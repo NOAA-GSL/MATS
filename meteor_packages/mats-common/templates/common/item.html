@@ -1,0 +1,26 @@
+<template name="item">
+    <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}}">
+        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}"> {{name}}</button>
+        <div id="{{element}}" style="display:{{elementHidden}}" >
+            {{#if isSelect}}
+                {{> select this}}
+            {{else}} {{#if isSpinner}}
+                {{>numberSpinner this}}
+            {{else}} {{#if isInput}}
+                {{> textInput this}}
+            {{else}} {{#if isDateRange}}
+                {{> dateRange this}}
+            {{else}} {{#if isCheckBoxGroup}}
+                    {{#each options}}
+                        {{> checkboxGroup this}}
+                    {{/each}}
+            {{else}} {{#if isRadioGroup}}
+                    {{#each options}}
+                        {{> radioGroup this}}
+                    {{/each}}
+            {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}
+        </div>
+        <button type="button" class="control-button btn btn-info fa fa-label" id="{{controlButton}}-value" style="display:{{controlButtonVisibility}}"> {{value}}</button>
+        <button type="button" class="btn spacebutton" id="spacer"></button>
+    </div>
+</template>

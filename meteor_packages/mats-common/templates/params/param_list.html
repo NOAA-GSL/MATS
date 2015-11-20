@@ -1,0 +1,26 @@
+<template name="paramList">
+    <div id="paramList">
+        <span>{{editMode}} </span>
+        <form id="paramForm">
+            {{#each CurveParamGroups}}
+                {{> curveParamGroup}}
+            {{/each}}
+            <div class="rule"></div>
+            <div class="container-fluid">
+                {{#if isEdit}}
+                    <div class="btn-toolbar btn-group btn-xs" role="toolbar">
+                        <button type="submit" name="save" id="save" class="btn btn-success fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
+                        <button type="button" name="cancel" id="cancel" class="edit-cancel btn btn-info fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
+                    </div>
+                {{else}}
+                    <div class="btn-toolbar btn-group btn-xs" role="toolbar">
+                        <button type="submit" name="add" id="add" class="btn btn-success fa fa-line-chart">&nbsp;&nbsp;Add Curve</button>
+                        <button type="button" name="restore" id="restore" class="restore-settings btn btn-success  fa fa-cloud-download">&nbsp;&nbsp;Restore Settings</button>
+                        <button type="button" name="reset" id="reset" class="reset btn btn-success fa fa-refresh">&nbsp;&nbsp;Reset to Defaults</button>
+                    </div>
+                {{/if}}
+            </div>
+        </form>
+    </div>
+    <div class="rule"></div>
+</template>

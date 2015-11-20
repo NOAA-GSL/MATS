@@ -1,0 +1,1 @@
+NOTE: Had to place this js file here so that meteor would load it before loading the other flot files. I also had to make the Canvas2Image object global by removing the var declaration.

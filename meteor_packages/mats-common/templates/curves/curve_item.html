@@ -1,0 +1,12 @@
+<template name="curveItem">
+    <div id="curveItem" class="container-fluid">
+          <div class="btn-toolbar btn-group" role="toolbar">
+              <input  id="{{label}}-color-value" class="input-group-addon btn btn-xs colorpicker-component {{colorpick}}" value="{{defaultColor}}"
+                      style="height:1em;background:transparent;background-color:{{defaultColor}};"/>
+              <button class="btn btn-xs"> {{text}}</button>
+              <button class="remove-curve btn btn-danger btn-xs"><i class="fa fa-times remove-curve btn btn-warning btn-xs"></i>&nbsp;&nbsp;Remove</button>
+              <button class="edit-curve btn btn-info btn-xs"><i class="fa fa-pencil-square-o edit-curve btn btn-info btn-xs"></i>&nbsp;&nbsp;Edit</button>
+          </div>
+    </div>
+</template>
+
