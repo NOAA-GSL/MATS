@@ -18,7 +18,7 @@ Package.onUse(function(api) {
   api.addFiles('graphDataFunctions/data_series_zoom_pan.js','server');
   api.addFiles('upper_air_server.js','server');
   api.addFiles('upper_air.css',['client', 'server']);
-
+  api.addFiles('version.html', "client");
   api.export("dataSeriesZoom", ['client', 'server']);
   api.export("dataProfileZoom", ['client', 'server']);
 });
