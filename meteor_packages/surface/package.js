@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'xwei:mats-surface',
+  name: 'xwei:surface',
   version: '1.0.1',
   // Brief, one-line summary of the package.
   summary: '',
@@ -27,6 +27,6 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
-  api.use('xwei:mats-surface');
+  api.use('xwei:surface');
   api.addFiles('app-tests.js');
 });

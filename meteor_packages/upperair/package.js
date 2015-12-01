@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'randyp:mats-upperair',
+  name: 'randyp:upperair',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: '',
@@ -27,6 +27,6 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
-  api.use('randyp:mats-upperair');
+  api.use('randyp:upperair');
   api.addFiles('app-tests.js');
 });
