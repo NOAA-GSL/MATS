@@ -14,6 +14,7 @@ Package.onUse(function(api) {
   api.versionsFrom('1.2.1');
   api.use('ecmascript');
   api.use('randyp:mats-common');
+  api.use(['templating'], 'client');
   api.addFiles('graphDataFunctions/data_profile_zoom_pan.js','server');
   api.addFiles('graphDataFunctions/data_series_zoom_pan.js','server');
   api.addFiles('upper_air_server.js','server');
