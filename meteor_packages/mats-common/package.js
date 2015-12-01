@@ -72,9 +72,9 @@ Package.onUse(function(api) {
   api.add_files("templates/graph/graph.html", "client");
   api.add_files("templates/graph/graph.js", "client");
 
-  api.add_files("templates/graph/graphFunctions/graph_series_zoom_pan.js", "client");
+  api.add_files("templates/graph/displayFunctions/graph_series_zoom_pan.js", "client");
 
-  api.add_files("templates/graph/graphFunctions/graph_profile_zoom_pan.js", "client");
+  api.add_files("templates/graph/displayFunctions/graph_profile_zoom_pan.js", "client");
 
   api.add_files("templates/graph/text_profile_output.html", "client");
   api.add_files("templates/graph/text_profile_output.js", "client");

@@ -16,8 +16,8 @@ Meteor.methods({
     getDataFunctionFileList: function() {
         var future = new Future();
         var fs = Npm.require('fs');
-        //console.log("Going to read directory ../web.browser/app/lib/graphDataFunctions");
-        fs.readdir("../web.browser/app/lib/graphDataFunctions/",function(err, files){
+        //console.log("Going to read directory ../web.browser/app/lib/dataFunctions");
+        fs.readdir("../web.browser/app/lib/dataFunctions/",function(err, files){
             if (err) {
                 return (err);
             }
@@ -32,8 +32,8 @@ Meteor.methods({
     getGraphFunctionFileList: function() {
         var future = new Future();
         var fs = Npm.require('fs');
-        //console.log("Going to read directory ../web.browser/app/lib/graphFunctions/");
-        fs.readdir("../web.browser/app/lib/graphFunctions/",function(err, files){
+        //console.log("Going to read directory ../web.browser/app/lib/displayFunctions/");
+        fs.readdir("../web.browser/app/lib/displayFunctions/",function(err, files){
             if (err) {
                 return (err);
             }
@@ -50,10 +50,10 @@ Meteor.methods({
         var fs = Npm.require('fs');
         var path = "";
         if (type == "data") {
-            path = "../web.browser/app/lib/graphDataFunctions/" + file;
+            path = "../web.browser/app/lib/dataFunctions/" + file;
             console.log('exporting data file: ' + path);
         } else if (type == "graph") {
-            path = "../web.browser/app/lib/graphFunctions/" + file;
+            path = "../web.browser/app/lib/displayFunctions/" + file;
             console.log('exporting graph file: ' + path);
         } else {
             return ("error - wrong tyoe");
@@ -68,9 +68,9 @@ Meteor.methods({
         console.log("restoring " + type + " file " + name);
         var path = "";
         if (type == "data") {
-            path = "../web.browser/app/lib/graphDataFunctions/" + name;
+            path = "../web.browser/app/lib/dataFunctions/" + name;
         } else if (type == "graph") {
-            path = "../web.browser/app/lib/graphFunctions/" + name;
+            path = "../web.browser/app/lib/displayFunctions/" + name;
         } else {
             return ("error - wrong tyoe");
         }
