@@ -9,6 +9,14 @@ existingId=`grep 'name\s*:' meteor_packages/$existingApp/package.js | cut -d':' 
 new=$2
 meteor_user_id=$3
 
+#Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon
+if [[ ! $new =~ ^[a-z0-9:.-]+$ ]]; then 
+	echo "Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon $new does not conform"
+	echo "must exit now - choose another name"
+	exit 1
+fi
+
+
 if [ "$1" == "--help" ]; then
         cat <<xxxxxENDxxxx
         This program will duplicate a MATS application and name it with the supplied new name.
