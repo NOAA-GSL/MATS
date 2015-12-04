@@ -51,8 +51,8 @@ Template.item.helpers({
             var day = today.getDate();
             var month = today.getMonth() + 1;
             now = month + '/' + day + "/" + yr;
-            this.default = then + "   ---->  " + now;
-            this.value = then + "   ---->  " + now;
+            this.default = then + " to " + now;
+            this.value = then + " to " + now;
         }
 
         return this.value?this.value:this.default;
@@ -242,7 +242,7 @@ Template.dateRange.events({
         }
         var from = document.getElementById(this.name + "-" + InputTypes.dateRange + "-from").value;
         var to = document.getElementById(this.name + "-" + InputTypes.dateRange + "-to").value;
-        elem.textContent =  from + "   ---->  " + to;
+        elem.textContent =  from + " to " + to;
     }
 });
 

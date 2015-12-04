@@ -269,7 +269,7 @@ curveTextPatterns = function () {
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates-dateRange-from','-->'],
+                ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]
         });

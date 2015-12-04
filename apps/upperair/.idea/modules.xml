@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<--raxml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/UpperAirTimeSeries.iml" filepath="$PROJECT_DIR$/.idea/UpperAirTimeSeries.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/upperair" filepath="$PROJECT_DIR$/.idea/upperair.iml" />
     </modules>
   </component>
 </project>

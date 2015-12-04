@@ -214,7 +214,7 @@ Template.plotList.events({
                 });
                 // reset the plotParams
                 Session.set("PlotParams", p);
-                //set the used defaults so that subsequent adds get a correct default
+                //set the used defaults so that subsequent adds get a corre default
                 setUsedColorsAndLabels();
                 document.getElementById('restore_from_public').value = "";
                 document.getElementById('restore_from_private').value = "";
