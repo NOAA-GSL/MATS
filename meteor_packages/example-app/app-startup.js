@@ -287,7 +287,7 @@ Settings.remove({});
     if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
-            Title: "Surface",
+            Title: "Example-app",
             LineWidth: 3.5,
             NullFillString: "---"
         });

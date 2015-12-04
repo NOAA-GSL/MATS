@@ -192,9 +192,10 @@ replace_custom () {
         replace_meteorid_appname_reference "$currentDir/apps/$new"
         replace_meteorid_appname_reference "$currentDir/meteor_packages/$new"
 
-        replace_custom ".idea/modules.xml" ".idea/$existingApp" ".idea/$new"                #<module fileurl="file://$PROJECT_DIR$/.idea/surface.iml" filepath="$PROJECT_DIR$/.idea/surface.iml" />
-        replace_appname_reference ".idea/.name"                                      #surface
-        replace_custom "$currentDir/meteor_packages/$new/app-startup.js" "Title:.*\"$existingApp\"" "Title: \"${new^}\""  #Title: "Surface",    (Notice capitalization)
+        replace_custom ".idea/modules.xml" ".idea/$existingApp" ".idea/$new"
+        replace_appname_reference ".idea/.name"
+
+        replace_custom "$currentDir/meteor_packages/$new/app-startup.js" "Title:.*," "Title: \"${new^}\","
 } || {
         echo "ERROR: error making substitutions"
         exit 1
