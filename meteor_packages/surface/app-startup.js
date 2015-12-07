@@ -2,7 +2,7 @@ var modelOptionsMap ={};
 var regionOptionsMap ={};
 
 plotParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
     }
     if (PlotParams.find().count() == 0) {
@@ -57,7 +57,7 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
     }
     if (CurveParams.find().count() == 0) {
@@ -247,7 +247,7 @@ curveParams = function () {
  See curve_item.js and graph.js.
  */
 curveTextPatterns = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveTextPatterns.remove({});
     }
     if (CurveTextPatterns.find().count() == 0) {
@@ -283,7 +283,7 @@ curveTextPatterns = function () {
 };
 
 savedCurveParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         SavedCurveParams.remove({});
     }
     if (SavedCurveParams.find().count() == 0) {
@@ -292,7 +292,7 @@ savedCurveParams = function () {
 };
 
 settings = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -307,7 +307,7 @@ settings = function () {
 };
 
 colorScheme = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         ColorScheme.remove({});
     }
     if (ColorScheme.find().count() == 0) {
@@ -342,7 +342,7 @@ colorScheme = function () {
 };
 
 plotGraph = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotGraphFunctions.remove({});
     }
     if (PlotGraphFunctions.find().count() == 0) {
@@ -357,7 +357,7 @@ plotGraph = function () {
 
 credentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Credentials.remove({});
     }
     if (Credentials.find().count() == 0) {
@@ -371,7 +371,7 @@ credentials = function () {
 };
 
 authorization = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Authorization.remove({});
     }
     if (Authorization.find().count() == 0) {
@@ -383,7 +383,7 @@ authorization = function () {
 };
 
 roles = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Roles.remove({});
     }
     if (Roles.find().count() == 0) {
@@ -394,7 +394,7 @@ roles = function () {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
     }
     if (Databases.find().count() == 0) {
