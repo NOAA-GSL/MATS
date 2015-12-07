@@ -14,6 +14,10 @@ Template.settings.helpers({
     NullFillString: function(){
         var settings = Settings.findOne({});
         return settings === undefined ? "" : settings.NullFillString;
+    },
+    ResetFromCode: function(){
+        var settings = Settings.findOne({});
+        return settings === undefined ? "" : settings.ResetFromCode;
     }
 });
 Template.settings.events({
@@ -22,12 +26,14 @@ Template.settings.events({
         var title = document.getElementById("Title").value;
         var lineWidth = document.getElementById("LineWidth").value;
         var nullFillString = document.getElementById("NullFillString").value;
+        var resetFromCode = document.getElementById("ResetFromCode").checked;
 
         var settings = {};
         settings.labelPrefix = labelPrefix;
         settings.title = title;
         settings.lineWidth = lineWidth;
         settings.nullFillString = nullFillString;
+        settings.resetFromCode = resetFromCode;
         Meteor.call('setSettings', settings, function (error) {
             if (error) {
                 setError(error.message);
@@ -38,6 +44,7 @@ Template.settings.events({
         document.getElementById("Title").value = "";
         document.getElementById("LineWidth").value = "";
         document.getElementById("NullFillString").value = "";
+        document.getElementById("ResetFromCode").value = "";
         $("#settingsModal").modal('hide');
         return false;
     },
@@ -47,6 +54,7 @@ Template.settings.events({
         document.getElementById("Title").value = "";
         document.getElementById("LineWidth").value = "";
         document.getElementById("NullFillString").value = "";
+        document.getElementById("ResetFromCode").value = "";
     }
 });
 

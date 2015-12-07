@@ -6,64 +6,64 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     var error = "";
     var N0 = [];
     var N_times = [];
-
-    sumPool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            ymin = Number(rows[0].avtime);
-            ymax = Number(rows[0].avtime);
-            var curveTime=[] ;
-            var curveStat =[];
-            var N0_max=0;
-
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-
-                if(N0_loop> N0) N0_max=N0_loop;
-                if(N_times_loop> N_times) N_times_max=N_times_loop;
-
-                curveTime.push(avSeconds * 1000);
-                curveStat.push(stat);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
-            }
-
-            if (averageStr != "None") {
-                xmin = Number(rows[0].avtime)*1000;
-            }
-            var loopTime =xmin;
-
-            while (loopTime < xmax+1) {
-
-                if(curveTime.indexOf(loopTime)<0){
-                    d.push([loopTime, null]);
-                } else{
-                    var d_idx = curveTime.indexOf(loopTime);
-                    var this_N0 = N0[d_idx];
-                    var this_N_times = N_times[d_idx];
-                    if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
-                        d.push([loopTime, null]);
-
-                    }else{
-                        d.push([loopTime, curveStat[d_idx]]);
-                    }
-                }
-                loopTime = loopTime + interval;
-            }
-            // done waiting - have results
-            dFuture['return']();
-        }
-    });
+//Example-app doesn't really query the database
+    //sumPool.query(statement, function (err, rows) {
+    //    // query callback - build the curve data from the results - or set an error
+    //    if (err != undefined) {
+    //        error = err.message;
+    //        dFuture['return']();
+    //    } else if (rows === undefined || rows.length === 0) {
+    //        error = 'No data to plot: ' + err;
+    //        // done waiting - error condition
+    //        dFuture['return']();
+    //    } else {
+    //        ymin = Number(rows[0].avtime);
+    //        ymax = Number(rows[0].avtime);
+    //        var curveTime=[] ;
+    //        var curveStat =[];
+    //        var N0_max=0;
+    //
+    //        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    //            var avSeconds = Number(rows[rowIndex].avtime);
+    //            var stat = rows[rowIndex].stat;
+    //            var N0_loop = rows[rowIndex].N0;
+    //            var N_times_loop = rows[rowIndex].N_times;
+    //
+    //            if(N0_loop> N0) N0_max=N0_loop;
+    //            if(N_times_loop> N_times) N_times_max=N_times_loop;
+    //
+    //            curveTime.push(avSeconds * 1000);
+    //            curveStat.push(stat);
+    //            N0.push(N0_loop);
+    //            N_times.push(N_times_loop);
+    //        }
+    //
+    //        if (averageStr != "None") {
+    //            xmin = Number(rows[0].avtime)*1000;
+    //        }
+    //        var loopTime =xmin;
+    //
+    //        while (loopTime < xmax+1) {
+    //
+    //            if(curveTime.indexOf(loopTime)<0){
+    //                d.push([loopTime, null]);
+    //            } else{
+    //                var d_idx = curveTime.indexOf(loopTime);
+    //                var this_N0 = N0[d_idx];
+    //                var this_N_times = N_times[d_idx];
+    //                if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
+    //                    d.push([loopTime, null]);
+    //
+    //                }else{
+    //                    d.push([loopTime, curveStat[d_idx]]);
+    //                }
+    //            }
+    //            loopTime = loopTime + interval;
+    //        }
+    //        // done waiting - have results
+    //        dFuture['return']();
+    //    }
+    //});
     // wait for future to finish
     dFuture.wait();
     return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval};
@@ -223,7 +223,62 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{validTime}}', validTime);
 
             console.log("query=" + statement);
-            var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
+            //var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr); // example does not call database!
+            var queryResult = {
+                "data": [
+                    [
+                        1448928000000,
+                        null
+                    ],
+                    [
+                        1448971200000,
+                        2.9388828938104
+                    ],
+                    [
+                        1449014400000,
+                        2.82499718618856
+                    ],
+                    [
+                        1449057600000,
+                        2.68152139720405
+                    ],
+                    [
+                        1449100800000,
+                        2.76545733825981
+                    ],
+                    [
+                        1449144000000,
+                        3.11635740484051
+                    ],
+                    [
+                        1449187200000,
+                        2.90283622071429
+                    ]
+                ],
+                "error": "",
+                "ymin": 1448971200,
+                "ymax": 1448971200,
+                "N0": [
+                    2.148,
+                    2.186,
+                    2.146,
+                    2.185,
+                    2.145,
+                    2.187
+                ],
+                "N_times": [
+                    0.001,
+                    0.001,
+                    0.001,
+                    0.001,
+                    0.001,
+                    0.001
+                ],
+                "averageStr": "None",
+                "interval": 43200000
+            }
+
+            console.log ("query result is " + JSON.stringify(queryResult, null, 2));
             d = queryResult.data;
             if (d[0] === undefined) {
                 error = "No data returned";
@@ -419,5 +474,6 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         data: dataset,
         options: options
     };
+
     plotFunction(result);
 };

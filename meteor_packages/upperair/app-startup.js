@@ -2,7 +2,9 @@ var modelOptionsMap ={};
 var regionOptionsMap ={};
 
 plotParams = function () {
-PlotParams.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        PlotParams.remove({});
+    }
     if (PlotParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -55,7 +57,9 @@ PlotParams.remove({});
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-CurveParams.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        CurveParams.remove({});
+    }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -306,7 +310,9 @@ CurveParams.remove({});
  See curve_item.js and graph.js.
  */
 curveTextPatterns = function () {
-    CurveTextPatterns.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        CurveTextPatterns.remove({});
+    }
     if (CurveTextPatterns.find().count() == 0) {
         CurveTextPatterns.insert({
             plotType:'TimeSeries',
@@ -340,25 +346,33 @@ curveTextPatterns = function () {
 };
 
 savedCurveParams = function () {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        SavedCurveParams.remove({});
+    }
     if (SavedCurveParams.find().count() == 0) {
         SavedCurveParams.insert({clName: 'changeList', changeList:[]});
     }
 };
 
 settings = function () {
-Settings.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Settings.remove({});
+    }
     if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Upper Air",
             LineWidth: 3.5,
-            NullFillString: "---"
+            NullFillString: "---",
+            resetFromCode: false
         });
     }
 };
 
 colorScheme = function () {
-ColorScheme.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        ColorScheme.remove({});
+    }
     if (ColorScheme.find().count() == 0) {
         ColorScheme.insert({
             colors: [
@@ -391,7 +405,9 @@ ColorScheme.remove({});
 };
 
 plotGraph = function () {
-PlotGraphFunctions.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        PlotGraphFunctions.remove({});
+    }
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
             plotType: "TimeSeries",
@@ -410,7 +426,9 @@ PlotGraphFunctions.remove({});
 
 credentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    Credentials.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Credentials.remove({});
+    }
     if (Credentials.find().count() == 0) {
         Credentials.insert({
             name: "oauth_google",
@@ -422,7 +440,9 @@ credentials = function () {
 };
 
 authorization = function () {
-Authorization.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Authorization.remove({});
+    }
     if (Authorization.find().count() == 0) {
         Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
         Authorization.insert({email: "xue.wei@noaa.gov", roles: ["administrator"]});
@@ -432,7 +452,9 @@ Authorization.remove({});
 };
 
 roles = function () {
-Roles.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Roles.remove({});
+    }
     if (Roles.find().count() == 0) {
         Roles.insert({name: "administrator", description: "administrator privileges"});
     }
@@ -441,7 +463,9 @@ Roles.remove({});
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    Databases.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Databases.remove({});
+    }
     if (Databases.find().count() == 0) {
         Databases.insert({
             name:"sumSetting",

@@ -210,7 +210,8 @@ Meteor.methods({
         var title = settings.title;
         var lineWidth = settings.lineWidth;
         var nullFillString = settings.nullFillString;
-        Settings.update({},{$set:{LabelPrefix:labelPrefix,Title:title,LineWidth:lineWidth,NullFillString:nullFillString}});
+        var resetFromCode = settings.resetFromCode;
+        Settings.update({},{$set:{LabelPrefix:labelPrefix,Title:title,LineWidth:lineWidth,NullFillString:nullFillString,ResetFromCode:resetFromCode}});
         return false;
     },
 

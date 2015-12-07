@@ -1,8 +1,12 @@
+// These two are populated by the database query down in the top of the Meteor.startup function.
+// ExampleApp sets these explicitly - no database
 var modelOptionsMap ={};
 var regionOptionsMap ={};
 
 plotParams = function () {
-PlotParams.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        PlotParams.remove({});
+    }
     if (PlotParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -55,7 +59,9 @@ PlotParams.remove({});
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-CurveParams.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        CurveParams.remove({});
+    }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -78,6 +84,8 @@ CurveParams.remove({});
                 displayGroup: 1
             }
         );
+        // In exampleApp set these explicitly, normally set by database
+        modelOptionsMap={ "FIM" : [ "FIM_4" ], "GFS" : [ "GFS_4" ], "HRRR" : [ "HRRR" ], "RAP" : [ "RR1h" ] };
         CurveParams.insert(
             {
                 name: 'model',
@@ -93,6 +101,8 @@ CurveParams.remove({});
                 displayPriority: 1,
                 displayGroup: 1
             });
+        // In exampleApp set these explicitly, normally set by database
+        regionOptionsMap = { "RUC domain" : [ "ALL_RUC" ], "large TAMDAR domain" : [ null ], "small TAMDAR domain" : [ null ], "in reg 0 but not in 1 or 2" : [ null ], "RR domain (North America)," : [ "ALL_RR1" ], "global" : [ "Global" ], "tropics -20 <= lat <= +20" : [ "TRO" ], "South Hemisphere -80 <= lat < -20" : [ null ], "North Hemisphere: +20 < lat <= +80" : [ null ], "Arctic: lat >= 70" : [ null ], "Antarctic: lat <= -70" : [ null ], "GPS RAOBs" : [ null ], "Alaska" : [ "AK" ], "HRRR domain" : [ "ALL_HRRR" ], "STMAS_CI" : [ null ], "STMAS_HWT" : [ null ], "west 109W" : [ null ], "east 109W" : [ null ] };
         CurveParams.insert(
             {
                 name: 'region',
@@ -243,7 +253,9 @@ CurveParams.remove({});
  See curve_item.js and graph.js.
  */
 curveTextPatterns = function () {
-    CurveTextPatterns.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        CurveTextPatterns.remove({});
+    }
     if (CurveTextPatterns.find().count() == 0) {
         CurveTextPatterns.insert({
             plotType:'TimeSeries',
@@ -277,25 +289,33 @@ curveTextPatterns = function () {
 };
 
 savedCurveParams = function () {
-    if (SavedCurveParams.find().count() == 0) {
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        SavedCurveParams.remove({});
+    }
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         SavedCurveParams.insert({clName: 'changeList', changeList:[]});
     }
 };
 
 settings = function () {
-Settings.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Settings.remove({});
+    }
     if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Example-app",
             LineWidth: 3.5,
-            NullFillString: "---"
+            NullFillString: "---",
+            resetFromCode: false
         });
     }
 };
 
 colorScheme = function () {
-//ColorScheme.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        ColorScheme.remove({});
+    }
     if (ColorScheme.find().count() == 0) {
         ColorScheme.insert({
             colors: [
@@ -328,7 +348,9 @@ colorScheme = function () {
 };
 
 plotGraph = function () {
-PlotGraphFunctions.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        PlotGraphFunctions.remove({});
+    }
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
             plotType: "TimeSeries",
@@ -341,7 +363,9 @@ PlotGraphFunctions.remove({});
 
 credentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    //Credentials.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Credentials.remove({});
+    }
     if (Credentials.find().count() == 0) {
         Credentials.insert({
             name: "oauth_google",
@@ -353,7 +377,9 @@ credentials = function () {
 };
 
 authorization = function () {
-//Authorization.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Authorization.remove({});
+    }
     if (Authorization.find().count() == 0) {
         Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
         Authorization.insert({email: "xue.wei@noaa.gov", roles: ["administrator"]});
@@ -363,7 +389,9 @@ authorization = function () {
 };
 
 roles = function () {
-//Roles.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Roles.remove({});
+    }
     if (Roles.find().count() == 0) {
         Roles.insert({name: "administrator", description: "administrator privileges"});
     }
@@ -372,7 +400,9 @@ roles = function () {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    Databases.remove({});
+    if (Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Databases.remove({});
+    }
     if (Databases.find().count() == 0) {
         Databases.insert({
             name:"sumSetting",
@@ -408,104 +438,148 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    try {
-        //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                Models.remove({});
-                RegionsPerModel.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var name = rows[i].model.trim();
-                    var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
-                    var model_value = rows[i].model_value.trim();
-                    //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
-                    var regionMapping = "metar_v2";
-                    var valueMapping ;
-                    var valueList = [];
-                    valueList.push(model_value);
-                    modelOptionsMap[model] = valueList;
-                    myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
-                    //Models.insert({name: model});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
-    } catch (err) {
-        Console.log(err.message);
-    }
+    //Eaxmple-app does not really call the database...
+    //try {
+    //    //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
+    //    var statement = "select model,regions,model_value,regions_name from regions_per_model";
+    //    var qFuture = new Future();
+    //    modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+    //        if (err != undefined) {
+    //            console.log(err.message);
+    //        }
+    //        if (rows === undefined || rows.length === 0) {
+    //            console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+    //        } else {
+    //            Models.remove({});
+    //            RegionsPerModel.remove({});
+    //            for (var i = 0; i < rows.length; i++) {
+    //                var name = rows[i].model.trim();
+    //                var model = rows[i].model.trim();
+    //                var regions = rows[i].regions;
+    //                var model_value = rows[i].model_value.trim();
+    //                //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
+    //                var regionMapping = "metar_v2";
+    //                var valueMapping ;
+    //                var valueList = [];
+    //                valueList.push(model_value);
+    //                modelOptionsMap[model] = valueList;
+    //                myModels.push(model);
+    //                Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
+
+    //  example-app does not really call the database - data is inserted here instead
+    Models.insert({name : "FIM", regionMapping: "metar_v2", valueMapping: "FIM_4" });
+    Models.insert({name : "GFS", regionMapping: "metar_v2", valueMapping: "GFS_4" });
+    Models.insert({name : "HRRR",regionMapping: "metar_v2", valueMapping: "HRRR" });
+    Models.insert({name : "RAP", regionMapping: "metar_v2", valueMapping: "RR1h" });
+
+    //                //Models.insert({name: model});
+    //                RegionsPerModel.insert({model: model, regions: regions.split(',')});
+    //            }
+    RegionsPerModel.insert({model: "FIM", regions: [ "0", "6", "7", "8", "13", "14" ] });
+    RegionsPerModel.insert({model: "GFS", regions: [ "0", "6", "7", "8", "13", "14" ] });
+    RegionsPerModel.insert({model: "HRRR",regions: [ "14" ] });
+    RegionsPerModel.insert({model: "RAP", regions: [ "0", "6", "14" ] });
+
+    //        }
+    //        qFuture['return']();
+    //    }));
+    //    qFuture.wait();
+    //} catch (err) {
+    //    Console.log(err.message);
+    //}
+    //
+    //
+    //
+    //
+    //try {
+    //    var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
+    //    var qFuture = new Future();
+    //    modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+    //        if (err != undefined) {
+    //            console.log(err.message);
+    //        }
+    //        if (rows === undefined || rows.length === 0) {
+    //            //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
+    //            console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+    //        } else {
+    //            FcstLensPerModel.remove({});
+    //            for (var i = 0; i < rows.length; i++) {
+    //                var model = rows[i].model;
+    //                var forecastLengths = rows[i].fcst_lens;
+    //
+    //                FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
+
+    // example-app dpesn't really call the database, data inserted instead
+    FcstLensPerModel.insert({model: "GFS", forecastLengths: [ "0", "6", "12", "18", "24", "36", "48", "60", "72" ] });
+    FcstLensPerModel.insert({model: "FIM", forecastLengths: [ "0", "12", "24", "36", "48", "60", "72" ] });
+    FcstLensPerModel.insert({model: "HRRR",forecastLengths: [ "0", "2", "3", "6", "9", "12", "15", "18", "21", "24" ] });
+    FcstLensPerModel.insert({model: "RAP", forecastLengths: [ "0", "1", "2", "3", "6", "9", "12" ] });
+    FcstLensPerModel.insert({model: "GLMP",forecastLengths: [ "1", "3", "6", "9", "12" ] });
 
 
+    //
+    //            }
+    //        }
+    //        qFuture['return']();
+    //    }));
+    //    qFuture.wait();
+    //} catch (err) {
+    //    Console.log(err.message);
+    //}
+    //
+    //try {
+    //    var statement = "select id,description,short_name,table_name from region_descriptions;";
+    //    var qFuture = new Future();
+    //    modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+    //        if (err != undefined) {
+    //            console.log(err.message);
+    //        }
+    //        if (rows === undefined || rows.length === 0) {
+    //            console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+    //        } else {
+    //            RegionDescriptions.remove({});
+    //            for (var i = 0; i < rows.length; i++) {
+    //                var regionNumber = rows[i].id;
+    //                var description = rows[i].description;
+    //                var shortName = rows[i].short_name;
+    //                var appTableName = rows[i].table_name;
+    //                var valueList = [];
+    //                valueList.push(appTableName);
+    //
+    //
+    //           regionOptionsMap[description] = valueList;
+    //
+    //                RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
+    // example-app dpesn't really call the database, data inserted instead
 
+    RegionDescriptions.insert({regionNumber:0, shortName:"RUC", description:"RUC domain", appTableName:"ALL_RUC"});
+    RegionDescriptions.insert({regionNumber:1, shortName:"LTAM", description:"large TAMDAR domain", appTableName:null});
+    RegionDescriptions.insert({regionNumber:2, shortName:"GtLk", description:"small TAMDAR domain", appTableName:null});
+    RegionDescriptions.insert({regionNumber:5, shortName:"wTAM", description:"in reg 0 but not in 1 or 2", appTableName:null});
+    RegionDescriptions.insert({regionNumber:6, shortName:"RR", description:"RR domain (North America),", appTableName:"ALL_RR1"});
+    RegionDescriptions.insert({regionNumber:7, shortName:"Glob", description:"global", appTableName:"Global"});
+    RegionDescriptions.insert({regionNumber:8, shortName:"Trop", description:"tropics -20 <= lat <= +20", appTableName:"TRO"});
+    RegionDescriptions.insert({regionNumber:9, shortName:"SHX", description:"South Hemisphere -80 <= lat < -20", appTableName:null});
+    RegionDescriptions.insert({regionNumber:10, shortName:"NHX", description:"North Hemisphere: +20 < lat <= +80", appTableName:null});
+    RegionDescriptions.insert({regionNumber:11, shortName:"NPol", description:"Arctic: lat >= 70", appTableName:null});
+    RegionDescriptions.insert({regionNumber:12, shortName:"SPol", description:"Antarctic: lat <= -70", appTableName:null});
+    RegionDescriptions.insert({regionNumber:3, shortName:"Sippican", description:"GPS RAOBs", appTableName:null});
+    RegionDescriptions.insert({regionNumber:4, shortName:"non-Sippic", description:"GPS RAOBs", appTableName:null});
+    RegionDescriptions.insert({regionNumber:13, shortName:"AK", description:"Alaska", appTableName:"AK"});
+    RegionDescriptions.insert({regionNumber:14, shortName:"HRRR", description:"HRRR domain", appTableName:"ALL_HRRR"});
+    RegionDescriptions.insert({regionNumber:15, shortName:"STMAS_CI", description:"STMAS_CI", appTableName:null});
+    RegionDescriptions.insert({regionNumber:16, shortName:"HWT", description:"STMAS_HWT", appTableName:null});
+    RegionDescriptions.insert({regionNumber:17, shortName:"W_109W", description:"west 109W", appTableName:null});
+    RegionDescriptions.insert({regionNumber:18, shortName:"E_109W", description:"east 109W", appTableName:null});
 
-    try {
-        var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                FcstLensPerModel.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model;
-                    var forecastLengths = rows[i].fcst_lens;
-
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
-
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
-    } catch (err) {
-        Console.log(err.message);
-    }
-
-    try {
-        var statement = "select id,description,short_name,table_name from region_descriptions;";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                RegionDescriptions.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
-                    var description = rows[i].description;
-                    var shortName = rows[i].short_name;
-                    var appTableName = rows[i].table_name;
-                    var valueList = [];
-                    valueList.push(appTableName);
-
-
-               regionOptionsMap[description] = valueList;
-
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
-    } catch (err) {
-        Console.log(err.message);
-    }
+    //            }
+    //        }
+    //        qFuture['return']();
+    //    }));
+    //    qFuture.wait();
+    //} catch (err) {
+    //    Console.log(err.message);
+    //}
 
     roles();
     authorization();
