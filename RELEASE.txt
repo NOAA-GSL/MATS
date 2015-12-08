@@ -1,0 +1,6 @@
+version v1.0 
+date Tuesday December 8th, 2015
+apps:
+upperair - version 1.2.julian
+surface - version 1.2.julian
+example-app - 1.2.julian
