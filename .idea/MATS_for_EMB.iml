@@ -2,6 +2,7 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/test/.meteor/local" />
