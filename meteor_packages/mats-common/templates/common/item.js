@@ -143,7 +143,7 @@ Template.item.events({
             if (elem === undefined) {
                 return false;
             }
-            if (elem !== null && elem.style.display === "block") {
+            if (elem !== null && elem.style.display === "block" && (this.multiple == undefined) || this.multiple == false) {
                 elem.style.display = "none";
             } else {
                 if (elem !== null) {
@@ -191,7 +191,14 @@ Template.select.events({
         if (this.name === "region") {
             elem.textContent =  event.currentTarget.value.split(' (')[0];
         } else {
-            elem.textContent =  event.currentTarget.value;
+            if (this.multiple==true) {
+                elem.textContent = "";
+                for (var i=0; i<event.currentTarget.selectedOptions.length;i++) {
+                    elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
+                }
+            } else {
+                elem.textContent = event.currentTarget.value;
+            }
         }
     }
 });
