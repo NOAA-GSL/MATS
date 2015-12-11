@@ -65,7 +65,7 @@ Template.select.helpers({
         return this.options;
     },
     multiple:function(){
-        if(this.multiple && this.multiple===true)
+        if(this.multiple===true)
         {return "multiple";}
     }
 
