@@ -5,16 +5,8 @@
 usage="$0 [--help || existing_app_name new_app_name meteorId]"
 
 existingApp=$1
-existingId=`grep 'name\s*:' meteor_packages/$existingApp/package.js | cut -d':' -f2 | sed -e "s/'//g" | sed -e 's/"//g' | sed -e 's/ //g'`
 new=$2
 meteor_user_id=$3
-
-#Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon
-if [[ ! $new =~ ^[a-z0-9:.-]+$ ]]; then 
-	echo "Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon $new does not conform"
-	echo "must exit now - choose another name"
-	exit 1
-fi
 
 
 if [ "$1" == "--help" ]; then
@@ -44,8 +36,9 @@ xxxxxENDxxxx
         exit 0
 fi
 
+
 {
-        tdir=$(mktemp -d --tmpdir="/tmp")
+        tdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
         #echo "using temporary dir $tdir"
 } || {
         echo "ERROR: unable to create temporary directory - must exit"
@@ -72,6 +65,13 @@ if [ "x$meteor_user_id" == "x" ]; then
 fi
 
 
+#Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon
+if [[ ! $new =~ ^[a-z0-9:.-]+$ ]]; then
+	echo "Package names can only contain lowercase ASCII alphanumerics, dash, dot, or colon $new does not conform"
+	echo "must exit now - choose another name"
+	exit 1
+fi
+
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`
 if [ "$remote_origin" != "gerrit:MATS_for_EMB" ]; then
@@ -91,6 +91,8 @@ if [ "$currentDir" != "$topLevel" ]; then
     echo "exiting"
     exit 1
 fi
+
+existingId=`grep 'name\s*:' meteor_packages/$existingApp/package.js 2>/dev/null | cut -d':' -f2 | sed -e "s/'//g" | sed -e 's/"//g' | sed -e 's/ //g'`
 
 
 # does existingApp really exist
@@ -134,11 +136,10 @@ fi
 replace_meteorid_appname_reference () {
         {
             findDir=$1
-            for filepath in $(/bin/grep -rl $existingId:$existingApp $findDir)
+            for filepath in $(grep -rl $existingId:$existingApp $findDir)
                 do
                     bname=$(basename $filepath)
                     tname="$tdir/$bname"
-                    #echo "sed  s/$existingId:$existingApp/$meteor_user_id:$new/g $filepath"
                     sed  "s/$existingId:$existingApp/$meteor_user_id:$new/g" $filepath > $tname
                     mv $tname $filepath
                 done
@@ -194,8 +195,8 @@ replace_custom () {
 
         replace_custom ".idea/modules.xml" ".idea/$existingApp" ".idea/$new"
         replace_appname_reference ".idea/.name"
-
-        replace_custom "$currentDir/meteor_packages/$new/app-startup.js" "Title:.*," "Title: \"${new^}\","
+        newWithCapital="$(tr '[:lower:]' '[:upper:]' <<< ${new:0:1})${new:1}"
+        replace_custom "$currentDir/meteor_packages/$new/app-startup.js" "Title:.*," "Title: \"$newWithCapital\","
 } || {
         echo "ERROR: error making substitutions"
         exit 1
