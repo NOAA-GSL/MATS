@@ -191,7 +191,14 @@ Template.select.events({
         if (this.name === "region") {
             elem.textContent =  event.currentTarget.value.split(' (')[0];
         } else {
-            elem.textContent =  event.currentTarget.value;
+            if (this.multiple==true) {
+                elem.textContent = "";
+                for (var i=0; i<event.currentTarget.selectedOptions.length;i++) {
+                    elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
+                }
+            } else {
+                elem.textContent = event.currentTarget.value;
+            }
         }
     }
 });
