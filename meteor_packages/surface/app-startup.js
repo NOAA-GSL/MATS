@@ -409,7 +409,7 @@ Meteor.startup(function () {
             connectionLimit : 10
         });
         Databases.insert({
-            name:"surfaceSettings",
+            name:"modelSetting",
             role: "model_data",
             status: "active",
             host        : 'wolphin.fsl.noaa.gov',
