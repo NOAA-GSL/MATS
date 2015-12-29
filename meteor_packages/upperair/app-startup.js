@@ -1,5 +1,6 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
+var modelTableMap ={};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -87,8 +88,9 @@ curveParams = function () {
                 name: 'model',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
+                tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model",
+                optionsQuery:"select model from regions_per_model_mats",
                 controlButtonCovered: true,
                 default: 'FIM',
                 unique: false,
@@ -364,7 +366,8 @@ settings = function () {
             Title: "Upper Air",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: false
+          //  resetFromCode: false
+            resetFromCode: true
         });
     }
 };
@@ -501,7 +504,8 @@ Meteor.startup(function () {
 
     try {
         //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model_mats";
+        //var statement = "select model,regions,model_value from regions_per_model_mats";
+        var statement = "select model,regions from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -515,13 +519,26 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
-                    var model_value = rows[i].model_value.trim();
+                    //var model_value = rows[i].model_value.trim();
                     var regionMapping = "Areg";
+                    if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
+                        regionMapping = "reg";
+                    }
+
                     var valueList = [];
-                    valueList.push(model_value);
+                    //valueList.push(model_value);
+                    //modelOptionsMap[model] = valueList;
+                    valueList.push(model);
                     modelOptionsMap[model] = valueList;
+
+                    var tablevalueList = [];
+                    tablevalueList.push(regionMapping);
+                    modelTableMap[model] = tablevalueList;
+                    console.log('model=' +model+" valuelist="+valueList);
+                    console.log('modelOptionsMap=' + modelOptionsMap);
                     myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
+                    //Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
+                    Models.insert({name: model, regionMapping: regionMapping});
                     RegionsPerModel.insert({model: model, regions: regions.split(',')});
                 }
             }
@@ -563,7 +580,8 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "select id,description,short_name,table_name from region_descriptions_mats;";
+        //var statement = "select id,description,short_name,table_name from region_descriptions_mats;";
+        var statement = "select id,description,short_name from region_descriptions_mats;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -577,12 +595,13 @@ Meteor.startup(function () {
                     var regionNumber = rows[i].id;
                     var description = rows[i].description;
                     var shortName = rows[i].short_name;
-                    var appTableName = rows[i].table_name;
+                    //var appTableName = rows[i].table_name;
                     var valueList = [];
                     valueList.push(regionNumber);
                regionOptionsMap[description] = valueList;
 
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
+                    //RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
+                RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description});
                 }
             }
             qFuture['return']();

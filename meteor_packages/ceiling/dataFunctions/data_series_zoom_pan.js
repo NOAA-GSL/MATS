@@ -136,34 +136,46 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var variableStatSet = Object.create(null);
+    //var variableStatSet = Object.create(null);
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
+        console.log("curve="+ curve);
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name:'model'}).optionsMap[curve['model']][0];
         var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
+        var threshhold = CurveParams.findOne({name:'threshhold'}).optionsMap[curve['threshhold']][0];
+        console.log("threshhold="+ threshhold);
+        console.log("model="+model);
+        console.log("region="+region);
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
-        var variableStr = curve['variable'];
-        var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
+      //  var variableStr = curve['variable'];
+       // console.log("variableStr="+variableStr);
+       // var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+       // var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         // formula depends on stats (rms vs bias), also variables like temperature and dew points need convert from f to c
+        console.log("statisticSelect="+statisticSelect);
         var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        console.log("statisticOptionsMap="+statisticOptionsMap);
         var statistic;
-        if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
+        statistic = statisticOptionsMap[statisticSelect][0];
+        console.log("statistic="+statistic);
+       /* if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
             statistic = statisticOptionsMap[statisticSelect][0];
         } else if (variableStr == 'wind'  ) {
                 statistic = statisticOptionsMap[statisticSelect][2];
         } else {
             statistic = statisticOptionsMap[statisticSelect][1];
         }
+        console.log("variableStr2="+variableStr);
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);*/
         //var validTimeStr = curve['valid hrs'];
         var validTimeStr = curve['valid time'];
+        console.log("validTimeStr="+ validTimeStr);
         var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
         var validTime = validTimeOptionsMap[validTimeStr][0];
         var averageStr = curve['average'];
@@ -174,8 +186,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         // This variableStatSet object is used like a set and if a curve has the same
         // variable and statistic (variableStat) it will use the same axis,
         // The axis number is assigned to the variableStatSet value, which is the variableStat.
-        var variableStat = variableStr + ":" + statisticSelect;
-        curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
+       // var variableStat = variableStr + ":" + statisticSelect;
+        //curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
         var xmax;
         var ymax;
         var xmin;
@@ -214,11 +226,38 @@ dataSeriesZoom = function(plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
+            //statement = statement.replace('{{average}}', average);
+            //statement = statement.replace('{{forecastLength}}', forecastLength);
+           // statement = statement.replace('{{fromSecs}}', fromSecs);
+            //statement = statement.replace('{{toSecs}}', toSecs);
+            //statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
+        //    statement = statement.replace('{{statistic}}', statistic);
+            //statement = statement.replace('{{validTime}}', validTime);
+
+
+           // select ceil(259200*floor(m0.time/259200)+259200/2) as avtime
+
+
+            //statement ="select ceil(3600*floor(m0.time/3600)) as avtime"+
+            statement = "select {{average}} as avtime " +
+               " ,min(m0.time) as min_secs"+
+               ",max(m0.time) as max_secs"+
+                ", {{statistic}} " +
+                    "from {{model}}_{{threshhold}}_{{forecastLength}}_{{region}} as m0"+
+            " where 1=1" +
+                "{{validTime}} " +
+            " and m0.yy+m0.ny+m0.yn+m0.nn > 0"+
+                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} "+
+            " group by avtime" +
+            " order by avtime;"
+
             statement = statement.replace('{{average}}', average);
+            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{threshhold}}', threshhold);
             statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{validTime}}', validTime);
 
@@ -288,15 +327,15 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         }
         var yAxisIndex = 1;
 
-        if (variableStat in variableStatSet) {
+        /*if (variableStat in variableStatSet) {
             yAxisIndex = variableStatSet[variableStat].index;
             variableStatSet[variableStat].label =  variableStatSet[variableStat].label + " | " + label;
         } else {
             variableStatSet[variableStat] = {index:curveIndex + 1, label:label};
-        }
+        }*/
 
         var options = {
-            yaxis: variableStatSet[variableStat].index,
+           // yaxis: variableStatSet[variableStat].index,
             label: label,
             color: color,
             data: d,
@@ -341,7 +380,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var yaxesOptions = {
                 position: position,
                 color: 'grey',
-                axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+                //axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
                 axisLabelColour: "black",
                 axisLabelUseCanvas: true,
                 axisLabelFontSizePixels: 16,

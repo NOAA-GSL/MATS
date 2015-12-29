@@ -122,6 +122,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+        var tableRegion = CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
@@ -190,7 +191,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ";";
 
             // build the query
-            statement = statement.replace('{{model}}', model + '_Areg' + region);
+            //statement = statement.replace('{{model}}', model + '_Areg' + region);
+            statement = statement.replace('{{model}}', model + '_'+tableRegion + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);

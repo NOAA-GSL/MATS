@@ -90,7 +90,8 @@ curveParams = function () {
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
                 controlButtonCovered: true,
-                default: 'FIM',
+                //default: 'HRRR',
+                default:Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -113,6 +114,11 @@ curveParams = function () {
             });
 
         optionsMap = {
+            //'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat',
+            //    'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+
+            'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat,' +
+            'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
             'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
                 'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}})/1000 as N0',
                 'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'
@@ -146,44 +152,44 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'RMS',
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
 
-            optionsMap = {
-                temperature: ['dt', 't'],
-                RH: ['drh', 'rh'],
-                dewpoint: ['dTd', 'td'],
-                wind: ['dw', 'ws'],
-            };
 
+
+        optionsMap = {
+            '60000 (any clound)': ['6000'],
+            '500 (ceiling<500 feet)': ['50'],
+            '3000 (ceiling <3000 feet)': ['300'],
+            '1000 (ceiling <1000 feet)': ['100']
+        };
         CurveParams.insert(
             {
-                name: 'variable',
+                name: 'threshhold',
                 type: InputTypes.select,
                 optionsMap: optionsMap,
                 options:Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'temperature',
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
-
         optionsMap = {
-            'None': ['(m0.valid_day)+3600*m0.hour'],
-                '1D': ['ceil(' + 60 * 60 * 24 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-                '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-                '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-                '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-                '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-                '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-                '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+            'None': ['ceil(3600*floor(m0.time/3600))'],
+                '1D': ['ceil(' + 60 * 60 * 24 + '*floor(((m0.time))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
+                '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(((m0.time))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
+                '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(((m0.time))/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
+                '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor(((m0.time))/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
+                '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor(((m0.time))/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
+                '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor(((m0.time))/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
+                '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor(((m0.time))/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
         };
         CurveParams.insert(
             {
@@ -218,16 +224,17 @@ curveParams = function () {
                 displayGroup: 3
             });
 
-        optionsMap = {'All':[""],0:[' and m0.hour in (0)'],6:[6],12:[12],18:[18]};
+        optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
         CurveParams.insert(
             {
                 name: 'valid time',
                 type: InputTypes.select,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                selected: 'ALL',
+                selected: 'All',
                 controlButtonCovered: true,
                 unique: false,
+                //default: Object.keys(optionsMap)[0],
                 default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 8,
@@ -296,12 +303,14 @@ settings = function () {
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
+    //    debugger;
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Ceiling",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: false
+            //resetFromCode: false
+            resetFromCode: true
         });
     }
 };
@@ -405,17 +414,17 @@ Meteor.startup(function () {
             host        : 'wolphin.fsl.noaa.gov',
             user        : 'writer',
             password    : 'amt1234',
-            database    : 'surface_sums',
+            database    : 'ceiling_sums',
             connectionLimit : 10
         });
         Databases.insert({
-            name:"surfaceSettings",
+            name:"modelSetting",
             role: "model_data",
             status: "active",
             host        : 'wolphin.fsl.noaa.gov',
             user        : 'writer',
             password    : 'amt1234',
-            database    : 'madis3',
+            database    : 'ceiling',
             connectionLimit : 10
         });
     }
@@ -499,7 +508,7 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
-    try {
+    /*try {
         var statement = "select id,description,short_name,table_name from region_descriptions;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -529,7 +538,40 @@ Meteor.startup(function () {
         qFuture.wait();
     } catch (err) {
         Console.log(err.message);
-    }
+    }*/
+
+    try {
+     var statement = "select id,description,short_name from region_descriptions;";
+     var qFuture = new Future();
+     modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+     if (err != undefined) {
+     console.log(err.message);
+     }
+     if (rows === undefined || rows.length === 0) {
+     console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+     } else {
+         RegionDescriptions.remove({});
+        for  (var i = 0; i < rows.length; i++) {
+        var regionNumber = rows[i].id;
+        var description = rows[i].description;
+        var shortName = rows[i].short_name;
+
+        var valueList = [];
+        valueList.push(shortName);
+
+
+        regionOptionsMap[description] = valueList;
+
+        RegionDescriptions.insert({ regionNumber: regionNumber,shortName: shortName, description: description});
+     }
+     }
+     qFuture['return']();
+     }));
+     qFuture.wait();
+     } catch (err) {
+     Console.log(err.message);
+     }
+
 
     roles();
     authorization();
