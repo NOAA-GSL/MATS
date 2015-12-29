@@ -143,7 +143,7 @@ Template.item.events({
             if (elem === undefined) {
                 return false;
             }
-            if (elem !== null && elem.style.display === "block" && (this.multiple == undefined) || this.multiple == false) {
+            if (elem !== null && elem.style.display === "block" && this.multiple == false) {
                 elem.style.display = "none";
             } else {
                 if (elem !== null) {
