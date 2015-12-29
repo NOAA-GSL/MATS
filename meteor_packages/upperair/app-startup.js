@@ -359,7 +359,7 @@ savedCurveParams = function () {
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
-            resetFromCode = Settings.findOne({}).resetFromCode;
+            var resetFromCode = Settings.findOne({}).resetFromCode;
         } else {
             resetFromCode = false;
         }
