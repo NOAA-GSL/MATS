@@ -2,14 +2,17 @@
 # 
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`
-case $remote_origin/ in
-gerrit:MATS_for_EMB) echo "In a MATS_for_EMB clone - good - I will continue";;
-*) echo "NOT in a MATS_for_EMB clone - not good"
-echo "try git clone gerrit:MATS_for_EMB MATS_for_EMB"
-echo "then execute this script from inside MATS_for_EMB"
-echo "quiting now."
-exit 1;;
-esac
+
+if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
+then 
+	echo "In a MATS_for_EMB clone - good - I will continue"
+else
+	echo "NOT in a MATS_for_EMB clone - not good"
+	echo "try git clone gerrit:MATS_for_EMB MATS_for_EMB"
+	echo "then execute this script from inside MATS_for_EMB"
+	echo "quiting now."
+	exit 1
+fi
 
 echo "git fetch origin"
 git fetch origin
@@ -33,7 +36,6 @@ if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	exit 1
 fi
 cd meteor_packages
-
 julian=`date +%Y%j`
 find . -name version.html | while read x
 do
@@ -43,15 +45,14 @@ do
 done
 git git push gerrit:MATS_for_EMB origin:master
 
+
 cd apps
 find . -maxdepth 1 -type d -not -path "." | while read x
 do
 	cd $x
-	julian=`date +%Y%j`
-	echo "setting version"
-	echo ""
 	echo "building app $x"
 	meteor reset
-	meteor build
+	meteor build /tmp/builds
+	cd ..
 done
 
