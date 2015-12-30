@@ -292,13 +292,18 @@ savedCurveParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         SavedCurveParams.remove({});
     }
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (SavedCurveParams.find().count() == 0) {
         SavedCurveParams.insert({clName: 'changeList', changeList:[]});
     }
 };
 
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            var resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -307,7 +312,7 @@ settings = function () {
             Title: "Example-app",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: false
+            resetFromCode: resetFromCode
         });
     }
 };

@@ -17,7 +17,7 @@ Template.settings.helpers({
     },
     ResetFromCode: function(){
         var settings = Settings.findOne({});
-        return settings === undefined ? "" : settings.ResetFromCode;
+        return settings === undefined ? "" : settings.resetFromCode;
     }
 });
 Template.settings.events({

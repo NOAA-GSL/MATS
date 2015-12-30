@@ -88,42 +88,47 @@ Template.select.events({
                 description: 1
             });
             var description = regionDescription != null?regionDescription.description:"";
-
-
             opts.push(description);
-        }
-        var optionsAsString = "";
-        for (var i = 0; i < opts.length; i++) {
-            if (i === 0) {
-                optionsAsString += "<option selected value='" + opts[i] + "'>" + opts[i] + "</option>";
-            } else {
-                optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
-            }
         }
 
         var selector = $('select[name="region"]');
+        // find which region is selected currently
+        var selectedRegion = document.getElementById('region-select').options[document.getElementById('region-select').selectedIndex].text;
+        var optionsAsString = "";
+        var selected = 0;
+        for (var i = 0; i < opts.length; i++) {
+            // if selected currently select this one
+            if (opts[i] == selectedRegion) {
+                selected = i;
+            }
+            optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
+        }
+        // set selected
         selector.html("");
         selector.append(optionsAsString);
+        document.getElementById('region-select').getElementsByTagName('option')[selected].selected = 'selected';
         // set the default for the value button
         var regionValueElem = document.getElementById('controlButton-region-value');
         regionValueElem.textContent = opts[0].split(' (')[0];
-
 
         // do the forecastLength selector
         opts = FcstLensPerModel.findOne({model: modelName}, {forecastLengths: 1}).forecastLengths.sort(function (a, b) {
             return (Number(a) - Number(b));
         });
-        optionsAsString = "";
-        for (var i = 0; i < opts.length; i++) {
-            if (i === 0) {
-                optionsAsString += "<option selected value='" + opts[i] + "'>" + opts[i] + "</option>";
-            } else {
-                optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
-            }
-        }
         selector = $('select[name="forecast length"]');
+        // find which forecastlen is selected currently
+        var selectedForecastLen = document.getElementById('forecast length-select').options[document.getElementById('forecast length-select').selectedIndex].text;
+        optionsAsString = "";
+        selected = 0;
+        for (var i = 0; i < opts.length; i++) {
+            if (opts[i] == selectedForecastLen) {
+                selected = i;
+            }
+            optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
+        }
         selector.html("");
         selector.append(optionsAsString);
+        document.getElementById('forecast length-select').getElementsByTagName('option')[selected].selected = 'selected';
         // set the default for the value button
         var fclValueElem = document.getElementById('controlButton-forecast length-value');
         fclValueElem.textContent = opts[0];

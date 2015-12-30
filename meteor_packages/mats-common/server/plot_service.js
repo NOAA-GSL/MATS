@@ -211,7 +211,7 @@ Meteor.methods({
         var lineWidth = settings.lineWidth;
         var nullFillString = settings.nullFillString;
         var resetFromCode = settings.resetFromCode;
-        Settings.update({},{$set:{LabelPrefix:labelPrefix,Title:title,LineWidth:lineWidth,NullFillString:nullFillString,ResetFromCode:resetFromCode}});
+        Settings.update({},{$set:{LabelPrefix:labelPrefix,Title:title,LineWidth:lineWidth,NullFillString:nullFillString,resetFromCode:resetFromCode}});
         return false;
     },
 
@@ -445,9 +445,6 @@ Meteor.publish("RegionsPerModel", function () {
 });
 Meteor.publish("RegionDescriptions", function () {
     return RegionDescriptions.find();
-});
-Meteor.publish("RegionNameMapping", function () {
-    return RegionNameMapping.find();
 });
 Meteor.publish("Models", function () {
     return Models.find();

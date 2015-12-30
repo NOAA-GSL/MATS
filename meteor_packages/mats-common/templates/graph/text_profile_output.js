@@ -43,7 +43,7 @@ Template.textProfileOutput.helpers({
         var mean = stats.d_mean;
         var n = stats.n_good;
         var lag1 = stats.lag1;
-        return "<td>" + mb + "</td>" +
+        return "<td>" + mb * -1 + "</td>" +
             "<td>" + val + "</td>" +
             "<td>" + stde + "</td>" +
             "<td>" + mean + "</td>" +
