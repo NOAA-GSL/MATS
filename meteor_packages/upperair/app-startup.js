@@ -358,6 +358,11 @@ savedCurveParams = function () {
 
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -366,8 +371,7 @@ settings = function () {
             Title: "Upper Air",
             LineWidth: 3.5,
             NullFillString: "---",
-          //  resetFromCode: false
-            resetFromCode: true
+            resetFromCode: resetFromCode
         });
     }
 };
@@ -503,8 +507,6 @@ Meteor.startup(function () {
     });
 
     try {
-        //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        //var statement = "select model,regions,model_value from regions_per_model_mats";
         var statement = "select model,regions from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -519,15 +521,12 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
-                    //var model_value = rows[i].model_value.trim();
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
                     }
 
                     var valueList = [];
-                    //valueList.push(model_value);
-                    //modelOptionsMap[model] = valueList;
                     valueList.push(model);
                     modelOptionsMap[model] = valueList;
 
@@ -537,7 +536,6 @@ Meteor.startup(function () {
                     console.log('model=' +model+" valuelist="+valueList);
                     console.log('modelOptionsMap=' + modelOptionsMap);
                     myModels.push(model);
-                    //Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
                     Models.insert({name: model, regionMapping: regionMapping});
                     RegionsPerModel.insert({model: model, regions: regions.split(',')});
                 }
@@ -580,7 +578,6 @@ Meteor.startup(function () {
     }
 
     try {
-        //var statement = "select id,description,short_name,table_name from region_descriptions_mats;";
         var statement = "select id,description,short_name from region_descriptions_mats;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -595,13 +592,11 @@ Meteor.startup(function () {
                     var regionNumber = rows[i].id;
                     var description = rows[i].description;
                     var shortName = rows[i].short_name;
-                    //var appTableName = rows[i].table_name;
                     var valueList = [];
                     valueList.push(regionNumber);
                regionOptionsMap[description] = valueList;
 
-                    //RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
-                RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description});
+                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description});
                 }
             }
             qFuture['return']();

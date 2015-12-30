@@ -14,9 +14,11 @@ var stopInit = function() {
     return month + '/' + day + "/" + yr;
 };
 
-Template.dateRange.rendered = function () {
+Template.dateRange.onRendered(function() {
     try {
-        if (document.getElementById('plot-type-TimeSeries').checked === true) {
+        // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
+        // in that event we test for undefined and block the curve-dates-item anyway
+        if (document.getElementById('plot-type-TimeSeries') == undefined || document.getElementById('plot-type-TimeSeries').checked === true) {
             document.getElementById('curve-dates-item').style.display = "none";
             document.getElementById('dates-item').style.display = "block";
         } else {
@@ -24,7 +26,7 @@ Template.dateRange.rendered = function () {
             document.getElementById('dates-item').style.display = "none";
         }
     } catch (Exception) {}
-};
+});
 
 Template.dateRange.helpers({
     value: function() {

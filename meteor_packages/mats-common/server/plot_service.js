@@ -446,9 +446,9 @@ Meteor.publish("RegionsPerModel", function () {
 Meteor.publish("RegionDescriptions", function () {
     return RegionDescriptions.find();
 });
-Meteor.publish("RegionNameMapping", function () {
-    return RegionNameMapping.find();
-});
+//Meteor.publish("RegionNameMapping", function () {
+//    return RegionNameMapping.find();
+//});
 Meteor.publish("Models", function () {
     return Models.find();
 });

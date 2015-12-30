@@ -31,7 +31,7 @@ Package.onUse(function(api) {
     api.export("SavedPlotGraphFunctions");
     api.export("RegionsPerModel");
     api.export("RegionDescriptions");
-    api.export("RegionNameMapping");
+    //api.export("RegionNameMapping");
     api.export("Models");
     api.export("FcstLensPerModel");
     api.export("CurveSettings");
