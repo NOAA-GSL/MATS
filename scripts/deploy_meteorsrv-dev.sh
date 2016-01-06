@@ -1,57 +1,42 @@
-#!/bin/sh
+#!/usr/bin/bash
 # 
-#test current dir is MATS_FOR_EMB
-remote_origin=`git config --get remote.origin.url`
-case $remote_origin/ in
-gerrit:MATS_for_EMB) echo "In a MATS_for_EMB clone - good - I will continue";;
-*) echo "NOT in a MATS_for_EMB clone - not good"
-echo "try git clone gerrit:MATS_for_EMB MATS_for_EMB"
-echo "then execute this script from inside MATS_for_EMB"
-echo "quiting now."
-exit 1;;
-esac
+if [[ $USER != "www-data" ]]; then 
+		echo "This script must be run as www-data!" 
+		exit 1
+	fi 
 
-echo "git fetch origin"
-git fetch origin
-if [ $? -ne 0 ]
-then
-echo "git fetch failed - must exit"
-exit 1
-fi
+logname=`echo deploy_meteorsrv-dev.sh.log | cut -f1 -d"."`.log
+touch $logname
+exec > >(tee -i $logname)
+exec 2>&1
 
-echo "git reset --hard origin/master"
-git reset --hard origin/master
-if [ $? -ne 0 ]
-then
-echo "git  reset failed - must exit"
-exit 1
-fi
-
-export PACKAGE_DIRS=`find $PWD -name meteor_packages`
-if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
-	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
+echo "$0 ----------- started"
+date
+ 
+#git the builds top version
+git clone --depth 1 /builds /tmp/tmpbuilds
+if [[ ! -d "/tmp/tmpbuilds" ]]; then
+	echo "failed to git clone --depth 1 /builds /tmp/tmpbuilds"
+	echo exiting
 	exit 1
 fi
-cd meteor_packages
-
-julian=`date +%Y%j`
-find . -name version.html | while read x
+	
+#deploy apps
+cd /web
+find /tmp/tmpbuilds -maxdepth 1 -type f -not -path "/tmp/tmpbuilds" -name "*.gz" 2>/dev/null | while read x
 do
-	cat $x | sed 's|<i>\d+</i>|<i>2015328</i>|' > /tmp/version.html
-	mv /tmp/version.html $x
-	git commit -m"versioned per build" $x
-done
-git git push gerrit:MATS_for_EMB origin:master
+	appname=`basename $x | cut -f1 -d"."`
+	if [ -d "$x" ]; then
+		mv $appname $appname"-previous"
+	fi
+	mkdir $appname
+	cd $apname
+	tar -xzf $x
+	cd bundle
+	(cd programs/server && npm install)
+	cd ../..
+done	
+echo rm -rf /tmp/tmpbuilds
 
-cd apps
-find . -maxdepth 1 -type d -not -path "." | while read x
-do
-	cd $x
-	julian=`date +%Y%j`
-	echo "setting version"
-	echo ""
-	echo "building app $x"
-	meteor reset
-	meteor build
-done
-
+date
+echo "$0 ----------------- finished" 
