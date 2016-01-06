@@ -48,6 +48,9 @@ Template.administration.helpers({
     },
     showResetNow: function() {
         var settings = Settings.findOne({});
+        if (document.getElementById("ResetFromCode") == null) {
+            return "none";
+        }
         var resetEnabled =  settings === undefined ? false : document.getElementById("ResetFromCode").checked;
         var roles = Session.get('roles');
         if (roles !== undefined && (roles.indexOf('administrator') > -1) && resetEnabled) {
