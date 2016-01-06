@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # 
-logname=`echo deploy_meteorsrv-dev.sh.log | cut -f1 -d"."`.log
+logname=`echo $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
