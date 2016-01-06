@@ -15,9 +15,13 @@ Template.settings.helpers({
         var settings = Settings.findOne({});
         return settings === undefined ? "" : settings.NullFillString;
     },
-    ResetFromCode: function(){
+    ResetFromCodeChecked: function(){
         var settings = Settings.findOne({});
-        return settings === undefined ? "" : settings.resetFromCode;
+        if (settings && settings.resetFromCode == true) {
+            return "checked";
+        } else {
+            return "";
+        }
     }
 });
 Template.settings.events({
@@ -39,12 +43,12 @@ Template.settings.events({
                 setError(error.message);
             }
         });
-        // reset modal
-        document.getElementById("LabelPrefix").value = "";
-        document.getElementById("Title").value = "";
-        document.getElementById("LineWidth").value = "";
-        document.getElementById("NullFillString").value = "";
-        document.getElementById("ResetFromCode").value = "";
+        //// reset modal
+        //document.getElementById("LabelPrefix").value = "";
+        //document.getElementById("Title").value = "";
+        //document.getElementById("LineWidth").value = "";
+        //document.getElementById("NullFillString").value = "";
+        //document.getElementById("ResetFromCode").checked = false;
         $("#settingsModal").modal('hide');
         return false;
     },
@@ -54,7 +58,7 @@ Template.settings.events({
         document.getElementById("Title").value = "";
         document.getElementById("LineWidth").value = "";
         document.getElementById("NullFillString").value = "";
-        document.getElementById("ResetFromCode").value = "";
+        document.getElementById("ResetFromCode").checked = false;
     }
 });
 
