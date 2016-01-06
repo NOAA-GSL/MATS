@@ -45,6 +45,19 @@ Template.administration.helpers({
         } else {
             return "none"
         }
+    },
+    showResetNow: function() {
+        var settings = Settings.findOne({});
+        if (document.getElementById("ResetFromCode") == null) {
+            return "none";
+        }
+        var resetEnabled =  settings === undefined ? false : document.getElementById("ResetFromCode").checked;
+        var roles = Session.get('roles');
+        if (roles !== undefined && (roles.indexOf('administrator') > -1) && resetEnabled) {
+            return  "block";
+        } else {
+            return "none"
+        }
     }
 
 });
@@ -102,5 +115,17 @@ Template.administration.events({
             adminDiv.style.display = "none";
             userDiv.style.display = "none";
         }
+    },
+    'click .resetNow': function() {
+        $("#resetModal").modal('show');
+        document.getElementById("ResetFromCode").checked = false;
+
+        var settings = Settings.findOne({});
+        settings.resetFromCode = false;
+        Meteor.call('setSettings', settings, function (error) {
+            if (error) {
+                setError(error.message);
+            }
+        });
     }
 });
