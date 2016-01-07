@@ -301,7 +301,8 @@ settings = function () {
             Title: "Surface",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: false
+            //resetFromCode: false
+            resetFromCode: true
         });
     }
 };
@@ -434,7 +435,8 @@ Meteor.startup(function () {
 
     try {
         //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model";
+       // var statement = "select model,regions,model_value,regions_name from regions_per_model";
+        var statement = "select model,regions,model_value from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -446,9 +448,10 @@ Meteor.startup(function () {
                 Models.remove({});
                 RegionsPerModel.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var name = rows[i].model.trim();
+                    //var name = rows[i].model.trim();
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
+                    //var regions = rows[i].regions_name;
                     var model_value = rows[i].model_value.trim();
                     //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
                     var regionMapping = "metar_v2";
@@ -500,7 +503,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "select id,description,short_name,table_name from region_descriptions;";
+        var statement = "select regionMapTable,description from region_descriptions_mats;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -511,17 +514,20 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
-                    var description = rows[i].description;
-                    var shortName = rows[i].short_name;
-                    var appTableName = rows[i].table_name;
-                    var valueList = [];
-                    valueList.push(appTableName);
 
+                    var description = rows[i].description;
+
+                    //var appTableName = rows[i].table_name;
+                    var regionMapTable = rows[i].regionMapTable
+                    var valueList = [];
+                    //valueList.push(appTableName);
+                     valueList.push(regionMapTable);
 
                regionOptionsMap[description] = valueList;
 
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
+                    RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
+
+                    console.log('regionOptionMap des= ' +description+ "value= "+ valueList);
                 }
             }
             qFuture['return']();

@@ -8,7 +8,8 @@ Template.select.helpers({
         }
         var modelName = models[0].name;
         if (p.name === 'region') {
-            var regionDescription  = RegionDescriptions.findOne({regionNumber:Number(0)});
+            //var regionDescription  = RegionDescriptions.findOne({regionMapTable:"0"});
+            var regionDescription  = RegionDescriptions.find({}).fetch()[0];
             var description = regionDescription.description;
             this.default = description;
             this.value = description;
@@ -34,12 +35,16 @@ Template.select.helpers({
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
             var regionMapping = models[0].regionMapping;
-            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions.sort(function(a, b){return Number(a)-Number(b)});
+
+            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
             for (var ri=0; ri< regionIds.length; ri++){
                 var rid= regionIds[ri];
-                var regionDescription  = RegionDescriptions.findOne({regionNumber:Number(rid)});
-                var description = regionDescription != null? regionDescription.description:"";
-                rOpts.push(description);
+
+
+                var regionDescription  = RegionDescriptions.findOne({regionMapTable:rid});
+               var description = regionDescription != null? regionDescription.description:"";
+
+                    rOpts.push(description);
 
             }
             if (this.default === undefined || this.default === "") {
@@ -49,7 +54,7 @@ Template.select.helpers({
             return rOpts;
         } else if (this.name === 'forecast length') {
             var rOpts = [];
-            //var models = Models.find({},{sort: ["name","asc"]}, {name: 1}).fetch();
+
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
             var modelLength = FcstLensPerModel.findOne({model: modelName});
@@ -78,17 +83,18 @@ Template.select.events({
         var model = Models.findOne({name: modelName}, {name: 1});
         var regionMapping = model.regionMapping;
         var opts = [];
-        var regionIds = RegionsPerModel.findOne({model: modelName}, {regions: 1}).regions.sort(function (a, b) {
-            return (Number(a) - Number(b));
-        });
+
+
+        var regionIds = RegionsPerModel.findOne({model: modelName}, {regions: 1}).regions;
         for (var ri=0; ri< regionIds.length; ri++){
             var rid= regionIds[ri];
-            var regionDescription = RegionDescriptions.findOne({regionNumber: Number(rid)}, {
-                shortName: 1,
+
+           var regionDescription = RegionDescriptions.findOne({regionMapTable: rid}, {
+
                 description: 1
             });
             var description = regionDescription != null?regionDescription.description:"";
-
+            //var description = rid;
 
             opts.push(description);
         }

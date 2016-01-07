@@ -23,11 +23,20 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             var curveStat =[];
             var N0_max=0;
 
+//            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
+            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
+                if (rowIndex < rows.length-1) {
+                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
+                    if (time_diff < time_interval){
+                        time_interval = time_diff;
+                    }
+                }
+
 
                 if(N0_loop> N0) N0_max=N0_loop;
                 if(N_times_loop> N_times) N_times_max=N_times_loop;
@@ -37,6 +46,10 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
+
+            interval = time_interval *1000;
+            console.log("curvetime=" + curveTime);
+            console.log("interval=" + interval);
 
             if (averageStr != "None") {
                 xmin = Number(rows[0].avtime)*1000;
@@ -181,20 +194,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var xmin;
         var ymin;
         var interval;
-        if (averageStr == "None") {
-            if (model.search('FIM')>=0){
-                interval = 12 * 3600*1000;
-            }
-            else if (model.search('GFS')>=0){
-                interval = 6 * 3600*1000;
-            }
-            else if (model.search('RR')>=0){
-                interval = 1 * 3600*1000;
-            }
-        } else{
-            var daycount = averageStr.replace("D","");
-            interval = daycount*24*3600*1000;
-        }
+
         var d = [];
         if (diffFrom == null) {
                 // this is a database driven curve, not a difference curve
