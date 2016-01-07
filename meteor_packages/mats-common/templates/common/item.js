@@ -19,10 +19,10 @@ Template.item.helpers({
         if (this.name === 'region') {
             var modelName = models[0].name;
             var regionMapping = models[0].regionMapping;
-            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions.sort(function(a, b){return Number(a)-Number(b)});
+            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
             var rid = regionIds[0];
-            var regionDescription  = RegionDescriptions.findOne({regionNumber:Number(0)},{shortName:1,description:1});
-            var shortName = regionDescription.shortName;
+            //var regionDescription  = RegionDescriptions.findOne({regionMapTable:"0"},{description:1});
+            var regionDescription  = RegionDescriptions.find({},{description:1}).fetch()[0];
             var description = regionDescription.description;
             def = description;
             return def;

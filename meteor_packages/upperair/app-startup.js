@@ -507,6 +507,7 @@ Meteor.startup(function () {
     });
 
     try {
+
         var statement = "select model,regions from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -578,7 +579,8 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "select id,description,short_name from region_descriptions_mats;";
+
+        var statement = "select regionMapTable,description from region_descriptions_mats_new;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -589,14 +591,16 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
+
+                    var regionMapTable = (rows[i].regionMapTable);
                     var description = rows[i].description;
-                    var shortName = rows[i].short_name;
+
                     var valueList = [];
-                    valueList.push(regionNumber);
+
+                    valueList.push(regionMapTable);
                regionOptionsMap[description] = valueList;
 
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description});
+                    RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
                 }
             }
             qFuture['return']();
