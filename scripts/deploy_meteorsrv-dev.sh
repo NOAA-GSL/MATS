@@ -30,6 +30,9 @@ do
 	appname=`basename $x | cut -f1 -d"."`
 	echo "appname $appname"
 	if [ -d "$appname" ]; then
+		if [ -d "$appname"-previous ]; then
+			rm -rf "$appname"-previous
+		fi
 		mv $appname "$appname"-previous
 	fi
 	mkdir $appname
@@ -37,6 +40,7 @@ do
 	tar -xzf $x
 	cd bundle
 	(cd programs/server && npm install)
+	tar czf /builds/deployments/"$appname"-dply.tar.gz .
 	cd ../..
 done	
 echo rm -rf /tmp/tmpbuilds
