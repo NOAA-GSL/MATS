@@ -14,9 +14,10 @@ echo "$0 ----------- started"
 date
  
 #git the builds top version
-git clone --depth 1 /builds /tmp/tmpbuilds
+rm -rf /tmp/tmpbuilds/*
+cp /builds/*.tar.gz /tmp/tmpbuilds
 if [[ ! -d "/tmp/tmpbuilds" ]]; then
-	echo "failed to git clone --depth 1 /builds /tmp/tmpbuilds"
+	echo "failed to  copy /builds to /tmp/tmpbuilds"
 	echo exiting
 	exit 1
 fi
@@ -25,12 +26,14 @@ fi
 cd /web
 find /tmp/tmpbuilds -maxdepth 1 -type f -not -path "/tmp/tmpbuilds" -name "*.gz" 2>/dev/null | while read x
 do
+	echo "processing $x"
 	appname=`basename $x | cut -f1 -d"."`
-	if [ -d "$x" ]; then
-		mv $appname $appname"-previous"
+	echo "appname $appname"
+	if [ -d "$appname" ]; then
+		mv $appname "$appname"-previous
 	fi
 	mkdir $appname
-	cd $apname
+	cd $appname
 	tar -xzf $x
 	cd bundle
 	(cd programs/server && npm install)
