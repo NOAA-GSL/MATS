@@ -293,6 +293,11 @@ savedCurveParams = function () {
 
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -301,8 +306,7 @@ settings = function () {
             Title: "Surface",
             LineWidth: 3.5,
             NullFillString: "---",
-            //resetFromCode: false
-            resetFromCode: true
+            resetFromCode: resetFromCode
         });
     }
 };
@@ -434,8 +438,7 @@ Meteor.startup(function () {
     });
 
     try {
-        //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-       // var statement = "select model,regions,model_value,regions_name from regions_per_model";
+
         var statement = "select model,regions,model_value from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -448,12 +451,9 @@ Meteor.startup(function () {
                 Models.remove({});
                 RegionsPerModel.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    //var name = rows[i].model.trim();
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
-                    //var regions = rows[i].regions_name;
                     var model_value = rows[i].model_value.trim();
-                    //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
                     var regionMapping = "metar_v2";
                     var valueMapping ;
                     var valueList = [];
@@ -514,16 +514,12 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-
                     var description = rows[i].description;
-
-                    //var appTableName = rows[i].table_name;
                     var regionMapTable = rows[i].regionMapTable
                     var valueList = [];
-                    //valueList.push(appTableName);
                      valueList.push(regionMapTable);
 
-               regionOptionsMap[description] = valueList;
+                     regionOptionsMap[description] = valueList;
 
                     RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
 

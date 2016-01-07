@@ -340,7 +340,7 @@ curveTextPatterns = function () {
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates-dateRange-from','-->'],
+                ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]
         });
@@ -358,6 +358,11 @@ savedCurveParams = function () {
 
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            var resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -366,8 +371,7 @@ settings = function () {
             Title: "Upper Air",
             LineWidth: 3.5,
             NullFillString: "---",
-          //  resetFromCode: false
-            resetFromCode: true
+            resetFromCode: resetFromCode
         });
     }
 };
@@ -518,15 +522,12 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
-                    //var model_value = rows[i].model_value.trim();
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
                     }
 
                     var valueList = [];
-                    //valueList.push(model_value);
-                    //modelOptionsMap[model] = valueList;
                     valueList.push(model);
                     modelOptionsMap[model] = valueList;
 
@@ -536,7 +537,6 @@ Meteor.startup(function () {
                     console.log('model=' +model+" valuelist="+valueList);
                     console.log('modelOptionsMap=' + modelOptionsMap);
                     myModels.push(model);
-                    //Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
                     Models.insert({name: model, regionMapping: regionMapping});
                     RegionsPerModel.insert({model: model, regions: regions.split(',')});
                 }

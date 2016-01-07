@@ -1,7 +1,7 @@
 <template name="dateRange">
     {{!bootstrap datepicker http://bootstrap-datepicker.readthedocs.org/en/latest/markup.html}}
     <div class="input-daterange btn-group" name="{{name}}" id="{{name}}" data-provide="datepicker">
-        <input  class="btn btn-primary" type="button" name="{{name}}" id="{{name}}-{{type}}-from" value="{{startInitial}}"/>
-        <input class="btn btn-primary" type="button" name="{{name}}" id="{{name}}-{{type}}-to" value="{{stopInitial}}"/>
+        <input  class="btn btn-primary from" type="button" name="{{name}}" id="{{name}}-{{type}}-from" value="{{startInitial}}"/>
+        <input class="btn btn-primary to" type="button" name="{{name}}" id="{{name}}-{{type}}-to" value="{{stopInitial}}"/>
     </div>
 </template>

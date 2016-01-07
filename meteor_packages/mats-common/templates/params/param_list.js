@@ -114,7 +114,7 @@ Template.paramList.events({
 
 });
 
-Template.paramList.rendered = function(){
-  Session.set('displayPriority', 1);
-  Session.set('editMode', '');
-};
+Template.paramList.onRendered(function(){
+    Session.set('displayPriority', 1);
+    Session.set('editMode', '');
+});

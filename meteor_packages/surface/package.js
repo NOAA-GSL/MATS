@@ -22,6 +22,16 @@ Package.onUse(function(api) {
   api.addFiles('version.html', "client");
   api.export("dataSeriesZoom", ['client', 'server']);
   api.export("dataProfileZoom", ['client', 'server']);
+  api.export("roles", "server");
+  api.export("authorization", "server");
+  api.export("credentials", "server");
+  api.export("plotGraph", "server");
+  api.export("colorScheme", "server");
+  api.export("settings", "server");
+  api.export("curveParams", "server");
+  api.export("savedCurveParams", "server");
+  api.export("plotParams", "server");
+  api.export("curveTextPatterns", "server");
 });
 
 Package.onTest(function(api) {

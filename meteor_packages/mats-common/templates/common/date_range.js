@@ -14,17 +14,19 @@ var stopInit = function() {
     return month + '/' + day + "/" + yr;
 };
 
-Template.dateRange.rendered = function () {
-    try {
-        if (document.getElementById('plot-type-TimeSeries').checked === true) {
-            document.getElementById('curve-dates-item').style.display = "none";
-            document.getElementById('dates-item').style.display = "block";
-        } else {
-            document.getElementById('curve-dates-item').style.display = "block";
-            document.getElementById('dates-item').style.display = "none";
-        }
-    } catch (Exception) {}
-};
+Template.dateRange.onRendered(function() {
+    // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
+    // in that event we test for undefined and block the curve-dates-item anyway
+    if (document.getElementById('plot-type-TimeSeries') == undefined || document.getElementById('plot-type-TimeSeries').checked === true) {
+        document.getElementById('curve-dates-item').style.display = "none";
+        document.getElementById('dates-item').style.display = "block";
+    } else {
+        document.getElementById('curve-dates-item').style.display = "block";
+        document.getElementById('dates-item').style.display = "none";
+    }
+    $('#' + this.name + "-" + InputTypes.dateRange + "-from input").datepicker({});
+    $('#' + this.name + "-" + InputTypes.dateRange + "-to input").datepicker({});
+});
 
 Template.dateRange.helpers({
     value: function() {
@@ -38,3 +40,11 @@ Template.dateRange.helpers({
     }
 });
 
+Template.dateRange.events({
+    'click .from' : function (event) {
+        $('#' + this.name + "-" + InputTypes.dateRange + "-from").datepicker('show');
+    },
+    'click .to' : function (event) {
+        $('#' + this.name + "-" + InputTypes.dateRange + "-to").datepicker('show');
+    }
+});
