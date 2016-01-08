@@ -225,6 +225,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
+            interval=queryResult.interval;
             if (d[0] === undefined) {
                 error = "No data returned";
             } else {}
