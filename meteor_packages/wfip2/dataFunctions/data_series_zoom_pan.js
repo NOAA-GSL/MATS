@@ -78,6 +78,86 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
     };
 };
 
+
+var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+
+    // modelPool.query(statement, function (err, rows) {
+    wfip2Pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = 'No data to plot: ' + err;
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveTime = [];
+            var curveStat = [];
+            var N0_max = 0;
+
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var avSeconds = Number(rows[rowIndex].avtime);
+                var stat = rows[rowIndex].stat;
+                var N0_loop = rows[rowIndex].N0;
+                var N_times_loop = rows[rowIndex].N_times;
+
+                if (N0_loop > N0) N0_max = N0_loop;
+                if (N_times_loop > N_times) N_times_max = N_times_loop;
+
+                curveTime.push(avSeconds * 1000);
+                curveStat.push(stat);
+                N0.push(N0_loop);
+                N_times.push(N_times_loop);
+            }
+
+            if (averageStr != "None") {
+                xmin = Number(rows[0].avtime) * 1000;
+            }
+            var loopTime = xmin;
+
+            while (loopTime < xmax + 1) {
+
+                if (curveTime.indexOf(loopTime) < 0) {
+                    d.push([loopTime, null]);
+                } else {
+                    var d_idx = curveTime.indexOf(loopTime);
+                    var this_N0 = N0[d_idx];
+                    var this_N_times = N_times[d_idx];
+                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                        d.push([loopTime, null]);
+
+                    } else {
+                        d.push([loopTime, curveStat[d_idx]]);
+                    }
+                }
+                loopTime = loopTime + interval;
+            }
+            // done waiting - have results
+            dFuture['return']();
+        }
+    });
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        ymin: ymin,
+        ymax: ymax,
+        N0: N0,
+        N_times: N_times,
+        averageStr: averageStr,
+        interval: interval
+    };
+};
+
 dataSeriesZoom = function (plotParams, plotFunction) {
     var dateConvert = function (dStr) {
         if (dStr === undefined || dStr === " ") {
@@ -122,6 +202,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+        var tableRegion = CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
@@ -190,7 +271,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ";";
 
             // build the query
-            statement = statement.replace('{{model}}', model + '_Areg' + region);
+            //statement = statement.replace('{{model}}', model + '_Areg' + region);
+            statement = statement.replace('{{model}}', model + '_'+tableRegion + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);
@@ -199,6 +281,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{average}}', average);
+
+
             console.log("query=" + statement);
             var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
             d = queryResult.data;
