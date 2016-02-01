@@ -29,7 +29,8 @@ InputTypes = {
     checkBoxGroup:'checkBoxGroup',
     resetButton:'resetButton',
     controlButton:'controlButton',
-    element:'element'
+    element:'element',
+    custom:'custom'
 };
 
 getCurves = function() {

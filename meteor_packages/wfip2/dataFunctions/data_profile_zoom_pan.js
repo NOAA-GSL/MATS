@@ -30,6 +30,39 @@ var queryDB = function (statement, validTimeStr, statisticSelect, label) {
     return d;   // [sub_values,sub_secs] as arrays
 };
 
+var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    wfip2Pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err != undefined) {
+                error = err.message;
+                dFuture['return']();
+            } else if (rows === undefined || rows.length === 0) {
+                error = 'No data to plot: ' + err;
+                // done waiting - error condition
+                dFuture['return']();
+            } else {
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var avVal = Number(rows[rowIndex].z);
+                    var stat = rows[rowIndex].ws;
+                    var sub_values = rows[rowIndex].z.toString().split(',').map(Number);
+                    var sub_secs = rows[rowIndex].ws.toString().split(',').map(Number);
+                    console.log(sub_values);
+                    console.log(sub_secs);
+                    d.push([stat,avVal,-1,sub_values,sub_secs]); // -1 is a placeholder for the stde_betsy value
+                }// end of loop row
+            }
+            // done waiting - have results
+            dFuture['return']();
+        }
+    );
+    // wait for future to finish
+    dFuture.wait();
+    return d;   // [sub_values,sub_secs] as arrays
+};
+
 var get_err = function (sub_val_array, sub_secs_array) {
     var n = sub_val_array.length;
     var n_good =0;
@@ -209,8 +242,11 @@ dataProfileZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
+
+            statement ="select z,ws from profiler_recs_915 where profiler_recid=21;"
+
             console.log("query=" + statement);
-            d = queryDB(statement, validTimeStr, statisticSelect, label);
+            d = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
         } else {
             // this is a difference curve
             var minuendIndex = diffFrom[0];

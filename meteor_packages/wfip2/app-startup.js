@@ -1,5 +1,6 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
+var modelTableMap ={};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -87,8 +88,9 @@ curveParams = function () {
                 name: 'model',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
+                tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model",
+                optionsQuery:"select model from regions_per_model_mats",
                 controlButtonCovered: true,
                 default: 'FIM',
                 unique: false,
@@ -97,6 +99,8 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
+
+
         CurveParams.insert(
             {
                 name: 'region',
@@ -105,12 +109,108 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: ' ',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
+
+        optionsMap = {All:['All'], sodar:['sodar'], lidar:['lidar']};
+        CurveParams.insert(
+            {
+                name: 'instrument',
+                type: InputTypes.select,
+                optionsMap: optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: 'All',
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        optionsMap = {BO2OR:['Boardman Airport'], CD2OR:['Condon State Airport']};
+      //  optionsMap = {'Boardman Airport':[BO2OR], CD2OR:['Condon State Airport']};
+        CurveParams.insert(
+            {
+                name: 'sites',
+                type: InputTypes.select,
+                optionsMap:optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: 'BO2OR',
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        CurveParams.insert(
+            {
+                name: 'map',
+                type: InputTypes.custom,
+                functionName: 'siteMap',
+                //optionsMap:optionsMap,
+                //options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: 'site map',
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        CurveParams.insert(
+            {
+                name: 'descriptors',
+                type: InputTypes.select,
+               // optionsMap:optionsMap,
+               // options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: '',
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+
+        CurveParams.insert(
+            {
+                name: 'upper',
+                type: InputTypes.select,
+                //optionsMap:optionsMap,
+                //options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: '',
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+        CurveParams.insert(
+            {
+                name: 'lower',
+                type: InputTypes.select,
+                //optionsMap:optionsMap,
+                //options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: '',
+                controlButtonVisibility: 'block',
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+
 
         optionsMap = {
             'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
@@ -144,9 +244,9 @@ curveParams = function () {
                 unique: false,
                 default: 'RMS',
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 4
             });
 
             optionsMap = {
@@ -156,7 +256,7 @@ curveParams = function () {
                 winds: ['dw', 'ws'],
                 height: ['dH', 'H']
             };
-
+        optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
         CurveParams.insert(
             {
                 name: 'variable',
@@ -165,28 +265,14 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'temperature',
+                default: 'wind_speed',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 4
             });
 
-        optionsMap = {All:['All'], Clear:['Clear'], Cloudy:['Cloudy']};
-        CurveParams.insert(
-            {
-                name: 'cloud coverage',
-                type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                default: 'All',
-                controlButtonVisibility: 'block',
-                displayOrder: 6,
-                displayPriority: 1,
-                displayGroup: 2
-            });
+
 
         optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
         CurveParams.insert(
@@ -202,7 +288,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
 
         optionsMap = {
@@ -228,7 +314,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 8,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
 
         optionsMap = {};
@@ -245,7 +331,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
         CurveParams.insert(
             {
@@ -262,7 +348,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 6
             });
         CurveParams.insert(
             {
@@ -279,7 +365,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 6
         });
         optionsMap = {'1 day':['1 day'], '3 days':['3 days'], '7 days':['7 days'],'31 days':['31 days'], '90 days':['90 days'],'180 days':['180 days'],'365 days':['365 days']};
         CurveParams.insert(
@@ -338,7 +424,7 @@ curveTextPatterns = function () {
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates-dateRange-from','-->'],
+                ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]
         });
@@ -356,15 +442,21 @@ savedCurveParams = function () {
 
 settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            var resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
-            Title: "Wfip2",
+            Title: "WFIP2",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: false
+           // resetFromCode: resetFromCode
+            resetFromCode: true
         });
     }
 };
@@ -463,9 +555,9 @@ roles = function () {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    //if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
-    }
+    //}
     if (Databases.find().count() == 0) {
         Databases.insert({
             name:"sumSetting",
@@ -478,30 +570,46 @@ Meteor.startup(function () {
             connectionLimit : 10
         });
         Databases.insert({
-            name:"modelSetting",
-            role: "model_data",
+            name:"wfip2Setting",
+            role: "wfip2_data",
             status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
-            database    : 'ruc_ua',
+            host        : 'wfip2-db.gsd.esrl.noaa.gov',
+            user        : 'dev',
+            password    : 'Pass4userdev*',
+            database    : 'WFIP2_jeff',
             connectionLimit : 10
+
+        });
+
+        Databases.insert({
+                  name:"modelSetting",
+                  role: "model_data",
+                  status: "active",
+                  host        : 'wolphin.fsl.noaa.gov',
+                  user        : 'writer',
+                  password    : 'amt1234',
+                  database    : 'wfip',
+                  connectionLimit : 10
+
         });
     }
     var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+    var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
     var myModels = [];
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
+    wfip2Pool = mysql.createPool(wfip2Settings);
+
 
     modelPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
     try {
-        //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model_mats";
+
+        var statement = "select model,regions from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -515,13 +623,22 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
-                    var model_value = rows[i].model_value.trim();
                     var regionMapping = "Areg";
+                    if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
+                        regionMapping = "reg";
+                    }
+
                     var valueList = [];
-                    valueList.push(model_value);
+                    valueList.push(model);
                     modelOptionsMap[model] = valueList;
+
+                    var tablevalueList = [];
+                    tablevalueList.push(regionMapping);
+                    modelTableMap[model] = tablevalueList;
+                    console.log('model=' +model+" valuelist="+valueList);
+                    console.log('modelOptionsMap=' + modelOptionsMap);
                     myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
+                    Models.insert({name: model, regionMapping: regionMapping});
                     RegionsPerModel.insert({model: model, regions: regions.split(',')});
                 }
             }
@@ -563,7 +680,8 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "select id,description,short_name,table_name from region_descriptions_mats;";
+
+        var statement = "select regionMapTable,description from region_descriptions_mats;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -574,15 +692,16 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
+
+                    var regionMapTable = (rows[i].regionMapTable);
                     var description = rows[i].description;
-                    var shortName = rows[i].short_name;
-                    var appTableName = rows[i].table_name;
+
                     var valueList = [];
-                    valueList.push(regionNumber);
+
+                    valueList.push(regionMapTable);
                regionOptionsMap[description] = valueList;
 
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
+                    RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
                 }
             }
             qFuture['return']();
