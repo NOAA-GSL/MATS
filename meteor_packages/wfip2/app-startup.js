@@ -92,7 +92,7 @@ curveParams = function () {
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
                 controlButtonCovered: true,
-                default: 'FIM',
+                default: 'hrrr_esrl',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -110,13 +110,18 @@ curveParams = function () {
                 controlButtonCovered: true,
                 unique: false,
                 default: ' ',
+                //default: 'wfip2 ',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
 
-        optionsMap = {All:['All'], sodar:['sodar'], lidar:['lidar']};
+
+
+
+
+        optionsMap = {All:['All'], sodar:['sodar_recs','4'], profiler_915:['profiler_recs_915','1']};
         CurveParams.insert(
             {
                 name: 'instrument',
