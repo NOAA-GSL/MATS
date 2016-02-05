@@ -24,22 +24,14 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
 
     <script type='text/javascript'> //<![CDATA[
-    function MyCtrl($scope, $http) {
-        var m = {};
+    function TCtrl($scope, $http) {
+        //var m = {};
         $scope.items = [];
-        $http({method: "GET", url: "applist.html"}).
+        $http({method: "GET", url: "applist.json"}).
         // success callback
 
         success(function (data) {
-            var lines = data.trim().split("\n");
-            for (var i in lines) {
-                var app = lines[i].trim();
-                if (app != "") {
-                    var appName = app.charAt(0).toUpperCase() + app.slice(1);
-                    m[appName] = app;
-                }
-            }
-            $scope.items = m;
+            $scope.items = data;
         }).
         // error callback
         error(function (data, status, headers, config) {
@@ -51,7 +43,7 @@
 
 </head>
 <body style="background-image: url('img/bg.png')">
-<div ng-app ng-controller="MyCtrl">
+<div ng-app ng-controller="TCtrl">
     <div id='main' class="main container-fluid">
         <div id="navbar" style="display:block;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
             <nav id="topnav" class="navbar navbar-default"
@@ -130,10 +122,10 @@
                     <li><a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/emb/">Earth Modeling
                         Branch(EMB)</a></li>
                     <li><p class="navbar-text" style="font-size:large;font-weight: bold">Applications ...</p></li>
-                    <li ng-repeat="(aName,a) in items"><a class="btn btn-primary"
+
+    	              <li ng-repeat="item in items"><a class="btn btn-primary"
                                                           style="font-size:large;font-weight: bold"
-                                                          href="/{{a}}">{{aName}}</a></li>
-                    <!-- <li><a class="btn btn-primary" style="font-size:large;font-weight: bold" href="/surface">Surface Hourly</a></li> -->
+                                                          href="/{{item.app}}">{{item.displayName}}</a></li>
                 </ul>
             </div>
         </div>
