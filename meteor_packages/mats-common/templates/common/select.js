@@ -8,14 +8,10 @@ Template.select.helpers({
         }
         var modelName = models[0].name;
         if (p.name === 'region') {
-            //var regionDescription  = RegionDescriptions.findOne({regionMapTable:"0"});
             var regionDescription  = RegionDescriptions.find({}).fetch()[0];
             var description = regionDescription.description;
             this.default = description;
             this.value = description;
-        } else if (p.name === 'forecast length') {
-            var lengths = FcstLensPerModel.findOne({model: modelName}).forecastLengths;
-            def = lengths[0];
         }
         if (def == this) {
             return "selected";   // the selected option
@@ -94,7 +90,7 @@ Template.select.events({
                 description: 1
             });
             var description = regionDescription != null?regionDescription.description:"";
-            //var description = rid;
+
 
             opts.push(description);
         }
@@ -117,7 +113,7 @@ Template.select.events({
         document.getElementById('region-select').getElementsByTagName('option')[selected].selected = 'selected';
         // set the default for the value button
         var regionValueElem = document.getElementById('controlButton-region-value');
-        regionValueElem.textContent = opts[0].split(' (')[0];
+        regionValueElem.textContent = opts[selected].split(' (')[0];
 
         // do the forecastLength selector
         opts = FcstLensPerModel.findOne({model: modelName}, {forecastLengths: 1}).forecastLengths.sort(function (a, b) {
@@ -139,6 +135,7 @@ Template.select.events({
         document.getElementById('forecast length-select').getElementsByTagName('option')[selected].selected = 'selected';
         // set the default for the value button
         var fclValueElem = document.getElementById('controlButton-forecast length-value');
-        fclValueElem.textContent = opts[0];
+        fclValueElem.textContent = opts[selected];
+
     }
 });
