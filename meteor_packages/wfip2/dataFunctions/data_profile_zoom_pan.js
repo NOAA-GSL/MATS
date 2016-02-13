@@ -45,14 +45,27 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 dFuture['return']();
             } else {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var avVal = Number(rows[rowIndex].z);
-                    var stat = rows[rowIndex].ws;
-                    var sub_values = rows[rowIndex].z.toString().split(',').map(Number);
-                    var sub_secs = rows[rowIndex].ws.toString().split(',').map(Number);
-                    console.log(sub_values);
-                    console.log(sub_secs);
-                    d.push([stat,avVal,-1,sub_values,sub_secs]); // -1 is a placeholder for the stde_betsy value
-                }// end of loop row
+                    //var avVal = Number(rows[rowIndex].z);
+                    var z = (rows[rowIndex].z);
+                    var avVal = z.substring(1,z.length-1)
+                    //console.log("xue="+avVal.substring(1,avVal.length-1));
+                    //console.log("z="+avVal);
+                    var ws = rows[rowIndex].ws;
+                    var stat = ws.substring(1,ws.length-1)
+                    //var sub_values = z.split(',').map(Number);
+                    var sub_values = avVal.split(',');
+                    var sub_ws = stat.split(',').map(Number);
+                    //var sub_secs = rows[rowIndex].ws.toString().split(',').map(Number);
+                   // console.log("z="+avVal);
+                    //console.log("sub_values="+sub_values);
+                    //console.log("sub_ws="+sub_ws);
+                    //console.log("sub_values length="+sub_values.length);
+                    //console.log(sub_secs);
+                    for (var ia=0;ia<sub_values.length;ia++){
+                      //  console.log("xue stat[ia]="+ia+ " " +sub_ws[ia]+" avVal[ia]="+sub_values[ia]);
+                        d.push([sub_ws[ia], sub_values[ia], -1, sub_values, sub_ws]); // -1 is a placeholder for the stde_betsy value
+                    }
+                    }// end of loop row
             }
             // done waiting - have results
             dFuture['return']();
@@ -60,6 +73,7 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
     );
     // wait for future to finish
     dFuture.wait();
+    console.log("xue d="+d);
     return d;   // [sub_values,sub_secs] as arrays
 };
 
@@ -181,8 +195,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
         //var model = curve['model'];
         //var region = curve['region'].replace(/^.*mapped to: /, "").replace(')', ''); // have to use the mapped value....
 
+        console.log ("Curvemodel " +  curve['model']);
+        console.log ("Curveregion " +  curve['region']);
+
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+
+        var obsTable = CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][0];
+        console.log ("obsTable= " +  obsTable);
+        var instruments_instrid= CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][1];
 
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
         var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
@@ -243,9 +264,18 @@ dataProfileZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
 
-            statement ="select z,ws from profiler_recs_915 where profiler_recid=21;"
+           // statement ="select z,ws from "+ obsTable+" where profiler_recid=105;"
+// obs
+       /*     statement ="select z,ws from  obs_recs as o,"+ obsTable+
+                " where valid_utc=1454526000 " +
+                " and obs_recs_obsrecid = o.obsrecid" +
+                    "  and instruments_instrid=" +instruments_instrid+" limit 1"*/
+
+
+            statement="select z,ws  from hrrr_esrl where valid_utcs=1454526000 and nwp_recs_nwprecid=89522;"
 
             console.log("query=" + statement);
+
             d = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
         } else {
             // this is a difference curve
@@ -362,6 +392,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
     // calculate stats for each dataset matching to subsec_intersection if matching is specified
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         data = dataset[curveIndex].data;
+        console.log("this data: " + data);
         for (di = 0; di < data.length; di++) { // every pressure level
             sub_secs = data[di][4];
             var subValues = data[di][3];
@@ -381,11 +412,11 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 data[di][3] = newSubValues;
                 data[di][4] = subSecIntersection;
             }
-            errorResult = get_err(data[di][3], data[di][4]);
+            //errorResult = get_err(data[di][3], data[di][4]);
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
             //data[di] = [errorResult.d_mean, errorResult.stde_betsy, errorResult.n_good, errorResult.lag1];
-            data[di][2] = errorResult.stde_betsy;
+           /* data[di][2] = errorResult.stde_betsy;
             data[di][5] = {
                 d_mean: errorResult.d_mean,
                 stde_betsy: errorResult.stde_betsy,
@@ -398,7 +429,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
                 "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
                 "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + errorResult.lag1.toPrecision(4);
+                "<br>  lag1:" + errorResult.lag1.toPrecision(4);*/
         }
     }
 
@@ -411,14 +442,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: 'Pressure (hPa)',
+            axisLabel: 'level above ground in meters',
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            ticks:[[-1000,1000],[-900,900],[-800,800],[-700,700],[-600,600],[-500,500],[-400,400],[-300,300],[-200,200],[-100,100],[0,0]]
+            //ticks:[[-1000,1000],[-900,900],[-800,800],[-700,700],[-600,600],[-500,500],[-400,400],[-300,300],[-200,200],[-100,100],[0,0]]
         };
         var yaxisOptions = {
             zoomRange: [0.1,10]

@@ -1,4 +1,12 @@
 graphSeriesZoom = function(dataset, options) {
+    var meanAnnotation ="";
+    for (var i=0;i<dataset.length-1;i++) {
+        console.log("mean i=" + i);
+
+        meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].mean + " </div>";
+    }
+
+
     var placeholder = $("#placeholder");
 
         // bind to the pan, zoom, and redraw buttons
@@ -37,6 +45,9 @@ graphSeriesZoom = function(dataset, options) {
         $("#refresh-plot").click(function (event) {
             event.preventDefault();
             plot = $.plot(placeholder, dataset, options);
+           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
+            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+
         });
 
         // add show/hide buttons
@@ -57,6 +68,9 @@ graphSeriesZoom = function(dataset, options) {
                 }
             }
             plot = $.plot(placeholder, dataset, options);
+           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
+            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+
         });
 
     // add show/hide points buttons
@@ -75,6 +89,9 @@ graphSeriesZoom = function(dataset, options) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+
     });
     var normalizeYAxis = function (ranges) {
         /*
@@ -95,6 +112,7 @@ graphSeriesZoom = function(dataset, options) {
     var drawGraph = function(ranges) {
         var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
         plot = $.plot(placeholder, dataset, zOptions);
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
     };
 
     // selection zooming
@@ -109,6 +127,8 @@ graphSeriesZoom = function(dataset, options) {
     // we essentially create a range that is the size of the max data, then do what the zoom (plotSelected) would do
     // which causes the normalization of the axes.
     var plot = $.plot(placeholder, dataset, options);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+
     // hide the spinner
     document.getElementById("spinner").style.display="none";
 };

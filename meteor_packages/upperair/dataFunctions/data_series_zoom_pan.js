@@ -264,16 +264,26 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
 
-        var options = {
+        var mean =0 ;
+
+
+        for (var i = 0; i < d.length; i++) {
+            mean =   mean +d[i][1];
+        }
+        mean = mean/d.length;
+        var pOptions = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
+           // mean: "<div style='color:"+ color+"'"+ label + "- mean = " + mean.toPrecision(4)+"</div>",
+            mean:  label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
         };
 
-        dataset.push(options);
+
+        dataset.push(pOptions);
         // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
         // start at the same xaxis point and they may not end at the same xaxis point.
         // We have to make them start and end at the same point (the xmin value and fill missing data with nulls).
@@ -342,11 +352,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         },
         yaxes: yaxes,
         yaxis: yaxis,
-
         legend: {
             show: false,
             container: "#legendContainer",
-            noColumns: 0
+            noColumns: 0,
+            position: 'ne'
         },
         series: {
             lines: {

@@ -1,3 +1,4 @@
+
 var width = function () {
     var w = 0.90 * Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     return w + "px";
@@ -7,6 +8,16 @@ var height = function() {
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.5;
     return h + "px";
 };
+
+//$(window).on('resize orientationChange', function(event) {
+Template.graph.onCreated(function() {
+    $(window).resize(function() {
+        //console.log($(window).height());
+        document.getElementById('placeholder').style.width=width();
+        document.getElementById('placeholder').style.heigth=height();
+    });
+});
+
 
 Template.graph.helpers({
     /**
