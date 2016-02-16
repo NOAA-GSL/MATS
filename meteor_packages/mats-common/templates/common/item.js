@@ -10,35 +10,7 @@ Template.item.helpers({
         }
 
 
-        if (this.name === 'model') {
-            def = models[0].name;
-            this.default = def;
-            this.value = def;
-            return def;
-        }
-        if (this.name === 'region') {
-            var modelName = models[0].name;
-            var regionMapping = models[0].regionMapping;
-            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
-            var rid = regionIds[0];
-            //var regionDescription  = RegionDescriptions.findOne({regionMapTable:"0"},{description:1});
-            var regionDescription  = RegionDescriptions.find({},{description:1}).fetch()[0];
-            var description = regionDescription.description;
-            def = description;
-            return def;
-        }
-        if (this.name === 'forecast length') {
-            var modelName = models[0].name;
-            var modelLengths = FcstLensPerModel.findOne({model: modelName});
-            if (modelLengths === undefined) {
-                return "";
-            }
-            var lengths = modelLengths.forecastLengths;
-            def = lengths[0];
-            this.default = def;
-            this.value = def;
-            return def
-        }
+
         if (this.name === 'dates' || this.name == 'curve-dates') {
             var today = new Date();
             var thenDate = new Date(today.getTime() - 30*24*60*60*1000);
@@ -106,9 +78,7 @@ Template.item.helpers({
         if (this.controlButtonCovered) {
             return "none";
         } else {
-            //var stylestr = "block;&nbsp;&nbsp;&nbsp;";
             return "block";
-            //return stylestr;
         }
     }
 });

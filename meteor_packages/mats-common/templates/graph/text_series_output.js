@@ -66,13 +66,14 @@ Template.textSeriesOutput.helpers({
             if (dataSet[cindex].data[di][1] !== null) data.push(dataSet[cindex].data[di][1]);
         }
 
-        var mean = median(data).toPrecision(4);
+
+        var weimean = mean(data).toPrecision(4);
         var min =  Math.min.apply(Math, data).toPrecision(4);
         var max =  Math.max.apply(Math, data).toPrecision(4);
         var sd = Math.sqrt(variance(data)).toPrecision(4);
         var se = Math.sqrt(variance(data)/(data.length-1)).toPrecision(4);
 
-        return "<td>" + curve.label + "</td>" + "<td>" + mean + "</td>" + "<td>" + min + "</td>" + "<td>" + max + "</td>" + "<td>" + sd + "</td>" + "<td>" + se + "</td>";
+        return "<td>" + curve.label + "</td>" + "<td>" + weimean + "</td>" + "<td>" + min + "</td>" + "<td>" + max + "</td>" + "<td>" + sd + "</td>" + "<td>" + se + "</td>";
     }
 });
 

@@ -92,7 +92,7 @@ curveParams = function () {
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
                 controlButtonCovered: true,
-                default: 'FIM',
+                default: 'RAP',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -107,7 +107,7 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'HRRR domain',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -167,7 +167,7 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'temperature',
+                default: 'winds',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -243,7 +243,7 @@ curveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: '6',
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -363,9 +363,10 @@ settings = function () {
         } else {
             resetFromCode = false;
         }
-        Settings.remove({});
+        //Settings.remove({});
     }
-    if (Settings.find().count() == 0) {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    //if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Upper Air",
@@ -470,6 +471,9 @@ roles = function () {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
+
+
+
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
     }
@@ -534,8 +538,6 @@ Meteor.startup(function () {
                     var tablevalueList = [];
                     tablevalueList.push(regionMapping);
                     modelTableMap[model] = tablevalueList;
-                    console.log('model=' +model+" valuelist="+valueList);
-                    console.log('modelOptionsMap=' + modelOptionsMap);
                     myModels.push(model);
                     Models.insert({name: model, regionMapping: regionMapping});
                     RegionsPerModel.insert({model: model, regions: regions.split(',')});
