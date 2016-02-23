@@ -1,7 +1,6 @@
 #!/bin/sh
 # 
 # Used to remove an existing MATS application.
-# this is the comment
 
 usage="$0 [--help || existing_app_name]"
 
