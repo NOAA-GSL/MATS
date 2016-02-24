@@ -5,7 +5,7 @@ if [[ $USER != "www-data" ]]; then
 		exit 1
 	fi 
 
-logname=`echo $0 | cut -f1 -d"."`.log
+logname=`basename $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
@@ -34,6 +34,8 @@ do
 			rm -rf "$appname"-previous
 		fi
 		mv $appname "$appname"-previous
+		sed 's/$/-previous/ "$appname"-previous/bundle/programs/web.browser/app/title > /tmp/title$$
+		mv /tmp/title$$ "$appname"-previous/bundle/programs/web.browser/app/title
 	fi
 	mkdir $appname
 	cd $appname
