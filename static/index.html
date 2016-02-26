@@ -27,15 +27,22 @@
     function TCtrl($scope, $http) {
         //var m = {};
         $scope.items = [];
+        $scope.previous = [];
         $http({method: "GET", url: "applist.json"}).
         // success callback
-
         success(function (data) {
-            $scope.items = data;
-        }).
+            $scope.items = data.filter(
+		function(val){
+			return (val.app.indexOf("-previous") == -1);
+        	});
+            $scope.previous = data.filter(
+		function(val){
+			return (val.app.indexOf("-previous") > -1);
+       		});
+	}).
         // error callback
         error(function (data, status, headers, config) {
-            alert("Could not read application list: /applist.html \n(should be automatically generated)");
+            alert("Could not read application list: /applist.json \n(should be automatically generated)");
         });
     }
     //]]>
@@ -126,7 +133,14 @@
     	              <li ng-repeat="item in items"><a class="btn btn-primary"
                                                           style="font-size:large;font-weight: bold"
                                                           href="/{{item.app}}">{{item.displayName}}</a></li>
+
+		     <li>
+		        <select onchange="location = this.options[this.selectedIndex].value;" class="form-control">
+			  <option ng-repeat="option in previous" value="{{option.app}}">{{option.displayName}}</option>
+                        </select>
+		     </li>
                 </ul>
+		
             </div>
         </div>
     </div>
