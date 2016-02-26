@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 # 
-logname=`echo $0 | cut -f1 -d"."`.log
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >(tee -i $logname)
 exec 2>&1

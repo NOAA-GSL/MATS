@@ -5,7 +5,8 @@ if [[ $USER != "www-data" ]]; then
 		exit 1
 	fi 
 
-logname=`basename $0 | cut -f1 -d"."`.log
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
@@ -34,7 +35,7 @@ do
 			rm -rf "$appname"-previous
 		fi
 		mv $appname "$appname"-previous
-		sed 's/$/-previous/ "$appname"-previous/bundle/programs/web.browser/app/title > /tmp/title$$
+		sed 's/$/-previous/' "$appname"-previous/bundle/programs/web.browser/app/title > /tmp/title$$
 		mv /tmp/title$$ "$appname"-previous/bundle/programs/web.browser/app/title
 	fi
 	mkdir $appname
@@ -46,6 +47,5 @@ do
 	cd ../..
 done	
 echo rm -rf /tmp/tmpbuilds
-
 date
 echo "$0 ----------------- finished" 

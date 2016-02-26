@@ -2,6 +2,14 @@
 # 
 # Used to remove an existing MATS application.
 
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
+touch $logname
+exec > >(tee -i $logname)
+exec 2>&1
+echo "$0 ----------- started"
+date
+
 usage="$0 [--help || existing_app_name]"
 
 if [ "$1" == "--help" ]; then
@@ -68,6 +76,8 @@ if [ "$?" -ne 0 ]; then
     exit 1
 fi
 echo "Completed deleting app $existing"
+date
+echo "$0 ----------- finished"
 exit 0
 
 
