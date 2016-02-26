@@ -1,3 +1,9 @@
+Template.select.rendered = function(){
+    console.log (this);
+    if (this.firstNode.selectedIndex == -1) {
+        this.firstNode.selectedIndex = 0;
+    }
+};
 Template.select.helpers({
     isSelectedByDefault: function (p) {
         var def = p.default;

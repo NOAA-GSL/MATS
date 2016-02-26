@@ -208,7 +208,7 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                selected: '0',
+                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: '0',
@@ -518,12 +518,8 @@ Meteor.startup(function () {
                     var regionMapTable = rows[i].regionMapTable
                     var valueList = [];
                      valueList.push(regionMapTable);
-
                      regionOptionsMap[description] = valueList;
-
                     RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
-
-                    console.log('regionOptionMap des= ' +description+ "value= "+ valueList);
                 }
             }
             qFuture['return']();
