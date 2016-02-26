@@ -153,7 +153,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         // The axis number is assigned to the variableStatSet value, which is the variableStat.
         var variableStat = variableStr + ":" + statisticSelect;
         curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
-        var xmax;
+        var xmax;gerrit:MATS_for_EMB
         var ymax;
         var xmin;
         var ymin;
