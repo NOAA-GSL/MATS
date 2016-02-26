@@ -18,6 +18,7 @@ cd MATS_for_EMB
 echo "checkout master branch"
 git checkout master
 echo "git pull --rebase"
+git reset --hard HEAD
 git pull --rebase
 if [ $? -ne 0 ]
 then
