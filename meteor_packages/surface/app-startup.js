@@ -208,10 +208,10 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                selected: '',
+                selected: '0',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: '0',
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
