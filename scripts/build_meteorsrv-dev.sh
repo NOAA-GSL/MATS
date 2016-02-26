@@ -9,7 +9,7 @@ exec 2>&1
 echo "$0 ----------- started"
 date
  
-if [ ! -f MATS_for_EMB ]; then
+if [ ! -d MATS_for_EMB ]; then
 	echo "no MATS_for_EMB directory here - git clone gerrit:MATS_for_EMB"
 	exit 1
 fi
