@@ -39,6 +39,6 @@ done
 echo >> $applistFile
 echo ']' >> $applistFile
 mv $applistFile static/applist.json
-
+chmod a+r static/applist.json
 date
 echo "$0 ----------------- finished" 
