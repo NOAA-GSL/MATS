@@ -18,7 +18,7 @@ cd /web
 applistFile=`mktemp`
 echo  "[" >> $applistFile
 appCount=0
-find . -maxdepth 1  -type d  -not -path '*/\.*' -not -path "." -not -path "./static" -not -path "./bundle" -exec basename {} \; | while read appName
+find . -maxdepth 1  -type d  -not -path '*/\.*' -not -path "." -not -path "./static" -not -path "./example*" -not -path "./bundle" -exec basename {} \; | while read appName
 do
         if [ "$appCount" -gt 0 ]; then
                 echo "," >> $applistFile
