@@ -1,7 +1,17 @@
 Template.select.rendered = function(){
-    console.log (this);
+    //console.log (this);
     if (this.firstNode.selectedIndex == -1) {
-        this.firstNode.selectedIndex = 0;
+        if (this.data.default && this.data.default != "") {
+            var defaultIndex = this.data.options.indexOf(this.data.default);
+            if (defaultIndex == -1) {
+                defaultIndex = 0;
+            }
+            this.firstNode.selectedIndex = defaultIndex;
+            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options(defaultIndex);
+        } else {
+            this.firstNode.selectedIndex = 0;
+            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.firstNode[0].text;
+        }
     }
 };
 Template.select.helpers({
