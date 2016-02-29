@@ -7,10 +7,10 @@ Template.select.rendered = function(){
                 defaultIndex = 0;
             }
             this.firstNode.selectedIndex = defaultIndex;
-            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[defaultIndex];
+            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[defaultIndex];
         } else {
             this.firstNode.selectedIndex = 0;
-            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[0];
+            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[0];
         }
     }
 };
