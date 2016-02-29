@@ -10,7 +10,7 @@ Template.select.rendered = function(){
             document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[defaultIndex];
         } else {
             this.firstNode.selectedIndex = 0;
-            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.firstNode[0].text;
+            document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[0];
         }
     }
 };
