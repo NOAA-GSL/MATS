@@ -105,7 +105,7 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'HRRR domain',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
