@@ -1,6 +1,14 @@
 #!/bin/sh
 # 
 # Used to copy an existingApp MATS application to another name.
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
+touch $logname
+exec > >(tee -i $logname)
+exec 2>&1
+
+echo "$0 ----------- started"
+date
 
 usage="$0 [--help || existing_app_name new_app_name meteorId]"
 
@@ -206,6 +214,8 @@ echo "Completed duplicating app $existingApp to $new"
 echo "You should do a manual compare (use compare or diffmerge or some folder level tool) to make sure things are correct before commiting duplicated apps."
 echo "kompare apps/$existingApp apps/$new, and kompare meteor_packages/$existingApp meteor_packages/$new"
 echo " or diffmerge apps/$existingApp apps/$new, and diffmerge meteor_packages/$existingApp meteor_packages/$new"
+echo "$0 ----------- finished"
+date
 exit 0
 
 

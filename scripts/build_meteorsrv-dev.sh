@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 # 
-logname=`echo $0 | cut -f1 -d"."`.log
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
@@ -8,21 +9,22 @@ exec 2>&1
 echo "$0 ----------- started"
 date
  
-
-echo "remove build area if it exists"
-rm -rf MATS_for_EMB
-echo "git clone gerrit:MATS_for_EMB"
-git clone gerrit:MATS_for_EMB
-if [ $? -ne 0 ]
-then
-	echo "git clone gerrit:MATS_for_EMB failed - must exit"
+if [ ! -d MATS_for_EMB ]; then
+	echo "no MATS_for_EMB directory here - git clone gerrit:MATS_for_EMB"
 	exit 1
 fi
+
 cd MATS_for_EMB
-#make sure www-data can get to the scripts
-rm -rf /tmp/scripts
-cp -a scripts /tmp/scripts
-chmod -R a+r /tmp
+echo "checkout master branch"
+git checkout master
+echo "git pull --rebase"
+git reset --hard HEAD
+git pull --rebase
+if [ $? -ne 0 ]
+then
+	echo "git pull --rebase of master failed - must exit"
+	exit 1
+fi
 
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`

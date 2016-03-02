@@ -1,3 +1,19 @@
+Template.select.rendered = function(){
+    //console.log (this);
+    if (this.firstNode.selectedIndex == -1) {
+        if (this.data.default && this.data.default != "") {
+            var defaultIndex = this.data.options.indexOf(this.data.default);
+            if (defaultIndex == -1) {
+                defaultIndex = 0;
+            }
+            this.firstNode.selectedIndex = defaultIndex;
+            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[defaultIndex];
+        } else {
+            this.firstNode.selectedIndex = 0;
+            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[0];
+        }
+    }
+};
 Template.select.helpers({
     isSelectedByDefault: function (p) {
         var def = p.default;

@@ -18,11 +18,19 @@ Template.dateRange.onRendered(function() {
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
     if (document.getElementById('plot-type-TimeSeries') == undefined || document.getElementById('plot-type-TimeSeries').checked === true) {
-        document.getElementById('curve-dates-item').style.display = "none";
-        document.getElementById('dates-item').style.display = "block";
+        if (document.getElementById('curve-dates-item')) {
+            document.getElementById('curve-dates-item').style.display = "none";
+        }
+        if (document.getElementById('dates-item')) {
+            document.getElementById('dates-item').style.display = "block";
+        }
     } else {
-        document.getElementById('curve-dates-item').style.display = "block";
-        document.getElementById('dates-item').style.display = "none";
+        if (document.getElementById('curve-dates-item')) {
+            document.getElementById('curve-dates-item').style.display = "block";
+        }
+        if (document.getElementById('dates-item')) {
+            document.getElementById('dates-item').style.display = "none";
+        }
     }
     $('#' + this.name + "-" + InputTypes.dateRange + "-from input").datepicker({});
     $('#' + this.name + "-" + InputTypes.dateRange + "-to input").datepicker({});

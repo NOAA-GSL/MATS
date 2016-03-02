@@ -105,7 +105,7 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'HRRR domain',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -518,11 +518,8 @@ Meteor.startup(function () {
                     var regionMapTable = rows[i].regionMapTable
                     var valueList = [];
                      valueList.push(regionMapTable);
-
                      regionOptionsMap[description] = valueList;
-
                     RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
-
                 }
             }
             qFuture['return']();
