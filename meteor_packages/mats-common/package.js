@@ -30,6 +30,7 @@ Package.onUse(function(api) {
     api.export("PlotGraphFunctions");
     api.export("SavedPlotGraphFunctions");
     api.export("RegionsPerModel");
+    api.export("SitesPerModel");
     api.export("RegionDescriptions");
     api.export("Models");
     api.export("FcstLensPerModel");

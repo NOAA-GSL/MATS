@@ -3,6 +3,7 @@ Meteor.subscribe("SavedCurveParams");
 Meteor.subscribe("PlotParams");
 Meteor.subscribe("PlotGraphFunctions");
 Meteor.subscribe("RegionsPerModel");
+Meteor.subscribe("SitesPerModel");
 Meteor.subscribe("RegionDescriptions");
 Meteor.subscribe("RegionNameMapping");
 Meteor.subscribe("Models");

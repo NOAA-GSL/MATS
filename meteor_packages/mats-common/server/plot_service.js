@@ -443,6 +443,9 @@ Meteor.publish("PlotGraphFunctions", function () {
 Meteor.publish("RegionsPerModel", function () {
     return RegionsPerModel.find();
 });
+Meteor.publish("SitesPerModel", function () {
+    return SitesPerModel.find();
+});
 Meteor.publish("RegionDescriptions", function () {
     return RegionDescriptions.find();
 });

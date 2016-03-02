@@ -348,7 +348,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             errorResult = get_err(data[di][3], data[di][4]);
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            //data[di] = [errorResult.d_mean, errorResult.stde_betsy, errorResult.n_good, errorResult.lag1];
+
             data[di][2] = errorResult.stde_betsy;
             data[di][5] = {
                 d_mean: errorResult.d_mean,

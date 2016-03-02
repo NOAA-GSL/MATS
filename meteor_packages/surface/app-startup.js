@@ -211,7 +211,7 @@ curveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: '0',
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
@@ -523,7 +523,6 @@ Meteor.startup(function () {
 
                     RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
 
-                    console.log('regionOptionMap des= ' +description+ "value= "+ valueList);
                 }
             }
             qFuture['return']();

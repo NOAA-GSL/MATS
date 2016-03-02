@@ -1,4 +1,34 @@
 // use future to wait for the query callback to complete
+
+var secsConvert = function (dStr) {
+    if (dStr === undefined || dStr === " ") {
+        var now = new Date();
+        var date = new Date(now.getUTCFullYear(), now.getUTCMonth()-1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+        var date_in_secs = date.getTime();
+        var yr = date.getFullYear();
+        var day = date.getDate();
+        var month = date.getMonth();
+    }
+    else {
+        var dateArray = dStr.split('-');
+        console.log("dateArray=" + dateArray);
+        var month = dateArray[1];
+        var day = dateArray[2];
+        var yr = dateArray[0];
+
+        var my_date = new Date(yr, month-1, day,0);
+        console.log("my_date=" + my_date);
+        // to UTC time, not local time
+        var date_in_secs = my_date.getTime();
+    }
+    // to UTC time, not local time
+    //return date_in_secs/1000 -3600*6;
+    return date_in_secs/1000 ;
+
+};
+
+
+
 var queryDB = function (statement, validTimeStr, statisticSelect, label) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -44,28 +74,84 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 // done waiting - error condition
                 dFuture['return']();
             } else {
+
+                var ws_z = {};
+                var time_z = {};
+
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     //var avVal = Number(rows[rowIndex].z);
                     var z = (rows[rowIndex].z);
-                    var avVal = z.substring(1,z.length-1)
-                    //console.log("xue="+avVal.substring(1,avVal.length-1));
-                    //console.log("z="+avVal);
+                    var avVal = z.substring(1, z.length - 1)
                     var ws = rows[rowIndex].ws;
-                    var stat = ws.substring(1,ws.length-1)
-                    //var sub_values = z.split(',').map(Number);
+                    var stat = ws.substring(1, ws.length - 1)
+                    var valid_utc = rows[rowIndex].valid_utc;
+
+
+
                     var sub_values = avVal.split(',');
                     var sub_ws = stat.split(',').map(Number);
-                    //var sub_secs = rows[rowIndex].ws.toString().split(',').map(Number);
-                   // console.log("z="+avVal);
-                    //console.log("sub_values="+sub_values);
-                    //console.log("sub_ws="+sub_ws);
-                    //console.log("sub_values length="+sub_values.length);
-                    //console.log(sub_secs);
-                    for (var ia=0;ia<sub_values.length;ia++){
-                      //  console.log("xue stat[ia]="+ia+ " " +sub_ws[ia]+" avVal[ia]="+sub_values[ia]);
-                        d.push([sub_ws[ia], sub_values[ia], -1, sub_values, sub_ws]); // -1 is a placeholder for the stde_betsy value
+
+
+                    for (var j=0;j<sub_ws.length;j++) {
+                        var this_z = Number(sub_values[j]);
+                        if (ws_z[this_z] === undefined) {
+                            ws_z[this_z]=[];
+                        }
+                        var this_ws = sub_ws[j];
+
+                        ws_z[this_z].push(this_ws);
+
+                        if (time_z[this_z] === undefined) {
+                            time_z[this_z]=[];
+                        }
+                        time_z[this_z].push(valid_utc);
+                        //console.log("xue this_z="+ this_z+" valid_utc="+valid_utc);
                     }
-                    }// end of loop row
+
+                }// end of loop row
+                //console.log("ws_z length=" + Object.keys(ws_z).length);
+
+
+                var max_sample_level =0;
+                var  keys = Object.keys(ws_z);
+                for(var jj=0; jj<keys.length;jj++){
+                    var key = keys[jj];
+                    if (ws_z[key].length > max_sample_level){
+                        max_sample_level=ws_z[key].length;
+                    }
+                }
+
+                console.log("max_sample_level=" + max_sample_level);
+
+                for(var jj=0; jj<keys.length;jj++) {
+                    var key = keys[jj];
+                    var ws_array = ws_z[key];
+
+                    var mean_ws;
+                    var sum_ws = 0;
+
+                    if (ws_array.length > 0.5 * max_sample_level) {
+
+                        for (var jjj = 0; jjj < ws_array.length; jjj++) {
+                            sum_ws = sum_ws + ws_array[jjj];
+                        }
+                        mean_ws = sum_ws / ws_array.length;
+
+                       // console.log("xue key=" + key + " time_z=" + time_z[key].length);
+
+
+                    //d.push([mean_ws,key, -1, keys, ws_z[key]]);
+                    // d.push([mean_ws,key, -1, key, mean_ws]);
+
+                        d.push([mean_ws, key, -1, ws_z[key], time_z[key]]);
+                    }
+                }
+
+
+
+               //console.log("xue ws_z=" +ws_z);
+               // console.log("xue this_row_ws[1]=" +this_row_ws[1]);
+
             }
             // done waiting - have results
             dFuture['return']();
@@ -143,10 +229,14 @@ var get_err = function (sub_val_array, sub_secs_array) {
             r[lag] = null;
         }
     }
+    console.log("===");
+    console.log ("r[1]= " +r[1]);
     // Betsy Weatherhead's correction, based on lag 1
     if(r[1] >= 1) {
         r[1] = .99999;
     }
+
+
     var betsy = Math.sqrt((n_good-1)*(1. - r[1]));
     var stde_betsy;
     if(betsy != 0) {
@@ -154,6 +244,10 @@ var get_err = function (sub_val_array, sub_secs_array) {
     } else {
         stde_betsy = null;
     }
+
+    console.log ("stde_besty= " +  stde_betsy +" sd="+sd+" besty="+betsy);
+    console.log ("n_good= " +  n_good +" r[1]="+r[1]);
+    console.log("===");
     return {d_mean:d_mean,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1]};
 };
 
@@ -195,18 +289,33 @@ dataProfileZoom = function(plotParams, plotFunction) {
         //var model = curve['model'];
         //var region = curve['region'].replace(/^.*mapped to: /, "").replace(')', ''); // have to use the mapped value....
 
-        console.log ("Curvemodel " +  curve['model']);
+       /* console.log ("Curvemodel " +  curve['model']);
         console.log ("Curveregion " +  curve['region']);
+        console.log ("sites= " +  curve['sites']);*/
 
-        var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
+        //var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+        var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+        var model =  tmp[0];
+        var instrument_id = tmp[1];
+        //var instrument_id = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][1];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+        var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
 
-        var obsTable = CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][0];
-        console.log ("obsTable= " +  obsTable);
-        var instruments_instrid= CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][1];
+
+        /*console.log ("siteid= " +  siteid);
+        console.log ("region= " +  region);
+        console.log ("model= " +  model);
+        console.log ("instrument_id= " +  instrument_id);*/
+
+       // var obsTable = CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][0];
+       // console.log ("obsTable= " +  obsTable);
+       var instruments_instrid= CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][1];
 
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
         var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
+
+       // console.log ("curveDatesDateRangeFrom= " +  curveDatesDateRangeFrom);
+
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
@@ -272,8 +381,74 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     "  and instruments_instrid=" +instruments_instrid+" limit 1"*/
 
 
-            statement="select z,ws  from hrrr_esrl where valid_utcs=1454526000 and nwp_recs_nwprecid=89522;"
+            //statement="select z,ws  from hrrr_esrl where valid_utcs=1454526000 and nwp_recs_nwprecid=89522;"
 
+           // statement = "select z,ws  from obs_recs as o ,sodar_recs   as s  where valid_utc=1454526000  and obs_recs_obsrecid = o.obsrecid  and instruments_instrid=4 and sites_siteid=1;"
+            //if (instrument_id>=0) {
+            if(model.includes("recs")){  //obs
+                statement = "select valid_utc,z,ws " +
+                    " from obs_recs as o ," + model + "   as s " +
+                    //" where valid_utc=1454526000 " +
+                    " where valid_utc >= "+ secsConvert(curveDatesDateRangeFrom) +
+                    " and valid_utc <= " +  secsConvert(curveDatesDateRangeTo) +
+                    " and obs_recs_obsrecid = o.obsrecid " +
+                    " and instruments_instrid=" + instrument_id
+
+                    if (siteid !="All"){
+                        statement = statement +
+                            "  and sites_siteid="+siteid;
+
+                    }
+
+
+
+               /* statement= "select sites_siteid,valid_utc,z,ws  " +
+                    "from obs_recs as o ,sodar_recs   as s  " +
+                    " where valid_utc >=1455494400" +
+                    " and valid_utc<=1455498000" +
+                    "  and obs_recs_obsrecid = o.obsrecid" +
+                    "  and instruments_instrid=4" //+*/
+                   // " and sites_siteid=13" +
+                   // " order by sites_siteid"
+
+            }else{//model
+
+                //statement="select z ,ws,nwprecid  " +
+                //statement="select z ,ws " +
+                 //   " from hrrr_esrl, nwp_recs  " +
+                  //  "where valid_utcs=1454526000 " +
+                  //  " and analysis_utc+fcst_end_utc=1454526000 " +
+                  //  "and sites_siteid=1  " +
+                  //  "and nwps_nwpid=4 " +
+                  //  "and nwp_recs_nwprecid=nwprecid " +
+                  //  "and fcst_end_utc=3600;"
+
+                statement="select valid_utcs,z ,ws " +
+                        " from "+model+", nwp_recs  " +
+                       // "where valid_utcs= 1455494400" +
+                       // " and analysis_utc+fcst_end_utc=1455494400 " +
+                         "where valid_utcs>= "+ secsConvert(curveDatesDateRangeFrom)+
+                         " and analysis_utc+fcst_end_utc>="+  secsConvert(curveDatesDateRangeFrom) +
+                    "  and valid_utcs<= "+ secsConvert(curveDatesDateRangeTo) +
+                    " and analysis_utc+fcst_end_utc <="+  secsConvert(curveDatesDateRangeTo) +
+                    " and nwps_nwpid= " + instrument_id+
+                    " and nwp_recs_nwprecid=nwprecid " +
+                    " and fcst_end_utc="+3600*forecastLength;
+
+                if (siteid !="All"){
+                    statement = statement +
+                        "  and sites_siteid="+siteid;
+
+                }
+
+                //statement="select z,ws  from "+model+" where valid_utcs=1454526000 " +
+                 //   "and nwp_recs_nwprecid=89522 " //+
+                   // "and fcst_end_utc=3600;"
+
+            }
+
+            console.log("model=" + model);
+            console.log("forecastLength=" + forecastLength);
             console.log("query=" + statement);
 
             d = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
@@ -372,12 +547,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every pressure level
                 var sub_secs = data[di][4];
+               // console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
                 subSecs.push(sub_secs);
             }
         }
 
+        console.log ("xue sub_secs= " +  subSecs);
+        //console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
         var subSecIntersection = _.intersection.apply(this,subSecs);
-        //console.log ("_.intersection subSecIntersection " +  subSecIntersection);
+        console.log ("_.intersection subSecIntersection " +  subSecIntersection.length);
         //
         //var res = subSecs.shift().filter(function(v) {
         //    return subSecs.every(function(a) {
@@ -412,11 +590,18 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 data[di][3] = newSubValues;
                 data[di][4] = subSecIntersection;
             }
-            //errorResult = get_err(data[di][3], data[di][4]);
+
+           // console.log("data[di][3]: " + data[di][3]);
+           // console.log("data[di][4]: " + data[di][4]);
+         //   errorResult = get_err(data[di][3], data[di][4]);
+            /*console.log("errorResult: mean= " + errorResult.d_mean);
+            console.log("errorResult: stde= " + errorResult.stde_betsy);
+            console.log("errorResult: n_good= " + errorResult.n_good);
+            console.log("errorResult: lag1= " + errorResult.lag1);*/
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            //data[di] = [errorResult.d_mean, errorResult.stde_betsy, errorResult.n_good, errorResult.lag1];
-           /* data[di][2] = errorResult.stde_betsy;
+
+          /*  data[di][2] = errorResult.stde_betsy;
             data[di][5] = {
                 d_mean: errorResult.d_mean,
                 stde_betsy: errorResult.stde_betsy,
@@ -424,7 +609,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 lag1: errorResult.lag1
             };
             data[di][6] = label +
-                "<br>" + -data[di][1] + "mb" +
+                "<br>" + data[di][1] + "m" +
                 "<br> " + statisticSelect + ":" + data[di][0].toPrecision(4) +
                 "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
                 "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
@@ -511,7 +696,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
     };
 
     // add black 0 line curve
-    dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
+    //dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
     var result = {
         error: error,
         data: dataset,

@@ -6,6 +6,7 @@ SavedPlotParams = new Meteor.Collection("SavedPlotParams");
 PlotGraphFunctions = new Meteor.Collection("PlotGraphFunctions");
 SavedPlotGraphFunctions = new Meteor.Collection("SavedPlotGraphFunctions");
 RegionsPerModel = new Meteor.Collection("RegionsPerModel");
+SitesPerModel = new Meteor.Collection("SitesPerModel");
 RegionDescriptions = new Meteor.Collection("RegionDescriptions");
 Models = new Meteor.Collection("Models");
 FcstLensPerModel = new Meteor.Collection("FcstLensPerModel");

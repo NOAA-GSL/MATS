@@ -1,6 +1,6 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
-var modelTableMap ={};
+var siteOptionsMap ={};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -88,7 +88,7 @@ curveParams = function () {
                 name: 'model',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
-                tableMap:modelTableMap,
+                //tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
                 controlButtonCovered: true,
@@ -101,6 +101,7 @@ curveParams = function () {
             });
 
 
+
         CurveParams.insert(
             {
                 name: 'region',
@@ -109,8 +110,7 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: ' ',
-                //default: 'wfip2 ',
+                default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -121,8 +121,8 @@ curveParams = function () {
 
 
 
-        optionsMap = {All:['All'], sodar:['sodar_recs','4'], profiler_915:['profiler_recs_915','1']};
-        CurveParams.insert(
+       // optionsMap = {All:['All'], sodar:['sodar_recs','4'], profiler_915:['profiler_recs_915','1']};
+       /* CurveParams.insert(
             {
                 name: 'instrument',
                 type: InputTypes.select,
@@ -135,19 +135,21 @@ curveParams = function () {
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
-            });
+            });*/
 
-        optionsMap = {BO2OR:['Boardman Airport'], CD2OR:['Condon State Airport']};
+       // optionsMap = {BO2OR:['Boardman Airport'], CD2OR:['Condon State Airport']};
       //  optionsMap = {'Boardman Airport':[BO2OR], CD2OR:['Condon State Airport']};
         CurveParams.insert(
             {
                 name: 'sites',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+              //  optionsMap:optionsMap,
+                optionsMap:siteOptionsMap,
+                options:Object.keys(siteOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: 'BO2OR',
+               // default: 'BO2OR',
+                default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -332,7 +334,8 @@ curveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                //default: '',
+                default: '0',
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -345,11 +348,11 @@ curveParams = function () {
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
                 min: '0',
-                max: '1000',
+                max: '5000',
                 step: '25',
                 controlButtonCovered: true,
                 unique: false,
-                default: '100',
+                default: '5000',
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
@@ -361,12 +364,12 @@ curveParams = function () {
                 type: InputTypes.numberSpinner,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                min: '100',
-                max: '1000',
+                min: '0',
+                max: '5000',
                 step: '25',
                 controlButtonCovered: true,
                 unique: false,
-                default: '1000',
+                default: '0',
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
@@ -602,7 +605,7 @@ Meteor.startup(function () {
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    var myModels = [];
+    //var myModels = [];
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
     wfip2Pool = mysql.createPool(wfip2Settings);
@@ -614,7 +617,7 @@ Meteor.startup(function () {
 
     try {
 
-        var statement = "select model,regions from regions_per_model_mats";
+        var statement = "select model,regions,model_value from regions_per_model_mats";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -625,26 +628,35 @@ Meteor.startup(function () {
             } else {
                 Models.remove({});
                 RegionsPerModel.remove({});
+
+               // RegionsPerModel =['hrrr_esrl,All'];
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
+                    var model_values = rows[i].model_value.split(',');
+                    var table_name = model_values[0];
+                    var instruments_instrid =-1;
+                   // if(table_name.includes("recs")){
+                    //    console.log('this is obs data ');
+                        instruments_instrid = model_values[1];
+
+                   // }
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
                     }
 
                     var valueList = [];
-                    valueList.push(model);
+                    valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
 
                     var tablevalueList = [];
-                    tablevalueList.push(regionMapping);
-                    modelTableMap[model] = tablevalueList;
-                    console.log('model=' +model+" valuelist="+valueList);
-                    console.log('modelOptionsMap=' + modelOptionsMap);
-                    myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
+                    tablevalueList.push(table_name);
+
+                    Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
+                    var regionsArr = regions.split(',');
+                    regionsArr.unshift('All');
+                    RegionsPerModel.insert({model: model, regions: regionsArr});
                 }
             }
             qFuture['return']();
@@ -655,6 +667,59 @@ Meteor.startup(function () {
     }
 
 
+    try {
+        var statement = "SELECT siteid, name,description FROM sites;";
+        var qFuture = new Future();
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+            if (err != undefined) {
+                console.log(err.message);
+            }
+            var sodar_sites =['All,All'];
+            var profile_sites =['All,All'];
+            var all_sites =['All,All'];
+
+
+
+            if (rows === undefined || rows.length === 0) {
+                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
+                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+            } else {
+                //FcstLensPerModel.remove({});
+                SitesPerModel.remove({});
+                siteOptionsMap['All'] = 'All';
+                for (var i = 0; i < rows.length; i++) {
+                    var siteid = rows[i].siteid;
+                    var name = rows[i].name;
+                    var description = rows[i].description;
+
+                    if(description.includes("SODAR")) {
+                        sodar_sites.push(siteid +","+name);
+
+                    }else{
+                        profile_sites.push(siteid +","+name);
+
+                    }
+                    all_sites.push(siteid +","+name);
+
+
+                    //var valueList = [];
+                    //valueList.push(table_name+','+instruments_instrid);
+                    siteOptionsMap[name] = siteid;
+
+                   // siteOptionsMap[description] = siteid;
+
+                }
+                SitesPerModel.insert({model:"sodar", sites:sodar_sites});
+                SitesPerModel.insert({model:"profile", sites:profile_sites});
+                SitesPerModel.insert({model:"model", sites:all_sites});
+
+            }
+            qFuture['return']();
+        }));
+        qFuture.wait();
+    } catch (err) {
+        Console.log(err.message);
+    }
 
 
     try {
@@ -696,6 +761,10 @@ Meteor.startup(function () {
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
                 RegionDescriptions.remove({});
+                RegionDescriptions.insert({regionMapTable: 'All',  description: 'All'});
+
+
+                regionOptionsMap['All'] = ['All'];
                 for (var i = 0; i < rows.length; i++) {
 
                     var regionMapTable = (rows[i].regionMapTable);
@@ -704,16 +773,18 @@ Meteor.startup(function () {
                     var valueList = [];
 
                     valueList.push(regionMapTable);
-               regionOptionsMap[description] = valueList;
+                   regionOptionsMap[description] = valueList;
 
                     RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
                 }
+             
+
             }
             qFuture['return']();
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
     roles();
