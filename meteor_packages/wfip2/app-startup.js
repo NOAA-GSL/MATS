@@ -249,7 +249,8 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'RMS',
+                //default: 'RMS',
+                default: 'model average',
                 controlButtonVisibility: 'block',
                 displayOrder: 6,
                 displayPriority: 1,
@@ -263,6 +264,9 @@ curveParams = function () {
                 winds: ['dw', 'ws'],
                 height: ['dH', 'H']
             };
+
+
+
         optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
         CurveParams.insert(
             {
@@ -349,7 +353,7 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 min: '0',
                 max: '5000',
-                step: '25',
+                step: '20',
                 controlButtonCovered: true,
                 unique: false,
                 default: '5000',
@@ -366,7 +370,7 @@ curveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 min: '0',
                 max: '5000',
-                step: '25',
+                step: '20',
                 controlButtonCovered: true,
                 unique: false,
                 default: '0',
@@ -413,9 +417,12 @@ curveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
-                ['', 'regionName', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
+                [' region:', 'regionName', ', '],
+                [' sites:', 'sites', ', '],
+                ['', 'variable', ', '],
+                ['', 'statistic', ', '],
+                [' top', 'top:', 'm, '],
+                [' bottom', 'bottom:', 'm, '],
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' ']
@@ -427,6 +434,7 @@ curveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'model', ':'],
                 ['', 'regionName', ', '],
+                ['', 'sites', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
                 ['fcst_len:', 'forecast length', 'h '],

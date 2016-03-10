@@ -302,10 +302,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
 
 
-        /*console.log ("siteid= " +  siteid);
-        console.log ("region= " +  region);
-        console.log ("model= " +  model);
-        console.log ("instrument_id= " +  instrument_id);*/
+
 
        // var obsTable = CurveParams.findOne({name: 'instrument'}).optionsMap[curve['instrument']][0];
        // console.log ("obsTable= " +  obsTable);
@@ -593,7 +590,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
            // console.log("data[di][3]: " + data[di][3]);
            // console.log("data[di][4]: " + data[di][4]);
-         //   errorResult = get_err(data[di][3], data[di][4]);
+            errorResult = get_err(data[di][3], data[di][4]);
             /*console.log("errorResult: mean= " + errorResult.d_mean);
             console.log("errorResult: stde= " + errorResult.stde_betsy);
             console.log("errorResult: n_good= " + errorResult.n_good);
@@ -601,7 +598,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
 
-          /*  data[di][2] = errorResult.stde_betsy;
+            data[di][2] = errorResult.stde_betsy;
             data[di][5] = {
                 d_mean: errorResult.d_mean,
                 stde_betsy: errorResult.stde_betsy,
@@ -614,7 +611,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
                 "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
                 "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + errorResult.lag1.toPrecision(4);*/
+                "<br>  lag1:" + errorResult.lag1.toPrecision(4);
         }
     }
 

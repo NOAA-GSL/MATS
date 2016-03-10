@@ -1,4 +1,32 @@
 // use future to wait for the query callback to complete
+var secsConvert = function (dStr) {
+    if (dStr === undefined || dStr === " ") {
+        var now = new Date();
+        var date = new Date(now.getUTCFullYear(), now.getUTCMonth()-1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+        var date_in_secs = date.getTime();
+        var yr = date.getFullYear();
+        var day = date.getDate();
+        var month = date.getMonth();
+    }
+    else {
+        var dateArray = dStr.split('-');
+        console.log("dateArray=" + dateArray);
+        var month = dateArray[1];
+        var day = dateArray[2];
+        var yr = dateArray[0];
+
+        var my_date = new Date(yr, month-1, day,0);
+        console.log("my_date=" + my_date);
+        // to UTC time, not local time
+        var date_in_secs = my_date.getTime();
+    }
+    // to UTC time, not local time
+    //return date_in_secs/1000 -3600*6;
+    return date_in_secs/1000 ;
+
+};
+
+
 var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -79,13 +107,13 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 };
 
 
-var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
+var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr,top,bottom,ws_z_time) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-
+    var ws_z_time = {};
     // modelPool.query(statement, function (err, rows) {
     wfip2Pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -103,56 +131,145 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
             var curveStat = [];
             var N0_max = 0;
 
+            var ws_time = {};
+
+
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
-                var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
+                //var stat = rows[rowIndex].stat;
+                //console.log(rowIndex+" secs="+avSeconds);
 
-                if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) N_times_max = N_times_loop;
+                var z = (rows[rowIndex].z);
+                var avVal = z.substring(1, z.length - 1)
+                var ws = rows[rowIndex].ws;
+                var stat = ws.substring(1, ws.length - 1)
+              //  var valid_utc = rows[rowIndex].valid_utc;
 
-                curveTime.push(avSeconds * 1000);
-                curveStat.push(stat);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
-            }
+                var sub_z = avVal.split(',');
+                var sub_ws = stat.split(',').map(Number);
 
-            if (averageStr != "None") {
-                xmin = Number(rows[0].avtime) * 1000;
-            }
-            var loopTime = xmin;
-
-            while (loopTime < xmax + 1) {
-
-                if (curveTime.indexOf(loopTime) < 0) {
-                    d.push([loopTime, null]);
-                } else {
-                    var d_idx = curveTime.indexOf(loopTime);
-                    var this_N0 = N0[d_idx];
-                    var this_N_times = N_times[d_idx];
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
-                        d.push([loopTime, null]);
-
-                    } else {
-                        d.push([loopTime, curveStat[d_idx]]);
-                    }
+                if (ws_time[avSeconds] === undefined) {
+                    ws_time[avSeconds]=[];
                 }
-                loopTime = loopTime + interval;
+                var this_mean_ws=0;
+                var n_z =0;
+                for (var j=0;j<sub_ws.length;j++) {
+                    var this_ws = sub_ws[j];
+                    var this_z = sub_z[j];
+
+                    //if (ws_z_time[avSeconds][this_z] === undefined) {
+                    //    ws_z_time[avSeconds,this_z]=[];
+                    //}
+
+                    if (ws_z_time[avSeconds] === undefined) {
+                        ws_z_time[avSeconds] = {};
+                    }
+                    if (ws_z_time[avSeconds][this_z] === undefined) {
+                        ws_z_time[avSeconds][this_z] = [];
+                    }
+                    if (this_z >= bottom && this_z <= top) {
+                        this_mean_ws = this_mean_ws + this_ws;
+                        n_z = n_z +1;
+                        ws_z_time[avSeconds][this_z].push(this_ws)
+                       // console.log(avSeconds+" this_z=" + this_z + " ws_z_time= "+ws_z_time[avSeconds][this_z] );
+                    }
+
+
+                }
+                //this_mean_ws = this_mean_ws/sub_ws.length;
+
+                this_mean_ws = this_mean_ws/n_z;
+               // console.log("xue nz=" + n_z +" mean_ws="+this_mean_ws);
+                ws_time[avSeconds].push(this_mean_ws);
+                //console.log("xue ws_time"+avSeconds+"ws="+ws_time[avSeconds] );
+                //N_times_loop = sub_ws.length;
+
+                /*if (N0_loop > N0) N0_max = N0_loop;
+                if (N_times_loop > N_times) N_times_max = N_times_loop;*/
+
+               // curveTime.push(avSeconds * 1000);
+               // curveStat.push(mean_ws);
+                //N0.push(N0_loop);
+                //N_times.push(N_times_loop);
+
+               // d.push([avSeconds * 1000, this_mean_ws]);
             }
+
+
+
+            var max_sample_time =0;
+            var  keys = Object.keys(ws_time);
+            console.log("xue keys="+keys);
+            for(var jj=0; jj<keys.length;jj++){
+                var key = keys[jj];
+                if (ws_time[key].length > max_sample_time){
+                    max_sample_time=ws_time[key].length;
+                }
+            }
+
+            for(var jj=0; jj<keys.length;jj++) {
+                var key = keys[jj];
+                var ws_array = ws_time[key];
+
+                var mean_ws;
+                var sum_ws = 0;
+
+               // if (ws_array.length > 0.5 * max_sample_time) {
+
+                    for (var jjj = 0; jjj < ws_array.length; jjj++) {
+                        sum_ws = sum_ws + ws_array[jjj];
+                    }
+                    mean_ws = sum_ws / ws_array.length;
+
+                    d.push([key * 1000, mean_ws]);
+               // }
+            }
+
+
+
+
+
+
+            /*   if (averageStr != "None") {
+                   xmin = Number(rows[0].avtime) * 1000;
+               }
+               var loopTime = xmin;
+
+               while (loopTime < xmax + 1) {
+
+                   if (curveTime.indexOf(loopTime) < 0) {
+                       d.push([loopTime, null]);
+                   } else {
+                       var d_idx = curveTime.indexOf(loopTime);
+                       var this_N0 = N0[d_idx];
+                       var this_N_times = N_times[d_idx];
+                       if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                           d.push([loopTime, null]);
+
+                       } else {
+                           d.push([loopTime, curveStat[d_idx]]);
+                       }
+                   }
+                   loopTime = loopTime + interval;
+               }*/
             // done waiting - have results
             dFuture['return']();
         }
     });
     // wait for future to finish
     dFuture.wait();
+
+    //console.log("var_z_time="+var_z_time );
     return {
         data: d,
         error: error,
+        ws_z_time: ws_z_time,
         ymin: ymin,
         ymax: ymax,
-        N0: N0,
-        N_times: N_times,
+       // N0: N0,
+       // N_times: N_times,
+        N0: 20,
+        N_times: 20,
         averageStr: averageStr,
         interval: interval
     };
@@ -200,12 +317,19 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
+        //var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
+
+        var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+        var model =  tmp[0];
+        var instrument_id = tmp[1];
+
+
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
-        var tableRegion = CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
-        var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
+        var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
+
+        var label = (curve['label']);
+        var top =  Number(curve['top']);
+        var bottom =  Number(curve['bottom']);
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
@@ -253,7 +377,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime, " +
+          /*  var statement = "select {{average}} as avtime, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
@@ -280,12 +404,48 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{average}}', average);
+            statement = statement.replace('{{average}}', average);*/
+
+
+
+
+            if(model.includes("recs")) {
+
+                statement = "select valid_utc as avtime,sites_siteid,z,ws " +
+                    "from obs_recs as o , " + model +
+                    " where  obs_recs_obsrecid = o.obsrecid" +
+                    " and instruments_instrid="+instrument_id +
+                 " and valid_utc>=" + secsConvert(fromDate) +
+                 " and valid_utc<=" + secsConvert(toDate)
+                   // " and valid_utc>=1454482800" + //secsConvert(fromDate) +
+                   // " and valid_utc<=1454486400"// + secsConvert(toDate)
+
+
+            } else {
+
+                statement ="select valid_utcs as avtime ,z ,ws  " +
+                    "from "+model +", nwp_recs  " +
+                    " where nwps_nwpid=" +instrument_id+
+                    " and nwp_recs_nwprecid=nwprecid" +
+                       " and valid_utcs >="+ secsConvert(fromDate) +
+                    " and valid_utcs<=" + secsConvert(toDate)+
+                    " and fcst_end_utc="+3600*forecastLength;
+
+
+            }
+            if (siteid != "All") {
+                statement = statement +
+                    "  and sites_siteid=" + siteid;
+
+            }
 
 
             console.log("query=" + statement);
-            var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
+            console.log("siteid=" + siteid);
+            var ws_z_time;
+            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom,ws_z_time);
             d = queryResult.data;
+            //console.log("d=" + d);
             if (d[0] === undefined) {
                 error = "No data returned";
             } else {
@@ -295,6 +455,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             mxmax = mxmax > xmax ? xmax : mxmax;
             mxmin = mxmin < xmin ? mxmin : xmin;
             error = queryResult.error;
+            ws_z_time = queryResult.ws_z_time;
+
+           // var keys_z_time = Object.keys(ws_z_time);
+            //console.log("keys_z_time=" + keys_z_time);
+
+            //console.log("ws_z_time=" + queryResult.ws_z_time);
+
         } else {
             // this is a difference curve
             var minuendIndex = diffFrom[0];
@@ -346,10 +513,20 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
 
+        var mean =0 ;
+
+
+        for (var i = 0; i < d.length; i++) {
+            mean =   mean +d[i][1];
+        }
+        mean = mean/d.length;
+
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
+            ws_z_time: ws_z_time,
             color: color,
+            mean:  label + "- mean = " + mean.toPrecision(4),
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
@@ -363,10 +540,20 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var numCurves = dataset.length;
     }
 
+
+    for (var ci = 0; ci < numCurves; ci++) {
+        console.log("c=" +ci+" "+ dataset[ci].data);
+    }
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
     if (matching) {
         var dataLength = dataset[0].data.length;
+
+
+     //   for (var ci = 0; ci < numCurves; ci++) {
+     //       console.log("c=" +ci+" "+ dataset[ci].data);
+     //   }
+
         var matchNullIndexes = [];
         for (var di = 0; di < dataLength; di++) {
         for (var ci = 0; ci < numCurves; ci++) {
@@ -385,6 +572,99 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 }
             }
         }
+        //for (var di = 0; di < dataLength; di++) {
+        var curve_time_list =[];
+
+        var ws_z_time0 = dataset[0].ws_z_time;
+
+        var keys_time0 = Object.keys(ws_z_time0);
+
+        dataset[0].data=[];
+        for (var ci = 1; ci < numCurves; ci++) {
+            var this_ws_z_time = dataset[ci].ws_z_time;
+            var keys_time = Object.keys(this_ws_z_time);
+
+            var secondsIntersection = _.intersection(keys_time,keys_time0);
+
+            dataset[ci].data =[];
+        }
+
+        //console.log("secondsInte=" + secondsIntersection);
+
+        for (var si = 0; si < secondsIntersection.length; si++) {
+            this_secs = secondsIntersection[si];
+            var these_z0 = Object.keys(dataset[0].ws_z_time[this_secs]);
+            //console.log("these_z0=" + these_z0);
+
+            for (var ci = 1; ci < numCurves; ci++) {
+                var these_z = Object.keys(dataset[ci].ws_z_time[this_secs]);
+                var zsIntersection = _.intersection(these_z,these_z0);
+
+            }
+            //console.log(this_secs +" ws_z_time=" + ws_z_time[this_secs]);
+
+            for (var ci = 0; ci < numCurves; ci++) {
+                var new_ws_list=[];
+                for (var zi = 0; zi < zsIntersection.length; zi++) {
+                  var this_z = zsIntersection[zi];
+                  // console.log("c="+ci+" "+this_secs +" z="+this_z+ " ws_z_time=" + dataset[ci].ws_z_time[this_secs][this_z]);
+                  var new_ws = dataset[ci].ws_z_time[this_secs][this_z];
+                 new_ws_list.push (new_ws);
+
+               }
+                //console.log("c="+ci+" "+" new_ws_list=" + new_ws_list);
+                var flattened = new_ws_list.reduce(function(a, b) {
+                        return a.concat(b);
+                    },[]);
+
+                var new_mean =0;
+                for (var ii=0;ii<flattened.length;ii++){
+                   // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
+                    new_mean = new_mean +flattened[ii];
+
+                }
+                 dataset[ci].data.push([this_secs*1000,new_mean/flattened.length]);
+                 //console.log("new c=" +ci+" "+ dataset[ci].data);
+            }
+        }
+
+        for (var ci = 0; ci < numCurves; ci++) {
+            console.log("new c=" + ci + " " + dataset[ci].data);
+        }
+        //console.log("curve_time_list=" + curve_time_list);
+        //var secondsIntersection = _.intersection(curve_time_list);
+        //console.log("zsInte=" + secondsIntersection);
+
+
+      /*  this_ws_z_time = dataset[0].ws_z_time;
+
+        var keys_time = Object.keys(this_ws_z_time);
+        console.log("11 keys_time=" + keys_time);
+
+        var keys_z_all_curves =[];
+        for (var ti = 0; ti < keys_time.length; ti++) {
+            console.log("key this_time=" + keys_time[ti]);
+            var these_zs = this_ws_z_time[keys_time[ti]];
+
+            keys_z = Object.keys(these_zs);
+            console.log("these_zs=" + keys_z);
+
+            for (var ci = 0; ci < numCurves; ci++) {
+                var each_ws_z_time = dataset[ci].ws_z_time;
+
+                var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
+            }
+           /* for (var ci = 1; ci < numCurves; ci++) {
+                this_ws_z_time = dataset[ci].ws_z_time;
+                var keys_time = Object.keys(this_ws_z_time);
+                console.log("keys_z_time=" + keys_z_time);
+
+            }*/
+    //    }
+
+
+
+
     }
 
     // generate y-axis
