@@ -421,8 +421,8 @@ curveTextPatterns = function () {
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
                 ['', 'statistic', ', '],
-                [' top', 'top:', 'm, '],
-                [' bottom', 'bottom:', 'm, '],
+                [' top:', 'top', 'm, '],
+                [' bottom:', 'bottom', 'm, '],
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' ']
