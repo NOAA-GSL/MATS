@@ -120,6 +120,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        console.log("diffFrom=" + diffFrom);
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var tableRegion = CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
@@ -215,6 +216,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             error = queryResult.error;
         } else {
             // this is a difference curve
+            console.log("in different curve" );
+
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1];
             var minuendData = dataset[minuendIndex].data;

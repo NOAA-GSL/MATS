@@ -10,13 +10,13 @@ var secsConvert = function (dStr) {
     }
     else {
         var dateArray = dStr.split('-');
-        console.log("dateArray=" + dateArray);
+
         var month = dateArray[1];
         var day = dateArray[2];
         var yr = dateArray[0];
 
         var my_date = new Date(yr, month-1, day,0);
-        console.log("my_date=" + my_date);
+
         // to UTC time, not local time
         var date_in_secs = my_date.getTime();
     }
@@ -27,93 +27,17 @@ var secsConvert = function (dStr) {
 };
 
 
-var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var N0 = [];
-    var N_times = [];
-
-    // modelPool.query(statement, function (err, rows) {
-    sumPool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            ymin = Number(rows[0].stat);
-            ymax = Number(rows[0].stat);
-            var curveTime = [];
-            var curveStat = [];
-            var N0_max = 0;
-
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-
-                if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) N_times_max = N_times_loop;
-
-                curveTime.push(avSeconds * 1000);
-                curveStat.push(stat);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
-            }
-
-            if (averageStr != "None") {
-                xmin = Number(rows[0].avtime) * 1000;
-            }
-            var loopTime = xmin;
-
-            while (loopTime < xmax + 1) {
-
-                if (curveTime.indexOf(loopTime) < 0) {
-                    d.push([loopTime, null]);
-                } else {
-                    var d_idx = curveTime.indexOf(loopTime);
-                    var this_N0 = N0[d_idx];
-                    var this_N_times = N_times[d_idx];
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
-                        d.push([loopTime, null]);
-
-                    } else {
-                        d.push([loopTime, curveStat[d_idx]]);
-                    }
-                }
-                loopTime = loopTime + interval;
-            }
-            // done waiting - have results
-            dFuture['return']();
-        }
-    });
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        data: d,
-        error: error,
-        ymin: ymin,
-        ymax: ymax,
-        N0: N0,
-        N_times: N_times,
-        averageStr: averageStr,
-        interval: interval
-    };
-};
 
 
-var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr,top,bottom,ws_z_time) {
+
+var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, site,averageStr,top,bottom) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
     var ws_z_time = {};
+    var site_z_time ={};
     // modelPool.query(statement, function (err, rows) {
     wfip2Pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -136,70 +60,67 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
 
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
-                //var stat = rows[rowIndex].stat;
-                //console.log(rowIndex+" secs="+avSeconds);
+                var siteid = rows[rowIndex].sites_siteid;
 
                 var z = (rows[rowIndex].z);
                 var avVal = z.substring(1, z.length - 1)
                 var ws = rows[rowIndex].ws;
                 var stat = ws.substring(1, ws.length - 1)
-              //  var valid_utc = rows[rowIndex].valid_utc;
+                //  var valid_utc = rows[rowIndex].valid_utc;
 
                 var sub_z = avVal.split(',');
                 var sub_ws = stat.split(',').map(Number);
 
+
                 if (ws_time[avSeconds] === undefined) {
-                    ws_time[avSeconds]=[];
+                    ws_time[avSeconds] = [];
                 }
-                var this_mean_ws=0;
-                var n_z =0;
-                for (var j=0;j<sub_ws.length;j++) {
+                var this_mean_ws = 0;
+                var n_z = 0;
+                for (var j = 0; j < sub_ws.length; j++) {
                     var this_ws = sub_ws[j];
-                    var this_z = sub_z[j];
+                    var this_z = Math.floor(sub_z[j]); // jeff put float number for level
 
-                    //if (ws_z_time[avSeconds][this_z] === undefined) {
-                    //    ws_z_time[avSeconds,this_z]=[];
-                    //}
-
+                    // ws_z_time is for matching levels for each timestamp
                     if (ws_z_time[avSeconds] === undefined) {
                         ws_z_time[avSeconds] = {};
                     }
                     if (ws_z_time[avSeconds][this_z] === undefined) {
                         ws_z_time[avSeconds][this_z] = [];
+
                     }
+
+
+                    if (site_z_time[avSeconds] === undefined) {
+                        site_z_time[avSeconds] = {};
+                    }
+                    if (site_z_time[avSeconds][this_z] === undefined) {
+                        site_z_time[avSeconds][this_z] = [];
+
+                    }
+
                     if (this_z >= bottom && this_z <= top) {
                         this_mean_ws = this_mean_ws + this_ws;
-                        n_z = n_z +1;
-                        ws_z_time[avSeconds][this_z].push(this_ws)
-                       // console.log(avSeconds+" this_z=" + this_z + " ws_z_time= "+ws_z_time[avSeconds][this_z] );
+                        n_z = n_z + 1;
+                        ws_z_time[avSeconds][this_z].push(this_ws);
+                        site_z_time[avSeconds][this_z].push(siteid);
                     }
 
 
                 }
-                //this_mean_ws = this_mean_ws/sub_ws.length;
 
-                this_mean_ws = this_mean_ws/n_z;
-               // console.log("xue nz=" + n_z +" mean_ws="+this_mean_ws);
+                if (n_z > 0) {
+
+                this_mean_ws = this_mean_ws / n_z;
                 ws_time[avSeconds].push(this_mean_ws);
-                //console.log("xue ws_time"+avSeconds+"ws="+ws_time[avSeconds] );
-                //N_times_loop = sub_ws.length;
-
-                /*if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) N_times_max = N_times_loop;*/
-
-               // curveTime.push(avSeconds * 1000);
-               // curveStat.push(mean_ws);
-                //N0.push(N0_loop);
-                //N_times.push(N_times_loop);
-
-               // d.push([avSeconds * 1000, this_mean_ws]);
+                }
             }
 
 
 
             var max_sample_time =0;
             var  keys = Object.keys(ws_time);
-            console.log("xue keys="+keys);
+            // console.log("xue keys="+keys);
             for(var jj=0; jj<keys.length;jj++){
                 var key = keys[jj];
                 if (ws_time[key].length > max_sample_time){
@@ -207,22 +128,31 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                 }
             }
 
+            // multiple stations, get average values for one time stampe for some certain veritcal levels
             for(var jj=0; jj<keys.length;jj++) {
                 var key = keys[jj];
                 var ws_array = ws_time[key];
+               // console.log("type=" +  typeof ws_array);
+               // console.log("null=" +  isNaN(ws_array));
+               // console.log("length=" +  ws_array.length);
+                if (ws_array.length>0 ) {
 
-                var mean_ws;
-                var sum_ws = 0;
 
-               // if (ws_array.length > 0.5 * max_sample_time) {
+                    var mean_ws;
+                    var sum_ws = 0;
 
-                    for (var jjj = 0; jjj < ws_array.length; jjj++) {
-                        sum_ws = sum_ws + ws_array[jjj];
-                    }
-                    mean_ws = sum_ws / ws_array.length;
+                   //  if (ws_array.length > 0.5 * max_sample_time) {
 
-                    d.push([key * 1000, mean_ws]);
-               // }
+                        for (var jjj = 0; jjj < ws_array.length; jjj++) {
+                            sum_ws = sum_ws + ws_array[jjj];
+                        }
+                         mean_ws = sum_ws / ws_array.length;
+
+                         //console.log("key="+key+" mean_ws="+mean_ws );
+
+                         d.push([key * 1000, mean_ws]);
+                //     }
+                }
             }
 
 
@@ -230,28 +160,9 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
 
 
 
-            /*   if (averageStr != "None") {
-                   xmin = Number(rows[0].avtime) * 1000;
-               }
-               var loopTime = xmin;
 
-               while (loopTime < xmax + 1) {
 
-                   if (curveTime.indexOf(loopTime) < 0) {
-                       d.push([loopTime, null]);
-                   } else {
-                       var d_idx = curveTime.indexOf(loopTime);
-                       var this_N0 = N0[d_idx];
-                       var this_N_times = N_times[d_idx];
-                       if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
-                           d.push([loopTime, null]);
 
-                       } else {
-                           d.push([loopTime, curveStat[d_idx]]);
-                       }
-                   }
-                   loopTime = loopTime + interval;
-               }*/
             // done waiting - have results
             dFuture['return']();
         }
@@ -264,6 +175,8 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
         data: d,
         error: error,
         ws_z_time: ws_z_time,
+        site_z_time: site_z_time,
+        site: site,
         ymin: ymin,
         ymax: ymax,
        // N0: N0,
@@ -377,41 +290,10 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-          /*  var statement = "select {{average}} as avtime, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 " +
-                "{{validTime}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
-
-            // build the query
-            //statement = statement.replace('{{model}}', model + '_Areg' + region);
-            statement = statement.replace('{{model}}', model + '_'+tableRegion + region);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{validTime}}', validTime);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{average}}', average);*/
-
-
-
 
             if(model.includes("recs")) {
 
-                statement = "select valid_utc as avtime,sites_siteid,z,ws " +
+                statement = "select valid_utc as avtime,z,ws,sites_siteid " +
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid="+instrument_id +
@@ -423,7 +305,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
             } else {
 
-                statement ="select valid_utcs as avtime ,z ,ws  " +
+                statement ="select valid_utcs as avtime ,z ,ws,sites_siteid  " +
                     "from "+model +", nwp_recs  " +
                     " where nwps_nwpid=" +instrument_id+
                     " and nwp_recs_nwprecid=nwprecid" +
@@ -443,8 +325,10 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             console.log("query=" + statement);
             console.log("siteid=" + siteid);
             var ws_z_time;
-            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom,ws_z_time);
+            var site_z_time;
+            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval,siteid, averageStr,top,bottom);
             d = queryResult.data;
+            console.log("data=" + d);
             //console.log("d=" + d);
             if (d[0] === undefined) {
                 error = "No data returned";
@@ -456,14 +340,16 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             mxmin = mxmin < xmin ? mxmin : xmin;
             error = queryResult.error;
             ws_z_time = queryResult.ws_z_time;
+            site_z_time = queryResult.site_z_time;
 
            // var keys_z_time = Object.keys(ws_z_time);
             //console.log("keys_z_time=" + keys_z_time);
 
             //console.log("ws_z_time=" + queryResult.ws_z_time);
 
-        } else {
+        } /*else {
             // this is a difference curve
+            console.log("in diff");
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1];
             var minuendData = dataset[minuendIndex].data;
@@ -484,7 +370,9 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ymin = ymin < d[i][1] ? ymin : d[i][1];
                 ymax = ymax > d[i][1] ? ymax : d[i][1];
             }
-        }
+
+            console.log("in diff d="+d);
+        }*/
 
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
@@ -525,8 +413,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             yaxis: variableStatSet[variableStat].index,
             label: label,
             ws_z_time: ws_z_time,
+            site_z_time: site_z_time,
+            site: siteid,
             color: color,
-            mean:  label + "- mean = " + mean.toPrecision(4),
+           mean:  label + "- mean = " + mean.toPrecision(4),
+       //    mean:  label + "- mean = " + mean,
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
@@ -541,131 +432,199 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     }
 
 
-    for (var ci = 0; ci < numCurves; ci++) {
-        console.log("c=" +ci+" "+ dataset[ci].data);
-    }
-    // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
-    // not have data in each curve.
+
+
     if (matching) {
-        var dataLength = dataset[0].data.length;
 
 
-     //   for (var ci = 0; ci < numCurves; ci++) {
-     //       console.log("c=" +ci+" "+ dataset[ci].data);
-     //   }
+        var num_all_sites =0;
+        for (var ci= 0; ci < numCurves; ci++) {
+            var this_id = dataset[ci].site;
 
-        var matchNullIndexes = [];
-        for (var di = 0; di < dataLength; di++) {
-        for (var ci = 0; ci < numCurves; ci++) {
-                /* it is possible to have a curve that does not have any data at the front */
-                if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
-                    matchNullIndexes.push(di);
-                    break;
-        }
+            if (this_id === "All"){
+                num_all_sites = num_all_sites+1;
             }
         }
-        for (var mi = 0; mi < matchNullIndexes.length; mi++) {
-            var index = matchNullIndexes[mi];
-        for (var ci = 0; ci < numCurves; ci++) {
-                if (dataset[ci].data[index] !== undefined) {
-                    dataset[ci].data[index][1] = null;
-                }
-            }
-        }
-        //for (var di = 0; di < dataLength; di++) {
-        var curve_time_list =[];
+
+
 
         var ws_z_time0 = dataset[0].ws_z_time;
 
         var keys_time0 = Object.keys(ws_z_time0);
 
         dataset[0].data=[];
+
+        var secondsIntersection = keys_time0;
         for (var ci = 1; ci < numCurves; ci++) {
             var this_ws_z_time = dataset[ci].ws_z_time;
             var keys_time = Object.keys(this_ws_z_time);
 
-            var secondsIntersection = _.intersection(keys_time,keys_time0);
-
+           // secondsIntersection = _.intersection(keys_time,keys_time0);
+            secondsIntersection = _.intersection(keys_time,secondsIntersection);
             dataset[ci].data =[];
         }
 
         //console.log("secondsInte=" + secondsIntersection);
-
+        // for each timestamp, look for common levels btw curves
         for (var si = 0; si < secondsIntersection.length; si++) {
-            this_secs = secondsIntersection[si];
+            var this_secs = secondsIntersection[si];
             var these_z0 = Object.keys(dataset[0].ws_z_time[this_secs]);
-            //console.log("these_z0=" + these_z0);
+           // console.log("these_secs=" + this_secs);
 
+            var zsIntersection = these_z0;
+
+            // common levels for this time btw curves
             for (var ci = 1; ci < numCurves; ci++) {
                 var these_z = Object.keys(dataset[ci].ws_z_time[this_secs]);
-                var zsIntersection = _.intersection(these_z,these_z0);
+                zsIntersection = _.intersection(these_z,zsIntersection);
 
             }
-            //console.log(this_secs +" ws_z_time=" + ws_z_time[this_secs]);
 
-            for (var ci = 0; ci < numCurves; ci++) {
-                var new_ws_list=[];
-                for (var zi = 0; zi < zsIntersection.length; zi++) {
-                  var this_z = zsIntersection[zi];
-                  // console.log("c="+ci+" "+this_secs +" z="+this_z+ " ws_z_time=" + dataset[ci].ws_z_time[this_secs][this_z]);
-                  var new_ws = dataset[ci].ws_z_time[this_secs][this_z];
-                 new_ws_list.push (new_ws);
+            //console.log("zsInte=" + zsIntersection);
+            // at this time, this commonn levels, looking for common stns
 
-               }
-                //console.log("c="+ci+" "+" new_ws_list=" + new_ws_list);
-                var flattened = new_ws_list.reduce(function(a, b) {
-                        return a.concat(b);
-                    },[]);
 
-                var new_mean =0;
-                for (var ii=0;ii<flattened.length;ii++){
-                   // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
-                    new_mean = new_mean +flattened[ii];
+            if (num_all_sites ===numCurves){ // all curves with selection of all stations
+                var stnsIntersection={};
+                for(var zi=0; zi<zsIntersection.length; zi++) {
+                    var this_z = zsIntersection[zi];
+                    var these_stn0 = dataset[0].site_z_time[this_secs][this_z];
+                    stnsIntersection[this_z] = these_stn0;
+                    for (var ci = 1; ci < numCurves; ci++) {
+                        var these_stns = dataset[ci].site_z_time[this_secs][this_z];
+                       // stnsIntersection[this_z] = _.intersection(these_stns, these_stn0);
+                        stnsIntersection[this_z] = _.intersection(these_stns, stnsIntersection[this_z]);
+                    }
 
                 }
-                 dataset[ci].data.push([this_secs*1000,new_mean/flattened.length]);
-                 //console.log("new c=" +ci+" "+ dataset[ci].data);
             }
-        }
 
-        for (var ci = 0; ci < numCurves; ci++) {
-            console.log("new c=" + ci + " " + dataset[ci].data);
-        }
-        //console.log("curve_time_list=" + curve_time_list);
-        //var secondsIntersection = _.intersection(curve_time_list);
-        //console.log("zsInte=" + secondsIntersection);
-
-
-      /*  this_ws_z_time = dataset[0].ws_z_time;
-
-        var keys_time = Object.keys(this_ws_z_time);
-        console.log("11 keys_time=" + keys_time);
-
-        var keys_z_all_curves =[];
-        for (var ti = 0; ti < keys_time.length; ti++) {
-            console.log("key this_time=" + keys_time[ti]);
-            var these_zs = this_ws_z_time[keys_time[ti]];
-
-            keys_z = Object.keys(these_zs);
-            console.log("these_zs=" + keys_z);
 
             for (var ci = 0; ci < numCurves; ci++) {
-                var each_ws_z_time = dataset[ci].ws_z_time;
+                    var new_ws_list = [];
+                    //console.log(ci +" zsInte=" + zsIntersection);
 
-                var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
+                    for (var zi = 0; zi < zsIntersection.length; zi++) {
+                        var this_z = zsIntersection[zi];
+                        var new_ws;
+
+                        if (num_all_sites ===numCurves) { // all curves with selection of all stations
+
+                            for (var stni = 0; stni < stnsIntersection[this_z].length; stni++) {
+                                var this_stn = stnsIntersection[this_z][stni];
+                                var this_index = dataset[ci].site_z_time[this_secs][this_z].indexOf(this_stn);
+
+                                new_ws = dataset[ci].ws_z_time[this_secs][this_z][this_index];
+                                new_ws_list.push (new_ws);
+
+
+                            }
+
+                        }else{
+                                new_ws = dataset[ci].ws_z_time[this_secs][this_z];
+                                new_ws_list.push (new_ws);
+
+                        }
+
+                    }
+
+                    var flattened = new_ws_list.reduce(function (a, b) {
+                        return a.concat(b);
+                    }, []);
+
+                //console.log("c="+ci+" "+" flattened=" + flattened);
+
+                    if (flattened.length > 0) {
+                        var new_mean = 0;
+                        for (var ii = 0; ii < flattened.length; ii++) {
+                            // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
+                            new_mean = new_mean + flattened[ii];
+
+                        }
+                        dataset[ci].data.push([this_secs * 1000, new_mean / flattened.length]);
+                    }
+
+                var mean =0 ;
+                var d = dataset[ci].data;
+                for (var i = 0; i < d.length; i++) {
+                    mean =   mean +d[i][1];
+                }
+                mean = mean/d.length;
+                dataset[ci].mean = label + "- mean = " + mean.toPrecision(4);
+
             }
-           /* for (var ci = 1; ci < numCurves; ci++) {
-                this_ws_z_time = dataset[ci].ws_z_time;
-                var keys_time = Object.keys(this_ws_z_time);
-                console.log("keys_z_time=" + keys_z_time);
-
-            }*/
-    //    }
 
 
+        }
+
+        var dataLength = dataset[0].data.length;
+
+        var matchNullIndexes = [];
+        for (var di = 0; di < dataLength; di++) {
+            for (var ci = 0; ci < numCurves; ci++) {
+
+                if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
+                    matchNullIndexes.push(di);
+                    break;
+                }
+            }
+        }
+        for (var mi = 0; mi < matchNullIndexes.length; mi++) {
+            var index = matchNullIndexes[mi];
+            for (var ci = 0; ci < numCurves; ci++) {
+                if (dataset[ci].data[index] !== undefined) {
+                    dataset[ci].data[index][1] = null;
+                }
+            }
+        }
 
 
-    }
+        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+            var curve = curves[curveIndex];
+            var diffFrom = curve.diffFrom;
+
+        if (diffFrom != null) {
+
+
+            var minuendIndex = diffFrom[0];
+            var subtrahendIndex = diffFrom[1];
+            var minuendData = dataset[minuendIndex].data;
+            var subtrahendData = dataset[subtrahendIndex].data;
+            var minuendDataOptions = dataOptions[minuendIndex];
+            // add dataset copied from minuend
+            var d = [];
+            // do the differencing of the data
+            for (var i = 0; i < minuendData.length; i++) {
+                d[i] = [];
+                d[i][0] = subtrahendData[i][0];
+                if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
+                    d[i][1] = minuendData[i][1] - subtrahendData[i][1];
+                } else {
+                    d[i][1] = null;
+                }
+                // ymin and ymax will change with diff
+                ymin = ymin < d[i][1] ? ymin : d[i][1];
+                ymax = ymax > d[i][1] ? ymax : d[i][1];
+            }
+
+            console.log("in diff d="+d);
+
+            var mean =0 ;
+            for (var i = 0; i < d.length; i++) {
+                mean =   mean +d[i][1];
+            }
+            mean = mean/d.length;
+
+            dataset[curveIndex].data = d;
+            dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
+        // dataset[2].data=d;
+            }
+        }
+
+
+
+
+    }// end of match
 
     // generate y-axis
     var yaxes = [];

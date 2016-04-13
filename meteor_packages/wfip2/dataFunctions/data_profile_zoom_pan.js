@@ -434,22 +434,27 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
     // match the data by subseconds
     // build an array of sub_second arrays
-    // data is [stat,avVal,sub_values,sub_secs]
+    // data is [stat(ws),avVal(z),sub_values,sub_secs]
     if (matching) {
         var subSecs = [];
+        var subLevel=[];
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every pressure level
                 var sub_secs = data[di][4];
                // console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
                 subSecs.push(sub_secs);
+
+                var sub_level = data[di][1];
+                subLevel.push(sub_level);
             }
         }
 
        // console.log ("xue sub_secs= " +  subSecs);
         //console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
         var subSecIntersection = _.intersection.apply(this,subSecs);
-      //  console.log ("_.intersection subSecIntersection " +  subSecIntersection.length);
+        var subLevelIntersection = _.intersection.apply(this,subLevel);
+        console.log ("_.intersection subLevel " + subLevelIntersection.length);
         //
         //var res = subSecs.shift().filter(function(v) {
         //    return subSecs.every(function(a) {

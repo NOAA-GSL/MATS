@@ -148,7 +148,6 @@ curveParams = function () {
                 options:Object.keys(siteOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-               // default: 'BO2OR',
                 default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
@@ -592,7 +591,11 @@ Meteor.startup(function () {
             host        : 'wfip2-db.gsd.esrl.noaa.gov',
             user        : 'dev',
             password    : 'Pass4userdev*',
-            database    : 'WFIP2_jeff',
+
+           // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           // user        : 'readonly',
+           // password    : 'Readonlyp@$$405',
+            database    : 'WFIP2',
             connectionLimit : 10
 
         });
@@ -611,11 +614,13 @@ Meteor.startup(function () {
     }
     var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+    //var modelSettings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
     //var myModels = [];
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
+   // modelPool = mysql.createPool(wfip2Settings);
     wfip2Pool = mysql.createPool(wfip2Settings);
 
 
@@ -689,12 +694,14 @@ Meteor.startup(function () {
 
 
             if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 //FcstLensPerModel.remove({});
                 SitesPerModel.remove({});
                 siteOptionsMap['All'] = 'All';
+                siteOptionsMap['All Sodar'] = 'All Sodar';
+                siteOptionsMap['All Profile'] = 'All Profile';
                 for (var i = 0; i < rows.length; i++) {
                     var siteid = rows[i].siteid;
                     var name = rows[i].name;
