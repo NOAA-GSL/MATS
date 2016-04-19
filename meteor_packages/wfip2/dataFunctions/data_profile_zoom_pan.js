@@ -33,6 +33,11 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
+    var ws_z = {};
+    var time_z = {};
+    var site_z ={};
+    var site_z_time ={};
+    var ws_z_time = {};
     wfip2Pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
             if (err != undefined) {
@@ -44,8 +49,6 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 dFuture['return']();
             } else {
 
-                var ws_z = {};
-                var time_z = {};
 
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     //var avVal = Number(rows[rowIndex].z);
@@ -53,8 +56,8 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                     var avVal = z.substring(1, z.length - 1)
                     var ws = rows[rowIndex].ws;
                     var stat = ws.substring(1, ws.length - 1)
-                    var valid_utc = rows[rowIndex].valid_utc;
-
+                    var valid_utc = Number(rows[rowIndex].valid_utc);
+                    var site_id = Number(rows[rowIndex].sites_siteid);
 
 
                     var sub_values = avVal.split(',');
@@ -63,22 +66,38 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
 
                     for (var j=0;j<sub_ws.length;j++) {
                         var this_z = Number(sub_values[j]);
+                        var this_ws = sub_ws[j];
+
                         if (ws_z[this_z] === undefined) {
                             ws_z[this_z]=[];
                         }
-                        var this_ws = sub_ws[j];
 
                         ws_z[this_z].push(this_ws);
 
-                        if (time_z[this_z] === undefined) {
-                            time_z[this_z]=[];
+
+                        if (site_z_time[this_z] === undefined) {
+                            site_z_time[this_z] = {};
                         }
-                        time_z[this_z].push(valid_utc);
-                        //console.log("xue this_z="+ this_z+" valid_utc="+valid_utc);
+                        if (site_z_time[this_z][valid_utc] === undefined) {
+                            site_z_time[this_z][valid_utc] = [];
+
+                        }
+
+                        site_z_time[this_z][valid_utc].push(site_id);
+
+                        if (ws_z_time[this_z] === undefined) {
+                            ws_z_time[this_z] = {};
+                        }
+                        if (ws_z_time[this_z][valid_utc] === undefined) {
+                            ws_z_time[this_z][valid_utc] = [];
+
+                        }
+
+                        ws_z_time[this_z][valid_utc].push(this_ws);
+
                     }
 
                 }// end of loop row
-                //console.log("ws_z length=" + Object.keys(ws_z).length);
 
 
                 var max_sample_level =0;
@@ -106,19 +125,12 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                         }
                         mean_ws = sum_ws / ws_array.length;
 
+                        //d.push([mean_ws, key, -1, ws_z[key], time_z[key],site_z[key]]);
+                        d.push([mean_ws, key,-1]);
 
-
-                    //d.push([mean_ws,key, -1, keys, ws_z[key]]);
-                    // d.push([mean_ws,key, -1, key, mean_ws]);
-
-                        d.push([mean_ws, key, -1, ws_z[key], time_z[key]]);
                     }
                 }
 
-
-
-               //console.log("xue ws_z=" +ws_z);
-               // console.log("xue this_row_ws[1]=" +this_row_ws[1]);
 
             }
             // done waiting - have results
@@ -127,8 +139,27 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
     );
     // wait for future to finish
     dFuture.wait();
-   // console.log("xue d="+d);
-    return d;   // [sub_values,sub_secs] as arrays
+
+    //return d;
+
+    return {
+        data: d,
+      //  error: error,
+
+        ws_z_time: ws_z_time,
+        site_z_time: site_z_time,
+
+        ymin: ymin,
+        ymax: ymax,
+        // N0: N0,
+        // N_times: N_times,
+        //N0: 20,
+        //N_times: 20,
+        //averageStr: averageStr,
+        //interval: interval
+    };
+
+
 };
 
 var get_err = function (sub_val_array, sub_secs_array) {
@@ -298,7 +329,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
         if (diffFrom == null) {
 
             if(model.includes("recs")){  //obs
-               var statement = "select valid_utc,z,ws " +
+               var statement = "select sites_siteid,valid_utc,z,ws " +
                     " from obs_recs as o ," + model + "   as s " +
                     //" where valid_utc=1454526000 " +
                     " where valid_utc >= "+ secsConvert(curveDatesDateRangeFrom) +
@@ -319,11 +350,11 @@ dataProfileZoom = function(plotParams, plotFunction) {
             }else{//model
 
 
-               var statement="select valid_utcs,z ,ws " +
+               var statement="select sites_siteid,valid_utc,z ,ws " +
                         " from "+model+", nwp_recs  " +
-                         "where valid_utcs>= "+ secsConvert(curveDatesDateRangeFrom)+
+                         "where valid_utc>= "+ secsConvert(curveDatesDateRangeFrom)+
                          " and analysis_utc+fcst_end_utc>="+  secsConvert(curveDatesDateRangeFrom) +
-                    "  and valid_utcs<= "+ secsConvert(curveDatesDateRangeTo) +
+                    "  and valid_utc<= "+ secsConvert(curveDatesDateRangeTo) +
                     " and analysis_utc+fcst_end_utc <="+  secsConvert(curveDatesDateRangeTo) +
                     " and nwps_nwpid= " + instrument_id+
                     " and nwp_recs_nwprecid=nwprecid " +
@@ -335,9 +366,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                 }
 
-                //statement="select z,ws  from "+model+" where valid_utcs=1454526000 " +
-                 //   "and nwp_recs_nwprecid=89522 " //+
-                   // "and fcst_end_utc=3600;"
 
             }
 
@@ -345,7 +373,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
             console.log("forecastLength=" + forecastLength);
             console.log("query=" + statement);
 
-            d = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
+
+            var queryResult = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
+            d = queryResult.data;
+
+            ws_z_time = queryResult.ws_z_time;
+            site_z_time = queryResult.site_z_time;
+
+
         } else {
             // this is a difference curve
             var minuendIndex = diffFrom[0];
@@ -410,6 +445,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
             label: label,
             color: color,
             data: d,
+            ws_z_time: ws_z_time,
+            site_z_time: site_z_time,
             points: {
                 symbol: pointSymbol,
                 fillColor: color,
@@ -435,87 +472,225 @@ dataProfileZoom = function(plotParams, plotFunction) {
     // match the data by subseconds
     // build an array of sub_second arrays
     // data is [stat(ws),avVal(z),sub_values,sub_secs]
+    //d.push([mean_ws, z, -1]);
     if (matching) {
-        var subSecs = [];
-        var subLevel=[];
-        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-            var data = dataset[curveIndex].data;
-            for (var di = 0; di < data.length; di++) { // every pressure level
-                var sub_secs = data[di][4];
-               // console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
-                subSecs.push(sub_secs);
 
-                var sub_level = data[di][1];
-                subLevel.push(sub_level);
+        console.log(" in matching" );
+        var num_all_sites =0;
+        var all_curve_z = [];
+        for (var ci= 0; ci < curvesLength; ci++) {
+            var this_id = dataset[ci].site;
+
+            if (this_id === "All") {
+                num_all_sites = num_all_sites + 1;
             }
+
+            var data = dataset[ci].data;
+            var this_curve_z =[];
+            for (var di = 0; di < data.length; di++) {
+
+                var this_z = data[di][1];
+                this_curve_z.push(this_z);
+            }
+
+            all_curve_z.push(this_curve_z);
         }
 
-       // console.log ("xue sub_secs= " +  subSecs);
-        //console.log ("xue z="+ data[di][1]+"  sub_secs= " +  sub_secs);
-        var subSecIntersection = _.intersection.apply(this,subSecs);
-        var subLevelIntersection = _.intersection.apply(this,subLevel);
-        console.log ("_.intersection subLevel " + subLevelIntersection.length);
-        //
-        //var res = subSecs.shift().filter(function(v) {
-        //    return subSecs.every(function(a) {
-        //        return a.indexOf(v) !== -1;
-        //    });
-        //});
-        //console.log ("manual subSecIntersection " +  res);
 
+
+        //only do matching for common levels ; if A has 10 levels, B has 20 levels, first 10 levels match, 2nd 10 levels keep original values
+
+         var subZIntersection = _.intersection.apply(this,all_curve_z);
+
+        for (var zi= 0; zi < subZIntersection.length; zi++) {
+
+            var common_z = subZIntersection[zi];
+            var all_time =[];
+
+
+            console.log("common_z=" + common_z);
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
+                //var this_time_z = dataset[curveIndex].time_z[common_z];
+                var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
+                all_time.push(this_time_z);
+
+            }
+
+
+            var subSecIntersection = _.intersection.apply(this,all_time);
+
+            console.log("subSecIntersection=" + subSecIntersection);
+
+            if (num_all_sites ===curvesLength){ // all curves with selection of all stations
+                var stnsIntersection={};
+
+               for (var si=0; si<subSecIntersection.length; si++){
+
+                   var this_secs = subSecIntersection[si];
+                   var all_site =[];
+
+
+                    for (var ci = 0; ci < curvesLength; ci++) {
+                        var these_stns = dataset[ci].site_z_time[common_z][this_secs];
+                        all_site.push(these_stns);
+                    }
+                    stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
+
+                   console.log("stnIntersection=" +this_secs+"===="+ stnsIntersection[this_secs]);
+                }
+
+
+            }
+
+
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
+
+
+                var new_ws_list =[];
+
+
+                for (var si=0; si<subSecIntersection.length; si++){
+
+                    var this_secs = subSecIntersection[si];
+
+                    var this_ws_z_time = dataset[curveIndex].ws_z_time[common_z][this_secs];
+
+                    var new_ws;
+
+                    if(num_all_sites==curvesLength){
+
+                        for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
+                            var this_stn = stnsIntersection[this_secs][stni];
+                            var this_index = dataset[curveIndex].site_z_time[common_z][this_secs].indexOf(this_stn);
+
+                            new_ws = dataset[curveIndex].ws_z_time[common_z][this_secs][this_index];
+                            new_ws_list.push (new_ws);
+
+                        }
+
+                    }
+
+                    else{
+
+                        new_ws = this_ws_z_time;
+                        new_ws_list.push(new_ws);
+                    }
+                }
+
+
+                var flattened = new_ws_list.reduce(function (a, b) {
+                    return a.concat(b);
+                }, []);
+
+                console.log("c="+ci+" "+" flattened=" + flattened);
+
+                if (flattened.length > 0) {
+                    var new_mean = 0;
+                    for (var ii = 0; ii < flattened.length; ii++) {
+                        // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
+                        new_mean = new_mean + flattened[ii];
+
+                    }
+
+                    //dataset[curveIndex].data.push([new_mean / flattened.length,common_z]);
+                }
+
+                var di=0;
+                while(di<data.length){
+                    if(data[di][1]===common_z){break;}
+                    else{di= di+1;}
+
+                }
+                dataset[curveIndex].data[di]=[new_mean / flattened.length,common_z,-1];
+
+
+
+
+            }
+
+        }
+
+       /* for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+            var curve = curves[curveIndex];
+            var diffFrom = curve.diffFrom; // [minuend, subtrahend]
+
+            var minuendIndex = diffFrom[0];
+            var subtrahendIndex = diffFrom[1];
+            var minuendData = dataset[minuendIndex].data;
+            var subtrahendData = dataset[subtrahendIndex].data;
+
+            // do the differencing
+            //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+            var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
+            for (var i = 0; i < l; i++) { // each pressure level
+                d[i] = [];
+                d[i][3] = [];
+                d[i][4] = [];
+                // pressure level
+                d[i][1] = subtrahendData[i][1];
+                // values diff
+                d[i][0] = minuendData[i][0] - subtrahendData[i][0];
+                // do the subValues
+                var minuendDataSubValues = minuendData[i][3];
+                var minuendDataSubSeconds = minuendData[i][4];
+                var subtrahendDataSubValues = subtrahendData[i][3];
+                var subtrahendDataSubSeconds = subtrahendData[i][4];
+                // find the intersection of the subSeconds
+                var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
+                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                    d[i][4].push(secondsIntersection[siIndex]);
+                    d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+                }
+            }
+        }*/
 
     }
 
     // calculate stats for each dataset matching to subsec_intersection if matching is specified
-    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        data = dataset[curveIndex].data;
-       // console.log("this data: " + data);
-        for (di = 0; di < data.length; di++) { // every pressure level
-            sub_secs = data[di][4];
-            var subValues = data[di][3];
-            var errorResult = {};
-            if (matching) {
-                var newSubValues = [];
-                for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
-                    var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
-                    var newVal = subValues[secsIndex];
-                    if (newVal === undefined || newVal == 0) {
-                        console.log("bad newVal: " + newVal);
-                        console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                    } else {
-                        newSubValues.push(newVal);
-                    }
-                }
-                data[di][3] = newSubValues;
-                data[di][4] = subSecIntersection;
-            }
+   // for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+   //     data = dataset[curveIndex].data;
+   //    // console.log("this data: " + data);
+   //     for (di = 0; di < data.length; di++) { // every pressure level
+    //        sub_secs = data[di][4];
+     //       var subValues = data[di][3];
+     //       var errorResult = {};
+     //       if (matching) {
+     //           var newSubValues = [];
+     //           for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
+     //               var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
+     //               var newVal = subValues[secsIndex];
+     //               if (newVal === undefined || newVal == 0) {
+     //                   console.log("bad newVal: " + newVal);
+     //                   console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+     //               } else {
+     //                   newSubValues.push(newVal);
+     //               }
+      //          }
+      //          data[di][3] = newSubValues;
+      //          data[di][4] = subSecIntersection;
+      //      }
 
-           // console.log("data[di][3]: " + data[di][3]);
-           // console.log("data[di][4]: " + data[di][4]);
-           // errorResult = get_err(data[di][3], data[di][4]);
-            /*console.log("errorResult: mean= " + errorResult.d_mean);
-            console.log("errorResult: stde= " + errorResult.stde_betsy);
-            console.log("errorResult: n_good= " + errorResult.n_good);
-            console.log("errorResult: lag1= " + errorResult.lag1);*/
+
+
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
 
-           /* data[di][2] = errorResult.stde_betsy;
-            data[di][5] = {
-                d_mean: errorResult.d_mean,
-                stde_betsy: errorResult.stde_betsy,
-                n_good: errorResult.n_good,
-                lag1: errorResult.lag1
-            };
-            data[di][6] = label +
-                "<br>" + data[di][1] + "m" +
-                "<br> " + statisticSelect + ":" + data[di][0].toPrecision(4) +
-                "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
-                "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
-                "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + errorResult.lag1.toPrecision(4);*/
-        }
-    }
+      //     /* data[di][2] = errorResult.stde_betsy;
+      //      data[di][5] = {
+      //          d_mean: errorResult.d_mean,
+       //         stde_betsy: errorResult.stde_betsy,
+       //         n_good: errorResult.n_good,
+       //         lag1: errorResult.lag1
+       //     };
+       //     data[di][6] = label +
+       //         "<br>" + data[di][1] + "m" +
+       //         "<br> " + statisticSelect + ":" + data[di][0].toPrecision(4) +
+       //         "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
+       //         "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
+       //         "<br>  n:" + errorResult.n_good +
+       //         "<br>  lag1:" + errorResult.lag1.toPrecision(4);*/
+       // }
+   // }
 
 
     // generate y-axis

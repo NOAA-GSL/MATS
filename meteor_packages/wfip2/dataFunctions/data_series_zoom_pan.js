@@ -27,166 +27,162 @@ var secsConvert = function (dStr) {
 };
 
 
+var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr,top,bottom) {
+        var dFuture = new Future();
+        var d = [];  // d will contain the curve data
+        var error = "";
+        var N0 = [];
+        var N_times = [];
+        var ws_z_time = {};
+        var site_z_time ={};
+        // modelPool.query(statement, function (err, rows) {
+        wfip2Pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err != undefined) {
+                error = err.message;
+                dFuture['return']();
+            } else if (rows === undefined || rows.length === 0) {
+                error = 'No data to plot: ' + err;
+                // done waiting - error condition
+                dFuture['return']();
+            } else {
+                ymin = Number(rows[0].stat);
+                ymax = Number(rows[0].stat);
+                var curveTime = [];
+                var curveStat = [];
+                var N0_max = 0;
+
+                var ws_time = {};
 
 
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var avSeconds = Number(rows[rowIndex].avtime);
+                    var siteid = rows[rowIndex].sites_siteid;
 
-var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, site,averageStr,top,bottom) {
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var N0 = [];
-    var N_times = [];
-    var ws_z_time = {};
-    var site_z_time ={};
-    // modelPool.query(statement, function (err, rows) {
-    wfip2Pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            ymin = Number(rows[0].stat);
-            ymax = Number(rows[0].stat);
-            var curveTime = [];
-            var curveStat = [];
-            var N0_max = 0;
+                    var z = (rows[rowIndex].z);
+                    var avVal = z.substring(1, z.length - 1)
+                    var ws = rows[rowIndex].ws;
+                    var stat = ws.substring(1, ws.length - 1)
+                    //  var valid_utc = rows[rowIndex].valid_utc;
 
-            var ws_time = {};
+                    var sub_z = avVal.split(',');
+                    var sub_ws = stat.split(',').map(Number);
 
 
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var siteid = rows[rowIndex].sites_siteid;
+                    if (ws_time[avSeconds] === undefined) {
+                        ws_time[avSeconds] = [];
+                    }
+                    var this_mean_ws = 0;
+                    var n_z = 0;
+                    for (var j = 0; j < sub_ws.length; j++) {
+                        var this_ws = sub_ws[j];
+                        var this_z = Math.floor(sub_z[j]); // jeff put float number for level
 
-                var z = (rows[rowIndex].z);
-                var avVal = z.substring(1, z.length - 1)
-                var ws = rows[rowIndex].ws;
-                var stat = ws.substring(1, ws.length - 1)
-                //  var valid_utc = rows[rowIndex].valid_utc;
+                        // ws_z_time is for matching levels for each timestamp
+                        if (ws_z_time[avSeconds] === undefined) {
+                            ws_z_time[avSeconds] = {};
+                        }
+                        if (ws_z_time[avSeconds][this_z] === undefined) {
+                            ws_z_time[avSeconds][this_z] = [];
 
-                var sub_z = avVal.split(',');
-                var sub_ws = stat.split(',').map(Number);
+                        }
 
 
-                if (ws_time[avSeconds] === undefined) {
-                    ws_time[avSeconds] = [];
+                        if (site_z_time[avSeconds] === undefined) {
+                            site_z_time[avSeconds] = {};
+                        }
+                        if (site_z_time[avSeconds][this_z] === undefined) {
+                            site_z_time[avSeconds][this_z] = [];
+
+                        }
+
+                        if (this_z >= bottom && this_z <= top) {
+                            this_mean_ws = this_mean_ws + this_ws;
+                            n_z = n_z + 1;
+                            ws_z_time[avSeconds][this_z].push(this_ws);
+                            site_z_time[avSeconds][this_z].push(siteid);
+                        }
+
+
+                    }
+
+                    if (n_z > 0) {
+
+                        this_mean_ws = this_mean_ws / n_z;
+                        ws_time[avSeconds].push(this_mean_ws);
+                    }
                 }
-                var this_mean_ws = 0;
-                var n_z = 0;
-                for (var j = 0; j < sub_ws.length; j++) {
-                    var this_ws = sub_ws[j];
-                    var this_z = Math.floor(sub_z[j]); // jeff put float number for level
 
-                    // ws_z_time is for matching levels for each timestamp
-                    if (ws_z_time[avSeconds] === undefined) {
-                        ws_z_time[avSeconds] = {};
+
+
+                var max_sample_time =0;
+                var  keys = Object.keys(ws_time);
+                // console.log("xue keys="+keys);
+                for(var jj=0; jj<keys.length;jj++){
+                    var key = keys[jj];
+                    if (ws_time[key].length > max_sample_time){
+                        max_sample_time=ws_time[key].length;
                     }
-                    if (ws_z_time[avSeconds][this_z] === undefined) {
-                        ws_z_time[avSeconds][this_z] = [];
-
-                    }
-
-
-                    if (site_z_time[avSeconds] === undefined) {
-                        site_z_time[avSeconds] = {};
-                    }
-                    if (site_z_time[avSeconds][this_z] === undefined) {
-                        site_z_time[avSeconds][this_z] = [];
-
-                    }
-
-                    if (this_z >= bottom && this_z <= top) {
-                        this_mean_ws = this_mean_ws + this_ws;
-                        n_z = n_z + 1;
-                        ws_z_time[avSeconds][this_z].push(this_ws);
-                        site_z_time[avSeconds][this_z].push(siteid);
-                    }
-
-
                 }
 
-                if (n_z > 0) {
+                // multiple stations, get average values for one time stampe for some certain veritcal levels
+                for(var jj=0; jj<keys.length;jj++) {
+                    var key = keys[jj];
+                    var ws_array = ws_time[key];
 
-                this_mean_ws = this_mean_ws / n_z;
-                ws_time[avSeconds].push(this_mean_ws);
-                }
-            }
-
-
-
-            var max_sample_time =0;
-            var  keys = Object.keys(ws_time);
-            // console.log("xue keys="+keys);
-            for(var jj=0; jj<keys.length;jj++){
-                var key = keys[jj];
-                if (ws_time[key].length > max_sample_time){
-                    max_sample_time=ws_time[key].length;
-                }
-            }
-
-            // multiple stations, get average values for one time stampe for some certain veritcal levels
-            for(var jj=0; jj<keys.length;jj++) {
-                var key = keys[jj];
-                var ws_array = ws_time[key];
-               // console.log("type=" +  typeof ws_array);
-               // console.log("null=" +  isNaN(ws_array));
-               // console.log("length=" +  ws_array.length);
-                if (ws_array.length>0 ) {
+                    if (ws_array.length>0 ) {
 
 
-                    var mean_ws;
-                    var sum_ws = 0;
+                        var mean_ws;
+                        var sum_ws = 0;
 
-                   //  if (ws_array.length > 0.5 * max_sample_time) {
+                        //  if (ws_array.length > 0.5 * max_sample_time) {
 
                         for (var jjj = 0; jjj < ws_array.length; jjj++) {
                             sum_ws = sum_ws + ws_array[jjj];
                         }
-                         mean_ws = sum_ws / ws_array.length;
+                        mean_ws = sum_ws / ws_array.length;
 
-                         //console.log("key="+key+" mean_ws="+mean_ws );
+                        //console.log("key="+key+" mean_ws="+mean_ws );
 
-                         d.push([key * 1000, mean_ws]);
-                //     }
+                        d.push([key * 1000, mean_ws]);
+                        //     }
+                    }
                 }
+
+
+
+
+
+
+
+
+
+                // done waiting - have results
+                dFuture['return']();
             }
+        });
+        // wait for future to finish
+        dFuture.wait();
 
-
-
-
-
-
-
-
-
-            // done waiting - have results
-            dFuture['return']();
-        }
-    });
-    // wait for future to finish
-    dFuture.wait();
-
-    //console.log("var_z_time="+var_z_time );
-    return {
-        data: d,
-        error: error,
-        ws_z_time: ws_z_time,
-        site_z_time: site_z_time,
-        site: site,
-        ymin: ymin,
-        ymax: ymax,
-       // N0: N0,
-       // N_times: N_times,
-        N0: 20,
-        N_times: 20,
-        averageStr: averageStr,
-        interval: interval
+        //console.log("var_z_time="+var_z_time );
+        return {
+            data: d,
+            error: error,
+            ws_z_time: ws_z_time,
+            site_z_time: site_z_time,
+     //         site: site,
+            ymin: ymin,
+            ymax: ymax,
+            // N0: N0,
+            // N_times: N_times,
+            N0: 20,
+            N_times: 20,
+            averageStr: averageStr,
+            interval: interval
+        };
     };
-};
+//}
 
 dataSeriesZoom = function (plotParams, plotFunction) {
     var dateConvert = function (dStr) {
@@ -305,12 +301,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
             } else {
 
-                statement ="select valid_utcs as avtime ,z ,ws,sites_siteid  " +
+                statement ="select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from "+model +", nwp_recs  " +
                     " where nwps_nwpid=" +instrument_id+
                     " and nwp_recs_nwprecid=nwprecid" +
-                       " and valid_utcs >="+ secsConvert(fromDate) +
-                    " and valid_utcs<=" + secsConvert(toDate)+
+                       " and valid_utc >="+ secsConvert(fromDate) +
+                    " and valid_utc<=" + secsConvert(toDate)+
                     " and fcst_end_utc="+3600*forecastLength;
 
 
@@ -326,7 +322,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             console.log("siteid=" + siteid);
             var ws_z_time;
             var site_z_time;
-            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval,siteid, averageStr,top,bottom);
+
+            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom);
             d = queryResult.data;
             console.log("data=" + d);
             //console.log("d=" + d);
