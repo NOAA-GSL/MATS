@@ -508,7 +508,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             var all_time =[];
 
 
-            console.log("common_z=" + common_z);
+
             for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
                 //var this_time_z = dataset[curveIndex].time_z[common_z];
                 var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
@@ -519,7 +519,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             var subSecIntersection = _.intersection.apply(this,all_time);
 
-            console.log("subSecIntersection=" + subSecIntersection);
 
             if (num_all_sites ===curvesLength){ // all curves with selection of all stations
                 var stnsIntersection={};
@@ -536,7 +535,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     }
                     stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
 
-                   console.log("stnIntersection=" +this_secs+"===="+ stnsIntersection[this_secs]);
+
                 }
 
 
@@ -582,7 +581,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     return a.concat(b);
                 }, []);
 
-                console.log("c="+ci+" "+" flattened=" + flattened);
+
 
                 if (flattened.length > 0) {
                     var new_mean = 0;

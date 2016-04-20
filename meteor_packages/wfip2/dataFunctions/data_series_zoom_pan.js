@@ -143,7 +143,6 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                         }
                         mean_ws = sum_ws / ws_array.length;
 
-                        //console.log("key="+key+" mean_ws="+mean_ws );
 
                         d.push([key * 1000, mean_ws]);
                         //     }
@@ -165,7 +164,7 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
         // wait for future to finish
         dFuture.wait();
 
-        //console.log("var_z_time="+var_z_time );
+
         return {
             data: d,
             error: error,
@@ -319,14 +318,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
             console.log("query=" + statement);
-            console.log("siteid=" + siteid);
+
             var ws_z_time;
             var site_z_time;
 
             var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom);
             d = queryResult.data;
-            console.log("data=" + d);
-            //console.log("d=" + d);
+
             if (d[0] === undefined) {
                 error = "No data returned";
             } else {
@@ -529,7 +527,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         return a.concat(b);
                     }, []);
 
-                //console.log("c="+ci+" "+" flattened=" + flattened);
 
                     if (flattened.length > 0) {
                         var new_mean = 0;
@@ -604,7 +601,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ymax = ymax > d[i][1] ? ymax : d[i][1];
             }
 
-            console.log("in diff d="+d);
+
 
             var mean =0 ;
             for (var i = 0; i < d.length; i++) {
