@@ -15,6 +15,11 @@ echo "$0 ----------- started"
 date
  
 #git the builds top version
+if [[ ! -d "/tmp/tmpbuilds" ]]; then
+	mkdir -p /tmp/tmpbuilds
+	chmod 777 /tmp/tmpbuilds
+fi
+
 rm -rf /tmp/tmpbuilds/*
 cp /builds/*.tar.gz /tmp/tmpbuilds
 if [[ ! -d "/tmp/tmpbuilds" ]]; then
