@@ -253,7 +253,7 @@ Template.plotList.events({
 
                     var dataset = result.data;
                     var options = result.options;
-                    Session.set('dataset', dataset);
+                  //  Session.set('dataset', dataset);
                     Session.set('options', options);
                     Session.set('graphFunction', graphFunction);
                     //window[graphFunction](dataset, options, Session.get('Curves'));
