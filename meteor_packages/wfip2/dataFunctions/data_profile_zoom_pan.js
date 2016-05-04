@@ -127,6 +127,7 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
 
                         //d.push([mean_ws, key, -1, ws_z[key], time_z[key],site_z[key]]);
                         d.push([mean_ws, key,-1]);
+                       // d.push([mean_ws, key]);
 
                     }
                 }
@@ -373,44 +374,23 @@ dataProfileZoom = function(plotParams, plotFunction) {
             console.log("forecastLength=" + forecastLength);
             console.log("query=" + statement);
 
+            var ws_z_time;
+            var site_z_time;
 
             var queryResult = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
             d = queryResult.data;
+            console.log("d[0]=" + d[0]);
 
-            ws_z_time = queryResult.ws_z_time;
-            site_z_time = queryResult.site_z_time;
+            if (d[0] === undefined) {
+                console.log("i am undefined" );
 
+                error = "No data returned";
+            } else {
 
-        } else {
-            // this is a difference curve
-            var minuendIndex = diffFrom[0];
-            var subtrahendIndex = diffFrom[1];
-            var minuendData = dataset[minuendIndex].data;
-            var subtrahendData = dataset[subtrahendIndex].data;
-
-            // do the differencing
-            //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
-            var l = minuendData.length < subtrahendData.length?minuendData.length:subtrahendData.length;
-            for (var i = 0; i < l; i++) { // each pressure level
-                d[i] = [];
-                d[i][3] = [];
-                d[i][4] = [];
-                // pressure level
-                d[i][1] = subtrahendData[i][1];
-                // values diff
-                d[i][0] = minuendData[i][0] - subtrahendData[i][0];
-                // do the subValues
-                var minuendDataSubValues =   minuendData[i][3];
-                var minuendDataSubSeconds =   minuendData[i][4];
-                var subtrahendDataSubValues =   subtrahendData[i][3];
-                var subtrahendDataSubSeconds =   subtrahendData[i][4];
-                // find the intersection of the subSeconds
-                var secondsIntersection = _.intersection(minuendDataSubSeconds,subtrahendDataSubSeconds);
-                for (var siIndex=0; siIndex<secondsIntersection.length-1;siIndex++) {
-                    d[i][4].push(secondsIntersection[siIndex]);
-                    d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
-                }
+                ws_z_time = queryResult.ws_z_time;
+                site_z_time = queryResult.site_z_time;
             }
+
         }
 
 
@@ -440,6 +420,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
 
+        console.log("before option" );
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
@@ -466,7 +447,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 fill: false
             }
         };
+        console.log("after option" );
         dataset.push(options);
+        console.log("after push" );
     }
 
     // match the data by subseconds
@@ -602,96 +585,64 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 }
                 dataset[curveIndex].data[di]=[new_mean / flattened.length,common_z,-1];
 
-
-
-
             }
 
         }
 
-       /* for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom; // [minuend, subtrahend]
 
-            var minuendIndex = diffFrom[0];
-            var subtrahendIndex = diffFrom[1];
-            var minuendData = dataset[minuendIndex].data;
-            var subtrahendData = dataset[subtrahendIndex].data;
 
-            // do the differencing
-            //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
-            var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
-            for (var i = 0; i < l; i++) { // each pressure level
-                d[i] = [];
-                d[i][3] = [];
-                d[i][4] = [];
-                // pressure level
-                d[i][1] = subtrahendData[i][1];
-                // values diff
-                d[i][0] = minuendData[i][0] - subtrahendData[i][0];
-                // do the subValues
-                var minuendDataSubValues = minuendData[i][3];
-                var minuendDataSubSeconds = minuendData[i][4];
-                var subtrahendDataSubValues = subtrahendData[i][3];
-                var subtrahendDataSubSeconds = subtrahendData[i][4];
-                // find the intersection of the subSeconds
-                var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
-                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
-                    d[i][4].push(secondsIntersection[siIndex]);
-                    d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+            if (diffFrom != null) {
+
+                console.log("in diffFrom="+curveIndex);
+                var minuendIndex = diffFrom[0];
+                var subtrahendIndex = diffFrom[1];
+                var minuendData = dataset[minuendIndex].data;
+                var subtrahendData = dataset[subtrahendIndex].data;
+
+                console.log(" minuendData ="+minuendData);
+
+
+
+                // do the differencing
+                //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+                d =[];
+                var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
+                for (var i = 0; i < l; i++) { // each pressure level
+                    d[i] = [];
+                //    d[i][3] = [];
+                //    d[i][4] = [];
+                    // pressure level
+                    d[i][1] = subtrahendData[i][1];
+                    // values diff
+                    d[i][0] = minuendData[i][0] - subtrahendData[i][0];
+                    d[i][2] =-1;
+                    // do the subValues
+                 //   var minuendDataSubValues = minuendData[i][3];
+                 //   var minuendDataSubSeconds = minuendData[i][4];
+                  //  var subtrahendDataSubValues = subtrahendData[i][3];
+                   // var subtrahendDataSubSeconds = subtrahendData[i][4];
+                    // find the intersection of the subSeconds
+                   // var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
+                   // for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                   //     d[i][4].push(secondsIntersection[siIndex]);
+                   //     d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+                    //}
                 }
+                //d = minuendData - subtrahendData;
+                console.log("diffFrom  d="+d);
+                dataset[curveIndex].data = d;
+
             }
-        }*/
+        }
 
     }
 
-    // calculate stats for each dataset matching to subsec_intersection if matching is specified
-   // for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-   //     data = dataset[curveIndex].data;
-   //    // console.log("this data: " + data);
-   //     for (di = 0; di < data.length; di++) { // every pressure level
-    //        sub_secs = data[di][4];
-     //       var subValues = data[di][3];
-     //       var errorResult = {};
-     //       if (matching) {
-     //           var newSubValues = [];
-     //           for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
-     //               var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
-     //               var newVal = subValues[secsIndex];
-     //               if (newVal === undefined || newVal == 0) {
-     //                   console.log("bad newVal: " + newVal);
-     //                   console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-     //               } else {
-     //                   newSubValues.push(newVal);
-     //               }
-      //          }
-      //          data[di][3] = newSubValues;
-      //          data[di][4] = subSecIntersection;
-      //      }
 
 
-
-            // already have [stat,pl,subval,subsec]
-            // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-
-      //     /* data[di][2] = errorResult.stde_betsy;
-      //      data[di][5] = {
-      //          d_mean: errorResult.d_mean,
-       //         stde_betsy: errorResult.stde_betsy,
-       //         n_good: errorResult.n_good,
-       //         lag1: errorResult.lag1
-       //     };
-       //     data[di][6] = label +
-       //         "<br>" + data[di][1] + "m" +
-       //         "<br> " + statisticSelect + ":" + data[di][0].toPrecision(4) +
-       //         "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
-       //         "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
-       //         "<br>  n:" + errorResult.n_good +
-       //         "<br>  lag1:" + errorResult.lag1.toPrecision(4);*/
-       // }
-   // }
-
-
+    console.log("before dsi");
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -716,6 +667,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
         yaxis.push(yaxisOptions);
     }
 
+    console.log("before pOptions");
     var pOptions = {
         axisLabels: {
             show: true
@@ -764,12 +716,16 @@ dataProfileZoom = function(plotParams, plotFunction) {
         tooltip: true,
         tooltipOpts: {
             // the ct value is the third [2] element of the data series for profiles. This is the tooltip content.
-            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+           // content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+            //content: "<span style='font-size:150%'><strong>%y</strong></span>"
+            content: "<span style='font-size:150%'><strong>%f<br>%x:<br>value %y</strong></span>"
         }
     };
 
     // add black 0 line curve
     //dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
+
+    console.log("before result");
     var result = {
         error: error,
         data: dataset,

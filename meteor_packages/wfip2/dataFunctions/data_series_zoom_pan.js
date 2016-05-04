@@ -325,49 +325,22 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom);
             d = queryResult.data;
 
+            console.log("d[0]=" + d[0]);
             if (d[0] === undefined) {
                 error = "No data returned";
             } else {
-            }
-            xmin = d[0][0];
-            xmax = d[d.length - 1][0];
-            mxmax = mxmax > xmax ? xmax : mxmax;
-            mxmin = mxmin < xmin ? mxmin : xmin;
-            error = queryResult.error;
-            ws_z_time = queryResult.ws_z_time;
-            site_z_time = queryResult.site_z_time;
 
-           // var keys_z_time = Object.keys(ws_z_time);
-            //console.log("keys_z_time=" + keys_z_time);
-
-            //console.log("ws_z_time=" + queryResult.ws_z_time);
-
-        } /*else {
-            // this is a difference curve
-            console.log("in diff");
-            var minuendIndex = diffFrom[0];
-            var subtrahendIndex = diffFrom[1];
-            var minuendData = dataset[minuendIndex].data;
-            var subtrahendData = dataset[subtrahendIndex].data;
-            var minuendDataOptions = dataOptions[minuendIndex];
-            // add dataset copied from minuend
-            var d = [];
-            // do the differencing of the data
-            for (var i = 0; i < minuendData.length; i++) {
-                d[i] = [];
-                d[i][0] = subtrahendData[i][0];
-                if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
-                    d[i][1] = minuendData[i][1] - subtrahendData[i][1];
-                } else {
-                    d[i][1] = null;
-                }
-                // ymin and ymax will change with diff
-                ymin = ymin < d[i][1] ? ymin : d[i][1];
-                ymax = ymax > d[i][1] ? ymax : d[i][1];
+                xmin = d[0][0];
+                xmax = d[d.length - 1][0];
+                mxmax = mxmax > xmax ? xmax : mxmax;
+                mxmin = mxmin < xmin ? mxmin : xmin;
+                error = queryResult.error;
+                ws_z_time = queryResult.ws_z_time;
+                site_z_time = queryResult.site_z_time;
             }
 
-            console.log("in diff d="+d);
-        }*/
+
+        }
 
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
