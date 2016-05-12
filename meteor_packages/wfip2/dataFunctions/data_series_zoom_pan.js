@@ -228,7 +228,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         //var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
 
         var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
-        var model =  tmp[0];
+        var model = tmp[0];
         var instrument_id = tmp[1];
 
 
@@ -236,8 +236,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
 
         var label = (curve['label']);
-        var top =  Number(curve['top']);
-        var bottom =  Number(curve['bottom']);
+        var top = Number(curve['top']);
+        var bottom = Number(curve['bottom']);
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
@@ -286,27 +286,27 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
 
-            if(model.includes("recs")) {
+            if (model.includes("recs")) {
 
                 statement = "select valid_utc as avtime,z,ws,sites_siteid " +
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
-                    " and instruments_instrid="+instrument_id +
-                 " and valid_utc>=" + secsConvert(fromDate) +
-                 " and valid_utc<=" + secsConvert(toDate)
-                   // " and valid_utc>=1454482800" + //secsConvert(fromDate) +
-                   // " and valid_utc<=1454486400"// + secsConvert(toDate)
+                    " and instruments_instrid=" + instrument_id +
+                    " and valid_utc>=" + secsConvert(fromDate) +
+                    " and valid_utc<=" + secsConvert(toDate)
+                // " and valid_utc>=1454482800" + //secsConvert(fromDate) +
+                // " and valid_utc<=1454486400"// + secsConvert(toDate)
 
 
             } else {
 
-                statement ="select valid_utc as avtime ,z ,ws,sites_siteid  " +
-                    "from "+model +", nwp_recs  " +
-                    " where nwps_nwpid=" +instrument_id+
+                statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
+                    "from " + model + ", nwp_recs  " +
+                    " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                       " and valid_utc >="+ secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate)+
-                    " and fcst_end_utc="+3600*forecastLength;
+                    " and valid_utc >=" + secsConvert(fromDate) +
+                    " and valid_utc<=" + secsConvert(toDate) +
+                    " and fcst_end_utc=" + 3600 * forecastLength;
 
 
             }
@@ -322,12 +322,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             var ws_z_time;
             var site_z_time;
 
-            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr,top,bottom);
+            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr, top, bottom);
             d = queryResult.data;
 
             console.log("d[0]=" + d[0]);
             if (d[0] === undefined) {
-                error = "No data returned";
+           //    no data set emply array
+                d[0]=[];
             } else {
 
                 xmin = d[0][0];
@@ -337,69 +338,69 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 error = queryResult.error;
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
+                 }
+
+
+        }
+
+                var pointSymbol = "circle";
+                switch (curveIndex % 5) {
+                    case 0:
+                        pointSymbol = "circle";
+                        break;
+                    case 1:
+                        pointSymbol = "square";
+                        break;
+                    case 2:
+                        pointSymbol = "diamond";
+                        break;
+                    case 3:
+                        pointSymbol = "triangle";
+                        break;
+                    case 4:
+                        pointSymbol = "cross";
+                        break;
+                }
+                var yAxisIndex = 1;
+
+                if (variableStat in variableStatSet) {
+                    yAxisIndex = variableStatSet[variableStat].index;
+                    variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
+                } else {
+                    variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
+                }
+
+                var mean = 0;
+
+               //if (d[0] != undefined) {
+                 for (var i = 0; i < d.length; i++) {
+                        mean = mean + d[i][1];
+                    }
+                    mean = mean / d.length;
+               // }
+
+
+                var options = {
+                    yaxis: variableStatSet[variableStat].index,
+                    label: label,
+                    ws_z_time: ws_z_time,
+                    site_z_time: site_z_time,
+                    site: siteid,
+                    color: color,
+                    mean: label + "- mean = " + mean.toPrecision(4),
+                    data: d,
+                    points: {symbol: pointSymbol, fillColor: color, show: true},
+                    lines: {show: true, fill: false}
+                };
+
+
+                dataset.push(options);
+        console.log(curveIndex +" mean=" + dataset[curveIndex].mean);
+       // console.log("before match1 dataset="+dataset[curveIndex].data);
             }
 
-
-        }
-
-        var pointSymbol = "circle";
-        switch (curveIndex % 5) {
-            case 0:
-                pointSymbol = "circle";
-                break;
-            case 1:
-                pointSymbol = "square";
-                break;
-            case 2:
-                pointSymbol = "diamond";
-                break;
-            case 3:
-                pointSymbol = "triangle";
-                break;
-            case 4:
-                pointSymbol = "cross";
-                break;
-        }
-        var yAxisIndex = 1;
-
-        if (variableStat in variableStatSet) {
-            yAxisIndex = variableStatSet[variableStat].index;
-            variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
-        } else {
-            variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
-        }
-
-        var mean =0 ;
-
-
-        for (var i = 0; i < d.length; i++) {
-            mean =   mean +d[i][1];
-        }
-        mean = mean/d.length;
-
-        var options = {
-            yaxis: variableStatSet[variableStat].index,
-            label: label,
-            ws_z_time: ws_z_time,
-            site_z_time: site_z_time,
-            site: siteid,
-            color: color,
-           mean:  label + "- mean = " + mean.toPrecision(4),
-       //    mean:  label + "- mean = " + mean,
-            data: d,
-            points: {symbol: pointSymbol, fillColor: color, show: true},
-            lines: {show: true, fill: false}
-        };
-
-        dataset.push(options);
-        // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
-        // start at the same xaxis point and they may not end at the same xaxis point.
-        // We have to make them start and end at the same point (the xmin value and fill missing data with nulls).
-
-        var numCurves = dataset.length;
-    }
-
-
+    var numCurves = dataset.length;
+    console.log(" numCurves=" + numCurves);
 
 
     if (matching) {
@@ -470,7 +471,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
             for (var ci = 0; ci < numCurves; ci++) {
                     var new_ws_list = [];
-                    //console.log(ci +" zsInte=" + zsIntersection);
 
                     for (var zi = 0; zi < zsIntersection.length; zi++) {
                         var this_z = zsIntersection[zi];
@@ -584,7 +584,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
             dataset[curveIndex].data = d;
             dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
-        // dataset[2].data=d;
+
             }
         }
 
@@ -593,10 +593,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     }// end of match
 
+
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
+        console.log(" dsi=" + dsi);
+
         var variableStat = curves[dsi].variableStat;
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
@@ -616,6 +619,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         yaxes.push(yaxesOptions);
         yaxis.push(yaxisOptions);
     }
+
     var options = {
         axisLabels: {
             show: true
@@ -673,11 +677,17 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+
+
+    //dataset.push(dataZero = {color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
     var result = {
         error: error,
         data: dataset,
         options: options
     };
+
     plotFunction(result);
+
+
+
 };

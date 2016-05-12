@@ -49,7 +49,6 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 dFuture['return']();
             } else {
 
-
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     //var avVal = Number(rows[rowIndex].z);
                     var z = (rows[rowIndex].z);
@@ -64,12 +63,12 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                     var sub_ws = stat.split(',').map(Number);
 
 
-                    for (var j=0;j<sub_ws.length;j++) {
+                    for (var j = 0; j < sub_ws.length; j++) {
                         var this_z = Number(sub_values[j]);
                         var this_ws = sub_ws[j];
 
                         if (ws_z[this_z] === undefined) {
-                            ws_z[this_z]=[];
+                            ws_z[this_z] = [];
                         }
 
                         ws_z[this_z].push(this_ws);
@@ -100,18 +99,17 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 }// end of loop row
 
 
-                var max_sample_level =0;
-                var  keys = Object.keys(ws_z);
-                for(var jj=0; jj<keys.length;jj++){
+                var max_sample_level = 0;
+                var keys = Object.keys(ws_z);
+                for (var jj = 0; jj < keys.length; jj++) {
                     var key = keys[jj];
-                    if (ws_z[key].length > max_sample_level){
-                        max_sample_level=ws_z[key].length;
+                    if (ws_z[key].length > max_sample_level) {
+                        max_sample_level = ws_z[key].length;
                     }
                 }
 
-               // console.log("max_sample_level=" + max_sample_level);
 
-                for(var jj=0; jj<keys.length;jj++) {
+                for (var jj = 0; jj < keys.length; jj++) {
                     var key = keys[jj];
                     var ws_array = ws_z[key];
 
@@ -125,18 +123,17 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                         }
                         mean_ws = sum_ws / ws_array.length;
 
-                        //d.push([mean_ws, key, -1, ws_z[key], time_z[key],site_z[key]]);
-                        d.push([mean_ws, key,-1]);
-                       // d.push([mean_ws, key]);
+                        d.push([mean_ws, key, -1]);
+                        // d.push([mean_ws, key]);
 
                     }
                 }
 
 
+                // done waiting - have results
+                dFuture['return']();
             }
-            // done waiting - have results
-            dFuture['return']();
-        }
+            }
     );
     // wait for future to finish
     dFuture.wait();
@@ -145,8 +142,7 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
 
     return {
         data: d,
-      //  error: error,
-
+        error: error,
         ws_z_time: ws_z_time,
         site_z_time: site_z_time,
 
@@ -382,10 +378,10 @@ dataProfileZoom = function(plotParams, plotFunction) {
             console.log("d[0]=" + d[0]);
 
             if (d[0] === undefined) {
-                console.log("i am undefined" );
+                    //    no data set emply array
+                    d[0]=[];
 
-                error = "No data returned";
-            } else {
+                } else {
 
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
@@ -584,6 +580,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                 }
                 dataset[curveIndex].data[di]=[new_mean / flattened.length,common_z,-1];
+                console.log("curve="+ curveIndex+"  dataset[curveIndex].data[di]="+dataset[curveIndex].data[di] );
 
             }
 
@@ -634,6 +631,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 //d = minuendData - subtrahendData;
                 console.log("diffFrom  d="+d);
                 dataset[curveIndex].data = d;
+               // console.log("curve="+ curveIndex+"  d="+d );
 
             }
         }
@@ -718,7 +716,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             // the ct value is the third [2] element of the data series for profiles. This is the tooltip content.
            // content: "<span style='font-size:150%'><strong>%ct</strong></span>"
             //content: "<span style='font-size:150%'><strong>%y</strong></span>"
-            content: "<span style='font-size:150%'><strong>%f<br>%x:<br>value %y</strong></span>"
+            content: "<span style='font-size:150%'><strong><br>value %x<br>at %y m</strong></span>"
         }
     };
 
