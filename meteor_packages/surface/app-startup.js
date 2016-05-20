@@ -90,7 +90,7 @@ curveParams = function () {
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
                 controlButtonCovered: true,
-                default: 'FIM',
+                default: 'RAP',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
