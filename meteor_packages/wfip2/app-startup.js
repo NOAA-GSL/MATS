@@ -143,32 +143,38 @@ curveParams = function () {
             {
                 name: 'sites',
                 type: InputTypes.select,
-              //  optionsMap:optionsMap,
                 optionsMap:siteOptionsMap,
                 options:Object.keys(siteOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
                 default: 'All',
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                multiple: true
             });
 
+        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
+                            };
         CurveParams.insert(
             {
-                name: 'map',
-                type: InputTypes.custom,
-                functionName: 'siteMap',
-                //optionsMap:optionsMap,
-                //options:Object.keys(optionsMap),   // convenience
+                name: 'sitesMap',
+                type: InputTypes.selectMap,
+                optionsMap:siteMarkers,
+                options:Object.keys(optionsMap),   // convenience
+                targetParam: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: 'site map',
+                default: '',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                multiple: true,
+                defaultMapView: {point:[40.258719, -100.606821], zoomLevel:4},
+
             });
 
         CurveParams.insert(
@@ -565,6 +571,9 @@ roles = function () {
         Roles.insert({name: "administrator", description: "administrator privileges"});
     }
 };
+
+
+    
 
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');

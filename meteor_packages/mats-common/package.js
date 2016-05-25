@@ -88,6 +88,9 @@ Package.onUse(function(api) {
   api.add_files("templates/common/select.html", "client");
   api.add_files("templates/common/select.js", "client");
 
+  api.add_files("templates/common/map.html", "client");
+  api.add_files("templates/common/map.js", "client");
+
   api.add_files("templates/common/date_range.html", "client");
   api.add_files("templates/common/date_range.js", "client");
 

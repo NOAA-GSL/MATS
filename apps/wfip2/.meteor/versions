@@ -7,6 +7,7 @@ autoupdate@1.2.4
 babel-compiler@5.8.24_1
 babel-runtime@0.1.4
 base64@1.0.4
+bevanhunt:leaflet@2.0.0
 binary-heap@1.0.4
 blaze@2.1.3
 blaze-html-templates@1.0.1
@@ -68,7 +69,6 @@ rajit:bootstrap3-datepicker@1.5.0
 random@1.0.5
 randyp:flot@1.0.0
 randyp:mats-common@1.0.4
-xwei:wfip2@0.0.1
 rate-limit@1.0.0
 reactive-dict@1.1.3
 reactive-var@1.0.6
@@ -90,3 +90,4 @@ underscore@1.0.4
 url@1.0.5
 webapp@1.2.3
 webapp-hashing@1.0.5
+xwei:wfip2@0.0.1

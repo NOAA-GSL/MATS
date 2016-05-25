@@ -32,6 +32,9 @@ Template.item.helpers({
     isSelect: function () {
         return ((typeof this.type !== 'undefined') && (this.type == InputTypes.select));
     },
+    isSelectMap: function () {
+        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.selectMap));
+    },
     isInput: function () {
         return ((typeof this.type !== 'undefined')  && (this.type == InputTypes.textInput));
     },

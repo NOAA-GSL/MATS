@@ -425,6 +425,7 @@ Meteor.methods({
 });
 
 
+
 Meteor.publish("CurveParams", function () {
     return CurveParams.find();
 });

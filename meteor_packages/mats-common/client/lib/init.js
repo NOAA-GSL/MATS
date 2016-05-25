@@ -17,6 +17,8 @@ Meteor.subscribe("Authorization");
 Meteor.subscribe("Credentials");
 Meteor.subscribe("Databases");
 Meteor.subscribe("CurveTextPatterns");
+
+
 Session.set('Curves',[]);
 Session.set('PlotParams',[]);
 
@@ -27,4 +29,3 @@ Accounts.ui.config({
 });
 
 
-//Hooks.init();

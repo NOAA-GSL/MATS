@@ -18,7 +18,9 @@
                     {{#each options}}
                         {{> radioGroup this}}
                     {{/each}}
-            {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}
+            {{else}} {{#if isSelectMap}}
+                {{> map this}}
+            {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}
         </div>
         <button type="button" class="control-button btn btn-info fa fa-label" id="{{controlButton}}-value" style="display:{{controlButtonVisibility}}"> {{value}}</button>
         <button type="button" class="btn spacebutton" id="spacer"></button>

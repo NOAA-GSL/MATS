@@ -21,17 +21,20 @@ Databases = new Meteor.Collection("Databases");
 SavedDatabases = new Meteor.Collection("SavedDatabases");
 Credentials = new Meteor.Collection("Credentials");
 SavedCredentials = new Meteor.Collection("SavedCredentials");
+
+
 InputTypes = {
     textInput : 'textInput',
     select : 'select',
     numberSpinner : 'numberSpinner',
-    dateRange:'dateRange',
-    radioGroup:'radioGroup',
-    checkBoxGroup:'checkBoxGroup',
-    resetButton:'resetButton',
-    controlButton:'controlButton',
-    element:'element',
-    custom:'custom'
+    dateRange: 'dateRange',
+    radioGroup: 'radioGroup',
+    checkBoxGroup: 'checkBoxGroup',
+    resetButton: 'resetButton',
+    controlButton: 'controlButton',
+    element: 'element',
+    selectMap: 'selectMap',
+    custom: 'custom'
 };
 
 getCurves = function() {
