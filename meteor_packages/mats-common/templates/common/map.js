@@ -14,7 +14,7 @@ Template.map.rendered = function () {
         var options = m.options;
         var point = m.point;
         var icon = L.divIcon({
-            html: '<div style="width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;opacity:.6"><b>' + options.network + '</b></div>'
+            html: '<div style="background: transparent;border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>'
         });
         return icon;
     };
