@@ -1,7 +1,8 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
-
+//var siteMarkers={};
+//var siteMarkers=[];
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
@@ -582,16 +583,7 @@ Meteor.startup(function () {
         Databases.remove({});
     //}
     if (Databases.find().count() == 0) {
-        Databases.insert({
-            name:"sumSetting",
-            role: "sum_data",
-            status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
-            database    : 'ruc_ua_sums2',
-            connectionLimit : 10
-        });
+
         Databases.insert({
             name:"wfip2Setting",
             role: "wfip2_data",
@@ -608,31 +600,19 @@ Meteor.startup(function () {
 
         });
 
-        Databases.insert({
-                  name:"modelSetting",
-                  role: "model_data",
-                  status: "active",
-                  host        : 'wolphin.fsl.noaa.gov',
-                  user        : 'writer',
-                  password    : 'amt1234',
-                  database    : 'wfip',
-                  connectionLimit : 10
 
-        });
     }
-    var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    //var modelSettings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+
+
     var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    //var myModels = [];
-    sumPool = mysql.createPool(sumSettings);
-    modelPool = mysql.createPool(modelSettings);
-   // modelPool = mysql.createPool(wfip2Settings);
+
+
     wfip2Pool = mysql.createPool(wfip2Settings);
 
 
-    modelPool.on('connection', function (connection) {
+
+    wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
@@ -640,7 +620,8 @@ Meteor.startup(function () {
 
         var statement = "select model,regions,model_value from regions_per_model_mats";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -657,11 +638,10 @@ Meteor.startup(function () {
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid =-1;
-                   // if(table_name.includes("recs")){
-                    //    console.log('this is obs data ');
+
                         instruments_instrid = model_values[1];
 
-                   // }
+
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
@@ -687,9 +667,11 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
+   // var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
+    //    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
 
     try {
-        var statement = "SELECT siteid, name,description FROM sites;";
+        var statement = "SELECT siteid, name,description ,lat,lon FROM sites;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -714,6 +696,9 @@ Meteor.startup(function () {
                     var siteid = rows[i].siteid;
                     var name = rows[i].name;
                     var description = rows[i].description;
+                    var lat = rows[i].lat;
+                    var lon = rows[i].lon;
+
 
                     if(description.includes("SODAR")) {
                         sodar_sites.push(siteid +","+name);
@@ -728,6 +713,10 @@ Meteor.startup(function () {
                     //var valueList = [];
                     //valueList.push(table_name+','+instruments_instrid);
                     siteOptionsMap[name] = siteid;
+
+                    //siteMarkers.default.push({point:[lat,lon],options:{title:name}});
+                  // siteMarkers.push({point:[lat,lon],options:{title:name}});
+
 
                    // siteOptionsMap[description] = siteid;
 
@@ -748,7 +737,8 @@ Meteor.startup(function () {
     try {
         var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -776,7 +766,8 @@ Meteor.startup(function () {
 
         var statement = "select regionMapTable,description from region_descriptions_mats;";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
