@@ -28,4 +28,3 @@ Accounts.ui.config({
     }
 });
 
-
