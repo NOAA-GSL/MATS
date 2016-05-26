@@ -97,6 +97,20 @@ Template.item.events({
         } else {
             if (elem !== null) {
                 elem.style.display = "block";
+                if (this.type == "selectMap") {
+                    var ref = this.name + '-' + this.type;
+                    var m = document.getElementById(ref);
+                    var data = {
+                        name: this.name,
+                        type: this.type
+                    }
+                    var resizeMapEvent = new CustomEvent("resizeMap", {
+                        detail: {
+                            data: data
+                        }
+                    });
+                    m.dispatchEvent(resizeMapEvent);
+                }
             }
         }
     },

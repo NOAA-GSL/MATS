@@ -117,28 +117,6 @@ curveParams = function () {
                 displayGroup: 2
             });
 
-
-
-
-
-       // optionsMap = {All:['All'], sodar:['sodar_recs','4'], profiler_915:['profiler_recs_915','1']};
-       /* CurveParams.insert(
-            {
-                name: 'instrument',
-                type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                default: 'All',
-                controlButtonVisibility: 'block',
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 2
-            });*/
-
-       // optionsMap = {BO2OR:['Boardman Airport'], CD2OR:['Condon State Airport']};
-      //  optionsMap = {'Boardman Airport':[BO2OR], CD2OR:['Condon State Airport']};
         CurveParams.insert(
             {
                 name: 'sites',
@@ -167,7 +145,7 @@ curveParams = function () {
                 targetParam: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'ALL',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,

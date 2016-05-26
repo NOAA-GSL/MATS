@@ -1,23 +1,18 @@
 var mapWidth = function () {
-    var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * 0.5;
+    var w = Math.round(Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * .9);
     return w + "px";
 };
 var mapHeight = function() {
-    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.5;
+    var h = Math.round(Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5);
     return h + "px";
 };
 
+
 Template.map.rendered = function () {
-    $(window).resize(function() {
-        $('#map').css('height', mapHeight());
-        $('#map').css('width', mapWidth());
-    });
-
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
-
     var defaultPoint = this.data.defaultMapView.point;
     var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
-    var map = L.map('map', {
+    var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: false
     }).setView(defaultPoint, defaultZoomLevel);
 
@@ -25,18 +20,35 @@ Template.map.rendered = function () {
 
     var markers = this.data.optionsMap.default;
     for (var m=0; m < markers.length; m++) {
-         L.marker(markers[m].point,{title: markers[m].title}).addTo(map);
+         L.marker(markers[m].point,{title: markers[m].options.title}).addTo(map)
+             .on('click', function(event) {
+                 console.log('you clicked on ' + event);
+                 alert('you clicked on ' + event.target.options.title);
+             });
     }
-    map.on('dblclick', function(event) {
+    var resizeMap = function(what) {
+        map.invalidateSize();   // really important....
+        var ref = what.data.name + '-' + what.data.type;
+        var elem = document.getElementById(ref);
+        elem.style.height = mapHeight();
+        elem.style.width = mapWidth();
+    }
 
+    resizeMap(this);
+    // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible
+    var ref = this.data.name + '-' + this.data.type;
+    var elem = document.getElementById(ref);
+    elem.addEventListener('resizeMap', function(e) {
+        resizeMap(e.detail);
     });
-
-    $(window).resize(); // trigger resize event
 };
 
 Template.map.helpers({
-    multiple:function(){
-        if(this.multiple===true)
-        {return "multiple";}
+    mapWidth: function() {
+        return mapWidth();
+    },
+    mapHeight: function() {
+        return mapHeight();
     }
 });
+
