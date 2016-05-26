@@ -133,8 +133,8 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
+        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", targetOption:"BO2OR"}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", targetOption:"CD2OR"}}]
                             };
         CurveParams.insert(
             {
