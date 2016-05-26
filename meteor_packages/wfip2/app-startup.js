@@ -1,7 +1,7 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
-//var siteMarkers={};
+var siteMarkers={};
 //var siteMarkers=[];
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -134,9 +134,11 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
-                            };
+       // siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
+        //                            {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
+        //                    };
+
+        console.log ('default siteMarkers are' + siteMarkers.default);
         CurveParams.insert(
             {
                 name: 'sitesMap',
@@ -152,7 +154,7 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2,
                 multiple: true,
-                defaultMapView: {point:[40.258719, -100.606821], zoomLevel:4},
+                defaultMapView: {point:[45.5139, -120], zoomLevel:7},
 
             });
 
@@ -642,11 +644,16 @@ Meteor.startup(function () {
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
-   // var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
+    //siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
     //    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
+    //};
+
+    //console.log("siteMarkers="+siteMarkers.default+ " element="+siteMarkers.default[0].point+ " name="+ siteMarkers.default[0].options.title );
+    //console.log("siteMarkers="+siteMarkers.default+ " element="+siteMarkers.default[1].point+ " name="+ siteMarkers.default[0].options.title );
+    //console.log(" element type="+siteMarkers.default[0].point.type+ " name type="+ siteMarkers.default[0].options.title.type );
 
     try {
         var statement = "SELECT siteid, name,description ,lat,lon FROM sites;";
@@ -670,33 +677,31 @@ Meteor.startup(function () {
                 siteOptionsMap['All'] = 'All';
                 siteOptionsMap['All Sodar'] = 'All Sodar';
                 siteOptionsMap['All Profile'] = 'All Profile';
+                siteMarkers.default = [];
                 for (var i = 0; i < rows.length; i++) {
                     var siteid = rows[i].siteid;
                     var name = rows[i].name;
                     var description = rows[i].description;
                     var lat = rows[i].lat;
-                    var lon = rows[i].lon;
-
+                    var lon = Number(rows[i].lon)-360;
+                    var obs_net ;
 
                     if(description.includes("SODAR")) {
                         sodar_sites.push(siteid +","+name);
+                        obs_net = "Sodar";
 
                     }else{
                         profile_sites.push(siteid +","+name);
+                        obs_net = "Profile";
 
                     }
                     all_sites.push(siteid +","+name);
 
 
-                    //var valueList = [];
-                    //valueList.push(table_name+','+instruments_instrid);
                     siteOptionsMap[name] = siteid;
 
-                    //siteMarkers.default.push({point:[lat,lon],options:{title:name}});
-                  // siteMarkers.push({point:[lat,lon],options:{title:name}});
+                    siteMarkers.default.push({point: [lat,lon],options:{title:name+"="+obs_net}});
 
-
-                   // siteOptionsMap[description] = siteid;
 
                 }
                 SitesPerModel.insert({model:"sodar", sites:sodar_sites});
