@@ -59,9 +59,9 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+   // if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-    }
+   // }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -127,7 +127,7 @@ curveParams = function () {
                 targetName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -692,8 +692,6 @@ Meteor.startup(function () {
                     all_sites.push(siteid +","+name);
 
 
-                    //var valueList = [];
-                    //valueList.push(table_name+','+instruments_instrid);
                     siteOptionsMap[name] = siteid;
 
                     siteMarkers.default.push({point: [lat,lon],options:{title:name+"="+obs_net}});
