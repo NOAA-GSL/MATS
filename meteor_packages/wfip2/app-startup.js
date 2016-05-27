@@ -58,9 +58,9 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    //if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-    }
+    //}
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -123,9 +123,10 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:siteOptionsMap,
                 options:Object.keys(siteOptionsMap),
+                targetName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: '',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -133,8 +134,8 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", targetOption:"BO2OR"}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", targetOption:"CD2OR"}}]
+        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, dataSource:"SODAR", targetOption:"BO2OR"}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, dataSource:"PROFILE", targetOption:"CD2OR"}}]
                             };
         CurveParams.insert(
             {
@@ -142,7 +143,7 @@ curveParams = function () {
                 type: InputTypes.selectMap,
                 optionsMap:siteMarkers,
                 options:Object.keys(optionsMap),   // convenience
-                targetParam: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                targetName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: 'ALL',

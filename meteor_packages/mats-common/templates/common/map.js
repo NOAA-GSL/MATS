@@ -12,9 +12,19 @@ Template.map.rendered = function () {
 
     var createIcon = function (m) {
         var options = m.options;
-        var point = m.point;
         var icon = L.divIcon({
-            html: '<div style="background: transparent;border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>'
+            html: '<div style="border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>',
+            options: options
+        });
+        return icon;
+    };
+
+
+    var createSelectedIcon = function (m) {
+        var options = m.options;
+        var icon = L.divIcon({
+            html: '<div style="box-shadow: 0 0 0 10px black;border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>',
+            options: options
         });
         return icon;
     };
@@ -22,6 +32,32 @@ Template.map.rendered = function () {
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
     var defaultPoint = this.data.defaultMapView.point;
     var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
+    var targetName = this.data.targetName;
+    var targetElement = document.getElementsByName(targetName)[0];
+    var targetId = '#' + targetElement.id;
+    var toggleTargetSelection = function(targetOption) {
+        var selectedValues = $(targetId).val();
+        if (selectedValues) {
+            var ALLIndex = selectedValues.indexOf("All");
+
+            if (ALLIndex > -1) {
+                selectedValues.splice(ALLIndex, 1);
+            }
+            var index = selectedValues.indexOf(targetOption);
+            if (index > -1) {
+                // toggle off
+                selectedValues.splice(index, 1);
+            } else {
+                //toggle on
+                selectedValues.push(targetOption);
+            }
+        } else {
+            selectedValues = [];
+            selectedValues.push(targetOption);
+        }
+        $(targetId).val(selectedValues);
+    }
+
     var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: false
     }).setView(defaultPoint, defaultZoomLevel);
@@ -32,10 +68,12 @@ Template.map.rendered = function () {
     for (var m = 0; m < markers.length; m++) {
         var marker = new L.Marker(markers[m].point, {
             icon: createIcon(markers[m]),
-            title: markers[m].options.title
+            //selectedIcon: createSelectedIcon(markers[m]),
+            title: markers[m].options.title,
         }).on('click', function (event) {
-                alert('you clicked on ' + event.target.options.title);
+                //event.target.setIcon(event.target.selectedIcon);
                 // toggle selection of corresponding site option for this marker
+                toggleTargetSelection(event.target.options.icon.options.options.targetOption);
             }
         );
 
