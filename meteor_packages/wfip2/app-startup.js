@@ -124,9 +124,10 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:siteOptionsMap,
                 options:Object.keys(siteOptionsMap),
+                targetName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: '',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -145,7 +146,7 @@ curveParams = function () {
                 type: InputTypes.selectMap,
                 optionsMap:siteMarkers,
                 options:Object.keys(optionsMap),   // convenience
-                targetParam: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                targetName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: 'ALL',
@@ -647,13 +648,6 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    //siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
-    //    {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
-    //};
-
-    //console.log("siteMarkers="+siteMarkers.default+ " element="+siteMarkers.default[0].point+ " name="+ siteMarkers.default[0].options.title );
-    //console.log("siteMarkers="+siteMarkers.default+ " element="+siteMarkers.default[1].point+ " name="+ siteMarkers.default[0].options.title );
-    //console.log(" element type="+siteMarkers.default[0].point.type+ " name type="+ siteMarkers.default[0].options.title.type );
 
     try {
         var statement = "SELECT siteid, name,description ,lat,lon FROM sites;";
@@ -698,6 +692,8 @@ Meteor.startup(function () {
                     all_sites.push(siteid +","+name);
 
 
+                    //var valueList = [];
+                    //valueList.push(table_name+','+instruments_instrid);
                     siteOptionsMap[name] = siteid;
 
                     siteMarkers.default.push({point: [lat,lon],options:{title:name+"="+obs_net}});
