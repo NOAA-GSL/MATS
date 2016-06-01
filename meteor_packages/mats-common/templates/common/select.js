@@ -1,5 +1,4 @@
 Template.select.rendered = function(){
-    //console.log (this);
     if (this.firstNode.selectedIndex == -1) {
         if (this.data.default && this.data.default != "") {
             var defaultIndex = this.data.options.indexOf(this.data.default);
@@ -7,10 +6,8 @@ Template.select.rendered = function(){
                 defaultIndex = 0;
             }
             this.firstNode.selectedIndex = defaultIndex;
-            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[defaultIndex];
         } else {
             this.firstNode.selectedIndex = 0;
-            //document.getElementById(InputTypes.controlButton + "-" + this.data.name + "-value").textContent = this.data.options[0];
         }
     }
 };
@@ -22,7 +19,6 @@ Template.select.helpers({
         if (models === undefined || models.length === 0) {
             return "";
         }
-        var modelName = models[0].name;
         if (p.name === 'region') {
             var regionDescription  = RegionDescriptions.find({}).fetch()[0];
             var description = regionDescription.description;
@@ -41,19 +37,13 @@ Template.select.helpers({
         if (models === undefined || models.length === 0) {
             return "";
         }
-
         if (this.name === 'sites') {
             var rOpts = [];
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
-            var modelName = models[0].name;
-
             var sites = SitesPerModel.findOne({model: 'model'}).sites;
-
             for (var ri=0; ri< sites.length; ri++){
                 var site_id = sites[ri].split(',')[0];
                 var site_name = sites[ri].split(',')[1];
-
-
                 rOpts.push(site_name);
 
             }
@@ -65,22 +55,15 @@ Template.select.helpers({
         }
 
         if (this.name === 'region') {
-           // var rOpts = ['All'];
             var rOpts = [];
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
-            var regionMapping = models[0].regionMapping;
-
             var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
             for (var ri=0; ri< regionIds.length; ri++){
                 var rid= regionIds[ri];
-
-
                 var regionDescription  = RegionDescriptions.findOne({regionMapTable:rid});
                var description = regionDescription != null? regionDescription.description:"";
-
                     rOpts.push(description);
-
             }
             if (this.default === undefined || this.default === "") {
                 this.default = rOpts[0];
@@ -88,8 +71,6 @@ Template.select.helpers({
             }
             return rOpts;
         } else if (this.name === 'forecast length') {
-            var rOpts = [];
-
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
             var modelLength = FcstLensPerModel.findOne({model: modelName});
@@ -108,7 +89,6 @@ Template.select.helpers({
         if(this.multiple===true)
         {return "multiple";}
     }
-
 });
 
 Template.select.events({
@@ -116,24 +96,16 @@ Template.select.events({
         var modelName = event.currentTarget.options[event.currentTarget.selectedIndex].value;
         // do the region selector
         var model = Models.findOne({name: modelName}, {name: 1});
-        var regionMapping = model.regionMapping;
         var opts = [];
-
-
         var regionIds = RegionsPerModel.findOne({model: modelName}, {regions: 1}).regions;
         for (var ri=0; ri< regionIds.length; ri++){
             var rid= regionIds[ri];
-
-           var regionDescription = RegionDescriptions.findOne({regionMapTable: rid}, {
-
-                description: 1
+            var regionDescription = RegionDescriptions.findOne({regionMapTable: rid}, {
+               description: 1
             });
             var description = regionDescription != null?regionDescription.description:"";
-
-
             opts.push(description);
         }
-
 
         var selector = $('select[name="region"]');
         // find which region is selected currently
@@ -154,11 +126,8 @@ Template.select.events({
         // set the default for the value button
         var regionValueElem = document.getElementById('controlButton-region-value');
         regionValueElem.textContent = opts[selected].split(' (')[0];
-
-
         if(CurveParams.findOne({name:"sites"})) {
             var sOpts = [];
-            //var sites = SitesPerModel.findOne({model: 'sodar'}).sites;
             var sites;
             if (modelName.includes("sodar")) {
                 sites = SitesPerModel.findOne({model: 'sodar'}).sites;
@@ -170,18 +139,11 @@ Template.select.events({
                     sites = SitesPerModel.findOne({model: 'model'}).sites;
                 }
             }
-
-
             for (var ri = 0; ri < sites.length; ri++) {
-
                 var site_id = sites[ri].split(',')[0];
                 var site_name = sites[ri].split(',')[1];
-
                 sOpts.push(site_name);
-
             }
-
-
             var selector = $('select[name="sites"]');
             var selectedSites = document.getElementById('sites-select').options[document.getElementById('sites-select').selectedIndex].text;
             var optionsAsString = "";
@@ -200,14 +162,7 @@ Template.select.events({
             // set the default for the value button
             var siteValueElem = document.getElementById('controlButton-sites-value');
             siteValueElem.textContent = sOpts[selected].split(' (')[0];
-
         }
-
-
-
-
-
-
         // do the forecastLength selector
         opts = FcstLensPerModel.findOne({model: modelName}, {forecastLengths: 1}).forecastLengths.sort(function (a, b) {
             return (Number(a) - Number(b));
@@ -229,6 +184,19 @@ Template.select.events({
         // set the default for the value button
         var fclValueElem = document.getElementById('controlButton-forecast length-value');
         fclValueElem.textContent = opts[selected];
-
+    },
+    'change': function(event ) {
+        if (this.targetName ) {
+            // refresh the peer
+            var targetParam = CurveParams.findOne({name:this.targetName});
+            var targetId  = targetParam.name + '-' + targetParam.type;
+            var targetElem = document.getElementById(targetId);
+            var refreshMapEvent = new CustomEvent("refresh", {
+                detail: {
+                    refElement: event.target
+                }
+            });
+            targetElem.dispatchEvent(refreshMapEvent);
+        }
     }
 });

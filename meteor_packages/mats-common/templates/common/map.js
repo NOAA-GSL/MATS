@@ -7,92 +7,160 @@ var mapHeight = function () {
     return h + "px";
 };
 
-
 Template.map.rendered = function () {
+    var defaultPoint = this.data.defaultMapView.point;
+    var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
+    var minZoomLevel = this.data.defaultMapView.minZoomLevel;
+    var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
+    var targetName = this.data.targetName;
+    var targetElement = document.getElementsByName(targetName)[0];
+    var targetId = '#' + targetElement.id;
+    var markers = this.data.optionsMap.default;
+    var markerFeatures = {};
+    var map = L.map(this.data.name + "-" + this.data.type, {
+        doubleClickZoom: true,
+        minZoom: minZoomLevel,
+        maxZoom: maxZoomLevel
+    }).setView(defaultPoint, defaultZoomLevel);
+    // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
+    L.tileLayer.provider('Thunderforest.Outdoors').addTo(map);
 
-    var createIcon = function (m) {
+    var createUnSelectedIcon = function (m) {
         var options = m.options;
         var icon = L.divIcon({
-            html: '<div style="border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>',
+            iconSize: new L.point(0, 0),  // get rid of default white box icon
+            html: '<div style="border: none;' +
+            'width:' + options.size + 'px;' +
+            'height:' + options.size + 'px;' +
+            'background-color:' + options.color + ';' +
+            'border-radius:50%;">' +
+            '<b style="font-size: large">&nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
+            '</div>',
             options: options
         });
         return icon;
     };
-
 
     var createSelectedIcon = function (m) {
         var options = m.options;
         var icon = L.divIcon({
-            html: '<div style="box-shadow: 0 0 0 10px black;border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>',
+            iconSize: new L.point(0, 0),  // get rid of default white box icon
+            html: '<div style="box-shadow: 0 0 0 ' + options.size / 2 + 'px ' + options.highLightColor + ';' +
+            'border: none;' +
+            'width:' + options.size + 'px;' +
+            'height:' + options.size + 'px;' +
+            'background-color:' + options.color + ';' +
+            'border-radius:50%;">' +
+            '<b style="font-size: large"> &nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
+            '</div>',
             options: options
         });
         return icon;
     };
 
-    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
-    var defaultPoint = this.data.defaultMapView.point;
-    var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
-    var targetName = this.data.targetName;
-    var targetElement = document.getElementsByName(targetName)[0];
-    var targetId = '#' + targetElement.id;
-    var toggleTargetSelection = function(targetOption) {
-        var selectedValues = $(targetId).val();
-        if (selectedValues) {
-            var ALLIndex = selectedValues.indexOf("All");
-
-            if (ALLIndex > -1) {
-                selectedValues.splice(ALLIndex, 1);
-            }
-            var index = selectedValues.indexOf(targetOption);
-            if (index > -1) {
-                // toggle off
-                selectedValues.splice(index, 1);
-            } else {
-                //toggle on
-                selectedValues.push(targetOption);
-            }
+    var toggleTargetSelection = function (event) {
+        var marker = event.target;
+        var markerId = event.latlng.lat + ',' + event.latlng.lng + ':' + event.target.options.title;
+        var mFeatures = markerFeatures[markerId];
+        var icon = mFeatures.unSelectedIcon;
+        var targetOption = mFeatures.markerTargetOption;
+        var selectedValues = $(targetId).val() ? $(targetId).val() : [];
+        var ALLIndex = selectedValues.indexOf("All");
+        if (ALLIndex > -1) {
+            selectedValues.splice(ALLIndex, 1);
+        }
+        var index = selectedValues.indexOf(targetOption);
+        if (index > -1) {
+            // toggle off
+            icon = mFeatures.unSelectedIcon;
+            selectedValues.splice(index, 1);
         } else {
-            selectedValues = [];
+            //toggle on
+            icon = mFeatures.selectedIcon;
             selectedValues.push(targetOption);
         }
         $(targetId).val(selectedValues);
+        marker.setIcon(icon);
+    };
+
+    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+
+    if (!markerFeatures) {
+        markerFeatures = {};
     }
-
-    var map = L.map(this.data.name + "-" + this.data.type, {
-        doubleClickZoom: false
-    }).setView(defaultPoint, defaultZoomLevel);
-
-    L.tileLayer.provider('Thunderforest.Outdoors').addTo(map);
-
-    var markers = this.data.optionsMap.default;
     for (var m = 0; m < markers.length; m++) {
+        var unSelectedIcon = createUnSelectedIcon(markers[m]);
+        var selectedIcon = createSelectedIcon(markers[m]);
+        var markerOptions = markers[m].options;
+        var markerTargetOption = markerOptions.targetOption;
+        var title = markerOptions.title;
+        var point = markers[m].point;
+        var markerId = point[0] + ',' + point[1] + ':' + title;
+        var features = {
+            unSelectedIcon: unSelectedIcon,
+            selectedIcon: selectedIcon,
+            markerOptions: markerOptions,
+            markerTargetOption: markerTargetOption
+        };
+
         var marker = new L.Marker(markers[m].point, {
-            icon: createIcon(markers[m]),
-            //selectedIcon: createSelectedIcon(markers[m]),
+            icon: unSelectedIcon,
             title: markers[m].options.title,
         }).on('click', function (event) {
-                //event.target.setIcon(event.target.selectedIcon);
                 // toggle selection of corresponding site option for this marker
-                toggleTargetSelection(event.target.options.icon.options.options.targetOption);
+                toggleTargetSelection(event);
             }
         );
-
+        markerFeatures[markerId] = features;
         map.addLayer(marker);
-
-        // L.marker(markers[m].point,{title: markers[m].options.title}).addTo(map)
-        //     .on('click', function(event) {
-        //         //console.log('you clicked on ' + event);
-        //         //alert('you clicked on ' + event.target.options.title);
-        //     });
     }
+
+    var refresh = function (peerElement) {
+        var peerId = peerElement.id;
+        var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
+        var ALLIndex = selectedValues.indexOf("All");
+        if (ALLIndex > -1) {
+            //everything needs to be selected;
+            var peerIdOption = peerId + " option";
+            selectedValues = $('#' + peerIdOption).map(function () {
+                return $(this).val();
+            });
+            ALLIndex = selectedValues.indexOf("All");
+            selectedValues.splice(ALLIndex, 1);
+        }
+        // iterate through all the makers,
+        // set the selectedIcon if they are selected in the peer
+        // set the unSelectedIcon if they are not selected in the peer
+        $.each(map._layers, function (ml) {
+            if (map._layers[ml]._latlng) {
+                var lat = map._layers[ml]._latlng.lat;
+                var lng = map._layers[ml]._latlng.lng;
+                var point = [lat, lng];
+                var marker = markers.filter(function (obj) {
+                    return obj.point[0] === point[0] && obj.point[1] === point[1];
+                })[0];
+                if (marker !== undefined) {
+                    var targetOption = marker.options.targetOption;
+                    var markerId = marker.point[0] + ',' + marker.point[1] + ':' + marker.options.title;
+                    var mFeatures = markerFeatures[markerId];
+                    if (_.contains(selectedValues, targetOption)) {
+                        map._layers[ml].setIcon(mFeatures.selectedIcon);
+                    } else {
+                        map._layers[ml].setIcon(mFeatures.unSelectedIcon);
+                    }
+                }
+            }
+        });
+    };
+
     var resizeMap = function (what) {
         map.invalidateSize();   // really important....
         var ref = what.data.name + '-' + what.data.type;
         var elem = document.getElementById(ref);
         elem.style.height = mapHeight();
         elem.style.width = mapWidth();
-    }
-
+    };
+    // initial resize seems to be necessary
     resizeMap(this);
     // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible
     var ref = this.data.name + '-' + this.data.type;
@@ -100,14 +168,11 @@ Template.map.rendered = function () {
     elem.addEventListener('resizeMap', function (e) {
         resizeMap(e.detail);
     });
+
+    // register an event listener so that the select.js can ask the map div to refresh after a selection
+    var ref = this.data.name + '-' + this.data.type;
+    var elem = document.getElementById(ref);
+    elem.addEventListener('refresh', function (e) {
+        refresh(e.detail.refElement);
+    });
 };
-
-Template.map.helpers({
-    mapWidth: function () {
-        return mapWidth();
-    },
-    mapHeight: function () {
-        return mapHeight();
-    }
-});
-

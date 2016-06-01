@@ -134,8 +134,8 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, dataSource:"SODAR", targetOption:"BO2OR"}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, dataSource:"PROFILE", targetOption:"CD2OR"}}]
+        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", targetOption:"BO2OR", highLightColor:'white'}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", targetOption:"CD2OR",highLightColor:'yellow'}}]
                             };
         CurveParams.insert(
             {
@@ -152,8 +152,7 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2,
                 multiple: true,
-                defaultMapView: {point:[40.258719, -100.606821], zoomLevel:4},
-
+                defaultMapView: {point:[40.258719, -100.606821], zoomLevel:4, minZoomLevel:4, maxZoomLevel:14}
             });
 
         CurveParams.insert(

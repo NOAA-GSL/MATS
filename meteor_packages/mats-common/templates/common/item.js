@@ -8,9 +8,6 @@ Template.item.helpers({
             var curves = Session.get('Curves');
             return getNextCurveLabel();
         }
-
-
-
         if (this.name === 'dates' || this.name == 'curve-dates') {
             var today = new Date();
             var thenDate = new Date(today.getTime() - 30*24*60*60*1000);
@@ -26,7 +23,6 @@ Template.item.helpers({
             this.default = then + " to " + now;
             this.value = then + " to " + now;
         }
-
         return this.value?this.value:this.default;
     },
     isSelect: function () {
@@ -70,7 +66,6 @@ Template.item.helpers({
         }
     },
     controlButtonVisibility: function() {
-        //return this.controlButtonVisibility;
         if (this.controlButtonCovered) {
             return "block;";
         } else {
@@ -103,7 +98,7 @@ Template.item.events({
                     var data = {
                         name: this.name,
                         type: this.type
-                    }
+                    };
                     var resizeMapEvent = new CustomEvent("resizeMap", {
                         detail: {
                             data: data
@@ -155,8 +150,6 @@ Template.item.events({
             }
         }
     }
-
-
 });
 
 Template.textInput.events({
