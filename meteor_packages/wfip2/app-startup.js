@@ -87,6 +87,7 @@ curveParams = function () {
         CurveParams.insert(
             {
                 name: 'model',
+              //  name: 'Model Forecast or OBS',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
                 //tableMap:modelTableMap,
@@ -135,11 +136,9 @@ curveParams = function () {
                 multiple: true
             });
 
-       // siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder - SODAR"}},
-        //                            {point:[37.6956794,-97.3116876],options:{title:"wichita - SODAR"}}]
-        //                    };
-
-        console.log ('default siteMarkers are' + siteMarkers.default);
+      /* var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, dataSource:"SODAR", targetOption:"BO2OR"}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, dataSource:"PROFILE", targetOption:"CD2OR"}}]
+                            };*/
         CurveParams.insert(
             {
                 name: 'sitesMap',
@@ -403,6 +402,7 @@ curveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
+               // ['', 'Model Forecast or OBS', ':'],
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
@@ -419,6 +419,7 @@ curveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
+               // ['', 'Model Forecast or OBS', ':'],
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
@@ -649,6 +650,8 @@ Meteor.startup(function () {
     }
 
 
+
+    var stn_color;
     try {
         var statement = "SELECT siteid, name,description ,lat,lon FROM sites;";
         var qFuture = new Future();
@@ -682,11 +685,13 @@ Meteor.startup(function () {
 
                     if(description.includes("SODAR")) {
                         sodar_sites.push(siteid +","+name);
-                        obs_net = "Sodar";
+                        obs_net = "SODAR";
+                        stn_color ="red";
 
                     }else{
                         profile_sites.push(siteid +","+name);
-                        obs_net = "Profile";
+                        obs_net = "PROFILE";
+                        stn_color = "blue"
 
                     }
                     all_sites.push(siteid +","+name);
@@ -694,7 +699,12 @@ Meteor.startup(function () {
 
                     siteOptionsMap[name] = siteid;
 
-                    siteMarkers.default.push({point: [lat,lon],options:{title:name+"="+obs_net}});
+                    //siteMarkers.default.push({point: [lat,lon],options:{title:name+"="+obs_net}});
+
+                    /* var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, dataSource:"SODAR", targetOption:"BO2OR"}},
+                     {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, dataSource:"PROFILE", targetOption:"CD2OR"}}]
+                     };*/
+                    siteMarkers.default.push({point: [lat,lon],options:{title:name, color:stn_color,size:20, network:obs_net,targetOption:name}});
 
 
                 }

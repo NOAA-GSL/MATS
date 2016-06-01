@@ -13,7 +13,7 @@ Template.map.rendered = function () {
     var createIcon = function (m) {
         var options = m.options;
         var icon = L.divIcon({
-            html: '<div style="border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.network + '</b></div>',
+            html: '<div style="border: none;width:' + options.size + 'px;height:' + options.size + 'px;background-color:' + options.color + ';border-radius:50%;"><b>' + options.title + '</b></div>',
             options: options
         });
         return icon;
