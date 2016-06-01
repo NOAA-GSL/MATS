@@ -123,7 +123,7 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:siteOptionsMap,
                 options:Object.keys(siteOptionsMap),
-                targetName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: '',
@@ -134,8 +134,8 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", targetOption:"BO2OR", highLightColor:'white'}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", targetOption:"CD2OR",highLightColor:'yellow'}}]
+        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
+                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}]
                             };
         CurveParams.insert(
             {
@@ -143,7 +143,7 @@ curveParams = function () {
                 type: InputTypes.selectMap,
                 optionsMap:siteMarkers,
                 options:Object.keys(optionsMap),   // convenience
-                targetName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: 'ALL',
@@ -698,17 +698,9 @@ Meteor.startup(function () {
 
                     }else{
                         profile_sites.push(siteid +","+name);
-
                     }
                     all_sites.push(siteid +","+name);
-
-
-                    //var valueList = [];
-                    //valueList.push(table_name+','+instruments_instrid);
                     siteOptionsMap[name] = siteid;
-
-                   // siteOptionsMap[description] = siteid;
-
                 }
                 SitesPerModel.insert({model:"sodar", sites:sodar_sites});
                 SitesPerModel.insert({model:"profile", sites:profile_sites});

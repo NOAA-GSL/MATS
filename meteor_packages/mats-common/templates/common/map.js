@@ -12,8 +12,8 @@ Template.map.rendered = function () {
     var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
     var minZoomLevel = this.data.defaultMapView.minZoomLevel;
     var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
-    var targetName = this.data.targetName;
-    var targetElement = document.getElementsByName(targetName)[0];
+    var peerName = this.data.peerName;
+    var targetElement = document.getElementsByName(peerName)[0];
     var targetId = '#' + targetElement.id;
     var markers = this.data.optionsMap.default;
     var markerFeatures = {};
@@ -63,13 +63,13 @@ Template.map.rendered = function () {
         var markerId = event.latlng.lat + ',' + event.latlng.lng + ':' + event.target.options.title;
         var mFeatures = markerFeatures[markerId];
         var icon = mFeatures.unSelectedIcon;
-        var targetOption = mFeatures.markerTargetOption;
+        var peerOption = mFeatures.markerPeerOption;
         var selectedValues = $(targetId).val() ? $(targetId).val() : [];
         var ALLIndex = selectedValues.indexOf("All");
         if (ALLIndex > -1) {
             selectedValues.splice(ALLIndex, 1);
         }
-        var index = selectedValues.indexOf(targetOption);
+        var index = selectedValues.indexOf(peerOption);
         if (index > -1) {
             // toggle off
             icon = mFeatures.unSelectedIcon;
@@ -77,7 +77,7 @@ Template.map.rendered = function () {
         } else {
             //toggle on
             icon = mFeatures.selectedIcon;
-            selectedValues.push(targetOption);
+            selectedValues.push(peerOption);
         }
         $(targetId).val(selectedValues);
         marker.setIcon(icon);
@@ -92,7 +92,7 @@ Template.map.rendered = function () {
         var unSelectedIcon = createUnSelectedIcon(markers[m]);
         var selectedIcon = createSelectedIcon(markers[m]);
         var markerOptions = markers[m].options;
-        var markerTargetOption = markerOptions.targetOption;
+        var markerPeerOption = markerOptions.peerOption;
         var title = markerOptions.title;
         var point = markers[m].point;
         var markerId = point[0] + ',' + point[1] + ':' + title;
@@ -100,7 +100,7 @@ Template.map.rendered = function () {
             unSelectedIcon: unSelectedIcon,
             selectedIcon: selectedIcon,
             markerOptions: markerOptions,
-            markerTargetOption: markerTargetOption
+            markerPeerOption: markerPeerOption
         };
 
         var marker = new L.Marker(markers[m].point, {
@@ -140,10 +140,10 @@ Template.map.rendered = function () {
                     return obj.point[0] === point[0] && obj.point[1] === point[1];
                 })[0];
                 if (marker !== undefined) {
-                    var targetOption = marker.options.targetOption;
+                    var peerOption = marker.options.peerOption;
                     var markerId = marker.point[0] + ',' + marker.point[1] + ':' + marker.options.title;
                     var mFeatures = markerFeatures[markerId];
-                    if (_.contains(selectedValues, targetOption)) {
+                    if (_.contains(selectedValues, peerOption)) {
                         map._layers[ml].setIcon(mFeatures.selectedIcon);
                     } else {
                         map._layers[ml].setIcon(mFeatures.unSelectedIcon);

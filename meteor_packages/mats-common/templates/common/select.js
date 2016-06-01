@@ -13,19 +13,7 @@ Template.select.rendered = function(){
 };
 Template.select.helpers({
     isSelectedByDefault: function (p) {
-        var def = p.default;
-        // redefine the default value to be the first one if it is a model or region select
-        var models = Models.find({},{sort: ["name","asc"]}, {name: 1}).fetch();
-        if (models === undefined || models.length === 0) {
-            return "";
-        }
-        if (p.name === 'region') {
-            var regionDescription  = RegionDescriptions.find({}).fetch()[0];
-            var description = regionDescription.description;
-            this.default = description;
-            this.value = description;
-        }
-        if (def == this) {
+        if (p.default == this) {
             return "selected";   // the selected option
         } else {
             return ""; // not the selected option
@@ -39,13 +27,10 @@ Template.select.helpers({
         }
         if (this.name === 'sites') {
             var rOpts = [];
-            var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var sites = SitesPerModel.findOne({model: 'model'}).sites;
             for (var ri=0; ri< sites.length; ri++){
-                var site_id = sites[ri].split(',')[0];
                 var site_name = sites[ri].split(',')[1];
                 rOpts.push(site_name);
-
             }
             if (this.default === undefined || this.default === "") {
                 this.default = rOpts[0];
@@ -186,9 +171,9 @@ Template.select.events({
         fclValueElem.textContent = opts[selected];
     },
     'change': function(event ) {
-        if (this.targetName ) {
+        if (this.peerName ) {
             // refresh the peer
-            var targetParam = CurveParams.findOne({name:this.targetName});
+            var targetParam = CurveParams.findOne({name:this.peerName});
             var targetId  = targetParam.name + '-' + targetParam.type;
             var targetElem = document.getElementById(targetId);
             var refreshMapEvent = new CustomEvent("refresh", {
