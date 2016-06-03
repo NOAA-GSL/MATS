@@ -2,7 +2,10 @@ var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
 var siteMarkers={};
-//var siteMarkers=[];
+var descriptorOptionsMap ={};
+var upperOptionsMap = {};
+var lowerOptionsMap = {};
+
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
@@ -45,7 +48,8 @@ plotParams = function () {
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                options: ['show matching diffs', 'pairwise diffs', 'no diffs'],
+                //options: ['show matching diffs', 'pairwise diffs', 'no diffs'],
+                options: ['show matching diffs', 'show matching RMS','pairwise diffs', 'no diffs'],
                 default: 'no diffs',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -162,46 +166,61 @@ curveParams = function () {
             {
                 name: 'descriptors',
                 type: InputTypes.select,
-               // optionsMap:optionsMap,
-               // options:Object.keys(optionsMap),   // convenience
+                optionsMap:descriptorOptionsMap,
+                options:Object.keys(descriptorOptionsMap),   // convenience
+                dependentNames: ['upper','lower'],
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: Object.keys(descriptorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 3
             });
+
+
 
 
         CurveParams.insert(
             {
                 name: 'upper',
-                type: InputTypes.select,
-                //optionsMap:optionsMap,
-                //options:Object.keys(optionsMap),   // convenience
+                type: InputTypes.numberSpinner,
+                optionsMap:upperOptionsMap,
+                options:Object.keys(upperOptionsMap),   // convenience
+                superiorName: 'descriptors',
+                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
+
         CurveParams.insert(
             {
                 name: 'lower',
-                type: InputTypes.select,
-                //optionsMap:optionsMap,
-                //options:Object.keys(optionsMap),   // convenience
+                type: InputTypes.numberSpinner,
+                optionsMap:lowerOptionsMap,
+                options:Object.keys(lowerOptionsMap),   // convenience
+                superiorName: 'descriptors',
+                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3
             });
+
+
+
 
 
 
@@ -237,7 +256,7 @@ curveParams = function () {
                 unique: false,
                default: 'average',
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -263,7 +282,7 @@ curveParams = function () {
                 unique: false,
                 default: 'wind_speed',
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 10,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -282,7 +301,7 @@ curveParams = function () {
                 unique: false,
                 default: 'BOTH',
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 11,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -308,7 +327,7 @@ curveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 12,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -326,7 +345,7 @@ curveParams = function () {
                 //default: '',
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 13,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -343,7 +362,7 @@ curveParams = function () {
                 unique: false,
                 default: '5000',
                 controlButtonVisibility: 'block',
-                displayOrder: 10,
+                displayOrder: 14,
                 displayPriority: 1,
                 displayGroup: 6
             });
@@ -360,7 +379,7 @@ curveParams = function () {
                 unique: false,
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 11,
+                displayOrder: 15,
                 displayPriority: 1,
                 displayGroup: 6
         });
@@ -719,6 +738,51 @@ Meteor.startup(function () {
     } catch (err) {
         Console.log(err.message);
     }
+
+
+
+    try {
+        //var statement = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE  TABLE_NAME = 'hrrr_wfip_discriminator';";
+        var statement = "select * from discriminator_range;";
+        var qFuture = new Future();
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+            if (err != undefined) {
+                console.log(err.message);
+            }
+            if (rows === undefined || rows.length === 0) {
+                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
+                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+            } else {
+                //RangePerDescriptor.remove({});
+                for (var i = 0; i < rows.length; i++) {
+                    var descriptor = rows[i].name;
+                    var min_value = rows[i].min_value;
+                    var max_value = rows[i].max_value;
+
+                    descriptorOptionsMap[descriptor] = descriptor;
+
+                   /* dependentOptions = {
+                        a:{min:0, max:20, step:1},
+                        b:{min:0, max:20, step:1},
+                        c:{min:0, max:20, step:1}
+                    }*/
+
+                    var step = (max_value - min_value)/10.;
+                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:max_value};
+                    lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
+
+                }
+
+
+            }
+            qFuture['return']();
+        }));
+        qFuture.wait();
+    } catch (err) {
+        Console.log(err.message);
+    }
+
 
 
     try {

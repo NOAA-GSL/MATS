@@ -64,6 +64,31 @@ Template.select.helpers({
             return rOpts;
         }
 
+      /*  if (this.name === 'upper') {
+            // var rOpts = ['All'];
+            var rOpts = [];
+            var models = RangePerDescriptor.find({}, {sort: ["name", "asc"]}).fetch();
+            var modelName = models[0].name;
+
+            var regionIds = RegionsPerModel.findOne({model: modelName}, {regions: 1}).regions;
+            for (var ri = 0; ri < regionIds.length; ri++) {
+                var rid = regionIds[ri];
+
+
+                var regionDescription = RegionDescriptions.findOne({regionMapTable: rid});
+                var description = regionDescription != null ? regionDescription.description : "";
+
+                rOpts.push(description);
+
+            }
+            if (this.default === undefined || this.default === "") {
+                this.default = rOpts[0];
+                this.value = rOpts[0];
+            }
+            return rOpts;
+        }*/
+
+
         if (this.name === 'region') {
            // var rOpts = ['All'];
             var rOpts = [];
@@ -230,5 +255,37 @@ Template.select.events({
         var fclValueElem = document.getElementById('controlButton-forecast length-value');
         fclValueElem.textContent = opts[selected];
 
+    },
+
+    'change': function(event ) {
+        if (this.peerName ) {
+            // refresh the peer
+            var targetParam = CurveParams.findOne({name:this.peerName});
+            var targetId  = targetParam.name + '-' + targetParam.type;
+            var targetElem = document.getElementById(targetId);
+            var refreshEvent = new CustomEvent("refresh", {
+                detail: {
+                    refElement: event.target
+                }
+            });
+            targetElem.dispatchEvent(refreshEvent);
+        };
+        if (this.dependentNames) {
+            // refresh the dependents
+            for (var i = 0; i < this.dependentNames.length; i++) {
+                var name = this.dependentNames[i];
+                var targetParam = CurveParams.findOne({name: name});
+                var targetId = targetParam.name + '-' + targetParam.type;
+                var targetElem = document.getElementById(targetId);
+                var refreshEvent = new CustomEvent("refresh", {
+                    detail: {
+                        refElement: event.target
+                    }
+                });
+                targetElem.dispatchEvent(refreshEvent);
+            }
+        }
     }
+
+
 });

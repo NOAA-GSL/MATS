@@ -97,6 +97,7 @@ Package.onUse(function(api) {
   api.add_files("templates/common/checkbox_group.html", "client");
 
   api.add_files("templates/common/number_spinner.html", "client");
+  api.add_files("templates/common/number_spinner.js", "client");
 
   api.add_files("templates/common/radio_group_option.html", "client");
   api.add_files("templates/common/radio_group_option.js", "client");
