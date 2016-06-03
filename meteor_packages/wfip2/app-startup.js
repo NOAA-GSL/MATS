@@ -769,7 +769,7 @@ Meteor.startup(function () {
                     }*/
 
                     var step = (max_value - min_value)/10.;
-                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:max_value};
+                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,default:max_value};
                     lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
 
                 }
