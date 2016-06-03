@@ -27,10 +27,18 @@ Template.select.helpers({
         }
         if (this.name === 'sites') {
             var rOpts = [];
+            var models = Models.find({},{sort: ["name","asc"]}).fetch();
+            var modelName = models[0].name;
+
             var sites = SitesPerModel.findOne({model: 'model'}).sites;
+
             for (var ri=0; ri< sites.length; ri++){
+                var site_id = sites[ri].split(',')[0];
                 var site_name = sites[ri].split(',')[1];
+
+
                 rOpts.push(site_name);
+
             }
             if (this.default === undefined || this.default === "") {
                 this.default = rOpts[0];
@@ -43,6 +51,8 @@ Template.select.helpers({
             var rOpts = [];
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
+            var regionMapping = models[0].regionMapping;
+
             var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
             for (var ri=0; ri< regionIds.length; ri++){
                 var rid= regionIds[ri];
@@ -171,6 +181,15 @@ Template.select.events({
         fclValueElem.textContent = opts[selected];
     },
     'change': function(event ) {
+        if (this.multiple) {
+            if (event.target.value === 'All') {
+                // select them all
+                $("#" + event.target.id + " option").each(function(){
+                    // Add $(this).val() to your list
+                    $("#" + event.target.id + " option[value='" + $(this).val() + "']").prop("selected", true);
+                });
+            }
+        }
         if (this.peerName ) {
             // refresh the peer
             var targetParam = CurveParams.findOne({name:this.peerName});

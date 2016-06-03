@@ -15,7 +15,7 @@ Template.map.rendered = function () {
     var peerName = this.data.peerName;
     var targetElement = document.getElementsByName(peerName)[0];
     var targetId = '#' + targetElement.id;
-    var markers = this.data.optionsMap.default;
+    var markers = this.data.optionsMap.model;   // from app startup
     var markerFeatures = {};
     var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: true,
@@ -125,6 +125,7 @@ Template.map.rendered = function () {
             selectedValues = $('#' + peerIdOption).map(function () {
                 return $(this).val();
             });
+            
             ALLIndex = selectedValues.indexOf("All");
             selectedValues.splice(ALLIndex, 1);
         }

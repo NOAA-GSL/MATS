@@ -1,6 +1,7 @@
-var modelOptionsMap ={};
-var regionOptionsMap ={};
-var siteOptionsMap ={};
+var modelOptionsMap = {};
+var regionOptionsMap = {};
+var siteOptionsMap = {};
+var siteMarkerOptionsMap = {};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -58,9 +59,12 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    //if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-    //}
+    }
+
+// remove for production
+CurveParams.remove({});
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -134,15 +138,22 @@ curveParams = function () {
                 multiple: true
             });
 
-        var siteMarkers = {default:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
-                                    {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}]
-                            };
+        // var siteMarkerOptionsMap = {
+        //     model:  [{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
+        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}],
+        //
+        //     sodar:  [{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
+        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"SODAR", peerOption:"CD2OR",highLightColor:'yellow'}}],
+        //
+        //     profile:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"PROFILE", peerOption:"BO2OR", highLightColor:'white'}},
+        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}]
+        // };
         CurveParams.insert(
             {
                 name: 'sitesMap',
                 type: InputTypes.selectMap,
-                optionsMap:siteMarkers,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:siteMarkerOptionsMap,
+                options:Object.keys(siteMarkerOptionsMap),   // convenience
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
@@ -152,7 +163,7 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2,
                 multiple: true,
-                defaultMapView: {point:[40.258719, -100.606821], zoomLevel:4, minZoomLevel:4, maxZoomLevel:14}
+                defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
 
         CurveParams.insert(
@@ -327,6 +338,7 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 5
             });
+
         CurveParams.insert(
             {
                 name: 'top',
@@ -550,7 +562,18 @@ roles = function () {
     }
 };
 
-
+var containsPoint = function(pointArray,point) {
+    var lat = point[0];
+    var lon = point[1];
+    for (var i =0; i < pointArray.length; i++) {
+        var pLat = pointArray[i][0];
+        var pLon = pointArray[i][1];
+        if (lat === pLat && lon === pLon) {
+            return true
+        }
+    }
+    return false;
+};
     
 
 Meteor.startup(function () {
@@ -667,7 +690,7 @@ Meteor.startup(function () {
 
 
     try {
-        var statement = "SELECT siteid, name,description FROM sites;";
+        var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -688,16 +711,36 @@ Meteor.startup(function () {
                 siteOptionsMap['All'] = 'All';
                 siteOptionsMap['All Sodar'] = 'All Sodar';
                 siteOptionsMap['All Profile'] = 'All Profile';
+                siteMarkerOptionsMap.model = [];
+                siteMarkerOptionsMap.sodar = [];
+                siteMarkerOptionsMap.profile = [];
+                var points = [];
                 for (var i = 0; i < rows.length; i++) {
                     var siteid = rows[i].siteid;
                     var name = rows[i].name;
                     var description = rows[i].description;
-
+                    var lat = rows[i].lat;
+                    var lon = rows[i].lon;
+                    if (lon > 180) {
+                        lon = lon - 360;
+                    }
+                    var point = [lat, lon ];
+                    if (containsPoint(points,point)) {
+                        lat = lat + 0.002;
+                        point = [lat, lon];
+                    }
+                    points.push(point);
+                    var elev = rows[i].elev;
                     if(description.includes("SODAR")) {
                         sodar_sites.push(siteid +","+name);
-
+                        var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:"SODAR", peerOption:name, highLightColor:'pink'}};
+                        siteMarkerOptionsMap.sodar.push(obj);
+                        siteMarkerOptionsMap.model.push(obj);
                     }else{
                         profile_sites.push(siteid +","+name);
+                        var obj = {point:point,elevation:elev, options:{title:description, color:"blue", size:20, network:"PROFILE", peerOption:name, highLightColor:'cyan'}};
+                        siteMarkerOptionsMap.profile.push(obj);
+                        siteMarkerOptionsMap.model.push(obj);
                     }
                     all_sites.push(siteid +","+name);
                     siteOptionsMap[name] = siteid;
