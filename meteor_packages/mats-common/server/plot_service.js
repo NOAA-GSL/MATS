@@ -480,3 +480,6 @@ Meteor.publish("Credentials", function () {
 Meteor.publish("Databases", function () {
     return Databases.find();
 });
+Meteor.publish("RangePerDescriptor", function () {
+    return RangePerDescriptor.find();
+});

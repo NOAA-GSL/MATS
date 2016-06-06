@@ -21,6 +21,7 @@ Databases = new Meteor.Collection("Databases");
 SavedDatabases = new Meteor.Collection("SavedDatabases");
 Credentials = new Meteor.Collection("Credentials");
 SavedCredentials = new Meteor.Collection("SavedCredentials");
+RangePerDescriptor = new Meteor.Collection("RangePerDiscriptor");
 
 
 InputTypes = {

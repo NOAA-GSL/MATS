@@ -189,7 +189,7 @@ Template.select.events({
                     $("#" + event.target.id + " option[value='" + $(this).val() + "']").prop("selected", true);
                 });
             }
-        }
+        };
         if (this.peerName ) {
             // refresh the peer
             var targetParam = CurveParams.findOne({name:this.peerName});
@@ -201,6 +201,21 @@ Template.select.events({
                 }
             });
             targetElem.dispatchEvent(refreshMapEvent);
+        };
+        if (this.dependentNames) {
+            // refresh the dependents
+            for (var i = 0; i < this.dependentNames.length; i++) {
+                var name = this.dependentNames[i];
+                var targetParam = CurveParams.findOne({name: name});
+                var targetId = targetParam.name + '-' + targetParam.type;
+                var targetElem = document.getElementById(targetId);
+                var refreshEvent = new CustomEvent("refresh", {
+                    detail: {
+                        refElement: event.target
+                    }
+                });
+                targetElem.dispatchEvent(refreshEvent);
+            }
         }
     }
 });

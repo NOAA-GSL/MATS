@@ -1,7 +1,10 @@
-var modelOptionsMap = {};
-var regionOptionsMap = {};
-var siteOptionsMap = {};
-var siteMarkerOptionsMap = {};
+var modelOptionsMap ={};
+var regionOptionsMap ={};
+var siteOptionsMap ={};
+var siteMarkers={};
+var descriptorOptionsMap ={};
+var upperOptionsMap = {};
+var lowerOptionsMap = {};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -45,7 +48,8 @@ plotParams = function () {
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                options: ['show matching diffs', 'pairwise diffs', 'no diffs'],
+                options: ['show matching diffs', 'show matching RMS','pairwise diffs', 'no diffs'],
+
                 default: 'no diffs',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -63,8 +67,8 @@ curveParams = function () {
         CurveParams.remove({});
     }
 
-// remove for production
-CurveParams.remove({});
+    // remove for production
+    CurveParams.remove({});
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -130,7 +134,7 @@ CurveParams.remove({});
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: 'All',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -152,9 +156,9 @@ CurveParams.remove({});
             {
                 name: 'sitesMap',
                 type: InputTypes.selectMap,
-                optionsMap:siteMarkerOptionsMap,
-                options:Object.keys(siteMarkerOptionsMap),   // convenience
-                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                optionsMap:siteMarkers,
+                options:Object.keys(optionsMap),   // convenience
+                targetName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: 'ALL',
@@ -170,13 +174,14 @@ CurveParams.remove({});
             {
                 name: 'descriptors',
                 type: InputTypes.select,
-               // optionsMap:optionsMap,
-               // options:Object.keys(optionsMap),   // convenience
+                optionsMap:descriptorOptionsMap,
+                options:Object.keys(descriptorOptionsMap),   // convenience
+                dependentNames: ['upper','lower'],
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: Object.keys(descriptorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -185,28 +190,37 @@ CurveParams.remove({});
         CurveParams.insert(
             {
                 name: 'upper',
-                type: InputTypes.select,
-                //optionsMap:optionsMap,
-                //options:Object.keys(optionsMap),   // convenience
+                type: InputTypes.numberSpinner,
+                optionsMap:upperOptionsMap,
+                options:Object.keys(upperOptionsMap),   // convenience
+                superiorName: 'descriptors',
+                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
+
         CurveParams.insert(
             {
                 name: 'lower',
-                type: InputTypes.select,
-                //optionsMap:optionsMap,
-                //options:Object.keys(optionsMap),   // convenience
+                type: InputTypes.numberSpinner,
+                optionsMap:lowerOptionsMap,
+                options:Object.keys(lowerOptionsMap),   // convenience
+                superiorName: 'descriptors',
+                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -245,7 +259,7 @@ CurveParams.remove({});
                 unique: false,
                default: 'average',
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -271,7 +285,7 @@ CurveParams.remove({});
                 unique: false,
                 default: 'wind_speed',
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 10,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -290,7 +304,7 @@ CurveParams.remove({});
                 unique: false,
                 default: 'BOTH',
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 11,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -316,7 +330,7 @@ CurveParams.remove({});
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 12,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -334,11 +348,10 @@ CurveParams.remove({});
                 //default: '',
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 13,
                 displayPriority: 1,
                 displayGroup: 5
             });
-
         CurveParams.insert(
             {
                 name: 'top',
@@ -352,7 +365,7 @@ CurveParams.remove({});
                 unique: false,
                 default: '5000',
                 controlButtonVisibility: 'block',
-                displayOrder: 10,
+                displayOrder: 14,
                 displayPriority: 1,
                 displayGroup: 6
             });
@@ -369,7 +382,7 @@ CurveParams.remove({});
                 unique: false,
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 11,
+                displayOrder: 15,
                 displayPriority: 1,
                 displayGroup: 6
         });
@@ -583,16 +596,7 @@ Meteor.startup(function () {
         Databases.remove({});
     //}
     if (Databases.find().count() == 0) {
-        Databases.insert({
-            name:"sumSetting",
-            role: "sum_data",
-            status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
-            database    : 'ruc_ua_sums2',
-            connectionLimit : 10
-        });
+
         Databases.insert({
             name:"wfip2Setting",
             role: "wfip2_data",
@@ -609,31 +613,19 @@ Meteor.startup(function () {
 
         });
 
-        Databases.insert({
-                  name:"modelSetting",
-                  role: "model_data",
-                  status: "active",
-                  host        : 'wolphin.fsl.noaa.gov',
-                  user        : 'writer',
-                  password    : 'amt1234',
-                  database    : 'wfip',
-                  connectionLimit : 10
 
-        });
     }
-    var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    //var modelSettings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+
+
     var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    //var myModels = [];
-    sumPool = mysql.createPool(sumSettings);
-    modelPool = mysql.createPool(modelSettings);
-   // modelPool = mysql.createPool(wfip2Settings);
+
+
     wfip2Pool = mysql.createPool(wfip2Settings);
 
 
-    modelPool.on('connection', function (connection) {
+
+    wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
@@ -641,7 +633,8 @@ Meteor.startup(function () {
 
         var statement = "select model,regions,model_value from regions_per_model_mats";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -658,11 +651,10 @@ Meteor.startup(function () {
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid =-1;
-                   // if(table_name.includes("recs")){
-                    //    console.log('this is obs data ');
+
                         instruments_instrid = model_values[1];
 
-                   // }
+
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
@@ -685,10 +677,12 @@ Meteor.startup(function () {
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
 
+
+    var stn_color;
     try {
         var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
         var qFuture = new Future();
@@ -758,10 +752,56 @@ Meteor.startup(function () {
     }
 
 
+
+    try {
+        //var statement = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE  TABLE_NAME = 'hrrr_wfip_discriminator';";
+        var statement = "select * from discriminator_range;";
+        var qFuture = new Future();
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+            if (err != undefined) {
+                console.log(err.message);
+            }
+            if (rows === undefined || rows.length === 0) {
+                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
+                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+            } else {
+                //RangePerDescriptor.remove({});
+                for (var i = 0; i < rows.length; i++) {
+                    var descriptor = rows[i].name;
+                    var min_value = rows[i].min_value;
+                    var max_value = rows[i].max_value;
+
+                    descriptorOptionsMap[descriptor] = descriptor;
+
+                   /* dependentOptions = {
+                        a:{min:0, max:20, step:1},
+                        b:{min:0, max:20, step:1},
+                        c:{min:0, max:20, step:1}
+                    }*/
+
+                    var step = (max_value - min_value)/10.;
+                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,default:max_value};
+                    lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
+
+                }
+
+
+            }
+            qFuture['return']();
+        }));
+        qFuture.wait();
+    } catch (err) {
+        Console.log(err.message);
+    }
+
+
+
     try {
         var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -789,7 +829,8 @@ Meteor.startup(function () {
 
         var statement = "select regionMapTable,description from region_descriptions_mats;";
         var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }

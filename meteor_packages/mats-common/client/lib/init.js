@@ -17,7 +17,7 @@ Meteor.subscribe("Authorization");
 Meteor.subscribe("Credentials");
 Meteor.subscribe("Databases");
 Meteor.subscribe("CurveTextPatterns");
-
+Meteor.subscribe("RangePerDescriptor");
 
 Session.set('Curves',[]);
 Session.set('PlotParams',[]);
