@@ -18,7 +18,10 @@ Template.map.rendered = function () {
     var markers = this.data.optionsMap.model;   // from app startup
     var markerFeatures = {};
     var map = L.map(this.data.name + "-" + this.data.type, {
-        doubleClickZoom: true,
+        doubleClickZoom: false,
+        scrollWheelZoom: true,
+        trackResize:true,
+        zoomControl:true,
         minZoom: minZoomLevel,
         maxZoom: maxZoomLevel
     }).setView(defaultPoint, defaultZoomLevel);
@@ -122,9 +125,9 @@ Template.map.rendered = function () {
         if (ALLIndex > -1) {
             //everything needs to be selected;
             var peerIdOption = peerId + " option";
-            selectedValues = $('#' + peerIdOption).map(function () {
+            selectedValues = $('#' + peerIdOption).map(function (){
                 return $(this).val();
-            });
+            }).toArray();
             
             ALLIndex = selectedValues.indexOf("All");
             selectedValues.splice(ALLIndex, 1);
@@ -176,4 +179,5 @@ Template.map.rendered = function () {
     elem.addEventListener('refresh', function (e) {
         refresh(e.detail.refElement);
     });
+    refresh(targetElement);
 };

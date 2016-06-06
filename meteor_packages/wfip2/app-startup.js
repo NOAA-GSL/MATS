@@ -1,6 +1,7 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
+var siteMarkerOptionsMap ={};
 var siteMarkers={};
 var descriptorOptionsMap ={};
 var upperOptionsMap = {};
@@ -156,9 +157,9 @@ curveParams = function () {
             {
                 name: 'sitesMap',
                 type: InputTypes.selectMap,
-                optionsMap:siteMarkers,
-                options:Object.keys(optionsMap),   // convenience
-                targetName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                optionsMap:siteMarkerOptionsMap,
+                options:Object.keys(siteMarkerOptionsMap),   // convenience
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 default: 'ALL',
@@ -774,19 +775,12 @@ Meteor.startup(function () {
 
                     descriptorOptionsMap[descriptor] = descriptor;
 
-                   /* dependentOptions = {
-                        a:{min:0, max:20, step:1},
-                        b:{min:0, max:20, step:1},
-                        c:{min:0, max:20, step:1}
-                    }*/
-
-                    var step = (max_value - min_value)/10.;
-                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,default:max_value};
+                    //var step = (max_value - min_value)/100;
+                    var step = "any";
+                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:max_value};
                     lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
 
                 }
-
-
             }
             qFuture['return']();
         }));
