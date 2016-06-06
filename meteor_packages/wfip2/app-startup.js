@@ -2,7 +2,6 @@ var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
 var siteMarkerOptionsMap ={};
-var siteMarkers={};
 var descriptorOptionsMap ={};
 var upperOptionsMap = {};
 var lowerOptionsMap = {};
