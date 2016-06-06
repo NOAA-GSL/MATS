@@ -227,7 +227,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         //var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
 
-        var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+        //var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+        var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
 
