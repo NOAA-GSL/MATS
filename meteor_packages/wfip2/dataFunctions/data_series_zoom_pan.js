@@ -60,9 +60,9 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                     var siteid = rows[rowIndex].sites_siteid;
 
                     var z = (rows[rowIndex].z);
-                    var avVal = z.substring(1, z.length - 1)
+                    var avVal = z.substring(1, z.length - 1);
                     var ws = rows[rowIndex].ws;
-                    var stat = ws.substring(1, ws.length - 1)
+                    var stat = ws.substring(1, ws.length - 1);
                     //  var valid_utc = rows[rowIndex].valid_utc;
 
                     var sub_z = avVal.split(',');
@@ -293,7 +293,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
                     " and valid_utc>=" + secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate)
+                    " and valid_utc<=" + secsConvert(toDate);
                 // " and valid_utc>=1454482800" + //secsConvert(fromDate) +
                 // " and valid_utc<=1454486400"// + secsConvert(toDate)
 
@@ -307,18 +307,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " and valid_utc >=" + secsConvert(fromDate) +
                     " and valid_utc<=" + secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
-
-
             }
             if (siteid != "All") {
                 statement = statement +
                     "  and sites_siteid=" + siteid;
-
             }
-
-
             console.log("query=" + statement);
-
             var ws_z_time;
             var site_z_time;
 
@@ -339,8 +333,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
                  }
-
-
         }
 
                 var pointSymbol = "circle";

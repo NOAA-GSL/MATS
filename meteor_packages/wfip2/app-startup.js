@@ -5,6 +5,7 @@ var siteMarkerOptionsMap ={};
 var descriptorOptionsMap ={};
 var upperOptionsMap = {};
 var lowerOptionsMap = {};
+var forecastLengthOptionsMap = {};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -99,6 +100,7 @@ curveParams = function () {
                 //tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
+                dependentNames: ["sites", "forecast length"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -130,8 +132,9 @@ curveParams = function () {
                 name: 'sites',
                 type: InputTypes.select,
                 optionsMap:siteOptionsMap,
-                options:Object.keys(siteOptionsMap),
+                options:siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                superiorName: 'model',
                 controlButtonCovered: true,
                 unique: false,
                 default: 'All',
@@ -142,16 +145,6 @@ curveParams = function () {
                 multiple: true
             });
 
-        // var siteMarkerOptionsMap = {
-        //     model:  [{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
-        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}],
-        //
-        //     sodar:  [{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"SODAR", peerOption:"BO2OR", highLightColor:'white'}},
-        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"SODAR", peerOption:"CD2OR",highLightColor:'yellow'}}],
-        //
-        //     profile:[{point:[40.015517, -105.264830],options:{title:"boulder", color:"red", size:20, network:"PROFILE", peerOption:"BO2OR", highLightColor:'white'}},
-        //              {point:[37.6956794,-97.3116876],options:{title:"wichita", color:"blue", size:20, network:"PROFILE", peerOption:"CD2OR",highLightColor:'yellow'}}]
-        // };
         CurveParams.insert(
             {
                 name: 'sitesMap',
@@ -264,16 +257,6 @@ curveParams = function () {
                 displayGroup: 4
             });
 
-            optionsMap = {
-                temperature: ['dt', 't'],
-                RH: ['dR', 'R'],
-                RHobT: ['dRoT', 'RoT'],
-                winds: ['dw', 'ws'],
-                height: ['dH', 'H']
-            };
-
-
-
         optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
         CurveParams.insert(
             {
@@ -289,7 +272,6 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4
             });
-
 
 
         optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
@@ -340,8 +322,9 @@ curveParams = function () {
             {
                 name: 'forecast length',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:forecastLengthOptionsMap,
+                options:Object.keys(forecastLengthOptionsMap),   // convenience
+                superiorName: 'model',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -592,43 +575,34 @@ var containsPoint = function(pointArray,point) {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    //if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
-    //}
-    if (Databases.find().count() == 0) {
+    }
+// remove for production
+Databases.remove({});
 
+    if (Databases.find().count() == 0) {
         Databases.insert({
             name:"wfip2Setting",
             role: "wfip2_data",
             status: "active",
-            host        : 'wfip2-db.gsd.esrl.noaa.gov',
-            user        : 'dev',
-            password    : 'Pass4userdev*',
+            // host        : 'wfip2-db.gsd.esrl.noaa.gov',
+            // user        : 'dev',
+            // password    : 'Pass4userdev*',
 
-           // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-           // user        : 'readonly',
-           // password    : 'Readonlyp@$$405',
-            database    : 'WFIP2',
-            connectionLimit : 10
-
+           host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           user        : 'readonly',
+           password    : 'Readonlyp@$$405',
+           database    : 'WFIP2',
+           connectionLimit : 10
         });
-
-
     }
 
-
     var wfip2Settings = Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-
-
-
     wfip2Pool = mysql.createPool(wfip2Settings);
-
-
-
     wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-
     try {
 
         var statement = "select model,regions,model_value from regions_per_model_mats";
@@ -643,30 +617,21 @@ Meteor.startup(function () {
             } else {
                 Models.remove({});
                 RegionsPerModel.remove({});
-
-               // RegionsPerModel =['hrrr_esrl,All'];
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
-                    var instruments_instrid =-1;
-
-                        instruments_instrid = model_values[1];
-
-
+                    var instruments_instrid = model_values[1];
                     var regionMapping = "Areg";
                     if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
                         regionMapping = "reg";
                     }
-
                     var valueList = [];
                     valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
-
                     var tablevalueList = [];
                     tablevalueList.push(table_name);
-
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
                     var regionsArr = regions.split(',');
                     regionsArr.unshift('All');
@@ -680,9 +645,6 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-
-
-    var stn_color;
     try {
         var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
         var qFuture = new Future();
@@ -690,27 +652,16 @@ Meteor.startup(function () {
             if (err != undefined) {
                 console.log(err.message);
             }
-            var sodar_sites =['All,All'];
-            var profile_sites =['All,All'];
-            var all_sites =['All,All'];
-
-
-
             if (rows === undefined || rows.length === 0) {
-
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
-                //FcstLensPerModel.remove({});
-                SitesPerModel.remove({});
-                siteOptionsMap['All'] = 'All';
-                siteOptionsMap['All Sodar'] = 'All Sodar';
-                siteOptionsMap['All Profile'] = 'All Profile';
-                siteMarkerOptionsMap.model = [];
-                siteMarkerOptionsMap.sodar = [];
-                siteMarkerOptionsMap.profile = [];
+                siteMarkerOptionsMap = [];
+                siteOptionsMap.model = ['All'];
+                siteOptionsMap.sodar = [];
+                siteOptionsMap.profiler_915 = [];
+
                 var points = [];
                 for (var i = 0; i < rows.length; i++) {
-                    var siteid = rows[i].siteid;
                     var name = rows[i].name;
                     var description = rows[i].description;
                     var lat = rows[i].lat;
@@ -719,30 +670,33 @@ Meteor.startup(function () {
                         lon = lon - 360;
                     }
                     var point = [lat, lon ];
+                    // move slightly north if another marker occupies this location
                     if (containsPoint(points,point)) {
                         lat = lat + 0.002;
                         point = [lat, lon];
                     }
                     points.push(point);
                     var elev = rows[i].elev;
-                    if(description.includes("SODAR")) {
-                        sodar_sites.push(siteid +","+name);
+                    if (description.includes("SODAR")) {
                         var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:"SODAR", peerOption:name, highLightColor:'pink'}};
-                        siteMarkerOptionsMap.sodar.push(obj);
-                        siteMarkerOptionsMap.model.push(obj);
-                    }else{
-                        profile_sites.push(siteid +","+name);
+                        siteMarkerOptionsMap.push(obj);
+                        siteOptionsMap.model.push(name);
+                        siteOptionsMap.sodar.push(name);
+                    } else {
                         var obj = {point:point,elevation:elev, options:{title:description, color:"blue", size:20, network:"PROFILE", peerOption:name, highLightColor:'cyan'}};
-                        siteMarkerOptionsMap.profile.push(obj);
-                        siteMarkerOptionsMap.model.push(obj);
+                        siteMarkerOptionsMap.push(obj);
+                        siteOptionsMap.model.push(name);
+                        siteOptionsMap.profiler_915.push(name);
                     }
-                    all_sites.push(siteid +","+name);
-                    siteOptionsMap[name] = siteid;
                 }
-                SitesPerModel.insert({model:"sodar", sites:sodar_sites});
-                SitesPerModel.insert({model:"profile", sites:profile_sites});
-                SitesPerModel.insert({model:"model", sites:all_sites});
-
+                var modelNames = Models.find({},{fields:{'name':1, '_id': 0}}).fetch();
+                for (var i=0; i < modelNames.length; i++) {
+                    var mName = modelNames[i].name;
+                    var mNameUpper = mName.toUpperCase();
+                    if (((mNameUpper).indexOf('SODAR') === -1) && ((mNameUpper).indexOf('PROFILE') === -1)) {
+                        siteOptionsMap[mName] = siteOptionsMap['model'];
+                    }
+                }
             }
             qFuture['return']();
         }));
@@ -751,13 +705,10 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
-
-
     try {
         //var statement = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE  TABLE_NAME = 'hrrr_wfip_discriminator';";
         var statement = "select * from discriminator_range;";
         var qFuture = new Future();
-
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
@@ -771,14 +722,10 @@ Meteor.startup(function () {
                     var descriptor = rows[i].name;
                     var min_value = rows[i].min_value;
                     var max_value = rows[i].max_value;
-
                     descriptorOptionsMap[descriptor] = descriptor;
-
-                    //var step = (max_value - min_value)/100;
                     var step = "any";
                     upperOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:max_value};
                     lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
-
                 }
             }
             qFuture['return']();
@@ -788,27 +735,20 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
-
-
     try {
         var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
         var qFuture = new Future();
-
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                FcstLensPerModel.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model;
-                    var forecastLengths = rows[i].fcst_lens;
-
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
-
+                     var model = rows[i].model;
+                     var forecastLengths = rows[i].fcst_lens;
+                    forecastLengthOptionsMap[model] = forecastLengths.split(',');
                 }
             }
             qFuture['return']();
@@ -819,11 +759,9 @@ Meteor.startup(function () {
     }
 
     try {
-
         var statement = "select regionMapTable,description from region_descriptions_mats;";
         var qFuture = new Future();
-
-        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+       wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -832,23 +770,15 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 RegionDescriptions.insert({regionMapTable: 'All',  description: 'All'});
-
-
                 regionOptionsMap['All'] = ['All'];
                 for (var i = 0; i < rows.length; i++) {
-
                     var regionMapTable = (rows[i].regionMapTable);
                     var description = rows[i].description;
-
                     var valueList = [];
-
                     valueList.push(regionMapTable);
-                   regionOptionsMap[description] = valueList;
-
+                    regionOptionsMap[description] = valueList;
                     RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
                 }
-             
-
             }
             qFuture['return']();
         }));

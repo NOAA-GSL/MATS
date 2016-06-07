@@ -1,4 +1,39 @@
+var refreshPeer = function(peerName) {
+    if (peerName ) {
+        // refresh the peer
+        var targetParam = CurveParams.findOne({name:peerName});
+        var targetId  = targetParam.name + '-' + targetParam.type;
+        var targetElem = document.getElementById(targetId);
+        var refreshMapEvent = new CustomEvent("refresh", {
+            detail: {
+                refElement: event.target
+            }
+        });
+        targetElem.dispatchEvent(refreshMapEvent);
+    }
+};
+
+var refreshDependents = function(dependentNames) {
+    if (dependentNames) {
+        // refresh the dependents
+        for (var i = 0; i < dependentNames.length; i++) {
+            var name = dependentNames[i];
+            var targetParam = CurveParams.findOne({name: name});
+            var targetId = targetParam.name + '-' + targetParam.type;
+            var targetElem = document.getElementById(targetId);
+            var refreshEvent = new CustomEvent("refresh", {
+                detail: {
+                    refElement: event.target
+                }
+            });
+            targetElem.dispatchEvent(refreshEvent);
+        }
+    }
+};
+
 Template.select.rendered = function(){
+    var ref = this.data.name + '-' + this.data.type;
+    var elem = document.getElementById(ref);
     if (this.firstNode.selectedIndex == -1) {
         if (this.data.default && this.data.default != "") {
             var defaultIndex = this.data.options.indexOf(this.data.default);
@@ -10,7 +45,29 @@ Template.select.rendered = function(){
             this.firstNode.selectedIndex = 0;
         }
     }
+    var optionsMap = this.data.optionsMap;
+    var peerName = this.data.peerName;
+    var dependentNames = this.data.dependentNames;
+    var refresh = function(selectedSuperiorValue) {
+        var options = optionsMap[selectedSuperiorValue];
+        elem.options.length =0;
+        for(var i = 0; i < options.length; i++) {
+            elem.options[elem.options.length] = new Option(options[i], options[i], i==0, i==0);
+        }
+
+        refreshPeer(peerName);
+        refreshDependents(dependentNames)
+    };
+
+    // register refresh event for any superior to use to enforce a refresh
+    elem.addEventListener('refresh', function (e) {
+        var superiorElement = e.detail.refElement;
+        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+        refresh(selectedSuperiorValue);
+    });
+
 };
+
 Template.select.helpers({
     isSelectedByDefault: function (p) {
         if (p.default == this) {
@@ -19,40 +76,15 @@ Template.select.helpers({
             return ""; // not the selected option
         }
     },
-
     options: function() {
         var models = Models.find({},{sort: ["name","asc"]},{name: 1}).fetch();
         if (models === undefined || models.length === 0) {
             return "";
         }
-        if (this.name === 'sites') {
-            var rOpts = [];
-            var models = Models.find({},{sort: ["name","asc"]}).fetch();
-            var modelName = models[0].name;
-
-            var sites = SitesPerModel.findOne({model: 'model'}).sites;
-
-            for (var ri=0; ri< sites.length; ri++){
-                var site_id = sites[ri].split(',')[0];
-                var site_name = sites[ri].split(',')[1];
-
-
-                rOpts.push(site_name);
-
-            }
-            if (this.default === undefined || this.default === "") {
-                this.default = rOpts[0];
-                this.value = rOpts[0];
-            }
-            return rOpts;
-        }
-
         if (this.name === 'region') {
             var rOpts = [];
             var models = Models.find({},{sort: ["name","asc"]}).fetch();
             var modelName = models[0].name;
-            var regionMapping = models[0].regionMapping;
-
             var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
             for (var ri=0; ri< regionIds.length; ri++){
                 var rid= regionIds[ri];
@@ -87,99 +119,6 @@ Template.select.helpers({
 });
 
 Template.select.events({
-    'change .model': function(event ) {
-        var modelName = event.currentTarget.options[event.currentTarget.selectedIndex].value;
-        // do the region selector
-        var model = Models.findOne({name: modelName}, {name: 1});
-        var opts = [];
-        var regionIds = RegionsPerModel.findOne({model: modelName}, {regions: 1}).regions;
-        for (var ri=0; ri< regionIds.length; ri++){
-            var rid= regionIds[ri];
-            var regionDescription = RegionDescriptions.findOne({regionMapTable: rid}, {
-               description: 1
-            });
-            var description = regionDescription != null?regionDescription.description:"";
-            opts.push(description);
-        }
-
-        var selector = $('select[name="region"]');
-        // find which region is selected currently
-        var selectedRegion = document.getElementById('region-select').options[document.getElementById('region-select').selectedIndex].text;
-        var optionsAsString = "";
-        var selected = 0;
-        for (var i = 0; i < opts.length; i++) {
-            // if selected currently select this one
-            if (opts[i] == selectedRegion) {
-                selected = i;
-            }
-            optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
-        }
-        // set selected
-        selector.html("");
-        selector.append(optionsAsString);
-        document.getElementById('region-select').getElementsByTagName('option')[selected].selected = 'selected';
-        // set the default for the value button
-        var regionValueElem = document.getElementById('controlButton-region-value');
-        regionValueElem.textContent = opts[selected].split(' (')[0];
-        if(CurveParams.findOne({name:"sites"})) {
-            var sOpts = [];
-            var sites;
-            if (modelName.includes("sodar")) {
-                sites = SitesPerModel.findOne({model: 'sodar'}).sites;
-            } else if (modelName.includes("profile")) {
-                sites = SitesPerModel.findOne({model: 'profile'}).sites;
-
-            } else {
-                if (SitesPerModel.findOne({model: 'model'})) {
-                    sites = SitesPerModel.findOne({model: 'model'}).sites;
-                }
-            }
-            for (var ri = 0; ri < sites.length; ri++) {
-                var site_id = sites[ri].split(',')[0];
-                var site_name = sites[ri].split(',')[1];
-                sOpts.push(site_name);
-            }
-            var selector = $('select[name="sites"]');
-            var selectedSites = document.getElementById('sites-select').options[document.getElementById('sites-select').selectedIndex].text;
-            var optionsAsString = "";
-            var selected = 0;
-            for (var i = 0; i < sOpts.length; i++) {
-                // if selected currently select this one
-                if (sOpts[i] == selectedSites) {
-                    selected = i;
-                }
-                optionsAsString += "<option value='" + sOpts[i] + "'>" + sOpts[i] + "</option>";
-            }
-            // set selected
-            selector.html("");
-            selector.append(optionsAsString);
-            document.getElementById('sites-select').getElementsByTagName('option')[selected].selected = 'selected';
-            // set the default for the value button
-            var siteValueElem = document.getElementById('controlButton-sites-value');
-            siteValueElem.textContent = sOpts[selected].split(' (')[0];
-        }
-        // do the forecastLength selector
-        opts = FcstLensPerModel.findOne({model: modelName}, {forecastLengths: 1}).forecastLengths.sort(function (a, b) {
-            return (Number(a) - Number(b));
-        });
-        selector = $('select[name="forecast length"]');
-        // find which forecastlen is selected currently
-        var selectedForecastLen = document.getElementById('forecast length-select').options[document.getElementById('forecast length-select').selectedIndex].text;
-        optionsAsString = "";
-        selected = 0;
-        for (var i = 0; i < opts.length; i++) {
-            if (opts[i] == selectedForecastLen) {
-                selected = i;
-            }
-            optionsAsString += "<option value='" + opts[i] + "'>" + opts[i] + "</option>";
-        }
-        selector.html("");
-        selector.append(optionsAsString);
-        document.getElementById('forecast length-select').getElementsByTagName('option')[selected].selected = 'selected';
-        // set the default for the value button
-        var fclValueElem = document.getElementById('controlButton-forecast length-value');
-        fclValueElem.textContent = opts[selected];
-    },
     'change': function(event ) {
         if (this.multiple) {
             if (event.target.value === 'All') {
@@ -189,33 +128,8 @@ Template.select.events({
                     $("#" + event.target.id + " option[value='" + $(this).val() + "']").prop("selected", true);
                 });
             }
-        };
-        if (this.peerName ) {
-            // refresh the peer
-            var targetParam = CurveParams.findOne({name:this.peerName});
-            var targetId  = targetParam.name + '-' + targetParam.type;
-            var targetElem = document.getElementById(targetId);
-            var refreshMapEvent = new CustomEvent("refresh", {
-                detail: {
-                    refElement: event.target
-                }
-            });
-            targetElem.dispatchEvent(refreshMapEvent);
-        };
-        if (this.dependentNames) {
-            // refresh the dependents
-            for (var i = 0; i < this.dependentNames.length; i++) {
-                var name = this.dependentNames[i];
-                var targetParam = CurveParams.findOne({name: name});
-                var targetId = targetParam.name + '-' + targetParam.type;
-                var targetElem = document.getElementById(targetId);
-                var refreshEvent = new CustomEvent("refresh", {
-                    detail: {
-                        refElement: event.target
-                    }
-                });
-                targetElem.dispatchEvent(refreshEvent);
-            }
         }
-    }
+        refreshPeer(this.peerName);
+        refreshDependents(this.dependentNames);
+     }
 });

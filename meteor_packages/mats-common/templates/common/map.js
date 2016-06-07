@@ -15,7 +15,7 @@ Template.map.rendered = function () {
     var peerName = this.data.peerName;
     var targetElement = document.getElementsByName(peerName)[0];
     var targetId = '#' + targetElement.id;
-    var markers = this.data.optionsMap.model;   // from app startup
+    var markers = this.data.optionsMap;   // from app startup
     var markerFeatures = {};
     var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: false,
@@ -27,7 +27,11 @@ Template.map.rendered = function () {
     }).setView(defaultPoint, defaultZoomLevel);
     // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
     L.tileLayer.provider('Thunderforest.Outdoors').addTo(map);
-
+    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+    if (!markerFeatures) {
+        markerFeatures = {};
+    }
+    
     var createUnSelectedIcon = function (m) {
         var options = m.options;
         var icon = L.divIcon({
@@ -86,40 +90,57 @@ Template.map.rendered = function () {
         marker.setIcon(icon);
     };
 
-    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
 
-    if (!markerFeatures) {
-        markerFeatures = {};
-    }
-    for (var m = 0; m < markers.length; m++) {
-        var unSelectedIcon = createUnSelectedIcon(markers[m]);
-        var selectedIcon = createSelectedIcon(markers[m]);
-        var markerOptions = markers[m].options;
-        var markerPeerOption = markerOptions.peerOption;
-        var title = markerOptions.title;
-        var point = markers[m].point;
-        var markerId = point[0] + ',' + point[1] + ':' + title;
-        var features = {
-            unSelectedIcon: unSelectedIcon,
-            selectedIcon: selectedIcon,
-            markerOptions: markerOptions,
-            markerPeerOption: markerPeerOption
-        };
 
-        var marker = new L.Marker(markers[m].point, {
-            icon: unSelectedIcon,
-            title: markers[m].options.title,
-        }).on('click', function (event) {
-                // toggle selection of corresponding site option for this marker
-                toggleTargetSelection(event);
+    var refreshMarkersForPeer = function(peerElement) {
+        // find out what peer options are available
+        var peerOptions = [];
+        var currentMakerTitles = [];
+        if (peerElement && $(peerElement).is("select")) {
+            for (var i = 0; i < peerElement.options.length; i++) {
+                peerOptions.push(peerElement.options[i].text);
             }
-        );
-        markerFeatures[markerId] = features;
-        map.addLayer(marker);
-    }
+        }
+
+        // clear the markers
+        map.eachLayer(function(l) {
+            if (l._icon) {
+                map.removeLayer(l);
+            }
+        });
+        for (var m = 0; m < markers.length; m++) {
+            var markerPeerOption = markers[m].options.peerOption;
+            if (_.contains(peerOptions,markerPeerOption)) {
+                var unSelectedIcon = createUnSelectedIcon(markers[m]);
+                var selectedIcon = createSelectedIcon(markers[m]);
+                var markerOptions = markers[m].options;
+                var title = markerOptions.title;
+                var point = markers[m].point;
+                var markerId = point[0] + ',' + point[1] + ':' + title;
+                var features = {
+                    unSelectedIcon: unSelectedIcon,
+                    selectedIcon: selectedIcon,
+                    markerOptions: markerOptions,
+                    markerPeerOption: markerPeerOption
+                };
+
+                var marker = new L.Marker(markers[m].point, {
+                    icon: unSelectedIcon,
+                    title: markers[m].options.title,
+                }).on('click', function (event) {
+                        // toggle selection of corresponding site option for this marker
+                        toggleTargetSelection(event);
+                    }
+                );
+                markerFeatures[markerId] = features;
+                map.addLayer(marker);
+            }
+        }
+    };
 
     var refresh = function (peerElement) {
         var peerId = peerElement.id;
+        refreshMarkersForPeer(peerElement);
         var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
         var ALLIndex = selectedValues.indexOf("All");
         if (ALLIndex > -1) {

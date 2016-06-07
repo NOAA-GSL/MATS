@@ -177,8 +177,6 @@ Template.select.events({
                     elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
                 }
             } else {
-                console.log("event.currentTarget");
-                console.log("event.currentTarget.value");
                 elem.textContent = event.currentTarget.value;
             }
         }
