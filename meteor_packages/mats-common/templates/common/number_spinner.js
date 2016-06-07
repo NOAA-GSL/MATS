@@ -15,24 +15,25 @@ Template.numberSpinner.rendered = function () {
 // register an event listener so that the select.js can ask the map div to refresh after a selection
     var optionsMap = this.data.optionsMap;
     var ref = this.data.name + '-' + this.data.type;
-    var refValueDisplay = "controlButton-" + this.data.name + "-value"
+    var refValueDisplay = "controlButton-" + this.data.name + "-value";
+    var dispElem = document.getElementById(refValueDisplay);
     var elem = document.getElementById(ref);
-    var superiorName = this.data.superiorName;
-    var refresh = function(descriptor) {
-        var min = optionsMap[descriptor].min;
-        var max = optionsMap[descriptor].max;
-        var step = optionsMap[descriptor].step;
-        var displayDefault = optionsMap[descriptor].default;
-        console.log("descriptor is " + descriptor + " min " + min + " max " + max + " step " + step);
+
+    var refresh = function(superiorSelection) {
+        var min = optionsMap[superiorSelection].min;
+        var max = optionsMap[superiorSelection].max;
+        var step = optionsMap[superiorSelection].step;
+        var displayDefault = optionsMap[superiorSelection].default;
         elem.setAttribute("min", min);
         elem.setAttribute("max",max);
         elem.setAttribute("step",step);
-        document.getElementById(refValueDisplay).textContent = displayDefault;
-    }
+        dispElem.textContent = displayDefault;
+        elem.value = displayDefault;
+    };
 
     elem.addEventListener('refresh', function (e) {
         var superiorElement = e.detail.refElement;
-        selectedDescriptor = superiorElement.options[superiorElement.selectedIndex].text;
-        refresh(selectedDescriptor);
+        var superiorSelection = superiorElement.options[superiorElement.selectedIndex].text;
+        refresh(superiorSelection);
     });
 };

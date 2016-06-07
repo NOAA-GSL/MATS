@@ -231,6 +231,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
+        var dataSource = (curve['data source']);
 
 
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
@@ -245,6 +246,14 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+
+        var discriminator = curve['discriminator'];
+        var disc_upper = curve['upper'];
+        var disc_lower = curve['lower'];
+        console.log("discriminator=" + discriminator);
+        console.log("discriminator lower=" + disc_lower);
+        console.log("discriminator upper=" + disc_upper);
+
         var statistic;
         if (variableStr == 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
@@ -299,7 +308,33 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 // " and valid_utc<=1454486400"// + secsConvert(toDate)
 
 
-            } else {
+            } else if(model.includes("hrrr_wfip")){
+
+              /*  statement = "select o.valid_utc as avtime,z,ws,sites_siteid " +
+                    "from obs_recs as o , " + model +","+ dataSource+"_discriminator"+
+                    " where  obs_recs_obsrecid = o.obsrecid" +
+                    " and modelid= modelid_rc"  +
+                    " and instruments_instrid=" + instrument_id +
+                    " and valid_utc>=" + secsConvert(fromDate) +
+                    " and valid_utc<=" + secsConvert(toDate)+
+                    " and "+ discriminator+" >="+disc_lower +
+                    " and "+ discriminator+" <="+disc_upper*/
+
+                statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
+                    "from " + model + ", nwp_recs,  " +dataSource+"_discriminator"+
+                    " where nwps_nwpid=" + instrument_id +
+                    " and modelid= modelid_rec"  +
+                    " and nwp_recs_nwprecid=nwprecid" +
+                    " and valid_utc >=" + secsConvert(fromDate) +
+                    " and valid_utc<=" + secsConvert(toDate) +
+                    " and fcst_end_utc=" + 3600 * forecastLength+
+                    " and "+ discriminator+" >="+disc_lower +
+                    " and "+ discriminator+" <="+disc_upper
+
+            }
+
+
+            else {
 
                 statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
@@ -311,12 +346,19 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
             }
+
+
+            //console.log("query1=" + statement);
             if (siteid != "All") {
                 statement = statement +
                     "  and sites_siteid=" + siteid;
 
             }
 
+
+         //   if (model.includes("hrrr_wfip")) {
+
+           // }
 
             console.log("query=" + statement);
 

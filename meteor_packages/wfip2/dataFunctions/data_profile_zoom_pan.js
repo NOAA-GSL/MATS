@@ -280,15 +280,18 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
+        var data_source = curve['data source'];
 
-        var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
+
+        var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model =  tmp[0];
         var instrument_id = tmp[1];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
 
 
-       var instruments_instrid= CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][1];
+
+        var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
 
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
         var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
