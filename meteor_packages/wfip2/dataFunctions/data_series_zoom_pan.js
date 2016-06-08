@@ -23,9 +23,7 @@ var secsConvert = function (dStr) {
     // to UTC time, not local time
     //return date_in_secs/1000 -3600*6;
     return date_in_secs/1000 ;
-
 };
-
 
 var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr,top,bottom) {
         var dFuture = new Future();
@@ -35,7 +33,6 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
         var N_times = [];
         var ws_z_time = {};
         var site_z_time ={};
-        // modelPool.query(statement, function (err, rows) {
         wfip2Pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
             if (err != undefined) {
@@ -51,18 +48,15 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                 var curveTime = [];
                 var curveStat = [];
                 var N0_max = 0;
-
                 var ws_time = {};
-
-
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avSeconds = Number(rows[rowIndex].avtime);
                     var siteid = rows[rowIndex].sites_siteid;
 
                     var z = (rows[rowIndex].z);
-                    var avVal = z.substring(1, z.length - 1)
+                    var avVal = z.substring(1, z.length - 1);
                     var ws = rows[rowIndex].ws;
-                    var stat = ws.substring(1, ws.length - 1)
+                    var stat = ws.substring(1, ws.length - 1);
                     //  var valid_utc = rows[rowIndex].valid_utc;
 
                     var sub_z = avVal.split(',');
@@ -113,8 +107,6 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                     }
                 }
 
-
-
                 var max_sample_time =0;
                 var  keys = Object.keys(ws_time);
                 // console.log("xue keys="+keys);
@@ -131,32 +123,15 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                     var ws_array = ws_time[key];
 
                     if (ws_array.length>0 ) {
-
-
                         var mean_ws;
                         var sum_ws = 0;
-
-                        //  if (ws_array.length > 0.5 * max_sample_time) {
-
                         for (var jjj = 0; jjj < ws_array.length; jjj++) {
                             sum_ws = sum_ws + ws_array[jjj];
                         }
                         mean_ws = sum_ws / ws_array.length;
-
-
                         d.push([key * 1000, mean_ws]);
-                        //     }
                     }
                 }
-
-
-
-
-
-
-
-
-
                 // done waiting - have results
                 dFuture['return']();
             }
@@ -170,7 +145,6 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
             error: error,
             ws_z_time: ws_z_time,
             site_z_time: site_z_time,
-     //         site: site,
             ymin: ymin,
             ymax: ymax,
             // N0: N0,
@@ -235,8 +209,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
-        var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
-
+        var siteid = _.indexOf(CurveParams.findOne({name: 'sites'}).optionsMap[dataSource],curve['sites']);
         var label = (curve['label']);
         var top = Number(curve['top']);
         var bottom = Number(curve['bottom']);
@@ -347,7 +320,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
             //console.log("query1=" + statement);
-            if (siteid != "All") {
+            //if (siteid != "All") {
+            if (siteid != 0) {
                 statement = statement +
                     "  and sites_siteid=" + siteid;
             }

@@ -52,9 +52,9 @@ var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     //var avVal = Number(rows[rowIndex].z);
                     var z = (rows[rowIndex].z);
-                    var avVal = z.substring(1, z.length - 1)
+                    var avVal = z.substring(1, z.length - 1);
                     var ws = rows[rowIndex].ws;
-                    var stat = ws.substring(1, ws.length - 1)
+                    var stat = ws.substring(1, ws.length - 1);
                     var valid_utc = Number(rows[rowIndex].valid_utc);
                     var site_id = Number(rows[rowIndex].sites_siteid);
 
@@ -281,23 +281,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
         var data_source = curve['data source'];
-
-
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model =  tmp[0];
         var instrument_id = tmp[1];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
-        var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
-
-
-
+        var siteid = _.indexOf(CurveParams.findOne({name: 'sites'}).optionsMap[data_source],curve['sites']);
+        //var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
         var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
-
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
         var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
-
-
-
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
@@ -335,9 +327,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " where valid_utc >= "+ secsConvert(curveDatesDateRangeFrom) +
                     " and valid_utc <= " +  secsConvert(curveDatesDateRangeTo) +
                     " and obs_recs_obsrecid = o.obsrecid " +
-                    " and instruments_instrid=" + instrument_id
+                    " and instruments_instrid=" + instrument_id;
 
-                    if (siteid !="All"){
+                    if (siteid !=0){
                         statement = statement +
                             "  and sites_siteid="+siteid;
 
@@ -360,7 +352,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc="+3600*forecastLength;
 
-                if (siteid !="All"){
+                if (siteid !=0){
                     statement = statement +
                         "  and sites_siteid="+siteid;
 

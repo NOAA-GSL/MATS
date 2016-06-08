@@ -588,13 +588,13 @@ Databases.remove({});
             name:"wfip2Setting",
             role: "wfip2_data",
             status: "active",
-            // host        : 'wfip2-db.gsd.esrl.noaa.gov',
-            // user        : 'dev',
-            // password    : 'Pass4userdev*',
+            host        : 'wfip2-db.gsd.esrl.noaa.gov',
+            user        : 'dev',
+            password    : 'Pass4userdev*',
 
-           host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-           user        : 'readonly',
-           password    : 'Readonlyp@$$405',
+           // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           // user        : 'readonly',
+           // password    : 'Readonlyp@$$405',
            database    : 'WFIP2',
            connectionLimit : 10
         });
