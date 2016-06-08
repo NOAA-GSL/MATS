@@ -149,7 +149,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
         //var region = curve['region'].replace(/^.*mapped to: /, "").replace(')', ''); // have to use the mapped value....
 
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+        //var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
+        var region = RegionDescriptions.findOne({description:curve['region']}).regionMapTable;
 
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
         var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
