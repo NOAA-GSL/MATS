@@ -94,7 +94,8 @@ curveParams = function () {
         );
         CurveParams.insert(
             {
-                name: 'model',
+              //  name: 'model',
+                name: 'data source',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
                 //tableMap:modelTableMap,
@@ -165,7 +166,8 @@ curveParams = function () {
 
         CurveParams.insert(
             {
-                name: 'descriptors',
+               // name: 'descriptors',
+                name: 'discriminator',
                 type: InputTypes.select,
                 optionsMap:descriptorOptionsMap,
                 options:Object.keys(descriptorOptionsMap),   // convenience
