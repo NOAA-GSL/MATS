@@ -1,11 +1,6 @@
 Template.item.helpers({
     value: function() {
-        var models = Models.find({},{sort: ["name","asc"]}, {name: 1}).fetch();
-        if (models === undefined || models.length === 0) {
-            return "";
-        }
         if (this.name === "label") {
-            var curves = Session.get('Curves');
             return getNextCurveLabel();
         }
         if (this.name === 'dates' || this.name == 'curve-dates') {
@@ -14,12 +9,12 @@ Template.item.helpers({
             var thenyr = thenDate.getFullYear();
             var thenday = thenDate.getDate();
             var thenmonth = thenDate.getMonth() + 1;
-            then =  thenmonth + '/' + thenday + "/" + thenyr;
+            var then =  thenmonth + '/' + thenday + "/" + thenyr;
 
             var yr = today.getFullYear();
             var day = today.getDate();
             var month = today.getMonth() + 1;
-            now = month + '/' + day + "/" + yr;
+            var now = month + '/' + day + "/" + yr;
             this.default = then + " to " + now;
             this.value = then + " to " + now;
         }
@@ -60,9 +55,7 @@ Template.item.helpers({
             return "none";
         }
         else {
-            //return "block";
-                var stylestr = "block;margin-top: 1.5em;";
-                return stylestr;
+            return "block;margin-top: 1.5em;";
         }
     },
     controlButtonVisibility: function() {
@@ -168,17 +161,13 @@ Template.select.events({
         if (elem === undefined) {
             return false;
         }
-        if (this.name === "region") {
-            elem.textContent =  event.currentTarget.value.split(' (')[0];
-        } else {
-            if (this.multiple==true) {
-                elem.textContent = "";
-                for (var i=0; i<event.currentTarget.selectedOptions.length;i++) {
-                    elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
-                }
-            } else {
-                elem.textContent = event.currentTarget.value;
+        if (this.multiple==true) {
+            elem.textContent = "";
+            for (var i=0; i<event.currentTarget.selectedOptions.length;i++) {
+                elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
             }
+        } else {
+            elem.textContent = event.currentTarget.value;
         }
     }
 });

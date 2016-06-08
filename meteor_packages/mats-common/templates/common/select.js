@@ -48,13 +48,17 @@ Template.select.rendered = function(){
     var optionsMap = this.data.optionsMap;
     var peerName = this.data.peerName;
     var dependentNames = this.data.dependentNames;
+    var dispElem = document.getElementById(InputTypes.controlButton + "-" + this.data.name + '-value');
     var refresh = function(selectedSuperiorValue) {
         var options = optionsMap[selectedSuperiorValue];
         elem.options.length =0;
         for(var i = 0; i < options.length; i++) {
             elem.options[elem.options.length] = new Option(options[i], options[i], i==0, i==0);
+            // set the display button
+            if (i === 0) {
+                dispElem.textContent = options[i];
+            }
         }
-
         refreshPeer(peerName);
         refreshDependents(dependentNames)
     };
@@ -65,7 +69,6 @@ Template.select.rendered = function(){
         var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
         refresh(selectedSuperiorValue);
     });
-
 };
 
 Template.select.helpers({
@@ -77,37 +80,9 @@ Template.select.helpers({
         }
     },
     options: function() {
-        var models = Models.find({},{sort: ["name","asc"]},{name: 1}).fetch();
-        if (models === undefined || models.length === 0) {
-            return "";
-        }
-        if (this.name === 'region') {
-            var rOpts = [];
-            var models = Models.find({},{sort: ["name","asc"]}).fetch();
-            var modelName = models[0].name;
-            var regionIds = RegionsPerModel.findOne({model: modelName},{regions:1}).regions;
-            for (var ri=0; ri< regionIds.length; ri++){
-                var rid= regionIds[ri];
-                var regionDescription  = RegionDescriptions.findOne({regionMapTable:rid});
-               var description = regionDescription != null? regionDescription.description:"";
-                    rOpts.push(description);
-            }
-            if (this.default === undefined || this.default === "") {
-                this.default = rOpts[0];
-                this.value = rOpts[0];
-            }
-            return rOpts;
-        } else if (this.name === 'forecast length') {
-            var models = Models.find({},{sort: ["name","asc"]}).fetch();
-            var modelName = models[0].name;
-            var modelLength = FcstLensPerModel.findOne({model: modelName});
-            if (modelLength === undefined) {
-                return [];
-            }
-            return modelLength.forecastLengths;
-        }
         if (this.default === undefined || this.default === "") {
             this.default = this.options[0];
+            // set the default value
             this.value = this.options[0];
         }
         return this.options;

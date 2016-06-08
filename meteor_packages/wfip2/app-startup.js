@@ -94,14 +94,12 @@ curveParams = function () {
         );
         CurveParams.insert(
             {
-              //  name: 'model',
                 name: 'data source',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
-                //tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["sites", "forecast length"],
+                dependentNames: ["sites","forecast length"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -135,7 +133,7 @@ curveParams = function () {
                 optionsMap:siteOptionsMap,
                 options:siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                superiorName: 'model',
+                superiorName: 'data source',
                 controlButtonCovered: true,
                 unique: false,
                 default: 'All',
@@ -325,13 +323,12 @@ curveParams = function () {
                 name: 'forecast length',
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
-                options:Object.keys(forecastLengthOptionsMap),   // convenience
+                options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
                 superiorName: 'model',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                //default: '',
-                default: '0',
+                default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 13,
                 displayPriority: 1,
@@ -588,13 +585,13 @@ Databases.remove({});
             name:"wfip2Setting",
             role: "wfip2_data",
             status: "active",
-            host        : 'wfip2-db.gsd.esrl.noaa.gov',
-            user        : 'dev',
-            password    : 'Pass4userdev*',
+            //host        : 'wfip2-db.gsd.esrl.noaa.gov',
+            //user        : 'dev',
+            //password    : 'Pass4userdev*',
 
-           // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-           // user        : 'readonly',
-           // password    : 'Readonlyp@$$405',
+           host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           user        : 'readonly',
+           password    : 'Readonlyp@$$405',
            database    : 'WFIP2',
            connectionLimit : 10
         });
@@ -618,7 +615,6 @@ Databases.remove({});
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
                 Models.remove({});
-                RegionsPerModel.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
@@ -635,9 +631,6 @@ Databases.remove({});
                     var tablevalueList = [];
                     tablevalueList.push(table_name);
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
-                    var regionsArr = regions.split(',');
-                    regionsArr.unshift('All');
-                    RegionsPerModel.insert({model: model, regions: regionsArr});
                 }
             }
             qFuture['return']();

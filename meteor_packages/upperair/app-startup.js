@@ -1,6 +1,9 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
+var regionModelOptionsMap ={};
 var modelTableMap ={};
+var forecastLengthOptionsMap = {};
+
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -61,6 +64,8 @@ curveParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
     }
+// remove for production
+CurveParams.remove({});
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -91,8 +96,9 @@ curveParams = function () {
                 tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
+                dependentNames: ["region", "forecast length"],
                 controlButtonCovered: true,
-                default: 'RAP',
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -103,11 +109,12 @@ curveParams = function () {
             {
                 name: 'region',
                 type: InputTypes.select,
-                optionsMap:regionOptionsMap,
-                options:Object.keys(regionOptionsMap),   // convenience
+                optionsMap:regionModelOptionsMap,
+                options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                superiorName: 'model',
                 controlButtonCovered: true,
                 unique: false,
-                default: 'HRRR domain',
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -238,12 +245,13 @@ curveParams = function () {
             {
                 name: 'forecast length',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:forecastLengthOptionsMap,
+                options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                superiorName: 'model',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '6',
+                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][2],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -510,6 +518,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
+    var modelRegionNumberMap = {};
     try {
 
         var statement = "select model,regions from regions_per_model_mats";
@@ -523,6 +532,7 @@ Meteor.startup(function () {
             } else {
                 Models.remove({});
                 RegionsPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
@@ -540,7 +550,9 @@ Meteor.startup(function () {
                     modelTableMap[model] = tablevalueList;
                     myModels.push(model);
                     Models.insert({name: model, regionMapping: regionMapping});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
+                    var regionArr = regions.split(',');
+                    RegionsPerModel.insert({model: model, regions: regionArr});
+                    modelRegionNumberMap[model] = regionArr;
                 }
             }
             qFuture['return']();
@@ -568,9 +580,9 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
-
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
-
+                    var forecastLengthArr = forecastLengths.split(',');
+                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
+                    forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
             qFuture['return']();
@@ -580,8 +592,9 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
-    try {
+    var regionNumberDescriptionMapping = [];
 
+    try {
         var statement = "select regionMapTable,description from region_descriptions_mats_new;";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -593,16 +606,13 @@ Meteor.startup(function () {
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-
-                    var regionMapTable = (rows[i].regionMapTable);
+                    var regionNumber = (rows[i].regionMapTable);
                     var description = rows[i].description;
-
                     var valueList = [];
-
-                    valueList.push(regionMapTable);
-               regionOptionsMap[description] = valueList;
-
-                    RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
+                    valueList.push(regionNumber);
+                    //regionOptionsMap[description] = valueList;
+                    regionNumberDescriptionMapping[regionNumber] = description;
+                    RegionDescriptions.insert({regionMapTable: regionNumber,  description: description});
                 }
             }
             qFuture['return']();
@@ -610,6 +620,15 @@ Meteor.startup(function () {
         qFuture.wait();
     } catch (err) {
         Console.log(err.message);
+    }
+
+    // build RegionModelOptionsMap
+    for (var i = 0 ; i < myModels.length; i++) {
+        var regionNumbers = modelRegionNumberMap[myModels[i]];
+        regionModelOptionsMap[myModels[i]] = [];
+        for (var i1 = 0; i1 < regionNumbers.length; i1++) {
+            regionModelOptionsMap[myModels[i]].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+        }
     }
 
     roles();
