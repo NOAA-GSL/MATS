@@ -1,5 +1,7 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
+var regionModelOptionsMap = {};
+var forecastLengthOptionsMap = {};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -60,6 +62,9 @@ curveParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
     }
+
+//remove for production
+CurveParams.remove({});
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -89,6 +94,7 @@ curveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
+                dependentNames: ["region", "forecast length"],
                 controlButtonCovered: true,
                 default: 'RAP',
                 unique: false,
@@ -101,11 +107,12 @@ curveParams = function () {
             {
                 name: 'region',
                 type: InputTypes.select,
-                optionsMap:regionOptionsMap,
-                options:Object.keys(regionOptionsMap),   // convenience
+                optionsMap:regionModelOptionsMap,
+                options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]],   // convenience
+                superiorName: 'model',
                 controlButtonCovered: true,
                 unique: false,
-                default: 'HRRR domain',
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -206,12 +213,13 @@ curveParams = function () {
             {
                 name: 'forecast length',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:forecastLengthOptionsMap,
+                options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                superiorName: 'model',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '0',
+                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
@@ -462,7 +470,9 @@ Meteor.startup(function () {
                     myModels.push(model);
                     Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
                     //Models.insert({name: model});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
+                    var regionsArr = regions.split(',');
+                    RegionsPerModel.insert({model: model, regions: regionsArr});
+                    regionModelOptionsMap[modelOptionsMap[model]] = regionsArr;
                 }
             }
             qFuture['return']();
@@ -490,9 +500,9 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
-
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
-
+                    var forecastLengthArr = forecastLengths.split(',');
+                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
+                    forecastLengthOptionsMap[modelOptionsMap[model]] = forecastLengthArr;
                 }
             }
             qFuture['return']();
@@ -515,7 +525,7 @@ Meteor.startup(function () {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var description = rows[i].description;
-                    var regionMapTable = rows[i].regionMapTable
+                    var regionMapTable = rows[i].regionMapTable;
                     var valueList = [];
                      valueList.push(regionMapTable);
                      regionOptionsMap[description] = valueList;
@@ -529,6 +539,7 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
+
     roles();
     authorization();
     credentials();
@@ -540,10 +551,10 @@ Meteor.startup(function () {
     plotParams();
     curveTextPatterns();
 
-    $(window).resize(function() {
-        $('#map').css('height', window.innerHeight - 82 - 45);
-    });
-    $(window).resize(); // trigger resize event
+    // $(window).resize(function() {
+    //     $('#map').css('height', window.innerHeight - 82 - 45);
+    // });
+    // $(window).resize(); // trigger resize event
 });
 
 
