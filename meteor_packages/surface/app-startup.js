@@ -208,7 +208,8 @@ CurveParams.remove({});
                 displayGroup: 3
             });
 
-        optionsMap = {};
+
+
         CurveParams.insert(
             {
                 name: 'forecast length',
@@ -216,7 +217,6 @@ CurveParams.remove({});
                 optionsMap:forecastLengthOptionsMap,
                 options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
                 superiorName: 'model',
-                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
@@ -472,14 +472,17 @@ Meteor.startup(function () {
                     //Models.insert({name: model});
                     var regionsArr = regions.split(',');
                     RegionsPerModel.insert({model: model, regions: regionsArr});
-                    regionModelOptionsMap[modelOptionsMap[model]] = regionsArr;
+
+
+                    regionModelOptionsMap[model] = regionsArr;
+
                 }
             }
             qFuture['return']();
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
 
@@ -502,15 +505,22 @@ Meteor.startup(function () {
                     var forecastLengths = rows[i].fcst_lens;
                     var forecastLengthArr = forecastLengths.split(',');
                     FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
-                    forecastLengthOptionsMap[modelOptionsMap[model]] = forecastLengthArr;
+
+
+                    forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
             qFuture['return']();
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
+
+
+    console.log("forecastLengthOptionsMap="+forecastLengthOptionsMap);
+    console.log("regionModelOptionsMap="+regionModelOptionsMap);
+
 
     try {
         var statement = "select regionMapTable,description from region_descriptions_mats;";
