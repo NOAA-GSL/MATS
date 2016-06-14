@@ -472,7 +472,7 @@ Meteor.startup(function () {
                     //Models.insert({name: model});
                     var regionsArr = regions.split(',');
                     RegionsPerModel.insert({model: model, regions: regionsArr});
-                    regionModelOptionsMap[modelOptionsMap[model]] = regionsArr;
+                    regionModelOptionsMap[model] = regionsArr;
                 }
             }
             qFuture['return']();
@@ -502,7 +502,7 @@ Meteor.startup(function () {
                     var forecastLengths = rows[i].fcst_lens;
                     var forecastLengthArr = forecastLengths.split(',');
                     FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
-                    forecastLengthOptionsMap[modelOptionsMap[model]] = forecastLengthArr;
+                    forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
             qFuture['return']();
