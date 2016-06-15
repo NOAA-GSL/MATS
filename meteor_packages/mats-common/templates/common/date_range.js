@@ -17,7 +17,7 @@ var stopInit = function() {
 Template.dateRange.onRendered(function() {
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
-    if (document.getElementById('plot-type-TimeSeries') == undefined || document.getElementById('plot-type-TimeSeries').checked === true) {
+    if (document.getElementById('plot-type-' + PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + PlotTypes.timeSeries).checked === true) {
         if (document.getElementById('curve-dates-item')) {
             document.getElementById('curve-dates-item').style.display = "none";
         }

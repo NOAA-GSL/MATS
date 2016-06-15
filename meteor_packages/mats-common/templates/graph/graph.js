@@ -64,7 +64,7 @@ Template.graph.helpers({
     plotText: function() {
         var p = Session.get('PlotParams');
         if (p !== undefined) {
-            if ((Session.get("plotType") === undefined) || Session.get("plotType").toLowerCase() === "timeseries") {
+            if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
                 return p.fromDate + " - " + p.toDate + " : " + p.plotQualifier;
             } else {
                 return "Profile: " + p.plotQualifier;
@@ -85,7 +85,7 @@ Template.graph.helpers({
         return addresses;
     },
     displayErrorBarButton: function() {
-        if ((Session.get("plotType") === undefined) || Session.get("plotType").toLowerCase() === "timeseries") {
+        if ((Session.get("plotType") === undefined) || Session.get("plotType").toLowerCase() === PlotTypes.timeSeries) {
             return "none";
         } else {
             return "block";
@@ -177,7 +177,7 @@ Template.graph.events({
         document.getElementById("textButton").style.display = "none";
         document.getElementById("curves").style.display = "none";
         document.getElementById("graphView").style.display = "none";
-        if (Session.get('plotType') === undefined || Session.get('plotType').toLowerCase() == "timeseries") {
+        if (Session.get('plotType') === undefined || Session.get('plotType').toLowerCase() == PlotTypes.timeSeries) {
             document.getElementById("textSeriesView").style.display = "block";
             document.getElementById("textProfileView").style.display = "none";
         } else {

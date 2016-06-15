@@ -22,32 +22,34 @@ Package.onUse(function(api) {
   api.imply("accounts-google");
   api.imply("accounts-ui");
   api.add_files("lib/collections/collections.js", ['client','server']);
-    api.export("CurveParams");
-    api.export("CurveTextPatterns");
-    api.export("SavedCurveParams");
-    api.export("PlotParams");
-    api.export("SavedPlotParams");
-    api.export("PlotGraphFunctions");
-    api.export("SavedPlotGraphFunctions");
-    api.export("RegionsPerModel");
-    api.export("SitesPerModel");
-    api.export("RegionDescriptions");
-    api.export("Models");
-    api.export("FcstLensPerModel");
-    api.export("CurveSettings");
-    api.export("Settings");
-    api.export("ColorScheme");
-    api.export("SentAddresses");
-    api.export("Authorization");
-    api.export("Roles");
-    api.export("SavedRoles");
-    api.export("Databases");
-    api.export("SavedDatabases");
-    api.export("Credentials");
-    api.export("SavedCredentials");
-    api.export("InputTypes");
+  api.export("CurveParams");  
+  api.export("Scatter2dParams");
+  api.export("CurveTextPatterns");
+  api.export("SavedCurveParams");
+  api.export("PlotParams");
+  api.export("SavedPlotParams");
+  api.export("PlotGraphFunctions");
+  api.export("SavedPlotGraphFunctions");
+  api.export("RegionsPerModel");
+  api.export("SitesPerModel");
+  api.export("RegionDescriptions");
+  api.export("Models");
+  api.export("FcstLensPerModel");
+  api.export("CurveSettings");
+  api.export("Settings");
+  api.export("ColorScheme");
+  api.export("SentAddresses");
+  api.export("Authorization");
+  api.export("Roles");
+  api.export("SavedRoles");
+  api.export("Databases");
+  api.export("SavedDatabases");
+  api.export("Credentials");
+  api.export("SavedCredentials");
+  api.export("InputTypes");
+  api.export("PlotTypes");
 
-    api.add_files("lib/util.js", ['client','server']);
+  api.add_files("lib/util.js", ['client','server']);
   api.add_files("lib/error/error.js", ['client','server']);
   api.add_files("templates/topnav/topNav.html", "client");
   api.add_files("templates/spinner/spinner.html", "client");
@@ -65,7 +67,7 @@ Package.onUse(function(api) {
 
   api.add_files("templates/plot/plot_param_group.html", "client");
   api.add_files("templates/plot/plot_param_group.js", "client");
-
+  
   api.add_files("templates/error/error.html", "client");
   api.add_files("templates/error/error.js", "client");
 
@@ -116,6 +118,9 @@ Package.onUse(function(api) {
 
   api.add_files("templates/params/curve_param_group.html", "client");
   api.add_files("templates/params/curve_param_group.js", "client");
+
+  api.add_files("templates/params/scatter_axis.html", "client");
+  api.add_files("templates/params/scatter_axis.js", "client");
 
   api.add_files("templates/plotType/plot_type.html", "client");
   api.add_files("templates/plotType/plot_type.js", "client");

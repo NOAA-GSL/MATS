@@ -7,6 +7,29 @@ var upperOptionsMap = {};
 var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
 
+scatter2dParams = function() {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Scatter2dParams.remove({});
+    }
+// remove for production
+    Scatter2dParams.remove({});
+    if (Scatter2dParams.find().count() == 0) {
+        Scatter2dParams.insert(
+            {
+                name: 'scatter2d',
+                type: InputTypes.radioGroup,
+                options: ['x-axis', 'y-axis', 'both'],
+                selected: 'matching',
+                controlButtonCovered: true,
+                default: 'x-axis',
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    }
+};
+
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
@@ -104,7 +127,7 @@ curveParams = function () {
                 default: 'hrrr_esrl',
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 1
             });
@@ -121,7 +144,7 @@ curveParams = function () {
                 unique: false,
                 default: 'All',
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -138,7 +161,7 @@ curveParams = function () {
                 unique: false,
                 default: 'All',
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2,
                 multiple: true
@@ -155,7 +178,7 @@ curveParams = function () {
                 unique: false,
                 default: 'ALL',
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 2,
                 multiple: true,
@@ -174,7 +197,7 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(descriptorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -194,7 +217,7 @@ curveParams = function () {
                 unique: false,
                 default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -213,7 +236,7 @@ curveParams = function () {
                 unique: false,
                 default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -252,7 +275,7 @@ curveParams = function () {
                 unique: false,
                default: 'average',
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 10,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -268,7 +291,7 @@ curveParams = function () {
                 unique: false,
                 default: 'wind_speed',
                 controlButtonVisibility: 'block',
-                displayOrder: 10,
+                displayOrder: 11,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -286,7 +309,7 @@ curveParams = function () {
                 unique: false,
                 default: 'BOTH',
                 controlButtonVisibility: 'block',
-                displayOrder: 11,
+                displayOrder: 12,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -312,7 +335,7 @@ curveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 12,
+                displayOrder: 13,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -330,7 +353,7 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 13,
+                displayOrder: 14,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -347,7 +370,7 @@ curveParams = function () {
                 unique: false,
                 default: '5000',
                 controlButtonVisibility: 'block',
-                displayOrder: 14,
+                displayOrder: 15,
                 displayPriority: 1,
                 displayGroup: 6
             });
@@ -364,7 +387,7 @@ curveParams = function () {
                 unique: false,
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 15,
+                displayOrder: 16,
                 displayPriority: 1,
                 displayGroup: 6
         });
@@ -381,7 +404,7 @@ curveParams = function () {
                 unique: false,
                 default: '03/01/2015',
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 17,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -402,7 +425,7 @@ curveTextPatterns = function () {
     }
     if (CurveTextPatterns.find().count() == 0) {
         CurveTextPatterns.insert({
-            plotType:'TimeSeries',
+            plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
@@ -418,7 +441,23 @@ curveTextPatterns = function () {
             ]
         });
         CurveTextPatterns.insert({
-            plotType:'Profile',
+            plotType: PlotTypes.profile,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'model', ':'],
+                ['', 'regionName', ', '],
+                ['', 'sites', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ' '],
+                ['fcst_len:', 'forecast length', 'h '],
+                [' valid time:', 'valid time', ' '],
+                ['avg:', 'average', ' '],
+                ['','curve-dates-dateRange-from','to'],
+                ['','curve-dates-dateRange-to','']
+            ]
+        });
+        CurveTextPatterns.insert({
+            plotType: PlotTypes.scatter2d,
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
@@ -507,15 +546,21 @@ plotGraph = function () {
     }
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
-            plotType: "TimeSeries",
+            plotType: PlotTypes.timeSeries,
             graphFunction: "graphSeriesZoom",
             dataFunction: "dataSeriesZoom",
             checked:true
         });
         PlotGraphFunctions.insert({
-            plotType: "Profile",
+            plotType: PlotTypes.profile,
             graphFunction: "graphProfileZoom",
             dataFunction: "dataProfileZoom",
+            checked: false
+        });
+        PlotGraphFunctions.insert({
+            plotType: PlotTypes.scatter2d,
+            graphFunction: "graph2dScatter",
+            dataFunction: "data2dScatter",
             checked: false
         });
     }
@@ -791,6 +836,7 @@ Databases.remove({});
     curveParams();
     savedCurveParams();
     plotParams();
+    scatter2dParams();
     curveTextPatterns();
 });
 

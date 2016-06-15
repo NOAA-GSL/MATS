@@ -258,7 +258,7 @@ curveTextPatterns = function () {
     }
     if (CurveTextPatterns.find().count() == 0) {
         CurveTextPatterns.insert({
-            plotType:'TimeSeries',
+            plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
@@ -271,7 +271,7 @@ curveTextPatterns = function () {
             ]
         });
         CurveTextPatterns.insert({
-            plotType:'Profile',
+            plotType: PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'model', ':'],
@@ -358,7 +358,7 @@ plotGraph = function () {
     }
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
-            plotType: "TimeSeries",
+            plotType: PlotTypes.timeSeries,
             graphFunction: "graphSeriesZoom",
             dataFunction: "dataSeriesZoom",
             checked:true

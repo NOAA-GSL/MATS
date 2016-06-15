@@ -438,6 +438,9 @@ Meteor.publish("SavedCurveParams", function () {
 Meteor.publish("PlotParams", function () {
     return PlotParams.find();
 });
+Meteor.publish("Scatter2dParams", function () {
+    return Scatter2dParams.find();
+});
 Meteor.publish("PlotGraphFunctions", function () {
     return PlotGraphFunctions.find();
 });

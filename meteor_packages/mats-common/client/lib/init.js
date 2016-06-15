@@ -1,4 +1,5 @@
 Meteor.subscribe("CurveParams");
+Meteor.subscribe("Scatter2dParams");
 Meteor.subscribe("SavedCurveParams");
 Meteor.subscribe("PlotParams");
 Meteor.subscribe("PlotGraphFunctions");
