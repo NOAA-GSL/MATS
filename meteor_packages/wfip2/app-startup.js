@@ -45,11 +45,26 @@ plotParams = function () {
                 displayPriority: 100,
                 displayGroup: 1
             });
+
+
+      /*  optionsMap = {
+            'show matching diffs': ['match_diff'],
+            'show matching absolute error': ['abs_error'],
+            'no diffs': ['no_diff',]
+
+        };*/
+
         PlotParams.insert(
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                options: ['show matching diffs', 'show matching RMS','pairwise diffs', 'no diffs'],
+               options: ['show matching diffs','pairwise diffs', 'no diffs'],
+                //optionsMap:['match_diff','abs_error','pair_diff','no_diff']
+
+               // options: Object.keys(optionsMap),
+               // optionsMap:optionsMap,
+
+             //   options: ['show matching diffs', 'show matching absolute error', 'no diffs'],
 
                 default: 'no diffs',
                 controlButtonCovered: false,
@@ -162,6 +177,77 @@ curveParams = function () {
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
 
+
+
+        optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
+        CurveParams.insert(
+            {
+                name: 'variable',
+                type: InputTypes.select,
+                optionsMap: optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: 'wind_speed',
+                controlButtonVisibility: 'block',
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        optionsMap = {};
+        CurveParams.insert(
+            {
+                name: 'forecast length',
+                type: InputTypes.select,
+                optionsMap:forecastLengthOptionsMap,
+                options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
+                superiorName: 'model',
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        CurveParams.insert(
+            {
+                name: 'top',
+                type: InputTypes.numberSpinner,
+                optionsMap:optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                min: '0',
+                max: '5000',
+                step: '20',
+                controlButtonCovered: true,
+                unique: false,
+                default: '5000',
+                controlButtonVisibility: 'block',
+                displayOrder: 8,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+        CurveParams.insert(
+            {
+                name: 'bottom',
+                type: InputTypes.numberSpinner,
+                optionsMap:optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                min: '0',
+                max: '5000',
+                step: '20',
+                controlButtonCovered: true,
+                unique: false,
+                default: '0',
+                controlButtonVisibility: 'block',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+
         CurveParams.insert(
             {
                // name: 'descriptors',
@@ -174,9 +260,9 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(descriptorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
 
 
@@ -194,9 +280,9 @@ curveParams = function () {
                 unique: false,
                 default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 5
             });
 
         CurveParams.insert(
@@ -213,162 +299,17 @@ curveParams = function () {
                 unique: false,
                 default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-
-
-
-        optionsMap = {
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
-                'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0'],
-
-                'Bias (Model - OB)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0'],
-                'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                ''],
-                'average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat,m0.N_{{variable0}} as N0',
-                ''],
-               // 'RAOB average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-               // 'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-               // '']
-        };
-
-        CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
-                name: 'statistic',
-                type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-               default: 'average',
-                controlButtonVisibility: 'block',
-                displayOrder: 9,
-                displayPriority: 1,
-                displayGroup: 4
-            });
-
-        optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
-        CurveParams.insert(
-            {
-                name: 'variable',
-                type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                default: 'wind_speed',
-                controlButtonVisibility: 'block',
-                displayOrder: 10,
-                displayPriority: 1,
-                displayGroup: 4
-            });
-
-
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
-        CurveParams.insert(
-            {
-                name: 'valid time',
-                type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                selected: 'BOTH',
-                unique: false,
-                default: 'BOTH',
-                controlButtonVisibility: 'block',
-                displayOrder: 11,
-                displayPriority: 1,
-                displayGroup: 5
-            });
-
-        optionsMap = {
-            'None': ['unix_timestamp(m0.date)+3600*m0.hour'],
-                '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-                '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-                '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-                '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-                '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-                '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-                '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((unix_timestamp(m0.date)+3600*m0.hour)/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
-        };
-        CurveParams.insert(
-            {
-                name: 'average',
-                type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                selected: 'None',
-                default: 'None',
-                controlButtonVisibility: 'block',
                 displayOrder: 12,
                 displayPriority: 1,
                 displayGroup: 5
             });
 
-        optionsMap = {};
-        CurveParams.insert(
-            {
-                name: 'forecast length',
-                type: InputTypes.select,
-                optionsMap:forecastLengthOptionsMap,
-                options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorName: 'model',
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 13,
-                displayPriority: 1,
-                displayGroup: 5
-            });
-        CurveParams.insert(
-            {
-                name: 'top',
-                type: InputTypes.numberSpinner,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                min: '0',
-                max: '5000',
-                step: '20',
-                controlButtonCovered: true,
-                unique: false,
-                default: '5000',
-                controlButtonVisibility: 'block',
-                displayOrder: 14,
-                displayPriority: 1,
-                displayGroup: 6
-            });
-        CurveParams.insert(
-            {
-                name: 'bottom',
-                type: InputTypes.numberSpinner,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                min: '0',
-                max: '5000',
-                step: '20',
-                controlButtonCovered: true,
-                unique: false,
-                default: '0',
-                controlButtonVisibility: 'block',
-                displayOrder: 15,
-                displayPriority: 1,
-                displayGroup: 6
-        });
-        optionsMap = {'1 day':['1 day'], '3 days':['3 days'], '7 days':['7 days'],'31 days':['31 days'], '90 days':['90 days'],'180 days':['180 days'],'365 days':['365 days']};
+
+
+
+
+
+
         CurveParams.insert(
             {
                 name: 'curve-dates',
@@ -383,7 +324,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 6
             });
     }
 };

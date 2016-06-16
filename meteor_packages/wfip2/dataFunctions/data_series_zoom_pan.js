@@ -25,7 +25,8 @@ var secsConvert = function (dStr) {
     return date_in_secs/1000 ;
 };
 
-var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, averageStr,top,bottom) {
+
+var queryWFIP2DB = function (statement, xmin, xmax, interval, top,bottom) {
         var dFuture = new Future();
         var d = [];  // d will contain the curve data
         var error = "";
@@ -33,6 +34,7 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
         var N_times = [];
         var ws_z_time = {};
         var site_z_time ={};
+        var all_z =[];
         wfip2Pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
             if (err != undefined) {
@@ -71,6 +73,11 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
                     for (var j = 0; j < sub_ws.length; j++) {
                         var this_ws = sub_ws[j];
                         var this_z = Math.floor(sub_z[j]); // jeff put float number for level
+
+                        if(all_z.indexOf(this_z)==-1){
+                            all_z.push(this_z);
+                        }
+
 
                         // ws_z_time is for matching levels for each timestamp
                         if (ws_z_time[avSeconds] === undefined) {
@@ -151,8 +158,9 @@ var queryWFIP2DB = function (statement, validTimeStr, xmin, xmax, interval, aver
             // N_times: N_times,
             N0: 20,
             N_times: 20,
-            averageStr: averageStr,
-            interval: interval
+           // averageStr: averageStr,
+            interval: interval,
+            all_z: all_z
         };
     };
 //}
@@ -181,6 +189,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
     var toDate = dateConvert(toDateStr);
+
+
+    var plotdiff = plotParams.plotFormat;
+    console.log("plotdiff=" + plotdiff);
+
 
     var weitemp = fromDate.split("-");
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
@@ -217,8 +230,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        //var statisticSelect = curve['statistic'];
+        //var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
 
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
@@ -227,26 +240,20 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         console.log("discriminator lower=" + disc_lower);
         console.log("discriminator upper=" + disc_upper);
 
-        var statistic;
+        /*var statistic;
         if (variableStr == 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
         } else {
             statistic = statisticOptionsMap[statisticSelect][0];
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid time'];
-        var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        var validTime = validTimeOptionsMap[validTimeStr][0];
-        var averageStr = curve['average'];
-        var averageOptionsMap = CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
+        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);*/
+
         var forecastLength = curve['forecast length'];
-        // variableStat is used to determine which axis a curve should use.
-        // This variableStatSet object is used like a set and if a curve has the same
-        // variable and statistic (variableStat) it will use the same axis,
-        // The axis number is assigned to the variableStatSet value, which is the variableStat.
-        var variableStat = variableStr + ":" + statisticSelect;
+
+       // var variableStat = variableStr + ":" + statisticSelect;
+
+        var variableStat = variableStr + ":" ;
         curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
         var xmax;
         var ymax;
@@ -254,17 +261,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var ymin;
         var interval;
 
-        if (averageStr == "None") {
-            if (validTimeStr === 'BOTH') {
-                interval = 12 * 3600 * 1000;
-            } else {
 
-                interval = 24 * 3600 * 1000;
-            }
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
-        }
+
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -277,21 +275,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " and instruments_instrid=" + instrument_id +
                     " and valid_utc>=" + secsConvert(fromDate) +
                     " and valid_utc<=" + secsConvert(toDate);
-                // " and valid_utc>=1454482800" + //secsConvert(fromDate) +
-                // " and valid_utc<=1454486400"// + secsConvert(toDate)
+
 
 
             } else if(model.includes("hrrr_wfip")){
 
-              /*  statement = "select o.valid_utc as avtime,z,ws,sites_siteid " +
-                    "from obs_recs as o , " + model +","+ dataSource+"_discriminator"+
-                    " where  obs_recs_obsrecid = o.obsrecid" +
-                    " and modelid= modelid_rc"  +
-                    " and instruments_instrid=" + instrument_id +
-                    " and valid_utc>=" + secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate)+
-                    " and "+ discriminator+" >="+disc_lower +
-                    " and "+ discriminator+" <="+disc_upper*/
 
                 statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from " + model + ", nwp_recs,  " +dataSource+"_discriminator"+
@@ -328,10 +316,17 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             var ws_z_time;
             var site_z_time;
 
-            var queryResult = queryWFIP2DB(statement, validTimeStr, qxmin, qxmax, interval, averageStr, top, bottom);
-            d = queryResult.data;
 
-            console.log("d[0]=" + d[0]);
+
+            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, interval, top, bottom);
+            d = queryResult.data;
+            ws_z_time = queryResult.ws_z_time;
+
+
+
+
+
+           // console.log("ws_z_time=" + ws_z_time);
             if (d[0] === undefined) {
            //    no data set emply array
                 d[0]=[];
