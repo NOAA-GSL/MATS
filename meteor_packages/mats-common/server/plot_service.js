@@ -1,5 +1,4 @@
 Future = Npm.require('fibers/future');
-
 var authorizedForRole = function (role) {
     if (!Meteor.userId()) {
         return false;
@@ -424,10 +423,8 @@ Meteor.methods({
     }
 });
 
-
-
 Meteor.publish("CurveParams", function () {
-    return CurveParams.find();
+    return params = CurveParams.find();
 });
 Meteor.publish("CurveTextPatterns", function () {
     return CurveTextPatterns.find();

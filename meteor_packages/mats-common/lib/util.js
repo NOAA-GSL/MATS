@@ -262,7 +262,7 @@ addDiffs = function () {
     // show diffs is checked -- have to add diff curves
     var curvesLength = curves.length;
     if (curvesLength <= 1) {
-        alert("You cannot difference less than two curves!")
+        alert("You cannot difference less than two curves!");
         return false;
     }
 
@@ -342,3 +342,4 @@ getPlotType = function () {
     }
     return "";
 };
+

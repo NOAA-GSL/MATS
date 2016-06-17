@@ -15,32 +15,73 @@ Template.plotType.events({
     'click .plot-type-Profile': function() {
         // move dates selector to curve parameters - one date range for each curve
         if (document.getElementById('plot-type-' + PlotTypes.profile).checked === true) {
-            document.getElementById(PlotTypes.scatter2d).style.display="none";
-            document.getElementById('curve-dates-item').style.display="block";
-            document.getElementById('dates-item').style.display="none";
-            document.getElementById('average-item').style.display="none";
-            document.getElementById('top-numberSpinner').value=0;
-            document.getElementById('controlButton-top-value').textContent="0";
+            var elem = document.getElementById(PlotTypes.scatter2d);
+            if (elem && elem.style) {
+                elem.style.display="none";
+            }
+            elem = document.getElementById('curve-dates-item');
+            if (elem && elem.style) {
+                elem.style.display="block";
+            }
+            elem = document.getElementById('dates-item');
+            if (elem && elem.style) {
+                elem.style.display = "none";
+            }
+            elem = document.getElementById('average-item');
+            if (elem && elem.style) {
+                elem.style.display = "none";
+            }
+            elem = document.getElementById('top-numberSpinner');
+            if (elem && elem.style) {
+                elem.value = 0;
+            }
+            elem = document.getElementById('controlButton-top-value');
+            if (elem && elem.style) {
+                elem.textContent = "0";
+            }
             Session.set('plotType', PlotTypes.profile);
+            Session.set('lastUpdate', Date.now());
         }
     },
     'click .plot-type-TimeSeries': function() {
         // move dates selector to plot parameters - one date range for all curves
         if (document.getElementById('plot-type-' + PlotTypes.timeSeries).checked === true) {
-            document.getElementById(PlotTypes.scatter2d).style.display="none";
-            document.getElementById('curve-dates-item').style.display="none";
-            document.getElementById('dates-item').style.display="block";
-            document.getElementById('average-item').style.display="block";
-            document.getElementById('top-numberSpinner').value=100;
-            document.getElementById('controlButton-top-value').textContent="100";
+            var elem = document.getElementById(PlotTypes.scatter2d);
+            if (elem && elem.style) {
+                elem.style.display = "none";
+            }
+            elem = document.getElementById('curve-dates-item');
+            if (elem && elem.style) {
+                elem.style.display = "none";
+            }
+            elem = document.getElementById('dates-item');
+            if (elem && elem.style) {
+                elem.style.display = "block";
+            }
+            elem = document.getElementById('average-item');
+            if (elem && elem.style) {
+                elem.style.display = "block";
+            }
+            elem = document.getElementById('top-numberSpinner');
+            if (elem && elem.style) {
+                elem.value = 100;
+            }
+            elem = document.getElementById('controlButton-top-value');
+            if (elem && elem.style) {
+                elem.textContent = "100";
+            }
             Session.set('plotType', PlotTypes.timeSeries);
+            Session.set('lastUpdate', Date.now());
         }
     },
     'click .plot-type-Scatter2d': function() {
-        // move dates selector to plot parameters - one date range for all curves
         if (document.getElementById('plot-type-' + PlotTypes.scatter2d).checked === true) {
-            document.getElementById(PlotTypes.scatter2d).style.display="block";
+            var elem = document.getElementById(PlotTypes.scatter2d);
+            if (elem && elem.style) {
+                elem.style.display = "block";
+            }
             Session.set('plotType', PlotTypes.scatter2d);
+            Session.set('lastUpdate', Date.now());
         }
     }
 });

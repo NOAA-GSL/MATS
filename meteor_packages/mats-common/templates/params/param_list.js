@@ -1,8 +1,9 @@
 Template.paramList.helpers({
-    CurveParamGroups: function () {
+    CurveParamGroups: function() {
         var lastUpdate = Session.get('lastUpdate');
         var groupNums = [];
-        var params = CurveParams.find({},{fields:{displayGroup:1}}).fetch();
+        var params = CurveParams.find({}).fetch();
+        params = filterParams(params);
         for (var i = 0; i < params.length; i++) {
             groupNums.push(params[i].displayGroup);
         }
@@ -17,6 +18,25 @@ Template.paramList.helpers({
             return '';
         } else {
             return "Changing " + Session.get('editMode');
+        }
+    },
+    isScatter: function() {
+        return getPlotType() === PlotTypes.scatter2d;  
+    },
+    isXaxisHidden: function() {
+
+        if (axis === 'yaxis') {
+            return "hidden";
+        } else {
+            return "";
+        }
+    },
+    isYaxisHidden: function() {
+        var axis = document.querySelector('input[name="scatter2d"]:checked').value;
+        if (axis === 'xaxis') {
+            return axis === 'xaxis';
+        } else {
+            return "";
         }
     },
     log: function() {

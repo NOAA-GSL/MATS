@@ -53,9 +53,18 @@ Template.item.helpers({
     display: function() {
         if (this.displayPriority !== undefined && this.displayPriority > Session.get('displayPriority')){
             return "none";
-        }
-        else {
-            return "block;margin-top: 1.5em;";
+        } else {
+            if (getPlotType() === PlotTypes.scatter2d){
+                var axis = document.querySelector('input[name="scatter2d"]:checked').value;
+                if ((this.name.indexOf(axis) === -1) && (axis !== 'both')) {
+                    return "none";
+                }
+                else {
+                    return "block;margin-top: 1.5em;";
+                }
+            } else {
+                return "block;margin-top: 1.5em;";
+            }
         }
     },
     controlButtonVisibility: function() {

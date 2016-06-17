@@ -18,10 +18,10 @@ scatter2dParams = function() {
             {
                 name: 'scatter2d',
                 type: InputTypes.radioGroup,
-                options: ['x-axis', 'y-axis', 'both'],
+                options: ['xaxis', 'yaxis', 'both'],
                 selected: 'matching',
                 controlButtonCovered: true,
-                default: 'x-axis',
+                default: 'xaxis',
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
