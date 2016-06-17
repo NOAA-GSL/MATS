@@ -48,3 +48,4 @@ PlotTypes = {
 getCurves = function() {
     return Session.get('Curves');
 };
+

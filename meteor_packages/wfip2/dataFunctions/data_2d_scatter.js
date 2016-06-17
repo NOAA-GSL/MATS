@@ -165,7 +165,7 @@ var queryWFIP2DB = function (statement, xmin, xmax, interval, top,bottom) {
     };
 //}
 
-dataSeriesZoom = function (plotParams, plotFunction) {
+data2dScatter = function (plotParams, plotFunction) {
     var dateConvert = function (dStr) {
         if (dStr === undefined || dStr === " ") {
             var now = new Date();
@@ -184,7 +184,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         return dstr;
     };
 
-    //console.log(plotParams);
+    console.log(plotParams);
     var fromDateStr = plotParams.fromDate;
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
