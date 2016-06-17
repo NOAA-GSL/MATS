@@ -14,6 +14,9 @@ Template.map.rendered = function () {
     var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
     var peerName = this.data.peerName;
     var targetElement = document.getElementsByName(peerName)[0];
+    if (!targetElement) {
+        return;
+    }
     var targetId = '#' + targetElement.id;
     var markers = this.data.optionsMap;   // from app startup
     var markerFeatures = {};

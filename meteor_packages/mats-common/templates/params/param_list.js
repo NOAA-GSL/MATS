@@ -20,25 +20,6 @@ Template.paramList.helpers({
             return "Changing " + Session.get('editMode');
         }
     },
-    isScatter: function() {
-        return getPlotType() === PlotTypes.scatter2d;  
-    },
-    isXaxisHidden: function() {
-
-        if (axis === 'yaxis') {
-            return "hidden";
-        } else {
-            return "";
-        }
-    },
-    isYaxisHidden: function() {
-        var axis = document.querySelector('input[name="scatter2d"]:checked').value;
-        if (axis === 'xaxis') {
-            return axis === 'xaxis';
-        } else {
-            return "";
-        }
-    },
     log: function() {
         console.log(this);
     }
@@ -73,10 +54,19 @@ Template.paramList.events({
             var elems = event.target.valueOf().elements;
             var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
-            var a = _.filter(elems, function (elem) {
+            if (getPlotType() === PlotTypes.scatter2d) {
+                var scatterCurveNames = [];
+                for (var i=0; i<curveNames.length;i++) {
+                    scatterCurveNames.push(curveNames[i]);
+                    scatterCurveNames.push("xaxis-" + curveNames[i]);
+                    scatterCurveNames.push("yaxis-" + curveNames[i]);
+                }
+                curveNames = scatterCurveNames;
+            }
+            var param_elems = _.filter(elems, function (elem) {
                 return _.contains(curveNames, elem.name);
             });
-            var l = a.length;
+            var l = param_elems.length;
 
             if (Session.get('editMode')) {
                 Session.set('editMode', '');
@@ -85,12 +75,12 @@ Template.paramList.events({
                 label.disabled = false;
 
                 for (var i = 0; i < l; i++) {
-                    if (a[i].type === "radio") {
-                        p[a[i].name] = $('input[name="' + a[i].name + '"]:checked').val();
-                    } else if (a[i].type === "button") {
-                        p[a[i].id] = a[i].value;
+                    if (param_elems[i].type === "radio") {
+                        p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
+                    } else if (param_elems[i].type === "button") {
+                        p[param_elems[i].id] = param_elems[i].value;
                     } else {
-                        p[a[i].name] = (a[i]).value;
+                        p[param_elems[i].name] = (param_elems[i]).value;
                     }
                 }
                 var index = -1;
@@ -105,16 +95,16 @@ Template.paramList.events({
                 }
             } else {
                 for (var i = 0; i < l; i++) {
-                    if (a[i].type === "radio") {
-                        p[a[i].name] = $('input[name="' + a[i].name + '"]:checked').val();
-                    } else if (a[i].type === "button") {
-                        p[a[i].id] = a[i].value;
+                    if (param_elems[i].type === "radio") {
+                        p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
+                    } else if (param_elems[i].type === "button") {
+                        p[param_elems[i].id] = param_elems[i].value;
                     } else {
-                        p[a[i].name] = (a[i]).value;
+                        p[param_elems[i].name] = (param_elems[i]).value;
                     }
-                    if (a[i].name === 'label') {
-                        if (_.indexOf(getUsedLabels(), (a[i]).value) != -1) {
-                            setError('labels need to be unique - change ' + (a[i]).value + " to something else");
+                    if (param_elems[i].name === 'label') {
+                        if (_.indexOf(getUsedLabels(), (param_elems[i]).value) != -1) {
+                            setError('labels need to be unique - change ' + (param_elems[i]).value + " to something else");
                             return false;
                         }
                     }

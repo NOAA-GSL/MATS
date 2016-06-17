@@ -6,6 +6,9 @@
                 <input class="data-input radio-group" type=radio name="{{name ..}}" id={{id ..}} value="{{this}}" {{isDefault ..}}/>
                 <label for="{{id ..}}">{{this ..}}</label>
             {{/each}}
+            <div class="btn-toolbar btn-group btn-xs" role="toolbar">
+                <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to Axis</button>
+            </div>
         {{/each}}
     </div>
 </template>

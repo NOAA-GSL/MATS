@@ -17,10 +17,12 @@ Package.onUse(function(api) {
   api.use(['templating'], 'client');
   api.addFiles('dataFunctions/data_profile_zoom_pan.js','server');
   api.addFiles('dataFunctions/data_series_zoom_pan.js','server');
+  api.addFiles('dataFunctions/data_2d_scatter.js','server');
   api.addFiles('app-startup.js','server');
   api.addFiles('app.css',['client', 'server']);
   api.addFiles('version.html', "client");
   api.export("dataSeriesZoom", ['client', 'server']);
+  api.export("data2dScatter", ['client', 'server']);
   api.export("dataProfileZoom", ['client', 'server']);
   api.export("roles", "server");
   api.export("authorization", "server");

@@ -18,7 +18,7 @@ scatter2dParams = function() {
             {
                 name: 'scatter2d',
                 type: InputTypes.radioGroup,
-                options: ['xaxis', 'yaxis', 'both'],
+                options: ['xaxis', 'yaxis'],
                 selected: 'matching',
                 controlButtonCovered: true,
                 default: 'xaxis',
@@ -142,9 +142,9 @@ curveParams = function () {
                 default: 'hrrr_esrl',
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
 
 
@@ -159,7 +159,7 @@ curveParams = function () {
                 unique: false,
                 default: 'All',
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -176,9 +176,9 @@ curveParams = function () {
                 unique: false,
                 default: 'All',
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 2,
+                displayGroup: 3,
                 multiple: true
             });
 
@@ -193,9 +193,9 @@ curveParams = function () {
                 unique: false,
                 default: 'ALL',
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 2,
+                displayGroup: 3,
                 multiple: true,
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
@@ -213,9 +213,9 @@ curveParams = function () {
                 unique: false,
                 default: 'wind_speed',
                 controlButtonVisibility: 'block',
-                displayOrder: 7,
+                displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
 
         optionsMap = {};
@@ -231,9 +231,9 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
 
         CurveParams.insert(
@@ -249,9 +249,9 @@ curveParams = function () {
                 unique: false,
                 default: '5000',
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 8,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
         CurveParams.insert(
             {
@@ -266,9 +266,9 @@ curveParams = function () {
                 unique: false,
                 default: '0',
                 controlButtonVisibility: 'block',
-                displayOrder: 10,
+                displayOrder: 9,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
 
         CurveParams.insert(
@@ -283,9 +283,9 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(descriptorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 11,
+                displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 6
             });
 
 
@@ -303,9 +303,9 @@ curveParams = function () {
                 unique: false,
                 default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 controlButtonVisibility: 'block',
-                displayOrder: 12,
+                displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 7
             });
 
         CurveParams.insert(
@@ -322,16 +322,10 @@ curveParams = function () {
                 unique: false,
                 default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 controlButtonVisibility: 'block',
-                displayOrder: 13,
+                displayOrder: 12,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 7
             });
-
-
-
-
-
-
 
         CurveParams.insert(
             {
@@ -345,9 +339,9 @@ curveParams = function () {
                 unique: false,
                 default: '03/01/2015',
                 controlButtonVisibility: 'block',
-                displayOrder: 17,
+                displayOrder: 13,
                 displayPriority: 1,
-                displayGroup: 6
+                displayGroup: 8
             });
     }
 };
@@ -485,6 +479,8 @@ plotGraph = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotGraphFunctions.remove({});
     }
+//remove for production
+PlotGraphFunctions.remove({});
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
             plotType: PlotTypes.timeSeries,
