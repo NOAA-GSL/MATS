@@ -69,26 +69,11 @@ plotParams = function () {
                 displayGroup: 1
             });
 
-
-      /*  optionsMap = {
-            'show matching diffs': ['match_diff'],
-            'show matching absolute error': ['abs_error'],
-            'no diffs': ['no_diff',]
-
-        };*/
-
         PlotParams.insert(
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-               options: ['show matching diffs','pairwise diffs', 'no diffs'],
-                //optionsMap:['match_diff','abs_error','pair_diff','no_diff']
-
-               // options: Object.keys(optionsMap),
-               // optionsMap:optionsMap,
-
-             //   options: ['show matching diffs', 'show matching absolute error', 'no diffs'],
-
+                options: ['show matching diffs','pairwise diffs', 'no diffs'],
                 default: 'no diffs',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -202,7 +187,7 @@ curveParams = function () {
 
 
 
-        optionsMap = {wind_speed:['wind_speed'], wind_direction:['wind_direction']};
+        optionsMap = {wind_speed:['ws'], wind_direction:['wd']};
         CurveParams.insert(
             {
                 name: 'variable',
@@ -363,30 +348,30 @@ curveTextPatterns = function () {
             plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
+                ['', 'data source', ':'],
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
-                ['', 'statistic', ', '],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
-                ['avg:', 'average', ' ']
+                [' upper:', 'upper', ', '],
+                [' lower:', 'lower', ', '],
+                ['fcst_len:', 'forecast length', 'h ']
             ]
         });
         CurveTextPatterns.insert({
             plotType: PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
+                ['', 'data source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
-                ['', 'statistic', ' '],
+                [' top:', 'top', 'm, '],
+                [' bottom:', 'bottom', 'm, '],
+                [' upper:', 'upper', ', '],
+                [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
-                ['avg:', 'average', ' '],
                 ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]
@@ -395,14 +380,16 @@ curveTextPatterns = function () {
             plotType: PlotTypes.scatter2d,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
-                ['', 'regionName', ', '],
-                ['', 'sites', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
-                ['avg:', 'average', ' '],
+                ['', 'xaxis-data source', ':'],
+                ['', 'xaxis-region', ', '],
+                ['', 'xaxis-sites', ', '],
+                ['', 'xaxis-variable', ' '],
+                ['fcst_len:', 'xaxis-forecast length', 'h '],
+                ['', 'yaxis-data source', ':'],
+                ['', 'yaxis-region', ', '],
+                ['', 'yaxis-sites', ', '],
+                ['', 'yaxis-variable', ' '],
+                ['fcst_len:', 'yaxis-forecast length', 'h '],
                 ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]
@@ -491,7 +478,7 @@ PlotGraphFunctions.remove({});
         PlotGraphFunctions.insert({
             plotType: PlotTypes.profile,
             graphFunction: "graphProfileZoom",
-            dataFunction: "dataProfileZoom",
+            dataFunction: "dselect valid_utc as avtime ,z ,ws,sites_siteid  from hrrr_esrl_nwp, nwp_recs   where nwps_nwpid=4 and nwp_recs_nwprecid=nwprecid and valid_utc >=1463810400 and valid_utc<=1466402400 and fcst_end_utc=0ataProfileZoom",
             checked: false
         });
         PlotGraphFunctions.insert({
