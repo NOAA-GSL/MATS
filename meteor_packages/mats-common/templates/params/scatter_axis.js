@@ -64,7 +64,9 @@ Template.scatter2d.events({
             var elem_id = pelem.id;
             var target_id = axis + "-" + elem_id;
             var telem = document.getElementById(target_id);
-            if (pelem.type === "radio") {
+            if (pelem.type === "select-multiple") {
+                $(telem).val($(pelem.selectedOptions).map(function(){return(this.value)}).get());
+            } else if (pelem.type === "radio") {
                 // NOT SURE THIS IS RIGHT
                 //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());
                 $('input[name="' + telem.name + '"]:checked');
@@ -73,7 +75,6 @@ Template.scatter2d.events({
             } else {
                 telem.value = pelem.value;
             }
-
         }
     },
     'change .radio-group' : function(event) {
@@ -89,7 +90,9 @@ Template.scatter2d.events({
             // remove the axis part at the front
             var target_id = aelem_id.substring(newAxis.length+1,aelem_id.length);
             var telem = document.getElementById(target_id);
-            if (aelem.type === "radio") {
+            if (aelem.type === "select-multiple") {
+                $(telem).val($(aelem.selectedOptions).map(function(){return(this.value)}).get());
+            } else if (aelem.type === "radio") {
                 // NOT SURE THIS IS RIGHT
                 //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());
                 $('input[name="' + telem.name + '"]:checked');

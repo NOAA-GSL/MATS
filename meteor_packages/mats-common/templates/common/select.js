@@ -95,15 +95,6 @@ Template.select.helpers({
 
 Template.select.events({
     'change': function(event ) {
-        if (this.multiple) {
-            if (event.target.value === 'All') {
-                // select them all
-                $("#" + event.target.id + " option").each(function(){
-                    // Add $(this).val() to your list
-                    $("#" + event.target.id + " option[value='" + $(this).val() + "']").prop("selected", true);
-                });
-            }
-        }
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
      }

@@ -75,7 +75,9 @@ Template.paramList.events({
                 label.disabled = false;
 
                 for (var i = 0; i < l; i++) {
-                    if (param_elems[i].type === "radio") {
+                    if (param_elems[i].type === "select-multiple") {
+                        p[param_elems[i].name] = $(param_elems[i].selectedOptions).map(function(){return(this.value)}).get();
+                    } else if (param_elems[i].type === "radio") {
                         p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
                     } else if (param_elems[i].type === "button") {
                         p[param_elems[i].id] = param_elems[i].value;
@@ -95,7 +97,10 @@ Template.paramList.events({
                 }
             } else {
                 for (var i = 0; i < l; i++) {
-                    if (param_elems[i].type === "radio") {
+
+                    if (param_elems[i].type === "select-multiple") {
+                        p[param_elems[i].name] = $(param_elems[i].selectedOptions).map(function(){return(this.value)}).get();
+                    } else if (param_elems[i].type === "radio") {
                         p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
                     } else if (param_elems[i].type === "button") {
                         p[param_elems[i].id] = param_elems[i].value;

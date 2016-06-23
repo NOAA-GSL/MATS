@@ -142,7 +142,7 @@ curveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: regionOptionsMap[Object.keys(regionOptionsMap)[0]],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -159,7 +159,7 @@ curveParams = function () {
                 superiorName: 'data source',
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -176,7 +176,7 @@ curveParams = function () {
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: 'ALL',
+                default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -620,7 +620,7 @@ Databases.remove({});
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 siteMarkerOptionsMap = [];
-                siteOptionsMap.model = ['All'];
+                siteOptionsMap.model = [];
                 siteOptionsMap.sodar = [];
                 siteOptionsMap.profiler_915 = [];
 
@@ -733,8 +733,6 @@ Databases.remove({});
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
                 RegionDescriptions.remove({});
-                RegionDescriptions.insert({regionMapTable: 'All',  description: 'All'});
-                regionOptionsMap['All'] = ['All'];
                 for (var i = 0; i < rows.length; i++) {
                     var regionMapTable = (rows[i].regionMapTable);
                     var description = rows[i].description;

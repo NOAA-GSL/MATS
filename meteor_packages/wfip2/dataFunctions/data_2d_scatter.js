@@ -188,7 +188,12 @@ data2dScatter = function (plotParams, plotFunction) {
             var instrument_id = tmp[1];
             var dataSource = (curve[axis + '-' + 'data source']);
             var region = CurveParams.findOne({name: 'region'}).optionsMap[curve[axis + '-' + 'region']][0];
-            var siteid = _.indexOf(CurveParams.findOne({name: 'sites'}).optionsMap[dataSource], curve[axis + '-' + 'sites']);
+            var siteNames = curve[axis + '-' + 'sites'];
+            var siteIds = [];
+            var siteMap = CurveParams.findOne({name: 'sites'}).optionsMap[dataSource];
+            for (var i = 0; i < siteNames.length; i++){
+                siteIds.push(siteMap.indexOf(siteNames[i]));
+            }
             var label = (curve['label']);    // label should be same for all the axis
             var top = Number(curve[axis + '-' + 'top']);
             var bottom = Number(curve[axis + '-' + 'bottom']);
@@ -236,10 +241,7 @@ data2dScatter = function (plotParams, plotFunction) {
                         " and valid_utc<=" + secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength;
                 }
-                if (siteid != 0) {
-                    statement = statement +
-                        "  and sites_siteid=" + siteid;
-                }
+                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
                 var z_time;
                 var site_z_time;
                 var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom);
@@ -328,7 +330,7 @@ data2dScatter = function (plotParams, plotFunction) {
             label: label,
             value_z_time: z_time,
             site_z_time: site_z_time,
-            site: siteid,
+            site: siteIds,
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true},
