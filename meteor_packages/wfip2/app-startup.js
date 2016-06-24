@@ -625,8 +625,11 @@ Databases.remove({});
                 siteOptionsMap.profiler_915 = [];
 
                 var points = [];
+                SiteMap.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var name = rows[i].name;
+                    var siteid = rows[i].siteid;
+                    SiteMap.insert({siteName: name,  siteId: siteid});
                     var description = rows[i].description;
                     var lat = rows[i].lat;
                     var lon = rows[i].lon;

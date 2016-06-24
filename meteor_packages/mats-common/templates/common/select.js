@@ -69,6 +69,23 @@ Template.select.rendered = function(){
         var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
         refresh(selectedSuperiorValue);
     });
+    // register refresh event for axis change to use to enforce a refresh
+    elem.addEventListener('axisRefresh', function () {
+        // Don't know why I have to do this, I expected the parameter data to be in the context....
+        var paramData = CurveParams.findOne({name:this.name},{dependentNames:1,peerName:1});
+        var peerName = paramData.peerName;
+        var dependentNames = paramData.dependentNames;
+        if (peerName) {
+            if (refreshPeer){
+                refreshPeer(peerName);
+            }
+        }
+        if (dependentNames && dependentNames.length > 0) {
+            if (refreshDependents){
+                refreshDependents(dependentNames);
+            }
+        }
+    });
 };
 
 Template.select.helpers({
@@ -94,7 +111,7 @@ Template.select.helpers({
 });
 
 Template.select.events({
-    'change': function(event ) {
+    'change': function() {
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
      }

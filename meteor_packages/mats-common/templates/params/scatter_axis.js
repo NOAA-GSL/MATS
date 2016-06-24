@@ -111,6 +111,7 @@ Template.scatter2d.events({
             } else {
                 telem.value = aelem.value;
             }
+            telem.dispatchEvent(new CustomEvent("axisRefresh"));
         }
     }
 });

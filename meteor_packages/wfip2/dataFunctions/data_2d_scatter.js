@@ -192,7 +192,12 @@ data2dScatter = function (plotParams, plotFunction) {
             var siteIds = [];
             var siteMap = CurveParams.findOne({name: 'sites'}).optionsMap[dataSource];
             for (var i = 0; i < siteNames.length; i++){
-                siteIds.push(siteMap.indexOf(siteNames[i]));
+                var siteIndex = siteMap.indexOf(siteNames[i]) +1;
+                if (siteIndex !== -1) {
+                    siteIds.push(siteIndex);
+                } else {
+                    console.log("error: site: " + siteNames[i] + " is not in the site options: " + JSON.stringify(siteNames));
+                }
             }
             var label = (curve['label']);    // label should be same for all the axis
             var top = Number(curve[axis + '-' + 'top']);
@@ -440,5 +445,6 @@ data2dScatter = function (plotParams, plotFunction) {
         data: dataset,
         options: options
     };
+    //console.log("result:" + JSON.stringify(result, null,2));
     plotFunction(result);
 };

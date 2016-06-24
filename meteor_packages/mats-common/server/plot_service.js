@@ -483,3 +483,6 @@ Meteor.publish("Databases", function () {
 Meteor.publish("RangePerDescriptor", function () {
     return RangePerDescriptor.find();
 });
+Meteor.publish("SiteMap", function () {
+    return SiteMap.find();
+});
