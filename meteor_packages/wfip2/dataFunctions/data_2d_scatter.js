@@ -251,6 +251,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 var site_z_time;
                 var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom);
                 axisData[axis]= queryResult.data;
+                //console.log("axisData:" + JSON.stringify(axisData, null,2));
                 z_time = queryResult.value_z_time;
 
                 if (axisData[axis][0] === undefined) {
@@ -290,17 +291,19 @@ data2dScatter = function (plotParams, plotFunction) {
             if (axisData['xaxis'][xaxisIndex][0] === axisData['yaxis'][yaxisIndex][0]){
                 normalizedAxisData.push([axisData['xaxis'][xaxisIndex][1], axisData['yaxis'][yaxisIndex][1]]);
             } else {
-                if (axisData['xaxis'][xaxisIndex][0] <= axisData['yaxis'][yaxisIndex][0]) {
-                    while (axisData['xaxis'][xaxisIndex][0] < axisData['yaxis'][yaxisIndex][0]) {
+                if (axisData['xaxis'][xaxisIndex][0] < axisData['yaxis'][yaxisIndex][0]) {
+                    while (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex] && axisData['xaxis'][xaxisIndex][0] <= axisData['yaxis'][yaxisIndex][0]) {
                         xaxisIndex++;
                     }
                 } else {
-                    while (axisData['xaxis'][xaxisIndex][0] > axisData['yaxis'][yaxisIndex][0]) {
+                    while (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex] && axisData['xaxis'][xaxisIndex][0] >= axisData['yaxis'][yaxisIndex][0]) {
                         yaxisIndex++;
                     }
                 }
             }
-            normalizedAxisData.push([axisData['xaxis'][xaxisIndex][1], axisData['yaxis'][yaxisIndex][1]]);
+            if (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex]) {
+                normalizedAxisData.push([axisData['xaxis'][xaxisIndex][1], axisData['yaxis'][yaxisIndex][1]]);
+            }
             xaxisIndex++;
             yaxisIndex++;
         }
@@ -333,13 +336,13 @@ data2dScatter = function (plotParams, plotFunction) {
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
-            value_z_time: z_time,
-            site_z_time: site_z_time,
+            //value_z_time: z_time,
+            //site_z_time: site_z_time,
             site: siteIds,
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true},
-            lines: {show: false, fill: false}
+            //lines: {show: false, fill: false}
         };
         dataset.push(options);
         console.log (new Date(), " end curve " + curve.label + " processing");
@@ -350,7 +353,7 @@ data2dScatter = function (plotParams, plotFunction) {
     var xaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
         var variableStat = curves[dsi].variableStat;
-        var position = dsi === 0 ? "left" : "right";
+        var position = dsi === 0 ? "bottom" : "top";
         var xaxesOptions = {
             position: position,
             color: 'grey',
@@ -445,6 +448,6 @@ data2dScatter = function (plotParams, plotFunction) {
         data: dataset,
         options: options
     };
-    //console.log("result:" + JSON.stringify(result, null,2));
+    console.log("result:" + JSON.stringify(result, null,2));
     plotFunction(result);
 };
