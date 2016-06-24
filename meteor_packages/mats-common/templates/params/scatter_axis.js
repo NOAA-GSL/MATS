@@ -76,6 +76,16 @@ Template.scatter2d.events({
                 telem.value = pelem.value;
             }
         }
+        var axisCurveId = "scatter2d-" + axis + "-curve";
+        var span = document.getElementById(axisCurveId);
+        while( span.firstChild ) {
+            span.removeChild( span.firstChild );
+        }
+        span.appendChild( document.createTextNode(axis + " params applied") );
+        span.style.color='green';
+        span.className = "";
+        span.className += "fa ";
+        span.className += "fa-check";
     },
     'change .radio-group' : function(event) {
         var newAxis = event.currentTarget.value;
