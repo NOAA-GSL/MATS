@@ -24,7 +24,7 @@ Template.scatter2d.helpers({
     },
     id: function(param) {
         //console.log("type: " + param.type);
-        return param.name + "-" + param.type;
+        return param.name + "-" + param.type + "-" + this;
     },
     plotType : function() {
       return PlotTypes.scatter2d;  
@@ -86,6 +86,12 @@ Template.scatter2d.events({
         span.className = "";
         span.className += "fa ";
         span.className += "fa-check";
+        // select the other radio button
+        if (axis === "xaxis") {
+            $("#scatter2d-radioGroup-yaxis").prop("checked",true);
+        } else {
+            $("#scatter2d-radioGroup-xaxis").prop("checked",true);
+        }
     },
     'change .radio-group' : function(event) {
         var newAxis = event.currentTarget.value;
