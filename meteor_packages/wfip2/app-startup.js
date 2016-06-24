@@ -586,19 +586,19 @@ Databases.remove({});
                 Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
+                  //  var regions = rows[i].regions;
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid = model_values[1];
-                    var regionMapping = "Areg";
-                    if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
-                        regionMapping = "reg";
-                    }
+                  //  var regionMapping = "Areg";
+                 //   if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
+                  //      regionMapping = "reg";
+                  //  }
                     var valueList = [];
                     valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
-                    var tablevalueList = [];
-                    tablevalueList.push(table_name);
+                  //  var tablevalueList = [];
+                   // tablevalueList.push(table_name);
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
                 }
             }

@@ -307,7 +307,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
 
 
-            //console.log("query1=" + statement);
+            console.log("siteid=" + siteid);
             if (siteid != 0) {
                 statement = statement +
                     "  and sites_siteid=" + siteid;
