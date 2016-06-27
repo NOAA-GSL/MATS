@@ -19,7 +19,7 @@ Meteor.subscribe("Credentials");
 Meteor.subscribe("Databases");
 Meteor.subscribe("CurveTextPatterns");
 Meteor.subscribe("RangePerDescriptor");
-
+Meteor.subscribe("SiteMap");
 Session.set('Curves',[]);
 Session.set('PlotParams',[]);
 

@@ -23,6 +23,7 @@ SavedDatabases = new Meteor.Collection("SavedDatabases");
 Credentials = new Meteor.Collection("Credentials");
 SavedCredentials = new Meteor.Collection("SavedCredentials");
 RangePerDescriptor = new Meteor.Collection("RangePerDescriptor");
+SiteMap = new Meteor.Collection("SiteMap");
 
 
 InputTypes = {

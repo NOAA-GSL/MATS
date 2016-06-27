@@ -15,9 +15,15 @@ var stopInit = function() {
 };
 
 Template.dateRange.onRendered(function() {
+    //NOTE: Date fields are special in that they are qualified by plotType.
+    //TimeSeries and Scatter plots have a common date range
+    // but profile plots have a date range for each curve.
+    // The decision to hide or show a datarange is made here in the daterange template
+
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
-    if (document.getElementById('plot-type-' + PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + PlotTypes.timeSeries).checked === true) {
+    if ((document.getElementById('plot-type-' + PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + PlotTypes.timeSeries).checked === true) ||
+        (document.getElementById('plot-type-' + PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + PlotTypes.scatter2d).checked === true)) {
         if (document.getElementById('curve-dates-item')) {
             document.getElementById('curve-dates-item').style.display = "none";
         }

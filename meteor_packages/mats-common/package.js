@@ -48,6 +48,7 @@ Package.onUse(function(api) {
   api.export("SavedCredentials");
   api.export("InputTypes");
   api.export("PlotTypes");
+  api.export("SiteMap");
 
   api.add_files("lib/util.js", ['client','server']);
   api.add_files("lib/error/error.js", ['client','server']);
