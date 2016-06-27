@@ -251,7 +251,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 var site_z_time;
                 var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom);
                 axisData[axis]= queryResult.data;
-                //console.log("axisData:" + JSON.stringify(axisData, null,2));
+                console.log("axisData:" + JSON.stringify(axisData, null,2));
                 z_time = queryResult.value_z_time;
 
                 if (axisData[axis][0] === undefined) {
@@ -448,6 +448,6 @@ data2dScatter = function (plotParams, plotFunction) {
         data: dataset,
         options: options
     };
-    console.log("result:" + JSON.stringify(result, null,2));
+   // console.log("result:" + JSON.stringify(result, null,2));
     plotFunction(result);
 };
