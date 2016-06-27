@@ -155,10 +155,8 @@ Template.graph.events({
         document.getElementById('curve-text-buttons-grp').style.display='block';
     },
     'click .reload': function() {
-        var dataset = Session.get('dataset');
-        var options = Session.get('options');
         var graphFunction = Session.get('graphFunction');
-        window[graphFunction](dataset,options);
+        window[graphFunction](plotResult.data,plotResult.options);
     },
     'click .plotButton': function() {
         document.getElementById("plotButton").style.display = "none";

@@ -21,38 +21,35 @@ Template.textSeriesOutput.helpers({
         return text;
     },
     dataRows: function() {
-        var dataSet = Session.get('dataset');
-        if (dataSet === undefined) {
+        if (plotResult.data === undefined) {
             return [];
         }
-        var dataRows = _.range(dataSet[0].data.length - 1);
+        var dataRows = _.range(plotResult.data[0].data.length - 1);
         return dataRows;
     },
     points: function(rowIndex) {
-        var dataSet = Session.get('dataset');
-        if (dataSet === undefined) {
+        if (plotResult.data === undefined) {
             return "";
         }
-        var curveNums = dataSet.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
-        var line = "<td>" + moment.utc(dataSet[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
+        var curveNums = plotResult.data.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
+        var line = "<td>" + moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
         var fillStr = settings.NullFillString;
         for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-            var pdata = dataSet[curveIndex].data[rowIndex][1] !== null?(dataSet[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
+            var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
             line += "<td>" + pdata + "</td>";
         }
         return line;
     },
     stats: function(curve) {
         var curves = Session.get('Curves');
-        var dataSet = Session.get('dataset');
         if (curves === undefined || curves.length == 0) {
             return;
         }
-        if (dataSet === undefined || dataSet.length == 1) {
+        if (plotResult.data === undefined || plotResult.data.length == 1) {
             return;
         }
         var cindex;
@@ -62,8 +59,8 @@ Template.textSeriesOutput.helpers({
             }
         }
         var data = [];
-        for (var di = 0; di < dataSet[cindex].data.length; di++){
-            if (dataSet[cindex].data[di][1] !== null) data.push(dataSet[cindex].data[di][1]);
+        for (var di = 0; di < plotResult.data[cindex].data.length; di++){
+            if (plotResult.data[cindex].data[di][1] !== null) data.push(plotResult.data[cindex].data[di][1]);
         }
 
 
@@ -94,14 +91,12 @@ Template.textSeriesOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-
-        var dataSet = Session.get('dataset');
-        var curveNums = dataSet.length - 1;
-        var dataRows = _.range(dataSet[0].data.length - 1);
+        var curveNums = plotResult.data.length - 1;
+        var dataRows = _.range(plotResult.data[0].data.length - 1);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(dataSet[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = dataSet[curveIndex].data[rowIndex][1] !== null?(dataSet[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
+                var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);

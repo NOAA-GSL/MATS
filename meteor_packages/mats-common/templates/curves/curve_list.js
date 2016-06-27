@@ -103,7 +103,7 @@ Template.curveList.events({
                         p[name] = options[i];
                         break;
                     }
-                };
+                }
             } else if (type == InputTypes.checkBoxGroup) {
                 p[name] = [];
                 for (var i = 0; i < options.length; i++) {
@@ -246,12 +246,9 @@ Template.curveList.events({
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
 
-                    var dataset = result.data;
-                    var options = result.options;
-                    Session.set('dataset', dataset);
-                    Session.set('options', options);
+                    plotResult = result;
                     Session.set('graphFunction', graphFunction);
-                    window[graphFunction](dataset, options, Session.get('Curves'));
+                    window[graphFunction](plotResult.data, plotResult.options, Session.get('Curves'));
                 });
                 break;
 

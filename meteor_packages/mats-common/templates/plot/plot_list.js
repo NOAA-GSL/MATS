@@ -93,7 +93,7 @@ Template.plotList.events({
 
             if (type == InputTypes.dateRange) {
                 var from = document.getElementById(name + '-' + type + "-from").value;
-                var to = document.getElementById(name + '-' + type + "-to").value;CurveSettings
+                var to = document.getElementById(name + '-' + type + "-to").value;CurveSettings;
                 p['fromDate'] = from;
                 p['toDate'] = to;
             } else if (type == InputTypes.radioGroup) {
@@ -102,7 +102,7 @@ Template.plotList.events({
                         p[name] = options[i];
                         break;
                     }
-                };
+                }
             } else if (type == InputTypes.checkBoxGroup) {
                 p[name] = [];
                 for (var i = 0; i < options.length; i++) {
@@ -250,15 +250,9 @@ Template.plotList.events({
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-
-                    var dataset = result.data;
-                    var options = result.options;
-                  //  Session.set('dataset', dataset);
-                    Session.set('options', options);
+                    plotResult = result;
                     Session.set('graphFunction', graphFunction);
-                    //window[graphFunction](dataset, options, Session.get('Curves'));
-                    //graphSeriesZoom(dataset, options, Session.get('Curves'));
-                    eval (graphFunction)(dataset, options, Session.get('Curves'));
+                    eval (graphFunction)(plotResult.data, plotResult.options, Session.get('Curves'));
 
                     document.getElementById("plotButton").style.display = "none";
                     document.getElementById("textButton").style.display = "block";

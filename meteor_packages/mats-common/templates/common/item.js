@@ -165,11 +165,16 @@ Template.select.events({
             return false;
         }
         if (this.multiple==true) {
-            elem.textContent = "";
-            for (var i=0; i<event.currentTarget.selectedOptions.length;i++) {
-                elem.textContent += event.currentTarget.selectedOptions[i].value + " ";
+            var selecetedLength = event.currentTarget.selectedOptions.length;
+            if (selecetedLength > 1) {
+                elem.textContent = "" + event.currentTarget.selectedOptions[0].value + "..." + event.currentTarget.selectedOptions[event.currentTarget.selectedOptions.length - 1].value;
+            } else {
+                elem.textContent = "" + event.currentTarget.selectedOptions[0].value;
             }
         } else {
+            if (this.peerName) {
+                elem.textContent = "";
+            } else
             elem.textContent = event.currentTarget.value;
         }
     }

@@ -23,6 +23,10 @@ Meteor.subscribe("SiteMap");
 Session.set('Curves',[]);
 Session.set('PlotParams',[]);
 
+
+//global dataset variable
+plotResult = {};
+
 Accounts.ui.config({
     requestOfflineToken: {
         google: true
