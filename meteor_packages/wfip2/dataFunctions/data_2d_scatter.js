@@ -441,7 +441,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
         }
     };
-    console.log (new Date(), " end  processing axis");
+    //console.log (new Date(), " end  processing axis");
 
     var result = {
         error: error,
