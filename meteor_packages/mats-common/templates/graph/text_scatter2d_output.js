@@ -1,5 +1,4 @@
-
-Template.textSeriesOutput.helpers({
+Template.textScatter2dOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
     },
@@ -11,11 +10,12 @@ Template.textSeriesOutput.helpers({
     },
     curveText: function () {
         var text = this.label + ": " +
-            this['data source'] + ":" +
+            this.model + ":" +
             this.region.split(' ')[0] + ", "  +
             this.bottom + "-" +
             this.top + "mb " +
             this.variable + " " +
+            this.statistic + " " +
             this['forecast length'] +"h";
         return text;
     },
@@ -31,15 +31,13 @@ Template.textSeriesOutput.helpers({
             return "";
         }
         //var curveNums = plotResult.data.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
-
+        var curveNums = plotResult.data.length;
         var line = "<td>" + moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
         var fillStr = settings.NullFillString;
-        var curves = Session.get('Curves');
-        var curveNums = curves.length;
         for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
             var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
             line += "<td>" + pdata + "</td>";
@@ -51,7 +49,8 @@ Template.textSeriesOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return;
         }
-        if (plotResult.data === undefined) {
+        //if (plotResult.data === undefined || plotResult.data.length == 1) {
+        if (plotResult.data === undefined){
             return;
         }
         var cindex;
@@ -64,6 +63,8 @@ Template.textSeriesOutput.helpers({
         for (var di = 0; di < plotResult.data[cindex].data.length; di++){
             if (plotResult.data[cindex].data[di][1] !== null) data.push(plotResult.data[cindex].data[di][1]);
         }
+
+
         var weimean = mean(data).toPrecision(4);
         var min =  Math.min.apply(Math, data).toPrecision(4);
         var max =  Math.max.apply(Math, data).toPrecision(4);
@@ -74,7 +75,7 @@ Template.textSeriesOutput.helpers({
     }
 });
 
-Template.textSeriesOutput.events({
+Template.textScatter2dOutput.events({
     'click .export': function() {
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {

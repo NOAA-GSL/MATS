@@ -26,7 +26,7 @@ var secsConvert = function (dStr) {
 };
 
 
-var queryWFIP2DB = function (statement, xmin, xmax, interval, top, bottom) {
+var queryWFIP2DB = function (statement, xmin, xmax, top, bottom) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -158,8 +158,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, interval, top, bottom) {
         // N_times: N_times,
         N0: 20,
         N_times: 20,
-        // averageStr: averageStr,
-        interval: interval,
         all_z: all_z
     };
 };
@@ -212,9 +210,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        //var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-
-        //var tmp = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0].split(',');
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
@@ -235,38 +230,16 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        //var statisticSelect = curve['statistic'];
-        //var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
-        console.log("discriminator=" + discriminator);
-        console.log("discriminator lower=" + disc_lower);
-        console.log("discriminator upper=" + disc_upper);
-
-        /*var statistic;
-         if (variableStr == 'winds') {
-         statistic = statisticOptionsMap[statisticSelect][1];
-         } else {
-         statistic = statisticOptionsMap[statisticSelect][0];
-         }
-         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);*/
-
         var forecastLength = curve['forecast length'];
-
-        // var variableStat = variableStr + ":" + statisticSelect;
-
-        var variableStat = variableStr + ":";
         curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
         var xmax;
         var ymax;
         var xmin;
         var ymin;
         var interval;
-
-
         var d = [];
         var statement = "";
         if (diffFrom == null) {
@@ -310,10 +283,10 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
-            console.log("query=" + statement);
+            console.log("statement: " + statement);
             var ws_z_time;
             var site_z_time;
-            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, interval, top, bottom);
+            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom);
             d = queryResult.data;
             ws_z_time = queryResult.ws_z_time;
             if (d[0] === undefined) {
@@ -369,8 +342,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
-            ws_z_time: ws_z_time,
-            site_z_time: site_z_time,
             color: color,
             mean: label + "- mean = " + mean.toPrecision(4),
             data: d,
@@ -658,12 +629,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
     //dataset.push(dataZero = {color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+
     var result = {
         error: error,
         data: dataset,
         options: options
     };
-
+    console.log("result", JSON.stringify(result,null,2));
     plotFunction(result);
 
 
