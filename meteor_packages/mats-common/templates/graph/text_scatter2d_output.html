@@ -1,0 +1,45 @@
+<template name="textScatter2dOutput" xmlns="http://www.w3.org/1999/html">
+    <div id="textScatter2dOutput" class="container">
+        <button id="text_export" type="button" class="export" style="display:none">Export</button>
+        <br/>
+            {{#each curves}}
+                <h5>{{curveText}}</h5>
+            {{/each}}
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>label</th>
+                <th>mean</th>
+                <th>minimum</th>
+                <th>maximum</th>
+                <th>standard deviation</th>
+                <th>standard error</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each curves}}
+                <tr>
+                    {{{stats this}}}
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>time</th>
+                {{#each curves}}
+                    <th>{{curveLabel this}}</th>
+                {{/each}}
+            </tr>
+            </thead>
+            <tbody>
+                {{#each dataRows}}
+                    <tr>
+                        {{{points this}}}
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</template>
