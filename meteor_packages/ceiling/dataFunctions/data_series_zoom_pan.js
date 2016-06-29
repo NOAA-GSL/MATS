@@ -142,7 +142,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         console.log("curve="+ curve);
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name:'model'}).optionsMap[curve['model']][0];
-        var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
+        //var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
+        var region = curve['region'];
         var threshhold = CurveParams.findOne({name:'threshhold'}).optionsMap[curve['threshhold']][0];
         console.log("threshhold="+ threshhold);
         console.log("model="+model);
@@ -210,35 +211,13 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
                 // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                ",avg(m0.valid_day+3600*m0.hour) as middle_secs"+
-                ",min(m0.valid_day+3600*m0.hour) as min_secs"+
-                ",max(m0.valid_day+3600*m0.hour) as max_secs,"+
-                "count(m0.hour)/1000 as N_times, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 "+
-                "{{validTime}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
 
-            //statement = statement.replace('{{average}}', average);
-            //statement = statement.replace('{{forecastLength}}', forecastLength);
-           // statement = statement.replace('{{fromSecs}}', fromSecs);
-            //statement = statement.replace('{{toSecs}}', toSecs);
-            //statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
-        //    statement = statement.replace('{{statistic}}', statistic);
-            //statement = statement.replace('{{validTime}}', validTime);
+            console.log("{{forecastLength}} before query="+ forecastLength);
 
 
-           // select ceil(259200*floor(m0.time/259200)+259200/2) as avtime
 
 
-            //statement ="select ceil(3600*floor(m0.time/3600)) as avtime"+
+
             statement = "select {{average}} as avtime " +
                " ,min(m0.time) as min_secs"+
                ",max(m0.time) as max_secs"+

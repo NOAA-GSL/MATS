@@ -69,7 +69,10 @@ plotParams = function () {
                 displayGroup: 1
             });
 
-        var diffOptionsMap = {'show matching diffs':['show matching diffs'],'absolute diffs': ['pairwise diffs'],'no diffs':['no diffs']};
+      var diffOptionsMap = {'time-series':['show matching diffs',"show pairwise diffs","no diffs"],
+                            'profile':['show matching diffs',"show pairwise diffs","no diffs"],
+                            'scatter-plot':['show matching diffs',"show matching absolute diffs","no diffs"]};
+
         PlotParams.insert(
             {
                 name: 'plotFormat',
@@ -261,7 +264,6 @@ curveParams = function () {
 
         CurveParams.insert(
             {
-               // name: 'descriptors',
                 name: 'discriminator',
                 type: InputTypes.select,
                 optionsMap:descriptorOptionsMap,
@@ -293,7 +295,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 6
             });
 
         CurveParams.insert(
@@ -312,7 +314,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 12,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 6
             });
 
         CurveParams.insert(
@@ -329,7 +331,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 13,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 7
             });
     }
 };
@@ -557,13 +559,13 @@ Databases.remove({});
             name:"wfip2Setting",
             role: "wfip2_data",
             status: "active",
-            //host        : 'wfip2-db.gsd.esrl.noaa.gov',
-            //user        : 'dev',
-            //password    : 'Pass4userdev*',
+            host        : 'wfip2-db.gsd.esrl.noaa.gov',
+            user        : 'dev',
+            password    : 'Pass4userdev*',
 
-           host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-           user        : 'readonly',
-           password    : 'Readonlyp@$$405',
+          // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           //user        : 'readonly',
+           //password    : 'Readonlyp@$$405',
            database    : 'WFIP2',
            connectionLimit : 10
         });
@@ -584,7 +586,7 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
@@ -685,7 +687,7 @@ Databases.remove({});
             }
             if (rows === undefined || rows.length === 0) {
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 //RangePerDescriptor.remove({});
                 for (var i = 0; i < rows.length; i++) {
@@ -713,7 +715,7 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows.length; i++) {
                      var model = rows[i].model;
@@ -736,7 +738,7 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
