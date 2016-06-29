@@ -21,7 +21,7 @@ Template.textProfileOutput.helpers({
     },
     pressureLevels: function(curveLabel) {
         //var dataSet = Session.get('dataset');
-        
+        var curves = Session.get('Curves');
         if (plotResult.data === undefined) {
             return [];
         }

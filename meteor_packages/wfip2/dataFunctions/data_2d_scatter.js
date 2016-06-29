@@ -149,7 +149,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var dstr = yr + "-" + month + '-' + day;
         return dstr;
     };
-
+console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
     var fromDateStr = plotParams.fromDate;
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
@@ -160,8 +160,8 @@ data2dScatter = function (plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotQualifier === 'matching';
-    var pairwise = plotParams.plotQualifier === 'pairwise';
+    var matching = plotParams.plotFormat === PlotFormats.matching;
+    var pairwise = plotParams.plotFormat === PlotFormats.pairwise;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;

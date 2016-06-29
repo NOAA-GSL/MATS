@@ -31,7 +31,8 @@ Template.textSeriesOutput.helpers({
         if (plotResult.data === undefined) {
             return "";
         }
-        var curveNums = plotResult.data.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
+        //var curveNums = plotResult.data.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
+
         var line = "<td>" + moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {

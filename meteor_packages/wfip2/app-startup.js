@@ -55,31 +55,17 @@ plotParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
-        PlotParams.insert(
-            {
-                name: 'plotQualifier',
-                type: InputTypes.radioGroup,
-                options: ['matching', 'unmatched', 'pairwise'],
-                selected: 'matching',
-                controlButtonCovered: true,
-                default: 'matching',
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 100,
-                displayGroup: 1
-            });
 
-      var diffOptionsMap = {'time-series':['show matching diffs',"show pairwise diffs","no diffs"],
-                            'profile':['show matching diffs',"show pairwise diffs","no diffs"],
-                            'scatter-plot':['show matching diffs',"show matching absolute diffs","no diffs"]};
-
+        var plotFormats = {};
+        plotFormats[PlotFormats.absolute] = "absolute diffs";
+        plotFormats[PlotFormats.none] = "no diffs";
         PlotParams.insert(
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                optionsMap: diffOptionsMap,
-                options: Object.keys(diffOptionsMap),
-                default: 'no diffs',
+                optionsMap: plotFormats,
+                options: Object.keys(plotFormats),
+                default: PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
@@ -190,8 +176,6 @@ curveParams = function () {
                 multiple: true,
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
-
-
 
         optionsMap = {wind_speed:['ws'], wind_direction:['wd']};
         CurveParams.insert(
@@ -478,18 +462,24 @@ PlotGraphFunctions.remove({});
             plotType: PlotTypes.timeSeries,
             graphFunction: "graphSeriesZoom",
             dataFunction: "dataSeriesZoom",
+            textViewId: "textSeriesView",
+            graphViewId: "graphSeriesView",
             checked:true
         });
         PlotGraphFunctions.insert({
             plotType: PlotTypes.profile,
             graphFunction: "graphProfileZoom",
-            dataFunction: "dselect valid_utc as avtime ,z ,ws,sites_siteid  from hrrr_esrl_nwp, nwp_recs   where nwps_nwpid=4 and nwp_recs_nwprecid=nwprecid and valid_utc >=1463810400 and valid_utc<=1466402400 and fcst_end_utc=0ataProfileZoom",
+            dataFunction: "dataProfileZoom",
+            textViewId: "textProfileView",
+            graphViewId: "graphSeriesView",
             checked: false
         });
         PlotGraphFunctions.insert({
             plotType: PlotTypes.scatter2d,
             graphFunction: "graph2dScatter",
             dataFunction: "data2dScatter",
+            textViewId: "textScatter2dView",
+            graphViewId: "graphSeriesView",
             checked: false
         });
     }
@@ -563,9 +553,9 @@ Databases.remove({});
             user        : 'dev',
             password    : 'Pass4userdev*',
 
-          // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-           //user        : 'readonly',
-           //password    : 'Readonlyp@$$405',
+           // host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+           // user        : 'readonly',
+           // password    : 'Readonlyp@$$405',
            database    : 'WFIP2',
            connectionLimit : 10
         });

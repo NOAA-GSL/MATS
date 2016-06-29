@@ -65,9 +65,9 @@ Template.graph.helpers({
         var p = Session.get('PlotParams');
         if (p !== undefined) {
             if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
-                return p.fromDate + " - " + p.toDate + " : " + p.plotQualifier;
+                return p.fromDate + " - " + p.toDate + " : " + p.plotFormat;
             } else {
-                return "Profile: " + p.plotQualifier;
+                return "Profile: " + p.plotFormat;
             }
         } else {
             return "no plot params";
@@ -155,10 +155,13 @@ Template.graph.events({
         document.getElementById('curve-text-buttons-grp').style.display='block';
     },
     'click .reload': function() {
+        var dataset = Session.get('dataset');
+        var options = Session.get('options');
         var graphFunction = Session.get('graphFunction');
-        window[graphFunction](plotResult.data,plotResult.options);
+        window[graphFunction](dataset,options);
     },
     'click .plotButton': function() {
+        var plotType = getPlotType();
         document.getElementById("plotButton").style.display = "none";
         document.getElementById("textButton").style.display = "block";
         document.getElementById("plot-buttons-grp").style.display = "block";
@@ -208,7 +211,7 @@ Template.graph.events({
         var plotText = "";
         var p = Session.get('PlotParams');
         if (p !== undefined) {
-            plotText = p.fromDate + " - " + p.toDate + " : " + p.plotQualifier;
+            plotText = p.fromDate + " - " + p.toDate + " : " + p.plotFormat;
         } else {
             plotText = "no plot params";
         }

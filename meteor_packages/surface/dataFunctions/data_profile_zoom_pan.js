@@ -134,7 +134,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
     var toDate = dateConvert(toDateStr);
-    var matching = plotParams.plotQualifier === 'matching';
+    var matching = plotParams.plotFormat === PlotFormats.matching;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
