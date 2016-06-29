@@ -49,7 +49,7 @@ PlotTypes = {
 PlotFormats = {
     none: "none",
     matching: "matching",
-    pairwise: "pairwise,",
+    pairwise: "pairwise",
     absolute:"absolute"
 };
 
