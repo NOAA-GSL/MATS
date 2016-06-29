@@ -24,7 +24,6 @@ var secsConvert = function (dStr) {
 
 
 var queryWFIP2DB = function (statement, xmin, xmax, top, bottom) {
-    console.log (new Date(), " start query: ", statement );
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -118,7 +117,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom) {
     });
     // wait for future to finish
     dFuture.wait();
-    console.log (new Date(), " end query:");
     return {
         data: d,
         error: error,
@@ -135,7 +133,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom) {
 
 data2dScatter = function (plotParams, plotFunction) {
     var dateConvert = function (dStr) {
-        console.log (new Date(), " start data2dScatter: ");
         if (dStr === undefined || dStr === " ") {
             var now = new Date();
             var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
@@ -153,7 +150,6 @@ data2dScatter = function (plotParams, plotFunction) {
         return dstr;
     };
 
-    console.log(new Date(), " plot params:", plotParams);
     var fromDateStr = plotParams.fromDate;
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
@@ -177,7 +173,6 @@ data2dScatter = function (plotParams, plotFunction) {
     });
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        console.log (new Date(), " start curve " + curves[curveIndex] + " processing");
         var axisData = {};
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
             var axis = axisLabelList[axisIndex].split('-')[0];
@@ -251,9 +246,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 var site_z_time;
                 var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom);
                 axisData[axis]= queryResult.data;
-                console.log("axisData:" + JSON.stringify(axisData, null,2));
                 z_time = queryResult.value_z_time;
-
                 if (axisData[axis][0] === undefined) {
                     //    no data set empty array
                     axisData[axis][0] = [];
@@ -336,18 +329,12 @@ data2dScatter = function (plotParams, plotFunction) {
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
-            //value_z_time: z_time,
-            //site_z_time: site_z_time,
-            site: siteIds,
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true},
-            //lines: {show: false, fill: false}
         };
         dataset.push(options);
-        console.log (new Date(), " end curve " + curve.label + " processing");
     }
-    console.log (new Date(), " start  processing axis");
     // generate x-axis
     var xaxes = [];
     var xaxis = [];
@@ -441,13 +428,10 @@ data2dScatter = function (plotParams, plotFunction) {
             }
         }
     };
-    console.log (new Date(), " end  processing axis");
-
     var result = {
         error: error,
         data: dataset,
         options: options
     };
-   // console.log("result:" + JSON.stringify(result, null,2));
     plotFunction(result);
 };

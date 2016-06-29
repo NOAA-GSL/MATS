@@ -20,8 +20,9 @@ Template.textProfileOutput.helpers({
         return text;
     },
     pressureLevels: function(curveLabel) {
-        var dataSet = Session.get('dataset');
-        if (dataSet === undefined) {
+        //var dataSet = Session.get('dataset');
+        
+        if (plotResult.data === undefined) {
             return [];
         }
         var c = 0;
@@ -30,7 +31,7 @@ Template.textProfileOutput.helpers({
                 break;
             }
         }
-        return dataSet[c].data
+        return plotResult.data[c].data
     },
     points: function(pressureLevel) {
         var stats = pressureLevel[5];
@@ -69,14 +70,13 @@ Template.textProfileOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-
-        var dataSet = Session.get('dataset');
-        var curveNums = dataSet.length;
-        var dataRows = _.range(dataSet[0].data.length - 1);
+        //var dataSet = Session.get('dataset');
+        var curveNums = plotResult.data.length;
+        var dataRows = _.range(plotResult.data[0].data.length - 1);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment(dataSet[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = dataSet[curveIndex].data[rowIndex][1] !== null?(dataSet[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
+                var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);

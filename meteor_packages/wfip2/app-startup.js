@@ -69,11 +69,13 @@ plotParams = function () {
                 displayGroup: 1
             });
 
+        var diffOptionsMap = {'show matching diffs':['show matching diffs'],'absolute diffs': ['pairwise diffs'],'no diffs':['no diffs']};
         PlotParams.insert(
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                options: ['show matching diffs','pairwise diffs', 'no diffs'],
+                optionsMap: diffOptionsMap,
+                options: Object.keys(diffOptionsMap),
                 default: 'no diffs',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -176,7 +178,8 @@ curveParams = function () {
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
+                //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
+                default:"map",
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
