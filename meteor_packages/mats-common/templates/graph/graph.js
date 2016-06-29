@@ -178,13 +178,25 @@ Template.graph.events({
         document.getElementById("textButton").style.display = "none";
         document.getElementById("curves").style.display = "none";
         document.getElementById("graphView").style.display = "none";
-        if (Session.get('plotType') === undefined || Session.get('plotType').toLowerCase() == PlotTypes.timeSeries) {
-            document.getElementById("textSeriesView").style.display = "block";
-            document.getElementById("textProfileView").style.display = "none";
-        } else {
-            document.getElementById("textProfileView").style.display = "block";
-            document.getElementById("textSeriesView").style.display = "none";
-        }
+        switch(getPlotType()) {
+            case PlotTypes.timeSeries:
+                document.getElementById("textSeriesView").style.display = "block";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dOutput").style.display = "none";
+                break;
+            case PlotTypes.profile:
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "block";
+                document.getElementById("textScatter2dOutput").style.display = "none";
+                break;
+            case PlotTypes.scatter2d:
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dOutput").style.display = "block";
+                break;
+            default:
+                console.log("Error: no plot type detected");
+        } 
     },
     'click .export': function() {
         document.getElementById('text_export').click();
