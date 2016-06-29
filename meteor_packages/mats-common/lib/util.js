@@ -1,3 +1,8 @@
+
+//global dataset variable
+plotResult = {};
+
+
 getCurveText = function(plotType, obj){
     var curveTextPattern = CurveTextPatterns.findOne({plotType:plotType}).textPattern;
     var text = "";
@@ -259,24 +264,19 @@ setUsedColorsAndLabels = function () {
 addDiffs = function () {
     var curves = Session.get('Curves');
     var newCurves = Session.get('Curves');
-    // show diffs is checked -- have to add diff curves
+    // diffs is checked -- have to add diff curves
     var curvesLength = curves.length;
     if (curvesLength <= 1) {
         alert("You cannot difference less than two curves!");
         return false;
     }
 
-
-    var pairwise = document.getElementById("plotFormat-radioGroup-pairwise diffs").checked==true;
-    if (pairwise) {
-        var baseIndex = 0; // This will probably not default to curve 0 in the future
-
-        for (var ci = 1; ci < curves.length; ci++) {
-            if (ci % 2 != 0) {  // only diff on odd curves against previous curve
-                base_index = ci - 1;
-
+    switch (getPlotFormat()) {
+        case PlotFormats.matching:
+            var baseIndex = 0; // This will probably not default to curve 0 in the future
+            for (var ci = 1; ci < curves.length; ci++) {
                 var newCurve = jQuery.extend(true, {}, curves[ci]);
-                newCurve.label = curves[ci].label + "-" + curves[base_index].label;
+                newCurve.label = curves[ci].label + "-" + curves[0].label;
                 newCurve.color = getNextCurveColor();
                 newCurve.diffFrom = [ci, baseIndex];
                 // do not create extra diff if it already exists
@@ -286,23 +286,41 @@ addDiffs = function () {
                     setUsedColorsAndLabels();
                 }
             }
+            break;
+        case PlotFormats.pairwise:
+            var baseIndex = 0; // This will probably not default to curve 0 in the future
+            for (var ci = 1; ci < curves.length; ci++) {
+                if (ci % 2 != 0) {  // only diff on odd curves against previous curve
+                    base_index = ci - 1;
 
-        }
-
-    } else {
-     var baseIndex = 0; // This will probably not default to curve 0 in the future
-        for (var ci = 1; ci < curves.length; ci++) {
-            var newCurve = jQuery.extend(true, {}, curves[ci]);
-            newCurve.label = curves[ci].label + "-" + curves[0].label;
-            newCurve.color = getNextCurveColor();
-            newCurve.diffFrom = [ci, baseIndex];
-            // do not create extra diff if it already exists
-            if (_.findWhere(curves, {label: newCurve.label}) === undefined) {
-                newCurves.push(newCurve);
-                Session.set('Curves', newCurves);
-                setUsedColorsAndLabels();
+                    var newCurve = jQuery.extend(true, {}, curves[ci]);
+                    newCurve.label = curves[ci].label + "-" + curves[base_index].label;
+                    newCurve.color = getNextCurveColor();
+                    newCurve.diffFrom = [ci, baseIndex];
+                    // do not create extra diff if it already exists
+                    if (_.findWhere(curves, {label: newCurve.label}) === undefined) {
+                        newCurves.push(newCurve);
+                        Session.set('Curves', newCurves);
+                        setUsedColorsAndLabels();
+                    }
+                }
             }
-        }
+            break;
+        case PlotFormats.absolute:
+            var baseIndex = 0; // This will probably not default to curve 0 in the future
+            for (var ci = 1; ci < curves.length; ci++) {
+                var newCurve = jQuery.extend(true, {}, curves[ci]);
+                newCurve.label = curves[ci].label + "-" + curves[0].label;
+                newCurve.color = getNextCurveColor();
+                newCurve.diffFrom = [ci, baseIndex];
+                // do not create extra diff if it already exists
+                if (_.findWhere(curves, {label: newCurve.label}) === undefined) {
+                    newCurves.push(newCurve);
+                    Session.set('Curves', newCurves);
+                    setUsedColorsAndLabels();
+                }
+            }
+            break;
     }
 };
 
@@ -320,17 +338,16 @@ removeDiffs = function () {
 // (used after adding or removing a curve while the show diffs box is checked)
 checkDiffs = function () {
     var curves = Session.get('Curves');
+    var plotFormat = getPlotFormat();
     if (curves.length > 1) {
-        if ((document.getElementById("plotFormat-radioGroup-show matching diffs").checked === true) ||
-            (document.getElementById("plotFormat-radioGroup-pairwise diffs").checked === true)) {
+        if (plotFormat !== PlotFormats.none) {
             removeDiffs();
             addDiffs();
-        } else if (document.getElementById("plotFormat-radioGroup-no diffs").checked === true){
+        } else {
             removeDiffs();
         }
     }
 };
-
 
 // determine which plottype radio button is checked
 getPlotType = function () {
@@ -340,6 +357,19 @@ getPlotType = function () {
             return buttons[i].value;
         }
     }
-    return "";
+    return "";    // error condition actually - shouldn't ever happen
 };
+
+// determine which plotFormat radio button is checked
+getPlotFormat = function() {
+    var buttons = document.getElementsByName('plotFormat');
+    var optionsMap = PlotParams.findOne({name:'plotFormat'}).optionsMap;
+    for (var i = 0, len = buttons.length; i < len; i++) {
+        if (buttons[i].checked) {
+            return _.invert(optionsMap)[buttons[i].value];
+        }
+    }
+    return "";  // error condition actually - shouldn't ever happen
+};
+
 

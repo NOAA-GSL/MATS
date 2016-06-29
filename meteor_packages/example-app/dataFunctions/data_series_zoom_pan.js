@@ -130,8 +130,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotQualifier === 'matching';
-    var pairwise = plotParams.plotQualifier === 'pairwise';
+    var matching = plotParams.plotFormat === PlotFormats.matching;
+    var pairwise = plotParams.plotFormat === PlotFormats.pairwise;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -276,7 +276,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
                 ],
                 "averageStr": "None",
                 "interval": 43200000
-            }
+            };
 
             console.log ("query result is " + JSON.stringify(queryResult, null, 2));
             d = queryResult.data;

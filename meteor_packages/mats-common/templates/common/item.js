@@ -109,9 +109,8 @@ Template.item.events({
         if (this.displayPriority !== undefined) {
             Session.set('displayPriority', this.displayPriority + 1);
         }
-        if (this == "pairwise diffs" ||
-            this == "show matching diffs" ||
-            this == "no diffs") {
+        var formats = Object.keys(PlotFormats);
+        if ($.inArray(this,formats) !== -1){
             Session.set('diffStatus',this);
         }
     },

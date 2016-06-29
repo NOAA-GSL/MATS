@@ -184,7 +184,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         return dstr;
     };
 
-    //console.log(plotParams);
+    console.log(plotParams);
     var fromDateStr = plotParams.fromDate;
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
@@ -201,8 +201,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotQualifier === 'matching';
-    var pairwise = plotParams.plotQualifier === 'pairwise';
+    var matching = plotParams.plotFormat === PlotFormats.matching;
+    //var pairwise = plotParams.plotFormat === PlotFormats.pairwise;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -268,6 +268,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
         var d = [];
+        var statement = "";
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
 
@@ -388,8 +389,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
     if (matching) {
-
-
         var num_all_sites = 0;
         for (var ci = 0; ci < numCurves; ci++) {
             var this_id = dataset[ci].site;
@@ -398,7 +397,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 num_all_sites = num_all_sites + 1;
             }
         }
-
 
         var ws_z_time0 = dataset[0].ws_z_time;
 

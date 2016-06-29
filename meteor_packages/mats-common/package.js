@@ -21,7 +21,8 @@ Package.onUse(function(api) {
   api.use('session');
   api.imply("accounts-google");
   api.imply("accounts-ui");
-  api.add_files("lib/collections/collections.js", ['client','server']);
+  api.addFiles("lib/collections/collections.js", ['client','server']);
+
   api.export("CurveParams");  
   api.export("Scatter2dParams");
   api.export("CurveTextPatterns");
@@ -48,119 +49,125 @@ Package.onUse(function(api) {
   api.export("SavedCredentials");
   api.export("InputTypes");
   api.export("PlotTypes");
+  api.export("PlotFormats");
   api.export("SiteMap");
 
-  api.add_files("lib/util.js", ['client','server']);
-  api.add_files("lib/error/error.js", ['client','server']);
-  api.add_files("templates/topnav/topNav.html", "client");
-  api.add_files("templates/spinner/spinner.html", "client");
+  api.addFiles("lib/util.js", ['client','server']);
+  api.addFiles("lib/error/error.js", ['client','server']);
+  api.addFiles("templates/topnav/topNav.html", "client");
+  api.addFiles("templates/spinner/spinner.html", "client");
+    
   api.addFiles('Home.html', "client");
   api.addFiles('client/lib/helpers.js', "client");
   api.addFiles('client/lib/html2canvas.js', "client");
   api.addFiles('client/lib/init.js', "client");
+  api.export("plotResult",['client','server']);
   api.addFiles('footer.html', "client");
   api.addFiles('server/plot_service.js', "server");
   api.addFiles('client/main.html', "client");
 
 
-  api.add_files("templates/plot/plot_list.html", "client");
-  api.add_files("templates/plot/plot_list.js", "client");
+  api.addFiles("templates/plot/plot_list.html", "client");
+  api.addFiles("templates/plot/plot_list.js", "client");
 
-  api.add_files("templates/plot/plot_param_group.html", "client");
-  api.add_files("templates/plot/plot_param_group.js", "client");
+  api.addFiles("templates/plot/plot_param_group.html", "client");
+  api.addFiles("templates/plot/plot_param_group.js", "client");
   
-  api.add_files("templates/error/error.html", "client");
-  api.add_files("templates/error/error.js", "client");
+  api.addFiles("templates/error/error.html", "client");
+  api.addFiles("templates/error/error.js", "client");
 
-  api.add_files("templates/graph/graph.html", "client");
-  api.add_files("templates/graph/graph.js", "client");
+  api.addFiles("templates/graph/graph.html", "client");
+  api.addFiles("templates/graph/graph.js", "client");
 
-  api.add_files("templates/graph/displayFunctions/graph_series_zoom_pan.js", "client");
-  api.add_files("templates/graph/displayFunctions/graph_profile_zoom_pan.js", "client");
-  api.add_files("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_series_zoom_pan.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_profile_zoom_pan.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
 
-  api.add_files("templates/graph/text_profile_output.html", "client");
-  api.add_files("templates/graph/text_profile_output.js", "client");
+  api.addFiles("templates/graph/text_profile_output.html", "client");
+  api.addFiles("templates/graph/text_profile_output.js", "client");
 
-  api.add_files("templates/common/text_input.html", "client");
-  api.add_files("templates/common/text_input.js", "client");
+  api.addFiles("templates/common/text_input.html", "client");
+  api.addFiles("templates/common/text_input.js", "client");
 
-  api.add_files("templates/graph/text_series_output.html", "client");
-  api.add_files("templates/graph/text_series_output.js", "client");
+  api.addFiles("templates/graph/text_series_output.html", "client");
+  api.addFiles("templates/graph/text_series_output.js", "client");
 
-  api.add_files("templates/common/select.html", "client");
-  api.add_files("templates/common/select.js", "client");
+  api.addFiles("templates/graph/text_scatter2d_output.html", "client");
+  api.addFiles("templates/graph/text_scatter2d_output.js", "client");
 
-  api.add_files("templates/common/map.html", "client");
-  api.add_files("templates/common/map.js", "client");
+  api.addFiles("templates/common/select.html", "client");
+  api.addFiles("templates/common/select.js", "client");
 
-  api.add_files("templates/common/date_range.html", "client");
-  api.add_files("templates/common/date_range.js", "client");
+  api.addFiles("templates/common/map.html", "client");
+  api.addFiles("templates/common/map.js", "client");
 
-  api.add_files("templates/common/checkbox_group.html", "client");
+  api.addFiles("templates/common/date_range.html", "client");
+  api.addFiles("templates/common/date_range.js", "client");
 
-  api.add_files("templates/common/number_spinner.html", "client");
-  api.add_files("templates/common/number_spinner.js", "client");
+  api.addFiles("templates/common/checkbox_group.html", "client");
 
-  api.add_files("templates/common/radio_group_option.html", "client");
-  api.add_files("templates/common/radio_group_option.js", "client");
+  api.addFiles("templates/common/number_spinner.html", "client");
+  api.addFiles("templates/common/number_spinner.js", "client");
 
-  api.add_files("templates/common/item.html", "client");
-  api.add_files("templates/common/item.js", "client");
+  api.addFiles("templates/common/radio_group_option.html", "client");
+  api.addFiles("templates/common/radio_group_option.js", "client");
 
-  api.add_files("templates/curves/curve_item.html", "client");
-  api.add_files("templates/curves/curve_item.js", "client");
+  api.addFiles("templates/common/item.html", "client");
+  api.addFiles("templates/common/item.js", "client");
 
-  api.add_files("templates/curves/curve_list.html", "client");
-  api.add_files("templates/curves/curve_list.js", "client");
+  api.addFiles("templates/curves/curve_item.html", "client");
+  api.addFiles("templates/curves/curve_item.js", "client");
 
-  api.add_files("templates/params/param_list.html", "client");
-  api.add_files("templates/params/param_list.js", "client");
+  api.addFiles("templates/curves/curve_list.html", "client");
+  api.addFiles("templates/curves/curve_list.js", "client");
 
-  api.add_files("templates/params/curve_param_group.html", "client");
-  api.add_files("templates/params/curve_param_group.js", "client");
+  api.addFiles("templates/params/param_list.html", "client");
+  api.addFiles("templates/params/param_list.js", "client");
 
-  api.add_files("templates/params/scatter_axis.html", "client");
-  api.add_files("templates/params/scatter_axis.js", "client");
+  api.addFiles("templates/params/curve_param_group.html", "client");
+  api.addFiles("templates/params/curve_param_group.js", "client");
 
-  api.add_files("templates/plotType/plot_type.html", "client");
-  api.add_files("templates/plotType/plot_type.js", "client");
+  api.addFiles("templates/params/scatter_axis.html", "client");
+  api.addFiles("templates/params/scatter_axis.js", "client");
 
-  api.add_files("templates/administration/reset.html", "client");
-  api.add_files("templates/administration/reset.js", "client");
+  api.addFiles("templates/plotType/plot_type.html", "client");
+  api.addFiles("templates/plotType/plot_type.js", "client");
 
-  api.add_files("templates/administration/export.html", "client");
-  api.add_files("templates/administration/export.js", "client");
+  api.addFiles("templates/administration/reset.html", "client");
+  api.addFiles("templates/administration/reset.js", "client");
 
-  api.add_files("templates/administration/import.html", "client");
-  api.add_files("templates/administration/import.js", "client");
+  api.addFiles("templates/administration/export.html", "client");
+  api.addFiles("templates/administration/export.js", "client");
 
-  api.add_files("templates/administration/settings.html", "client");
-  api.add_files("templates/administration/settings.js", "client");
+  api.addFiles("templates/administration/import.html", "client");
+  api.addFiles("templates/administration/import.js", "client");
 
-  api.add_files("templates/administration/databases.html", "client");
-  api.add_files("templates/administration/databases.js", "client");
+  api.addFiles("templates/administration/settings.html", "client");
+  api.addFiles("templates/administration/settings.js", "client");
 
-  api.add_files("templates/administration/plotParams.html", "client");
-  api.add_files("templates/administration/plotParams.js", "client");
+  api.addFiles("templates/administration/databases.html", "client");
+  api.addFiles("templates/administration/databases.js", "client");
 
-  api.add_files("templates/administration/colorsScheme.html", "client");
-  api.add_files("templates/administration/colorScheme.js", "client");
+  api.addFiles("templates/administration/plotParams.html", "client");
+  api.addFiles("templates/administration/plotParams.js", "client");
 
-  api.add_files("templates/administration/curveParams.html", "client");
-  api.add_files("templates/administration/curveParams.js", "client");
+  api.addFiles("templates/administration/colorsScheme.html", "client");
+  api.addFiles("templates/administration/colorScheme.js", "client");
 
-  api.add_files("templates/administration/authorization.html", "client");
-  api.add_files("templates/administration/authorization.js", "client");
+  api.addFiles("templates/administration/curveParams.html", "client");
+  api.addFiles("templates/administration/curveParams.js", "client");
 
-  api.add_files("templates/administration/mail_credentials.html", "client");
-  api.add_files("templates/administration/mail_credentials.js", "client");
+  api.addFiles("templates/administration/authorization.html", "client");
+  api.addFiles("templates/administration/authorization.js", "client");
 
-  api.add_files("templates/administration/PlotGraphFunctions.html", "client");
-  api.add_files("templates/administration/PlotGraphFunctions.js", "client");
+  api.addFiles("templates/administration/mail_credentials.html", "client");
+  api.addFiles("templates/administration/mail_credentials.js", "client");
 
-  api.add_files("templates/administration/administration.html", "client");
-  api.add_files("templates/administration/administration.js", "client");
+  api.addFiles("templates/administration/PlotGraphFunctions.html", "client");
+  api.addFiles("templates/administration/PlotGraphFunctions.js", "client");
+
+  api.addFiles("templates/administration/administration.html", "client");
+  api.addFiles("templates/administration/administration.js", "client");
 
   api.addAssets('public/img/arrow-down.gif', "client");
   api.addAssets('public/img/arrow-left.gif', "client");

@@ -59,10 +59,10 @@ Template.plotList.events({
         }
     },
 
+    // catch a click on a diff plotFormat readio button.
     'click .data-input' : function() {
-        if (this.toString(event) === "show matching diffs" ||
-            this.toString(event) === "pairwise diffs" ||
-            this.toString(event) === "no diffs") {
+        var formats = Object.keys(PlotFormats);
+        if ($.inArray(this.toString(),formats) !== -1) {
             checkDiffs();
         }
     },

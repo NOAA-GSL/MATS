@@ -16,7 +16,7 @@ Template.curveList.helpers({
         if (Session.get('diffStatus') === undefined) {
             return "";
         }
-        if (Session.get('diffStatus') == 'no diffs'){
+        if (Session.get('diffStatus') == PlotFormats.none){
             return "";
         }
         return "disabled";
@@ -59,14 +59,12 @@ Template.curveList.events({
     'click .plot-curves-unmatched': function(event) {
         document.getElementById("spinner").style.display="block";
         event.preventDefault();
-        document.getElementById("plotQualifier-" + InputTypes.radioGroup + '-unmatched').checked = true;
         document.getElementById("plot-curves").click();
         return false;
     },
     'click .plot-curves-matched': function(event) {
         document.getElementById("spinner").style.display="block";
         event.preventDefault();
-        document.getElementById("plotQualifier-" + InputTypes.radioGroup + '-matching').checked = true;
         document.getElementById("plot-curves").click();
         return false;
     },

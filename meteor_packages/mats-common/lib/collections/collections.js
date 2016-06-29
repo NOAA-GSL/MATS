@@ -46,6 +46,13 @@ PlotTypes = {
     scatter2d : "Scatter2d"
 };
 
+PlotFormats = {
+    none: "none",
+    matching: "matching",
+    pairwise: "pairwise,",
+    absolute:"absolute"
+};
+
 getCurves = function() {
     return Session.get('Curves');
 };

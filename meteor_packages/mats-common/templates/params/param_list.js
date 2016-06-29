@@ -54,6 +54,7 @@ Template.paramList.events({
             var elems = event.target.valueOf().elements;
             var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
+
             if (getPlotType() === PlotTypes.scatter2d) {
                 var scatterCurveNames = [];
                 for (var i=0; i<curveNames.length;i++) {
@@ -63,10 +64,14 @@ Template.paramList.events({
                 }
                 curveNames = scatterCurveNames;
             }
-            var param_elems = _.filter(elems, function (elem) {
+            var paramElems = _.filter(elems, function (elem) {
                 return _.contains(curveNames, elem.name);
             });
-            var l = param_elems.length;
+            // the following converts the PlotFormat NodeList to an actual array....
+            // the param element form does not contain the plotFormat radiogroup so we sort of add it in here manually
+            var plotFormatElems = [].slice.call(document.getElementsByName('plotFormat'));
+            paramElems = paramElems.concat(plotFormatElems);
+            var l = paramElems.length;
 
             if (Session.get('editMode')) {
                 Session.set('editMode', '');
@@ -75,14 +80,18 @@ Template.paramList.events({
                 label.disabled = false;
 
                 for (var i = 0; i < l; i++) {
-                    if (param_elems[i].type === "select-multiple") {
-                        p[param_elems[i].name] = $(param_elems[i].selectedOptions).map(function(){return(this.value)}).get();
-                    } else if (param_elems[i].type === "radio") {
-                        p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
-                    } else if (param_elems[i].type === "button") {
-                        p[param_elems[i].id] = param_elems[i].value;
+                    if (paramElems[i].type === "select-multiple") {
+                        p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
                     } else {
-                        p[param_elems[i].name] = (param_elems[i]).value;
+                        if (paramElems[i].type === "radio") {
+                            if (paramElems[i].checked){
+                                p[paramElems[i].name] = paramElems[i].value;
+                            }
+                        } else if (paramElems[i].type === "button") {
+                            p[paramElems[i].id] = paramElems[i].value;
+                        } else {
+                            p[paramElems[i].name] = (paramElems[i]).value;
+                        }
                     }
                 }
                 var index = -1;
@@ -98,18 +107,23 @@ Template.paramList.events({
             } else {
                 for (var i = 0; i < l; i++) {
 
-                    if (param_elems[i].type === "select-multiple") {
-                        p[param_elems[i].name] = $(param_elems[i].selectedOptions).map(function(){return(this.value)}).get();
-                    } else if (param_elems[i].type === "radio") {
-                        p[param_elems[i].name] = $('input[name="' + param_elems[i].name + '"]:checked').val();
-                    } else if (param_elems[i].type === "button") {
-                        p[param_elems[i].id] = param_elems[i].value;
+                    if (paramElems[i].type === "select-multiple") {
+                        p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
                     } else {
-                        p[param_elems[i].name] = (param_elems[i]).value;
+                        if (paramElems[i].type === "radio") {
+                            if (paramElems[i].checked){
+                                p[paramElems[i].name] = paramElems[i].value;
+                            }
+                        }
+                     else if (paramElems[i].type === "button") {
+                            p[paramElems[i].id] = paramElems[i].value;
+                        } else {
+                            p[paramElems[i].name] = (paramElems[i]).value;
+                        }
                     }
-                    if (param_elems[i].name === 'label') {
-                        if (_.indexOf(getUsedLabels(), (param_elems[i]).value) != -1) {
-                            setError('labels need to be unique - change ' + (param_elems[i]).value + " to something else");
+                    if (paramElems[i].name === 'label') {
+                        if (_.indexOf(getUsedLabels(), (paramElems[i]).value) != -1) {
+                            setError('labels need to be unique - change ' + (paramElems[i]).value + " to something else");
                             return false;
                         }
                     }

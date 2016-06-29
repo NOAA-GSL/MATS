@@ -5,5 +5,8 @@ Template.radioGroup.helpers({
         } else {
             return "";
         }
+    },
+    value: function(p) {
+        return p.optionsMap[this];
     }
 });

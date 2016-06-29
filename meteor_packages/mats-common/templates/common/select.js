@@ -56,7 +56,7 @@ Template.select.rendered = function(){
             elem.options[elem.options.length] = new Option(options[i], options[i], i==0, i==0);
             // set the display button
             if (i === 0) {
-                if (peername) {
+                if (peerName) {
                     dispElem.textContent = "";
                 } else {
                     dispElem.textContent = options[i];

@@ -7,6 +7,8 @@ plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
     }
+// remove for production
+PlotParams.remove({});
     if (PlotParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -28,25 +30,18 @@ plotParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
-        PlotParams.insert(
-            {
-                name: 'plotQualifier',
-                type: InputTypes.radioGroup,
-                options: ['matching', 'unmatched', 'pairwise'],
-                selected: 'matching',
-                controlButtonCovered: true,
-                default: 'matching',
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 100,
-                displayGroup: 1
-            });
+
+        var plotFormats = {};
+        plotFormats[PlotFormats.matching] = 'show matching diffs';
+        plotFormats[PlotFormats.pairwise] = 'pairwise diffs';
+        plotFormats[PlotFormats.none] = 'no diffs';
         PlotParams.insert(
             {
                 name: 'plotFormat',
                 type: InputTypes.radioGroup,
-                options: ['show matching diffs', 'pairwise diffs', 'no diffs'],
-                default: 'no diffs',
+                optionsMap: plotFormats,
+                options: Object.keys(plotFormats),
+                default: plotFormats[PlotFormats.none],
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,

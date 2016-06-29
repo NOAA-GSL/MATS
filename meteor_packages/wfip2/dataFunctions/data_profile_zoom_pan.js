@@ -29,7 +29,8 @@ var secsConvert = function (dStr) {
 
 
 
-var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
+//var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
+var queryWFIP2DB = function (statement) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -270,12 +271,12 @@ dataProfileZoom = function(plotParams, plotFunction) {
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
     var toDate = dateConvert(toDateStr);
-    var matching = plotParams.plotQualifier === 'matching';
+    var matching = plotParams.plotFormat === PlotFormats.matching;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var variableStatSet = Object.create(null);
+    //var variableStatSet = Object.create(null);
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
@@ -285,7 +286,13 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var model =  tmp[0];
         var instrument_id = tmp[1];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
-        var siteid = _.indexOf(CurveParams.findOne({name: 'sites'}).optionsMap[data_source],curve['sites']);
+
+        var siteNames = curve['sites'];
+        var siteIds = [];
+        for (var i = 0; i < siteNames.length; i++) {
+            var siteId = SiteMap.findOne({siteName:siteNames[i]}).siteId;
+            siteIds.push(siteId);
+        }
         //var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
         var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
@@ -296,27 +303,27 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        if (variableStr == 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        }
-        statistic = statistic + "," + statisticOptionsMap[statisticSelect][2];
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid time'];
-        var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        var validTime = validTimeOptionsMap[validTimeStr][0];
+        // var statisticSelect = curve['statistic'];
+        // var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        // var statistic;
+        // if (variableStr == 'winds') {
+        //     statistic = statisticOptionsMap[statisticSelect][1];
+        // } else {
+        //     statistic = statisticOptionsMap[statisticSelect][0];
+        // }
+        // statistic = statistic + "," + statisticOptionsMap[statisticSelect][2];
+        // statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
+        // statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        // var validTimeStr = curve['valid time'];
+        // var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
+        // var validTime = validTimeOptionsMap[validTimeStr][0];
         var forecastLength = curve['forecast length'];
         // variableStat is used to determine which axis a curve should use.
         // This variableStatSet object is used like a set and if a curve has the same
         // variable and statistic (variableStat) it will use the same axis,
         // The axis number is assigned to the variableStatSet value, which is the variableStat.
-        var variableStat = variableStr + ":" + statisticSelect;
-        curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
+        //var variableStat = variableStr + ":" + statisticSelect;
+        //curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
         var d = [];
         if (diffFrom == null) {
 
@@ -328,20 +335,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " and valid_utc <= " +  secsConvert(curveDatesDateRangeTo) +
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
-
-                    if (siteid !=0){
-                        statement = statement +
-                            "  and sites_siteid="+siteid;
-
-                    }
-
-
-
-
-
             }else{//model
-
-
                var statement="select sites_siteid,valid_utc,z ,ws " +
                         " from "+model+", nwp_recs  " +
                          "where valid_utc>= "+ secsConvert(curveDatesDateRangeFrom)+
@@ -351,24 +345,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " and nwps_nwpid= " + instrument_id+
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc="+3600*forecastLength;
-
-                if (siteid !=0){
-                    statement = statement +
-                        "  and sites_siteid="+siteid;
-
-                }
-
-
             }
-
-            console.log("model=" + model);
-            console.log("forecastLength=" + forecastLength);
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("query=" + statement);
 
             var ws_z_time;
             var site_z_time;
-
-            var queryResult = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
+            //var queryResult = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
+            var queryResult = queryWFIP2DB(statement);
             d = queryResult.data;
             console.log("d[0]=" + d[0]);
 
@@ -404,16 +388,16 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 break;
         }
         var yAxisIndex = 1;
-        if (variableStat in variableStatSet) {
-            yAxisIndex = variableStatSet[variableStat].index;
-            variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
-        } else {
-            variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
-        }
+        // if (variableStat in variableStatSet) {
+        //     yAxisIndex = variableStatSet[variableStat].index;
+        //     variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
+        // } else {
+        //     variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
+        // }
 
-        console.log("before option" );
+//        console.log("before option" );
         var options = {
-            yaxis: variableStatSet[variableStat].index,
+            //yaxis: variableStatSet[variableStat].index,
             label: label,
             color: color,
             data: d,
@@ -438,9 +422,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 fill: false
             }
         };
-        console.log("after option" );
+//        console.log("after option" );
         dataset.push(options);
-        console.log("after push" );
+//        console.log("after push" );
     }
 
     // match the data by subseconds
@@ -666,7 +650,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             show: true
         },
         xaxes:[{
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            //axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
             color: 'grey'
         }],
         xaxis: {
