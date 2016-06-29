@@ -109,8 +109,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotFormat === PlotFormats.matching;
-    var pairwise = plotParams.plotFormat === PlotFormats.pairwise;
+    var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
