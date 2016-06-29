@@ -53,6 +53,11 @@ PlotFormats = {
     absolute:"absolute"
 };
 
+PlotActions = {
+    matched: "matched",
+    unmatched: "unmatched"
+};
+
 getCurves = function() {
     return Session.get('Curves');
 };

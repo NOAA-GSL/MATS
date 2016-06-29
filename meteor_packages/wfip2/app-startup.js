@@ -200,7 +200,7 @@ curveParams = function () {
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorName: 'model',
+                superiorName: 'data source',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -269,7 +269,7 @@ curveParams = function () {
                 type: InputTypes.numberSpinner,
                 optionsMap:upperOptionsMap,
                 options:Object.keys(upperOptionsMap),   // convenience
-                superiorName: 'descriptors',
+                superiorName: 'discriminator',
                 min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
                 max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
@@ -288,7 +288,7 @@ curveParams = function () {
                 type: InputTypes.numberSpinner,
                 optionsMap:lowerOptionsMap,
                 options:Object.keys(lowerOptionsMap),   // convenience
-                superiorName: 'descriptors',
+                superiorName: 'discriminator',
                 min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
                 step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,

@@ -73,6 +73,7 @@ Template.plotList.events({
         document.getElementById('restore_from_private').value = "";
     },
     'click .submit-params': function (event, template) {
+        var plotAction = Session.get('plotParameter');
         document.getElementById("spinner").style.display="block";
         event.preventDefault();
         var action = event.currentTarget.name;
@@ -85,6 +86,7 @@ Template.plotList.events({
             return false;
         }
         p.curves = [];
+        p.plotAction = plotAction;
         curves.forEach(function(curve){p.curves.push(curve)});
         PlotParams.find({}).fetch().forEach(function(plotParam){
             var name = plotParam.name;

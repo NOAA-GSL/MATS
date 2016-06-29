@@ -50,6 +50,7 @@ Package.onUse(function(api) {
   api.export("InputTypes");
   api.export("PlotTypes");
   api.export("PlotFormats");
+  api.export("PlotActions");
   api.export("SiteMap");
 
   api.addFiles("lib/util.js", ['client','server']);
