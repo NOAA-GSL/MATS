@@ -1,4 +1,6 @@
-graphSeriesZoom = function(dataset, options) {
+graphSeriesZoom = function(result) {
+    var dataset = result.data;
+    var options = result.options;
     var meanAnnotation ="";
     for (var i=0;i<dataset.length;i++) {
         meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].mean + " </div>";

@@ -1,4 +1,6 @@
-graphProfileZoom = function(dataset, options) {
+graphProfileZoom = function(result) {
+    var dataset = result.data;
+    var options = result.options;
     var placeholder = $("#placeholder");
 
         // bind to the pan, zoom, and redraw buttons
