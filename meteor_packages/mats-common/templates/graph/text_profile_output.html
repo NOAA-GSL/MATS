@@ -2,28 +2,25 @@
     <div id="textProfileOutput" class="container">
         <button id="text_export" type="button" class="export" style="display:none">Export</button>
         <br/>
-            {{#each curves}}
-                <h5>{{curveText}}</h5>
-                <table class="table table-condensed table-striped table-bordered">
-                    <caption>{{label}}</caption>
-                    <thead>
-                    <tr>
-                        <th>mb</th>
-                        <th>stat</th>
-                        <th>stde</th>
-                        <th>mean</th>
-                        <th>n</th>
-                        <th>lag1</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {{#each pressureLevels label}}
-                        <tr>
-                            {{{points this}}}
-                        </tr>
-                    {{/each}}
-                    </tbody>
-                </table>
+        {{#each curves}}
+            <h5>{{curveText}}</h5>
+        {{/each}}
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>level</th>
+                {{#each curves}}
+                    <th>{{curveLabel this}}</th>
+                {{/each}}
+            </tr>
+            </thead>
+            <tbody>
+            {{#each pressureLevels}}
+                <tr>
+                    {{{points this}}}
+                </tr>
             {{/each}}
+            </tbody>
+        </table>
     </div>
 </template>

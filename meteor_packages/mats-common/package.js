@@ -62,7 +62,6 @@ Package.onUse(function(api) {
   api.addFiles('client/lib/helpers.js', "client");
   api.addFiles('client/lib/html2canvas.js', "client");
   api.addFiles('client/lib/init.js', "client");
-  api.export("plotResult",['client','server']);
   api.addFiles('footer.html', "client");
   api.addFiles('server/plot_service.js', "server");
   api.addFiles('client/main.html', "client");

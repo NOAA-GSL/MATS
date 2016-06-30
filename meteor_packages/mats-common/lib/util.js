@@ -1,7 +1,14 @@
+/*
+ global dataset variable - container for graph dataset.
+ This (plotResult) is very important. It isn't "var" because it needs to be a meteor global scope.
+ The page is rendered whe the graph page comes up, but the data from the data processing callback
+ in plotList.js or curveList.js may not have set the global variable
+ PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+ Referring to plotResultsUpDated in the textView templates causes the template to get re-loaded with the current graph data
+ (which is in the PlotResults global).
+ */
 
-//global dataset variable
-plotResult = {};
-
+PlotResult = {};
 
 getCurveText = function(plotType, obj){
     var curveTextPattern = CurveTextPatterns.findOne({plotType:plotType}).textPattern;

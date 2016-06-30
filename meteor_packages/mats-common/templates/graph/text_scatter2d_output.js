@@ -3,75 +3,70 @@ Template.textScatter2dOutput.helpers({
         return Session.get('plotName');
     },
     curves: function () {
-        return Session.get('Curves');
-    },
-    curveLabel: function (curve) {
-      return curve.label;
-    },
-    curveText: function () {
-        var text = this.label + ": " +
-            this.model + ":" +
-            this.region.split(' ')[0] + ", "  +
-            this.bottom + "-" +
-            this.top + "mb " +
-            this.variable + " " +
-            this.statistic + " " +
-            this['forecast length'] +"h";
-        return text;
-    },
-    dataRows: function() {
-        if (plotResult.data === undefined) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
             return [];
         }
-        var dataRows = _.range(plotResult.data[0].data.length - 1);
-        return dataRows;
+        return Session.get('Curves');
     },
-    points: function(rowIndex) {
-        if (plotResult.data === undefined) {
-            return "";
-        }
-        //var curveNums = plotResult.data.length - 1;   // leave out the zero curve which has been added on to the end of the dataset
-        var curveNums = plotResult.data.length;
-        var line = "<td>" + moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
-        var settings = Settings.findOne({},{fields:{NullFillString:1}});
-        if (settings === undefined) {
-            return false;
-        }
-        var fillStr = settings.NullFillString;
-        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-            var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
-            line += "<td>" + pdata + "</td>";
-        }
-        return line;
+    curveText: function () {
+        this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
+        var text = getCurveText(getPlotType(),this);
+        return text;
     },
-    stats: function(curve) {
-        var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
-            return;
+    dataRows: function(curve) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
         }
-        //if (plotResult.data === undefined || plotResult.data.length == 1) {
-        if (plotResult.data === undefined){
-            return;
+        if (getPlotType() != PlotTypes.scatter2d) {
+            return [];
         }
-        var cindex;
-        for (cindex = 0; cindex < curves.length; cindex++) {
-            if (curves[cindex].label == curve.label) {
+
+        var curves = Session.get("Curves");
+        for (var i = 0; i < curves.length; i++){
+            if (curve.label === curves[i].label) {
                 break;
             }
         }
-        var data = [];
-        for (var di = 0; di < plotResult.data[cindex].data.length; di++){
-            if (plotResult.data[cindex].data[di][1] !== null) data.push(plotResult.data[cindex].data[di][1]);
+        if (PlotResult.data === undefined) {
+            return [];
         }
-
-
-        var weimean = mean(data).toPrecision(4);
-        var min =  Math.min.apply(Math, data).toPrecision(4);
-        var max =  Math.max.apply(Math, data).toPrecision(4);
-        var sd = Math.sqrt(variance(data)).toPrecision(4);
-        var se = Math.sqrt(variance(data)/(data.length-1)).toPrecision(4);
-
-        return "<td>" + curve.label + "</td>" + "<td>" + weimean + "</td>" + "<td>" + min + "</td>" + "<td>" + max + "</td>" + "<td>" + sd + "</td>" + "<td>" + se + "</td>";
+        var dataRows = _.range(PlotResult.data[i].data.length - 1);
+        return dataRows;
+    },
+    points: function(curve, rowIndex) {
+        if (PlotResult.data === undefined) {
+            return "";
+        }
+        var curves = Session.get("Curves");
+        for (var i = 0; i < curves.length; i++){
+            if (curve.label === curves[i].label) {
+                break;
+            }
+        }
+        var line = "<td>" + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
+        return line;
     }
 });
 
@@ -92,12 +87,12 @@ Template.textScatter2dOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        var curveNums = plotResult.data.length - 1;
-        var dataRows = _.range(plotResult.data[0].data.length - 1);
+        var curveNums = PlotResult.data.length - 1;
+        var dataRows = _.range(PlotResult.data[0].data.length - 1);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment.utc(PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
+                var pdata = PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);

@@ -4,52 +4,117 @@ Template.textProfileOutput.helpers({
         return Session.get('plotName');
     },
     curves: function () {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
         return Session.get('Curves');
     },
     curveText: function () {
-        var text = this.label + ": " +
-            this.model + ":" +
-            this.region.split(' ')[0] + ", "  +
-            this.bottom + "-" +
-            this.top + "mb " +
-            this.variable + " " +
-            this.statistic + " " +
-            this['forecast length'] +"h" +
-            this['curve-dates-dateRange-from'] + " " +
-            this['curve-dates-dateRange-to'];
+        this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
+        var text = getCurveText(getPlotType(),this);
         return text;
     },
-    pressureLevels: function(curveLabel) {
-        //var dataSet = Session.get('dataset');
-        var curves = Session.get('Curves');
-        if (plotResult.data === undefined) {
+    curveLabel: function (curve) {
+        return curve.label;
+    },
+    pressureLevels: function() {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
             return [];
         }
-        var c = 0;
-        for (c=0; c < curves.length - 1;c++) {  // do not include the zero curve which has been added onto the end of the dataset
-            if (curveLabel == curves[c].label) {
-                break;
+
+        if (PlotResult.data === undefined) {
+            return [];
+        }
+        if (getPlotType() != PlotTypes.profile) {
+            return [];
+        }
+
+        var maxl = 0;
+        var maxi =0;
+        for (var i = 0; i < PlotResult.data.length; i++) {
+            if (PlotResult.data[i].length > maxl) {
+                maxl = PlotResult.data[i].length;
+                maxi = i;
             }
         }
-        return plotResult.data[c].data
+        var levelIndexes = _.range(PlotResult.data[maxi].data.length - 1);
+        return levelIndexes;
+
     },
-    points: function(pressureLevel) {
-        var stats = pressureLevel[5];
-        if (stats === undefined) {
+    points: function(levelIndex) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
+        if (PlotResult.data === undefined || PlotResult.length == 0) {
+            return;
+        }
+        if (getPlotType() != PlotTypes.profile) {
+            return;
+        }
+
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length == 0) {
+            return;
+        }
+        var maxl = 0;
+        var maxi =0;
+        for (var i = 0; i < PlotResult.data.length; i++) {
+            if (PlotResult.data[i].length > maxl) {
+                maxl = PlotResult.data[i].length;
+                maxi = i;
+            }
+        }
+        // i is the one that has the most levels
+        if (PlotResult.data[maxi].data[levelIndex][1] === undefined) {
             return "";
         }
-        var mb = pressureLevel[1];
-        var val = pressureLevel[0];
-        var stde = stats.stde_betsy;
-        var mean = stats.d_mean;
-        var n = stats.n_good;
-        var lag1 = stats.lag1;
-        return "<td>" + mb * -1 + "</td>" +
-            "<td>" + val + "</td>" +
-            "<td>" + stde + "</td>" +
-            "<td>" + mean + "</td>" +
-            "<td>" + n + "</td>" +
-            "<td>" + lag1 + "</td>";
+        var line = "<td>" + PlotResult.data[maxi].data[levelIndex][1] + "</td>";
+        var settings = Settings.findOne({},{fields:{NullFillString:1}});
+        if (settings === undefined) {
+            return false;
+        }
+        var fillStr = settings.NullFillString;
+        var curveNums = curves.length;
+        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
+            if (PlotResult.data[curveIndex].data[levelIndex]) {
+                var val = PlotResult.data[curveIndex].data[levelIndex][1] !== undefined ? (Number(PlotResult.data[curveIndex].data[levelIndex][0])).toPrecision(4) : fillStr;
+                line += "<td>" + val + "</td>";
+            }
+        }
+        return line;
     }
 });
 
@@ -71,12 +136,12 @@ Template.textProfileOutput.events({
         }
         data.push(clabels);
         //var dataSet = Session.get('dataset');
-        var curveNums = plotResult.data.length;
-        var dataRows = _.range(plotResult.data[0].data.length - 1);
+        var curveNums = PlotResult.data.length;
+        var dataRows = _.range(PlotResult.data[0].data.length - 1);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment(plotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment(PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = plotResult.data[curveIndex].data[rowIndex][1] !== null?(plotResult.data[curveIndex].data[rowIndex][1]).toPrecision(4):fillStr;
+                var pdata = PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);
