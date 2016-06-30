@@ -51,9 +51,9 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+   // if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-    }
+  // }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -76,6 +76,8 @@ curveParams = function () {
                 displayGroup: 1
             }
         );
+
+
         CurveParams.insert(
             {
                 name: 'model',
@@ -83,9 +85,9 @@ curveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
+                dependentNames: ["region", "forecast length"],
                 controlButtonCovered: true,
-                //default: 'HRRR',
-                default:Object.keys(modelOptionsMap)[0],
+                default: 'HRRR',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -430,7 +432,7 @@ Meteor.startup(function () {
     var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    var myModels = [];
+   // var myModels = [];
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
 
@@ -440,7 +442,7 @@ Meteor.startup(function () {
 
     try {
         //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model";
+        var statement = "select model,model_value,regions_name from regions_per_model";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -452,25 +454,16 @@ Meteor.startup(function () {
                 Models.remove({});
                 RegionsPerModel.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var name = rows[i].model.trim();
                     var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
                     var regions_name = rows[i].regions_name;
                     var model_value = rows[i].model_value.trim();
-                    //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
-                    var regionMapping = "metar_v2";
-                    var valueMapping ;
                     var valueList = [];
                     valueList.push(model_value);
                     modelOptionsMap[model] = valueList;
-                    myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
-                    //Models.insert({name: model});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
-
+                  //  myModels.push(model);
+                    Models.insert({name: model,valueMapping:model_value});
 
                     var regionsArr = regions_name.split(',');
-                   // RegionsPerModel.insert({model: model, regions: regionsArr});
                     regionModelOptionsMap[model] = regionsArr;
 
                 }
@@ -481,13 +474,6 @@ Meteor.startup(function () {
     } catch (err) {
         console.log(err.message);
     }
-
-
-
-
-
-
-
 
 
 
