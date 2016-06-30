@@ -3,7 +3,7 @@
         <button id="text_export" type="button" class="export" style="display:none">Export</button>
         <br/>
             {{#each curves}}
-                {{curveText}}
+                <h5>{{curveText}}</h5>
             {{/each}}
         <table class="table table-condensed table-striped table-bordered">
             <thead>
@@ -19,7 +19,7 @@
             <tbody>
             {{#each curves}}
                 <tr>
-                    {{{stats}}}
+                    {{{stats this}}}
                 </tr>
             {{/each}}
             </tbody>
@@ -36,7 +36,7 @@
             <tbody>
                 {{#each dataRows}}
                     <tr>
-                        {{points this}}
+                        {{{points this}}}
                     </tr>
                 {{/each}}
             </tbody>

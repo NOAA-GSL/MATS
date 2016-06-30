@@ -4,42 +4,21 @@
         <br/>
             {{#each curves}}
                 <h5>{{curveText}}</h5>
-            {{/each}}
-        <table class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                <th>label</th>
-                <th>mean</th>
-                <th>minimum</th>
-                <th>maximum</th>
-                <th>standard deviation</th>
-                <th>standard error</th>
-            </tr>
-            </thead>
-            <tbody>
-            {{#each curves}}
-                <tr>
-                    {{{stats this}}}
-                </tr>
-            {{/each}}
-            </tbody>
-        </table>
-        <table class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                <th>time</th>
-                {{#each curves}}
-                    <th>{{curveLabel this}}</th>
-                {{/each}}
-            </tr>
-            </thead>
-            <tbody>
-                {{#each dataRows}}
+                <table class="table table-condensed table-striped table-bordered">
+                    <thead>
                     <tr>
-                        {{{points this}}}
+                        <th>xaxis</th>
+                        <th>yaxis</th>
                     </tr>
-                {{/each}}
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        {{#each dataRows this}}
+                            <tr>
+                                {{{points .. this}}}
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            {{/each}}
     </div>
 </template>

@@ -169,6 +169,8 @@ Template.graph.events({
         document.getElementById("graphView").style.display = "block";
         document.getElementById("textSeriesView").style.display = "none";
         document.getElementById("textProfileView").style.display = "none";
+        document.getElementById("textScatter2dView").style.display = "none";
+
         var graphView = document.getElementById('graphView');
         Blaze.render(Template.graph,graphView);
     },
@@ -182,17 +184,17 @@ Template.graph.events({
             case PlotTypes.timeSeries:
                 document.getElementById("textSeriesView").style.display = "block";
                 document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dOutput").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case PlotTypes.profile:
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "block";
-                document.getElementById("textScatter2dOutput").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case PlotTypes.scatter2d:
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dOutput").style.display = "block";
+                document.getElementById("textScatter2dView").style.display = "block";
                 break;
             default:
                 console.log("Error: no plot type detected");
