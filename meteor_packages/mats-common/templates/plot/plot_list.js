@@ -252,9 +252,9 @@ Template.plotList.events({
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    plotResult = result;
+                    //plotResult = result;
                     Session.set('graphFunction', graphFunction);
-                    eval (graphFunction)(plotResult.data, plotResult.options, Session.get('Curves'));
+                    eval (graphFunction)(result, Session.get('Curves'));
 
                     document.getElementById("plotButton").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
