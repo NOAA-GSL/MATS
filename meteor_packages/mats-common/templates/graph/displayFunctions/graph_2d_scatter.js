@@ -1,12 +1,10 @@
-graph2dScatter = function(dataset, options) {
+graph2dScatter = function(result) {
+    var dataset = result.data;
+    var options = result.options;
     var meanAnnotation ="";
     for (var i=0;i<dataset.length;i++) {
-        console.log("mean i=" + i);
-
         meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].mean + " </div>";
     }
-
-
     var placeholder = $("#placeholder");
 
         // bind to the pan, zoom, and redraw buttons
