@@ -61,6 +61,9 @@ curveParams = function () {
         var month = date.getMonth();
         var dstr = month + '/' + day + '/' + yr;
         var optionsMap = {};
+
+
+
         CurveParams.insert(
             {
                 name: 'label',
@@ -76,6 +79,8 @@ curveParams = function () {
                 displayGroup: 1
             }
         );
+
+
 
 
         CurveParams.insert(
@@ -223,13 +228,15 @@ curveParams = function () {
 
 
 
-        optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
+       // optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
+      //  optionsMap = {'All':[""],0:[0],6:[6],12:[12],18:[18]};
         CurveParams.insert(
             {
                 name: 'valid time',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+              //  optionsMap:optionsMap,
+             //   options:Object.keys(optionsMap),   // convenience
+                options:['All',0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
                 selected: 'All',
                 controlButtonCovered: true,
                 unique: false,
@@ -297,11 +304,11 @@ savedCurveParams = function () {
     }
 };
 
-settings = function () {
+/*settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
-    if (Settings.find().count() == 0) {
+  //  if (Settings.find().count() == 0) {
     //    debugger;
         Settings.insert({
             LabelPrefix: "C-",
@@ -313,6 +320,31 @@ settings = function () {
         });
     }
 };
+*/
+
+settings = function () {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            var resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
+        //Settings.remove({});
+    }
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        //if (Settings.find().count() == 0) {
+        Settings.insert({
+            LabelPrefix: "C-",
+            Title: "Upper Air",
+            LineWidth: 3.5,
+            NullFillString: "---",
+            resetFromCode: resetFromCode
+        });
+    }
+};
+
+
+
 
 colorScheme = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -451,8 +483,7 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                Models.remove({});
-                RegionsPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions_name = rows[i].regions_name;
@@ -460,9 +491,6 @@ Meteor.startup(function () {
                     var valueList = [];
                     valueList.push(model_value);
                     modelOptionsMap[model] = valueList;
-                  //  myModels.push(model);
-                    Models.insert({name: model,valueMapping:model_value});
-
                     var regionsArr = regions_name.split(',');
                     regionModelOptionsMap[model] = regionsArr;
 
@@ -488,12 +516,11 @@ Meteor.startup(function () {
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                FcstLensPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
                     var forecastLengthArr = forecastLengths.split(',');
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
                     forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
