@@ -6,7 +6,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     var error = "";
     var N0 = [];
     var N_times = [];
-
+    var cTime=[] ;
     sumPool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -66,9 +66,11 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                     var this_N_times = N_times[d_idx];
                     if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
                         d.push([loopTime, null]);
+                      //  returntime.push()
 
                     }else{
                         d.push([loopTime, curveStat[d_idx]]);
+                        cTime.push(loopTime);
                     }
                 }
                 loopTime = loopTime + interval;
@@ -79,7 +81,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     });
     // wait for future to finish
     dFuture.wait();
-    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval};
+    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval,cTime:cTime};
 };
 
 dataSeriesZoom = function(plotParams, plotFunction) {
@@ -174,10 +176,9 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        //var validTimeStr = curve['valid hrs'];
+
         var validTimeStr = curve['valid time'];
-        var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        var validTime = validTimeOptionsMap[validTimeStr][0];
+
         var averageStr = curve['average'];
         var averageOptionsMap = CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -219,11 +220,23 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
+
+
+            console.log("validTimeStr=" + validTimeStr );
+            validTime =" ";
+            if (validTimeStr != "All"){
+                validTime =" and  m0.hour IN("+validTimeStr+")"
+            }
+            console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
+
+
 
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
+            ctime = queryResult.cTime;
+            console.log("d="+d);
             interval=queryResult.interval;
             if (d[0] === undefined) {
                 error = "No data returned";
@@ -310,6 +323,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             mean:  label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
+            ctime: ctime,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false},
             interval: interval,
@@ -330,16 +344,37 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             if (this_interval > matchInterval) matchInterval = this_interval;
         }
 
+        var timeIntersection = dataset[0].ctime;
+        for (var ci = 1; ci < numCurves; ci++) {
+            var this_time = dataset[ci].ctime;
+            timeIntersection = _.intersection(this_time, timeIntersection);
+           // dataset[ci].data = [];
+        }
+        console.log("timeIntersection="+timeIntersection);
+        console.log("weixue0 ="+ dataset[0].data[0][1]);
+        console.log("weixue10 ="+ dataset[1].data);
+        console.log("weixue1 ="+ dataset[1].data[0][1]);
+
         for (var ci = 0; ci < numCurves; ci++) {
             var new_curve_d=[];
-            var curveTime = dataset[ci].data.map(function(value,index) { return value[0]; });
+           // var curveTime = dataset[ci].data.map(function(value,index) { return value[0]; });
             for (var xtime =dataset[ci].xmin; xtime<dataset[ci].xmax; xtime=xtime+matchInterval){
-                var myIndex = curveTime.indexOf(xtime);
+             //   var myIndex = curveTime.indexOf(xtime);
+                var ctime = dataset[ci].ctime;
+                var myIndex = timeIntersection.indexOf(xtime);
+                var myIndex2 = ctime.indexOf(xtime);
+               console.log("ci="+ci+" xtime="+xtime+" myIndex="+myIndex+" myIndex2="+myIndex2);
+              //  console.log("xtime="+ xtime);
+              //  if(myIndex>=0 &&  dataset[ci].data[myIndex][1]!=null) {
                 if(myIndex>=0) {
-                    new_curve_d.push([xtime, dataset[ci].data[myIndex][1]]);
+                 //   console.log("ci="+ci+" myIndex="+myIndex+" xtime="+xtime);
+                    console.log("xtime="+xtime+" d="+dataset[ci].data[myIndex2][1]);
+                    new_curve_d.push([xtime, dataset[ci].data[myIndex2][1]]);
                 }
             }
+            dataset[ci].data = [];
             dataset[ci].data= new_curve_d;
+            console.log("ci="+ci+" data="+ dataset[ci].data );
         }
     }
     // generate y-axis
