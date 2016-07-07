@@ -1,9 +1,9 @@
 graph2dScatter = function(result) {
     var dataset = result.data;
     var options = result.options;
-    var meanAnnotation ="";
+    var cLabelAnnotation ="";
     for (var i=0;i<dataset.length;i++) {
-        meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].mean + " </div>";
+        cLabelAnnotation = cLabelAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].cLabel + " </div>";
     }
     var placeholder = $("#placeholder");
 
@@ -43,8 +43,8 @@ graph2dScatter = function(result) {
         $("#refresh-plot").click(function (event) {
             event.preventDefault();
             plot = $.plot(placeholder, dataset, options);
-           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
-            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + cLabelAnnotation + "</div>");
+            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + cLabelAnnotation + "</div>");
 
         });
 
@@ -66,8 +66,8 @@ graph2dScatter = function(result) {
                 }
             }
             plot = $.plot(placeholder, dataset, options);
-           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
-            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + cLabelAnnotation + "</div>");
+            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + cLabelAnnotation + "</div>");
 
         });
 
@@ -87,8 +87,8 @@ graph2dScatter = function(result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
-        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + meanAnnotation + "</div>");
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + cLabelAnnotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + cLabelAnnotation + "</div>");
 
     });
     var normalizeYAxis = function (ranges) {
@@ -110,7 +110,7 @@ graph2dScatter = function(result) {
     var drawGraph = function(ranges) {
         var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
         plot = $.plot(placeholder, dataset, zOptions);
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + cLabelAnnotation + "</div>");
     };
 
     // selection zooming
@@ -125,7 +125,7 @@ graph2dScatter = function(result) {
     // we essentially create a range that is the size of the max data, then do what the zoom (plotSelected) would do
     // which causes the normalization of the axes.
     var plot = $.plot(placeholder, dataset, options);
-    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + meanAnnotation + "</div>");
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + cLabelAnnotation + "</div>");
 
     // hide the spinner
     document.getElementById("spinner").style.display="none";

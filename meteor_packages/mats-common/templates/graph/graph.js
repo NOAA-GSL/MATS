@@ -122,6 +122,8 @@ Template.graph.events({
         document.getElementById('plotList').style.display='block';
         document.getElementById('curveList').style.display='block';
         document.getElementById('plotType').style.display='block';
+        document.getElementById("scatter2d").style.display = "block";
+
         return false;
     },
     'click .new': function() {

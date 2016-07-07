@@ -181,8 +181,9 @@ mean = function (arr)
         if (arr[i] == ""){}
         else if (!isNum(arr[i]))
         {
-            alert(arr[i] + " is not number!");
-            return;
+            //alert(arr[i] + " is not number!");
+            console.log("Error: value at position: " + i + " is not number! Mean Calculation failed!" );
+            return 0;
         }
         else
         {
@@ -202,7 +203,8 @@ variance = function (arr)
         if (arr[i] == ""){}
         else if (!isNum(arr[i]))
         {
-            alert(arr[i] + " is not number, Variance Calculation failed!");
+            //alert(arr[i] + " is not number, Variance Calculation failed!");
+            console.log ("value at position " + i + " is not number, Variance Calculation failed!");
             return 0;
         }
         else
@@ -345,6 +347,10 @@ removeDiffs = function () {
 // (used after adding or removing a curve while the show diffs box is checked)
 checkDiffs = function () {
     var curves = Session.get('Curves');
+    if (getPlotType() == PlotTypes.scatter2d) {
+        // scatter plots have no concept of difference curves.
+        return;
+    }
     var plotFormat = getPlotFormat();
     if (curves.length > 1) {
         if (plotFormat !== PlotFormats.none) {
@@ -355,6 +361,7 @@ checkDiffs = function () {
         }
     }
 };
+
 
 // determine which plottype radio button is checked
 getPlotType = function () {
@@ -371,6 +378,18 @@ getPlotType = function () {
 getPlotFormat = function() {
     var buttons = document.getElementsByName('plotFormat');
     var optionsMap = PlotParams.findOne({name:'plotFormat'}).optionsMap;
+    for (var i = 0, len = buttons.length; i < len; i++) {
+        if (buttons[i].checked) {
+            return _.invert(optionsMap)[buttons[i].value];
+        }
+    }
+    return "";  // error condition actually - shouldn't ever happen
+};
+
+
+getBestFit = function() {
+    var buttons = document.getElementsByName('scatter2d-best-fit');
+    var optionsMap = PlotParams.findOne({name:'bestFit'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
             return _.invert(optionsMap)[buttons[i].value];

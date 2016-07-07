@@ -2,18 +2,60 @@
     <div id={{plotType}} class="container-fluid" style="display:{{displayScatter2d}};">
         <span style="font-size:large; font-weight: bold;">{{title}}&nbsp;&nbsp;</span>
         {{#each scatter2dParams}}
+            <h4>{{name this}}</h4>
             {{#each scatter2dOptions}}
-                <input class="data-input radio-group" type=radio name="{{name ..}}" id="{{id ..}}" value="{{this}}" {{isDefault ..}}/>
-                <label for="{{id ..}}">{{this ..}}</label>
+                <input class="data-input {{classname ..}}-radio-group" type=radio name="{{name ..}}" id="{{id ..}}" value="{{this}}" {{isDefault ..}}/>
+                <label for="{{id ..}}">{{label this ..}}</label>
             {{/each}}
-            <div class="btn-toolbar btn-group btn-xs" role="toolbar">
-                <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to Axis</button>
-            </div>
-            <div id="scatter2d-axis-curve">
-                <span id="scatter2d-xaxis-curve" style="color:red" class="fa fa-asterisk">XAXIS NOT YET APPLIED</span>
-                <span>&nbsp;</span>
-                <span id="scatter2d-yaxis-curve" style="color:red" class="fa fa-asterisk">YAXIS NOT YET APPLIED</span>
-            </div>
+            {{#if isAxis this}}
+                <div class="btn-toolbar btn-group btn-xs" role="toolbar">
+                    <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to {{axis ..}}</button>
+                    <button type="button" name="scatter-help" id="scatter-help" class="btn btn-info scatter-help fa fa-question">&nbsp;&nbsp;Scatter Help</button>
+                </div>
+                <div id="scatter2d-axis-curve">
+                    <span id="scatter2d-xaxis-curve" style="color:red" class="fa fa-asterisk">XAXIS NOT YET APPLIED</span>
+                    <span>&nbsp;</span>
+                    <span id="scatter2d-yaxis-curve" style="color:red" class="fa fa-asterisk">YAXIS NOT YET APPLIED</span>
+                </div>
+            {{/if}}
         {{/each}}
     </div>
+    <div id="scatterHelpModal" class="modal" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Scatter Help</h4>
+                </div>
+                    <div class="modal-body">
+                        <div>
+                            <h3>Best Fit curves are derived by regression.js algorithms. Regression is a javascript library courtesy of Tom Alexander <a href="https://github.com/Tom-Alexander/regression-js" target="_blank">Regression JS</a></h3>
+                            <p><span>regression.js is a javascript library containing a collection of least squares fitting methods for finding a trend in a set of data. It currently contains methods for linear, exponential, logarithmic, power and polynomial trends.(Polynomial currently excluded)</span></p>
+                            <h1 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Usage</b></span></h1>
+                            <p><span>Most regressions require only two parameters - the regression method (linear, exponential, logarithmic, power or polynomial) and a data source. A third parameter can be used to define the degree of a polynomial when a polynomial regression is required.</span></p>
+                            <p><span>regression.js will return an object containing an equation array and a points array.</span></p>
+                            <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Linear regression</b></span></h2>
+                            <p><span>equation: </span><span>[gradient, y-intercept]</span><span> in the form y = mx + c</span></p>
+                            <p class="p4"><span>var data = [[0,1],[32, 67] .... [12, 79]];</span></p>
+                            <p class="p4"><span>var result = regression('linear', data);</span></p>
+                            <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Linear regression through the origin</b></span></h2>
+                            <p><span>equation: </span><span>[gradient]</span><span> in the form y = mx</span></p>
+                            <p class="p4"><span>var data = [[0,1],[32, 67] .... [12, 79]];</span></p>
+                            <p class="p4"><span>var result = regression('linearThroughOrigin', data);</span></p>
+                            <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Exponential regression</b></span></h2>
+                            <p><span>equation: </span><span>[a, b]</span><span> in the form y = ae^bx</span></p>
+                            <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Logarithmic regression</b></span></h2>
+                            <p><span>equation: </span><span>[a, b]</span><span> in the form y = a + b ln x</span></p>
+                            <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000"><span><b>Power law regression</b></span></h2>
+                            <p><span>equation: </span><span>[a, b]</span><span> in the form y = ax^b</span></p>
+                        </div>
+                        <div class="modal-footer btn-group">
+                            <button name="closeScatterHelp" type="button" class="close-scatter-help btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Close</button>
+                        </div>
+                    </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
 </template>

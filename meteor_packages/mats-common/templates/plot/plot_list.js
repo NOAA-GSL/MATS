@@ -59,11 +59,11 @@ Template.plotList.events({
         }
     },
 
-    // catch a click on a diff plotFormat readio button.
+    // catch a click on a diff plotFormat radio button.
     'click .data-input' : function() {
         var formats = Object.keys(PlotFormats);
         if ($.inArray(this.toString(),formats) !== -1) {
-            checkDiffs();
+                checkDiffs();
         }
     },
     'click .restore-from-private' : function() {
@@ -256,7 +256,8 @@ Template.plotList.events({
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
-
+                    document.getElementById("plotType").style.display = "none";
+                    document.getElementById("scatter2d").style.display = "none";
                     document.getElementById("plotButton").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
                     document.getElementById("plot-buttons-grp").style.display = "block";

@@ -12,15 +12,6 @@ Template.curveList.helpers({
     log: function() {
         console.log(this);
     },
-    diffsdisabled: function() {
-        if (Session.get('diffStatus') === undefined) {
-            return "";
-        }
-        if (Session.get('diffStatus') == PlotFormats.none){
-            return "";
-        }
-        return "disabled";
-    },
     averagesdisabled: function() {
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {

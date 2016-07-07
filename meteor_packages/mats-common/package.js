@@ -51,9 +51,12 @@ Package.onUse(function(api) {
   api.export("PlotTypes");
   api.export("PlotFormats");
   api.export("PlotActions");
+  api.export("BestFits");
   api.export("SiteMap");
 
   api.addFiles("lib/util.js", ['client','server']);
+  api.addFiles("lib/regression.js",['client','server']);
+  api.export("regression",['client','server']);
   api.addFiles("lib/error/error.js", ['client','server']);
   api.addFiles("templates/topnav/topNav.html", "client");
   api.addFiles("templates/spinner/spinner.html", "client");

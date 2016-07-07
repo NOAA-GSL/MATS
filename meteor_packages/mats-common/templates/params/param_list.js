@@ -67,12 +67,12 @@ Template.paramList.events({
             var paramElems = _.filter(elems, function (elem) {
                 return _.contains(curveNames, elem.name);
             });
-            // the following converts the PlotFormat NodeList to an actual array....
-            // the param element form does not contain the plotFormat radiogroup so we sort of add it in here manually
-            var plotFormatElems = [].slice.call(document.getElementsByName('plotFormat'));
-            paramElems = paramElems.concat(plotFormatElems);
+            // add in the bestFit parameter if it is a scatter plot.
+            if (getPlotType() == PlotTypes.scatter2d) {
+                var bestFitParams = [].slice.call(document.getElementsByName('scatter2d-best-fit'));
+                paramElems = paramElems.concat(bestFitParams);
+            }
             var l = paramElems.length;
-
             if (Session.get('editMode')) {
                 Session.set('editMode', '');
                 var labelId = 'label-' + InputTypes.textInput;
@@ -138,9 +138,8 @@ Template.paramList.events({
             Session.set('Curves', curves);
             setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
             checkDiffs();
-        return false;
+            return false;
     }
-
 });
 
 Template.paramList.onRendered(function(){

@@ -16,7 +16,7 @@ scatter2dParams = function() {
     if (Scatter2dParams.find().count() == 0) {
         Scatter2dParams.insert(
             {
-                name: 'scatter2d',
+                name: 'scatter2d axis',
                 type: InputTypes.radioGroup,
                 options: ['xaxis', 'yaxis'],
                 selected: 'matching',
@@ -24,6 +24,29 @@ scatter2dParams = function() {
                 default: 'xaxis',
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+
+        var bestFits = {};
+        bestFits[BestFits.none] = "None";
+        bestFits[BestFits.linear] = "Linear regression";
+        bestFits[BestFits.linearThroughOrigin] = 'Linear regression  through origin';
+        bestFits[BestFits.exponential] = 'Exponential';
+        bestFits[BestFits.logarithmic] = 'Logarithmic';
+        bestFits[BestFits.power] = 'Power Law';
+
+        Scatter2dParams.insert(
+            {
+                name: 'scatter2d best fit',
+                type: InputTypes.radioGroup,
+                optionsMap: bestFits,
+                options: Object.keys(bestFits),
+                selected: BestFits.none,
+                controlButtonCovered: true,
+                default: BestFits.none,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
             });

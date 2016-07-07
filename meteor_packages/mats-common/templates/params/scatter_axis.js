@@ -1,3 +1,13 @@
+var getAxisText = function(){
+    var text = document.getElementById('controlButton-label-value').textContent + ":" +
+        document.getElementById('controlButton-data source-value').textContent + ":" +
+        document.getElementById('controlButton-region-value').textContent + ":" +
+        document.getElementById('controlButton-variable-value').textContent + ":" +
+        document.getElementById('controlButton-discriminator-value').textContent + ":" +
+        document.getElementById('controlButton-forecast length-value').textContent;
+    return text;
+};
+
 Template.scatter2d.helpers({
     title: function() {
         return "2d Scatter Plot Axis Selection"
@@ -12,7 +22,13 @@ Template.scatter2d.helpers({
     },
     name: function(param) {
         //console.log("name: " + param.name);
-        return param.name;
+        var name = param.name.replace(/ /g,'-');
+        return name;
+    },
+    classname: function(param) {
+        //console.log("name: " + param.name);
+        var cname = param.name.replace(/ /g,'-');
+        return cname;
     },
     default: function(param) {
         //console.log("default: " + param.default);
@@ -24,7 +40,9 @@ Template.scatter2d.helpers({
     },
     id: function(param) {
         //console.log("type: " + param.type);
-        return param.name + "-" + param.type + "-" + this;
+        var id = param.name + "-" + param.type + "-" + this;
+        id = id.replace(/ /g,'-');
+        return id;
     },
     plotType : function() {
       return PlotTypes.scatter2d;  
@@ -37,6 +55,9 @@ Template.scatter2d.helpers({
             return "";
         }
     },
+    isAxis: function(param) {
+      return param.name === 'scatter2d axis';
+    },
     displayScatter2d: function() {
         if (getPlotType() == PlotTypes.scatter2d) {
             return "block";
@@ -44,14 +65,32 @@ Template.scatter2d.helpers({
             return "none";
         }
     },
+    label: function(param, parent) {
+        if (parent.name === "scatter2d best fit") {
+            return parent.optionsMap[this];
+        } else {
+            return this;
+        }
+    },
     log: function() {
         console.log(this);
+    },
+    axis: function(param) {
+        var axis = Session.get('axis');
+        if (axis === undefined) {
+            if (param) {
+                return param.default;
+            } else {
+                return 'xaxis';
+            }
+        }
+        return axis;
     }
 });
 
 Template.scatter2d.events({
     'click .apply-params-to-axis': function(event) {
-        var axis = document.querySelector('input[name="scatter2d"]:checked').value;
+        var axis = document.querySelector('input[name="scatter2d-axis"]:checked').value;
         var elems = document.getElementsByClassName("data-input");
         var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
         var curveNames = _.pluck(curveParams, "name");
@@ -81,20 +120,23 @@ Template.scatter2d.events({
         while( span.firstChild ) {
             span.removeChild( span.firstChild );
         }
-        span.appendChild( document.createTextNode(axis + " params applied") );
+        span.appendChild( document.createTextNode(axis + " " + getAxisText()) );
         span.style.color='green';
         span.className = "";
         span.className += "fa ";
         span.className += "fa-check";
         // select the other radio button
         if (axis === "xaxis") {
-            $("#scatter2d-radioGroup-yaxis").prop("checked",true);
+            $("#scatter2d-axis-radioGroup-yaxis").prop("checked",true);
+            Session.set('axis','yaxis');
         } else {
-            $("#scatter2d-radioGroup-xaxis").prop("checked",true);
+            $("#scatter2d-axis-radioGroup-xaxis").prop("checked",true);
+            Session.set('axis','xaxis');
         }
     },
-    'change .radio-group' : function(event) {
+    'change .scatter2d-axis-radio-group' : function(event) {
         var newAxis = event.currentTarget.value;
+        Session.set('axis',newAxis);
         var elems = document.getElementsByClassName("data-input");
         var axis_elems = _.filter(elems, function (elem) {
             return elem.name.indexOf(newAxis) > -1;
@@ -119,5 +161,8 @@ Template.scatter2d.events({
             }
             telem.dispatchEvent(new CustomEvent("axisRefresh"));
         }
+    },
+    'click .scatter-help' : function() {
+        $("#scatterHelpModal").modal('show');
     }
 });

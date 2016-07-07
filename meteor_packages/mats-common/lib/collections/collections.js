@@ -57,6 +57,15 @@ PlotActions = {
     unmatched: "unmatched"
 };
 
+BestFits = {
+    none:'none',
+    linear:'linear',
+    linearThroughOrigin:'linearThroughOrigin',
+    exponential:'exponential',
+    logarithmic:'logarithmic',
+    power:'power'
+};
+
 getCurves = function() {
     return Session.get('Curves');
 };

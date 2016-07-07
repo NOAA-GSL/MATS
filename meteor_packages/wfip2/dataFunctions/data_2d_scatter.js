@@ -1,5 +1,13 @@
-// use future to wait for the query callback to complete
-var secsConvert = function (dStr) {
+var bestFitSortFunction = function (a, b) {
+    if (a[0] === b[0]) {
+        return 0;
+    }
+    else {
+        return (a[0] < b[0]) ? -1 : 1;
+    }
+};
+
+    var secsConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
         var now = new Date();
         var date = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
@@ -160,7 +168,6 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -170,7 +177,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
     var axisLabelList = curveKeys.filter(function (key) {
         return key.indexOf('axis-label') === 1;
     });
-
+    var bf = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var axisData = {};
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
@@ -207,11 +214,9 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             var variableStat = variableStr + ":";
             curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
             var xmax;
-            var ymax;
             var xmin;
-            var ymin;
             var d = [];
-            if (diffFrom == null) {
+                var statement = '';
                 // this is a database driven curve, not a difference curve
                 if (model.includes("recs")) {
                     statement = "select valid_utc as avtime,z," + variable + " as value, sites_siteid " +
@@ -258,7 +263,6 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
                     z_time = queryResult.value_z_time;
                     site_z_time = queryResult.site_z_time;
                 }
-            } // end for axis
         }
         // should now have two data sets, one for x and one for y
         // need to make sure the x components match (normalize data) and then use the y
@@ -331,8 +335,32 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true},
+            cLabel: ""
         };
         dataset.push(options);
+
+        if (curve['scatter2d-best-fit'] && curve['scatter2d-best-fit'] !== BestFits.none) {
+            var  regressionResult =  regression(curve['scatter2d-best-fit'], normalizedAxisData);
+            console.log("regressionResult is: ", regressionResult);
+            var  regressionData =  regressionResult.points;
+            regressionData.sort(bestFitSortFunction);
+
+            var  regressionEquation =  regressionResult.string;
+            var bfOptions = {
+                yaxis: options.yaxis,
+                label: options.label + "-best fit " + curve['scatter2d-best-fit'] ,
+                //color: "rgb(0,0,0)",
+                color: options.color,
+                data: regressionData,
+                points: {symbol: options.points.symbol, fillColor: color, show: false},
+                lines: {
+                    show: true,
+                    fill: false
+                },
+                cLabel: options.label + " - Best Fit: " + curve['scatter2d-best-fit'] + " fn: " + regressionEquation
+            };
+            bf.push(bfOptions);
+        }
     }
     // generate x-axis
     var xaxes = [];
@@ -427,6 +455,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             }
         }
     };
+    dataset = dataset.concat(bf);
     var result = {
         error: error,
         data: dataset,
