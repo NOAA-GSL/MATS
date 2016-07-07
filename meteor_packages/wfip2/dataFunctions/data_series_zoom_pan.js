@@ -344,7 +344,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             ws_z_time: ws_z_time,
             site_z_time: site_z_time,
             color: color,
-            mean: label + "- mean = " + mean.toPrecision(4),
+            annotation: label + "- mean = " + mean.toPrecision(4),
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
@@ -629,7 +629,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     // need to find the minimum and maximum x value for making the zero curve
 
 
-    //dataset.push(dataZero = {color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+    dataset.push(dataZero = {annotation:"", color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
 
     var result = {
         error: error,
