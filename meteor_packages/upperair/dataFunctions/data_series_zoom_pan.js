@@ -305,7 +305,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         for (var di = 0; di < dataLength; di++) {
         for (var ci = 0; ci < numCurves; ci++) {
                 /* it is possible to have a curve that does not have any data at the front */
-            console.log("di="+di+"  ci="+ci);
+           // console.log("di="+di+"  ci="+ci);
                 if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
                     matchNullIndexes.push(di);
                     break;

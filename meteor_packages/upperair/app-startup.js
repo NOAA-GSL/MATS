@@ -524,8 +524,6 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                Models.remove({});
-                RegionsPerModel.remove({});
 
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
@@ -543,9 +541,9 @@ Meteor.startup(function () {
                     tablevalueList.push(regionMapping);
                     modelTableMap[model] = tablevalueList;
                     myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping});
+
                     var regionArr = regions.split(',');
-                    RegionsPerModel.insert({model: model, regions: regionArr});
+
                     modelRegionNumberMap[model] = regionArr;
                 }
             }
@@ -553,7 +551,7 @@ Meteor.startup(function () {
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
 
@@ -570,12 +568,11 @@ Meteor.startup(function () {
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                FcstLensPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
                     var forecastLengthArr = forecastLengths.split(',');
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
                     forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
@@ -604,7 +601,6 @@ Meteor.startup(function () {
                     var description = rows[i].description;
                     var valueList = [];
                     valueList.push(regionNumber);
-                    //regionOptionsMap[description] = valueList;
                     regionNumberDescriptionMapping[regionNumber] = description;
                     RegionDescriptions.insert({regionMapTable: regionNumber,  description: description});
                 }
