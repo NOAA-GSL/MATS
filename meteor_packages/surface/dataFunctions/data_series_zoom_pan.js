@@ -51,9 +51,9 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             console.log("curvetime=" + curveTime);
             console.log("interval=" + interval);
 
-            if (averageStr != "None") {
+          //  if (averageStr != "None") {
                 xmin = Number(rows[0].avtime)*1000;
-            }
+         //   }
             var loopTime =xmin;
 
             while (loopTime < xmax+1) {
