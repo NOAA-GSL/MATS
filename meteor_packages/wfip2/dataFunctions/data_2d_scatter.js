@@ -335,7 +335,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true},
-            cLabel: ""
+            annotation: ""
         };
         dataset.push(options);
 
@@ -357,7 +357,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
                     show: true,
                     fill: false
                 },
-                cLabel: options.label + " - Best Fit: " + curve['scatter2d-best-fit'] + " fn: " + regressionEquation
+                annotation: options.label + " - Best Fit: " + curve['scatter2d-best-fit'] + " fn: " + regressionEquation
             };
             bf.push(bfOptions);
         }
