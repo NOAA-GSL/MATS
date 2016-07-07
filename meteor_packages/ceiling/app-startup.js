@@ -1,5 +1,7 @@
 var modelOptionsMap ={};
 var regionOptionsMap ={};
+var forecastLengthOptionsMap = {};
+var regionModelOptionsMap = {};
 
 plotParams = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -49,9 +51,9 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+   // if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-    }
+  // }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -59,6 +61,9 @@ curveParams = function () {
         var month = date.getMonth();
         var dstr = month + '/' + day + '/' + yr;
         var optionsMap = {};
+
+
+
         CurveParams.insert(
             {
                 name: 'label',
@@ -74,6 +79,10 @@ curveParams = function () {
                 displayGroup: 1
             }
         );
+
+
+
+
         CurveParams.insert(
             {
                 name: 'model',
@@ -81,24 +90,28 @@ curveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
+                dependentNames: ["region", "forecast length"],
                 controlButtonCovered: true,
-                //default: 'HRRR',
-                default:Object.keys(modelOptionsMap)[0],
+                default: 'HRRR',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
             });
+
+
+
         CurveParams.insert(
             {
                 name: 'region',
                 type: InputTypes.select,
-                optionsMap:regionOptionsMap,
-                options:Object.keys(regionOptionsMap),   // convenience
+                optionsMap:regionModelOptionsMap,
+                options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                superiorName: 'model',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -106,31 +119,28 @@ curveParams = function () {
             });
 
         optionsMap = {
-            //'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat',
-            //    'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
 
             'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat,' +
             'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'
-            ],
 
-                'Bias (Model - RAOB)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                    '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'],
 
-                'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                    'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-                'model average': [
-                    '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                    '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                    'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0'
-                ],
-                'RAOB average': ['(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                    '(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                    'sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0']
+            'Bias (Model - RAOB)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat,'+'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+
+            'Nlow(metars<thresh,avg per hr)': ['avg(m0.yy+m0.ny+0.000)/1000 as stat,'+'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+
+            'Ntot(total metars,avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as stat,'+'count(m0.nn)/1000 as N0'],
+
+            'Ratio(Nlow/Ntot)': ['sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat,'+'count(m0.nn)/1000 as N0'],
+            'PODy (POD of ceil< thresh)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) as stat,count(m0.nn)/1000 as N0'],
+            'PODn (POD of ceil< thresh)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.yn) as stat,count(m0.nn)/1000 as N0'],
+            'FAR(False Alarm Ratio)':['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)  as stat,count(m0.nn)/1000 as N0'],
+            'N_in_avg(to nearest 100)':['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/100000  as stat,count(m0.nn)/1000 as N0'],
+            'ETS (Equitable Treat Score)':[' (sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))+0.00)/(sum(m0.yy+m0.ny+m0.yn) -(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))) as stat,'+
+            'count(m0.nn)/1000 as N0'],
+            'CSI(Critical Success Index)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)  as stat,count(m0.nn)/1000 as N0'],
+            'HSS(Heidke Skill Score)':['2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as stat,'+
+                'count(m0.nn)/1000 as N0'],
+
         };
 
         CurveParams.insert(
@@ -199,30 +209,34 @@ curveParams = function () {
                 displayGroup: 3
             });
 
-        optionsMap = {};
         CurveParams.insert(
             {
                 name: 'forecast length',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:forecastLengthOptionsMap,
+                options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                superiorName: 'model',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: '',
+                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
 
-        optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
+
+
+       // optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
+      //  optionsMap = {'All':[""],0:[0],6:[6],12:[12],18:[18]};
         CurveParams.insert(
             {
                 name: 'valid time',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+              //  optionsMap:optionsMap,
+             //   options:Object.keys(optionsMap),   // convenience
+                options:['All',0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
                 selected: 'All',
                 controlButtonCovered: true,
                 unique: false,
@@ -290,11 +304,11 @@ savedCurveParams = function () {
     }
 };
 
-settings = function () {
+/*settings = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
-    if (Settings.find().count() == 0) {
+  //  if (Settings.find().count() == 0) {
     //    debugger;
         Settings.insert({
             LabelPrefix: "C-",
@@ -306,6 +320,31 @@ settings = function () {
         });
     }
 };
+*/
+
+settings = function () {
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
+            var resetFromCode = Settings.findOne({}).resetFromCode;
+        } else {
+            resetFromCode = false;
+        }
+        //Settings.remove({});
+    }
+    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        //if (Settings.find().count() == 0) {
+        Settings.insert({
+            LabelPrefix: "C-",
+            Title: "Upper Air",
+            LineWidth: 3.5,
+            NullFillString: "---",
+            resetFromCode: resetFromCode
+        });
+    }
+};
+
+
+
 
 colorScheme = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -425,7 +464,7 @@ Meteor.startup(function () {
     var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    var myModels = [];
+   // var myModels = [];
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
 
@@ -435,7 +474,7 @@ Meteor.startup(function () {
 
     try {
         //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,regions,model_value,regions_name from regions_per_model";
+        var statement = "select model,model_value,regions_name from regions_per_model";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -444,32 +483,25 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                Models.remove({});
-                RegionsPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
-                    var name = rows[i].model.trim();
                     var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
+                    var regions_name = rows[i].regions_name;
                     var model_value = rows[i].model_value.trim();
-                    //var regionMapping = name.replace(model,"").replace(/[0-9]/g, "").replace(/^_/,"");
-                    var regionMapping = "metar_v2";
-                    var valueMapping ;
                     var valueList = [];
                     valueList.push(model_value);
                     modelOptionsMap[model] = valueList;
-                    myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
-                    //Models.insert({name: model});
-                    RegionsPerModel.insert({model: model, regions: regions.split(',')});
+                    var regionsArr = regions_name.split(',');
+                    regionModelOptionsMap[model] = regionsArr;
+
                 }
             }
             qFuture['return']();
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
-
 
 
 
@@ -484,53 +516,22 @@ Meteor.startup(function () {
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                FcstLensPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
-
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengths.split(',')});
-
+                    var forecastLengthArr = forecastLengths.split(',');
+                    forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
             qFuture['return']();
         }));
         qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
-    /*try {
-        var statement = "select id,description,short_name,table_name from region_descriptions;";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                RegionDescriptions.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
-                    var description = rows[i].description;
-                    var shortName = rows[i].short_name;
-                    var appTableName = rows[i].table_name;
-                    var valueList = [];
-                    valueList.push(appTableName);
 
-
-               regionOptionsMap[description] = valueList;
-
-                    RegionDescriptions.insert({regionNumber: regionNumber, shortName: shortName, description: description, appTableName: appTableName});
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
-    } catch (err) {
-        Console.log(err.message);
-    }*/
 
     try {
      var statement = "select id,description,short_name from region_descriptions;";

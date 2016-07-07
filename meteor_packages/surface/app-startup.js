@@ -1,5 +1,5 @@
 var modelOptionsMap ={};
-var regionOptionsMap ={};
+//var regionOptionsMap ={};
 var regionModelOptionsMap = {};
 var forecastLengthOptionsMap = {};
 
@@ -30,6 +30,9 @@ PlotParams.remove({});
                 displayPriority: 1,
                 displayGroup: 1
             });
+
+
+
 
         var plotFormats = {};
         plotFormats[PlotFormats.matching] = 'show matching diffs';
@@ -222,13 +225,12 @@ CurveParams.remove({});
                 displayGroup: 3
             });
 
-        optionsMap = {'All':[""],0:[' and m0.hour in (0)'],6:[6],12:[12],18:[18]};
+
         CurveParams.insert(
             {
                 name: 'valid time',
                 type: InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options:['All',0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
                 selected: 'ALL',
                 controlButtonCovered: true,
                 unique: false,
@@ -433,7 +435,7 @@ Meteor.startup(function () {
     var sumSettings = Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var modelSettings = Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
 
-    var myModels = [];
+
     sumPool = mysql.createPool(sumSettings);
     modelPool = mysql.createPool(modelSettings);
 
@@ -452,22 +454,17 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                Models.remove({});
-                RegionsPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
                     var regions = rows[i].regions;
                     var model_value = rows[i].model_value.trim();
-                    var regionMapping = "metar_v2";
-                    var valueMapping ;
+
                     var valueList = [];
                     valueList.push(model_value);
                     modelOptionsMap[model] = valueList;
-                    myModels.push(model);
-                    Models.insert({name: model, regionMapping: regionMapping,valueMapping:model_value});
-                    //Models.insert({name: model});
+
                     var regionsArr = regions.split(',');
-                    RegionsPerModel.insert({model: model, regions: regionsArr});
                     regionModelOptionsMap[model] = regionsArr;
                 }
             }
@@ -492,12 +489,11 @@ Meteor.startup(function () {
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
-                FcstLensPerModel.remove({});
+
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model;
                     var forecastLengths = rows[i].fcst_lens;
                     var forecastLengthArr = forecastLengths.split(',');
-                    FcstLensPerModel.insert({model: model, forecastLengths: forecastLengthArr});
                     forecastLengthOptionsMap[model] = forecastLengthArr;
                 }
             }
@@ -524,7 +520,6 @@ Meteor.startup(function () {
                     var regionMapTable = rows[i].regionMapTable;
                     var valueList = [];
                      valueList.push(regionMapTable);
-                     regionOptionsMap[description] = valueList;
                     RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
                 }
             }

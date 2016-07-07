@@ -199,7 +199,7 @@ curveParams = function () {
                 multiple: true,
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
-        
+
         optionsMap = {wind_speed:['ws'], wind_direction:['wd']};
         CurveParams.insert(
             {
@@ -302,7 +302,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 6
             });
 
         CurveParams.insert(
@@ -321,7 +321,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 12,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 6
             });
 
         CurveParams.insert(
@@ -338,7 +338,7 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 13,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 7
             });
     }
 };
@@ -604,19 +604,14 @@ Databases.remove({});
                 Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
+
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid = model_values[1];
-                    var regionMapping = "Areg";
-                    if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
-                        regionMapping = "reg";
-                    }
+
                     var valueList = [];
                     valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
-                    var tablevalueList = [];
-                    tablevalueList.push(table_name);
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
                 }
             }
@@ -691,7 +686,7 @@ Databases.remove({});
     }
 
     try {
-        //var statement = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE  TABLE_NAME = 'hrrr_wfip_discriminator';";
+
         var statement = "select * from discriminator_range;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -699,7 +694,8 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 //RangePerDescriptor.remove({});
                 for (var i = 0; i < rows.length; i++) {
@@ -727,7 +723,7 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows.length; i++) {
                      var model = rows[i].model;
@@ -750,7 +746,7 @@ Databases.remove({});
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {

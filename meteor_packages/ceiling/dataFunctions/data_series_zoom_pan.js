@@ -29,6 +29,8 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
 
+               //  console.log("row="+rowIndex+" secs="+avSeconds+" stat="+stat);
+
                 if(N0_loop> N0) N0_max=N0_loop;
                 if(N_times_loop> N_times) N_times_max=N_times_loop;
 
@@ -38,27 +40,33 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                 N_times.push(N_times_loop);
             }
 
-            if (averageStr != "None") {
+           // if (averageStr != "None") {
                 xmin = Number(rows[0].avtime)*1000;
-            }
+           // }
             var loopTime =xmin;
-
+            console.log("xmin="+xmin+" xmax="+xmax+" loopTime="+loopTime);
             while (loopTime < xmax+1) {
 
                 if(curveTime.indexOf(loopTime)<0){
+
                     d.push([loopTime, null]);
                 } else{
+                   // bill didn't any filter for ceiling
                     var d_idx = curveTime.indexOf(loopTime);
-                    var this_N0 = N0[d_idx];
-                    var this_N_times = N_times[d_idx];
-                    if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
-                        d.push([loopTime, null]);
+                    //var this_N0 = N0[d_idx];
+                    //var this_N_times = N_times[d_idx];
+                    //if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
+                     //   d.push([loopTime, null]);
 
-                    }else{
+                    //}else{
                         d.push([loopTime, curveStat[d_idx]]);
-                    }
+                   // }
+
+
                 }
                 loopTime = loopTime + interval;
+
+
             }
             // done waiting - have results
             dFuture['return']();
@@ -66,6 +74,8 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     });
     // wait for future to finish
     dFuture.wait();
+
+
     return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval};
 };
 
@@ -141,7 +151,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         console.log("curve="+ curve);
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name:'model'}).optionsMap[curve['model']][0];
-        var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
+        //var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
+        var region = curve['region'];
         var threshhold = CurveParams.findOne({name:'threshhold'}).optionsMap[curve['threshhold']][0];
         console.log("threshhold="+ threshhold);
         console.log("model="+model);
@@ -150,10 +161,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
-      //  var variableStr = curve['variable'];
-       // console.log("variableStr="+variableStr);
-       // var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-       // var variable = variableOptionsMap[variableStr];
+
         var statisticSelect = curve['statistic'];
         // formula depends on stats (rms vs bias), also variables like temperature and dew points need convert from f to c
         console.log("statisticSelect="+statisticSelect);
@@ -162,21 +170,12 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var statistic;
         statistic = statisticOptionsMap[statisticSelect][0];
         console.log("statistic="+statistic);
-       /* if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr == 'wind'  ) {
-                statistic = statisticOptionsMap[statisticSelect][2];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        }
-        console.log("variableStr2="+variableStr);
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);*/
-        //var validTimeStr = curve['valid hrs'];
+
         var validTimeStr = curve['valid time'];
-        console.log("validTimeStr="+ validTimeStr);
-        var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        var validTime = validTimeOptionsMap[validTimeStr][0];
+       // console.log("validTimeStr="+ validTimeStr);
+       // var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
+       // var validTime = validTimeOptionsMap[validTimeStr][0];
+
         var averageStr = curve['average'];
         var averageOptionsMap = CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -192,6 +191,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var xmin;
         var ymin;
         var interval;
+        interval = 1 * 3600*1000;
         if (averageStr == "None") {
             if (model.search('FIM')>=0){
                 interval = 12 * 3600*1000;
@@ -199,9 +199,16 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             else if (model.search('GFS')>=0){
                 interval = 6 * 3600*1000;
             }
+            else if (model.search('NAM')>=0){
+                interval = 6 * 3600*1000;
+            }
             else if (model.search('RR')>=0){
                 interval = 1 * 3600*1000;
             }
+            else if (model.search('RAP')>=0){
+                interval = 1 * 3600*1000;
+            }
+
         } else{
             var daycount = averageStr.replace("D","");
             interval = daycount*24*3600*1000;
@@ -209,35 +216,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
                 // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                ",avg(m0.valid_day+3600*m0.hour) as middle_secs"+
-                ",min(m0.valid_day+3600*m0.hour) as min_secs"+
-                ",max(m0.valid_day+3600*m0.hour) as max_secs,"+
-                "count(m0.hour)/1000 as N_times, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 "+
-                "{{validTime}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
 
-            //statement = statement.replace('{{average}}', average);
-            //statement = statement.replace('{{forecastLength}}', forecastLength);
-           // statement = statement.replace('{{fromSecs}}', fromSecs);
-            //statement = statement.replace('{{toSecs}}', toSecs);
-            //statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
-        //    statement = statement.replace('{{statistic}}', statistic);
-            //statement = statement.replace('{{validTime}}', validTime);
-
-
-           // select ceil(259200*floor(m0.time/259200)+259200/2) as avtime
-
-
-            //statement ="select ceil(3600*floor(m0.time/3600)) as avtime"+
             statement = "select {{average}} as avtime " +
                " ,min(m0.time) as min_secs"+
                ",max(m0.time) as max_secs"+
@@ -258,11 +237,20 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic);
+            console.log("validTimeStr=" + validTimeStr );
+            validTime =" ";
+            if (validTimeStr != "All"){
+               // validTime =" and floor((m0.time)%(24*3600)/3600) IN(0,3) "
+                validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
+            }
+            console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
 
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
+            console.log("d="+d);
+
             if (d[0] === undefined) {
                 error = "No data returned";
             } else {}
@@ -333,11 +321,20 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             variableStatSet[variableStat] = {index:curveIndex + 1, label:label};
         }*/
 
+        var mean =0 ;
+
+
+        for (var i = 0; i < d.length; i++) {
+            mean =   mean +d[i][1];
+        }
+        mean = mean/d.length;
+
         var options = {
            // yaxis: variableStatSet[variableStat].index,
             label: label,
             color: color,
             data: d,
+            mean:  label + "- mean = " + mean.toPrecision(4),
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false},
             interval: interval,
@@ -452,6 +449,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
     dataset.push(dataZero = {color:'black',points:{show:false},data:[[mxmin,0,"zero"],[mxmax,0,"zero"]]});
+
+   // console.log("data="+JSON.stringify(dataset));
     var result = {
         error: error,
         data: dataset,

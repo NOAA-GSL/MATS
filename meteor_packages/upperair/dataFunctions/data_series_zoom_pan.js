@@ -284,7 +284,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
         };
-
+        console.log("d="+d);
 
         dataset.push(pOptions);
         // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
@@ -296,12 +296,16 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
+    console.log("matching="+matching);
     if (matching) {
         var dataLength = dataset[0].data.length;
         var matchNullIndexes = [];
+
+        console.log("in matching");
         for (var di = 0; di < dataLength; di++) {
         for (var ci = 0; ci < numCurves; ci++) {
                 /* it is possible to have a curve that does not have any data at the front */
+            console.log("di="+di+"  ci="+ci);
                 if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
                     matchNullIndexes.push(di);
                     break;
