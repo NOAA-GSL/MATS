@@ -3,7 +3,7 @@ graphSeriesZoom = function(result) {
     var options = result.options;
     var meanAnnotation ="";
     for (var i=0;i<dataset.length;i++) {
-        meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].mean + " </div>";
+        meanAnnotation = meanAnnotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].annotation + " </div>";
     }
 
 

@@ -278,7 +278,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             yaxis: variableStatSet[variableStat].index,
             label: label,
            // mean: "<div style='color:"+ color+"'"+ label + "- mean = " + mean.toPrecision(4)+"</div>",
-            mean:  label + "- mean = " + mean.toPrecision(4),
+            annotation:  label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
@@ -402,7 +402,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+    dataset.push(dataZero = {color: 'black', points: {show: false},annotation:"", data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
     var result = {
         error: error,
         data: dataset,
