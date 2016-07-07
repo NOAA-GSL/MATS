@@ -25,7 +25,6 @@ SavedCredentials = new Meteor.Collection("SavedCredentials");
 RangePerDescriptor = new Meteor.Collection("RangePerDescriptor");
 SiteMap = new Meteor.Collection("SiteMap");
 
-
 InputTypes = {
     textInput : 'textInput',
     select : 'select',

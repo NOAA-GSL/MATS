@@ -252,7 +252,8 @@ Template.plotList.events({
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    //plotResult = result;
+                    PlotResult = jQuery.extend(true,{}, result);
+                    Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
 
