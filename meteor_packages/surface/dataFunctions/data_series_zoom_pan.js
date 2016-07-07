@@ -6,7 +6,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     var error = "";
     var N0 = [];
     var N_times = [];
-    var cTime=[] ;
+    var ctime=[] ;
     sumPool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -51,27 +51,27 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             console.log("curvetime=" + curveTime);
             console.log("interval=" + interval);
 
-            if (averageStr != "None") {
+          //  if (averageStr != "None") {
                 xmin = Number(rows[0].avtime)*1000;
-            }
+         //   }
             var loopTime =xmin;
 
             while (loopTime < xmax+1) {
 
                 if(curveTime.indexOf(loopTime)<0){
                     d.push([loopTime, null]);
-                    cTime.push(loopTime);
+                    ctime.push(loopTime);
                 } else{
                     var d_idx = curveTime.indexOf(loopTime);
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
                     if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
                         d.push([loopTime, null]);
-                        cTime.push(loopTime);
+                        ctime.push(loopTime);
 
                     }else{
                         d.push([loopTime, curveStat[d_idx]]);
-                        cTime.push(loopTime);
+                        ctime.push(loopTime);
                     }
                 }
                 loopTime = loopTime + interval;
@@ -82,7 +82,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     });
     // wait for future to finish
     dFuture.wait();
-    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval,cTime:cTime};
+    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval,ctime:ctime};
 };
 
 dataSeriesZoom = function(plotParams, plotFunction) {
@@ -236,7 +236,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
-            ctime = queryResult.cTime;
+            ctime = queryResult.ctime;
             console.log("d length="+ d.length);
             console.log("ctime length="+ ctime.length);
             interval=queryResult.interval;
@@ -322,7 +322,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
-            mean:  label + "- mean = " + mean.toPrecision(4),
+            annotation:  label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
             ctime: ctime,
@@ -350,16 +350,13 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         for (var ci = 1; ci < numCurves; ci++) {
             var this_time = dataset[ci].ctime;
             timeIntersection = _.intersection(this_time, timeIntersection);
-           // dataset[ci].data = [];
         }
-        console.log("timeIntersection="+timeIntersection);
 
         var new_curve_dd={};
         for (var ci = 0; ci < numCurves; ci++) {
             new_curve_dd[ci] = [];
         }
 
-        console.log("timeIntersection  ="+ timeIntersection);
         var new_timeIntersection =[];
         var tlength =timeIntersection.length;
         for (var si = 0; si < tlength; si++) {
@@ -385,46 +382,38 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         }
 
         n_length= new_timeIntersection.length;
-        n_interval = new_timeIntersection[n_length-1]- new_timeIntersection[0];
-        for (var si = 0; si < new_timeIntersection.length-1; si++) {
-
-            this_interval =  new_timeIntersection[si+1]-new_timeIntersection[si];
-            if(this_interval < n_interval){
-                n_interval = this_interval;
-            }
-
-        }
-        console.log("n_interval ="+ n_interval);
 
 
+        tmin = new_timeIntersection[0];
+        tmax = new_timeIntersection[n_length-1];
 
-
-       for (var si = 0; si < new_timeIntersection.length; si++) {
-           var this_secs = new_timeIntersection[si];
-
+        tt = tmin;
+        while(tt<=tmax){
             for (var ci = 0; ci < numCurves; ci++) {
-                var ctime = dataset[ci].ctime;
-                var myIndex = ctime.indexOf(this_secs);
-                this_data = dataset[ci].data[myIndex][1];
 
-                    new_curve_dd[ci].push([this_secs, this_data]);
+                if(new_timeIntersection.indexOf(tt)>0) {
+                    var ctime = dataset[ci].ctime;
+                    var myIndex = ctime.indexOf(tt);
+                    this_data = dataset[ci].data[myIndex][1];
 
+                    new_curve_dd[ci].push([tt, this_data]);
+                }else{
 
+                    new_curve_dd[ci].push([tt, null]);
+                }
 
             }
+            tt = tt +matchInterval;
+
         }
-        console.log("new_timeIntersection  ="+ new_timeIntersection.length);
-        console.log("timeIntersection  ="+ timeIntersection.length);
+
+
 
         for (var ci = 0; ci < numCurves; ci++) {
             dataset[ci].data = [];
             dataset[ci].data = new_curve_dd[ci];
-            console.log("ci  ="+ci+" data=" +new_curve_dd[ci]);
+
         }
-
-
-
-
 
 
         }
@@ -512,7 +501,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {color:'black',points:{show:false},data:[[mxmin,0,"zero"],[mxmax,0,"zero"]]});
+    dataset.push(dataZero = {color:'black',points:{show:false},annotation:"",data:[[mxmin,0,"zero"],[mxmax,0,"zero"]]});
     var result = {
         error: error,
         data: dataset,

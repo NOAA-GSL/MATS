@@ -6,7 +6,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     var error = "";
     var N0 = [];
     var N_times = [];
-
+    var ctime=[] ;
     sumPool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -50,6 +50,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                 if(curveTime.indexOf(loopTime)<0){
 
                     d.push([loopTime, null]);
+                    ctime.push(loopTime);
                 } else{
                    // bill didn't any filter for ceiling
                     var d_idx = curveTime.indexOf(loopTime);
@@ -60,6 +61,8 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
 
                     //}else{
                         d.push([loopTime, curveStat[d_idx]]);
+                        ctime.push(loopTime);
+
                    // }
 
 
@@ -76,7 +79,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
     dFuture.wait();
 
 
-    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval};
+    return {data:d,error:error,ymin:ymin,ymax:ymax,N0:N0,N_times:N_times, averageStr:averageStr, interval:interval,ctime:ctime};
 };
 
 dataSeriesZoom = function(plotParams, plotFunction) {
@@ -249,6 +252,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
+            ctime = queryResult.ctime;
             console.log("d="+d);
 
             if (d[0] === undefined) {
@@ -334,7 +338,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             label: label,
             color: color,
             data: d,
-            mean:  label + "- mean = " + mean.toPrecision(4),
+            ctime: ctime,
+            annotation:  label + "- mean = " + mean.toPrecision(4),
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false},
             interval: interval,
@@ -348,6 +353,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
+
     if (matching) {
         var matchInterval=0;
         for (var ci = 0; ci < numCurves; ci++) {
@@ -355,18 +361,83 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             if (this_interval > matchInterval) matchInterval = this_interval;
         }
 
+        var timeIntersection = dataset[0].ctime;
+        console.log("timeIntersection="+timeIntersection);
+        for (var ci = 1; ci < numCurves; ci++) {
+            var this_time = dataset[ci].ctime;
+            timeIntersection = _.intersection(this_time, timeIntersection);
+        }
+
+        console.log("timeIntersection="+timeIntersection);
+        var new_curve_dd={};
         for (var ci = 0; ci < numCurves; ci++) {
-            var new_curve_d=[];
-            var curveTime = dataset[ci].data.map(function(value,index) { return value[0]; });
-            for (var xtime =dataset[ci].xmin; xtime<dataset[ci].xmax; xtime=xtime+matchInterval){
-                var myIndex = curveTime.indexOf(xtime);
-                if(myIndex>=0) {
-                    new_curve_d.push([xtime, dataset[ci].data[myIndex][1]]);
+            new_curve_dd[ci] = [];
+        }
+
+        var new_timeIntersection =[];
+        var tlength =timeIntersection.length;
+        for (var si = 0; si < tlength; si++) {
+            var this_secs = timeIntersection[si];
+            for (var ci = 0; ci < numCurves; ci++) {
+                var ctime = dataset[ci].ctime;
+                var myIndex = ctime.indexOf(this_secs);
+                this_data = dataset[ci].data[myIndex][1];
+                if (this_data==null){
+
+                    delete timeIntersection[si];
                 }
             }
-            dataset[ci].data= new_curve_d;
         }
+
+        for (var si = 0; si < tlength; si++) {
+            if(timeIntersection[si]!= undefined){
+                new_timeIntersection.push(timeIntersection[si]);
+
+            }
+
+        }
+
+        n_length= new_timeIntersection.length;
+
+
+        tmin = new_timeIntersection[0];
+        tmax = new_timeIntersection[n_length-1];
+
+        tt = tmin;
+        while(tt<=tmax){
+            for (var ci = 0; ci < numCurves; ci++) {
+
+                if(new_timeIntersection.indexOf(tt)>0) {
+                    var ctime = dataset[ci].ctime;
+                    var myIndex = ctime.indexOf(tt);
+                    this_data = dataset[ci].data[myIndex][1];
+
+                    new_curve_dd[ci].push([tt, this_data]);
+                }else{
+
+                    new_curve_dd[ci].push([tt, null]);
+                }
+
+            }
+            tt = tt + matchInterval;
+
+        }
+
+
+
+        for (var ci = 0; ci < numCurves; ci++) {
+            dataset[ci].data = [];
+            dataset[ci].data = new_curve_dd[ci];
+            console.log("ci="+ci+" data="+JSON.stringify(dataset[ci].data));
+
+        }
+
+
     }
+
+
+
+
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -448,7 +519,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {color:'black',points:{show:false},data:[[mxmin,0,"zero"],[mxmax,0,"zero"]]});
+    dataset.push(dataZero = {color:'black',points:{show:false},annotation:"",data:[[mxmin,0,"zero"],[mxmax,0,"zero"]]});
 
    // console.log("data="+JSON.stringify(dataset));
     var result = {
