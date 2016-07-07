@@ -60,13 +60,14 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
 
                 if(curveTime.indexOf(loopTime)<0){
                     d.push([loopTime, null]);
+                    cTime.push(loopTime);
                 } else{
                     var d_idx = curveTime.indexOf(loopTime);
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
                     if (this_N0< 0.1*N0_max || this_N_times < 0.75* N_times_max){
                         d.push([loopTime, null]);
-                      //  returntime.push()
+                        cTime.push(loopTime);
 
                     }else{
                         d.push([loopTime, curveStat[d_idx]]);
@@ -236,7 +237,8 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
             ctime = queryResult.cTime;
-            console.log("d="+d);
+            console.log("d length="+ d.length);
+            console.log("ctime length="+ ctime.length);
             interval=queryResult.interval;
             if (d[0] === undefined) {
                 error = "No data returned";
@@ -351,32 +353,84 @@ dataSeriesZoom = function(plotParams, plotFunction) {
            // dataset[ci].data = [];
         }
         console.log("timeIntersection="+timeIntersection);
-        console.log("weixue0 ="+ dataset[0].data[0][1]);
-        console.log("weixue10 ="+ dataset[1].data);
-        console.log("weixue1 ="+ dataset[1].data[0][1]);
 
+        var new_curve_dd={};
         for (var ci = 0; ci < numCurves; ci++) {
-            var new_curve_d=[];
-           // var curveTime = dataset[ci].data.map(function(value,index) { return value[0]; });
-            for (var xtime =dataset[ci].xmin; xtime<dataset[ci].xmax; xtime=xtime+matchInterval){
-             //   var myIndex = curveTime.indexOf(xtime);
+            new_curve_dd[ci] = [];
+        }
+
+        console.log("timeIntersection  ="+ timeIntersection);
+        var new_timeIntersection =[];
+        var tlength =timeIntersection.length;
+        for (var si = 0; si < tlength; si++) {
+            var this_secs = timeIntersection[si];
+            for (var ci = 0; ci < numCurves; ci++) {
                 var ctime = dataset[ci].ctime;
-                var myIndex = timeIntersection.indexOf(xtime);
-                var myIndex2 = ctime.indexOf(xtime);
-               console.log("ci="+ci+" xtime="+xtime+" myIndex="+myIndex+" myIndex2="+myIndex2);
-              //  console.log("xtime="+ xtime);
-              //  if(myIndex>=0 &&  dataset[ci].data[myIndex][1]!=null) {
-                if(myIndex>=0) {
-                 //   console.log("ci="+ci+" myIndex="+myIndex+" xtime="+xtime);
-                    console.log("xtime="+xtime+" d="+dataset[ci].data[myIndex2][1]);
-                    new_curve_d.push([xtime, dataset[ci].data[myIndex2][1]]);
+                var myIndex = ctime.indexOf(this_secs);
+                this_data = dataset[ci].data[myIndex][1];
+                if (this_data==null){
+                   // new_curve_dd[ci].push([this_secs,this_data]);
+
+                   delete timeIntersection[si];
                 }
             }
-            dataset[ci].data = [];
-            dataset[ci].data= new_curve_d;
-            console.log("ci="+ci+" data="+ dataset[ci].data );
         }
-    }
+
+        for (var si = 0; si < tlength; si++) {
+            if(timeIntersection[si]!= undefined){
+                new_timeIntersection.push(timeIntersection[si]);
+
+            }
+
+        }
+
+        n_length= new_timeIntersection.length;
+        n_interval = new_timeIntersection[n_length-1]- new_timeIntersection[0];
+        for (var si = 0; si < new_timeIntersection.length-1; si++) {
+
+            this_interval =  new_timeIntersection[si+1]-new_timeIntersection[si];
+            if(this_interval < n_interval){
+                n_interval = this_interval;
+            }
+
+        }
+        console.log("n_interval ="+ n_interval);
+
+
+
+
+       for (var si = 0; si < new_timeIntersection.length; si++) {
+           var this_secs = new_timeIntersection[si];
+
+            for (var ci = 0; ci < numCurves; ci++) {
+                var ctime = dataset[ci].ctime;
+                var myIndex = ctime.indexOf(this_secs);
+                this_data = dataset[ci].data[myIndex][1];
+
+                    new_curve_dd[ci].push([this_secs, this_data]);
+
+
+
+            }
+        }
+        console.log("new_timeIntersection  ="+ new_timeIntersection.length);
+        console.log("timeIntersection  ="+ timeIntersection.length);
+
+        for (var ci = 0; ci < numCurves; ci++) {
+            dataset[ci].data = [];
+            dataset[ci].data = new_curve_dd[ci];
+            console.log("ci  ="+ci+" data=" +new_curve_dd[ci]);
+        }
+
+
+
+
+
+
+        }
+
+
+
     // generate y-axis
     var yaxes = [];
     var yaxis = [];

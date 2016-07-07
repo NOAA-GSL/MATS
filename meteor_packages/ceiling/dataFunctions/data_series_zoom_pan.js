@@ -321,11 +321,20 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             variableStatSet[variableStat] = {index:curveIndex + 1, label:label};
         }*/
 
+        var mean =0 ;
+
+
+        for (var i = 0; i < d.length; i++) {
+            mean =   mean +d[i][1];
+        }
+        mean = mean/d.length;
+
         var options = {
            // yaxis: variableStatSet[variableStat].index,
             label: label,
             color: color,
             data: d,
+            mean:  label + "- mean = " + mean.toPrecision(4),
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false},
             interval: interval,
