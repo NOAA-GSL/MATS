@@ -15,7 +15,6 @@ Package.onUse(function(api) {
   api.use('ecmascript');
   api.use('randyp:mats-common');
   api.use(['templating'], 'client');
-  api.addFiles('dataFunctions/data_profile_zoom_pan.js','server');
   api.addFiles('dataFunctions/data_series_zoom_pan.js','server');
   api.addFiles('app-startup.js','server');
   api.addFiles('app.css',['client', 'server']);
