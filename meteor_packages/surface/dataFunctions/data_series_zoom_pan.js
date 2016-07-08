@@ -133,7 +133,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
     };
 
-    console.log(JSON.stringify(plotParams));
+    console.log(JSON.stringify(plotParams,null,2));
     var fromDateStr = plotParams.fromDate;
     var fromDate = dateConvert(fromDateStr);
     var toDateStr = plotParams.toDate;
@@ -146,7 +146,9 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotAction === PlotActions.matched;
+     var matching = plotParams.plotAction === PlotActions.matched;
+    console.log(" plot matching="+matching);
+ //   var matching = plotFormat===PlotFormats.matching;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -334,89 +336,153 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
         };
         dataset.push(options);
-        var numCurves = dataset.length;
+        //var numCurves = dataset.length;
     }
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
     if (matching) {
-        var matchInterval=0;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var this_interval = dataset[ci].interval;
-            if (this_interval > matchInterval) matchInterval = this_interval;
+
+
+
+        if (diffFrom == null)
+        {
+            var numCurves = dataset.length;
+
+        }else{
+            var numCurves = diffFrom.length;
+
         }
 
-        var timeIntersection = dataset[0].ctime;
-        for (var ci = 1; ci < numCurves; ci++) {
-            var this_time = dataset[ci].ctime;
-            timeIntersection = _.intersection(this_time, timeIntersection);
-        }
 
-        var new_curve_dd={};
-        for (var ci = 0; ci < numCurves; ci++) {
-            new_curve_dd[ci] = [];
-        }
-
-        var new_timeIntersection =[];
-        var tlength =timeIntersection.length;
-        for (var si = 0; si < tlength; si++) {
-            var this_secs = timeIntersection[si];
+            var matchInterval = 0;
             for (var ci = 0; ci < numCurves; ci++) {
-                var ctime = dataset[ci].ctime;
-                var myIndex = ctime.indexOf(this_secs);
-                this_data = dataset[ci].data[myIndex][1];
-                if (this_data==null){
-                   // new_curve_dd[ci].push([this_secs,this_data]);
-
-                   delete timeIntersection[si];
-                }
-            }
-        }
-
-        for (var si = 0; si < tlength; si++) {
-            if(timeIntersection[si]!= undefined){
-                new_timeIntersection.push(timeIntersection[si]);
-
+                var this_interval = dataset[ci].interval;
+                if (this_interval > matchInterval) matchInterval = this_interval;
             }
 
-        }
+            var timeIntersection = dataset[0].ctime;
+            for (var ci = 1; ci < numCurves; ci++) {
+                var this_time = dataset[ci].ctime;
+                timeIntersection = _.intersection(this_time, timeIntersection);
+            }
 
-        n_length= new_timeIntersection.length;
-
-
-        tmin = new_timeIntersection[0];
-        tmax = new_timeIntersection[n_length-1];
-
-        tt = tmin;
-        while(tt<=tmax){
+            var new_curve_dd = {};
             for (var ci = 0; ci < numCurves; ci++) {
+                new_curve_dd[ci] = [];
+            }
 
-                if(new_timeIntersection.indexOf(tt)>0) {
+            var new_timeIntersection = [];
+            var tlength = timeIntersection.length;
+            for (var si = 0; si < tlength; si++) {
+                var this_secs = timeIntersection[si];
+                for (var ci = 0; ci < numCurves; ci++) {
                     var ctime = dataset[ci].ctime;
-                    var myIndex = ctime.indexOf(tt);
+                    var myIndex = ctime.indexOf(this_secs);
                     this_data = dataset[ci].data[myIndex][1];
+                    if (this_data == null) {
+                        // new_curve_dd[ci].push([this_secs,this_data]);
 
-                    new_curve_dd[ci].push([tt, this_data]);
-                }else{
+                        delete timeIntersection[si];
+                    }
+                }
+            }
 
-                    new_curve_dd[ci].push([tt, null]);
+            for (var si = 0; si < tlength; si++) {
+                if (timeIntersection[si] != undefined) {
+                    new_timeIntersection.push(timeIntersection[si]);
+
                 }
 
             }
-            tt = tt +matchInterval;
 
+            n_length = new_timeIntersection.length;
+
+
+            tmin = new_timeIntersection[0];
+            tmax = new_timeIntersection[n_length - 1];
+
+            tt = tmin;
+            while (tt <= tmax) {
+                for (var ci = 0; ci < numCurves; ci++) {
+
+                    if (new_timeIntersection.indexOf(tt) > 0) {
+                        var ctime = dataset[ci].ctime;
+                        var myIndex = ctime.indexOf(tt);
+                        this_data = dataset[ci].data[myIndex][1];
+
+                        new_curve_dd[ci].push([tt, this_data]);
+                    } else {
+
+                        new_curve_dd[ci].push([tt, null]);
+                    }
+
+                }
+                tt = tt + matchInterval;
+
+            }
+
+
+            for (var ci = 0; ci < numCurves; ci++) {
+                dataset[ci].data = [];
+                dataset[ci].data = new_curve_dd[ci];
+                console.log("ci=" +ci+" d=" + dataset[ci].data);
+
+            }
+
+
+
+        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+            var curve = curves[curveIndex];
+            var diffFrom = curve.diffFrom;
+
+            if (diffFrom != null) {
+
+
+                var minuendIndex = diffFrom[0];
+                var subtrahendIndex = diffFrom[1];
+                var minuendData = dataset[minuendIndex].data;
+                var subtrahendData = dataset[subtrahendIndex].data;
+
+                console.log("d1=" + minuendData );
+                console.log("d2=" +  subtrahendData);
+
+
+                // add dataset copied from minuend
+                var d = [];
+                // do the differencing of the data
+                for (var i = 0; i < minuendData.length; i++) {
+                    d[i] = [];
+                    d[i][0] = subtrahendData[i][0];
+                    if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
+                        d[i][1] = minuendData[i][1] - subtrahendData[i][1];
+                    } else {
+                        d[i][1] = null;
+                    }
+                    // ymin and ymax will change with diff
+                    ymin = ymin < d[i][1] ? ymin : d[i][1];
+                    ymax = ymax > d[i][1] ? ymax : d[i][1];
+                }
+
+
+                var mean = 0;
+                for (var i = 0; i < d.length; i++) {
+                    mean = mean + d[i][1];
+                }
+                mean = mean / d.length;
+
+                dataset[curveIndex].data = d;
+                dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
+
+            }
         }
 
 
 
-        for (var ci = 0; ci < numCurves; ci++) {
-            dataset[ci].data = [];
-            dataset[ci].data = new_curve_dd[ci];
 
-        }
+        //////////////////
 
-
-        }
+        }//end of matching
 
 
 
