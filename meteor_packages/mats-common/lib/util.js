@@ -10,18 +10,11 @@
 
 PlotResult = {};
 
-getCurveText = function(plotType, obj){
-    var curveTextPattern = CurveTextPatterns.findOne({plotType:plotType}).textPattern;
-    var text = "";
-    for (var i = 0; i < curveTextPattern.length; i++) {
-        var a = curveTextPattern[i];
-        text += a[0];
-        text += obj[a[1]];
-        text += a[2];
-    }
-    return text;
-};
 
+
+/*
+Curve utilities - used to determine curve labels and colors etc.
+ */
 getUsedLabels = function () {
     if (Session.get('UsedLabels') === undefined) {
         return [];
@@ -148,10 +141,26 @@ setUsedColors = function () {
     setNextCurveColor();
 };
 
-// use curves in session to determine which labels are already used
-// and to set the usedLabels in the session
-// this is used on restore settings to set up the usedLabels
+setUsedLabels = function () {
+    var curves = Session.get('Curves');
+    var usedLabels = [];
+    for (var i = 0; i < curves.length; i++) {
+        var label = curves[i].label;
+        usedLabels.push(label);
+    }
+    Session.set('UsedLabels', usedLabels);
+    setNextCurveLabel();
+};
 
+setUsedColorsAndLabels = function () {
+    setUsedColors();
+    setUsedLabels();
+};
+
+
+/*
+generic Math Functions
+ */
  isNum = function (args)
 {
     if (args == null || args == undefined) {
@@ -253,21 +262,7 @@ median = function (arr)
 
     return median
 };
-setUsedLabels = function () {
-    var curves = Session.get('Curves');
-    var usedLabels = [];
-    for (var i = 0; i < curves.length; i++) {
-        var label = curves[i].label;
-        usedLabels.push(label);
-    }
-    Session.set('UsedLabels', usedLabels);
-    setNextCurveLabel();
-};
 
-setUsedColorsAndLabels = function () {
-    setUsedColors();
-    setUsedLabels();
-};
 
 // add the difference curves
 addDiffs = function () {
@@ -333,6 +328,10 @@ addDiffs = function () {
     }
 };
 
+
+/*
+Curve differencing utilities
+ */
 //remove difference curves
 removeDiffs = function () {
     var curves = Session.get('Curves');
@@ -362,8 +361,45 @@ checkDiffs = function () {
     }
 };
 
+/*
+various document utilities
+ */
 
-// determine which plottype radio button is checked
+// determine the axisText (used in scatter_axis.js for example)
+// according to the Scatter Axis Text Patterns Pattern defined in
+// ScatterAxisTextPatterns according to plotType - and derived from
+// currently selected inputs in the document.
+
+getAxisText = function(plotType) {
+    var scatterAxisTextPattern = ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern;
+    if (scatterAxisTextPattern === undefined) {
+        return "";
+    }
+    var text = "";
+    for (var i = 0; i < scatterAxisTextPattern.length; i++) {
+        var pName = scatterAxisTextPattern[i][0];
+        var delimiter = scatterAxisTextPattern[i][1];
+        var value = getValueForParamName(pName);
+        text += value += delimiter;
+    }
+    return text;
+};
+
+// determine the curveText (used in curveItem for example) for a given curve (from Session.get('curves'))
+// that has already been added
+getCurveText = function(plotType, curve){
+    var curveTextPattern = CurveTextPatterns.findOne({plotType:plotType}).textPattern;
+    var text = "";
+    for (var i = 0; i < curveTextPattern.length; i++) {
+        var a = curveTextPattern[i];
+        text += a[0];
+        text += curve[a[1]];
+        text += a[2];
+    }
+    return text;
+};
+
+// determine which plotType radio button is checked
 getPlotType = function () {
     var buttons = document.getElementsByName('plot-type');
     for (var i = 0, len = buttons.length; i < len; i++) {
@@ -386,7 +422,7 @@ getPlotFormat = function() {
     return "";  // error condition actually - shouldn't ever happen
 };
 
-
+// Determine which BestFit radio button is checked
 getBestFit = function() {
     var buttons = document.getElementsByName('scatter2d-best-fit');
     var optionsMap = PlotParams.findOne({name:'bestFit'}).optionsMap;
@@ -398,4 +434,89 @@ getBestFit = function() {
     return "";  // error condition actually - shouldn't ever happen
 };
 
+
+// get the document element that corresponds to the param name
+getValueElementForParamName = function(paramName) {
+    return document.getElementById(getValueIdForParamName(paramName));
+};
+
+// get the current selected value in the document element that corresponds to the param name
+// Note that the value should be reflected in the adjoining control button value textContent.
+getValueForParamName = function(paramName){
+    return getValueElementForParamName(paramName).textContent;
+};
+
+
+// get the VALUE BOX id for the element that corresponds to the param name
+getValueIdForParamName = function(paramName) {
+    return "controlButton-" + paramName + "-value";
+};
+
+// set the VALUE BOX text for the element that corresponds to the param name
+setValueTextForParamName = function(paramName, text) {
+    try {
+        var text = text;
+        var value = text;
+        var param = CurveParams.findOne({name: paramName});
+        if (param === undefined) {
+            param = PlotParams.findOne({name: paramName});
+        }
+
+        if (param.type === InputTypes.dateRange) {
+            // .... get the from - to
+            var from = document.getElementById(paramName + "-" + InputTypes.dateRange + "-from").value;
+            var to = document.getElementById(paramName + "-" + InputTypes.dateRange + "-to").value;
+            text = from + " to " + to;
+            value = [from,to];
+        } else if (param.multiple) {
+            // .... if multi selected  get the first .. last
+            var selection = getInputElementForParamName(paramName).selectedOptions;
+            if (selection.length == 1) {
+                text = selection[0].textContent;
+            } else {
+                text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
+            }
+            value = [];
+            for(var i = 0; i < selection.length; i++) {
+                value.push(selection[i].textContent);
+            }
+        }
+        getValueElementForParamName(paramName).textContent = text;
+        var elem = document.getElementById(InputTypes.controlButton + "-" + paramName + '-value');
+        elem.setAttribute("data-mats-currentValue", value);
+    } catch(error){
+        console.log ("Error: could not find param: " + paramName);
+    }
+};
+
+// get the document id for the element that corresponds to the param name
+getInputIdForParamName = function(paramName) {
+    var param = CurveParams.findOne({name: paramName});
+    var id = param.name + "-" + param.type;
+    return id;
+};
+
+// get the document element that corresponds to the param name
+getInputElementForParamName = function(paramName) {
+    return document.getElementById(getInputIdForParamName(paramName));
+};
+
+// set the input for the element that corresponds to the param name
+setInputForParamName = function(paramName) {
+    var id = getInputIdForParamName(paramName);
+    // set the element ... type dependent
+    //FIX ME - NOT COMPLETE
+};
+
+// set the data for the element that corresponds to the param name
+// setElementDataForParamName = function (paramName, value) {
+//     var elem = document.getElementById(InputTypes.controlButton + "-" + paramName + '-value');
+//
+//     elem.setAttribute("data-mats-currentValue", value);
+// };
+
+getElementDataForParamName = function(paramName) {
+    var elem = document.getElementById(InputTypes.controlButton + "-" + paramName + '-value');
+    return elem.getAttribute("data-mats-currentValue");
+};
 

@@ -18,6 +18,7 @@ Meteor.subscribe("Authorization");
 Meteor.subscribe("Credentials");
 Meteor.subscribe("Databases");
 Meteor.subscribe("CurveTextPatterns");
+Meteor.subscribe("ScatterAxisTextPattern");
 Meteor.subscribe("RangePerDescriptor");
 Meteor.subscribe("SiteMap");
 Session.set('Curves',[]);

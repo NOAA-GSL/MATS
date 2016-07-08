@@ -149,83 +149,106 @@ Template.item.events({
 
 Template.textInput.events({
     'change, blur': function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + this.name + '-value');
-        if (elem === undefined) {
-            return false;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
+            }
+            setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            setValueTextForParamName(event.target.name, "");
         }
-        elem.textContent = event.currentTarget.value;
     }
 });
 
 Template.select.events({
     'change, blur' : function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + this.name + '-value');
-        if (elem === undefined) {
-            return false;
-        }
-        if (this.multiple==true) {
-            var selecetedLength = event.currentTarget.selectedOptions.length;
-            if (selecetedLength > 1) {
-                elem.textContent = "" + event.currentTarget.selectedOptions[0].value + "..." + event.currentTarget.selectedOptions[event.currentTarget.selectedOptions.length - 1].value;
-            } else {
-                elem.textContent = "" + event.currentTarget.selectedOptions[0].value;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
             }
-        } else {
-            if (this.peerName) {
-                elem.textContent = "";
-            } else
-            elem.textContent = event.currentTarget.value;
+            setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            setValueTextForParamName(event.target.name, "");
         }
     }
 });
 
 Template.numberSpinner.events({
     'change, blur': function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + this.name + '-value');
-        if (elem === undefined) {
-            return false;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
+            }
+            setValueTextForParamName(event.target.name,text);
+            console.log("elementData is:", getElementDataForParamName(event.target.name));
+        } catch (error){
+            setValueTextForParamName(event.target.name, "");
         }
-        elem.textContent = event.currentTarget.value;
     }
 });
 
+
+// Currently have no radioGroup params - this is undoubtedly broken - FIX ME
 Template.radioGroup.events({
     'change, blur': function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + event.target.name  + '-value');
-        if (elem === undefined) {
-            return false;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
+            }
+            setValueTextForParamName(event.target.name,text);
+            console.log("elementData is:", getElementDataForParamName(event.target.name));
+        } catch (error){
+            setValueTextForParamName(event.target.name, "");
         }
-        elem.textContent = event.currentTarget.value;
     }
 });
 
+// Currently have no checkboxGroup params - this is undoubtedly broken - FIX ME
 Template.checkboxGroup.events({
     'change, blur': function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + event.target.name + '-value');
-        if (elem === undefined) {
-            return false;
-        }
-        if (event.currentTarget.checked) {
-            if (elem.textContent.indexOf(event.currentTarget.value) === -1) {
-                elem.textContent = elem.textContent + ": " + event.currentTarget.value;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
             }
-        } else { // not checked
-            if (elem.textContent.indexOf(event.currentTarget.value) > 0) {
-                elem.textContent = elem.textContent.replace(": " + event.currentTarget.value,'');
-            }
+            setValueTextForParamName(event.target.name, text);
+            console.log("elementData is:", getElementDataForParamName(event.target.name));
+        } catch (error) {
+            setValueTextForParamName(event.target.name, "");
         }
+        // var elem = document.getElementById(InputTypes.controlButton + "-" + event.target.name + '-value');
+        // if (elem === undefined) {
+        //     setElementDataForParamName (event.target.name, "");
+        //     return false;
+        // }
+        // if (event.currentTarget.checked) {
+        //     if (elem.textContent.indexOf(event.currentTarget.value) === -1) {
+        //         elem.textContent = elem.textContent + ": " + event.currentTarget.value;
+        //     }
+        // } else { // not checked
+        //     if (elem.textContent.indexOf(event.currentTarget.value) > 0) {
+        //         elem.textContent = elem.textContent.replace(": " + event.currentTarget.value,'');
+        //     }
+        // }
+        console.log("elementData is:", getElementDataForParamName(event.target.name));
     }
 });
 
 Template.dateRange.events({
     'change, blur': function (event) {
-        var elem = document.getElementById(InputTypes.controlButton + "-" + event.target.name + '-value');
-        if (elem === undefined || elem === null) {
-            return false;
+        try {
+            var text = "";
+            if (this.peerName !== undefined) {
+                text = event.currentTarget.value;
+            }
+            setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            setValueTextForParamName(event.target.name, "");
         }
-        var from = document.getElementById(this.name + "-" + InputTypes.dateRange + "-from").value;
-        var to = document.getElementById(this.name + "-" + InputTypes.dateRange + "-to").value;
-        elem.textContent =  from + " to " + to;
     }
 });
 

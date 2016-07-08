@@ -26,6 +26,7 @@ Package.onUse(function(api) {
   api.export("CurveParams");  
   api.export("Scatter2dParams");
   api.export("CurveTextPatterns");
+  api.export("ScatterAxisTextPattern");
   api.export("SavedCurveParams");
   api.export("PlotParams");
   api.export("SavedPlotParams");

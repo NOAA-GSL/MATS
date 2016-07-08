@@ -1,12 +1,3 @@
-var getAxisText = function(){
-    var text = document.getElementById('controlButton-label-value').textContent + ":" +
-        document.getElementById('controlButton-data source-value').textContent + ":" +
-        document.getElementById('controlButton-region-value').textContent + ":" +
-        document.getElementById('controlButton-variable-value').textContent + ":" +
-        document.getElementById('controlButton-discriminator-value').textContent + ":" +
-        document.getElementById('controlButton-forecast length-value').textContent;
-    return text;
-};
 
 Template.scatter2d.helpers({
     title: function() {
@@ -120,7 +111,7 @@ Template.scatter2d.events({
         while( span.firstChild ) {
             span.removeChild( span.firstChild );
         }
-        span.appendChild( document.createTextNode(axis + " " + getAxisText()) );
+        span.appendChild( document.createTextNode(axis + " " + getAxisText(getPlotType())) );
         span.style.color='green';
         span.className = "";
         span.className += "fa ";

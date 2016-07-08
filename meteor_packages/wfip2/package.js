@@ -34,6 +34,7 @@ Package.onUse(function(api) {
   api.export("savedCurveParams", "server");
   api.export("plotParams", "server");
   api.export("curveTextPatterns", "server");
+  api.export("ScatterAxisTextPattern", "server");
 });
 
 Package.onTest(function(api) {
