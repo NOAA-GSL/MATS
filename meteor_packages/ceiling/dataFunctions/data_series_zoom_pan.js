@@ -23,11 +23,19 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             var curveStat =[];
             var N0_max=0;
 
+//            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
+            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
+                if (rowIndex < rows.length-1) {
+                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
+                    if (time_diff < time_interval){
+                        time_interval = time_diff;
+                    }
+                }
 
                //  console.log("row="+rowIndex+" secs="+avSeconds+" stat="+stat);
 
@@ -40,7 +48,11 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                 N_times.push(N_times_loop);
             }
 
-           // if (averageStr != "None") {
+            interval = time_interval *1000;
+            console.log("curvetime=" + curveTime);
+            console.log("interval=" + interval);
+
+          //  if (averageStr != "None") {
                 xmin = Number(rows[0].avtime)*1000;
            // }
             var loopTime =xmin;
@@ -355,11 +367,24 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     // not have data in each curve.
 
     if (matching) {
-        var matchInterval=0;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var this_interval = dataset[ci].interval;
-            if (this_interval > matchInterval) matchInterval = this_interval;
+
+
+
+        if (diffFrom == null)
+        {
+            var numCurves = dataset.length;
+
+        }else{
+            var numCurves = diffFrom.length;
+
         }
+
+
+            var matchInterval = 0;
+            for (var ci = 0; ci < numCurves; ci++) {
+                var this_interval = dataset[ci].interval;
+                if (this_interval > matchInterval) matchInterval = this_interval;
+            }
 
         var timeIntersection = dataset[0].ctime;
         console.log("timeIntersection="+timeIntersection);
@@ -433,8 +458,58 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         }
 
 
-    }
 
+        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+            var curve = curves[curveIndex];
+            var diffFrom = curve.diffFrom;
+
+            if (diffFrom != null) {
+
+
+                var minuendIndex = diffFrom[0];
+                var subtrahendIndex = diffFrom[1];
+                var minuendData = dataset[minuendIndex].data;
+                var subtrahendData = dataset[subtrahendIndex].data;
+
+                console.log("d1=" + minuendData );
+                console.log("d2=" +  subtrahendData);
+
+
+                // add dataset copied from minuend
+                var d = [];
+                // do the differencing of the data
+                for (var i = 0; i < minuendData.length; i++) {
+                    d[i] = [];
+                    d[i][0] = subtrahendData[i][0];
+                    if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
+                        d[i][1] = minuendData[i][1] - subtrahendData[i][1];
+                    } else {
+                        d[i][1] = null;
+                    }
+                    // ymin and ymax will change with diff
+                    ymin = ymin < d[i][1] ? ymin : d[i][1];
+                    ymax = ymax > d[i][1] ? ymax : d[i][1];
+                }
+
+
+                var mean = 0;
+                for (var i = 0; i < d.length; i++) {
+                    mean = mean + d[i][1];
+                }
+                mean = mean / d.length;
+
+                dataset[curveIndex].data = d;
+                dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
+
+            }
+        }
+
+
+
+
+        //////////////////
+
+        }//end of matching
 
 
 
