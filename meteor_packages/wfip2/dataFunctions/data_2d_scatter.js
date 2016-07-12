@@ -379,7 +379,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
         var xaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-data source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
@@ -403,7 +403,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-data source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
