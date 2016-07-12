@@ -342,7 +342,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             label: label,
             color: color,
             data: normalizedAxisData,
-            points: {symbol: pointSymbol, fillColor: color, show: true},
+            points: {symbol: pointSymbol, fillColor: color, show: true, radius:1},
             annotation: ""
         };
         dataset.push(options);
@@ -360,7 +360,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
                 //color: "rgb(0,0,0)",
                 color: options.color,
                 data: regressionData,
-                points: {symbol: options.points.symbol, fillColor: color, show: false},
+                points: {symbol: options.points.symbol, fillColor: color, show: false, radius:1},
                 lines: {
                     show: true,
                     fill: false

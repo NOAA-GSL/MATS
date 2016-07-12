@@ -414,7 +414,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     upperCap: "-",
                     lowerCap: "-",
                     color: color,
-                    radius: null
+                    radius: 1
                 }
             },
             lines: {
@@ -650,7 +650,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             show: true
         },
         xaxes:[{
-            //axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: variableStr,
             color: 'grey'
         }],
         xaxis: {
@@ -670,7 +670,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 lineWidth:Settings.findOne({},{fields:{lineWidth:1}}).lineWidth
             },
             points: {
-                show: true
+                show: true,
+                radius:1
             },
             shadowSize: 0
         },

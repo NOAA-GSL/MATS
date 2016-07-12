@@ -340,13 +340,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
         var options = {
             yaxis: variableStatSet[variableStat].index,
-            label: label,
+            label: variableStr,
             ws_z_time: ws_z_time,
             site_z_time: site_z_time,
             color: color,
             annotation: label + "- mean = " + mean.toPrecision(4),
             data: d,
-            points: {symbol: pointSymbol, fillColor: color, show: true},
+            points: {symbol: pointSymbol, fillColor: color, show: true,radius:1},
             lines: {show: true, fill: false}
         };
 
@@ -555,7 +555,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: variableStatSet[variableStat].label + " : " + variableStr,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
@@ -596,7 +596,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 lineWidth: Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
             },
             points: {
-                show: true
+                show: true,
+                radius:1
             },
             shadowSize: 0
         },

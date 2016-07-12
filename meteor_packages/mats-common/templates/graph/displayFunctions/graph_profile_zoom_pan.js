@@ -1,5 +1,17 @@
 graphProfileZoom = function(result) {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw,vph);
     var dataset = result.data;
+    for (var i  =0; i < dataset.length; i++){
+        var o = dataset[i];
+        if (min < 400) {
+            o.points.radius = 1;
+        } else {
+            o.points.radius = 2;
+        }
+    }
+    
     var options = result.options;
     var placeholder = $("#placeholder");
 

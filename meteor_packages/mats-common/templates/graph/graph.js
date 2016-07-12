@@ -1,15 +1,23 @@
 
 var width = function () {
-    var vpw = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var w = .5 * Math.min(vpw,vph);
-    return w + "px";
+    var min = Math.min(vpw,vph);
+     if (min < 400) {
+         return (.9 * min).toString() + "px";
+     } else {
+         return (.7 * min).toString() + "px";
+     }
 };
 var height = function() {
-    var vpw = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var h = .5 * Math.min(vpw,vph);
-    return h + "px";
+    var min = Math.min(vpw,vph);
+    if (min < 400) {
+        return (.9 * min).toString() + "px";
+    } else {
+        return (.7 * min).toString() + "px";
+    }
 };
 
 //$(window).on('resize orientationChange', function(event) {
