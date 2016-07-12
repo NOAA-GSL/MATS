@@ -150,10 +150,7 @@ Template.item.events({
 Template.textInput.events({
     'change, blur': function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name,text);
         } catch (error){
             setValueTextForParamName(event.target.name, "");
@@ -164,10 +161,7 @@ Template.textInput.events({
 Template.select.events({
     'change, blur' : function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name,text);
         } catch (error){
             setValueTextForParamName(event.target.name, "");
@@ -178,10 +172,7 @@ Template.select.events({
 Template.numberSpinner.events({
     'change, blur': function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name,text);
             console.log("elementData is:", getElementDataForParamName(event.target.name));
         } catch (error){
@@ -195,10 +186,7 @@ Template.numberSpinner.events({
 Template.radioGroup.events({
     'change, blur': function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name,text);
             console.log("elementData is:", getElementDataForParamName(event.target.name));
         } catch (error){
@@ -211,29 +199,12 @@ Template.radioGroup.events({
 Template.checkboxGroup.events({
     'change, blur': function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name, text);
             console.log("elementData is:", getElementDataForParamName(event.target.name));
         } catch (error) {
             setValueTextForParamName(event.target.name, "");
         }
-        // var elem = document.getElementById(InputTypes.controlButton + "-" + event.target.name + '-value');
-        // if (elem === undefined) {
-        //     setElementDataForParamName (event.target.name, "");
-        //     return false;
-        // }
-        // if (event.currentTarget.checked) {
-        //     if (elem.textContent.indexOf(event.currentTarget.value) === -1) {
-        //         elem.textContent = elem.textContent + ": " + event.currentTarget.value;
-        //     }
-        // } else { // not checked
-        //     if (elem.textContent.indexOf(event.currentTarget.value) > 0) {
-        //         elem.textContent = elem.textContent.replace(": " + event.currentTarget.value,'');
-        //     }
-        // }
         console.log("elementData is:", getElementDataForParamName(event.target.name));
     }
 });
@@ -241,10 +212,7 @@ Template.checkboxGroup.events({
 Template.dateRange.events({
     'change, blur': function (event) {
         try {
-            var text = "";
-            if (this.peerName !== undefined) {
-                text = event.currentTarget.value;
-            }
+            var text = event.currentTarget.value;
             setValueTextForParamName(event.target.name,text);
         } catch (error){
             setValueTextForParamName(event.target.name, "");
