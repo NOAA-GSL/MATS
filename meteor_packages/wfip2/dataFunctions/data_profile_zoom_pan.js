@@ -434,6 +434,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
     if (matching) {
 
         console.log(" in matching" );
+
         var num_all_sites =0;
         var all_curve_z = [];
         for (var ci= 0; ci < curvesLength; ci++) {
@@ -454,8 +455,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
             all_curve_z.push(this_curve_z);
         }
 
-
-
+        for (var ci= 0; ci < curvesLength; ci++) {
+            dataset[ci].data=[]
+        }
         //only do matching for common levels ; if A has 10 levels, B has 20 levels, first 10 levels match, 2nd 10 levels keep original values
 
          var subZIntersection = _.intersection.apply(this,all_curve_z);
@@ -465,18 +467,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
             var common_z = subZIntersection[zi];
             var all_time =[];
 
-
-
             for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
-                //var this_time_z = dataset[curveIndex].time_z[common_z];
+
                 var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
                 all_time.push(this_time_z);
 
             }
 
-
             var subSecIntersection = _.intersection.apply(this,all_time);
-
 
             if (num_all_sites ===curvesLength){ // all curves with selection of all stations
                 var stnsIntersection={};
@@ -544,26 +542,22 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 if (flattened.length > 0) {
                     var new_mean = 0;
                     for (var ii = 0; ii < flattened.length; ii++) {
-                        // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
+
                         new_mean = new_mean + flattened[ii];
 
                     }
 
-                    //dataset[curveIndex].data.push([new_mean / flattened.length,common_z]);
+                    dataset[curveIndex].data.push([new_mean / flattened.length,common_z,-1]);
                 }
 
-                var di=0;
-                while(di<data.length){
-                    if(data[di][1]===common_z){break;}
-                    else{di= di+1;}
 
-                }
-                dataset[curveIndex].data[di]=[new_mean / flattened.length,common_z,-1];
-                console.log("curve="+ curveIndex+"  dataset[curveIndex].data[di]="+dataset[curveIndex].data[di] );
 
             }
 
         }
+
+
+
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
