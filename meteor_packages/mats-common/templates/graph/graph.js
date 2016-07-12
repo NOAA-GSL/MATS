@@ -1,11 +1,14 @@
 
 var width = function () {
-    var w = 0.90 * Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vpw = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var w = .5 * Math.min(vpw,vph);
     return w + "px";
 };
 var height = function() {
-    //var h = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) / 2;
-    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.5;
+    var vpw = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var h = .5 * Math.min(vpw,vph);
     return h + "px";
 };
 
