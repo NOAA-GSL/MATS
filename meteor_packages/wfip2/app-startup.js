@@ -8,11 +8,9 @@ var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
 
 scatter2dParams = function() {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Scatter2dParams.remove({});
     }
-// remove for production
-    Scatter2dParams.remove({});
     if (Scatter2dParams.find().count() == 0) {
         Scatter2dParams.insert(
             {
@@ -54,7 +52,7 @@ scatter2dParams = function() {
 };
 
 plotParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
     }
     if (PlotParams.find().count() == 0) {
@@ -101,12 +99,9 @@ plotParams = function () {
 
 curveParams = function () {
     //console.log(JSON.stringify(modelOptiosMap));
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
     }
-
-    // remove for production
-    CurveParams.remove({});
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -352,7 +347,7 @@ curveParams = function () {
  See curve_item.js and graph.js.
  */
 curveTextPatterns = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveTextPatterns.remove({});
     }
     if (CurveTextPatterns.find().count() == 0) {
@@ -406,11 +401,32 @@ curveTextPatterns = function () {
                 ['','curve-dates-dateRange-to','']
             ]
         });
+
+    }
+};
+
+scatterAxisTextPattern = function () {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        ScatterAxisTextPattern.remove({});
+    }
+    if (ScatterAxisTextPattern.find().count() == 0) {
+        ScatterAxisTextPattern.insert({
+            plotType: PlotTypes.scatter2d,
+            textPattern: [
+                ['label', ':'],
+                ['data source', ':'],
+                ['region', ':'],
+                ['sites', ':'],
+                ['variable', ':'],
+                ['forecast length', ':'],
+                ['discriminator',""]
+            ]
+        });
     }
 };
 
 savedCurveParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         SavedCurveParams.remove({});
     }
     if (SavedCurveParams.find().count() == 0) {
@@ -419,12 +435,7 @@ savedCurveParams = function () {
 };
 
 settings = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
-        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
-            var resetFromCode = Settings.findOne({}).resetFromCode;
-        } else {
-            resetFromCode = false;
-        }
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
     if (Settings.find().count() == 0) {
@@ -440,7 +451,7 @@ settings = function () {
 };
 
 colorScheme = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         ColorScheme.remove({});
     }
     if (ColorScheme.find().count() == 0) {
@@ -475,11 +486,9 @@ colorScheme = function () {
 };
 
 plotGraph = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotGraphFunctions.remove({});
     }
-//remove for production
-PlotGraphFunctions.remove({});
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
             plotType: PlotTypes.timeSeries,
@@ -510,7 +519,7 @@ PlotGraphFunctions.remove({});
 
 credentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Credentials.remove({});
     }
     if (Credentials.find().count() == 0) {
@@ -524,7 +533,7 @@ credentials = function () {
 };
 
 authorization = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Authorization.remove({});
     }
     if (Authorization.find().count() == 0) {
@@ -536,7 +545,7 @@ authorization = function () {
 };
 
 roles = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Roles.remove({});
     }
     if (Roles.find().count() == 0) {
@@ -765,6 +774,11 @@ Databases.remove({});
         console.log(err.message);
     }
 
+    if (process.env.NODE_ENV === "development" ) {
+        console.log("Running in development mode...")
+    } else {
+        console.log("Running in production mode...")
+    }
     roles();
     authorization();
     credentials();
@@ -776,6 +790,7 @@ Databases.remove({});
     plotParams();
     scatter2dParams();
     curveTextPatterns();
+    scatterAxisTextPattern();
 });
 
 

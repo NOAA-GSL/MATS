@@ -518,7 +518,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     d[i] = [];
                     d[i][0] = subtrahendData[i][0];
                     if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
-                        d[i][1] = minuendData[i][1] - subtrahendData[i][1];
+                        d[i][1] = Math.abs(minuendData[i][1] - subtrahendData[i][1]);
                     } else {
                         d[i][1] = null;
                     }

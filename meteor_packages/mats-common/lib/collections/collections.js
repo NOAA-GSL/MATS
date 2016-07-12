@@ -1,6 +1,7 @@
 CurveParams = new Meteor.Collection("CurveParams");
 Scatter2dParams = new Meteor.Collection("Scatter2dParams");
 CurveTextPatterns = new Meteor.Collection("CurveTextPatterns");
+ScatterAxisTextPattern = new Meteor.Collection("ScatterAxisTextPattern");
 SavedCurveParams = new Meteor.Collection("SavedCurveParams");
 PlotParams = new Meteor.Collection("PlotParams");
 SavedPlotParams = new Meteor.Collection("SavedPlotParams");

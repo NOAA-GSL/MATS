@@ -329,6 +329,14 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
         } else {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
+        // sort these by x axis
+        normalizedAxisData.sort(function(a,b){
+            if (a[0] == b[0]) {
+                return 0;
+            } else {
+                return (a[0] < b[0]) ? -1 : 1;
+            }
+        });
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,

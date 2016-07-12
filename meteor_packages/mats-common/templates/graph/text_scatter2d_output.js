@@ -1,3 +1,7 @@
+var curveData = [];
+var bfData = [];
+
+
 Template.textScatter2dOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
@@ -19,10 +23,33 @@ Template.textScatter2dOutput.helpers({
         }
         return Session.get('Curves');
     },
-    curveText: function () {
+    curveText: function (curve) {
         this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
         var text = getCurveText(getPlotType(),this);
         return text;
+    },
+    headers: function(curve) {
+        var bFitLabel = "best fit";
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+
+        if (plotResultsUpDated !== undefined) {
+            if (PlotResult.length >1) {
+                bFitLabel = "best fit";
+            }
+        }
+        // var curves = Session.get("Curves");
+        // var i = 0;
+        // for (i = 0; i < curves.length; i++){
+        //     if (curve.label === curves[i].label) {
+        //     }
+            // if (PlotResult.data[i].label.indexOf(curves[i].label) === 0 && PlotResult.data[i].label.indexOf("-best") > 1) {
+            //      bFitLabel = PlotResult.data[i].label;
+            // }
+        //}
+        var str = "<th>" + curve.label + " x axis</th>" +
+            "<th>" + curve.label + " y axis </th>" +
+            "<th>" + bFitLabel + "</th>";
+        return str;
     },
     dataRows: function(curve) {
         /*
@@ -39,33 +66,36 @@ Template.textScatter2dOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
+        if (PlotResult.data === undefined || PlotResult.length == 0) {
+            return [];
+        }
         if (getPlotType() != PlotTypes.scatter2d) {
             return [];
         }
-
-        var curves = Session.get("Curves");
-        for (var i = 0; i < curves.length; i++){
-            if (curve.label === curves[i].label) {
-                break;
+        var i = 0;
+        for (i = 0; i < PlotResult.data.length; i++){
+            if (curve.label === PlotResult.data[i].label) {
+                curveData = PlotResult.data[i].data;
+            }
+            if (PlotResult.data[i].label.indexOf(curve.label) === 0 && PlotResult.data[i].label.indexOf("-best") > 1) {
+                bfData = PlotResult.data[i].data;
             }
         }
-        if (PlotResult.data === undefined) {
-            return [];
-        }
-        var dataRows = _.range(PlotResult.data[i].data.length - 1);
+        var dataRows = _.range(curveData.length - 1);
         return dataRows;
     },
     points: function(curve, rowIndex) {
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
         if (PlotResult.data === undefined) {
             return "";
         }
-        var curves = Session.get("Curves");
-        for (var i = 0; i < curves.length; i++){
-            if (curve.label === curves[i].label) {
-                break;
-            }
-        }
-        var line = "<td>" + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
+        var x = curveData[rowIndex][0];
+        var curveY =  curveData[rowIndex][1];
+        var bFitY = bfData[rowIndex][1];
+        var line = "<td>" + Number(x).toPrecision(4) + "</td> <td>" + Number(curveY).toPrecision(4) + "</td><td>" + Number(bFitY).toPrecision(4) + "</td>";
         return line;
     }
 });

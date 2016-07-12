@@ -254,10 +254,8 @@ curveTextPatterns = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveTextPatterns.remove({});
     }
-    //remove for production
-     CurveTextPatterns.remove({});
     if (CurveTextPatterns.find().count() == 0) {
-        var insert = CurveTextPatterns.insert({
+        CurveTextPatterns.insert({
             plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
@@ -356,8 +354,6 @@ plotGraph = function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotGraphFunctions.remove({});
     }
-    //remove for production
-    PlotGraphFunctions.remove({});
     if (PlotGraphFunctions.find().count() == 0) {
         PlotGraphFunctions.insert({
             plotType: PlotTypes.timeSeries,
@@ -410,9 +406,6 @@ Meteor.startup(function () {
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
     }
-    //remove for production
-    Databases.remove({});
-
     if (Databases.find().count() == 0) {
         Databases.insert({
             name:"sumSetting",

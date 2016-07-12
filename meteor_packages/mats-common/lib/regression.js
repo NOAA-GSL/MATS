@@ -8,7 +8,7 @@
 * Licensed under the MIT license.
 *
  *
- * Modified slightly for compatibility with meteor - RTP
+ * Modified slightly for compatibility with meteor and MATS - RTP
 **/
 
 // ;(function() {

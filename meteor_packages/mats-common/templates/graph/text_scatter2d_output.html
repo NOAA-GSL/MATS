@@ -3,12 +3,11 @@
         <button id="text_export" type="button" class="export" style="display:none">Export</button>
         <br/>
             {{#each curves}}
-                <h5>{{curveText}}</h5>
+                <h5>{{curveText this}}</h5>
                 <table class="table table-condensed table-striped table-bordered">
                     <thead>
                     <tr>
-                        <th>xaxis</th>
-                        <th>yaxis</th>
+                        {{{headers this}}}
                     </tr>
                     </thead>
                     <tbody>

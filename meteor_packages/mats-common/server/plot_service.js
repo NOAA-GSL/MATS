@@ -424,10 +424,13 @@ Meteor.methods({
 });
 
 Meteor.publish("CurveParams", function () {
-    return params = CurveParams.find();
+    return CurveParams.find();
 });
 Meteor.publish("CurveTextPatterns", function () {
     return CurveTextPatterns.find();
+});
+Meteor.publish("ScatterAxisTextPattern", function () {
+    return ScatterAxisTextPattern.find();
 });
 Meteor.publish("SavedCurveParams", function () {
     return SavedCurveParams.find();
