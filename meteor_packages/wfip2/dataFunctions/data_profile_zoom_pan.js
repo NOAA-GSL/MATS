@@ -275,6 +275,10 @@ dataProfileZoom = function(plotParams, plotFunction) {
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
+
+
+
+    console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
     var dataset = [];
     //var variableStatSet = Object.create(null);
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -435,9 +439,18 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
         console.log(" in matching" );
 
+        if (diffFrom != null) {
+            var numCurves = diffFrom.length;
+        }else{
+            var numCurves = curves.length;
+        }
+
+
         var num_all_sites =0;
         var all_curve_z = [];
-        for (var ci= 0; ci < curvesLength; ci++) {
+
+
+        for (var ci= 0; ci < numCurves; ci++) {
             var this_id = dataset[ci].site;
 
             if (this_id === "All") {
@@ -454,20 +467,24 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             all_curve_z.push(this_curve_z);
         }
+        console.log(" after get z!!!!!!!!!!!!!" );
 
-        for (var ci= 0; ci < curvesLength; ci++) {
+        for (var ci= 0; ci < numCurves; ci++) {
             dataset[ci].data=[]
         }
-        //only do matching for common levels ; if A has 10 levels, B has 20 levels, first 10 levels match, 2nd 10 levels keep original values
+
+        console.log(" after empty data!!!!!!!!!!!!!" );
+
 
          var subZIntersection = _.intersection.apply(this,all_curve_z);
 
         for (var zi= 0; zi < subZIntersection.length; zi++) {
 
+          //  console.log(" reassign value!!!!!!!!!!!!!" );
             var common_z = subZIntersection[zi];
             var all_time =[];
 
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
+            for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
 
                 var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
                 all_time.push(this_time_z);
@@ -476,7 +493,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             var subSecIntersection = _.intersection.apply(this,all_time);
 
-            if (num_all_sites ===curvesLength){ // all curves with selection of all stations
+            if (num_all_sites ===numCurves){ // all curves with selection of all stations
                 var stnsIntersection={};
 
                for (var si=0; si<subSecIntersection.length; si++){
@@ -485,7 +502,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                    var all_site =[];
 
 
-                    for (var ci = 0; ci < curvesLength; ci++) {
+                    for (var ci = 0; ci < numCurves; ci++) {
                         var these_stns = dataset[ci].site_z_time[common_z][this_secs];
                         all_site.push(these_stns);
                     }
@@ -498,7 +515,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             }
 
 
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++){
+            for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
 
 
                 var new_ws_list =[];
@@ -512,7 +529,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                     var new_ws;
 
-                    if(num_all_sites==curvesLength){
+                    if(num_all_sites==numCurves){
 
                         for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
                             var this_stn = stnsIntersection[this_secs][stni];
@@ -556,7 +573,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
         }
 
-
+        console.log("11 dataset[0] ="+ dataset[0].data);
 
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -566,7 +583,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             if (diffFrom != null) {
 
-                console.log("in diffFrom="+curveIndex);
+                console.log("in diffFrom="+ diffFrom);
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
@@ -574,7 +591,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                 console.log(" minuendData ="+minuendData);
 
-
+                console.log("22 dataset[0] ="+ dataset[0].data);
 
                 // do the differencing
                 //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
