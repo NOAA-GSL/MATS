@@ -281,6 +281,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
     console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
     var dataset = [];
     //var variableStatSet = Object.create(null);
+
+    var siteIds = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
@@ -292,11 +294,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
 
         var siteNames = curve['sites'];
-        var siteIds = [];
+        siteIds[curveIndex] = [];
+
+
         for (var i = 0; i < siteNames.length; i++) {
             var siteId = SiteMap.findOne({siteName:siteNames[i]}).siteId;
-            siteIds.push(siteId);
+            siteIds[curveIndex].push(siteId);
         }
+
+        console.log("ci="+curveIndex+" length siteIds=" + siteIds[curveIndex].length);
         //var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
         var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
         var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
@@ -350,7 +356,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc="+3600*forecastLength;
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
+           // statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
+            statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
             console.log("query=" + statement);
 
             var ws_z_time;
@@ -449,13 +456,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var num_all_sites =0;
         var all_curve_z = [];
 
+        var single_stn = true;
 
         for (var ci= 0; ci < numCurves; ci++) {
             var this_id = dataset[ci].site;
 
-            if (this_id === "All") {
-                num_all_sites = num_all_sites + 1;
-            }
+          //  if (this_id === "All") {
+           //     num_all_sites = num_all_sites + 1;
+          //  }
 
             var data = dataset[ci].data;
             var this_curve_z =[];
@@ -466,7 +474,17 @@ dataProfileZoom = function(plotParams, plotFunction) {
             }
 
             all_curve_z.push(this_curve_z);
+
+            if (siteIds[ci].length!=1){
+                single_stn = false;
+            };
+
+
         }
+
+
+
+
         console.log(" after get z!!!!!!!!!!!!!" );
 
         for (var ci= 0; ci < numCurves; ci++) {
@@ -493,7 +511,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             var subSecIntersection = _.intersection.apply(this,all_time);
 
-            if (num_all_sites ===numCurves){ // all curves with selection of all stations
+          //  if (num_all_sites ===numCurves){ // all curves with selection of all stations
+            if( single_stn == false){
+
                 var stnsIntersection={};
 
                for (var si=0; si<subSecIntersection.length; si++){
@@ -507,12 +527,13 @@ dataProfileZoom = function(plotParams, plotFunction) {
                         all_site.push(these_stns);
                     }
                     stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
-
+                 //  console.log("all_site="+ all_site );
+                 //  console.log("this_secs="+ this_secs+ " stn="+stnsIntersection[this_secs] );
 
                 }
 
 
-            }
+           }
 
 
             for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
@@ -529,8 +550,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                     var new_ws;
 
-                    if(num_all_sites==numCurves){
-
+                   // if(num_all_sites==numCurves){
+                    if( single_stn == false){
                         for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
                             var this_stn = stnsIntersection[this_secs][stni];
                             var this_index = dataset[curveIndex].site_z_time[common_z][this_secs].indexOf(this_stn);
@@ -544,7 +565,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
                     else{
 
-                        new_ws = this_ws_z_time;
+                       new_ws = this_ws_z_time;
                         new_ws_list.push(new_ws);
                     }
                 }
