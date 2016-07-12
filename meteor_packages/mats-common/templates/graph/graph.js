@@ -1,12 +1,23 @@
 
 var width = function () {
-    var w = 0.90 * Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    return w + "px";
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw,vph);
+     if (min < 400) {
+         return (.9 * min).toString() + "px";
+     } else {
+         return (.7 * min).toString() + "px";
+     }
 };
 var height = function() {
-    //var h = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) / 2;
-    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.5;
-    return h + "px";
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw,vph);
+    if (min < 400) {
+        return (.9 * min).toString() + "px";
+    } else {
+        return (.7 * min).toString() + "px";
+    }
 };
 
 //$(window).on('resize orientationChange', function(event) {
