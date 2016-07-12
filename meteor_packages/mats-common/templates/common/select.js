@@ -54,20 +54,16 @@ Template.select.rendered = function(){
         elem.options.length =0;
         for(var i = 0; i < options.length; i++) {
             elem.options[elem.options.length] = new Option(options[i], options[i], i==0, i==0);
-            // set the display button
+            // set the display button to first value
             if (i === 0) {
-                if (peerName) {
-                    dispElem.textContent = "";
-                } else {
-                    dispElem.textContent = options[i];
-                }
+                dispElem.textContent = options[i];
             }
         }
         refreshPeer(peerName);
         refreshDependents(dependentNames)
     };
 
-    // register refresh event for any superior to use to enforce a refresh
+    // register refresh event for any superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
         var superiorElement = e.detail.refElement;
         var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
@@ -118,5 +114,6 @@ Template.select.events({
     'change': function() {
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
+        setValueTextForParamName(this.name);
      }
 });

@@ -13,6 +13,7 @@ Template.map.rendered = function () {
     var minZoomLevel = this.data.defaultMapView.minZoomLevel;
     var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
     var peerName = this.data.peerName;
+
     var targetElement = document.getElementsByName(peerName)[0];
     if (!targetElement) {
         return;
@@ -26,7 +27,8 @@ Template.map.rendered = function () {
         trackResize:true,
         zoomControl:true,
         minZoom: minZoomLevel,
-        maxZoom: maxZoomLevel
+        maxZoom: maxZoomLevel,
+        wheelPxPerZoomLevel: 5
     }).setView(defaultPoint, defaultZoomLevel);
     // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
     L.tileLayer.provider('Thunderforest.Outdoors').addTo(map);
@@ -75,10 +77,6 @@ Template.map.rendered = function () {
         var icon = mFeatures.unSelectedIcon;
         var peerOption = mFeatures.markerPeerOption;
         var selectedValues = $(targetId).val() ? $(targetId).val() : [];
-        var ALLIndex = selectedValues.indexOf("All");
-        if (ALLIndex > -1) {
-            selectedValues.splice(ALLIndex, 1);
-        }
         var index = selectedValues.indexOf(peerOption);
         if (index > -1) {
             // toggle off
@@ -89,7 +87,10 @@ Template.map.rendered = function () {
             icon = mFeatures.selectedIcon;
             selectedValues.push(peerOption);
         }
+        // set the selected value(s) of the peer
         $(targetId).val(selectedValues);
+        // trigger the change event on the peer
+        $(targetId).trigger("change");
         marker.setIcon(icon);
     };
 
@@ -98,64 +99,52 @@ Template.map.rendered = function () {
     var refreshMarkersForPeer = function(peerElement) {
         // find out what peer options are available
         var peerOptions = [];
-        var currentMakerTitles = [];
-        if (peerElement && $(peerElement).is("select")) {
-            for (var i = 0; i < peerElement.options.length; i++) {
-                peerOptions.push(peerElement.options[i].text);
-            }
-        }
+         //if (peerElement.options) {
+             for (var i = 0; i < peerElement.options.length; i++) {
+                 peerOptions.push(peerElement.options[i].text);
+             }
 
-        // clear the markers
-        map.eachLayer(function(l) {
-            if (l._icon) {
-                map.removeLayer(l);
-            }
-        });
-        for (var m = 0; m < markers.length; m++) {
-            var markerPeerOption = markers[m].options.peerOption;
-            if (_.contains(peerOptions,markerPeerOption)) {
-                var unSelectedIcon = createUnSelectedIcon(markers[m]);
-                var selectedIcon = createSelectedIcon(markers[m]);
-                var markerOptions = markers[m].options;
-                var title = markerOptions.title;
-                var point = markers[m].point;
-                var markerId = point[0] + ',' + point[1] + ':' + title;
-                var features = {
-                    unSelectedIcon: unSelectedIcon,
-                    selectedIcon: selectedIcon,
-                    markerOptions: markerOptions,
-                    markerPeerOption: markerPeerOption
-                };
+             // clear the markers
+             map.eachLayer(function (l) {
+                 if (l._icon) {
+                     map.removeLayer(l);
+                 }
+             });
+         //}
+            for (var m = 0; m < markers.length; m++) {
+                var markerPeerOption = markers[m].options.peerOption;
+                if (_.contains(peerOptions, markerPeerOption)) {
+                    var unSelectedIcon = createUnSelectedIcon(markers[m]);
+                    var selectedIcon = createSelectedIcon(markers[m]);
+                    var markerOptions = markers[m].options;
+                    var title = markerOptions.title;
+                    var point = markers[m].point;
+                    var markerId = point[0] + ',' + point[1] + ':' + title;
+                    var features = {
+                        unSelectedIcon: unSelectedIcon,
+                        selectedIcon: selectedIcon,
+                        markerOptions: markerOptions,
+                        markerPeerOption: markerPeerOption
+                    };
 
-                var marker = new L.Marker(markers[m].point, {
-                    icon: unSelectedIcon,
-                    title: markers[m].options.title,
-                }).on('click', function (event) {
-                        // toggle selection of corresponding site option for this marker
-                        toggleTargetSelection(event);
-                    }
-                );
-                markerFeatures[markerId] = features;
-                map.addLayer(marker);
+                    var marker = new L.Marker(markers[m].point, {
+                        icon: unSelectedIcon,
+                        title: markers[m].options.title,
+                    }).on('click', function (event) {
+                            // toggle selection of corresponding site option for this marker
+                            toggleTargetSelection(event);
+                        }
+                    );
+                    markerFeatures[markerId] = features;
+                    map.addLayer(marker);
+                }
             }
-        }
     };
 
     var refresh = function (peerElement) {
         var peerId = peerElement.id;
         refreshMarkersForPeer(peerElement);
         var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
-        var ALLIndex = selectedValues.indexOf("All");
-        if (ALLIndex > -1) {
-            //everything needs to be selected;
-            var peerIdOption = peerId + " option";
-            selectedValues = $('#' + peerIdOption).map(function (){
-                return $(this).val();
-            }).toArray();
-            
-            ALLIndex = selectedValues.indexOf("All");
-            selectedValues.splice(ALLIndex, 1);
-        }
         // iterate through all the makers,
         // set the selectedIcon if they are selected in the peer
         // set the unSelectedIcon if they are not selected in the peer
