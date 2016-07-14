@@ -10,31 +10,25 @@ var secsConvert = function (dStr) {
     }
     else {
         var dateArray = dStr.split('-');
-
         var month = dateArray[1];
         var day = dateArray[2];
         var yr = dateArray[0];
-
         var my_date = new Date(yr, month - 1, day, 0);
-
         // to UTC time, not local time
         var date_in_secs = my_date.getTime();
     }
     // to UTC time, not local time
-    //return date_in_secs/1000 -3600*6;
     return date_in_secs / 1000;
 };
 
 
-var queryWFIP2DB = function (statement, xmin, xmax, top, bottom,interval) {
+var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
-    var N0 = [];
-    var N_times = [];
     var ws_z_time = {};
     var site_z_time = {};
-    var all_z = [];
+    var all_z = [];  // all the levels for all the times
     wfip2Pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -47,93 +41,61 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom,interval) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveTime = [];
-            var curveStat = [];
-            var N0_max = 0;
             var ws_time = {};
-
-            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
-            var ctime=[];
+            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);  // the delta between adjacent times
+            var ctime = [];
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var siteid = rows[rowIndex].sites_siteid;
-
-                var z = (rows[rowIndex].z);
-                var avVal = z.substring(1, z.length - 1);
-                var ws = rows[rowIndex].ws;
-                var stat = ws.substring(1, ws.length - 1);
-                //  var valid_utc = rows[rowIndex].valid_utc;
-
-                var sub_z = avVal.split(',');
-                var sub_ws = stat.split(',').map(Number);
-
+                var sub_z = JSON.parse(rows[rowIndex].z);
+                var sub_ws = JSON.parse(rows[rowIndex].ws);
                 ctime.push(avSeconds * 1000);
-
-                if (rowIndex < rows.length-1) {
+                if (rowIndex < rows.length - 1) {   // record the minimum time delta between adjacent times
                     var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
-                    if (time_diff < time_interval){
+                    if (time_diff < time_interval) {
                         time_interval = time_diff;
                     }
                 }
-
-
-
-                if (ws_time[avSeconds] === undefined) {
+                if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
                     ws_time[avSeconds] = [];
                 }
                 var this_mean_ws = 0;
                 var n_z = 0;
-                for (var j = 0; j < sub_ws.length; j++) {
+                for (var j = 0; j < sub_ws.length; j++) {   //loop through all the windspeeds for this time
                     var this_ws = sub_ws[j];
-                    var this_z = Math.floor(sub_z[j]); // jeff put float number for level
-
+                    var this_z = Math.floor(sub_z[j]); // jeff put float number for level - round down to an int
                     if (all_z.indexOf(this_z) == -1) {
                         all_z.push(this_z);
                     }
-
-
                     // ws_z_time is for matching levels for each timestamp
                     if (ws_z_time[avSeconds] === undefined) {
                         ws_z_time[avSeconds] = {};
                     }
                     if (ws_z_time[avSeconds][this_z] === undefined) {
                         ws_z_time[avSeconds][this_z] = [];
-
                     }
-
-
                     if (site_z_time[avSeconds] === undefined) {
                         site_z_time[avSeconds] = {};
                     }
                     if (site_z_time[avSeconds][this_z] === undefined) {
                         site_z_time[avSeconds][this_z] = [];
-
                     }
-
                     if (this_z >= bottom && this_z <= top) {
                         this_mean_ws = this_mean_ws + this_ws;
                         n_z = n_z + 1;
                         ws_z_time[avSeconds][this_z].push(this_ws);
                         site_z_time[avSeconds][this_z].push(siteid);
                     }
-
-
                 }
-
                 if (n_z > 0) {
-
                     this_mean_ws = this_mean_ws / n_z;
                     ws_time[avSeconds].push(this_mean_ws);
                 }
             }
 
 
-
-            interval = time_interval *1000;
-           // console.log("curvetime=" + curveTime);
+            interval = time_interval * 1000;
             console.log("interval=" + interval);
-
-
             var max_sample_time = 0;
             var keys = Object.keys(ws_time);
             // console.log("xue keys="+keys);
@@ -143,20 +105,15 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom,interval) {
                     max_sample_time = ws_time[key].length;
                 }
             }
-
-
-            xmin = keys[0]*1000;
-            xmax = keys[keys.length-1]*1000;
-            var loopTime =xmin;
-
-            while (loopTime < xmax+1) {
-                if(ctime.indexOf(loopTime)<0){
+            xmin = keys[0] * 1000;
+            xmax = keys[keys.length - 1] * 1000;
+            var loopTime = xmin;
+            while (loopTime < xmax + 1) {
+                if (ctime.indexOf(loopTime) < 0) {
                     d.push([loopTime, null]);
-
-                } else{
-                    this_key = loopTime/1000;
+                } else {
+                    this_key = loopTime / 1000;
                     var ws_array = ws_time[this_key];
-
                     if (ws_array.length > 0) {
                         var mean_ws;
                         var sum_ws = 0;
@@ -166,36 +123,14 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom,interval) {
                         mean_ws = sum_ws / ws_array.length;
                         d.push([loopTime, mean_ws]);
                     }
-
                 }
                 loopTime = loopTime + interval;
-
-
             }
-
-            // multiple stations, get average values for one time stampe for some certain veritcal levels
-           /* for (var jj = 0; jj < keys.length; jj++) {
-                var key = keys[jj];
-                var ws_array = ws_time[key];
-
-                if (ws_array.length > 0) {
-                    var mean_ws;
-                    var sum_ws = 0;
-                    for (var jjj = 0; jjj < ws_array.length; jjj++) {
-                        sum_ws = sum_ws + ws_array[jjj];
-                    }
-                    mean_ws = sum_ws / ws_array.length;
-                    d.push([key * 1000, mean_ws]);
-                }
-            }*/
-            // done waiting - have results
             dFuture['return']();
         }
     });
     // wait for future to finish
     dFuture.wait();
-
-
     return {
         data: d,
         error: error,
@@ -203,15 +138,12 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom,interval) {
         site_z_time: site_z_time,
         ymin: ymin,
         ymax: ymax,
-        // N0: N0,
-        // N_times: N_times,
         N0: 20,
         N_times: 20,
         interval: interval,
         all_z: all_z
     };
 };
-//}
 
 dataSeriesZoom = function (plotParams, plotFunction) {
     var dateConvert = function (dStr) {
@@ -269,7 +201,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var siteNames = curve['sites'];
         var siteIds = [];
         for (var i = 0; i < siteNames.length; i++) {
-            var siteId = SiteMap.findOne({siteName:siteNames[i]}).siteId;
+            var siteId = SiteMap.findOne({siteName: siteNames[i]}).siteId;
             siteIds.push(siteId);
         }
         var label = (curve['label']);
@@ -335,7 +267,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             console.log("statement: " + statement);
             var ws_z_time;
             var site_z_time;
-            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom,interval);
+            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval);
             d = queryResult.data;
             ws_z_time = queryResult.ws_z_time;
             if (d[0] === undefined) {
@@ -397,7 +329,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             annotation: label + "- mean = " + mean.toPrecision(4),
             data: d,
             interval: interval,
-            points: {symbol: pointSymbol, fillColor: color, show: true,radius:1},
+            points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
             lines: {show: true, fill: false}
         };
 
@@ -655,7 +587,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             },
             points: {
                 show: true,
-                radius:1
+                radius: 1
             },
             shadowSize: 0
         },
@@ -688,7 +620,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     // need to find the minimum and maximum x value for making the zero curve
 
 
-    dataset.push(dataZero = {annotation:"", color: 'black', points: {show: false}, data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+    dataset.push(dataZero = {
+        annotation: "",
+        color: 'black',
+        points: {show: false},
+        data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]
+    });
 
     var result = {
         error: error,
