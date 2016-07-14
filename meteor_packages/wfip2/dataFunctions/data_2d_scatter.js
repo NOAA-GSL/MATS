@@ -342,7 +342,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             label: label,
             color: color,
             data: normalizedAxisData,
-            points: {symbol: pointSymbol, fillColor: color, show: true},
+            points: {symbol: pointSymbol, fillColor: color, show: true, radius:1},
             annotation: ""
         };
         dataset.push(options);
@@ -360,7 +360,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
                 //color: "rgb(0,0,0)",
                 color: options.color,
                 data: regressionData,
-                points: {symbol: options.points.symbol, fillColor: color, show: false},
+                points: {symbol: options.points.symbol, fillColor: color, show: false, radius:1},
                 lines: {
                     show: true,
                     fill: false
@@ -379,7 +379,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
         var xaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-data source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
@@ -403,7 +403,7 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-data source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
