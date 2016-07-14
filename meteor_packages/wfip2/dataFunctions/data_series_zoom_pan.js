@@ -390,7 +390,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
         var options = {
             yaxis: variableStatSet[variableStat].index,
-            label: variableStr,
+            label: label,
             ws_z_time: ws_z_time,
             site_z_time: site_z_time,
             color: color,
