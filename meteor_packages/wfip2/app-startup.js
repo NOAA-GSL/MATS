@@ -278,6 +278,7 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(discriminatorOptionsMap)[0],
                 controlButtonVisibility: 'block',
+                multiple: false,
                 displayOrder: 10,
                 displayPriority: 1,
                 displayGroup: 6
@@ -364,6 +365,7 @@ curveTextPatterns = function () {
                 ['', 'variable', ', '],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
+                [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast length', 'h ']
@@ -379,6 +381,7 @@ curveTextPatterns = function () {
                 ['', 'variable', ' '],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
+                [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast length', 'h '],
@@ -393,13 +396,15 @@ curveTextPatterns = function () {
                 ['', 'xaxis-data source', ':'],
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
-                ['', 'xaxis-variable', ' '],
-                ['fcst_len:', 'xaxis-forecast length', 'h '],
+                ['', 'xaxis-variable', ', '],
+                ['fcst_len:', 'xaxis-forecast length', 'h, '],
+                ['', 'xaxis-discriminator', ', '],
                 ['', 'yaxis-data source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
-                ['', 'yaxis-variable', ' '],
-                ['fcst_len:', 'yaxis-forecast length', 'h '],
+                ['', 'yaxis-variable', ', '],
+                ['fcst_len:', 'yaxis-forecast length', 'h, '],
+                ['', 'yaxis-discriminator', ', '],
                 ['','curve-dates-dateRange-from','to'],
                 ['','curve-dates-dateRange-to','']
             ]

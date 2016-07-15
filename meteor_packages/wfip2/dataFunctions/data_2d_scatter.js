@@ -205,8 +205,12 @@ console.log ("plotParams: ", JSON.stringify(plotParams,null,2));
             var bottom = Number(curve[axis + '-' + 'bottom']);
             var color = curve['color'];  // color should be same for all axis
             var variableStr = curve[axis + '-' + 'variable'];
-            var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-            var variable = variableOptionsMap[variableStr];
+            var variable;
+            if ( curve['variable']=='wind_speed'|| curve['variable']=='wind_direction') {
+                variable = CurveParams.findOne({name: 'variable'}).variableMap[curve['variable']];
+            } else{
+                variable =curve['variable'];
+            }
             var discriminator = curve[axis + '-' + 'discriminator'];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];

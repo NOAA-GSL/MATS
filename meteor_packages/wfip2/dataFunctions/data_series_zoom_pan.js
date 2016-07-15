@@ -22,7 +22,7 @@ var secsConvert = function (dStr) {
 };
 
 
-var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval) {
+var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval,my_variable) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -39,6 +39,8 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval) {
             // done waiting - error condition
             dFuture['return']();
         } else {
+
+            if (my_variable=='ws'){
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
             var ws_time = {};
@@ -92,8 +94,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval) {
                     ws_time[avSeconds].push(this_mean_ws);
                 }
             }
-
-
             interval = time_interval * 1000;
             console.log("interval=" + interval);
             var max_sample_time = 0;
@@ -127,7 +127,35 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval) {
                 loopTime = loopTime + interval;
             }
             dFuture['return']();
+
+        }else{
+
+
+                console.log("else=" + my_variable);
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var avSeconds = Number(rows[rowIndex].avtime);
+                    var my_value = Number(rows[rowIndex].dis);
+              //      console.log("secs="+avSeconds+" my_value=" + my_value);
+                    d.push([avSeconds*1000, my_value]);
+
+                }
+
+
+                dFuture['return']();
+
+
+
+
+            }
+
+
         }
+
+
+
+
+
+
     });
     // wait for future to finish
     dFuture.wait();
@@ -195,6 +223,17 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var model = tmp[0];
         var instrument_id = tmp[1];
         var dataSource = (curve['data source']);
+        var my_variable;
+        if ( curve['variable']=='wind_speed'|| curve['variable']=='wind_direction') {
+            my_variable = CurveParams.findOne({name: 'variable'}).variableMap[curve['variable']];
+        } else{
+
+            my_variable =curve['variable'];
+        }
+
+
+        console.log("curve_variable="+curve['variable']);
+        console.log("my_variable="+my_variable);
 
 
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
@@ -239,21 +278,35 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             } else if (model.includes("hrrr_wfip")) {
 
 
-                statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
-                    "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
-                    " where nwps_nwpid=" + instrument_id +
-                    " and modelid= modelid_rec" +
-                    " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate) +
-                    " and fcst_end_utc=" + 3600 * forecastLength +
-                    " and " + discriminator + " >=" + disc_lower +
-                    " and " + discriminator + " <=" + disc_upper
+                if(my_variable != 'ws'){
 
-            }
+                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid, " +my_variable+ " as dis "+
+                        " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + secsConvert(fromDate) +
+                        " and valid_utc<=" + secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
+                        " and " + discriminator + " >=" + disc_lower +
+                        " and " + discriminator + " <=" + disc_upper
 
 
-            else {
+                }else {
+
+                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
+                        "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + secsConvert(fromDate) +
+                        " and valid_utc<=" + secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
+                        " and " + discriminator + " >=" + disc_lower +
+                        " and " + discriminator + " <=" + disc_upper
+
+                }
+            } else {
 
                 statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
@@ -265,10 +318,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("statement: " + statement);
+
+
             var ws_z_time;
             var site_z_time;
-            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval);
+            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval,my_variable);
             d = queryResult.data;
+            console.log("data: " + d);
             ws_z_time = queryResult.ws_z_time;
             if (d[0] === undefined) {
                 //    no data set emply array
@@ -282,6 +338,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
+
+
         }
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
@@ -314,10 +372,14 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
         //if (d[0] != undefined) {
         for (var i = 0; i < d.length; i++) {
-            mean = mean + d[i][1];
+
+            mean = mean + (d[i][1]);
         }
+
         mean = mean / d.length;
         // }
+
+
 
 
         var options = {
@@ -335,7 +397,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
         dataset.push(options);
-        console.log(curveIndex + " mean=" + dataset[curveIndex].mean);
+        console.log(curveIndex + " mean=" + dataset[curveIndex].annotation);
         // console.log("before match1 dataset="+dataset[curveIndex].data);
     }
 
@@ -460,7 +522,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     mean = mean + d[i][1];
                 }
                 mean = mean / d.length;
-                dataset[ci].mean = label + "- mean = " + mean.toPrecision(4);
+                dataset[ci].annotation = label + "- mean = " + mean.toPrecision(4);
 
             }
 
@@ -525,7 +587,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 mean = mean / d.length;
 
                 dataset[curveIndex].data = d;
-                dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
+                dataset[curveIndex].annotation = label + "- mean = " + mean.toPrecision(4);
 
             }
         }
