@@ -107,6 +107,9 @@ Template.select.helpers({
     multiple:function(){
         if(this.multiple===true)
         {return "multiple";}
+    },
+    isMultiple: function() {
+        return this.multiple===true;
     }
 });
 
@@ -115,5 +118,18 @@ Template.select.events({
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
         setValueTextForParamName(this.name);
-     }
+     },
+    'change .selectAll': function(event) {
+        var selectorId = event.target.dataset.selectid;
+        var elem = document.getElementById(selectorId);
+        var select = false;
+        if (event.target.checked == true) {
+            select = true;
+        }
+        var elements = elem.options;
+        for(var i = 0; i < elements.length; i++){
+            elements[i].selected = select;
+        }
+        setValueTextForParamName(event.target.dataset.name, "");  // will override text if values are selected
+    }
 });
