@@ -2,10 +2,11 @@ var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
 var siteMarkerOptionsMap ={};
-var descriptorOptionsMap ={};
+var discriminatorOptionsMap ={};
 var upperOptionsMap = {};
 var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
+var variableOptionsMap = {};
 
 scatter2dParams = function() {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -131,7 +132,7 @@ curveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["sites","forecast length"],
+                dependentNames: ["sites","forecast length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -195,13 +196,15 @@ curveParams = function () {
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
 
-        optionsMap = {wind_speed:['ws'], wind_direction:['wd']};
+
         CurveParams.insert(
             {
                 name: 'variable',
                 type: InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
+                optionsMap: variableOptionsMap,
+                options:variableOptionsMap[Object.keys(variableOptionsMap)[0]],   // convenience
+                superiorName: 'data source',
                 controlButtonCovered: true,
                 unique: false,
                 default: 'wind_speed',
@@ -268,12 +271,12 @@ curveParams = function () {
             {
                 name: 'discriminator',
                 type: InputTypes.select,
-                optionsMap:descriptorOptionsMap,
-                options:Object.keys(descriptorOptionsMap),   // convenience
+                optionsMap:discriminatorOptionsMap,
+                options:Object.keys(discriminatorOptionsMap),   // convenience
                 dependentNames: ['upper','lower'],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(descriptorOptionsMap)[0],
+                default: Object.keys(discriminatorOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
@@ -625,6 +628,7 @@ Databases.remove({});
                     var valueList = [];
                     valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
+                    variableOptionsMap[model] = ['wind_speed', 'wind_direction'];
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
                 }
             }
@@ -710,15 +714,14 @@ Databases.remove({});
                 //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
-                //RangePerDescriptor.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var descriptor = rows[i].name;
+                    var discriminator = rows[i].name;
                     var min_value = rows[i].min_value;
                     var max_value = rows[i].max_value;
-                    descriptorOptionsMap[descriptor] = descriptor;
+                    discriminatorOptionsMap[discriminator] = discriminator;
                     var step = "any";
-                    upperOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:max_value};
-                    lowerOptionsMap[descriptor] = {min:min_value,max:max_value,step:step,default:min_value};
+                    upperOptionsMap[discriminator] = {min:min_value,max:max_value,step:step,default:max_value};
+                    lowerOptionsMap[discriminator] = {min:min_value,max:max_value,step:step,default:min_value};
                 }
             }
             qFuture['return']();
@@ -742,6 +745,18 @@ Databases.remove({});
                      var model = rows[i].model;
                      var forecastLengths = rows[i].fcst_lens;
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
+                    if (model === 'hrrr_wfip') {
+                        variableOptionsMap[model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
+                        var discriminators = Object.keys(discriminatorOptionsMap);
+                        for (var i =0; i < discriminators.length; i++) {
+                            variableOptionsMap[model].push(discriminators[i]);
+                        }
+                    } else {
+                        variableOptionsMap[model] = ['wind_speed', 'wind_direction'];
+                    }
                 }
             }
             qFuture['return']();
