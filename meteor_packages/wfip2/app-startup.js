@@ -278,7 +278,7 @@ curveParams = function () {
                 unique: false,
                 default: Object.keys(discriminatorOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                multiple: true,
+                multiple: false,
                 displayOrder: 10,
                 displayPriority: 1,
                 displayGroup: 6
