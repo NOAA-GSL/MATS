@@ -134,7 +134,6 @@ Template.paramList.events({
                 elem.style.display = "block";
             }
 
-            document.getElementById("controlButton-label-value").textContent = "";
             Session.set('Curves', curves);
             setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
             checkDiffs();

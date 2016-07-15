@@ -56,9 +56,9 @@
                 <div id="curve-text-buttons-grp" class="btn-group btn-xs">
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
-                    {{#unless isScatterPlot}}
+                    {{#if errorBarsAllowed}}
                         <input type="button" class="errorBars btn btn-primary btn-xs"  value="{{errorBarButtonText}}"  id="{{this.label}}-curve-errorbars"  style= "display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
-                    {{/unless}}
+                    {{/if}}
                 </div><br>
             {{/each}}
             <hr/>

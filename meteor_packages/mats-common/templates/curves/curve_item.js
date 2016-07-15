@@ -16,7 +16,7 @@ Template.curveItem.helpers({
         if (this.diffFrom === undefined) {
             var plotType = Session.get('plotType');
             if (plotType === undefined) {
-                pfuncs = PlotGraphFunctions.find({}).fetch();
+                var pfuncs = PlotGraphFunctions.find({}).fetch();
                 for (var i = 0; i < pfuncs.length; i++) {
                     if (pfuncs[i].checked === true) {
                         Session.set('plotType', pfuncs[i].plotType);
