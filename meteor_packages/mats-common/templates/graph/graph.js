@@ -122,6 +122,9 @@ Template.graph.helpers({
             Session.set(sval,'no error bars');
         }
         return Session.get(sval);
+    },
+    isScatterPlot: function() {
+        return (getPlotType() === PlotTypes.scatter2d);
     }
 });
 
