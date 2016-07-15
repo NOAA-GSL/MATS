@@ -397,7 +397,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
         dataset.push(options);
-        console.log(curveIndex + " mean=" + dataset[curveIndex].mean);
+        console.log(curveIndex + " mean=" + dataset[curveIndex].annotation);
         // console.log("before match1 dataset="+dataset[curveIndex].data);
     }
 
@@ -522,7 +522,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     mean = mean + d[i][1];
                 }
                 mean = mean / d.length;
-                dataset[ci].mean = label + "- mean = " + mean.toPrecision(4);
+                dataset[ci].annotation = label + "- mean = " + mean.toPrecision(4);
 
             }
 
@@ -587,7 +587,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 mean = mean / d.length;
 
                 dataset[curveIndex].data = d;
-                dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
+                dataset[curveIndex].annotation = label + "- mean = " + mean.toPrecision(4);
 
             }
         }
