@@ -16,6 +16,9 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/visibility/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/visibility/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/platforms" />
     </content>
