@@ -129,8 +129,8 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
-    isScatterPlot: function() {
-        return (getPlotType() === PlotTypes.scatter2d);
+    errorBarsAllowed: function() {
+        return (getPlotType() === PlotTypes.profile);
     }
 });
 
