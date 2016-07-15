@@ -75,10 +75,16 @@ Template.graph.helpers({
     plotText: function() {
         var p = Session.get('PlotParams');
         if (p !== undefined) {
+            var format = p.plotFormat;
+            if (PlotParams.findOne({name:'plotFormat'}) &&
+                PlotParams.findOne({name:'plotFormat'}).optionsMap &&
+                PlotParams.findOne({name:'plotFormat'}).optionsMap[p.plotFormat] !== undefined) {
+                format = PlotParams.findOne({name:'plotFormat'}).optionsMap[p.plotFormat];
+            }
             if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
-                return p.fromDate + " - " + p.toDate + " : " + p.plotFormat;
+                return p.fromDate + " - " + p.toDate + " : " + format;
             } else {
-                return "Profile: " + p.plotFormat;
+                return "Profile: " + format;
             }
         } else {
             return "no plot params";
@@ -122,6 +128,9 @@ Template.graph.helpers({
             Session.set(sval,'no error bars');
         }
         return Session.get(sval);
+    },
+    isScatterPlot: function() {
+        return (getPlotType() === PlotTypes.scatter2d);
     }
 });
 

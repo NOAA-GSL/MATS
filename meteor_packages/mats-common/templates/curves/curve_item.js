@@ -73,6 +73,7 @@ Template.curveItem.events({
             } else {
                 fElements[i].value = this[fElements[i].name];
             }
+            setValueTextForParamName(fElements[i].name,fElements[i].value);
         }
         var labelId = 'label-' + InputTypes.textInput;
         var label = document.getElementById(labelId);

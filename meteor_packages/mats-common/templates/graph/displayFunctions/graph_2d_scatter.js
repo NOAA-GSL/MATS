@@ -74,14 +74,15 @@ graph2dScatter = function(result) {
             var label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
                 if (dataset[c].label == label) {
-                    dataset[c].lines.show = !dataset[c].lines.show;
-                    dataset[c].points.show = !dataset[c].points.show;
-                    if (dataset[c].points.show == true) {
-                        Session.set(label + "hideButtonText", 'hide curve');
-                    } else {
-                        Session.set(label + "hideButtonText", 'show curve');
+                    // find the bestfit line - if it exists
+                    if (dataset.length > 1) {
+                        dataset[c + dataset.length - 1].lines.show = !dataset[c].lines.show;
+                        if (dataset[c + dataset.length - 1].points.show == true) {
+                            Session.set(label + "hideButtonText", 'hide curve');
+                        } else {
+                            Session.set(label + "hideButtonText", 'show curve');
+                        }
                     }
-
                 }
             }
             plot = $.plot(placeholder, dataset, options);
@@ -98,6 +99,7 @@ graph2dScatter = function(result) {
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].label == label) {
                 dataset[c].points.show = !dataset[c].points.show;
+                dataset[c].lines.show = false;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
                 } else {

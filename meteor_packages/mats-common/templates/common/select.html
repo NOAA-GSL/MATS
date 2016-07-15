@@ -1,7 +1,12 @@
 <template name="select">
     <select class="data-input {{name}}" size="5" name="{{name}}" id="{{name}}-{{type}}" {{multiple}}>
-        {{#each options}}
-            <option {{isSelectedByDefault ..}}>{{this}}</option>
-        {{/each}}
+            {{#each options}}
+                <option {{isSelectedByDefault ..}}>{{this}}</option>
+            {{/each}}
     </select>
+    {{#if isMultiple}}
+        <div>
+            <input class="selectAll" id="selectAll" data-name="{{name}}" data-selectId="{{name}}-{{type}}" name="selectall" type="checkbox"/>all/none
+        </div>
+    {{/if}}
 </template>
