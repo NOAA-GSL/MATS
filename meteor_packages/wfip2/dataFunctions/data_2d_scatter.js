@@ -7,7 +7,7 @@ var bestFitSortFunction = function (a, b) {
     }
 };
 
-var secsConvert = function (dStr) {
+    var secsConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
         var now = new Date();
         var date = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
