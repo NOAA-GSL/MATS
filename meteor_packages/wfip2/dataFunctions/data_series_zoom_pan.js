@@ -66,7 +66,7 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
                             time_interval = time_diff;
                         }
                     }
-                    console.log(" rows=" +avSeconds+ " sites="+siteid);*/
+                    //console.log(" rows=" +avSeconds+ " sites="+siteid);*/
                     if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
                         ws_time[avSeconds] = [];
                     }
@@ -118,7 +118,7 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
                 }
 
 
-                console.log("interval=" + interval);
+                //console.log("interval=" + interval);
                 var max_sample_time = 0;
                 var keys = Object.keys(ws_time);
                 // console.log("xue keys="+keys);
@@ -203,7 +203,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
     var plotdiff = plotParams.plotFormat;
-    console.log("plotdiff=" + plotdiff);
+    //console.log("plotdiff=" + plotdiff);
 
 
     var weitemp = fromDate.split("-");
@@ -308,7 +308,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             var site_z_time;
             var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval, my_variable);
             d = queryResult.data;
-            console.log("data: " + d);
+            //console.log("data: " + d);
             ws_z_time = queryResult.ws_z_time;
             if (d[0] === undefined) {
                 //    no data set emply array
@@ -379,12 +379,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
 
         dataset.push(options);
-        console.log(curveIndex + " mean=" + dataset[curveIndex].annotation);
+        //console.log(curveIndex + " mean=" + dataset[curveIndex].annotation);
         // console.log("before match1 dataset="+dataset[curveIndex].data);
     }
 
     var numCurves = dataset.length;
-    console.log(" numCurves=" + numCurves);
+    //console.log(" numCurves=" + numCurves);
 
 
     if (matching) {
