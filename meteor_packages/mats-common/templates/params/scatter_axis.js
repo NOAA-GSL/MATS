@@ -95,7 +95,14 @@ Template.scatter2d.events({
             var target_id = axis + "-" + elem_id;
             var telem = document.getElementById(target_id);
             if (pelem.type === "select-multiple") {
-                $(telem).val($(pelem.selectedOptions).map(function(){return(this.value)}).get());
+                var selectedOptions = $(pelem.selectedOptions).map(function(){return(this.value)}).get();
+                for (var i =0; i < telem.options.length; i++) {
+                    if ($.inArray(telem.options[i].value, selectedOptions) !== -1) {
+                        telem.options[i].selected = true;
+                    } else {
+                        telem.options[i].selected = false;
+                    }
+                }
             } else if (pelem.type === "radio") {
                 // NOT SURE THIS IS RIGHT
                 //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());

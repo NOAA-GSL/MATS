@@ -83,8 +83,10 @@ Template.graph.helpers({
             }
             if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
                 return p.fromDate + " - " + p.toDate + " : " + format;
-            } else {
+            } else if (Session.get("plotType") === PlotTypes.profile) {
                 return "Profile: " + format;
+            } else {
+                return "Scatter: " + format;
             }
         } else {
             return "no plot params";
