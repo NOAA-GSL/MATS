@@ -311,7 +311,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var bottom = curve['bottom'];
         var color = curve['color'];
         var variableStr = curve['variable'];
-        var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][PlotTypes.profile];
         var variable = variableOptionsMap[variableStr];
         // var statisticSelect = curve['statistic'];
         // var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
@@ -477,9 +477,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             if (siteIds[ci].length!=1){
                 single_stn = false;
-            };
-
-
+            }
         }
 
 

@@ -45,6 +45,7 @@ Template.select.rendered = function(){
             this.firstNode.selectedIndex = 0;
         }
     }
+    var plotTypeDependent = this.data.plotTypeDependent === true;
     var optionsMap = this.data.optionsMap;
     var peerName = this.data.peerName;
     var dependentNames = this.data.dependentNames;
@@ -55,6 +56,12 @@ Template.select.rendered = function(){
         see if there are any such elements that are essentially hidden copies
         of this one, and also refresh their options lists
          */
+        /*
+        plotTypeDependent means that the optionsMap has a top level plotType. i.e
+         optionsMap = { PlotTypes.profile: {all my options for profile},
+         PlotTypes.scatter2d : {all my options for scatter2d},
+         PlotTypes.timeSeries: {all my options for time series}
+         */
 
         // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
         var name = elem.name;
@@ -64,7 +71,12 @@ Template.select.rendered = function(){
             if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
                 brothers.push(elems[i]);
         }
-        var options = optionsMap[selectedSuperiorValue];
+        var options = {};
+        if (plotTypeDependent) {
+            options = optionsMap[getPlotType()][selectedSuperiorValue];
+        } else {
+            options = optionsMap[selectedSuperiorValue];
+        }
         Meteor.call('setSelectParamOptions', name, options, function (error) {
             if (error) {
                 setError(error.message);

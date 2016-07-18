@@ -7,6 +7,10 @@ var upperOptionsMap = {};
 var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
 var variableOptionsMap = {};
+variableOptionsMap[PlotTypes.profile] = {};
+variableOptionsMap[PlotTypes.scatter2d] = {};
+variableOptionsMap[PlotTypes.timeSeries] = {};
+
 
 scatter2dParams = function() {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -197,14 +201,73 @@ curveParams = function () {
             });
 
 
+
+
+
+
+        /*
+         For Variable plotTypeDependent means that the optionsMap has a top level dependency on plotType.
+         as well as a dependency on datasource. Something like....
+         optionsMap = { PlotTypes.profile: {
+         "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
+         "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
+         "hrrr_wfip" : [ "wind_speed","wind_direction" ],
+         "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
+         "profiler_915" : [ "wind_speed", "wind_direction" ],
+         "rap_esrl" : [ "wind_speed", "wind_direction" ],
+         "rap_ncep" : [ "wind_speed", "wind_direction" ],
+         "sodar" : [ "wind_speed", "wind_direction" ]
+            },
+         PlotTypes.scatter2d : {
+             "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
+             "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
+             "hrrr_wfip" : [ "wind_speed",
+                         "wind_direction",
+                         "sfc_Ri", "sfc_hflx",
+                         "lat_hflx", "fric_v",
+                         "cdca", "ws_10",
+                         "wd_10", "ws_80",
+                         "wd_80", "hpbl",
+                         "u200_10", "u50_10",
+                         "u200_50", "t200_0",
+                         "dswr" ],
+             "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
+             "profiler_915" : [ "wind_speed", "wind_direction" ],
+             "rap_esrl" : [ "wind_speed", "wind_direction" ],
+             "rap_ncep" : [ "wind_speed", "wind_direction" ],
+             "sodar" : [ "wind_speed", "wind_direction" ]
+         },
+         PlotTypes.timeSeries: {
+         "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
+         "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
+         "hrrr_wfip" : [ "wind_speed",
+                     "wind_direction",
+                     "sfc_Ri", "sfc_hflx",
+                     "lat_hflx", "fric_v",
+                     "cdca", "ws_10",
+                     "wd_10", "ws_80",
+                     "wd_80", "hpbl",
+                     "u200_10", "u50_10",
+                     "u200_50", "t200_0",
+                     "dswr" ],
+         "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
+         "profiler_915" : [ "wind_speed", "wind_direction" ],
+         "rap_esrl" : [ "wind_speed", "wind_direction" ],
+         "rap_ncep" : [ "wind_speed", "wind_direction" ],
+         "sodar" : [ "wind_speed", "wind_direction" ]
+
+         }
+         */
+
         CurveParams.insert(
             {
                 name: 'variable',
                 type: InputTypes.select,
                 variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
                 optionsMap: variableOptionsMap,
-                options:variableOptionsMap[Object.keys(variableOptionsMap)[0]],   // convenience
+                options:variableOptionsMap[PlotTypes.timeSeries][Object.keys(variableOptionsMap[PlotTypes.timeSeries])[0]],   // convenience
                 superiorName: 'data source',
+                plotTypeDependent: true,
                 controlButtonCovered: true,
                 unique: false,
                 default: 'wind_speed',
@@ -629,7 +692,9 @@ Databases.remove({});
                     var valueList = [];
                     valueList.push(table_name+','+instruments_instrid);
                     modelOptionsMap[model] = valueList;
-                    variableOptionsMap[model] = ['wind_speed', 'wind_direction'];
+                    variableOptionsMap[PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
+                    variableOptionsMap[PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
+                    variableOptionsMap[PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
                     Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
                 }
             }
@@ -747,16 +812,28 @@ Databases.remove({});
                      var forecastLengths = rows[i].fcst_lens;
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
                     if (model === 'hrrr_wfip') {
-                        variableOptionsMap[model] = [
+                        variableOptionsMap[PlotTypes.profile][model] = [
                             'wind_speed',
                             'wind_direction'
                         ];
+                        variableOptionsMap[PlotTypes.scatter2d][model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
+                        variableOptionsMap[PlotTypes.timeSeries][model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
+
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var i =0; i < discriminators.length; i++) {
-                            variableOptionsMap[model].push(discriminators[i]);
+                            variableOptionsMap[PlotTypes.scatter2d][model].push(discriminators[i]);
+                            variableOptionsMap[PlotTypes.timeSeries][model].push(discriminators[i]);
                         }
                     } else {
-                        variableOptionsMap[model] = ['wind_speed', 'wind_direction'];
+                        variableOptionsMap[PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
+                        variableOptionsMap[PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
+                        variableOptionsMap[PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
                     }
                 }
             }
