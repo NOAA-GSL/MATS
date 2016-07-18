@@ -61,7 +61,7 @@ Template.select.rendered = function(){
         var elems = document.getElementsByClassName("data-input");
         var brothers = [];
         for (var i=0; i<elems.length; i++) {
-            if (elems[i].id.indexOf(name) >= 0)
+            if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
                 brothers.push(elems[i]);
         }
         var options = optionsMap[selectedSuperiorValue];

@@ -393,7 +393,11 @@ getCurveText = function(plotType, curve){
     for (var i = 0; i < curveTextPattern.length; i++) {
         var a = curveTextPattern[i];
         text += a[0];
-        text += curve[a[1]];
+        if (curve[a[1]] instanceof Array && (curve[a[1]].length > 2)) {
+            text += curve[a[1]][0] +  ".." + curve[a[1]][curve[a[1]].length -1];
+        } else {
+            text += curve[a[1]];
+        }
         text += a[2];
     }
     return text;

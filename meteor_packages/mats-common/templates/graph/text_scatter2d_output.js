@@ -24,6 +24,29 @@ Template.textScatter2dOutput.helpers({
         var text = getCurveText(getPlotType(),this);
         return text;
     },
+    headers: function(curve) {
+        var bFitLabel = "best fit";
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+
+        if (plotResultsUpDated !== undefined) {
+            if (PlotResult.length >1) {
+                bFitLabel = "best fit";
+            }
+        }
+        // var curves = Session.get("Curves");
+        // var i = 0;
+        // for (i = 0; i < curves.length; i++){
+        //     if (curve.label === curves[i].label) {
+        //     }
+            // if (PlotResult.data[i].label.indexOf(curves[i].label) === 0 && PlotResult.data[i].label.indexOf("-best") > 1) {
+            //      bFitLabel = PlotResult.data[i].label;
+            // }
+        //}
+        var str = "<th>" + curve.label + " x axis</th>" +
+            "<th>" + curve.label + " y axis </th>" +
+            "<th>" + bFitLabel + "</th>";
+        return str;
+    },
     dataRows: function(curve) {
         /*
          This (plotResultsUpDated) is very important.
