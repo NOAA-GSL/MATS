@@ -22,7 +22,7 @@ var secsConvert = function (dStr) {
 };
 
 
-var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval,my_variable) {
+var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_variable) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -39,123 +39,102 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval,my_var
             // done waiting - error condition
             dFuture['return']();
         } else {
-
-            if (my_variable=='ws'){
-            ymin = Number(rows[0].stat);
-            ymax = Number(rows[0].stat);
-            var ws_time = {};
-            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);  // the delta between adjacent times
-            var ctime = [];
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var siteid = rows[rowIndex].sites_siteid;
-                var sub_z = JSON.parse(rows[rowIndex].z);
-                var sub_ws = JSON.parse(rows[rowIndex].ws);
-                ctime.push(avSeconds * 1000);
-                if (rowIndex < rows.length - 1) {   // record the minimum time delta between adjacent times
-                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
-                    if (time_diff < time_interval) {
-                        time_interval = time_diff;
-                    }
-                }
-                if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
-                    ws_time[avSeconds] = [];
-                }
-                var this_mean_ws = 0;
-                var n_z = 0;
-                for (var j = 0; j < sub_ws.length; j++) {   //loop through all the windspeeds for this time
-                    var this_ws = sub_ws[j];
-                    var this_z = Math.floor(sub_z[j]); // jeff put float number for level - round down to an int
-                    if (all_z.indexOf(this_z) == -1) {
-                        all_z.push(this_z);
-                    }
-                    // ws_z_time is for matching levels for each timestamp
-                    if (ws_z_time[avSeconds] === undefined) {
-                        ws_z_time[avSeconds] = {};
-                    }
-                    if (ws_z_time[avSeconds][this_z] === undefined) {
-                        ws_z_time[avSeconds][this_z] = [];
-                    }
-                    if (site_z_time[avSeconds] === undefined) {
-                        site_z_time[avSeconds] = {};
-                    }
-                    if (site_z_time[avSeconds][this_z] === undefined) {
-                        site_z_time[avSeconds][this_z] = [];
-                    }
-                    if (this_z >= bottom && this_z <= top) {
-                        this_mean_ws = this_mean_ws + this_ws;
-                        n_z = n_z + 1;
-                        ws_z_time[avSeconds][this_z].push(this_ws);
-                        site_z_time[avSeconds][this_z].push(siteid);
-                    }
-                }
-                if (n_z > 0) {
-                    this_mean_ws = this_mean_ws / n_z;
-                    ws_time[avSeconds].push(this_mean_ws);
-                }
-            }
-            interval = time_interval * 1000;
-            console.log("interval=" + interval);
-            var max_sample_time = 0;
-            var keys = Object.keys(ws_time);
-            // console.log("xue keys="+keys);
-            for (var jj = 0; jj < keys.length; jj++) {
-                var key = keys[jj];
-                if (ws_time[key].length > max_sample_time) {
-                    max_sample_time = ws_time[key].length;
-                }
-            }
-            xmin = keys[0] * 1000;
-            xmax = keys[keys.length - 1] * 1000;
-            var loopTime = xmin;
-            while (loopTime < xmax + 1) {
-                if (ctime.indexOf(loopTime) < 0) {
-                    d.push([loopTime, null]);
-                } else {
-                    this_key = loopTime / 1000;
-                    var ws_array = ws_time[this_key];
-                    if (ws_array.length > 0) {
-                        var mean_ws;
-                        var sum_ws = 0;
-                        for (var jjj = 0; jjj < ws_array.length; jjj++) {
-                            sum_ws = sum_ws + ws_array[jjj];
+            if (my_variable == 'ws') {
+                ymin = Number(rows[0].stat);
+                ymax = Number(rows[0].stat);
+                var ws_time = {};
+                var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);  // the delta between adjacent times
+                var ctime = [];
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var avSeconds = Number(rows[rowIndex].avtime);
+                    var siteid = rows[rowIndex].sites_siteid;
+                    var sub_z = JSON.parse(rows[rowIndex].z);
+                    var sub_ws = JSON.parse(rows[rowIndex].ws);
+                    ctime.push(avSeconds * 1000);
+                    if (rowIndex < rows.length - 1) {   // record the minimum time delta between adjacent times
+                        var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
+                        if (time_diff < time_interval) {
+                            time_interval = time_diff;
                         }
-                        mean_ws = sum_ws / ws_array.length;
-                        d.push([loopTime, mean_ws]);
+                    }
+                    if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
+                        ws_time[avSeconds] = [];
+                    }
+                    var this_mean_ws = 0;
+                    var n_z = 0;
+                    for (var j = 0; j < sub_ws.length; j++) {   //loop through all the windspeeds for this time
+                        var this_ws = sub_ws[j];
+                        var this_z = Math.floor(sub_z[j]); // jeff put float number for level - round down to an int
+                        if (all_z.indexOf(this_z) == -1) {
+                            all_z.push(this_z);
+                        }
+                        // ws_z_time is for matching levels for each timestamp
+                        if (ws_z_time[avSeconds] === undefined) {
+                            ws_z_time[avSeconds] = {};
+                        }
+                        if (ws_z_time[avSeconds][this_z] === undefined) {
+                            ws_z_time[avSeconds][this_z] = [];
+                        }
+                        if (site_z_time[avSeconds] === undefined) {
+                            site_z_time[avSeconds] = {};
+                        }
+                        if (site_z_time[avSeconds][this_z] === undefined) {
+                            site_z_time[avSeconds][this_z] = [];
+                        }
+                        if (this_z >= bottom && this_z <= top) {
+                            this_mean_ws = this_mean_ws + this_ws;
+                            n_z = n_z + 1;
+                            ws_z_time[avSeconds][this_z].push(this_ws);
+                            site_z_time[avSeconds][this_z].push(siteid);
+                        }
+                    }
+                    if (n_z > 0) {
+                        this_mean_ws = this_mean_ws / n_z;
+                        ws_time[avSeconds].push(this_mean_ws);
                     }
                 }
-                loopTime = loopTime + interval;
-            }
-            dFuture['return']();
-
-        }else{
-
-
-                console.log("else=" + my_variable);
+                interval = time_interval * 1000;
+                console.log("interval=" + interval);
+                var max_sample_time = 0;
+                var keys = Object.keys(ws_time);
+                // console.log("xue keys="+keys);
+                for (var jj = 0; jj < keys.length; jj++) {
+                    var key = keys[jj];
+                    if (ws_time[key].length > max_sample_time) {
+                        max_sample_time = ws_time[key].length;
+                    }
+                }
+                xmin = keys[0] * 1000;
+                xmax = keys[keys.length - 1] * 1000;
+                var loopTime = xmin;
+                while (loopTime < xmax + 1) {
+                    if (ctime.indexOf(loopTime) < 0) {
+                        d.push([loopTime, null]);
+                    } else {
+                        this_key = loopTime / 1000;
+                        var ws_array = ws_time[this_key];
+                        if (ws_array.length > 0) {
+                            var mean_ws;
+                            var sum_ws = 0;
+                            for (var jjj = 0; jjj < ws_array.length; jjj++) {
+                                sum_ws = sum_ws + ws_array[jjj];
+                            }
+                            mean_ws = sum_ws / ws_array.length;
+                            d.push([loopTime, mean_ws]);
+                        }
+                    }
+                    loopTime = loopTime + interval;
+                }
+                dFuture['return']();
+            } else {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avSeconds = Number(rows[rowIndex].avtime);
                     var my_value = Number(rows[rowIndex].dis);
-              //      console.log("secs="+avSeconds+" my_value=" + my_value);
-                    d.push([avSeconds*1000, my_value]);
-
+                    d.push([avSeconds * 1000, my_value]);
                 }
-
-
                 dFuture['return']();
-
-
-
-
             }
-
-
         }
-
-
-
-
-
-
     });
     // wait for future to finish
     dFuture.wait();
@@ -224,18 +203,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var instrument_id = tmp[1];
         var dataSource = (curve['data source']);
         var my_variable;
-        if ( curve['variable']=='wind_speed'|| curve['variable']=='wind_direction') {
+        if (curve['variable'] == 'wind_speed' || curve['variable'] == 'wind_direction') {
             my_variable = CurveParams.findOne({name: 'variable'}).variableMap[curve['variable']];
-        } else{
+        } else {
 
-            my_variable =curve['variable'];
+            my_variable = curve['variable'];
         }
-
-
-        console.log("curve_variable="+curve['variable']);
-        console.log("my_variable="+my_variable);
-
-
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -266,21 +239,15 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
 
             if (model.includes("recs")) {
-
                 statement = "select valid_utc as avtime,z,ws,sites_siteid " +
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
                     " and valid_utc>=" + secsConvert(fromDate) +
                     " and valid_utc<=" + secsConvert(toDate);
-
-
             } else if (model.includes("hrrr_wfip")) {
-
-
-                if(my_variable != 'ws'){
-
-                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid, " +my_variable+ " as dis "+
+                if (my_variable != 'ws') {
+                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid, " + my_variable + " as dis " +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
@@ -290,10 +257,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
-
-
-                }else {
-
+                } else {
                     statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
@@ -304,10 +268,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
-
                 }
             } else {
-
                 statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
@@ -318,11 +280,9 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("statement: " + statement);
-
-
             var ws_z_time;
             var site_z_time;
-            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval,my_variable);
+            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval, my_variable);
             d = queryResult.data;
             console.log("data: " + d);
             ws_z_time = queryResult.ws_z_time;
@@ -378,8 +338,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
         mean = mean / d.length;
         // }
-
-
 
 
         var options = {

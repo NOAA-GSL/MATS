@@ -50,15 +50,38 @@ Template.select.rendered = function(){
     var dependentNames = this.data.dependentNames;
     var dispElem = document.getElementById(InputTypes.controlButton + "-" + this.data.name + '-value');
     var refresh = function(selectedSuperiorValue) {
+        /*
+        Because there may be axis "brothers" This refresh must go and
+        see if there are any such elements that are essentially hidden copies
+        of this one, and also refresh their options lists
+         */
+
+        // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
+        var name = elem.name;
+        var elems = document.getElementsByClassName("data-input");
+        var brothers = [];
+        for (var i=0; i<elems.length; i++) {
+            if (elems[i].id.indexOf(name) >= 0)
+                brothers.push(elems[i]);
+        }
         var options = optionsMap[selectedSuperiorValue];
-        elem.options.length =0;
-        for(var i = 0; i < options.length; i++) {
-            elem.options[elem.options.length] = new Option(options[i], options[i], i==0, i==0);
-            // set the display button to first value
-            if (i === 0) {
-                dispElem.textContent = options[i];
+        Meteor.call('setSelectParamOptions', name, options, function (error) {
+            if (error) {
+                setError(error.message);
+            }
+        });
+        for (var i = 0; i < brothers.length; i++) {
+            var belem = brothers[i];
+            belem.options.length = 0;
+            for (var i = 0; i < options.length; i++) {
+                belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
+                // set the display button to first value
+                if (i === 0) {
+                    dispElem.textContent = options[i];
+                }
             }
         }
+
         refreshPeer(peerName);
         refreshDependents(dependentNames)
     };

@@ -213,7 +213,13 @@ Meteor.methods({
         Settings.update({},{$set:{LabelPrefix:labelPrefix,Title:title,LineWidth:lineWidth,NullFillString:nullFillString,resetFromCode:resetFromCode}});
         return false;
     },
-
+    setSelectParamOptions: function(name, options) {
+        var param = CurveParams.findOne({name:name});
+        param.options = options;
+        var param_id = param._id;
+        CurveParams.update(param_id,{$set:{options:options}});
+        return false;
+    },
     setCredentials: function(settings) {
         var name = settings.name;
         var clientId = settings.clientId;
