@@ -52,20 +52,22 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, my_variable) {
                 ymin = Number(rows[0].stat);
                 ymax = Number(rows[0].stat);
                 var ws_time = {};
-                var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);  // the delta between adjacent times
+                // var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);  // the delta between adjacent times
                 var ctime = [];
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avSeconds = Number(rows[rowIndex].avtime);
                     var siteid = rows[rowIndex].sites_siteid;
                     var sub_z = JSON.parse(rows[rowIndex].z);
                     var sub_ws = JSON.parse(rows[rowIndex].ws);
-                    ctime.push(avSeconds * 1000);
-                    if (rowIndex < rows.length - 1) {   // record the minimum time delta between adjacent times
-                        var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
-                        if (time_diff < time_interval) {
-                            time_interval = time_diff;
-                        }
+                    if (ctime.indexOf(avSeconds * 1000)<0){
+                        ctime.push(avSeconds * 1000);
                     }
+                    // if (rowIndex < rows.length - 1) {   // record the minimum time delta between adjacent times
+                    //     var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
+                    //     if (time_diff < time_interval) {
+                    //         time_interval = time_diff;
+                    //     }
+                    // }
                     if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
                         ws_time[avSeconds] = [];
                     }
@@ -102,7 +104,18 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, my_variable) {
                         ws_time[avSeconds].push(this_mean_ws);
                     }
                 }
-                var interval = time_interval * 1000;
+                ctime.sort();
+                var interval= ctime[0]*100000;
+                var time_diff;
+
+                for (var ii =0; ii<ctime.length-1;ii++){
+
+                    time_diff = ctime[ii+1] - ctime[ii];
+                    if ( time_diff< interval) {
+                        interval = time_diff;
+                    }
+
+                }
                 var max_sample_time = 0;
                 var keys = Object.keys(ws_time);
                 for (var jj = 0; jj < keys.length; jj++) {
