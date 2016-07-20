@@ -122,6 +122,12 @@ Template.textSeriesOutput.helpers({
         }
         var resultData =PlotResult.data[cindex].data;
         var data = resultData.map(function(value,index){return value[1];});
+        for (var i = 0; i < data.length; i++){
+            if (data[i] == null){
+                data.splice(i, 1);
+                i--;
+            }
+        }
         var weimean = mean(data).toPrecision(4);
         var min =  Math.min.apply(Math, data).toPrecision(4);
         var max =  Math.max.apply(Math, data).toPrecision(4);
