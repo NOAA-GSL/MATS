@@ -221,7 +221,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             console.log("validTimeStr=" + validTimeStr );
             validTime =" ";
             if (validTimeStr != "All"){
-                validTime =" and  m0.hour IN("+validTimeStr+")"
+                validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
             }
             console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
