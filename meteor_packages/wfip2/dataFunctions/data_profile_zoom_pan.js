@@ -348,10 +348,10 @@ dataProfileZoom = function(plotParams, plotFunction) {
             }else{//model
                var statement="select sites_siteid,valid_utc,z ,ws " +
                         " from "+model+", nwp_recs  " +
-                         "where valid_utc>= "+ secsConvert(curveDatesDateRangeFrom)+
-                         " and analysis_utc+fcst_end_utc>="+  secsConvert(curveDatesDateRangeFrom) +
-                    "  and valid_utc<= "+ secsConvert(curveDatesDateRangeTo) +
-                    " and analysis_utc+fcst_end_utc <="+  secsConvert(curveDatesDateRangeTo) +
+                         "where valid_utc>= "+ secsConvert(fromDate)+
+                         //" and analysis_utc+fcst_end_utc>="+  secsConvert(curveDatesDateRangeFrom) +
+                    "  and valid_utc<= "+ secsConvert(toDate) +
+                    //" and analysis_utc+fcst_end_utc <="+  secsConvert(curveDatesDateRangeTo) +
                     " and nwps_nwpid= " + instrument_id+
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc="+3600*forecastLength;

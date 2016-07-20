@@ -31,14 +31,14 @@ Template.plotType.events({
             if (elem && elem.style) {
                 elem.style.display = "none";
             }
-            elem = document.getElementById('top-numberSpinner');
+           /* elem = document.getElementById('top-numberSpinner');
             if (elem && elem.style) {
                 elem.value = 0;
             }
             elem = document.getElementById('controlButton-top-value');
             if (elem && elem.style) {
                 elem.textContent = "0";
-            }
+            } */
             Session.set('plotType', PlotTypes.profile);
             Session.set('lastUpdate', Date.now());
         }
@@ -62,6 +62,7 @@ Template.plotType.events({
             if (elem && elem.style) {
                 elem.style.display = "block";
             }
+            /*
             elem = document.getElementById('top-numberSpinner');
             if (elem && elem.style) {
                 elem.value = 100;
@@ -70,6 +71,7 @@ Template.plotType.events({
             if (elem && elem.style) {
                 elem.textContent = "100";
             }
+            */
             Session.set('plotType', PlotTypes.timeSeries);
             Session.set('lastUpdate', Date.now());
         }
