@@ -285,7 +285,7 @@ curveParams = function () {
                 optionsMap:forecastLengthOptionsMap,
                 options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
                 superiorName: 'data source',
-                selected: '',
+                //selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
@@ -826,7 +826,7 @@ Databases.remove({});
                         ];
 
                         var discriminators = Object.keys(discriminatorOptionsMap);
-                        for (var i =0; i < discriminators.length; i++) {
+                        for (var j =0; j < discriminators.length; j++) {
                             variableOptionsMap[PlotTypes.scatter2d][model].push(discriminators[i]);
                             variableOptionsMap[PlotTypes.timeSeries][model].push(discriminators[i]);
                         }
