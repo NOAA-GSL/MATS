@@ -335,14 +335,12 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 var newSubValues = [];
                 for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
-                    if (subSecIntersectionIndex < subValues.length) {
-                        var newVal = subValues[secsIndex];
-                        if (newVal === undefined || newVal == 0) {
-                            console.log("bad newVal: " + newVal);
-                            console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                        } else {
-                            newSubValues.push(newVal);
-                        }
+                    var newVal = subValues[secsIndex];
+                    if (newVal === undefined || newVal == 0) {
+                        console.log("bad newVal: " + newVal);
+                        console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                    } else {
+                        newSubValues.push(newVal);
                     }
                 }
                 data[di][3] = newSubValues;

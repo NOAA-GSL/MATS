@@ -51,7 +51,7 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
 
                 var ctime = [];
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var avSeconds = Number(rows[rowIndex].valid_utc);
+                    var avSeconds = Number(rows[rowIndex].avtime);
                     var siteid = rows[rowIndex].sites_siteid;
                     var sub_z = JSON.parse(rows[rowIndex].z);
                     var sub_ws = JSON.parse(rows[rowIndex].ws);
@@ -263,7 +263,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
 
             if (model.includes("recs")) {
-                statement = "select valid_utc,z,ws,sites_siteid " +
+                statement = "select valid_utc as avtime,z,ws,sites_siteid " +
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
@@ -271,7 +271,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " and valid_utc<=" + secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (my_variable != 'ws') {
-                    statement = "select valid_utc,z ,ws,sites_siteid, " + my_variable + " as dis " +
+                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid, " + my_variable + " as dis " +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
@@ -282,7 +282,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
-                    statement = "select valid_utc,z ,ws,sites_siteid  " +
+                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
@@ -294,7 +294,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and " + discriminator + " <=" + disc_upper
                 }
             } else {
-                statement = "select sites_siteid, valid_utc,z ,ws  " +
+                statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
@@ -308,7 +308,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             var site_z_time;
             var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval, my_variable);
             d = queryResult.data;
-            console.log("data: " + d);
+            //console.log("data: " + d);
             ws_z_time = queryResult.ws_z_time;
             if (d[0] === undefined) {
                 //    no data set emply array
