@@ -379,7 +379,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
         }
 
-
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
             case 0:
