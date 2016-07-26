@@ -11,6 +11,11 @@ Template.plotType.helpers({
    }
 });
 
+var refreshDependents = function() {
+        var dependents = [];
+    console.log(dependents);
+};
+
 Template.plotType.events({
     'click .plot-type-Profile': function() {
         // move dates selector to curve parameters - one date range for each curve
@@ -41,6 +46,7 @@ Template.plotType.events({
             } */
             Session.set('plotType', PlotTypes.profile);
             Session.set('lastUpdate', Date.now());
+            refreshDependents();
         }
     },
     'click .plot-type-TimeSeries': function() {
@@ -74,6 +80,7 @@ Template.plotType.events({
             */
             Session.set('plotType', PlotTypes.timeSeries);
             Session.set('lastUpdate', Date.now());
+            refreshDependents();
         }
     },
     'click .plot-type-Scatter2d': function() {
@@ -84,6 +91,7 @@ Template.plotType.events({
             }
             Session.set('plotType', PlotTypes.scatter2d);
             Session.set('lastUpdate', Date.now());
+            refreshDependents();
         }
     }
 });

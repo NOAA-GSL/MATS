@@ -114,7 +114,7 @@ Template.item.events({
             Session.set('diffStatus',this);
         }
     },
-    'change .data-input': function () {
+    'change .data-input': function (event) {
         if (this.type !== InputTypes.numberSpinner) {
             var elem = document.getElementById(InputTypes.element + "-" + this.name);
             if (elem === undefined) {

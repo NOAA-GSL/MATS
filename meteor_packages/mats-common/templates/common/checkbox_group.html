@@ -1,4 +1,8 @@
 <template name="checkboxGroup">
-    <label for="{{../../name}}-{{../../type}}-{{this}}">{{this}}</label>
-    <input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}"/>
+    <span>
+        &nbsp;&nbsp;<input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}"/>
+    </span>
+    <span>
+        &nbsp;<label for="{{../../name}}-{{../../type}}-{{this}}">{{this}}</label>
+    </span>
 </template>

@@ -17,12 +17,14 @@ Package.onUse(function(api) {
   api.use("accounts-google", 'client');
   api.use("accounts-ui", 'client');
   api.use("differential:event-hooks", ['client','server']);
+  api.use("service-configuration",'server');
   api.imply("differential:event-hooks");
   api.use('session');
   api.imply("accounts-google");
   api.imply("accounts-ui");
   api.addFiles("lib/collections/collections.js", ['client','server']);
 
+  api.export("ServiceConfiguration","server");
   api.export("CurveParams");  
   api.export("Scatter2dParams");
   api.export("CurveTextPatterns");
@@ -53,9 +55,11 @@ Package.onUse(function(api) {
   api.export("PlotFormats");
   api.export("PlotActions");
   api.export("BestFits");
+  api.export("MatchFormats");
   api.export("SiteMap");
 
   api.addFiles("lib/util.js", ['client','server']);
+  api.export("mean",['client','server']);
   api.addFiles("lib/regression.js",['client','server']);
   api.export("regression",['client','server']);
   api.addFiles("lib/error/error.js", ['client','server']);

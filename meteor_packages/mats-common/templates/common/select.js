@@ -31,6 +31,24 @@ var refreshDependents = function(dependentNames) {
     }
 };
 
+var checkDisableOther = function(item) {
+// check for enable controlled - This select might have control of another selector
+    if (item.disableOtherFor !== undefined) {
+        // this item controls the enable/disable properties of at least one other item.
+        // Use the options to enable disable that item.
+        var controlledSelectors = Object.keys(item.disableOtherFor);
+        for (var i = 0; i < controlledSelectors.length; i++) {
+            var selectedOption = getInputElementForParamName(item.name).selectedOptions;
+            var selectedText = selectedOption[0].text;
+            if ($.inArray(selectedText, item.disableOtherFor[controlledSelectors[i]]) !== -1) {
+                getInputElementForParamName(controlledSelectors[i]).disabled = true;
+            } else {
+                getInputElementForParamName(controlledSelectors[i]).disabled = false;
+            }
+        }
+    }
+};
+
 Template.select.rendered = function(){
     var ref = this.data.name + '-' + this.data.type;
     var elem = document.getElementById(ref);
@@ -84,18 +102,21 @@ Template.select.rendered = function(){
         });
         for (var i = 0; i < brothers.length; i++) {
             var belem = brothers[i];
-            belem.options.length = 0;
-            for (var i = 0; i < options.length; i++) {
-                belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
-                // set the display button to first value
-                if (i === 0) {
-                    dispElem.textContent = options[i];
+            var belemSelectedOptions =$(belem.selectedOptions).map(function(){return(this.value)}).get();
+            if (belemSelectedOptions.length === 0) {
+                belem.options.length = 0;
+                for (var i = 0; i < options.length; i++) {
+                    belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
+                    // set the display button to first value
+                    if (i === 0) {
+                        dispElem.textContent = options[i];
+                    }
                 }
             }
         }
 
         refreshPeer(peerName);
-        refreshDependents(dependentNames)
+        refreshDependents(dependentNames);
     };
 
     // register refresh event for any superior to use to enforce a refresh of the options list
@@ -121,6 +142,7 @@ Template.select.rendered = function(){
             }
         }
     });
+    checkDisableOther(this.data);
 };
 
 Template.select.helpers({
@@ -153,6 +175,7 @@ Template.select.events({
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
         setValueTextForParamName(this.name);
+        checkDisableOther(this);
      },
     'change .selectAll': function(event) {
         var selectorId = event.target.dataset.selectid;

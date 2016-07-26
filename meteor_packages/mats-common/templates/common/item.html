@@ -11,13 +11,15 @@
             {{else}} {{#if isDateRange}}
                 {{> dateRange this}}
             {{else}} {{#if isCheckBoxGroup}}
-                    {{#each options}}
-                        {{> checkboxGroup this}}
-                    {{/each}}
+                {{name}}:
+                {{#each options}}
+                    {{> checkboxGroup this}}
+                {{/each}}
             {{else}} {{#if isRadioGroup}}
-                    {{#each options}}
-                        {{> radioGroup this}}
-                    {{/each}}
+                {{name}}:
+                {{#each options}}
+                    {{> radioGroup this}}
+                {{/each}}
             {{else}} {{#if isSelectMap}}
                 {{> map this}}
             {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}

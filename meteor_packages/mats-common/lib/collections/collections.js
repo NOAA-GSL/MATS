@@ -67,6 +67,13 @@ BestFits = {
     power:'power'
 };
 
+MatchFormats = {
+    none: "none",
+    time: "time",
+    level: "level",
+    site: "site"
+};
+
 getCurves = function() {
     return Session.get('Curves');
 };

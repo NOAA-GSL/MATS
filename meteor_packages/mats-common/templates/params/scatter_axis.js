@@ -96,11 +96,11 @@ Template.scatter2d.events({
             var telem = document.getElementById(target_id);
             if (pelem.type === "select-multiple") {
                 var selectedOptions = $(pelem.selectedOptions).map(function(){return(this.value)}).get();
-                for (var i =0; i < telem.options.length; i++) {
-                    if ($.inArray(telem.options[i].value, selectedOptions) !== -1) {
-                        telem.options[i].selected = true;
+                for (var x =0; x < telem.options.length; x++) {
+                    if ($.inArray(telem.options[x].value, selectedOptions) !== -1) {
+                        telem.options[x].selected = true;
                     } else {
-                        telem.options[i].selected = false;
+                        telem.options[x].selected = false;
                     }
                 }
             } else if (pelem.type === "radio") {
