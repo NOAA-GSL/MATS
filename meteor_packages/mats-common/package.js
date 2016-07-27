@@ -56,6 +56,7 @@ Package.onUse(function(api) {
   api.export("PlotActions");
   api.export("BestFits");
   api.export("MatchFormats");
+  api.export("PlotAxisFilters");
   api.export("SiteMap");
 
   api.addFiles("lib/util.js", ['client','server']);

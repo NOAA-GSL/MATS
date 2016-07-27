@@ -69,10 +69,10 @@ var secsConvert = function (dStr) {
 };
 
 
-var queryWFIP2DB = function (statement, top, bottom, myVariable, conventional) {
+var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator) {
     var dFuture = new Future();
     var error = "";
-    var resultData = [];
+    var resultData = {};
     var minInterval = Number.MAX_VALUE;
     wfip2Pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -85,37 +85,39 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, conventional) {
             dFuture['return']();
         } else {
                 /*
-                 Variable is conventional - we must map the query result to a data structure like this...
+                 We must map the query result to a data structure like this...
                  var resultData = {
-                 // sites are numbered so the site key corresponds to a siteid
-
-                 [// siteid 0 - index 0
-                     time1: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-                         levels: [],
-                         values: [],
-                         sum: 0;
-                         mean: 0;
-                         count: count;
-                         max: max;
-                         min: min
-                     },
-                     time2: {
-                         .
-                         .
-                     },
-                     .
-                     .
-                     timeN: {
-                         .
-                         .
-                     },
-                     },
-                     .
-                     .
-                     { // siteid n
-                     },
-                 ];
-                 */
+                         siteid0: {
+                             time1: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+                                 levels: [],
+                                 values: [],
+                                 sum: 0;
+                                 mean: 0;
+                                 count: count;
+                                 max: max;
+                                 min: min
+                             },
+                             time2: {
+                                 .
+                                 .
+                             },
+                             .
+                             .
+                             timeN: {
+                                 .
+                                 .
+                             }
+                             },
+                        siteid2:{
+                            ....
+                        },
+                             .
+                             .
+                        siteidn:{
+                              ...
+                             },
+                 };
+            */
                 var time = 0;
                 var lastTime = 0;
                 var rowIndex;
@@ -129,14 +131,14 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, conventional) {
                     var siteid = rows[rowIndex].sites_siteid;
                     var values = [];
                     var levels = [];
-                    if (conventional)  {
-                            // conventional variable
-                        levels = JSON.parse(rows[rowIndex].z);
-                        values = JSON.parse(rows[rowIndex][myVariable]);
-                    } else {
+                    if (isDiscriminator)  {
                         // discriminator
                         levels = JSON.parse(rows[rowIndex].z);
                         values = [Number(rows[rowIndex][myVariable])];
+                    } else {
+                        // conventional variable
+                        levels = JSON.parse(rows[rowIndex].z);
+                        values = JSON.parse(rows[rowIndex][myVariable]);
                     }
                     // apply level filter, remove any levels and corresponding values that are not within the boundary.
                     // there are always the same number of levels as values, they correspond one to one (in database).
@@ -166,11 +168,18 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, conventional) {
                     resultData[siteid][time].min = min(values);
                 }
                 // fill in missing times - there must be an entry at each minInterval
-                // We are taking advantage of javascript arrays really being objects here.
-                // might be better (less confusing) to actually make this an explicit object instead of an array.
+                // if there are multiple entries for a given time average them into one time entry
+                // get an array of all the times for every site
+
+                var allSites = Object.keys(resultData).map(function(siteKey){
+                    return resultData[siteKey];
+                });
+                var allTimes = allSites.map(function(site) {
+                    return Object.keys(site);
+                });
+                var times = _.union(allTimes).sort() ; // get all the times, sorted
                 var siteids = Object.keys(resultData);
                 for (siteid in siteids) {
-                    var times = Object.keys(resultData[siteids[siteid]]);
                     for (var k = 0; k < times.length -1; k++) {
                         var time = Number(times[k]);
                         var nextTime = times[k+1];
@@ -218,13 +227,14 @@ data2dScatter = function (plotParams, plotFunction) {
             var instrument_id = tmp[1];
             var myVariable;
             // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
-            // we are using variableMap to decide if a variable is conventional or a discriminator.
+            // discriminators are not.
+            // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
             var variableMap = CurveParams.findOne({name: 'variable'}).variableMap;
-            var conventional = true;
+            var isDiscriminator = false;
             myVariable = variableMap[curve[axis + '-variable']];
             if (myVariable === undefined) {
                 myVariable = curve[axis + '-variable'];
-                conventional = false; // variable is mapped
+                isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
             }
             var region = CurveParams.findOne({name: 'region'}).optionsMap[curve[axis + '-' + 'region']][0];
             var siteNames = curve[axis + '-' + 'sites'];
@@ -255,7 +265,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and valid_utc>=" + secsConvert(fromDate) +
                     " and valid_utc<=" + secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
-                if (conventional === false) {
+                if (isDiscriminator) {
                     statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
@@ -289,7 +299,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
-            var queryResult = queryWFIP2DB(statement, top, bottom, myVariable, conventional);
+            var queryResult = queryWFIP2DB(statement, top, bottom, myVariable, isDiscriminator);
 
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
              data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
@@ -301,35 +311,68 @@ data2dScatter = function (plotParams, plotFunction) {
              We can be requested to match by any combination of siteids, levels, or times. Matching means that we exclude any data that is not consistent with
              the intersection of the match request. For example if level matching is requested we need to find the intersection of all the level arrays for the given
              criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+             The data from the query is of the form
+             resultData = {
+                    siteid: {
+                            time1: {
+                                levels:[],
+                                values:[],
+                                sum: Number,
+                                mean: Number,
+                                count: Number,
+                                max: Number,
+                                min: Number
+                            },
+                            time2: {...},
+                            .
+                            .
+                            timen:{...}
+                    },
+                    site2:{....},
+                    .
+                    .
+                    siten:{....}
+             }
+             where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              */
+            var data = queryResult.data;
              if (plotParams['matchFormat'].length > 0) {
                  // filter the queryResult by matching criteria
-             } else {
-                 // summarize the mean values of the data results
-                 
              }
 
-            // sort the axis data wrt time ([0] element)
-            axisData[axis] = queryResult.data.sort(sortFunction);
-            var varLevelTime = queryResult.varLevelTime;
-            var siteLevelTime;
-            if (axisData[axis][0] === undefined) {
-                //    no data set empty array
-                axisData[axis][0] = [];
-            } else {
-                xmin = axisData[axis][0][0];
-                xmax = axisData[axis][axisData[axis].length - 1][0];
-                mxmax = mxmax > xmax ? xmax : mxmax;
-                mxmin = mxmin < xmin ? mxmin : xmin;
-                error = queryResult.error;
-                varLevelTime = queryResult.varLevelTime;
-                siteLevelTime = queryResult.siteLevelTime;
-            }
+             var d = {};
+             // summarize the mean values of the data results
+             var sites =  Object.keys(data);
+             var sitesLength = sites.length;
+             var sitesIndex = 0;
+             var times = Object.keys(data[sites[0]]).sort();
+             var timesLength = times.length;
+             var timesIndex = 0;
+             var sum = 0;
+             var numLevels =0;
+             for (timesIndex; timesIndex < timesLength; timesIndex++) {
+                 var time = times[timesIndex];
+                 for (sitesIndex = 0; sitesIndex < sitesLength; sitesIndex++) {
+                     var site = sites[sitesIndex];
+                     if (data[site][time] !== undefined && data[site][time] !== null ) {
+                         try {
+                             sum += data[site][time].sum;
+                             numLevels += data[site][time].numLevels;
+                         } catch (error) {
+                             console.log ("error - data[site][time] is " + data[site][time]);
+                         }
+
+                     }
+                 }
+                 d[time] = sum / numLevels;
+             }
+            axisData[axis] = d;
         }   // for axis loop
 
 
-        // should now have two data sets, one for x and one for y, each a value against time.
-        // need to make sure the x (time) components match (normalize data) and then use the y
+        // should now have two data sets, one for x and one for y, each a summed value against time. There should
+        // not be any duplicate times.
+        // need to make sure the x (time) components of each curve match (normalize data) and then use the y
         // components to create the dataset i.e. axisData['xaxis'][*][0] should equal axisData['yaxis'][*][0] and
         // axisData['xaxis'][*][1] becomes the x values while axisData['yaxis'][*][1] becomes the corresponding y axis
 
@@ -337,44 +380,39 @@ data2dScatter = function (plotParams, plotFunction) {
         var normalizedAxisData = [];
         var xaxisIndex = 0;
         var yaxisIndex = 0;
+        var xaxisTimes = Object.keys(axisData['xaxis']);
+        var yaxisTimes = Object.keys(axisData['yaxis']);
+        var xaxisLength = xaxisTimes.length;
+        var yaxisLength = yaxisTimes.length;
+
         // synchronize datasets:
-        // time is the axis index. Each axis is a value against time
-        // make sure you do not have any leading data on either axis wrt time (axisIndex)
-        if (axisData['xaxis'][xaxisIndex][0] <= axisData['yaxis'][yaxisIndex][0]) {
-            while (axisData['xaxis'][xaxisIndex][0] < axisData['yaxis'][yaxisIndex][0]) {
-                xaxisIndex++;
-            }
-        } else {
-            while (axisData['xaxis'][xaxisIndex][0] > axisData['yaxis'][yaxisIndex][0]) {
-                yaxisIndex++;
-            }
-        }
-
-        // there can be many entries for a given time, we have to average those into a single time
-
-        while (xaxisIndex < axisData['xaxis'].length && yaxisIndex < axisData['yaxis'].length) {
-            if (axisData['xaxis'][xaxisIndex][0] === axisData['yaxis'][yaxisIndex][0]) {
-                normalizedAxisData.push([axisData['xaxis'][xaxisIndex][1], axisData['yaxis'][yaxisIndex][1]]);
+        // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
+        var yaxisTime;
+        var xaxisTime;
+        while (xaxisIndex < xaxisLength - 1 && yaxisIndex < yaxisLength - 1) {
+            xaxisTime = xaxisTimes[xaxisIndex];
+            yaxisTime = yaxisTimes[yaxisIndex];
+            if (xaxisTime === yaxisTime) {
+                normalizedAxisData.push([axisData['xaxis'][xaxisTime], axisData['yaxis'][yaxisTime]]);
             } else {
-                if (axisData['xaxis'][xaxisIndex][0] < axisData['yaxis'][yaxisIndex][0]) {
-                    while (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex] && axisData['xaxis'][xaxisIndex][0] <= axisData['yaxis'][yaxisIndex][0]) {
-                        xaxisIndex++;
-                    }
-                } else {
-                    while (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex] && axisData['xaxis'][xaxisIndex][0] >= axisData['yaxis'][yaxisIndex][0]) {
-                        yaxisIndex++;
-                    }
+                // skip up x
+                while (xaxisTime < yaxisTime && xaxisIndex < xaxisLength) {
+                    xaxisIndex++;
+                    xaxisTime = xaxisTimes[xaxisIndex];
                 }
-            }
-
-            if (axisData['xaxis'][xaxisIndex] && axisData['yaxis'][yaxisIndex]) {
-                normalizedAxisData.push([axisData['xaxis'][xaxisIndex][1], axisData['yaxis'][yaxisIndex][1]]);
+                // skip up y
+                while (xaxisTime > yaxisTime && yaxisIndex < yaxisLength) {
+                    yaxisIndex++;
+                    yaxisTime = yaxisTimes[yaxisIndex];
+                }
+                // push if equal
+                if (xaxisTime === yaxisTime) {
+                    normalizedAxisData.push([axisData['xaxis'][xaxisTime], axisData['yaxis'][yaxisTime]]);
+                }
             }
             xaxisIndex++;
             yaxisIndex++;
         }
-
-
 
 
         var pointSymbol = "circle";

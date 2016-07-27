@@ -74,6 +74,12 @@ MatchFormats = {
     site: "site"
 };
 
+PlotAxisFilters = {
+    none: "none",
+    level: "level",
+    site: "site"
+};
+
 getCurves = function() {
     return Session.get('Curves');
 };

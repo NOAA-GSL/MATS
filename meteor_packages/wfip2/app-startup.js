@@ -31,6 +31,26 @@ scatter2dParams = function() {
                 displayGroup: 1
             });
 
+        var filterOptions = {};
+        filterOptions[PlotAxisFilters.level] = "none";
+        filterOptions[PlotAxisFilters.level] = "by level";
+        filterOptions[PlotAxisFilters.site] = "by site";
+        
+        Scatter2dParams.insert(
+            {
+                name: 'scatter2d axis filter',
+                type: InputTypes.radioGroup,
+                optionsMap: filterOptions,
+                options: Object.keys(filterOptions),
+                selected: 'matching',
+                controlButtonCovered: true,
+                default: filterOptions.none,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+
         var bestFits = {};
         bestFits[BestFits.none] = "None";
         bestFits[BestFits.linear] = "Linear regression";
@@ -173,23 +193,6 @@ curveParams = function () {
             bias:['bias']
         };
 
-        CurveParams.insert(
-            {
-                name: 'truth data source',
-                type: InputTypes.select,
-                optionsMap:modelOptionsMap,
-                options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["sites","forecast length","variable"],
-                controlButtonCovered: true,
-                default: 'hrrr_esrl',
-                unique: false,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-
 
         CurveParams.insert(
             {
@@ -202,11 +205,27 @@ curveParams = function () {
                 unique: false,
                 default: statisticOptionsMap.none,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2
             });
 
+        CurveParams.insert(
+            {
+                name: 'truth data source',
+                type: InputTypes.select,
+                optionsMap:modelOptionsMap,
+                options:Object.keys(modelOptionsMap),   // convenience
+                optionsQuery:"select model from regions_per_model_mats",
+                dependentNames: ["sites","forecast length","variable"],
+                controlButtonCovered: true,
+                default: 'hrrr_esrl',
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 2,
+                displayGroup: 2
+            });
 
         CurveParams.insert(
             {
