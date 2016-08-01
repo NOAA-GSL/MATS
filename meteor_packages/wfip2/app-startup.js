@@ -16,13 +16,16 @@ scatter2dParams = function() {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Scatter2dParams.remove({});
     }
+
+    // NOTE: the name beginning with 'scatter2d' is significant because if it begins
+    // with 'scatter2d' the parameter will get added to the parameter object
+    // that gets passed to the back end. See param_list.js submit form event.
     if (Scatter2dParams.find().count() == 0) {
         Scatter2dParams.insert(
             {
-                name: 'scatter2d axis',
+                name: 'axis selector',
                 type: InputTypes.radioGroup,
                 options: ['xaxis', 'yaxis'],
-                selected: 'matching',
                 controlButtonCovered: true,
                 default: 'xaxis',
                 controlButtonVisibility: 'block',
@@ -31,22 +34,21 @@ scatter2dParams = function() {
                 displayGroup: 1
             });
 
+
         var filterOptions = {};
-        filterOptions[PlotAxisFilters.level] = "none";
         filterOptions[PlotAxisFilters.level] = "by level";
         filterOptions[PlotAxisFilters.site] = "by site";
-        
+
         Scatter2dParams.insert(
             {
                 name: 'scatter2d axis filter',
-                type: InputTypes.radioGroup,
+                type: InputTypes.checkBoxGroup,
                 optionsMap: filterOptions,
                 options: Object.keys(filterOptions),
-                selected: 'matching',
                 controlButtonCovered: true,
-                default: filterOptions.none,
+                default: PlotAxisFilters.none,
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
             });
@@ -69,7 +71,7 @@ scatter2dParams = function() {
                 controlButtonCovered: true,
                 default: BestFits.none,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 1
             });

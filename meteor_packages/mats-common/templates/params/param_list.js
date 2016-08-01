@@ -67,10 +67,11 @@ Template.paramList.events({
             var paramElems = _.filter(elems, function (elem) {
                 return _.contains(curveNames, elem.name);
             });
-            // add in the bestFit parameter if it is a scatter plot.
+            // add in the scatter2d parameters if it is a scatter plot.
             if (getPlotType() == PlotTypes.scatter2d) {
-                var bestFitParams = [].slice.call(document.getElementsByName('scatter2d-best-fit'));
-                paramElems = paramElems.concat(bestFitParams);
+                $(":input[id^='scatter2d']:input[name*='scatter2d']" ).each( function() {
+                    paramElems.push(this);
+                });
             }
             var l = paramElems.length;
             if (Session.get('editMode')) {
@@ -87,7 +88,14 @@ Template.paramList.events({
                             if (paramElems[i].checked){
                                 p[paramElems[i].name] = paramElems[i].value;
                             }
-                        } else if (paramElems[i].type === "button") {
+                        } else if (paramElems[i].type === "checkbox") {
+                            if (paramElems[i].checked){
+                                if (p[paramElems[i].name] === undefined) {
+                                    p[paramElems[i].name] = [];
+                                }
+                                p[paramElems[i].name].push(paramElems[i].value);
+                            }
+                    } else if (paramElems[i].type === "button") {
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
                             p[paramElems[i].name] = (paramElems[i]).value;
@@ -113,6 +121,13 @@ Template.paramList.events({
                         if (paramElems[i].type === "radio") {
                             if (paramElems[i].checked){
                                 p[paramElems[i].name] = paramElems[i].value;
+                            }
+                        } else if (paramElems[i].type === "checkbox") {
+                            if (paramElems[i].checked){
+                                if (p[paramElems[i].name] === undefined) {
+                                    p[paramElems[i].name] = [];
+                                }
+                                p[paramElems[i].name].push(paramElems[i].value);
                             }
                         }
                      else if (paramElems[i].type === "button") {

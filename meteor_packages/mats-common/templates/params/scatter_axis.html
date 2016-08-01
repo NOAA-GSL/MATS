@@ -4,7 +4,7 @@
         {{#each scatter2dParams}}
             <h4>{{name this}}</h4>
             {{#each scatter2dOptions}}
-                <input class="data-input {{classname ..}}-radio-group" type=radio name="{{name ..}}" id="{{id ..}}" value="{{this}}" {{isDefault ..}}/>
+                <input class="data-input {{className ..}}" type={{type ..}} name="{{name ..}}" id="{{id ..}}" value="{{this}}" {{isDefault ..}}/>
                 <label for="{{id ..}}">{{label this ..}}</label>
             {{/each}}
             {{#if isAxis this}}
@@ -12,10 +12,10 @@
                     <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to {{axis ..}}</button>
                     <button type="button" name="scatter-help" id="scatter-help" class="btn btn-info scatter-help fa fa-question">&nbsp;&nbsp;Scatter Help</button>
                 </div>
-                <div id="scatter2d-axis-curve">
-                    <span id="scatter2d-xaxis-curve" style="color:red" class="fa fa-asterisk">XAXIS NOT YET APPLIED</span>
+                <div>
+                    <span id="xaxis-curve" style="color:red" class="fa fa-asterisk">XAXIS NOT YET APPLIED</span>
                     <span>&nbsp;</span>
-                    <span id="scatter2d-yaxis-curve" style="color:red" class="fa fa-asterisk">YAXIS NOT YET APPLIED</span>
+                    <span id="yaxis-curve" style="color:red" class="fa fa-asterisk">YAXIS NOT YET APPLIED</span>
                 </div>
             {{/if}}
         {{/each}}

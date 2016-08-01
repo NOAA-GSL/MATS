@@ -74,6 +74,9 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
     var error = "";
     var resultData = {};
     var minInterval = Number.MAX_VALUE;
+    var allSiteIds = [];
+    var allLevels = [];
+    var allTimes = [];
     wfip2Pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -87,8 +90,8 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                 /*
                  We must map the query result to a data structure like this...
                  var resultData = {
-                         siteid0: {
-                             time1: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+                         time0: {
+                             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
                                  levels: [],
                                  values: [],
                                  sum: 0;
@@ -97,23 +100,23 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                                  max: max;
                                  min: min
                              },
-                             time2: {
+                             site1: {
                                  .
                                  .
                              },
                              .
                              .
-                             timeN: {
+                             site2: {
                                  .
                                  .
                              }
                              },
-                        siteid2:{
+                        time1:{
                             ....
                         },
                              .
                              .
-                        siteidn:{
+                        timen:{
                               ...
                              },
                  };
@@ -121,6 +124,8 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                 var time = 0;
                 var lastTime = 0;
                 var rowIndex;
+                var allSitesSet = new Set();
+
                 for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
                     var interval = time - lastTime;
@@ -129,10 +134,11 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                     }
                     lastTime = time;
                     var siteid = rows[rowIndex].sites_siteid;
+                    allSitesSet.add(siteid);
                     var values = [];
                     var levels = [];
                     if (isDiscriminator)  {
-                        // discriminator
+                        // discriminators do not return arrays of values
                         levels = JSON.parse(rows[rowIndex].z);
                         values = [Number(rows[rowIndex][myVariable])];
                     } else {
@@ -150,43 +156,36 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                             values.splice(l,1);
                         }
                     }
+                    allLevels.push(levels);  // array of level arrays - two dimensional
                     var sum = values.reduce(add,0);
                     var numLevels = levels.length;
                     var mean = sum / numLevels;
-                    if(resultData[siteid] === undefined) {
-                        resultData[siteid] = {};
+                    if(resultData[time] === undefined) {
+                        resultData[time] = {};
                     }
-                    if (resultData[siteid][time] === undefined) {
-                        resultData[siteid][time] = {};
+                    if (resultData[time][siteid] === undefined) {
+                        resultData[time][siteid] = {};
                     }
-                    resultData[siteid][time].levels = levels;
-                    resultData[siteid][time].values = values;
-                    resultData[siteid][time].sum = sum;
-                    resultData[siteid][time].numLevels = numLevels;
-                    resultData[siteid][time].mean = mean;
-                    resultData[siteid][time].max = max(values);
-                    resultData[siteid][time].min = min(values);
+                    resultData[time][siteid].levels = levels;
+                    resultData[time][siteid].values = values;
+                    resultData[time][siteid].sum = sum;
+                    resultData[time][siteid].numLevels = numLevels;
+                    resultData[time][siteid].mean = mean;
+                    resultData[time][siteid].max = max(values);
+                    resultData[time][siteid].min = min(values);
                 }
                 // fill in missing times - there must be an entry at each minInterval
                 // if there are multiple entries for a given time average them into one time entry
                 // get an array of all the times for every site
+                allSiteIds = Array.from(allSitesSet);
+                allTimes = Object.keys(resultData);
 
-                var allSites = Object.keys(resultData).map(function(siteKey){
-                    return resultData[siteKey];
-                });
-                var allTimes = allSites.map(function(site) {
-                    return Object.keys(site);
-                });
-                var times = _.union(allTimes).sort() ; // get all the times, sorted
-                var siteids = Object.keys(resultData);
-                for (siteid in siteids) {
-                    for (var k = 0; k < times.length -1; k++) {
-                        var time = Number(times[k]);
-                        var nextTime = times[k+1];
-                        while ((nextTime - time) > minInterval) {
-                            time = time + minInterval;
-                            resultData[siteids[siteid]][time] = null;
-                        }
+                for (var k = 0; k < allTimes.length -1; k++) {
+                    time = Number(allTimes[k]);
+                    var nextTime = allTimes[k+1];
+                    while ((nextTime - time) > minInterval) {
+                        time = time + minInterval;
+                        resultData[time] = null;
                     }
                 }
                 dFuture['return']();
@@ -198,6 +197,9 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
     return {
         error: error,
         data: resultData,
+        allLevels: allLevels,
+        allSites: allSiteIds,
+        allTimes: allTimes,
         minInterval: minInterval
     };
 };
@@ -214,11 +216,60 @@ data2dScatter = function (plotParams, plotFunction) {
     var axisLabelList = curveKeys.filter(function (key) {
         return key.indexOf('axis-label') === 1;
     });
+
     var bf = [];   // used for bestFit data
+
+    var getDatum = function (rawAxisData, axisTime, filterByLevel,filterBySite, allLevelsForDataSet, allSitesForDataSet) {
+        // sum and average all of the means for all of the sites
+        var datum = [];
+        var axisArr = [['xaxis', 'yaxis'], ['yaxis', 'xaxis']];
+        for (var ai = 0; ai < axisArr.length; ai++) {
+            var axisName = axisArr[ai][0];
+            var pairAxisName = axisArr[ai][1];
+            var tSites = Object.keys(rawAxisData[axisName]['data'][axisTime]);
+            var pairSites = Object.keys(rawAxisData[pairAxisName]['data'][axisTime]);
+            if (filterBySite) {
+                tSites =  _.intersection(tSites,pairSites);
+            }
+            for (var si = 0; si < tSites.length; si++) {
+                var sMean = 0;
+                // if filterByLevel is required we have to recalculate the mean for filtered levels
+                var dataPresent = false;
+                if (filterByLevel) {
+                    // recalculate sMean for filtered levels
+                    var sValues = rawAxisData[axisName]['data'][axisTime][tSites[si]]['values'];
+                    var sLevels = rawAxisData[axisName]['data'][axisTime][tSites[si]]['levels'];
+                    var pairLevels = rawAxisData[pairAxisName]['data'][axisTime][tSites[si]]['levels'];
+                    var filteredLevels = _.intersection(sLevels,pairLevels);
+                    // Eventually what we really want is to put in a quality control
+                    // that says "what percentage of the allLevelsForDataSet does the filteredLevels need to be
+                    // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
+                    // same for sites.
+                    var sSum = 0;
+                    var sNum = 0;
+                    for (var li = 0; li < sLevels.length; li++) {
+                        if (_.contains(filteredLevels,sLevels[li]) === false) {
+                            continue;
+                        }
+                        dataPresent = true;
+                        sSum += sValues[li];
+                        sNum++;
+                        sMean = sSum / sNum;
+                    }
+                } else {
+                    sMean = rawAxisData[axisName]['data'][axisTime][tSites[si]]['mean'];
+                }
+            }
+            datum.push(sMean);
+        }
+        return datum;
+    };
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        var axisData = {};
+        var rawAxisData = {};
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
             var curve = curves[curveIndex];
+            var filterOptions = curve['scatter2d-axis-filter'];
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
             // each axis has a data source - get the right data source and derive the model
@@ -300,114 +351,118 @@ data2dScatter = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
             var queryResult = queryWFIP2DB(statement, top, bottom, myVariable, isDiscriminator);
-
-            /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
-             data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
-             and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
-             need to be accounted for here. Also there can be missing times so we need to iterate through each set of times and fill in missing ones
-             based on the minimum interval for the data set.
-
-             We also have matching...
-             We can be requested to match by any combination of siteids, levels, or times. Matching means that we exclude any data that is not consistent with
-             the intersection of the match request. For example if level matching is requested we need to find the intersection of all the level arrays for the given
-             criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
-             The data from the query is of the form
-             resultData = {
-                    siteid: {
-                            time1: {
-                                levels:[],
-                                values:[],
-                                sum: Number,
-                                mean: Number,
-                                count: Number,
-                                max: Number,
-                                min: Number
-                            },
-                            time2: {...},
-                            .
-                            .
-                            timen:{...}
-                    },
-                    site2:{....},
-                    .
-                    .
-                    siten:{....}
-             }
-             where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
-             */
-            var data = queryResult.data;
-             if (plotParams['matchFormat'].length > 0) {
-                 // filter the queryResult by matching criteria
-             }
-
-             var d = {};
-             // summarize the mean values of the data results
-             var sites =  Object.keys(data);
-             var sitesLength = sites.length;
-             var sitesIndex = 0;
-             var times = Object.keys(data[sites[0]]).sort();
-             var timesLength = times.length;
-             var timesIndex = 0;
-             var sum = 0;
-             var numLevels =0;
-             for (timesIndex; timesIndex < timesLength; timesIndex++) {
-                 var time = times[timesIndex];
-                 for (sitesIndex = 0; sitesIndex < sitesLength; sitesIndex++) {
-                     var site = sites[sitesIndex];
-                     if (data[site][time] !== undefined && data[site][time] !== null ) {
-                         try {
-                             sum += data[site][time].sum;
-                             numLevels += data[site][time].numLevels;
-                         } catch (error) {
-                             console.log ("error - data[site][time] is " + data[site][time]);
-                         }
-
-                     }
-                 }
-                 d[time] = sum / numLevels;
-             }
-            axisData[axis] = d;
+            rawAxisData[axis] = queryResult;
         }   // for axis loop
 
 
-        // should now have two data sets, one for x and one for y, each a summed value against time. There should
-        // not be any duplicate times.
-        // need to make sure the x (time) components of each curve match (normalize data) and then use the y
-        // components to create the dataset i.e. axisData['xaxis'][*][0] should equal axisData['yaxis'][*][0] and
-        // axisData['xaxis'][*][1] becomes the x values while axisData['yaxis'][*][1] becomes the corresponding y axis
+
+        /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
+         data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
+         and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
+         need to be accounted for here. Also there can be missing times so we need to iterate through each set of times and fill in missing ones
+         based on the minimum interval for the data set.
+
+         We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+
+         We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
+         the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
+         criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+         The data from the query is of the form
+         result =  {
+             error: error,
+             data: resultData,
+             allLevels: allLevels,
+             allSites: allSiteIds,
+             allTimes: allTimes,
+             minInterval: minInterval
+         }
+          where ....
+         resultData = {
+                time0: {
+                        site0: {
+                            levels:[],
+                            values:[],
+                            sum: Number,
+                            mean: Number,
+                            count: Number,
+                            max: Number,
+                            min: Number
+                        },
+                        site1: {...},
+                        .
+                        .
+                        siten:{...}
+                },
+                time1:{....},
+                .
+                .
+                timen:{....}
+         }
+         where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
+         There is at least one real (non null) value for each site.
+         */
+
+        var filterByLevel = _.contains(filterOptions,PlotAxisFilters.level);
+        var allLevelsForDataSet = [];
+        //levels are two dimensional
+        if (filterByLevel) {
+            var xLevels = rawAxisData['xaxis'].allLevels;
+            var yLevels = rawAxisData['yaxis'].allLevels;
+            var levels = xLevels.concat(yLevels);
+            allLevelsForDataSet = _.union.apply(_,levels);
+        }
+        var filterBySite = _.contains(filterOptions,PlotAxisFilters.site);
+        var allSitesForDataSet = [];
+        // sites are one dimensional
+        if (filterBySite) {
+            var sitesx = rawAxisData['xaxis'].allSites;
+            var sitesy = rawAxisData['yaxis'].allSites;
+            allSitesForDataSet = _.union(sitesx,sitesy);
+        }
 
         // normalize data
+
         var normalizedAxisData = [];
         var xaxisIndex = 0;
         var yaxisIndex = 0;
-        var xaxisTimes = Object.keys(axisData['xaxis']);
-        var yaxisTimes = Object.keys(axisData['yaxis']);
+        var xaxisTimes = rawAxisData['xaxis']['allTimes'];
+        var yaxisTimes = rawAxisData['yaxis']['allTimes'];
         var xaxisLength = xaxisTimes.length;
         var yaxisLength = yaxisTimes.length;
-
         // synchronize datasets:
         // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
         var yaxisTime;
         var xaxisTime;
-        while (xaxisIndex < xaxisLength - 1 && yaxisIndex < yaxisLength - 1) {
+        var datum = [];
+        while (xaxisIndex < xaxisLength  && yaxisIndex < yaxisLength) {
             xaxisTime = xaxisTimes[xaxisIndex];
             yaxisTime = yaxisTimes[yaxisIndex];
             if (xaxisTime === yaxisTime) {
-                normalizedAxisData.push([axisData['xaxis'][xaxisTime], axisData['yaxis'][yaxisTime]]);
+                if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
+                    datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, allLevelsForDataSet, allSitesForDataSet);
+                    if (datum.length > 0) {
+                        normalizedAxisData.push([datum[0], datum[1]]);
+                    }
+                }
             } else {
-                // skip up x
+                // skip up x if necessary
                 while (xaxisTime < yaxisTime && xaxisIndex < xaxisLength) {
                     xaxisIndex++;
                     xaxisTime = xaxisTimes[xaxisIndex];
                 }
-                // skip up y
+                // skip up y if necessary
                 while (xaxisTime > yaxisTime && yaxisIndex < yaxisLength) {
                     yaxisIndex++;
                     yaxisTime = yaxisTimes[yaxisIndex];
                 }
                 // push if equal
-                if (xaxisTime === yaxisTime) {
-                    normalizedAxisData.push([axisData['xaxis'][xaxisTime], axisData['yaxis'][yaxisTime]]);
+                if (xaxisTime === yaxisTime && xaxisTime) {
+                    if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
+                        datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, allLevelsForDataSet, allSitesForDataSet);
+                        if (datum.length > 0) {
+                            normalizedAxisData.push([datum[0], datum[1]]);
+                        }
+                    }
                 }
             }
             xaxisIndex++;
