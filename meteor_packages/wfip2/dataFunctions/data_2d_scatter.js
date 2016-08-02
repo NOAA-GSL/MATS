@@ -549,10 +549,12 @@ data2dScatter = function (plotParams, plotFunction) {
             bf.push(bfOptions);
         }
     }
+
     // generate x-axis
     var xaxes = [];
     var xaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
+        var curve = curves[dsi];
         var position = dsi === 0 ? "bottom" : "top";
         var xaxesOptions = {
             position: position,
@@ -578,6 +580,7 @@ data2dScatter = function (plotParams, plotFunction) {
     var yaxes = [];
     var yaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
+        var curve = curves[dsi];
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
             position: position,
@@ -644,6 +647,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
         }
     };
+
     dataset = dataset.concat(bf);
     var result = {
         error: error,

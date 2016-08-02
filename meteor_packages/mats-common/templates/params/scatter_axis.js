@@ -185,7 +185,7 @@ Template.scatter2d.events({
         }
     },
     'click .scatter-help' : function() {
-        $("#matshelp").load("/help/best-fit.html #matshelp");
+        //$("#matshelp").load("/help/best-fit.html #matshelp");
         $("#scatterHelpModal").modal('show');
     }
 });
