@@ -38,7 +38,11 @@ var checkDisableOther = function(item) {
         // Use the options to enable disable that item.
         var controlledSelectors = Object.keys(item.disableOtherFor);
         for (var i = 0; i < controlledSelectors.length; i++) {
-            var selectedOption = getInputElementForParamName(item.name).selectedOptions;
+            var elem = getInputElementForParamName(item.name);
+            if (!elem) {
+                return;
+            }
+            var selectedOption = elem.selectedOptions;
             var selectedText = selectedOption[0].text;
             if ($.inArray(selectedText, item.disableOtherFor[controlledSelectors[i]]) !== -1) {
                 getInputElementForParamName(controlledSelectors[i]).disabled = true;

@@ -498,8 +498,10 @@ setValueTextForParamName = function(paramName, text) {
 // get the document id for the element that corresponds to the param name
 getInputIdForParamName = function(paramName) {
     var param = CurveParams.findOne({name: paramName});
-    var id = param.name + "-" + param.type;
-    return id;
+    if (param !== undefined) {
+        var id = param.name + "-" + param.type;
+        return id;
+    }
 };
 
 // get the document element that corresponds to the param name

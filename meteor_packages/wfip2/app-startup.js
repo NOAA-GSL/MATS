@@ -41,7 +41,7 @@ scatter2dParams = function() {
 
         Scatter2dParams.insert(
             {
-                name: 'scatter2d axis filter',
+                name: 'scatter2d axis matching',
                 type: InputTypes.checkBoxGroup,
                 optionsMap: filterOptions,
                 options: Object.keys(filterOptions),
@@ -49,6 +49,24 @@ scatter2dParams = function() {
                 default: PlotAxisFilters.none,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+
+        Scatter2dParams.insert(
+            {
+                name: 'scatter2d axis matching quality',
+                type: InputTypes.numberSpinner,
+                optionsMap:{},
+                options:[],
+                min: '10',
+                max: '100',
+                step: '5',
+                controlButtonCovered: true,
+                unique: false,
+                default: '70',
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 1
             });

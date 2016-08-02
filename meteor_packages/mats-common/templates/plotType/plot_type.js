@@ -13,7 +13,6 @@ Template.plotType.helpers({
 
 var refreshDependents = function() {
         var dependents = [];
-    console.log(dependents);
 };
 
 Template.plotType.events({

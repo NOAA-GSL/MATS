@@ -33,18 +33,23 @@ Template.scatter2d.helpers({
             case InputTypes.select:
                 return "select";
                 break;
+            case InputTypes.numberSpinner:
+                return "number";
+                break;
             default:
-                return "input";
+                return "text";
         }
     },
-
-    default: function(param) {
-        //console.log("default: " + param.default);
-        return param.default;
+    default: function() {
+        return this.default;
     },
-    id: function(param) {
-        //console.log("type: " + param.type);
+    idOption: function(param) {
         var id = param.name + "-" + param.type + "-" + this;
+        id = id.replace(/ /g,'-');
+        return id;
+    },
+    idParam: function() {
+        var id = this.name + "-" + this.type;
         id = id.replace(/ /g,'-');
         return id;
     },
@@ -76,6 +81,9 @@ Template.scatter2d.helpers({
             return this;
         }
     },
+    labelParam: function() {
+            return this.name;
+    },
     log: function() {
         console.log(this);
     },
@@ -89,6 +97,9 @@ Template.scatter2d.helpers({
             }
         }
         return axis;
+    },
+    isNumberSpinner: function(param) {
+        return param.type === InputTypes.numberSpinner;
     }
 });
 
@@ -174,6 +185,7 @@ Template.scatter2d.events({
         }
     },
     'click .scatter-help' : function() {
+        $("#matshelp").load("/help/best-fit.html #matshelp");
         $("#scatterHelpModal").modal('show');
     }
 });

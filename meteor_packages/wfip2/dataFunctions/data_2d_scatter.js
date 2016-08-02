@@ -217,51 +217,71 @@ data2dScatter = function (plotParams, plotFunction) {
         return key.indexOf('axis-label') === 1;
     });
 
+    // used to find the max and minimum for the axis
+    var xAxisMax = Number.MIN_VALUE;
+    var xAxisMin = Number.MAX_VALUE;
+    var yAxisMax = Number.MIN_VALUE;
+    var yAxisMin = Number.MAX_VALUE;
+
     var bf = [];   // used for bestFit data
 
-    var getDatum = function (rawAxisData, axisTime, filterByLevel,filterBySite, allLevelsForDataSet, allSitesForDataSet) {
+    var getDatum = function (rawAxisData, axisTime, filterByLevel,filterBySite, commonLevelsBasis, commonSitesBasis, quality) {
         // sum and average all of the means for all of the sites
         var datum = [];
-        var axisArr = [['xaxis', 'yaxis'], ['yaxis', 'xaxis']];
-        for (var ai = 0; ai < axisArr.length; ai++) {
-            var axisName = axisArr[ai][0];
-            var pairAxisName = axisArr[ai][1];
-            var tSites = Object.keys(rawAxisData[axisName]['data'][axisTime]);
-            var pairSites = Object.keys(rawAxisData[pairAxisName]['data'][axisTime]);
-            if (filterBySite) {
-                tSites =  _.intersection(tSites,pairSites);
+        var tSitesX = Object.keys(rawAxisData['xaxis']['data'][axisTime]);
+        var tSitesY = Object.keys(rawAxisData['yaxis']['data'][axisTime]);
+        var tSites = _.intersection(tSitesX,tSitesY);
+        var commonSitesBasisLength = commonSitesBasis.length;
+        var commonLevelsBasisLength = commonLevelsBasis.length;
+
+        if (filterBySite) {
+            // Do we have enough sites (based on the quality) for this time to qualify the data for this time?
+            var tSitesLength = tSites.length;
+            var sitesQuality = (tSitesLength / commonSitesBasisLength) * 100;
+            if (sitesQuality < quality) {
+                return []; // reject this site (it does not qualify)
             }
-            for (var si = 0; si < tSites.length; si++) {
-                var sMean = 0;
-                // if filterByLevel is required we have to recalculate the mean for filtered levels
-                var dataPresent = false;
-                if (filterByLevel) {
-                    // recalculate sMean for filtered levels
-                    var sValues = rawAxisData[axisName]['data'][axisTime][tSites[si]]['values'];
-                    var sLevels = rawAxisData[axisName]['data'][axisTime][tSites[si]]['levels'];
-                    var pairLevels = rawAxisData[pairAxisName]['data'][axisTime][tSites[si]]['levels'];
-                    var filteredLevels = _.intersection(sLevels,pairLevels);
-                    // Eventually what we really want is to put in a quality control
-                    // that says "what percentage of the allLevelsForDataSet does the filteredLevels need to be
-                    // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
-                    // same for sites.
-                    var sSum = 0;
-                    var sNum = 0;
-                    for (var li = 0; li < sLevels.length; li++) {
-                        if (_.contains(filteredLevels,sLevels[li]) === false) {
-                            continue;
-                        }
-                        dataPresent = true;
-                        sSum += sValues[li];
-                        sNum++;
-                        sMean = sSum / sNum;
-                    }
-                } else {
-                    sMean = rawAxisData[axisName]['data'][axisTime][tSites[si]]['mean'];
-                }
-            }
-            datum.push(sMean);
         }
+        for (var si = 0; si < tSites.length; si++) {
+            var sMean = 0;
+            // if filterByLevel is required we have to recalculate the mean for filtered levels
+            if (filterByLevel) {
+                // recalculate sMean for filtered levels
+                var sLevelsX = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['levels'];
+                var sLevelsY = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['levels'];
+                var sLevels = _.intersection(sLevelsX,sLevelsY);
+                // What we really want is to put in a quality control
+                // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
+                // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
+                var sSum = 0;
+                var sNum = 0;
+                var matchingLevelsLength = sLevels.length;
+                var matchQuality = (matchingLevelsLength / commonLevelsBasisLength) * 100;
+                if (matchQuality < quality) {
+                    continue;
+                }
+                var sValuesX = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['values'];
+                var sValuesY = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['values'];
+                for (var li = 0; li < sLevelsX.length; li++) {
+                    sSum += sValuesX[li];
+                    sNum++;
+                }
+                sMean = sSum / sNum;
+                dataum[0] = sMean; // x value
+                sSum = 0;
+                sNum = 0;
+                for (var li = 0; li < sLevelsY.length; li++) {
+                    sSum += sValuesY[li];
+                    sNum++;
+                }
+                sMean = sSum / sNum;
+                datum[1] = (sMean);
+            } else {
+                datum[0]  = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['mean'];
+                datum[1] = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['mean'];
+            }
+        }
+
         return datum;
     };
 
@@ -270,6 +290,7 @@ data2dScatter = function (plotParams, plotFunction) {
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
             var curve = curves[curveIndex];
             var filterOptions = curve['scatter2d-axis-filter'];
+            var quality = curve['scatter2d-axis-matching-quality'];
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
             // each axis has a data source - get the right data source and derive the model
@@ -403,21 +424,20 @@ data2dScatter = function (plotParams, plotFunction) {
          */
 
         var filterByLevel = _.contains(filterOptions,PlotAxisFilters.level);
-        var allLevelsForDataSet = [];
+        var commonLevelsBasis = [];
         //levels are two dimensional
         if (filterByLevel) {
-            var xLevels = rawAxisData['xaxis'].allLevels;
-            var yLevels = rawAxisData['yaxis'].allLevels;
-            var levels = xLevels.concat(yLevels);
-            allLevelsForDataSet = _.union.apply(_,levels);
+            var allXLevels = _.union(rawAxisData['xaxis'].allLevels);
+            var allYLevels = _.union(rawAxisData['yaxis'].allLevels);
+            commonLevelsBasis = _.intersection(allXLevels,allYLevels);
         }
         var filterBySite = _.contains(filterOptions,PlotAxisFilters.site);
-        var allSitesForDataSet = [];
+        var commonSitesBasis = [];
         // sites are one dimensional
         if (filterBySite) {
-            var sitesx = rawAxisData['xaxis'].allSites;
-            var sitesy = rawAxisData['yaxis'].allSites;
-            allSitesForDataSet = _.union(sitesx,sitesy);
+            var allXSites = _.union(rawAxisData['xaxis'].allSites);
+            var allYSites = _.union(rawAxisData['yaxis'].allSites);
+            commonSitesBasis = _.intersection(allXSites,allYSites);
         }
 
         // normalize data
@@ -439,8 +459,13 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisTime = yaxisTimes[yaxisIndex];
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                    datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, allLevelsForDataSet, allSitesForDataSet);
+                    datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, commonLevelsBasis, commonSitesBasis, quality);
                     if (datum.length > 0) {
+                        xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
+                        xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
+                        yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
+                        yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
+
                         normalizedAxisData.push([datum[0], datum[1]]);
                     }
                 }
@@ -458,8 +483,12 @@ data2dScatter = function (plotParams, plotFunction) {
                 // push if equal
                 if (xaxisTime === yaxisTime && xaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                        datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, allLevelsForDataSet, allSitesForDataSet);
+                        datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, commonLevelsBasis, commonSitesBasis, quality);
                         if (datum.length > 0) {
+                            xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
+                            xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
+                            yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
+                            yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
                             normalizedAxisData.push([datum[0], datum[1]]);
                         }
                     }
@@ -508,7 +537,6 @@ data2dScatter = function (plotParams, plotFunction) {
             var bfOptions = {
                 yaxis: options.yaxis,
                 label: options.label + "-best fit " + curve['scatter2d-best-fit'],
-                //color: "rgb(0,0,0)",
                 color: options.color,
                 data: regressionData,
                 points: {symbol: options.points.symbol, fillColor: color, show: false, radius: 1},
@@ -535,7 +563,9 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1
+            alignTicksWithAxis: 1,
+            min:xAxisMin * 0.95,
+            max:xAxisMax * 1.05
         };
         var xaxisOptions = {
             zoomRange: [0.1, 10]
@@ -558,7 +588,9 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1
+            alignTicksWithAxis: 1,
+            min:yAxisMin * 0.95,
+            max:yAxisMax * 1.05
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
