@@ -267,7 +267,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     sNum++;
                 }
                 sMean = sSum / sNum;
-                dataum[0] = sMean; // x value
+                datum[0] = sMean; // x value
                 sSum = 0;
                 sNum = 0;
                 for (var li = 0; li < sLevelsY.length; li++) {
@@ -287,10 +287,10 @@ data2dScatter = function (plotParams, plotFunction) {
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
+        var curve = curves[curveIndex];
+        var filterOptions = curve['scatter2d-axis-matching'];
+        var quality = curve['scatter2d-axis-matching-quality'];
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
-            var curve = curves[curveIndex];
-            var filterOptions = curve['scatter2d-axis-filter'];
-            var quality = curve['scatter2d-axis-matching-quality'];
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
             // each axis has a data source - get the right data source and derive the model
@@ -427,16 +427,16 @@ data2dScatter = function (plotParams, plotFunction) {
         var commonLevelsBasis = [];
         //levels are two dimensional
         if (filterByLevel) {
-            var allXLevels = _.union(rawAxisData['xaxis'].allLevels);
-            var allYLevels = _.union(rawAxisData['yaxis'].allLevels);
+            var allXLevels = _.union.apply(_,rawAxisData['xaxis'].allLevels);
+            var allYLevels = _.union.apply(_,rawAxisData['yaxis'].allLevels);
             commonLevelsBasis = _.intersection(allXLevels,allYLevels);
         }
         var filterBySite = _.contains(filterOptions,PlotAxisFilters.site);
         var commonSitesBasis = [];
         // sites are one dimensional
         if (filterBySite) {
-            var allXSites = _.union(rawAxisData['xaxis'].allSites);
-            var allYSites = _.union(rawAxisData['yaxis'].allSites);
+            var allXSites = _.union.apply(_,rawAxisData['xaxis'].allSites);
+            var allYSites = _.union.apply(_,rawAxisData['yaxis'].allSites);
             commonSitesBasis = _.intersection(allXSites,allYSites);
         }
 
