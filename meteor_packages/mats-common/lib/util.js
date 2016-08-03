@@ -438,6 +438,19 @@ getBestFit = function() {
     return "";  // error condition actually - shouldn't ever happen
 };
 
+// get the document id for the control button element that corresponds to the param name
+getControlButtonIdForParamName = function(paramName) {
+    var param = CurveParams.findOne({name: paramName});
+    if (param !== undefined) {
+        var id = "controlButton-" + param.name;
+        return id;
+    }
+};
+
+// get the control Button Element fthat corresponds to the param name
+getControlElementForParamName = function(paramName) {
+    return document.getElementById(getControlButtonIdForParamName(paramName));
+};
 
 // get the document element that corresponds to the param name
 getValueElementForParamName = function(paramName) {
@@ -465,7 +478,9 @@ setValueTextForParamName = function(paramName, text) {
         if (param === undefined) {
             param = PlotParams.findOne({name: paramName});
         }
-
+        if (param === undefined) {
+            return;
+        }
         if (param.type === InputTypes.dateRange) {
             // .... get the from - to
             var from = document.getElementById(paramName + "-" + InputTypes.dateRange + "-from").value;

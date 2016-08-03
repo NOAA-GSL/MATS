@@ -222,6 +222,7 @@ curveParams = function () {
                 options:Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
                 disableOtherFor:{'truth data source':[statisticOptionsMap.none][0]},
+                hideOtherFor:{'truth data source':[statisticOptionsMap.none][0]},
                 unique: false,
                 default: statisticOptionsMap.none,
                 controlButtonVisibility: 'block',
@@ -299,65 +300,6 @@ curveParams = function () {
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
             });
 
-
-
-
-
-
-        /*
-         For Variable plotTypeDependent means that the optionsMap has a top level dependency on plotType.
-         as well as a dependency on datasource. Something like....
-         optionsMap = { PlotTypes.profile: {
-         "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
-         "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
-         "hrrr_wfip" : [ "wind_speed","wind_direction" ],
-         "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
-         "profiler_915" : [ "wind_speed", "wind_direction" ],
-         "rap_esrl" : [ "wind_speed", "wind_direction" ],
-         "rap_ncep" : [ "wind_speed", "wind_direction" ],
-         "sodar" : [ "wind_speed", "wind_direction" ]
-            },
-         PlotTypes.scatter2d : {
-             "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
-             "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
-             "hrrr_wfip" : [ "wind_speed",
-                         "wind_direction",
-                         "sfc_Ri", "sfc_hflx",
-                         "lat_hflx", "fric_v",
-                         "cdca", "ws_10",
-                         "wd_10", "ws_80",
-                         "wd_80", "hpbl",
-                         "u200_10", "u50_10",
-                         "u200_50", "t200_0",
-                         "dswr" ],
-             "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
-             "profiler_915" : [ "wind_speed", "wind_direction" ],
-             "rap_esrl" : [ "wind_speed", "wind_direction" ],
-             "rap_ncep" : [ "wind_speed", "wind_direction" ],
-             "sodar" : [ "wind_speed", "wind_direction" ]
-         },
-         PlotTypes.timeSeries: {
-         "hrrr_esrl" : [ "wind_speed", "wind_direction" ],
-         "hrrr_ncep" : [ "wind_speed", "wind_direction" ],
-         "hrrr_wfip" : [ "wind_speed",
-                     "wind_direction",
-                     "sfc_Ri", "sfc_hflx",
-                     "lat_hflx", "fric_v",
-                     "cdca", "ws_10",
-                     "wd_10", "ws_80",
-                     "wd_80", "hpbl",
-                     "u200_10", "u50_10",
-                     "u200_50", "t200_0",
-                     "dswr" ],
-         "hrrr_wfip_nest" : [ "wind_speed", "wind_direction" ],
-         "profiler_915" : [ "wind_speed", "wind_direction" ],
-         "rap_esrl" : [ "wind_speed", "wind_direction" ],
-         "rap_ncep" : [ "wind_speed", "wind_direction" ],
-         "sodar" : [ "wind_speed", "wind_direction" ]
-
-         }
-         */
-
         CurveParams.insert(
             {
                 name: 'variable',
@@ -366,7 +308,7 @@ curveParams = function () {
                 optionsMap: variableOptionsMap,
                 options:variableOptionsMap[PlotTypes.timeSeries][Object.keys(variableOptionsMap[PlotTypes.timeSeries])[0]],   // convenience
                 superiorName: 'data source',
-                plotTypeDependent: true,
+                plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
                 default: 'wind_speed',
@@ -667,7 +609,7 @@ plotGraph = function () {
             textViewId: "textSeriesView",
             graphViewId: "graphSeriesView",
             checked:true,
-            dependent:'variable'
+            dependents:['variable']
         });
         PlotGraphFunctions.insert({
             plotType: PlotTypes.profile,
@@ -676,7 +618,7 @@ plotGraph = function () {
             textViewId: "textProfileView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependent:'variable'
+            dependents:['variable']
         });
         PlotGraphFunctions.insert({
             plotType: PlotTypes.scatter2d,
@@ -685,7 +627,7 @@ plotGraph = function () {
             textViewId: "textScatter2dView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependent:'variable'
+            dependents:['variable']
         });
     }
 };
@@ -939,7 +881,7 @@ Databases.remove({});
                     }
                 }
             }
-            qFuture['return']();
+            qFuture['return']();                
         }));
         qFuture.wait();
     } catch (err) {

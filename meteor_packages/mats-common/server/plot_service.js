@@ -264,9 +264,11 @@ Meteor.methods({
     },
     setSelectParamOptions: function(name, options) {
         var param = CurveParams.findOne({name:name});
-        param.options = options;
-        var param_id = param._id;
-        CurveParams.update(param_id,{$set:{options:options}});
+        if (param) {
+            param.options = options;
+            var param_id = param._id;
+            CurveParams.update(param_id, {$set: {options: options}});
+        }
         return false;
     },
     setCredentials: function(settings) {

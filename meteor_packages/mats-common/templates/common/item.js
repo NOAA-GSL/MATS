@@ -162,7 +162,7 @@ Template.select.events({
     'change, blur' : function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name,text);
+            setValueTextForParamName(event.target.name, text);
         } catch (error){
             setValueTextForParamName(event.target.name, "");
         }

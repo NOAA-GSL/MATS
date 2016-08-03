@@ -99,7 +99,7 @@ Template.map.rendered = function () {
     var refreshMarkersForPeer = function(peerElement) {
         // find out what peer options are available
         var peerOptions = [];
-         //if (peerElement.options) {
+         if (peerElement.options) {
              for (var i = 0; i < peerElement.options.length; i++) {
                  peerOptions.push(peerElement.options[i].text);
              }
@@ -110,7 +110,7 @@ Template.map.rendered = function () {
                      map.removeLayer(l);
                  }
              });
-         //}
+         }
             for (var m = 0; m < markers.length; m++) {
                 var markerPeerOption = markers[m].options.peerOption;
                 if (_.contains(peerOptions, markerPeerOption)) {

@@ -11,12 +11,26 @@ Template.plotType.helpers({
    }
 });
 
-var refreshDependents = function() {
-        var dependents = [];
+var refreshDependents = function(dependentNames) {
+    if (dependentNames) {
+        // refresh the dependents
+        for (var i = 0; i < dependentNames.length; i++) {
+            var name = dependentNames[i];
+            var targetParam = CurveParams.findOne({name: name});
+            var targetId = targetParam.name + '-' + targetParam.type;
+            var targetElem = document.getElementById(targetId);
+            var refreshEvent = new CustomEvent("refresh", {
+                detail: {
+                    refElement: event.target
+                }
+            });
+            targetElem.dispatchEvent(refreshEvent);
+        }
+    }
 };
 
 Template.plotType.events({
-    'click .plot-type-Profile': function() {
+    'click .plot-type-Profile': function(event) {
         // move dates selector to curve parameters - one date range for each curve
         if (document.getElementById('plot-type-' + PlotTypes.profile).checked === true) {
             var elem = document.getElementById(PlotTypes.scatter2d);
@@ -45,7 +59,7 @@ Template.plotType.events({
             } */
             Session.set('plotType', PlotTypes.profile);
             Session.set('lastUpdate', Date.now());
-            refreshDependents();
+            refreshDependents(this.dependents);
         }
     },
     'click .plot-type-TimeSeries': function() {
@@ -79,7 +93,7 @@ Template.plotType.events({
             */
             Session.set('plotType', PlotTypes.timeSeries);
             Session.set('lastUpdate', Date.now());
-            refreshDependents();
+            refreshDependents(this.dependents);
         }
     },
     'click .plot-type-Scatter2d': function() {
@@ -90,7 +104,7 @@ Template.plotType.events({
             }
             Session.set('plotType', PlotTypes.scatter2d);
             Session.set('lastUpdate', Date.now());
-            refreshDependents();
+            refreshDependents(this.dependents);
         }
     }
 });

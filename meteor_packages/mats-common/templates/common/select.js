@@ -53,11 +53,41 @@ var checkDisableOther = function(item) {
     }
 };
 
+var checkHideOther = function(item) {
+// check for hide controlled - This select might have control of another selectors visibility
+    if (item.hideOtherFor !== undefined) {
+        // this item controls the visibility of at least one other item.
+        var controlledSelectors = Object.keys(item.hideOtherFor);
+        for (var i = 0; i < controlledSelectors.length; i++) {
+            var elem = getInputElementForParamName(item.name);
+            if (!elem) {
+                return;
+            }
+            var selectedOption = elem.selectedOptions;
+            var selectedText = selectedOption[0].text;
+            
+            var otherControlElem = getControlElementForParamName(controlledSelectors[i]);
+            var otherInputElement = getInputElementForParamName(controlledSelectors[i]);
+            var otherValueElement =  getValueElementForParamName(controlledSelectors[i]);
+                
+            if ($.inArray(selectedText, item.hideOtherFor[controlledSelectors[i]]) !== -1) {
+                otherControlElem.style.display  = 'none';
+                otherInputElement.style.display  = 'none';
+                otherValueElement.style.display  = 'none';
+            } else {
+                otherControlElem.style.display  = 'block';
+                otherInputElement.style.display  = 'block';
+                otherValueElement.style.display  = 'block';
+            }
+        }
+    }
+};
+
 Template.select.rendered = function(){
     var ref = this.data.name + '-' + this.data.type;
     var elem = document.getElementById(ref);
     if (this.firstNode.selectedIndex == -1) {
-        if (this.data.default && this.data.default != "") {
+        if (this.data.default && this.data.default != "" && this.data.options) {
             var defaultIndex = this.data.options.indexOf(this.data.default);
             if (defaultIndex == -1) {
                 defaultIndex = 0;
@@ -72,6 +102,7 @@ Template.select.rendered = function(){
     var peerName = this.data.peerName;
     var dependentNames = this.data.dependentNames;
     var dispElem = document.getElementById(InputTypes.controlButton + "-" + this.data.name + '-value');
+    var superiorName = this.data.superiorName;
     var refresh = function(selectedSuperiorValue) {
         /*
         Because there may be axis "brothers" This refresh must go and
@@ -94,7 +125,7 @@ Template.select.rendered = function(){
                 brothers.push(elems[i]);
         }
         var options = {};
-        if (plotTypeDependent) {
+        if (plotTypeDependent && getPlotType()) {
             options = optionsMap[getPlotType()][selectedSuperiorValue];
         } else {
             options = optionsMap[selectedSuperiorValue];
@@ -125,9 +156,11 @@ Template.select.rendered = function(){
 
     // register refresh event for any superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
-        var superiorElement = e.detail.refElement;
-        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-        refresh(selectedSuperiorValue);
+        if (superiorName) {
+            var superiorElement = getInputElementForParamName(superiorName);
+            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+            refresh(selectedSuperiorValue);
+        }
     });
     // register refresh event for axis change to use to enforce a refresh
     elem.addEventListener('axisRefresh', function () {
@@ -147,6 +180,13 @@ Template.select.rendered = function(){
         }
     });
     checkDisableOther(this.data);
+    checkHideOther(this.data);
+
+    var superiorElement = getInputElementForParamName(superiorName);
+    if (superiorElement) {
+        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+        refresh(selectedSuperiorValue);
+    }
 };
 
 Template.select.helpers({
@@ -180,6 +220,7 @@ Template.select.events({
         refreshDependents(this.dependentNames);
         setValueTextForParamName(this.name);
         checkDisableOther(this);
+        checkHideOther(this);
      },
     'change .selectAll': function(event) {
         var selectorId = event.target.dataset.selectid;
