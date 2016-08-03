@@ -78,6 +78,7 @@ Package.onUse(function(api) {
 
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
+  api.addFiles('templates/help/help.html', "client");
 
   api.addFiles("templates/plot/plot_param_group.html", "client");
   api.addFiles("templates/plot/plot_param_group.js", "client");

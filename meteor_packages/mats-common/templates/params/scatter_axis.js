@@ -184,8 +184,8 @@ Template.scatter2d.events({
             telem.dispatchEvent(new CustomEvent("axisRefresh"));
         }
     },
-    'click .scatter-help' : function() {
-        //$("#matshelp").load("/help/best-fit.html #matshelp");
-        $("#scatterHelpModal").modal('show');
+    'click .help' : function() {
+        $("#matshelp").load("/help/best-fit.html #matshelp");
+        $("#helpModal").modal('show');
     }
 });

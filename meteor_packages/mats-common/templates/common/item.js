@@ -20,6 +20,9 @@ Template.item.helpers({
         }
         return this.value?this.value:this.default;
     },
+    hasHelp: function() {
+      return this.help !== undefined;
+    },
     isSelect: function () {
         return ((typeof this.type !== 'undefined') && (this.type == InputTypes.select));
     },
@@ -144,6 +147,10 @@ Template.item.events({
                 }
             }
         }
+    },
+    'click .help' : function() {
+        $("#matshelp").load("/help/" + this.help + " #matshelp");
+        $("#helpModal").modal('show');
     }
 });
 
