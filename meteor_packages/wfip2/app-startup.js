@@ -31,45 +31,46 @@ scatter2dParams = function() {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: "axis-selector.html"
             });
 
 
-        var filterOptions = {};
-        filterOptions[PlotAxisFilters.level] = "by level";
-        filterOptions[PlotAxisFilters.site] = "by site";
-
-        Scatter2dParams.insert(
-            {
-                name: 'scatter2d axis matching',
-                type: InputTypes.checkBoxGroup,
-                optionsMap: filterOptions,
-                options: Object.keys(filterOptions),
-                controlButtonCovered: true,
-                default: PlotAxisFilters.none,
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 1
-            });
-
-        Scatter2dParams.insert(
-            {
-                name: 'scatter2d axis matching quality',
-                type: InputTypes.numberSpinner,
-                optionsMap:{},
-                options:[],
-                min: '10',
-                max: '100',
-                step: '5',
-                controlButtonCovered: true,
-                unique: false,
-                default: '70',
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 1
-            });
+        // var filterOptions = {};
+        // filterOptions[PlotAxisFilters.level] = "by level";
+        // filterOptions[PlotAxisFilters.site] = "by site";
+        //
+        // Scatter2dParams.insert(
+        //     {
+        //         name: 'scatter2d axis matching',
+        //         type: InputTypes.checkBoxGroup,
+        //         optionsMap: filterOptions,
+        //         options: Object.keys(filterOptions),
+        //         controlButtonCovered: true,
+        //         default: PlotAxisFilters.none,
+        //         controlButtonVisibility: 'block',
+        //         displayOrder: 2,
+        //         displayPriority: 1,
+        //         displayGroup: 1
+        //     });
+        //
+        // Scatter2dParams.insert(
+        //     {
+        //         name: 'scatter2d axis matching quality',
+        //         type: InputTypes.numberSpinner,
+        //         optionsMap:{},
+        //         options:[],
+        //         min: '10',
+        //         max: '100',
+        //         step: '5',
+        //         controlButtonCovered: true,
+        //         unique: false,
+        //         default: '70',
+        //         controlButtonVisibility: 'block',
+        //         displayOrder: 3,
+        //         displayPriority: 1,
+        //         displayGroup: 1
+        //     });
 
         var bestFits = {};
         bestFits[BestFits.none] = "None";
@@ -260,9 +261,9 @@ curveParams = function () {
                 unique: false,
                 default: regionOptionsMap[Object.keys(regionOptionsMap)[0]],
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
 
         CurveParams.insert(
@@ -277,7 +278,7 @@ curveParams = function () {
                 unique: false,
                 default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true
@@ -295,11 +296,30 @@ curveParams = function () {
                 //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
                 default:"map",
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true,
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
+            });
+
+        CurveParams.insert(
+            {
+                name: 'site completeness',
+                type: InputTypes.numberSpinner,
+                optionsMap:{},
+                options:[],
+                min: '0',
+                max: '100',
+                step: '5',
+                controlButtonCovered: true,
+                unique: false,
+                default: '0',
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 3,
+                help: "completeness.html"
             });
 
         CurveParams.insert(
@@ -374,10 +394,10 @@ curveParams = function () {
             });
         CurveParams.insert(
             {
-                name: 'completeness',
+                name: 'level completeness',
                 type: InputTypes.numberSpinner,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:{},
+                options:[],
                 min: '0',
                 max: '100',
                 step: '5',

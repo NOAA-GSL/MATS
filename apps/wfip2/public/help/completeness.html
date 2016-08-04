@@ -10,10 +10,11 @@
     <p>It is possible that, for a given time, a given site might only have reported data for a subset of the levels for which it is normally capable.
         This is where completeness comes in. If you consider the maximum set of levels possible for the data set that you have selected as a basis set of levels, then
         you can set a percentage of completeness that must be met for each data point against that basis in order to have the data included into the mean. For example,
-        if I am looking at levels between 40 and 200 that might correlate to 9 distinct levels.  If I ask for 20 sites, and one of those sites, at a given time, only has
-        10 levels reported, then that point in time is 50% complete. Had I specified a completeness of 60% the data routine will throw away that set of levels and not consider it into
-        the mean calculation for that point in time. If I set a completeness of 100 then each site at every point in time must have the maximum possible number of levels reported.
-        If I specify a 0 completeness then all levels reported will be considered for each site into the mean calculation.
+        if I am looking at levels between 40 and 200 that might correlate to 10 distinct possible levels maximum (the maximum possible data set is derived from the data).
+        If I ask for 20 sites, and one of those sites, at a given point in time, only has 5 levels reported, then that point in time for that site is 50% complete. Had I specified a
+        completeness of 60% the data routine will throw away that set of levels for that site and time and not factor them into the mean calculation for that point in time. If I set a
+        completeness of 100 then each site at every point in time must have the maximum possible number of levels reported in order to be factored in to the mean calculation.
+        If I specify a completeness of 0, then all levels reported will be considered for each site into the mean calculation.
     </p>
     <p>
         For the data set below a completeness of 100 would result in rows 3, 4, and 5 being discarded, and a completeness of 80 would result in the data for row 3 being discarded and the rest
