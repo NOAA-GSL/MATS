@@ -100,7 +100,10 @@ Template.scatter2d.helpers({
     },
     isNumberSpinner: function(param) {
         return param.type === InputTypes.numberSpinner;
-    }
+    },
+    hasHelp: function() {
+        return this.help !== undefined;
+    },
 });
 
 Template.scatter2d.events({
@@ -184,8 +187,12 @@ Template.scatter2d.events({
             telem.dispatchEvent(new CustomEvent("axisRefresh"));
         }
     },
-    'click .help' : function() {
+    'click .axishelp' : function() {
         $("#matshelp").load("/help/best-fit.html #matshelp");
+        $("#helpModal").modal('show');
+    },
+    'click .help' : function() {
+        $("#matshelp").load("/help/" + this.help + " #matshelp");
         $("#helpModal").modal('show');
     }
 });
