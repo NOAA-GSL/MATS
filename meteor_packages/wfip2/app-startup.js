@@ -91,7 +91,8 @@ scatter2dParams = function() {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: "best-fit.html"
             });
     }
 };
@@ -374,6 +375,24 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 5,
                 help: 'bottom-help.html'
+            });
+        CurveParams.insert(
+            {
+                name: 'completeness',
+                type: InputTypes.numberSpinner,
+                optionsMap:optionsMap,
+                options:Object.keys(optionsMap),   // convenience
+                min: '0',
+                max: '100',
+                step: '5',
+                controlButtonCovered: true,
+                unique: false,
+                default: '0',
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "completeness.html"
             });
 
         CurveParams.insert(
