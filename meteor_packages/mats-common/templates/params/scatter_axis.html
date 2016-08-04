@@ -7,9 +7,9 @@
                 <label for="{{idParam}}">{{labelParam}}</label>
             {{else}}
                 <h4>{{name this}}
-                {{#if hasHelp}}
+                <small>{{#if hasHelp}}
                     <button style="background-color:#bbffbb" type="button"  class="btn btn-default  btn-xs  help fa fa-question"></button>
-                {{/if}}
+                {{/if}} </small>
                 </h4>
                 {{#each scatter2dOptions}}
                     <input class="data-input {{className ..}}" type={{type ..}} name="{{name ..}}" id="{{idOption ..}}" value="{{this}}" {{isDefault ..}}/>

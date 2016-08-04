@@ -79,7 +79,8 @@ CurveParams.remove({});
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: 'label.html'
             }
         );
         CurveParams.insert(

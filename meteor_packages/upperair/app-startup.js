@@ -79,7 +79,8 @@ CurveParams.remove({});
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: 'label.html'
             }
         );
         CurveParams.insert(
@@ -266,7 +267,8 @@ CurveParams.remove({});
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                help: 'top-help.html'
             });
         CurveParams.insert(
             {
@@ -283,7 +285,8 @@ CurveParams.remove({});
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                help: 'bottom-help.html'
         });
         optionsMap = {'1 day':['1 day'], '3 days':['3 days'], '7 days':['7 days'],'31 days':['31 days'], '90 days':['90 days'],'180 days':['180 days'],'365 days':['365 days']};
         CurveParams.insert(
