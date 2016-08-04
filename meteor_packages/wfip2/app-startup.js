@@ -229,7 +229,8 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                help: 'wfip2-statistic.html'
             });
 
         CurveParams.insert(
@@ -298,7 +299,8 @@ curveParams = function () {
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true,
-                defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13}
+                defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13},
+                help: 'map-help.html'
             });
 
         CurveParams.insert(
@@ -352,7 +354,8 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                help: 'top-help.html'
             });
         CurveParams.insert(
             {
@@ -369,7 +372,8 @@ curveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                help: 'bottom-help.html'
             });
 
         CurveParams.insert(
