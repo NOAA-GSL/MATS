@@ -129,25 +129,45 @@ graph2dScatter = function(result) {
     };
 
     var drawGraph = function(ranges) {
-        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
+        var normalizedOptions = normalizeYAxis(ranges);
+        var zOptions = $.extend(true, {}, options, normalizedOptions);
+        delete zOptions.xaxes[0].max;
+        delete zOptions.xaxes[0].min;
+        delete zOptions.yaxes[0].max;
+        delete zOptions.yaxes[0].min;
         plot = $.plot(placeholder, dataset, zOptions);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     };
 
+    var zooming = false;
     // selection zooming
     placeholder.bind("plotselected", function (event, ranges) {
+        event.preventDefault();
+        event.stopPropagation();
+        zooming = true;
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
         drawGraph(ranges);
     });
 
+
     // draw initial plot - we do this a little funky,
     // we essentially create a range that is the size of the max data, then do what the zoom (plotSelected) would do
     // which causes the normalization of the axes.
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
     // hide the spinner
     document.getElementById("spinner").style.display="none";
+
+    $("#placeholder").bind('plotclick', function(event,pos, item) {
+        if (zooming) {
+            zooming= false;
+            return;
+        }
+        if (item) {
+            $("#matshelp").load("/help/" + this.help + " #matshelp");
+            $("#helpModal").modal('show');
+        }
+    });
 };
