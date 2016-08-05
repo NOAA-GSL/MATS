@@ -68,6 +68,67 @@ var secsConvert = function (dStr) {
     return date_in_secs / 1000;
 };
 
+var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                         levelBasisX, levelBasisY, siteBasisX, siteBasisY) {
+    // sum and average all of the means for all of the sites
+    var datum = [];
+    var commonSitesBasisLengthX = siteBasisX.length;
+    var commonSitesBasisLengthY = siteBasisY.length;
+    var tSitesX = rawAxisData['xaxis']['data'][axisTime];
+    var tSitesY = rawAxisData['yaxis']['data'][axisTime];
+    // Do we have enough sites (based on the quality) for this time to qualify the data for this time? We need to have enough for x AND y
+    var sitesXQuality = (Object.keys(tSitesX).length / commonSitesBasisLengthX) * 100;
+    if (sitesXQuality < siteCompletenessX) {
+        return []; // reject this site (it does not qualify for x axis) for this time
+    }
+    var sitesYQuality = (Object.keys(tSitesY).length / commonSitesBasisLengthY) * 100;
+    if (sitesYQuality < siteCompletenessY) {
+        return []; // reject this site (it does not qualify for y axis) for this time
+    }
+
+    // still here? process the sites
+    var axisArr = ['xaxis', 'yaxis'];
+    for (var ai = 0; ai < axisArr.length; ai++) {
+        var axisStr = axisArr[ai];
+        var tSiteIds = Object.keys(tSitesX);
+        var commonLevelsBasisLength = levelBasisX.length;
+        var qualityLevels = levelCompletenessX;
+        if (axisArr[ai] == 'yaxis') {
+            tSiteIds = Object.keys(tSitesY);
+            commonLevelsBasisLength = levelBasisY.length;
+            qualityLevels = levelCompletenessY;
+        }
+        var siteSum = 0;
+        var siteNum = 0;
+        for (var si = 0; si < tSiteIds.length; si++) {
+            var siteId = tSiteIds[si];
+            var siteMean = 0;
+            if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
+                siteSum += rawAxisData[axisStr]['data'][axisTime][siteId]['mean'];
+                siteNum +=  rawAxisData[axisStr]['data'][axisTime][siteId]['numLevels'];
+            } else {
+                // quality filter is required (>0)  so we have to recalculate the mean for this site for qualified levels
+                // recalculate sMean for filtered levels
+                var sLevels = rawAxisData[axisStr]['data'][axisTime][siteId]['levels'];
+                // What we really want is to put in a quality control
+                // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
+                // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
+                var matchQuality = (sLevels.length / commonLevelsBasisLength) * 100;
+                if (matchQuality < qualityLevels) {
+                    continue;
+                }
+                var sValues = rawAxisData[axisStr]['data'][axisTime][siteId]['values'];
+                for (var li = 0; li < sLevels.length; li++) {
+                    siteSum += sValues[li];
+                    siteNum++;
+                }
+            }
+        }
+        siteMean = siteSum / siteNum;
+        datum.push(siteMean);
+    }
+    return datum;
+};
 
 var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator) {
     var dFuture = new Future();
@@ -96,7 +157,7 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                                  values: [],
                                  sum: 0;
                                  mean: 0;
-                                 count: count;
+                                 numLevels: numLevels;
                                  max: max;
                                  min: min
                              },
@@ -225,71 +286,10 @@ data2dScatter = function (plotParams, plotFunction) {
 
     var bf = [];   // used for bestFit data
 
-    var getDatum = function (rawAxisData, axisTime, filterByLevel,filterBySite, commonLevelsBasis, commonSitesBasis, quality) {
-        // sum and average all of the means for all of the sites
-        var datum = [];
-        var tSitesX = Object.keys(rawAxisData['xaxis']['data'][axisTime]);
-        var tSitesY = Object.keys(rawAxisData['yaxis']['data'][axisTime]);
-        var tSites = _.intersection(tSitesX,tSitesY);
-        var commonSitesBasisLength = commonSitesBasis.length;
-        var commonLevelsBasisLength = commonLevelsBasis.length;
-
-        if (filterBySite) {
-            // Do we have enough sites (based on the quality) for this time to qualify the data for this time?
-            var tSitesLength = tSites.length;
-            var sitesQuality = (tSitesLength / commonSitesBasisLength) * 100;
-            if (sitesQuality < quality) {
-                return []; // reject this site (it does not qualify)
-            }
-        }
-        for (var si = 0; si < tSites.length; si++) {
-            var sMean = 0;
-            // if filterByLevel is required we have to recalculate the mean for filtered levels
-            if (filterByLevel) {
-                // recalculate sMean for filtered levels
-                var sLevelsX = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['levels'];
-                var sLevelsY = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['levels'];
-                var sLevels = _.intersection(sLevelsX,sLevelsY);
-                // What we really want is to put in a quality control
-                // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
-                // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
-                var sSum = 0;
-                var sNum = 0;
-                var matchingLevelsLength = sLevels.length;
-                var matchQuality = (matchingLevelsLength / commonLevelsBasisLength) * 100;
-                if (matchQuality < quality) {
-                    continue;
-                }
-                var sValuesX = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['values'];
-                var sValuesY = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['values'];
-                for (var li = 0; li < sLevelsX.length; li++) {
-                    sSum += sValuesX[li];
-                    sNum++;
-                }
-                sMean = sSum / sNum;
-                datum[0] = sMean; // x value
-                sSum = 0;
-                sNum = 0;
-                for (var li = 0; li < sLevelsY.length; li++) {
-                    sSum += sValuesY[li];
-                    sNum++;
-                }
-                sMean = sSum / sNum;
-                datum[1] = (sMean);
-            } else {
-                datum[0]  = rawAxisData['xaxis']['data'][axisTime][tSites[si]]['mean'];
-                datum[1] = rawAxisData['yaxis']['data'][axisTime][tSites[si]]['mean'];
-            }
-        }
-
-        return datum;
-    };
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
         var curve = curves[curveIndex];
-        var filterOptions = curve['scatter2d-axis-matching'];
-        var quality = curve['scatter2d-axis-matching-quality'];
+
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
@@ -405,7 +405,7 @@ data2dScatter = function (plotParams, plotFunction) {
                             values:[],
                             sum: Number,
                             mean: Number,
-                            count: Number,
+                            numLevels: Number,
                             max: Number,
                             min: Number
                         },
@@ -423,22 +423,17 @@ data2dScatter = function (plotParams, plotFunction) {
          There is at least one real (non null) value for each site.
          */
 
-        var filterByLevel = _.contains(filterOptions,PlotAxisFilters.level);
-        var commonLevelsBasis = [];
-        //levels are two dimensional
-        if (filterByLevel) {
-            var allXLevels = _.union.apply(_,rawAxisData['xaxis'].allLevels);
-            var allYLevels = _.union.apply(_,rawAxisData['yaxis'].allLevels);
-            commonLevelsBasis = _.intersection(allXLevels,allYLevels);
-        }
-        var filterBySite = _.contains(filterOptions,PlotAxisFilters.site);
-        var commonSitesBasis = [];
-        // sites are one dimensional
-        if (filterBySite) {
-            var allXSites = _.union.apply(_,rawAxisData['xaxis'].allSites);
-            var allYSites = _.union.apply(_,rawAxisData['yaxis'].allSites);
-            commonSitesBasis = _.intersection(allXSites,allYSites);
-        }
+
+
+        // used for getDatum
+        var levelCompletenessX = curve['xaxis-level completeness'];
+        var levelCompletenessY = curve['xaxis-level completeness'];
+        var siteCompletenessX = curve['xaxis-site completeness'];
+        var siteCompletenessY = curve['yaxis-site completeness'];
+        var levelBasisX = _.union.apply(_,rawAxisData['xaxis'].allLevels);
+        var levelBasisY = _.union.apply(_,rawAxisData['yaxis'].allLevels);
+        var siteBasisX = _.union.apply(_,rawAxisData['xaxis'].allSites);
+        var siteBasisY = _.union.apply(_,rawAxisData['yaxis'].allSites);
 
         // normalize data
 
@@ -459,13 +454,18 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisTime = yaxisTimes[yaxisIndex];
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                    datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, commonLevelsBasis, commonSitesBasis, quality);
+                    datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                                             levelBasisX, levelBasisY, siteBasisX, siteBasisY);
                     if (datum.length > 0) {
                         xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
                         xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
                         yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
                         yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
-
+                        var tooltipText = label  +
+                            "<br>time:" + new Date(Number(xaxisTime)).toUTCString() +
+                            "<br> xvalue:" + datum[0].toPrecision(4) +
+                            "<br> yvalue:" + datum[1].toPrecision(4);
+                        //normalizedAxisData.push([datum[0], datum[1],rawAxisData['xaxis']['data'][xaxisTime],rawAxisData['yaxis']['data'][xaxisTime],tooltipText]);
                         normalizedAxisData.push([datum[0], datum[1]]);
                     }
                 }
@@ -483,12 +483,19 @@ data2dScatter = function (plotParams, plotFunction) {
                 // push if equal
                 if (xaxisTime === yaxisTime && xaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                        datum = getDatum(rawAxisData, xaxisTime,filterByLevel, filterBySite, commonLevelsBasis, commonSitesBasis, quality);
+                        datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                            levelBasisX, levelBasisY, siteBasisX, siteBasisY);
                         if (datum.length > 0) {
                             xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
                             xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
                             yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
                             yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
+                            var tooltipText = label  +
+                                "<br>time:" + new Date(Number(xaxisTime)).toUTCString() +
+                                "<br>xvalue:" + datum[0].toPrecision(4) +
+                                "<br>yvalue:" + datum[1].toPrecision(4);
+
+                            //normalizedAxisData.push([datum[0], datum[1],rawAxisData['xaxis']['data'][xaxisTime],rawAxisData['yaxis']['data'][xaxisTime],tooltipText]);
                             normalizedAxisData.push([datum[0], datum[1]]);
                         }
                     }
@@ -497,7 +504,6 @@ data2dScatter = function (plotParams, plotFunction) {
             xaxisIndex++;
             yaxisIndex++;
         }
-
 
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
@@ -634,17 +640,29 @@ data2dScatter = function (plotParams, plotFunction) {
         },
         grid: {
             hoverable: true,
+            clickable: true,
             borderWidth: 3,
             mouseActiveRadius: 50,
             backgroundColor: "white",
             axisMargin: 20
         },
+        /* tooltips NOTE:
+         There are two kinds of tooltips...
+         1) content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+         xDateFormat: "%Y-%m-%d:%H",
+         onHover: function (flotItem, $tooltipEl) {
+         which will cause the y value to be presented with the text "<br>%x:<br>value %y where %y is the y value"
+         and ...
+         content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+         which will present the text defined by a string in the last data position of the dataset array i.e.
+         [[x1,y1,"tooltiptext1"],[x2,y3,"tooltiptext2"]....[xn,yn,"tooltiptextn"]]
+         The tooltip text is expected to be an html snippet.
+         */
+
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
-            onHover: function (flotItem, $tooltipEl) {
-            }
+            // the ct value is the third [2] element of the data series. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
 

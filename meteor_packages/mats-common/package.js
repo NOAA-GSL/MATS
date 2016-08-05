@@ -20,6 +20,7 @@ Package.onUse(function(api) {
   api.use("service-configuration",'server');
   api.imply("differential:event-hooks");
   api.use('session');
+  api.use("iron:router");
   api.imply("accounts-google");
   api.imply("accounts-ui");
   api.addFiles("lib/collections/collections.js", ['client','server']);
@@ -75,6 +76,8 @@ Package.onUse(function(api) {
   api.addFiles('server/plot_service.js', "server");
   api.addFiles('client/main.html', "client");
 
+  api.addFiles("templates/showData/show_data.html", "client");
+  api.addFiles("templates/showData/show_data.js", "client");
 
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
