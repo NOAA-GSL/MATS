@@ -35,9 +35,21 @@ Template.paramList.events({
     'click .reset': function(event,template) {
         //location.reload();
         event.preventDefault();
-        var view = document.getElementById('paramList');
-        Blaze.remove(Blaze.getView(view));
+        if (getPlotType() == PlotTypes.scatter2d) {
+            Session.set('axisCurveIcon', 'fa-asterisk');
+            Session.set('xaxisCurveText', 'XAXIS NOT YET APPLIED');
+            Session.set('yaxisCurveText', 'YAXIS NOT YET APPLIED');
+            Session.set('xaxisCurveColor', 'red');
+            Session.set('yaxisCurveColor', 'red');
+            document.getElementById('scatter2d-best-fit-radioGroup-none').checked = true;
+            document.getElementById('axis-selector-radioGroup-xaxis').checked = true
+        }
+        var paramView = document.getElementById('paramList');
+        var plotView = document.getElementById('plotList');
+        Blaze.remove(Blaze.getView(paramView));
+        Blaze.remove(Blaze.getView(plotView));
         Blaze.render(Template.paramList,document.getElementById('paramView'));
+        Blaze.render(Template.plotList,document.getElementById('plotView'));
     },
 
     // restore settings

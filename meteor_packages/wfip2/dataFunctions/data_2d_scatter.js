@@ -566,8 +566,8 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min:xAxisMin * 0.95,
-            max:xAxisMax * 1.05
+        //    min:xAxisMin * 0.95,
+        //    max:xAxisMax * 1.05
         };
         var xaxisOptions = {
             zoomRange: [0.1, 10]
@@ -592,8 +592,8 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min:yAxisMin * 0.95,
-            max:yAxisMax * 1.05
+          //  min:yAxisMin * 0.95,
+          //  max:yAxisMax * 1.05
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]

@@ -1,5 +1,50 @@
 
 Template.scatter2d.helpers({
+    xaxisCurveText: function() {
+        var t = Session.get('xaxisCurveText');
+        if (t){
+            return t;
+        } else {
+            Session.set('xaxisCurveText', 'XAXIS NOT YET APPLIED');
+            return 'XAXIS NOT YET APPLIED';
+        }
+    },
+    yaxisCurveText: function() {
+        var t = Session.get('yaxisCurveText');
+        if (t){
+            return t;
+        } else {
+            Session.set('yaxisCurveText', 'YAXIS NOT YET APPLIED');
+            return 'YAXIS NOT YET APPLIED';
+        }
+    },
+    xaxisCurveColor: function() {
+        var t = Session.get('xaxisCurveColor');
+        if (t){
+            return t;
+        } else {
+            Session.set('xaxisCurveColor', 'red');
+            return 'red';
+        }
+    },
+    yaxisCurveColor: function() {
+        var t = Session.get('yaxisCurveColor');
+        if (t){
+            return t;
+        } else {
+            Session.set('yaxisCurveColor', 'red');
+            return 'red';
+        }
+    },
+    curveIcon: function() {
+        var t = Session.get('axisCurveIcon');
+        if (t){
+            return t;
+        } else {
+            Session.set('axisCurveIcon', 'fa-asterisk');
+            return 'fa-asterisk';
+        }
+    },
     title: function() {
         return "2d Scatter Plot Axis Selection"
     },
@@ -103,7 +148,7 @@ Template.scatter2d.helpers({
     },
     hasHelp: function() {
         return this.help !== undefined;
-    },
+    }
 });
 
 Template.scatter2d.events({
@@ -142,14 +187,13 @@ Template.scatter2d.events({
         }
         var axisCurveId = axis + "-curve";
         var span = document.getElementById(axisCurveId);
-        while( span.firstChild ) {
-            span.removeChild( span.firstChild );
-        }
-        span.appendChild( document.createTextNode(axis + " " + getAxisText(getPlotType())) );
-        span.style.color='green';
-        span.className = "";
-        span.className += "fa ";
-        span.className += "fa-check";
+        // while( span.firstChild ) {
+        //     span.removeChild( span.firstChild );
+        // }
+        //span.appendChild( document.createTextNode(axis + " " + getAxisText(getPlotType())) );
+        Session.set(axis + 'CurveText', axis + " " + getAxisText(getPlotType()));
+        Session.set(axis + 'CurveColor', 'green');
+        Session.set('axisCurveIcon', "fa-check");
         // select the other radio button
         if (axis === "xaxis") {
             $("#axis-selector-radioGroup-yaxis").prop("checked",true);
@@ -159,7 +203,7 @@ Template.scatter2d.events({
             Session.set('axis','xaxis');
         }
     },
-    'change .scatter2d-axis-radioGroup' : function(event) {
+    'change .axis-selector-radioGroup' : function(event) {
         var newAxis = event.currentTarget.value;
         Session.set('axis',newAxis);
         var elems = document.getElementsByClassName("data-input");

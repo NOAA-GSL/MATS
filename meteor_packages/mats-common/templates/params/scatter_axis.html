@@ -18,12 +18,12 @@
             {{/if}}
             {{#if isAxis this}}
                 <div class="btn-toolbar btn-group btn-xs" role="toolbar">
-                    <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to {{axis ..}}</button>
+                    <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to {{axis}}</button>
                 </div>
                 <div>
-                    <span id="xaxis-curve" style="color:red" class="fa fa-asterisk">XAXIS NOT YET APPLIED</span>
+                    <span id="xaxis-curve" style="color:{{xaxisCurveColor}}" class="fa {{curveIcon}}">{{xaxisCurveText}}</span>
                     <span>&nbsp;</span>
-                    <span id="yaxis-curve" style="color:red" class="fa fa-asterisk">YAXIS NOT YET APPLIED</span>
+                    <span id="yaxis-curve" style="color:{{yaxisCurveColor}}" class="fa {{curveIcon}}">{{yaxisCurveText}}</span>
                 </div>
             {{/if}}
         {{/each}}
