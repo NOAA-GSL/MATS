@@ -529,7 +529,7 @@ data2dScatter = function (plotParams, plotFunction) {
                             "<br>time:" + time +
                             "<br> xvalue:" + xValue +
                             "<br> yvalue:" + yValue;
-                        normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
+                        normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, xValue:xValue, yValue:yValue, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
                     }
                 }
             }

@@ -1,6 +1,4 @@
-//import 'jquery.json-viewer/jquery.json/jquery.json-viewer.css';
-//import 'jquery.json-viewer/jquery.json/jquery.json-viewer.js';
-//require('jquery.json-viewer');
+
 var setModalMaxHeight = function(element) {
     this.$element     = $(element);
     this.$content     = this.$element.find('.modal-content');
@@ -37,8 +35,9 @@ Template.data.rendered = function() {
 
 Template.data.helpers({
     data:function() {
-        // use jQuery json-viewer
-        return JSON.stringify(Session.get("data"), null, 4).toString();
-        //$('#data-viewer').jsonViewer(Session.get("data"));
+        return Session.get("data");
+    },
+    options:function() {
+        return {collapsed:true,nl2br:true,recursive_collapser:true};
     }
 });

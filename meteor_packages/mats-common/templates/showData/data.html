@@ -4,9 +4,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-body">
-                <pre id="data-viewer">
-                    {{data}}
-                </pre>
+                {{> jsonView json=data options=options }}
             </div>
             <div class="modal-footer btn-group">
                 <button type="button" class="close-help btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Close</button>

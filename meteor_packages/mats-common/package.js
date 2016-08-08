@@ -18,7 +18,8 @@ Package.onUse(function(api) {
   api.use("accounts-ui", 'client');
   api.use("differential:event-hooks", ['client','server']);
   api.use("service-configuration",'server');
-
+  api.use ("yasinuslu:json-view","client");
+  
   api.imply("differential:event-hooks");
   api.use('session');
   api.use("iron:router");
@@ -68,7 +69,8 @@ Package.onUse(function(api) {
   api.addFiles("lib/error/error.js", ['client','server']);
   api.addFiles("templates/topnav/topNav.html", "client");
   api.addFiles("templates/spinner/spinner.html", "client");
-    
+
+
   api.addFiles('templates/Home.html', "client");
   api.addFiles('client/lib/helpers.js', "client");
   api.addFiles('client/lib/html2canvas.js', "client");
