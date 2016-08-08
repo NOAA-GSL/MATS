@@ -71,7 +71,7 @@ var secsConvert = function (dStr) {
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY) {
     // sum and average all of the means for all of the sites
-    var datum = [];
+    var datum = {};
     var commonSitesBasisLengthX = siteBasisX.length;
     var commonSitesBasisLengthY = siteBasisY.length;
     var tSitesX = rawAxisData['xaxis']['data'][axisTime];
@@ -100,16 +100,24 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
         }
         var siteSum = 0;
         var siteNum = 0;
+        var filteredSites = [];   // used for the modal data view
         for (var si = 0; si < tSiteIds.length; si++) {
             var siteId = tSiteIds[si];
             var siteMean = 0;
             if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
                 siteSum += rawAxisData[axisStr]['data'][axisTime][siteId]['mean'];
                 siteNum +=  rawAxisData[axisStr]['data'][axisTime][siteId]['numLevels'];
+                filteredSites = rawAxisData[axisStr]['data'][axisTime];
+                //combine the levels and the values into single array (for using in the modal data view)
+                filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
+                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues = filteredSites[siteId].levelsValues;
             } else {
-                // quality filter is required (>0)  so we have to recalculate the mean for this site for qualified levels
+                // quality filter is required (>0)  so we have to recalculate the statistics for this site for qualified levels
                 // recalculate sMean for filtered levels
                 var sLevels = rawAxisData[axisStr]['data'][axisTime][siteId]['levels'];
+                //combine the levels and the values into single array (for using in the modal data view) - raw values - unfiltered
+                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues = rawAxisData[axisStr]['data'][axisTime][siteId].levels.map(function(level, index) { return [level, rawAxisData[axisStr]['data'][axisTime][siteId].values[index]] });
+
                 // What we really want is to put in a quality control
                 // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
                 // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
@@ -118,14 +126,18 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                     continue;
                 }
                 var sValues = rawAxisData[axisStr]['data'][axisTime][siteId]['values'];
+                filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
                 for (var li = 0; li < sLevels.length; li++) {
                     siteSum += sValues[li];
                     siteNum++;
                 }
             }
         }
+
         siteMean = siteSum / siteNum;
-        datum.push(siteMean);
+        datum[axisStr + '-mean'] = siteMean;
+        datum[axisStr + '-sites'] = rawAxisData[axisStr]['data'][axisTime];  // used to get levelsValues from raw data for data modal
+        datum[axisStr + '-filteredSites'] = filteredSites;
     }
     return datum;
 };
@@ -448,26 +460,41 @@ data2dScatter = function (plotParams, plotFunction) {
         // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
         var yaxisTime;
         var xaxisTime;
-        var datum = [];
+        var datum = {};
         while (xaxisIndex < xaxisLength  && yaxisIndex < yaxisLength) {
             xaxisTime = xaxisTimes[xaxisIndex];
             yaxisTime = yaxisTimes[yaxisIndex];
+            var tooltipText;
+            var rawXSites;
+            var filteredXSites;
+            var rawYSites;
+            var filteredYSites;
+            var time;
+            var seconds;
+            var xValue;
+            var yValue;
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                     datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                                              levelBasisX, levelBasisY, siteBasisX, siteBasisY);
-                    if (datum.length > 0) {
-                        xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
-                        xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
-                        yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
-                        yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
-                        var tooltipText = label  +
-                            "<br>time:" + new Date(Number(xaxisTime)).toUTCString() +
-                            "<br> xvalue:" + datum[0].toPrecision(4) +
-                            "<br> yvalue:" + datum[1].toPrecision(4);
-                        //normalizedAxisData.push([datum[0], datum[1],rawAxisData['xaxis']['data'][xaxisTime],rawAxisData['yaxis']['data'][xaxisTime],tooltipText]);
-                        normalizedAxisData.push([datum[0], datum[1]]);
-                    }
+                    xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
+                    xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
+                    yAxisMax = datum['yaxis-mean'] > yAxisMax ? datum['yaxis-mean'] : yAxisMax;
+                    yAxisMin = datum['yaxis-mean'] < yAxisMin ? datum['yaxis-mean'] : yAxisMin;
+                    rawXSites = datum['xaxis-sites'];
+                    filteredXSites = datum['xaxis-filteredSites'];
+                    rawYSites = datum['yaxis-sites'];
+                    filteredYSites = datum['yaxis-filteredSites'];
+                    time = new Date(Number(xaxisTime)).toUTCString();
+                    seconds = xaxisTime/1000;
+                    xValue = datum['xaxis-mean'];
+                    yValue = datum['yaxis-mean'];
+                    tooltipText = label  +
+                        "<br>seconds" + seconds +
+                        "<br>time:" + time +
+                        "<br> xvalue:" + xValue +
+                        "<br> yvalue:" + yValue;
+                    normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
                 }
             } else {
                 // skip up x if necessary
@@ -484,20 +511,25 @@ data2dScatter = function (plotParams, plotFunction) {
                 if (xaxisTime === yaxisTime && xaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                         datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                            levelBasisX, levelBasisY, siteBasisX, siteBasisY);
-                        if (datum.length > 0) {
-                            xAxisMax = datum[0] > xAxisMax ? datum[0] : xAxisMax;
-                            xAxisMin = datum[0] < xAxisMin ? datum[0] : xAxisMin;
-                            yAxisMax = datum[1] > yAxisMax ? datum[1] : yAxisMax;
-                            yAxisMin = datum[1] < yAxisMin ? datum[1] : yAxisMin;
-                            var tooltipText = label  +
-                                "<br>time:" + new Date(Number(xaxisTime)).toUTCString() +
-                                "<br>xvalue:" + datum[0].toPrecision(4) +
-                                "<br>yvalue:" + datum[1].toPrecision(4);
-
-                            //normalizedAxisData.push([datum[0], datum[1],rawAxisData['xaxis']['data'][xaxisTime],rawAxisData['yaxis']['data'][xaxisTime],tooltipText]);
-                            normalizedAxisData.push([datum[0], datum[1]]);
-                        }
+                        levelBasisX, levelBasisY, siteBasisX, siteBasisY);
+                        xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
+                        xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
+                        yAxisMax = datum['yaxis-mean'] > yAxisMax ? datum['yaxis-mean'] : yAxisMax;
+                        yAxisMin = datum['yaxis-mean'] < yAxisMin ? datum['yaxis-mean'] : yAxisMin;
+                        rawXSites = datum['xaxis-sites'];
+                        filteredXSites = datum['xaxis-filteredSites'];
+                        rawYSites = datum['yaxis-sites'];
+                        filteredYSites = datum['yaxis-filteredSites'];
+                        time = new Date(Number(xaxisTime)).toUTCString();
+                        seconds = xaxisTime/1000;
+                        xValue = datum['xaxis-mean'];
+                        yValue = datum['yaxis-mean'];
+                        tooltipText = label  +
+                            "<br>seconds" + seconds +
+                            "<br>time:" + time +
+                            "<br> xvalue:" + xValue +
+                            "<br> yvalue:" + yValue;
+                        normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
                     }
                 }
             }

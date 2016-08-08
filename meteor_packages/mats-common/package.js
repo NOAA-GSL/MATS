@@ -18,6 +18,7 @@ Package.onUse(function(api) {
   api.use("accounts-ui", 'client');
   api.use("differential:event-hooks", ['client','server']);
   api.use("service-configuration",'server');
+
   api.imply("differential:event-hooks");
   api.use('session');
   api.use("iron:router");
@@ -68,7 +69,7 @@ Package.onUse(function(api) {
   api.addFiles("templates/topnav/topNav.html", "client");
   api.addFiles("templates/spinner/spinner.html", "client");
     
-  api.addFiles('Home.html', "client");
+  api.addFiles('templates/Home.html', "client");
   api.addFiles('client/lib/helpers.js', "client");
   api.addFiles('client/lib/html2canvas.js', "client");
   api.addFiles('client/lib/init.js', "client");
@@ -82,6 +83,8 @@ Package.onUse(function(api) {
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
   api.addFiles('templates/help/help.html', "client");
+  api.addFiles('templates/showData/data.html', "client");
+  api.addFiles('templates/showData/data.js', "client");
 
   api.addFiles("templates/plot/plot_param_group.html", "client");
   api.addFiles("templates/plot/plot_param_group.js", "client");

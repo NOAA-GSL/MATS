@@ -160,14 +160,14 @@ graph2dScatter = function(result) {
     // hide the spinner
     document.getElementById("spinner").style.display="none";
 
-    $("#placeholder").bind('plotclick', function(event,pos, item) {
+    $("#placeholder").bind('plotclick', function(event,pos,item) {
         if (zooming) {
             zooming= false;
             return;
         }
-        if (item) {
-            $("#matshelp").load("/help/" + this.help + " #matshelp");
-            $("#helpModal").modal('show');
+        if (item && item.series.data[item.dataIndex][2]) {
+            Session.set("data",item.series.data[item.dataIndex][2]);
+            $("#dataModal").modal('show');
         }
     });
 };

@@ -27,12 +27,16 @@ RangePerDescriptor = new Meteor.Collection("RangePerDescriptor");
 SiteMap = new Meteor.Collection("SiteMap");
 
 //Routes
-Router.route('/show_data');
-Router.route('/', function () {
-    this.render('Home', {
-        data: function () { return Items.findOne({_id: this.params._id}); }
+Router.route('/show_data', function() {
+    this.render('showData', {
     });
 });
+
+Router.route('/', function () {
+    this.render('Home', {
+    });
+});
+
 
 InputTypes = {
     textInput : 'textInput',

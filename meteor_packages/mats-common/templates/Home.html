@@ -1,0 +1,23 @@
+<template name="Home">
+    <div id='main'  class="main container-fluid">
+        {{>topNav}}
+        {{>administration}}
+        {{>spinner}}
+        {{>help}}
+        {{>data}}
+        {{>plotType}}
+        {{>error}}
+        <div id="scatter2d">
+            {{>scatter2d}}
+        </div>
+        <div id="paramView">
+            {{>paramList}}
+        </div>
+        <div id="plotView">
+            {{>plotList}}
+        </div>
+        {{>curveList}}
+        {{>graph}}
+    </div>
+    {{>footer}}
+</template>
