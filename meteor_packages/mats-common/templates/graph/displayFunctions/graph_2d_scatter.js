@@ -72,16 +72,14 @@ graph2dScatter = function(result) {
             event.preventDefault();
             var id = event.target.id;
             var label = id.replace('-curve-show-hide','');
-            for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label == label) {
-                    // find the bestfit line - if it exists
-                    if (dataset.length > 1) {
-                        dataset[c + dataset.length - 1].lines.show = !dataset[c].lines.show;
-                        if (dataset[c + dataset.length - 1].points.show == true) {
-                            Session.set(label + "hideButtonText", 'hide curve');
-                        } else {
-                            Session.set(label + "hideButtonText", 'show curve');
-                        }
+            for (var c = 1; c < dataset.length; c++) {
+                // find the bestfit line - if it exists
+                if (dataset[c].lines) {
+                    dataset[c].lines.show = !dataset[c].lines.show;
+                    if (dataset[c].lines.show == true) {
+                        Session.set(label + "hideButtonText", 'hide curve');
+                    } else {
+                        Session.set(label + "hideButtonText", 'show curve');
                     }
                 }
             }
@@ -96,15 +94,13 @@ graph2dScatter = function(result) {
         event.preventDefault();
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-points','');
-        for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label == label) {
-                dataset[c].points.show = !dataset[c].points.show;
-                dataset[c].lines.show = false;
-                if (dataset[c].points.show == true) {
-                    Session.set(label + "pointsButtonText", 'hide points');
-                } else {
-                    Session.set(label + "pointsButtonText", 'show points');
-                }
+        var c = 0;
+        if (dataset[c].label) {
+            dataset[c].points.show = !dataset[c].points.show;
+            if (dataset[c].points.show == true) {
+                Session.set(label + "pointsButtonText", 'hide points');
+            } else {
+                Session.set(label + "pointsButtonText", 'show points');
             }
         }
         plot = $.plot(placeholder, dataset, options);
