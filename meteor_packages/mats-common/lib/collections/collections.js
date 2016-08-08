@@ -27,8 +27,8 @@ RangePerDescriptor = new Meteor.Collection("RangePerDescriptor");
 SiteMap = new Meteor.Collection("SiteMap");
 
 //Routes
-Router.route('/show_data', function() {
-    this.render('showData', {
+Router.route('/data', function() {
+    this.render('data', {
     });
 });
 

@@ -77,9 +77,6 @@ Package.onUse(function(api) {
   api.addFiles('server/plot_service.js', "server");
   api.addFiles('client/main.html', "client");
 
-  api.addFiles("templates/showData/show_data.html", "client");
-  api.addFiles("templates/showData/show_data.js", "client");
-
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
   api.addFiles('templates/help/help.html', "client");
