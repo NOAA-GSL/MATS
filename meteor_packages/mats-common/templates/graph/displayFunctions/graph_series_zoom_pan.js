@@ -78,11 +78,13 @@ graphSeriesZoom = function(result) {
             for (var c = 0; c < dataset.length; c++) {
                 if (dataset[c].label == label) {
                     dataset[c].lines.show = !dataset[c].lines.show;
-                    dataset[c].points.show = !dataset[c].points.show;
-                    if (dataset[c].points.show == true) {
+                    //dataset[c].points.show = !dataset[c].points.show;
+                    if (dataset[c].lines.show == true) {
                         Session.set(label + "hideButtonText", 'hide curve');
+                        //Session.set(label + "pointsButtonText", 'hide points');
                     } else {
                         Session.set(label + "hideButtonText", 'show curve');
+                        //Session.set(label + "pointsButtonText", 'show points');
                     }
 
                 }

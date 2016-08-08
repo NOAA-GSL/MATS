@@ -1,4 +1,3 @@
-
 var width = function () {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -26,6 +25,14 @@ Template.graph.onCreated(function() {
         //console.log($(window).height());
         document.getElementById('placeholder').style.width=width();
         document.getElementById('placeholder').style.heigth=height();
+        document.getElementById("plotButton").style.display = "none";
+        document.getElementById("textButton").style.display = "block";
+        document.getElementById("plot-buttons-grp").style.display = "block";
+        document.getElementById("curves").style.display = "block";
+        document.getElementById("graphView").style.display = "block";
+        document.getElementById("textSeriesView").style.display = "none";
+        document.getElementById("textProfileView").style.display = "none";
+        document.getElementById("textScatter2dView").style.display = "none";
     });
 });
 
