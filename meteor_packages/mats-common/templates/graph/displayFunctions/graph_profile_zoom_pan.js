@@ -55,34 +55,34 @@ graphProfileZoom = function(result) {
 
         var errorbars = Session.get('errorbars');
         // add errorbar buttons
-        $( "input[id$='-curve-errorbars']" ).click(function (event) {
-            event.preventDefault();
-            var id = event.target.id;
-            var label = id.replace('-curve-errorbars','');
-            for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label == label) {
-                    // save the errorbars
-                    if (errorbars === undefined) {
-                        errorbars = [];
-                    }
-                    if (errorbars[c] === undefined) {
-                        errorbars[c] = dataset[c].points.errorbars;
-                        Session.set('errorbars', errorbars);
-                    }
-                    if (dataset[c].points.errorbars == undefined) {
-                        dataset[c].points.errorbars = errorbars[c];
-                    } else {
-                        dataset[c].points.errorbars = undefined;
-                    }
-                    if (dataset[c].points.errorbars !== undefined) {
-                        Session.set(label + "errorBarButtonText", 'no error bars');
-                    } else {
-                        Session.set(label + "errorBarButtonText", 'error bars');
-                    }
-                }
-            }
-             plot = $.plot(placeholder, dataset, options);
-        });
+        // $( "input[id$='-curve-errorbars']" ).click(function (event) {
+        //     event.preventDefault();
+        //     var id = event.target.id;
+        //     var label = id.replace('-curve-errorbars','');
+        //     for (var c = 0; c < dataset.length; c++) {
+        //         if (dataset[c].label == label) {
+        //             // save the errorbars
+        //             if (errorbars === undefined) {
+        //                 errorbars = [];
+        //             }
+        //             if (errorbars[c] === undefined) {
+        //                 errorbars[c] = dataset[c].points.errorbars;
+        //                 Session.set('errorbars', errorbars);
+        //             }
+        //             if (dataset[c].points.errorbars == undefined) {
+        //                 dataset[c].points.errorbars = errorbars[c];
+        //             } else {
+        //                 dataset[c].points.errorbars = undefined;
+        //             }
+        //             if (dataset[c].points.errorbars !== undefined) {
+        //                 Session.set(label + "errorBarButtonText", 'no error bars');
+        //             } else {
+        //                 Session.set(label + "errorBarButtonText", 'error bars');
+        //             }
+        //         }
+        //     }
+        //      plot = $.plot(placeholder, dataset, options);
+        // });
 
         // add show/hide buttons
         $( "input[id$='-curve-show-hide']" ).click(function (event) {
@@ -91,25 +91,29 @@ graphProfileZoom = function(result) {
             var label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
                 // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
-                if (errorbars[c] === undefined) {
-                    errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
-                }
+                // if (errorbars === undefined) {
+                //     errorbars = [];
+                // }
+                // if (errorbars[c] === undefined) {
+                //     errorbars[c] = dataset[c].points.errorbars;
+                //     Session.set('errorbars', errorbars);
+                // }
                 if (dataset[c].label == label) {
-                    dataset[c].lines.show = !dataset[c].lines.show;
-                    dataset[c].points.show = !dataset[c].points.show;
-                    if (dataset[c].points.show) {
-                        dataset[c].points.errorbars = errorbars[c];
-                    } else {
-                        dataset[c].points.errorbars = undefined;
+                    if (dataset[c].lines.show == dataset[c].points.show) {
+                        dataset[c].points.show = !dataset[c].points.show;
                     }
+                    dataset[c].lines.show = !dataset[c].lines.show;
+                    // if (dataset[c].points.show) {
+                    //     dataset[c].points.errorbars = errorbars[c];
+                    // } else {
+                    //     dataset[c].points.errorbars = undefined;
+                    // }
                     if (dataset[c].points.show == true) {
                         Session.set(label + "hideButtonText", 'hide curve');
+                        Session.set(label + "pointsButtonText", 'hide points');
                     } else {
                         Session.set(label + "hideButtonText", 'show curve');
+                        Session.set(label + "pointsButtonText", 'show points');
                     }
                 }
             }

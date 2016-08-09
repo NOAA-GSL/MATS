@@ -77,14 +77,16 @@ graphSeriesZoom = function(result) {
             var label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
                 if (dataset[c].label == label) {
+                    if (dataset[c].lines.show == dataset[c].points.show) {
+                        dataset[c].points.show = !dataset[c].points.show;
+                    }
                     dataset[c].lines.show = !dataset[c].lines.show;
-                    //dataset[c].points.show = !dataset[c].points.show;
                     if (dataset[c].lines.show == true) {
                         Session.set(label + "hideButtonText", 'hide curve');
-                        //Session.set(label + "pointsButtonText", 'hide points');
+                        Session.set(label + "pointsButtonText", 'hide points');
                     } else {
                         Session.set(label + "hideButtonText", 'show curve');
-                        //Session.set(label + "pointsButtonText", 'show points');
+                        Session.set(label + "pointsButtonText", 'show points');
                     }
 
                 }
