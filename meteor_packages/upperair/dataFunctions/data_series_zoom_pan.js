@@ -119,7 +119,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        console.log("diffFrom=" + diffFrom);
+        //console.log("diffFrom=" + diffFrom);
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = RegionDescriptions.findOne({description:curve['region']}).regionMapTable;
         //var region = CurveParams.findOne({name: 'region'}).optionsMap[model][curve['region']][0];
@@ -216,7 +216,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             error = queryResult.error;
         } else {
             // this is a difference curve
-            console.log("in different curve" );
+            //console.log("in different curve" );
 
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1];
@@ -284,7 +284,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
         };
-        console.log("d="+d);
+        //console.log("d="+d);
 
         dataset.push(pOptions);
         // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
@@ -296,12 +296,12 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
-    console.log("matching="+matching);
+    //console.log("matching="+matching);
     if (matching) {
         var dataLength = dataset[0].data.length;
         var matchNullIndexes = [];
 
-        console.log("in matching");
+        //console.log("in matching");
         for (var di = 0; di < dataLength; di++) {
         for (var ci = 0; ci < numCurves; ci++) {
                 /* it is possible to have a curve that does not have any data at the front */
