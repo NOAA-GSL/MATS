@@ -3,26 +3,37 @@ var regionOptionsMap ={};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
 
+var date = new Date();
+var dateOneMonthPrior = new Date();
+dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
+var yr = date.getFullYear();
+var day = date.getDate();
+var month = date.getMonth();
+var hour = date.getHours();
+var minute = date.getMinutes();
+var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+yr = dateOneMonthPrior.getFullYear();
+day = dateOneMonthPrior.getDate();
+month = dateOneMonthPrior.getMonth();
+hour = dateOneMonthPrior.getHours();
+minute = dateOneMonthPrior.getMinutes();
+var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+var dstr = dstrOneMonthPrior + " - " + dstrToday;
+
 plotParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
     }
     if (PlotParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-
         PlotParams.insert(
             {
                 name: 'dates',
                 type: InputTypes.dateRange,
                 options: [''],
-                startDate: '03/01/2015',
-                stopDate: dstr,
+                startDate: dstrOneMonthPrior,
+                stopDate: dstrToday,
                 controlButtonCovered: true,
-                default: '03/01/2015',
+                default: dstr,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -46,14 +57,12 @@ plotParams = function () {
                 displayGroup: 2
             });
     }
-    return dstr;
 };
 
 curveParams = function () {
-    //console.log(JSON.stringify(modelOptiosMap));
-   // if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
-  // }
+    }
     if (CurveParams.find().count() == 0) {
         var date = new Date();
         var yr = date.getFullYear();
@@ -261,7 +270,7 @@ curveParams = function () {
  See curve_item.js and graph.js.
  */
 curveTextPatterns = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveTextPatterns.remove({});
     }
     if (CurveTextPatterns.find().count() == 0) {
@@ -289,15 +298,14 @@ curveTextPatterns = function () {
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates-dateRange-from','to'],
-                ['','curve-dates-dateRange-to','']
+                ['','curve-dates','']
             ]
         });
     }
 };
 
 savedCurveParams = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         SavedCurveParams.remove({});
     }
     if (SavedCurveParams.find().count() == 0) {
@@ -305,35 +313,11 @@ savedCurveParams = function () {
     }
 };
 
-/*settings = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+settings = function () {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
-  //  if (Settings.find().count() == 0) {
-    //    debugger;
-        Settings.insert({
-            LabelPrefix: "C-",
-            Title: "Ceiling",
-            LineWidth: 3.5,
-            NullFillString: "---",
-            //resetFromCode: false
-            resetFromCode: true
-        });
-    }
-};
-*/
-
-settings = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
-        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
-            var resetFromCode = Settings.findOne({}).resetFromCode;
-        } else {
-            resetFromCode = false;
-        }
-        //Settings.remove({});
-    }
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
-        //if (Settings.find().count() == 0) {
+    if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Upper Air",
@@ -348,7 +332,7 @@ settings = function () {
 
 
 colorScheme = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         ColorScheme.remove({});
     }
     if (ColorScheme.find().count() == 0) {
@@ -383,7 +367,7 @@ colorScheme = function () {
 };
 
 plotGraph = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotGraphFunctions.remove({});
     }
     if (PlotGraphFunctions.find().count() == 0) {
@@ -398,7 +382,7 @@ plotGraph = function () {
 
 credentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Credentials.remove({});
     }
     if (Credentials.find().count() == 0) {
@@ -412,7 +396,7 @@ credentials = function () {
 };
 
 authorization = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Authorization.remove({});
     }
     if (Authorization.find().count() == 0) {
@@ -424,7 +408,7 @@ authorization = function () {
 };
 
 roles = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Roles.remove({});
     }
     if (Roles.find().count() == 0) {
@@ -434,8 +418,7 @@ roles = function () {
 
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
-
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
     }
     if (Databases.find().count() == 0) {

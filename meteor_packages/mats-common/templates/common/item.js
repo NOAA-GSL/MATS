@@ -218,12 +218,7 @@ Template.checkboxGroup.events({
 
 Template.dateRange.events({
     'change, blur': function (event) {
-        try {
-            var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name,text);
-        } catch (error){
-            setValueTextForParamName(event.target.name, "");
-        }
+        document.getElementById(InputTypes.controlButton + "-" + this.name + "-value").textContent = event.currentTarget.value;
     }
 });
 

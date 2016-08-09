@@ -86,8 +86,9 @@ Template.curveList.events({
             var options = plotParam.options;
 
             if (type == InputTypes.dateRange) {
-                var from = document.getElementById(name + '-' + type + "-from").value;
-                var to = document.getElementById(name + '-' + type + "-to").value;
+                var vals = document.getElementById(name + '-' + type).value.split(" - ");
+                var from = vals[0];
+                var to = vals[1];
                 p['fromDate'] = from;
                 p['toDate'] = to;
             } else if (type == InputTypes.radioGroup) {
@@ -184,9 +185,7 @@ Template.curveList.events({
                     var options = plotParam.options;
 
                     if (type == InputTypes.dateRange) {
-                        document.getElementById(name + '-' + type + "-from").value = p.data.fromDate;
-                        document.getElementById(name + '-' + type + "-to").value = p.data.toDate;
-
+                        document.getElementById(name + '-' + type).value = p.data;
                     } else if (type == InputTypes.radioGroup) {
                         for (var i = 0; i < options.length; i++) {
                             if (options[i] === p.data[name]) {

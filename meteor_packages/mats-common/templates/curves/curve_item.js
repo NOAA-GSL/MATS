@@ -68,11 +68,6 @@ Template.curveItem.events({
         for(var k in this) keys.push(k);
         var fElements = document.getElementById("paramForm").elements;
         for (var i =0; i < fElements.length; i++) {
-            if (fElements[i].id == 'curve-dates-dateRange-to' || fElements[i].id == 'curve-dates-dateRange-from') {
-                fElements[i].value = this[fElements[i].id];
-            } else {
-                fElements[i].value = this[fElements[i].name];
-            }
             setValueTextForParamName(fElements[i].name,fElements[i].value);
         }
         var labelId = 'label-' + InputTypes.textInput;

@@ -1,35 +1,45 @@
 var modelOptionsMap ={};
-var regionOptionsMap ={};
 var regionModelOptionsMap ={};
 var modelTableMap ={};
 var forecastLengthOptionsMap = {};
 
+var date = new Date();
+var dateOneMonthPrior = new Date();
+dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
+var yr = date.getFullYear();
+var day = date.getDate();
+var month = date.getMonth();
+var hour = date.getHours();
+var minute = date.getMinutes();
+var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+yr = dateOneMonthPrior.getFullYear();
+day = dateOneMonthPrior.getDate();
+month = dateOneMonthPrior.getMonth();
+hour = dateOneMonthPrior.getHours();
+minute = dateOneMonthPrior.getMinutes();
+var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+var dstr = dstrOneMonthPrior + " - " + dstrToday;
 
 plotParams = function () {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         PlotParams.remove({});
     }
     if (PlotParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-
         PlotParams.insert(
             {
                 name: 'dates',
                 type: InputTypes.dateRange,
                 options: [''],
-                startDate: '03/01/2015',
-                stopDate: dstr,
+                startDate: dstrOneMonthPrior,
+                stopDate: dstrToday,
                 controlButtonCovered: true,
-                default: '03/01/2015',
+                default: dstr,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 1
             });
+
             var plotFormats = {};
             plotFormats[PlotFormats.matching] = 'show matching diffs';
             plotFormats[PlotFormats.pairwise] = 'pairwise diffs';
@@ -290,11 +300,11 @@ curveParams = function () {
                 type: InputTypes.dateRange,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                startDate: '03/01/2015',
-                stopDate: dstr,
+                startDate: dstrOneMonthPrior,
+                stopDate: dstrToday,
                 controlButtonCovered: true,
                 unique: false,
-                default: '03/01/2015',
+                default: dstr,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -340,8 +350,7 @@ curveTextPatterns = function () {
                 ['fcst_len:', 'forecast length', 'h '],
                 [' valid time:', 'valid time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates-dateRange-from','to'],
-                ['','curve-dates-dateRange-to','']
+                ['','curve-dates','']
             ]
         });
     }
@@ -357,13 +366,8 @@ savedCurveParams = function () {
 };
 
 settings = function () {
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
-        if (Settings.findOne({}) && Settings.findOne({}).resetFromCode) {
-            var resetFromCode = Settings.findOne({}).resetFromCode;
-        } else {
-            resetFromCode = false;
-        }
-        //Settings.remove({});
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+        Settings.remove({});
     }
     if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
     //if (Settings.find().count() == 0) {

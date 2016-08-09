@@ -482,11 +482,8 @@ setValueTextForParamName = function(paramName, text) {
             return;
         }
         if (param.type === InputTypes.dateRange) {
-            // .... get the from - to
-            var from = document.getElementById(paramName + "-" + InputTypes.dateRange + "-from").value;
-            var to = document.getElementById(paramName + "-" + InputTypes.dateRange + "-to").value;
-            text = from + " to " + to;
-            value = [from,to];
+            value = document.getElementById(name + '-' + type).value;
+            text = value;
         } else if (param.multiple) {
             // .... if multi selected  get the first .. last
             var selection = getInputElementForParamName(paramName).selectedOptions;

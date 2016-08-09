@@ -149,12 +149,6 @@ var queryWFIP2DB = function (statement) {
 
         ymin: ymin,
         ymax: ymax,
-        // N0: N0,
-        // N_times: N_times,
-        //N0: 20,
-        //N_times: 20,
-        //averageStr: averageStr,
-        //interval: interval
     };
 
 
@@ -226,13 +220,9 @@ var get_err = function (sub_val_array, sub_secs_array) {
             r[lag] = null;
         }
     }
-   // console.log("===");
-   // console.log ("r[1]= " +r[1]);
-    // Betsy Weatherhead's correction, based on lag 1
     if(r[1] >= 1) {
         r[1] = .99999;
     }
-
 
     var betsy = Math.sqrt((n_good-1)*(1. - r[1]));
     var stde_betsy;
@@ -241,10 +231,6 @@ var get_err = function (sub_val_array, sub_secs_array) {
     } else {
         stde_betsy = null;
     }
-
-   // console.log ("stde_besty= " +  stde_betsy +" sd="+sd+" besty="+betsy);
-   // console.log ("n_good= " +  n_good +" r[1]="+r[1]);
-  //  console.log("===");
     return {d_mean:d_mean,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1]};
 };
 
@@ -302,41 +288,23 @@ dataProfileZoom = function(plotParams, plotFunction) {
             siteIds[curveIndex].push(siteId);
         }
 
-        console.log("ci="+curveIndex+" length siteIds=" + siteIds[curveIndex].length);
-        //var siteid = CurveParams.findOne({name: 'sites'}).optionsMap[curve['sites']];
         var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
-        var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
-        var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
+        var curveDates = curve['curve-dates'];
+        var fromDateStr = curveDates.split( ' - ')[0]; // get the from part
+        fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
+        var toDateStr = curveDates.split( ' - ')[1]; // get the to part
+        toDateStr = toDateStr.split(' ')[0];  // strip off time field
+        var curveDatesDateRangeFrom = dateConvert(fromDateStr);
+        var curveDatesDateRangeTo = dateConvert(toDateStr);
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][PlotTypes.profile];
         var variable = variableOptionsMap[variableStr];
-        // var statisticSelect = curve['statistic'];
-        // var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        // var statistic;
-        // if (variableStr == 'winds') {
-        //     statistic = statisticOptionsMap[statisticSelect][1];
-        // } else {
-        //     statistic = statisticOptionsMap[statisticSelect][0];
-        // }
-        // statistic = statistic + "," + statisticOptionsMap[statisticSelect][2];
-        // statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        // statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        // var validTimeStr = curve['valid time'];
-        // var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        // var validTime = validTimeOptionsMap[validTimeStr][0];
         var forecastLength = curve['forecast length'];
-        // variableStat is used to determine which axis a curve should use.
-        // This variableStatSet object is used like a set and if a curve has the same
-        // variable and statistic (variableStat) it will use the same axis,
-        // The axis number is assigned to the variableStatSet value, which is the variableStat.
-        //var variableStat = variableStr + ":" + statisticSelect;
-        //curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
         var d = [];
         if (diffFrom == null) {
-
             if(model.includes("recs")){  //obs
                var statement = "select sites_siteid,valid_utc,z,ws " +
                     " from obs_recs as o ," + model + "   as s " +
@@ -356,27 +324,20 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc="+3600*forecastLength;
             }
-           // statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
             console.log("query=" + statement);
-
             var ws_z_time;
             var site_z_time;
-            //var queryResult = queryWFIP2DB(statement, validTimeStr, statisticSelect, label);
             var queryResult = queryWFIP2DB(statement);
             d = queryResult.data;
-            console.log("d[0]=" + d[0]);
-
             if (d[0] === undefined) {
                     //    no data set emply array
                     d[0]=[];
 
                 } else {
-
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
-
         }
 
         var pointSymbol = "circle";
@@ -397,15 +358,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 pointSymbol = "cross";
                 break;
         }
-        var yAxisIndex = 1;
-        // if (variableStat in variableStatSet) {
-        //     yAxisIndex = variableStatSet[variableStat].index;
-        //     variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
-        // } else {
-        //     variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
-        // }
 
-//        console.log("before option" );
+        var yAxisIndex = 1;
         var options = {
             //yaxis: variableStatSet[variableStat].index,
             label: label,
@@ -432,209 +386,116 @@ dataProfileZoom = function(plotParams, plotFunction) {
                 fill: false
             }
         };
-//        console.log("after option" );
         dataset.push(options);
-//        console.log("after push" );
     }
 
     // match the data by subseconds
     // build an array of sub_second arrays
     // data is [stat(ws),avVal(z),sub_values,sub_secs]
-    //d.push([mean_ws, z, -1]);
     if (matching) {
-
         console.log(" in matching" );
-
         if (diffFrom != null) {
             var numCurves = diffFrom.length;
         }else{
             var numCurves = curves.length;
         }
 
-
         var num_all_sites =0;
         var all_curve_z = [];
-
         var single_stn = true;
-
         for (var ci= 0; ci < numCurves; ci++) {
             var this_id = dataset[ci].site;
-
-          //  if (this_id === "All") {
-           //     num_all_sites = num_all_sites + 1;
-          //  }
-
             var data = dataset[ci].data;
             var this_curve_z =[];
             for (var di = 0; di < data.length; di++) {
-
                 var this_z = data[di][1];
                 this_curve_z.push(this_z);
             }
-
             all_curve_z.push(this_curve_z);
-
             if (siteIds[ci].length!=1){
                 single_stn = false;
             }
         }
 
-
-
-
-        console.log(" after get z!!!!!!!!!!!!!" );
-
         for (var ci= 0; ci < numCurves; ci++) {
             dataset[ci].data=[]
         }
-
-        console.log(" after empty data!!!!!!!!!!!!!" );
-
-
          var subZIntersection = _.intersection.apply(this,all_curve_z);
-
         for (var zi= 0; zi < subZIntersection.length; zi++) {
-
-          //  console.log(" reassign value!!!!!!!!!!!!!" );
             var common_z = subZIntersection[zi];
             var all_time =[];
-
             for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
-
                 var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
                 all_time.push(this_time_z);
-
             }
-
             var subSecIntersection = _.intersection.apply(this,all_time);
-
-          //  if (num_all_sites ===numCurves){ // all curves with selection of all stations
             if( single_stn == false){
-
                 var stnsIntersection={};
-
                for (var si=0; si<subSecIntersection.length; si++){
-
                    var this_secs = subSecIntersection[si];
                    var all_site =[];
-
-
                     for (var ci = 0; ci < numCurves; ci++) {
                         var these_stns = dataset[ci].site_z_time[common_z][this_secs];
                         all_site.push(these_stns);
                     }
                     stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
-                 //  console.log("all_site="+ all_site );
-                 //  console.log("this_secs="+ this_secs+ " stn="+stnsIntersection[this_secs] );
-
                 }
-
-
            }
-
-
             for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
-
-
                 var new_ws_list =[];
-
-
                 for (var si=0; si<subSecIntersection.length; si++){
-
                     var this_secs = subSecIntersection[si];
-
                     var this_ws_z_time = dataset[curveIndex].ws_z_time[common_z][this_secs];
-
                     var new_ws;
-
-                   // if(num_all_sites==numCurves){
                     if( single_stn == false){
                         for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
                             var this_stn = stnsIntersection[this_secs][stni];
                             var this_index = dataset[curveIndex].site_z_time[common_z][this_secs].indexOf(this_stn);
-
                             new_ws = dataset[curveIndex].ws_z_time[common_z][this_secs][this_index];
                             new_ws_list.push (new_ws);
-
                         }
-
                     }
-
                     else{
-
                        new_ws = this_ws_z_time;
                         new_ws_list.push(new_ws);
                     }
                 }
 
-
                 var flattened = new_ws_list.reduce(function (a, b) {
                     return a.concat(b);
                 }, []);
 
-
-
                 if (flattened.length > 0) {
                     var new_mean = 0;
                     for (var ii = 0; ii < flattened.length; ii++) {
-
                         new_mean = new_mean + flattened[ii];
-
                     }
-
                     dataset[curveIndex].data.push([new_mean / flattened.length,common_z,-1]);
                 }
-
-
-
             }
-
         }
-
-        console.log("11 dataset[0] ="+ dataset[0].data);
-
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom; // [minuend, subtrahend]
-
-
             if (diffFrom != null) {
-
                 console.log("in diffFrom="+ diffFrom);
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
-
-                console.log(" minuendData ="+minuendData);
-
-                console.log("22 dataset[0] ="+ dataset[0].data);
-
                 // do the differencing
                 //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
                 d =[];
                 var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
                 for (var i = 0; i < l; i++) { // each pressure level
                     d[i] = [];
-                //    d[i][3] = [];
-                //    d[i][4] = [];
                     // pressure level
                     d[i][1] = subtrahendData[i][1];
                     // values diff
                     d[i][0] = minuendData[i][0] - subtrahendData[i][0];
                     d[i][2] =-1;
                     // do the subValues
-                 //   var minuendDataSubValues = minuendData[i][3];
-                 //   var minuendDataSubSeconds = minuendData[i][4];
-                  //  var subtrahendDataSubValues = subtrahendData[i][3];
-                   // var subtrahendDataSubSeconds = subtrahendData[i][4];
-                    // find the intersection of the subSeconds
-                   // var secondsIntersection = _.intersection(minuendDataSubSeconds, subtrahendDataSubSeconds);
-                   // for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
-                   //     d[i][4].push(secondsIntersection[siIndex]);
-                   //     d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
-                    //}
                 }
                 //d = minuendData - subtrahendData;
                 console.log("diffFrom  d="+d);
@@ -643,12 +504,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
             }
         }
-
     }
 
-
-
-    console.log("before dsi");
     // generate y-axis
     var yaxes = [];
     var yaxis = [];

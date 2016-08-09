@@ -18,8 +18,8 @@ Package.onUse(function(api) {
   api.use("accounts-ui", 'client');
   api.use("differential:event-hooks", ['client','server']);
   api.use("service-configuration",'server');
-  api.use ("yasinuslu:json-view","client");
-  
+  api.use("yasinuslu:json-view","client");
+  api.use("dangrossman:bootstrap-daterangepicker");
   api.imply("differential:event-hooks");
   api.use('session');
   api.use("iron:router");

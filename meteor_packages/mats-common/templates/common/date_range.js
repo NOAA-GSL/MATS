@@ -4,21 +4,25 @@ var startInit = function() {
     var yr = thenDate.getFullYear();
     var day = thenDate.getDate();
     var month = thenDate.getMonth() + 1;
-    return month + '/' + day + "/" + yr;
+    var hour = thenDate.getHours();
+    var minute = thenDate.getMinutes();
+    return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
 };
 var stopInit = function() {
     var today = new Date();
     var yr = today.getFullYear();
     var day = today.getDate();
     var month = today.getMonth() + 1;
-    return month + '/' + day + "/" + yr;
+    var hour = today.getHours();
+    var minute = today.getMinutes();
+    return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
 };
 
 Template.dateRange.onRendered(function() {
     //NOTE: Date fields are special in that they are qualified by plotType.
     //TimeSeries and Scatter plots have a common date range
     // but profile plots have a date range for each curve.
-    // The decision to hide or show a datarange is made here in the daterange template
+    // The decision to hide or show a dataRange is made here in the dateRange template
 
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
@@ -38,13 +42,20 @@ Template.dateRange.onRendered(function() {
             document.getElementById('dates-item').style.display = "none";
         }
     }
-    $('#' + this.name + "-" + InputTypes.dateRange + "-from input").datepicker({});
-    $('#' + this.name + "-" + InputTypes.dateRange + "-to input").datepicker({});
+    var name = this.data.name;
+    $(function() {
+            $('input[name=' + name + ']').daterangepicker({
+            "timePicker": true,
+            "timePicker24Hour": true,
+            "autoApply": true,
+            format: 'MM/DD/YYYY H:mm'
+        });
+    });
 });
 
 Template.dateRange.helpers({
     value: function() {
-        return startInit() + "  To:  " + stopInit();
+        return startInit() + " - " + stopInit();
     },
     startInitial: function() {
         return startInit();
@@ -54,11 +65,3 @@ Template.dateRange.helpers({
     }
 });
 
-Template.dateRange.events({
-    'click .from' : function (event) {
-        $('#' + this.name + "-" + InputTypes.dateRange + "-from").datepicker('show');
-    },
-    'click .to' : function (event) {
-        $('#' + this.name + "-" + InputTypes.dateRange + "-to").datepicker('show');
-    }
-});

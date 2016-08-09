@@ -10,7 +10,6 @@ twbs:bootstrap
 fortawesome:fontawesome
 msavin:mongol
 pcel:mysql
-rajit:bootstrap3-datepicker
 momentjs:moment
 mrt:meteor-nodemailer
 differential:event-hooks

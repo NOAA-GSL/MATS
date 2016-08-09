@@ -129,11 +129,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
         return dstr;
     };
 
-    //console.log(plotParams);
-    var fromDateStr = plotParams.fromDate;
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = plotParams.toDate;
-    var toDate = dateConvert(toDateStr);
     var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -144,16 +139,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
-
-        //var model = curve['model'];
-        //var region = curve['region'].replace(/^.*mapped to: /, "").replace(')', ''); // have to use the mapped value....
-
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        //var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var region = RegionDescriptions.findOne({description:curve['region']}).regionMapTable;
-
-        var curveDatesDateRangeFrom = dateConvert(curve['curve-dates-dateRange-from']);
-        var curveDatesDateRangeTo = dateConvert(curve['curve-dates-dateRange-to']);
+        var curveDates = curve['curve-dates'];
+        var fromDateStr = curveDates.split( ' - ')[0]; // get the from part
+        fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
+        var toDateStr = curveDates.split( ' - ')[1]; // get the to part
+        toDateStr = toDateStr.split(' ')[0];  // strip off time field
+        var curveDatesDateRangeFrom = dateConvert(fromDateStr);
+        var curveDatesDateRangeTo = dateConvert(toDateStr);
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
@@ -312,16 +306,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
         }
 
         var subSecIntersection = _.intersection.apply(this,subSecs);
-        //console.log ("_.intersection subSecIntersection " +  subSecIntersection);
-        //
-        //var res = subSecs.shift().filter(function(v) {
-        //    return subSecs.every(function(a) {
-        //        return a.indexOf(v) !== -1;
-        //    });
-        //});
-        //console.log ("manual subSecIntersection " +  res);
-
-
     }
 
     // calculate stats for each dataset matching to subsec_intersection if matching is specified
@@ -337,7 +321,6 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
                     var newVal = subValues[secsIndex];
                     if (newVal === undefined || newVal == 0) {
-                        console.log("bad newVal: " + newVal);
                         console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
                     } else {
                         newSubValues.push(newVal);

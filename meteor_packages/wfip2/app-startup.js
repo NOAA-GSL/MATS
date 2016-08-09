@@ -11,6 +11,22 @@ variableOptionsMap[PlotTypes.profile] = {};
 variableOptionsMap[PlotTypes.scatter2d] = {};
 variableOptionsMap[PlotTypes.timeSeries] = {};
 
+var date = new Date();
+var dateOneMonthPrior = new Date();
+dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
+var yr = date.getFullYear();
+var day = date.getDate();
+var month = date.getMonth();
+var hour = date.getHours();
+var minute = date.getMinutes();
+var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+yr = dateOneMonthPrior.getFullYear();
+day = dateOneMonthPrior.getDate();
+month = dateOneMonthPrior.getMonth();
+hour = dateOneMonthPrior.getHours();
+minute = dateOneMonthPrior.getMinutes();
+var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
+var dstr = dstrOneMonthPrior + " - " + dstrToday;
 
 scatter2dParams = function() {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
@@ -103,21 +119,15 @@ plotParams = function () {
         PlotParams.remove({});
     }
     if (PlotParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-
         PlotParams.insert(
             {
                 name: 'dates',
                 type: InputTypes.dateRange,
                 options: [''],
-                startDate: '03/01/2015',
-                stopDate: dstr,
+                startDate: dstrOneMonthPrior,
+                stopDate: dstrToday,
                 controlButtonCovered: true,
-                default: '03/01/2015',
+                default: dstr,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -165,7 +175,6 @@ plotParams = function () {
 };
 
 curveParams = function () {
-    //console.log(JSON.stringify(modelOptiosMap));
     if (process.env.NODE_ENV === "development" ||Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         CurveParams.remove({});
     }
@@ -477,11 +486,11 @@ curveParams = function () {
                 type: InputTypes.dateRange,
                 optionsMap:optionsMap,
                 options:Object.keys(optionsMap),   // convenience
-                startDate: '03/01/2015',
-                stopDate: dstr,
+                startDate: dstrOneMonthPrior,
+                stopDate: dstrToday,
                 controlButtonCovered: true,
                 unique: false,
-                default: '03/01/2015',
+                default: dstr,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -533,8 +542,7 @@ curveTextPatterns = function () {
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast length', 'h '],
-                ['','curve-dates-dateRange-from','to'],
-                ['','curve-dates-dateRange-to','']
+                ['','curve-dates','']
             ]
         });
         CurveTextPatterns.insert({
@@ -553,8 +561,7 @@ curveTextPatterns = function () {
                 ['', 'yaxis-variable', ', '],
                 ['fcst_len:', 'yaxis-forecast length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
-                ['','curve-dates-dateRange-from','to'],
-                ['','curve-dates-dateRange-to','']
+                ['','curve-dates','']
             ]
         });
 
@@ -729,7 +736,7 @@ var containsPoint = function(pointArray,point) {
 Meteor.startup(function () {
     Future = Npm.require('fibers/future');
 
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
+    if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});
     }
 // remove for production
