@@ -537,6 +537,7 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisIndex++;
         }
 
+        normalizedAxisData.sort(sortFunction);
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
             case 0:

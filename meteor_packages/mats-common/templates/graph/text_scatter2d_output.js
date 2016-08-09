@@ -82,13 +82,15 @@ Template.textScatter2dOutput.helpers({
         if (PlotResult.data === undefined) {
             return "";
         }
-        var curves = Session.get("Curves");
-        for (var i = 0; i < curves.length; i++){
-            if (curve.label === curves[i].label) {
-                break;
+        var line = '';
+        for (var i = 0; i < PlotResult.data.length; i++) {
+            if (PlotResult.data[i].label == curve.label) {
+                line += "<td>" + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
+            }
+            if (PlotResult.data[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4).length) == Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4)) {
+                line += "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>"
             }
         }
-        var line = "<td>" + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
         return line;
     }
 });
