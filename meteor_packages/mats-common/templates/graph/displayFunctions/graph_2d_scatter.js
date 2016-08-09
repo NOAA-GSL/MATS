@@ -71,17 +71,15 @@ graph2dScatter = function(result) {
         $( "input[id$='-curve-show-hide']" ).click(function (event) {
             event.preventDefault();
             var id = event.target.id;
-            var label = id.replace('-curve-show-hide','');
+            var label = id.replace('-curve-show-hide','') +'-best fit';
             for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label == label) {
-                    // find the bestfit line - if it exists
-                    if (dataset.length > 1) {
-                        dataset[c + dataset.length - 1].lines.show = !dataset[c].lines.show;
-                        if (dataset[c + dataset.length - 1].points.show == true) {
-                            Session.set(label + "hideButtonText", 'hide curve');
-                        } else {
-                            Session.set(label + "hideButtonText", 'show curve');
-                        }
+                // find the bestfit line - if it exists
+                if (dataset[c].label.search(label) > -1) {
+                    dataset[c].lines.show = !dataset[c].lines.show;
+                    if (dataset[c].lines.show == true) {
+                        Session.set(label + "hideButtonText", 'hide curve');
+                    } else {
+                        Session.set(label + "hideButtonText", 'show curve');
                     }
                 }
             }
@@ -99,7 +97,6 @@ graph2dScatter = function(result) {
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].label == label) {
                 dataset[c].points.show = !dataset[c].points.show;
-                dataset[c].lines.show = false;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
                 } else {

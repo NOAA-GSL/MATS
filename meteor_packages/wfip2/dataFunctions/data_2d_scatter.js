@@ -562,6 +562,8 @@ data2dScatter = function (plotParams, plotFunction) {
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
+            //necessary to make the 'hide points' button work properly
+            lines: {show: false},
             annotation: ""
         };
         dataset.push(options);

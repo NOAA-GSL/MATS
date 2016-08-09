@@ -91,25 +91,29 @@ graphProfileZoom = function(result) {
             var label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
                 // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
-                if (errorbars[c] === undefined) {
-                    errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
-                }
+                // if (errorbars === undefined) {
+                //     errorbars = [];
+                // }
+                // if (errorbars[c] === undefined) {
+                //     errorbars[c] = dataset[c].points.errorbars;
+                //     Session.set('errorbars', errorbars);
+                // }
                 if (dataset[c].label == label) {
-                    dataset[c].lines.show = !dataset[c].lines.show;
-                    dataset[c].points.show = !dataset[c].points.show;
-                    if (dataset[c].points.show) {
-                        dataset[c].points.errorbars = errorbars[c];
-                    } else {
-                        dataset[c].points.errorbars = undefined;
+                    if (dataset[c].lines.show == dataset[c].points.show) {
+                        dataset[c].points.show = !dataset[c].points.show;
                     }
+                    dataset[c].lines.show = !dataset[c].lines.show;
+                    // if (dataset[c].points.show) {
+                    //     dataset[c].points.errorbars = errorbars[c];
+                    // } else {
+                    //     dataset[c].points.errorbars = undefined;
+                    // }
                     if (dataset[c].points.show == true) {
                         Session.set(label + "hideButtonText", 'hide curve');
+                        Session.set(label + "pointsButtonText", 'hide points');
                     } else {
                         Session.set(label + "hideButtonText", 'show curve');
+                        Session.set(label + "pointsButtonText", 'show points');
                     }
                 }
             }
