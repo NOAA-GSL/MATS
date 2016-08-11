@@ -97,10 +97,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         return dstr;
     };
 
-    //console.log(plotParams);
-    var fromDateStr = plotParams.fromDate;
+
+    var curveDates =  plotParams.dates.split(' - ');
+    var fromDateStr = curveDates[0];
     var fromDate = dateConvert(fromDateStr);
-    var toDateStr = plotParams.toDate;
+    var toDateStr = curveDates[1];
     var toDate = dateConvert(toDateStr);
 
     var weitemp = fromDate.split("-");

@@ -62,6 +62,13 @@ Package.onUse(function(api) {
   api.export("PlotAxisFilters");
   api.export("SiteMap");
 
+  //Modules
+  api.addFiles("both/modules/_modules.js", ['client','server']);
+  api.addFiles("server/modules/_modules.js", "server");
+  api.addFiles("client/modules/_modules.js", "client");
+  api.addFiles("both/modules/wfiputil.js", "server");
+  api.export("Modules",['client','server']);
+
   api.addFiles("lib/util.js", ['client','server']);
   api.export("mean",['client','server']);
   api.addFiles("lib/regression.js",['client','server']);

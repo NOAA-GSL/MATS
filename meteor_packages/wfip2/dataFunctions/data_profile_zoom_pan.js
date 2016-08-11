@@ -1,33 +1,3 @@
-// use future to wait for the query callback to complete
-
-var secsConvert = function (dStr) {
-    if (dStr === undefined || dStr === " ") {
-        var now = new Date();
-        var date = new Date(now.getUTCFullYear(), now.getUTCMonth()-1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-        var date_in_secs = date.getTime();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-    }
-    else {
-        var dateArray = dStr.split('-');
-        //console.log("dateArray=" + dateArray);
-        var month = dateArray[1];
-        var day = dateArray[2];
-        var yr = dateArray[0];
-
-        var my_date = new Date(yr, month-1, day,0);
-        //console.log("my_date=" + my_date);
-        // to UTC time, not local time
-        var date_in_secs = my_date.getTime();
-    }
-    // to UTC time, not local time
-    //return date_in_secs/1000 -3600*6;
-    return date_in_secs/1000 ;
-
-};
-
-
 
 //var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
 var queryWFIP2DB = function (statement) {
@@ -35,9 +5,7 @@ var queryWFIP2DB = function (statement) {
     var d = [];  // d will contain the curve data
     var error = "";
     var ws_z = {};
-    var time_z = {};
-    var site_z ={};
-    var site_z_time ={};
+    var site_z_time = {};
     var ws_z_time = {};
     wfip2Pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
@@ -134,7 +102,7 @@ var queryWFIP2DB = function (statement) {
                 // done waiting - have results
                 dFuture['return']();
             }
-            }
+        }
     );
     // wait for future to finish
     dFuture.wait();
@@ -156,16 +124,16 @@ var queryWFIP2DB = function (statement) {
 
 var get_err = function (sub_val_array, sub_secs_array) {
     var n = sub_val_array.length;
-    var n_good =0;
-    var sum_d=0;
-    var sum2_d =0;
-    for(var i=0; i< n; i++ ){
-        n_good = n_good +1;
+    var n_good = 0;
+    var sum_d = 0;
+    var sum2_d = 0;
+    for (var i = 0; i < n; i++) {
+        n_good = n_good + 1;
         sum_d = sum_d + sub_val_array[i];
         sum2_d = sum2_d + sub_val_array[i] * sub_val_array[i];
     }
-    var d_mean = sum_d/n_good;
-    var sd2 = sum2_d/n_good - d_mean *d_mean;
+    var d_mean = sum_d / n_good;
+    var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = Math.sqrt(sd2);
     // find minimum delta_time, if any value missing, set null
     var last_secs = -1e30;
@@ -173,39 +141,39 @@ var get_err = function (sub_val_array, sub_secs_array) {
     var min_secs = 1e30;
     var max_secs = -1e30;
 
-    for(i=0; i< sub_secs_array.length; i++){
+    for (i = 0; i < sub_secs_array.length; i++) {
         var secs = (sub_secs_array[i]);
         var delta = secs - last_secs;
-        if(delta < min_delta) {
+        if (delta < min_delta) {
             min_delta = delta;
         }
-        if(secs < min_secs) {
+        if (secs < min_secs) {
             min_secs = secs;
         }
-        if(secs >max_secs) {
+        if (secs > max_secs) {
             max_secs = secs;
         }
         last_secs = secs;
     }
 
-    var data_wg =[];
-    var n_gaps =0;
-    var loopTime =min_secs;
+    var data_wg = [];
+    var n_gaps = 0;
+    var loopTime = min_secs;
 
-    while (loopTime < max_secs+1) {
+    while (loopTime < max_secs + 1) {
 
-        if(sub_secs_array.indexOf(loopTime)<0){
+        if (sub_secs_array.indexOf(loopTime) < 0) {
             data_wg.push(null);
-            n_gaps = n_gaps+1;
-        } else{
+            n_gaps = n_gaps + 1;
+        } else {
             var d_idx = sub_secs_array.indexOf(loopTime);
             data_wg.push(sub_val_array[d_idx]);
         }
         loopTime = loopTime + min_delta;
     }
 
-    var r =[];
-    for(var lag=0;lag<=1; lag++) {
+    var r = [];
+    for (var lag = 0; lag <= 1; lag++) {
         r[lag] = 0;
         var n_in_lag = 0;
         for (var t = 0; t < n - lag; t++) {
@@ -220,53 +188,35 @@ var get_err = function (sub_val_array, sub_secs_array) {
             r[lag] = null;
         }
     }
-    if(r[1] >= 1) {
+    if (r[1] >= 1) {
         r[1] = .99999;
     }
 
-    var betsy = Math.sqrt((n_good-1)*(1. - r[1]));
+    var betsy = Math.sqrt((n_good - 1) * (1. - r[1]));
     var stde_betsy;
-    if(betsy != 0) {
-        stde_betsy = sd/betsy;
+    if (betsy != 0) {
+        stde_betsy = sd / betsy;
     } else {
         stde_betsy = null;
     }
-    return {d_mean:d_mean,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1]};
+    return {d_mean: d_mean, stde_betsy: stde_betsy, n_good: n_good, lag1: r[1]};
 };
 
-dataProfileZoom = function(plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        return dstr;
-    };
-
-    var fromDateStr = plotParams.fromDate;
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = plotParams.toDate;
-    var toDate = dateConvert(toDateStr);
+dataProfileZoom = function (plotParams, plotFunction) {
     var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
 
 
-
-    console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
+    console.log(" curvsLength!!!!!!!!!!!!!=" + curvesLength);
     var dataset = [];
     //var variableStatSet = Object.create(null);
+
+    var dates = plotParams.dates;
+    //"dates": "7/11/2016 14:58 - 8/10/2016 14:58"
+    var fromDate = dates.split(' - ')[0];
+    var toDate = dates.split(' - ')[1];
 
     var siteIds = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -275,7 +225,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var label = curve['label'];
         var data_source = curve['data source'];
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
-        var model =  tmp[0];
+        var model = tmp[0];
         var instrument_id = tmp[1];
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
 
@@ -284,18 +234,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
 
 
         for (var i = 0; i < siteNames.length; i++) {
-            var siteId = SiteMap.findOne({siteName:siteNames[i]}).siteId;
+            var siteId = SiteMap.findOne({siteName: siteNames[i]}).siteId;
             siteIds[curveIndex].push(siteId);
         }
 
-        var instruments_instrid= CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
+        var instruments_instrid = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
         var curveDates = curve['curve-dates'];
-        var fromDateStr = curveDates.split( ' - ')[0]; // get the from part
-        fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
-        var toDateStr = curveDates.split( ' - ')[1]; // get the to part
-        toDateStr = toDateStr.split(' ')[0];  // strip off time field
-        var curveDatesDateRangeFrom = dateConvert(fromDateStr);
-        var curveDatesDateRangeTo = dateConvert(toDateStr);
+        var curveDatesDateRangeFrom = curveDates.split(' - ')[0]; // get the from part
+        var curveDatesDateRangeTo = curveDates.split(' - ')[1]; // get the to part
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
@@ -305,24 +251,24 @@ dataProfileZoom = function(plotParams, plotFunction) {
         var forecastLength = curve['forecast length'];
         var d = [];
         if (diffFrom == null) {
-            if(model.includes("recs")){  //obs
-               var statement = "select sites_siteid,valid_utc,z,ws " +
+            if (model.includes("recs")) {  //obs
+                var statement = "select sites_siteid,valid_utc,z,ws " +
                     " from obs_recs as o ," + model + "   as s " +
                     //" where valid_utc=1454526000 " +
-                    " where valid_utc >= "+ secsConvert(curveDatesDateRangeFrom) +
-                    " and valid_utc <= " +  secsConvert(curveDatesDateRangeTo) +
+                    " where valid_utc >= " + secsConvert(curveDatesDateRangeFrom) +
+                    " and valid_utc <= " + secsConvert(curveDatesDateRangeTo) +
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
-            }else{//model
-               var statement="select sites_siteid,valid_utc,z ,ws " +
-                        " from "+model+", nwp_recs  " +
-                         "where valid_utc>= "+ secsConvert(fromDate)+
-                         " and analysis_utc+fcst_end_utc>="+  secsConvert(curveDatesDateRangeFrom) +
-                    "  and valid_utc<= "+ secsConvert(toDate) +
-                    " and analysis_utc+fcst_end_utc <="+  secsConvert(curveDatesDateRangeTo) +
-                    " and nwps_nwpid= " + instrument_id+
+            } else {//model
+                var statement = "select sites_siteid,valid_utc,z ,ws " +
+                    " from " + model + ", nwp_recs  " +
+                    "where valid_utc>= " + secsConvert(fromDate) +
+                    " and analysis_utc+fcst_end_utc>=" + secsConvert(curveDatesDateRangeFrom) +
+                    "  and valid_utc<= " + secsConvert(toDate) +
+                    " and analysis_utc+fcst_end_utc <=" + secsConvert(curveDatesDateRangeTo) +
+                    " and nwps_nwpid= " + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid " +
-                    " and fcst_end_utc="+3600*forecastLength;
+                    " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
             console.log("query=" + statement);
@@ -331,13 +277,16 @@ dataProfileZoom = function(plotParams, plotFunction) {
             var queryResult = queryWFIP2DB(statement);
             d = queryResult.data;
             if (d[0] === undefined) {
-                    //    no data set emply array
-                    d[0]=[];
-
-                } else {
+                //    no data set emply array
+                d[0] = [];
+            } else {
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
+            tooltipText = label  +
+                "<br>ws_z_time" + ws_z_time +
+                "<br>site_z_time:" + site_z_time;
+            d[1] =  tooltipText;
         }
 
         var pointSymbol = "circle";
@@ -389,74 +338,67 @@ dataProfileZoom = function(plotParams, plotFunction) {
         dataset.push(options);
     }
 
-    // match the data by subseconds
-    // build an array of sub_second arrays
-    // data is [stat(ws),avVal(z),sub_values,sub_secs]
     if (matching) {
-        console.log(" in matching" );
         if (diffFrom != null) {
             var numCurves = diffFrom.length;
-        }else{
+        } else {
             var numCurves = curves.length;
         }
-
-        var num_all_sites =0;
         var all_curve_z = [];
         var single_stn = true;
-        for (var ci= 0; ci < numCurves; ci++) {
-            var this_id = dataset[ci].site;
+        for (var ci = 0; ci < numCurves; ci++) {
             var data = dataset[ci].data;
-            var this_curve_z =[];
+            var this_curve_z = [];
             for (var di = 0; di < data.length; di++) {
                 var this_z = data[di][1];
                 this_curve_z.push(this_z);
             }
             all_curve_z.push(this_curve_z);
-            if (siteIds[ci].length!=1){
+            if (siteIds[ci].length != 1) {
                 single_stn = false;
             }
         }
 
-        for (var ci= 0; ci < numCurves; ci++) {
-            dataset[ci].data=[]
+        for (var ci = 0; ci < numCurves; ci++) {
+            dataset[ci].data = []
         }
-         var subZIntersection = _.intersection.apply(this,all_curve_z);
-        for (var zi= 0; zi < subZIntersection.length; zi++) {
+        var subZIntersection = _.intersection.apply(this, all_curve_z);
+        for (var zi = 0; zi < subZIntersection.length; zi++) {
             var common_z = subZIntersection[zi];
-            var all_time =[];
-            for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
+            var all_time = [];
+            for (curveIndex = 0; curveIndex < numCurves; curveIndex++) {
                 var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
                 all_time.push(this_time_z);
             }
-            var subSecIntersection = _.intersection.apply(this,all_time);
-            if( single_stn == false){
-                var stnsIntersection={};
-               for (var si=0; si<subSecIntersection.length; si++){
-                   var this_secs = subSecIntersection[si];
-                   var all_site =[];
+            var subSecIntersection = _.intersection.apply(this, all_time);
+            if (single_stn == false) {
+                var stnsIntersection = {};
+                for (var si = 0; si < subSecIntersection.length; si++) {
+                    var this_secs = subSecIntersection[si];
+                    var all_site = [];
                     for (var ci = 0; ci < numCurves; ci++) {
                         var these_stns = dataset[ci].site_z_time[common_z][this_secs];
                         all_site.push(these_stns);
                     }
                     stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
                 }
-           }
-            for (curveIndex = 0; curveIndex < numCurves; curveIndex++){
-                var new_ws_list =[];
-                for (var si=0; si<subSecIntersection.length; si++){
+            }
+            for (curveIndex = 0; curveIndex < numCurves; curveIndex++) {
+                var new_ws_list = [];
+                for (var si = 0; si < subSecIntersection.length; si++) {
                     var this_secs = subSecIntersection[si];
                     var this_ws_z_time = dataset[curveIndex].ws_z_time[common_z][this_secs];
                     var new_ws;
-                    if( single_stn == false){
+                    if (single_stn == false) {
                         for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
                             var this_stn = stnsIntersection[this_secs][stni];
                             var this_index = dataset[curveIndex].site_z_time[common_z][this_secs].indexOf(this_stn);
                             new_ws = dataset[curveIndex].ws_z_time[common_z][this_secs][this_index];
-                            new_ws_list.push (new_ws);
+                            new_ws_list.push(new_ws);
                         }
                     }
-                    else{
-                       new_ws = this_ws_z_time;
+                    else {
+                        new_ws = this_ws_z_time;
                         new_ws_list.push(new_ws);
                     }
                 }
@@ -470,7 +412,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     for (var ii = 0; ii < flattened.length; ii++) {
                         new_mean = new_mean + flattened[ii];
                     }
-                    dataset[curveIndex].data.push([new_mean / flattened.length,common_z,-1]);
+                    dataset[curveIndex].data.push([new_mean / flattened.length, common_z, -1]);
                 }
             }
         }
@@ -479,14 +421,13 @@ dataProfileZoom = function(plotParams, plotFunction) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom; // [minuend, subtrahend]
             if (diffFrom != null) {
-                console.log("in diffFrom="+ diffFrom);
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
                 // do the differencing
                 //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
-                d =[];
+                d = [];
                 var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
                 for (var i = 0; i < l; i++) { // each pressure level
                     d[i] = [];
@@ -494,14 +435,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     d[i][1] = subtrahendData[i][1];
                     // values diff
                     d[i][0] = minuendData[i][0] - subtrahendData[i][0];
-                    d[i][2] =-1;
+                    d[i][2] = -1;
                     // do the subValues
+                    tooltipText = label  +
+                        "<br>level" + d[i][1] +
+                        "<br>value:" + d[i][2];
+                    d[i][3] =  tooltipText;
                 }
-                //d = minuendData - subtrahendData;
-                console.log("diffFrom  d="+d);
                 dataset[curveIndex].data = d;
-               // console.log("curve="+ curveIndex+"  d="+d );
-
             }
         }
     }
@@ -509,8 +450,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
-    for (var dsi=0; dsi<dataset.length; dsi++) {
-        var position = dsi===0?"left":"right";
+    for (var dsi = 0; dsi < dataset.length; dsi++) {
+        var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
             position: position,
             color: 'grey',
@@ -520,44 +461,43 @@ dataProfileZoom = function(plotParams, plotFunction) {
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
+            alignTicksWithAxis: 1
             //ticks:[[-1000,1000],[-900,900],[-800,800],[-700,700],[-600,600],[-500,500],[-400,400],[-300,300],[-200,200],[-100,100],[0,0]]
         };
         var yaxisOptions = {
-            zoomRange: [0.1,10]
+            zoomRange: [0.1, 10]
         };
         yaxes.push(yaxesOptions);
         yaxis.push(yaxisOptions);
     }
 
-    console.log("before pOptions");
     var pOptions = {
         axisLabels: {
             show: true
         },
-        xaxes:[{
+        xaxes: [{
             axisLabel: variableStr,
             color: 'grey'
         }],
         xaxis: {
-            zoomRange: [0.1,10]
+            zoomRange: [0.1, 10]
         },
-        yaxes:yaxes,
-        yaxis:yaxis,
+        yaxes: yaxes,
+        yaxis: yaxis,
 
         legend: {
             show: false,
-            container:"#legendContainer",
+            container: "#legendContainer",
             noColumns: 0
         },
         series: {
             lines: {
                 show: true,
-                lineWidth:Settings.findOne({},{fields:{lineWidth:1}}).lineWidth
+                lineWidth: Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
             },
             points: {
                 show: true,
-                radius:1
+                radius: 1
             },
             shadowSize: 0
         },
@@ -580,16 +520,11 @@ dataProfileZoom = function(plotParams, plotFunction) {
         tooltip: true,
         tooltipOpts: {
             // the ct value is the third [2] element of the data series for profiles. This is the tooltip content.
-           // content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+             content: "<span style='font-size:150%'><strong>%ct</strong></span>"
             //content: "<span style='font-size:150%'><strong>%y</strong></span>"
-            content: "<span style='font-size:150%'><strong><br>value %x<br>at %y m</strong></span>"
+            //content: "<span style='font-size:150%'><strong><br>value %x<br>at %y m</strong></span>"
         }
     };
-
-    // add black 0 line curve
-    //dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
-
-    console.log("before result");
     var result = {
         error: error,
         data: dataset,

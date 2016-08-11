@@ -89,7 +89,7 @@ Template.graph.helpers({
                 format = PlotParams.findOne({name:'plotFormat'}).optionsMap[p.plotFormat];
             }
             if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
-                return p.fromDate + " - " + p.toDate + " : " + format;
+                return p.curve-dates + " : " + format;
             } else if (Session.get("plotType") === PlotTypes.profile) {
                 return "Profile: " + format;
             } else {
@@ -256,7 +256,7 @@ Template.graph.events({
         var plotText = "";
         var p = Session.get('PlotParams');
         if (p !== undefined) {
-            plotText = p.fromDate + " - " + p.toDate + " : " + p.plotFormat;
+            plotText = p.curve-dates + " : " + p.plotFormat;
         } else {
             plotText = "no plot params";
         }

@@ -1,26 +1,3 @@
-// use future to wait for the query callback to complete
-var secsConvert = function (dStr) {
-    if (dStr === undefined || dStr === " ") {
-        var now = new Date();
-        var date = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-        var date_in_secs = date.getTime();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-    }
-    else {
-        var dateArray = dStr.split('-');
-        var month = dateArray[1];
-        var day = dateArray[2];
-        var yr = dateArray[0];
-        var my_date = new Date(yr, month - 1, day, 0);
-        // to UTC time, not local time
-        var date_in_secs = my_date.getTime();
-    }
-    // to UTC time, not local time
-    return date_in_secs / 1000;
-};
-
 
 var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_variable) {
     var dFuture = new Future();
@@ -157,29 +134,13 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
 };
 
 dataSeriesZoom = function (plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        return dstr;
-    };
+
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
-    var fromDateStr = plotParams.fromDate;
+    var curveDates =  plotParams.dates.split(' - ');
+    var fromDateStr = curveDates[0];
     var fromDate = dateConvert(fromDateStr);
-    var toDateStr = plotParams.toDate;
-    var toDate = dateConvert(toDateStr);
-    var weitemp = fromDate.split("-");
+    var toDateStr = curveDates[1];
+    var toDate = dateConvert(toDateStr);    var weitemp = fromDate.split("-");
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     weitemp = toDate.split("-");
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);

@@ -1,146 +1,4 @@
-var sortFunction = function (a, b) {
-    if (a[0] === b[0]) {
-        return 0;
-    }
-    else {
-        return (a[0] < b[0]) ? -1 : 1;
-    }
-};
 
-var add = function (a,b) {
-    return a + b;
-};
-
-var max = function(vals) {
-    var m = Number.MIN_SAFE_INTEGER;
-    for (var i = 0; i < vals.length; i++) {
-        m = m > vals[i] ? m : vals[i];
-    }
-    return m;
-};
-
-var min = function(vals) {
-    var m = Number.MAX_SAFE_INTEGER;
-    for (var i = 0; i < vals.length; i++) {
-        m = m < vals[i] ? m : vals[i];
-    }
-    return m;
-};
-
-var dateConvert = function (dStr) {
-    if (dStr === undefined || dStr === " ") {
-        var now = new Date();
-        var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = yr + "-" + month + '-' + day;
-        return dstr;
-    }
-    var dateArray = dStr.split('/');
-    var month = dateArray[0];
-    var day = dateArray[1];
-    var yr = dateArray[2];
-    var dstr = yr + "-" + month + '-' + day;
-    return dstr;
-};
-
-var secsConvert = function (dStr) {
-    if (dStr === undefined || dStr === " ") {
-        var now = new Date();
-        var date = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-        var date_in_secs = date.getTime();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-    }
-    else {
-        var dateArray = dStr.split('-');
-        var month = dateArray[1];
-        var day = dateArray[2];
-        var yr = dateArray[0];
-        var my_date = new Date(yr, month - 1, day, 0);
-        // to UTC time, not local time
-        var date_in_secs = my_date.getTime();
-    }
-    // to UTC time, not local time
-    //return date_in_secs/1000 -3600*6;
-    return date_in_secs / 1000;
-};
-
-var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                         levelBasisX, levelBasisY, siteBasisX, siteBasisY) {
-    // sum and average all of the means for all of the sites
-    var datum = {};
-    var commonSitesBasisLengthX = siteBasisX.length;
-    var commonSitesBasisLengthY = siteBasisY.length;
-    var tSitesX = rawAxisData['xaxis']['data'][axisTime];
-    var tSitesY = rawAxisData['yaxis']['data'][axisTime];
-    // Do we have enough sites (based on the quality) for this time to qualify the data for this time? We need to have enough for x AND y
-    var sitesXQuality = (Object.keys(tSitesX).length / commonSitesBasisLengthX) * 100;
-    if (sitesXQuality < siteCompletenessX) {
-        return []; // reject this site (it does not qualify for x axis) for this time
-    }
-    var sitesYQuality = (Object.keys(tSitesY).length / commonSitesBasisLengthY) * 100;
-    if (sitesYQuality < siteCompletenessY) {
-        return []; // reject this site (it does not qualify for y axis) for this time
-    }
-
-    // still here? process the sites
-    var axisArr = ['xaxis', 'yaxis'];
-    for (var ai = 0; ai < axisArr.length; ai++) {
-        var axisStr = axisArr[ai];
-        var tSiteIds = Object.keys(tSitesX);
-        var commonLevelsBasisLength = levelBasisX.length;
-        var qualityLevels = levelCompletenessX;
-        if (axisArr[ai] == 'yaxis') {
-            tSiteIds = Object.keys(tSitesY);
-            commonLevelsBasisLength = levelBasisY.length;
-            qualityLevels = levelCompletenessY;
-        }
-        var siteSum = 0;
-        var siteNum = 0;
-        var filteredSites = [];   // used for the modal data view
-        for (var si = 0; si < tSiteIds.length; si++) {
-            var siteId = tSiteIds[si];
-            var siteMean = 0;
-            if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
-                siteSum += rawAxisData[axisStr]['data'][axisTime][siteId]['mean'];
-                siteNum +=  rawAxisData[axisStr]['data'][axisTime][siteId]['numLevels'];
-                filteredSites = rawAxisData[axisStr]['data'][axisTime];
-                //combine the levels and the values into single array (for using in the modal data view)
-                filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
-                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues = filteredSites[siteId].levelsValues;
-            } else {
-                // quality filter is required (>0)  so we have to recalculate the statistics for this site for qualified levels
-                // recalculate sMean for filtered levels
-                var sLevels = rawAxisData[axisStr]['data'][axisTime][siteId]['levels'];
-                //combine the levels and the values into single array (for using in the modal data view) - raw values - unfiltered
-                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues = rawAxisData[axisStr]['data'][axisTime][siteId].levels.map(function(level, index) { return [level, rawAxisData[axisStr]['data'][axisTime][siteId].values[index]] });
-
-                // What we really want is to put in a quality control
-                // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
-                // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
-                var matchQuality = (sLevels.length / commonLevelsBasisLength) * 100;
-                if (matchQuality < qualityLevels) {
-                    continue;
-                }
-                var sValues = rawAxisData[axisStr]['data'][axisTime][siteId]['values'];
-                filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
-                for (var li = 0; li < sLevels.length; li++) {
-                    siteSum += sValues[li];
-                    siteNum++;
-                }
-            }
-        }
-
-        siteMean = siteSum / siteNum;
-        datum[axisStr + '-mean'] = siteMean;
-        datum[axisStr + '-sites'] = rawAxisData[axisStr]['data'][axisTime];  // used to get levelsValues from raw data for data modal
-        datum[axisStr + '-filteredSites'] = filteredSites;
-    }
-    return datum;
-};
 
 var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator) {
     var dFuture = new Future();
@@ -230,7 +88,7 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                         }
                     }
                     allLevels.push(levels);  // array of level arrays - two dimensional
-                    var sum = values.reduce(add,0);
+                    var sum = values.reduce(function (a,b) {return a + b;},0);
                     var numLevels = levels.length;
                     var mean = sum / numLevels;
                     if(resultData[time] === undefined) {
@@ -244,8 +102,8 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                     resultData[time][siteid].sum = sum;
                     resultData[time][siteid].numLevels = numLevels;
                     resultData[time][siteid].mean = mean;
-                    resultData[time][siteid].max = max(values);
-                    resultData[time][siteid].min = min(values);
+                    resultData[time][siteid].max = Math.max(values);
+                    resultData[time][siteid].min = Math.min(values);
                 }
                 // fill in missing times - there must be an entry at each minInterval
                 // if there are multiple entries for a given time average them into one time entry
@@ -279,8 +137,12 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
 
 data2dScatter = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
-    var fromDate = dateConvert(plotParams.fromDate);
-    var toDate = dateConvert(plotParams.toDate);
+
+    var curveDates =  plotParams.dates.split(' - ');
+    var fromDateStr = curveDates[0];
+    var fromDate = Modules.server.wfip2.dateConvert(fromDateStr);
+    var toDateStr = curveDates[1];
+    var toDate = Modules.server.wfip2.dateConvert(toDateStr);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -346,8 +208,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
-                    " and valid_utc>=" + secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate);
+                    " and valid_utc>=" + Modules.server.wfip2.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
                     statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
@@ -355,8 +217,8 @@ data2dScatter = function (plotParams, plotFunction) {
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + secsConvert(fromDate) +
-                        " and valid_utc<=" + secsConvert(toDate) +
+                        " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
@@ -366,8 +228,8 @@ data2dScatter = function (plotParams, plotFunction) {
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + secsConvert(fromDate) +
-                        " and valid_utc<=" + secsConvert(toDate) +
+                        " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
@@ -377,8 +239,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + secsConvert(fromDate) +
-                    " and valid_utc<=" + secsConvert(toDate) +
+                    " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -475,7 +337,7 @@ data2dScatter = function (plotParams, plotFunction) {
             var yValue;
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                    datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                    datum = Modules.server.wfip2.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                                              levelBasisX, levelBasisY, siteBasisX, siteBasisY);
                     xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
                     xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
@@ -510,7 +372,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 // push if equal
                 if (xaxisTime === yaxisTime && xaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                        datum = getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                        datum = Modules.server.wfip2.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                         levelBasisX, levelBasisY, siteBasisX, siteBasisY);
                         xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
                         xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
@@ -537,7 +399,7 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisIndex++;
         }
 
-        normalizedAxisData.sort(sortFunction);
+        normalizedAxisData.sort(Modules.server.wfip2.sortFunction);
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
             case 0:
@@ -572,7 +434,7 @@ data2dScatter = function (plotParams, plotFunction) {
         if (curve['scatter2d-best-fit'] && curve['scatter2d-best-fit'] !== BestFits.none) {
             var regressionResult = regression(curve['scatter2d-best-fit'], normalizedAxisData);
             var regressionData = regressionResult.points;
-            regressionData.sort(sortFunction);
+            regressionData.sort(Modules.server.wfip2.sortFunction);
 
             var regressionEquation = regressionResult.string;
             var bfOptions = {

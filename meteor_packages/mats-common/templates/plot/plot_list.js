@@ -93,13 +93,7 @@ Template.plotList.events({
             var type = plotParam.type;
             var options = plotParam.options;
 
-            if (type == InputTypes.dateRange) {
-                var vals = document.getElementById(name + '-' + type).value.split(" - ");
-                var from = vals[0];
-                var to = vals[1];
-                p['fromDate'] = from;
-                p['toDate'] = to;
-            } else if (type == InputTypes.radioGroup) {
+            if (type == InputTypes.radioGroup) {
                 for (var i=0; i<options.length; i++) {
                     if (document.getElementById(name+"-" + type + "-" + options[i]).checked == true) {
                         p[name] = options[i];
@@ -113,8 +107,9 @@ Template.plotList.events({
                         p[name].push(options[i]);
                     }
                 }
-            }
-             else if (type == InputTypes.numberSpinner) {
+            } else if (type == InputTypes.dateRange) {
+                p[name] = document.getElementById(name + '-' + type).value;
+            } else if (type == InputTypes.numberSpinner) {
                 p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == InputTypes.select) {
                 p[name] = document.getElementById(name + '-' + type).value;
