@@ -71,7 +71,7 @@ Template.textSeriesOutput.helpers({
         if (getPlotType() != PlotTypes.timeSeries) {
             return false;
         }
-        curves = Session.get('Curves');
+        var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return;
         }
@@ -82,7 +82,8 @@ Template.textSeriesOutput.helpers({
             return false;
         }
         var fillStr = settings.NullFillString;
-        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
+        var curveNums = curves.length;
+        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
             if (PlotResult.data[curveIndex] && PlotResult.data[curveIndex].data && PlotResult.data[curveIndex].data[rowIndex]) {
                 var pdata = PlotResult.data[curveIndex].data[rowIndex][1] !== null ? (Number(PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "<td>" + pdata + "</td>";

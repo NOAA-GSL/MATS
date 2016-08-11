@@ -358,20 +358,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var numCurves = dataset.length;
     //console.log(" numCurves=" + numCurves);
 
-    //Find the min interval
-    var minInterval = Number.MAX_VALUE;
-    for (var i = 0; i < numCurves; i++){
-        var tempInterval = dataset[i].data[1][0] - dataset[i].data[0][0];
-        if (tempInterval < minInterval){
-            minInterval = tempInterval;
-        }
-    }
-    
-    //Normalize data
-    for (var j = 0; j < numCurves; j++){
-        
-    }
-
 
     if (matching) {
         var num_all_sites = 0;
