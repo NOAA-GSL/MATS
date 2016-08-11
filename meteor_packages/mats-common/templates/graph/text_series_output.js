@@ -61,24 +61,28 @@ Template.textSeriesOutput.helpers({
         return dataRows;
     },
     points: function(rowIndex) {
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
         if (PlotResult.data === undefined || PlotResult.length == 0) {
             return false;
         }
         if (getPlotType() != PlotTypes.timeSeries) {
             return false;
         }
-        var curves = Session.get('Curves');
+        curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return;
         }
-        var line = "<td>" + moment.utc(PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
+        var time = PlotResult.data[0].data[rowIndex][0];
+        var line = "<td>" + moment.utc(time).format('YYYY-MM-DD:HH') + "</td>";
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
         var fillStr = settings.NullFillString;
-        var curveNums = curves.length;
-        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
+        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
             if (PlotResult.data[curveIndex] && PlotResult.data[curveIndex].data && PlotResult.data[curveIndex].data[rowIndex]) {
                 var pdata = PlotResult.data[curveIndex].data[rowIndex][1] !== null ? (Number(PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "<td>" + pdata + "</td>";

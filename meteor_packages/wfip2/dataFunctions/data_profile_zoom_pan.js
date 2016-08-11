@@ -148,7 +148,7 @@ var queryWFIP2DB = function (statement) {
         site_z_time: site_z_time,
 
         ymin: ymin,
-        ymax: ymax,
+        ymax: ymax
         // N0: N0,
         // N_times: N_times,
         //N0: 20,
@@ -276,7 +276,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
 
-
+    var xAxisMax = Number.MIN_VALUE;
+    var xAxisMin = Number.MAX_VALUE;
 
     console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
     var dataset = [];
@@ -372,7 +373,14 @@ dataProfileZoom = function(plotParams, plotFunction) {
                     d[0]=[];
 
                 } else {
-
+                for (var j = 0; j < d.length; j++){
+                    if (d[j][0] > xAxisMax){
+                        xAxisMax = d[j][0];
+                    }
+                    if (d[j][0] < xAxisMin){
+                        xAxisMin = d[j][0];
+                    }
+                }
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
@@ -663,7 +671,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
+            alignTicksWithAxis: 1
             //ticks:[[-1000,1000],[-900,900],[-800,800],[-700,700],[-600,600],[-500,500],[-400,400],[-300,300],[-200,200],[-100,100],[0,0]]
         };
         var yaxisOptions = {
@@ -683,7 +691,9 @@ dataProfileZoom = function(plotParams, plotFunction) {
             color: 'grey'
         }],
         xaxis: {
-            zoomRange: [0.1,10]
+            zoomRange: [0.1,10],
+            max: xAxisMax * 1.2,
+            min: xAxisMin * 0.2
         },
         yaxes:yaxes,
         yaxis:yaxis,
