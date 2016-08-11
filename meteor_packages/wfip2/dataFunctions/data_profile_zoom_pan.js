@@ -5,7 +5,9 @@ var queryWFIP2DB = function (statement) {
     var d = [];  // d will contain the curve data
     var error = "";
     var ws_z = {};
-    var site_z_time = {};
+    var time_z = {};
+    var site_z ={};
+    var site_z_time ={};
     var ws_z_time = {};
     wfip2Pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
@@ -116,7 +118,7 @@ var queryWFIP2DB = function (statement) {
         site_z_time: site_z_time,
 
         ymin: ymin,
-        ymax: ymax,
+        ymax: ymax
     };
 
 
@@ -210,6 +212,10 @@ dataProfileZoom = function (plotParams, plotFunction) {
 
 
     console.log(" curvsLength!!!!!!!!!!!!!=" + curvesLength);
+    var xAxisMax = Number.MIN_VALUE;
+    var xAxisMin = Number.MAX_VALUE;
+
+    console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
     var dataset = [];
     //var variableStatSet = Object.create(null);
 
@@ -277,16 +283,22 @@ dataProfileZoom = function (plotParams, plotFunction) {
             var queryResult = queryWFIP2DB(statement);
             d = queryResult.data;
             if (d[0] === undefined) {
-                //    no data set emply array
-                d[0] = [];
-            } else {
+                    //    no data set emply array
+                    d[0]=[];
+
+                } else {
+                for (var j = 0; j < d.length; j++){
+                    if (d[j][0] > xAxisMax){
+                        xAxisMax = d[j][0];
+                    }
+                    if (d[j][0] < xAxisMin){
+                        xAxisMin = d[j][0];
+                    }
+                }
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
-            tooltipText = label  +
-                "<br>ws_z_time" + ws_z_time +
-                "<br>site_z_time:" + site_z_time;
-            d[1] =  tooltipText;
+
         }
 
         var pointSymbol = "circle";
@@ -436,11 +448,7 @@ dataProfileZoom = function (plotParams, plotFunction) {
                     // values diff
                     d[i][0] = minuendData[i][0] - subtrahendData[i][0];
                     d[i][2] = -1;
-                    // do the subValues
-                    tooltipText = label  +
-                        "<br>level" + d[i][1] +
-                        "<br>value:" + d[i][2];
-                    d[i][3] =  tooltipText;
+    
                 }
                 dataset[curveIndex].data = d;
             }
@@ -480,7 +488,9 @@ dataProfileZoom = function (plotParams, plotFunction) {
             color: 'grey'
         }],
         xaxis: {
-            zoomRange: [0.1, 10]
+            zoomRange: [0.1,10],
+            max: xAxisMax * 1.2,
+            min: xAxisMin * 0.2
         },
         yaxes: yaxes,
         yaxis: yaxis,

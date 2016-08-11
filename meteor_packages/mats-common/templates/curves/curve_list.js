@@ -235,6 +235,15 @@ Template.curveList.events({
                     PlotResult = jQuery.extend(true,{}, result);
                     Session.set('graphFunction', graphFunction);
                     window[graphFunction](result, Session.get('Curves'));
+                    document.getElementById("plotType").style.display = "none";
+                    document.getElementById("scatter2d").style.display = "none";
+                    document.getElementById("plotButton").style.display = "none";
+                    document.getElementById("textButton").style.display = "block";
+                    document.getElementById("plot-buttons-grp").style.display = "block";
+                    document.getElementById("curves").style.display = "block";
+                    document.getElementById("graphView").style.display = "block";
+                    document.getElementById("textSeriesView").style.display = "none";
+                    document.getElementById("textProfileView").style.display = "none";
                 });
                 break;
 

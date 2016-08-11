@@ -61,6 +61,10 @@ Template.textSeriesOutput.helpers({
         return dataRows;
     },
     points: function(rowIndex) {
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
         if (PlotResult.data === undefined || PlotResult.length == 0) {
             return false;
         }
@@ -71,7 +75,8 @@ Template.textSeriesOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return;
         }
-        var line = "<td>" + moment.utc(PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH') + "</td>";
+        var time = PlotResult.data[0].data[rowIndex][0];
+        var line = "<td>" + moment.utc(time).format('YYYY-MM-DD:HH') + "</td>";
         var settings = Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
