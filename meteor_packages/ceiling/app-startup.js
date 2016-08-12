@@ -64,21 +64,12 @@ curveParams = function () {
         CurveParams.remove({});
     }
     if (CurveParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-        var optionsMap = {};
-
-
-
         CurveParams.insert(
             {
                 name: 'label',
                 type: InputTypes.textInput,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap:{},
+                options:[],   // convenience
                 controlButtonCovered: true,
                 default: '',
                 unique: true,
@@ -320,10 +311,10 @@ settings = function () {
     if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
-            Title: "Upper Air",
+            Title: "Ceiling",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: resetFromCode
+            resetFromCode: true
         });
     }
 };

@@ -37,7 +37,6 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
                     }
                 }
 
-               //  console.log("row="+rowIndex+" secs="+avSeconds+" stat="+stat);
 
                 if(N0_loop> N0) N0_max=N0_loop;
                 if(N_times_loop> N_times) N_times_max=N_times_loop;
@@ -49,11 +48,7 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             }
 
             interval = time_interval *1000;
-            console.log("curvetime=" + curveTime);
-            console.log("interval=" + interval);
-
-
-                xmin = Number(rows[0].avtime)*1000;
+            xmin = Number(rows[0].avtime)*1000;
 
             var loopTime =xmin;
 
@@ -95,67 +90,21 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
 };
 
 dataSeriesZoom = function(plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var date_in_secs = date.getTime();
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
-
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        var date = new Date(yr, month, day);
-        var date_in_secs = date.getTime();
-        return dstr;
-
-    };
-
-    var secsConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth()-1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var date_in_secs = date.getTime();
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-        }
-        else {
-            var dateArray = dStr.split('/');
-            var month = dateArray[0];
-            var day = dateArray[1];
-            var yr = dateArray[2];
-
-            var my_date = new Date(yr, month-1, day,0);
-            // to UTC time, not local time
-            var date_in_secs = my_date.getTime();
-       }
-        // to UTC time, not local time
-        return date_in_secs/1000 -3600*6;
-
-    };
-
     console.log(JSON.stringify(plotParams));
-    var curveDates =  plotParams.dates.split(' - ');
-    var fromDateStr = curveDates[0];
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = curveDates[1];
-    var toDate = dateConvert(toDateStr);
-    var fromSecs = secsConvert(fromDateStr);
-    var toSecs = secsConvert(toDateStr);
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
+    var dateRange = Modules.server.util.getDateRange(plotParams.dates);
+    var fromDate = dateRange.fromDate;
+    var toDate = dateRange.toDate;
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
+
+    var weitemp = fromDate.split("/");
+    var qxmin = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
+    weitemp = toDate.split("/");
+
+    var qxmax = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
+
     var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -164,15 +113,10 @@ dataSeriesZoom = function(plotParams, plotFunction) {
     //var variableStatSet = Object.create(null);
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
-        console.log("curve="+ curve);
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name:'model'}).optionsMap[curve['model']][0];
-        //var region = CurveParams.findOne({name:'region'}).optionsMap[curve['region']][0];
         var region = curve['region'];
         var threshhold = CurveParams.findOne({name:'threshhold'}).optionsMap[curve['threshhold']][0];
-        console.log("threshhold="+ threshhold);
-        console.log("model="+model);
-        console.log("region="+region);
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
@@ -180,15 +124,10 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
         var statisticSelect = curve['statistic'];
         // formula depends on stats (rms vs bias), also variables like temperature and dew points need convert from f to c
-        console.log("statisticSelect="+statisticSelect);
         var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        console.log("statisticOptionsMap="+statisticOptionsMap);
         var statistic;
         statistic = statisticOptionsMap[statisticSelect][0];
-        console.log("statistic="+statistic);
-
         var validTimeStr = curve['valid time'];
-       // console.log("validTimeStr="+ validTimeStr);
        // var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
        // var validTime = validTimeOptionsMap[validTimeStr][0];
 
@@ -253,20 +192,17 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic);
-            console.log("validTimeStr=" + validTimeStr );
             validTime =" ";
             if (validTimeStr != "All"){
                // validTime =" and floor((m0.time)%(24*3600)/3600) IN(0,3) "
                 validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
             }
-            console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
 
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
             ctime = queryResult.ctime;
-            console.log("d="+d);
 
             if (d[0] === undefined) {
                 error = "No data returned";

@@ -66,7 +66,8 @@ Package.onUse(function(api) {
   api.addFiles("both/modules/_modules.js", ['client','server']);
   api.addFiles("server/modules/_modules.js", "server");
   api.addFiles("client/modules/_modules.js", "client");
-  api.addFiles("both/modules/wfiputil.js", "server");
+  api.addFiles("server/modules/wfiputil.js", "server");
+  api.addFiles("server/modules/data_util.js", "server");
   api.export("Modules",['client','server']);
 
   api.addFiles("lib/util.js", ['client','server']);

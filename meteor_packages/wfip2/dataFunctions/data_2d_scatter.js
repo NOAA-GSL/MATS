@@ -140,9 +140,9 @@ data2dScatter = function (plotParams, plotFunction) {
 
     var curveDates =  plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
-    var fromDate = Modules.server.wfip2.dateConvert(fromDateStr);
+    var fromDate = Modules.server.util.dateConvert(fromDateStr);
     var toDateStr = curveDates[1];
-    var toDate = Modules.server.wfip2.dateConvert(toDateStr);
+    var toDate = Modules.server.util.dateConvert(toDateStr);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -208,8 +208,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
-                    " and valid_utc>=" + Modules.server.wfip2.secsConvert(fromDate) +
-                    " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate);
+                    " and valid_utc>=" + Modules.server.util.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.util.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
                     statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
@@ -217,8 +217,8 @@ data2dScatter = function (plotParams, plotFunction) {
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
-                        " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
+                        " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
@@ -228,8 +228,8 @@ data2dScatter = function (plotParams, plotFunction) {
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
-                        " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
+                        " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
@@ -239,8 +239,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + Modules.server.wfip2.secsConvert(fromDate) +
-                    " and valid_utc<=" + Modules.server.wfip2.secsConvert(toDate) +
+                    " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -399,7 +399,7 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisIndex++;
         }
 
-        normalizedAxisData.sort(Modules.server.wfip2.sortFunction);
+        normalizedAxisData.sort(Modules.server.util.sortFunction);
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
             case 0:
@@ -434,7 +434,7 @@ data2dScatter = function (plotParams, plotFunction) {
         if (curve['scatter2d-best-fit'] && curve['scatter2d-best-fit'] !== BestFits.none) {
             var regressionResult = regression(curve['scatter2d-best-fit'], normalizedAxisData);
             var regressionData = regressionResult.points;
-            regressionData.sort(Modules.server.wfip2.sortFunction);
+            regressionData.sort(Modules.server.util.sortFunction);
 
             var regressionEquation = regressionResult.string;
             var bfOptions = {

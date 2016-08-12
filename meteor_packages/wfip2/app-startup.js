@@ -220,8 +220,9 @@ curveParams = function () {
 
 
         var statisticOptionsMap = {
-            none:['none'],
-            rms:['rms'],
+            mean:['mean'],
+            rms:['rmse'],
+            rmse:['mae'],
             bias:['bias']
         };
 
@@ -233,10 +234,10 @@ curveParams = function () {
                 optionsMap:statisticOptionsMap,
                 options:Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
-                disableOtherFor:{'truth data source':[statisticOptionsMap.none][0]},
-                hideOtherFor:{'truth data source':[statisticOptionsMap.none][0]},
+                disableOtherFor:{'truth data source':[statisticOptionsMap.mean][0]},
+                hideOtherFor:{'truth data source':[statisticOptionsMap.mean][0]},
                 unique: false,
-                default: statisticOptionsMap.none,
+                default: statisticOptionsMap.mean,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -607,7 +608,6 @@ settings = function () {
             Title: "WFIP2",
             LineWidth: 3.5,
             NullFillString: "---",
-           // resetFromCode: resetFromCode
             resetFromCode: true
         });
     }

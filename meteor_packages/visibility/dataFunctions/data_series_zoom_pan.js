@@ -47,12 +47,8 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
             }
 
             interval = time_interval * 1000;
-            console.log("curvetime=" + curveTime);
-            console.log("interval=" + interval);
-
             xmin = Number(rows[0].avtime)*1000;
             var loopTime =xmin;
-
             while (loopTime < xmax + 1) {
 
                 if (curveTime.indexOf(loopTime) < 0) {
@@ -140,19 +136,22 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     console.log(JSON.stringify(plotParams,null,2));
     var curveDates =  plotParams.dates.split(' - ');
-    var fromDateStr = curveDates[0];
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = curveDates[1];
-    var toDate = dateConvert(toDateStr);
-    var fromSecs = secsConvert(fromDateStr);
-    var toSecs = secsConvert(toDateStr);
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
+    var dateRange = Modules.server.util.getDateRange(plotParams.dates);
+    var fromDate = dateRange.fromDate;
+    var toDate = dateRange.toDate;
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
+
+    var weitemp = fromDate.split("/");
+    var qxmin = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
+    weitemp = toDate.split("/");
+
+    var qxmax = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
     var mxmax = qxmax;// used to draw zero line
-    var mxmin = qxmin; // used to draw zero line
+    var mxmin = qxmin; // used to draw zero line    var matching = plotParams.plotAction === PlotActions.matched;
+
     var matching = plotParams.plotAction === PlotActions.matched;
+
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -217,17 +216,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{data_source}}', data_source + threshold + forecastLength + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
-
-
-            console.log("validTimeStr=" + validTimeStr );
             validTime =" ";
             if (validTimeStr != "All"){
                 validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
             }
-            console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
-
             console.log("query=" + statement);
+
             var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
             d = queryResult.data;
             ctime = queryResult.ctime;
@@ -409,27 +404,16 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             for (var ci = 0; ci < numCurves; ci++) {
                 dataset[ci].data = [];
                 dataset[ci].data = new_curve_dd[ci];
-                console.log("ci=" +ci+" d=" + dataset[ci].data);
-
             }
-
-
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom;
-
             if (diffFrom != null) {
-
-
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
-
-                console.log("d1=" + minuendData );
-                console.log("d2=" +  subtrahendData);
-
 
                 // add dataset copied from minuend
                 var d = [];
@@ -460,14 +444,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
         }
 
-
-
-
-        //////////////////
-
         }//end of matching
-
-
 
     // generate y-axis
     var yaxes = [];

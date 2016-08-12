@@ -217,13 +217,6 @@ dataProfileZoom = function (plotParams, plotFunction) {
 
     console.log(" curvsLength!!!!!!!!!!!!!="+curvesLength );
     var dataset = [];
-    //var variableStatSet = Object.create(null);
-
-    var dates = plotParams.dates;
-    //"dates": "7/11/2016 14:58 - 8/10/2016 14:58"
-    var fromDate = dates.split(' - ')[0];
-    var toDate = dates.split(' - ')[1];
-
     var siteIds = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -261,17 +254,17 @@ dataProfileZoom = function (plotParams, plotFunction) {
                 var statement = "select sites_siteid,valid_utc,z,ws " +
                     " from obs_recs as o ," + model + "   as s " +
                     //" where valid_utc=1454526000 " +
-                    " where valid_utc >= " + secsConvert(curveDatesDateRangeFrom) +
-                    " and valid_utc <= " + secsConvert(curveDatesDateRangeTo) +
+                    " where valid_utc >= " + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
+                    " and valid_utc <= " + Modules.server.util.secsConvert(curveDatesDateRangeTo) +
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
             } else {//model
                 var statement = "select sites_siteid,valid_utc,z ,ws " +
                     " from " + model + ", nwp_recs  " +
-                    "where valid_utc>= " + secsConvert(fromDate) +
-                    " and analysis_utc+fcst_end_utc>=" + secsConvert(curveDatesDateRangeFrom) +
-                    "  and valid_utc<= " + secsConvert(toDate) +
-                    " and analysis_utc+fcst_end_utc <=" + secsConvert(curveDatesDateRangeTo) +
+                    "where valid_utc>= " + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
+                    " and analysis_utc+fcst_end_utc>=" + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
+                    "  and valid_utc<= " + Modules.server.util.secsConvert(curveDatesDateRangeTo) +
+                    " and analysis_utc+fcst_end_utc <=" + Modules.server.util.secsConvert(curveDatesDateRangeTo) +
                     " and nwps_nwpid= " + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc=" + 3600 * forecastLength;

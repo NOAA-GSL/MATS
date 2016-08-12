@@ -48,17 +48,14 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
             }
 
             interval = time_interval *1000;
-            console.log("curvetime=" + curveTime);
-            console.log("interval=" + interval);
+            xmin = Number(rows[0].avtime)*1000;
 
-          //  if (averageStr != "None") {
-                xmin = Number(rows[0].avtime)*1000;
-         //   }
             var loopTime =xmin;
 
             while (loopTime < xmax+1) {
 
                 if(curveTime.indexOf(loopTime)<0){
+
                     d.push([loopTime, null]);
                     ctime.push(loopTime);
                 } else{
@@ -86,70 +83,22 @@ var queryDB = function (statement, validTimeStr,xmin,xmax,interval,averageStr) {
 };
 
 dataSeriesZoom = function(plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var date_in_secs = date.getTime();
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
+    console.log(JSON.stringify(plotParams));
+    var dateRange = Modules.server.util.getDateRange(plotParams.dates);
+    var fromDate = dateRange.fromDate;
+    var toDate = dateRange.toDate;
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
 
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        var date = new Date(yr, month, day);
-        var date_in_secs = date.getTime();
-        return dstr;
+    var weitemp = fromDate.split("/");
+    var qxmin = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
+    weitemp = toDate.split("/");
 
-    };
-
-    var secsConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth()-1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var date_in_secs = date.getTime();
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-        }
-        else {
-            var dateArray = dStr.split('/');
-            var month = dateArray[0];
-            var day = dateArray[1];
-            var yr = dateArray[2];
-
-            var my_date = new Date(yr, month-1, day,0);
-            // to UTC time, not local time
-            var date_in_secs = my_date.getTime();
-       }
-        // to UTC time, not local time
-        return date_in_secs/1000 -3600*6;
-
-    };
-
-    console.log(JSON.stringify(plotParams,null,2));
-    var curveDates =  plotParams.dates.split(' - ');
-    var fromDateStr = curveDates[0];
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = curveDates[1];
-    var toDate = dateConvert(toDateStr);
-    var fromSecs = secsConvert(fromDateStr);
-    var toSecs = secsConvert(toDateStr);
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0],weitemp[1]-1,weitemp[2]);
+    var qxmax = Date.UTC(weitemp[2].split(' ')[0],weitemp[0]-1,weitemp[1], weitemp[2].split(' ')[1][0], weitemp[2].split(' ')[1][1]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
-     var matching = plotParams.plotAction === PlotActions.matched;
-    console.log(" plot matching="+matching);
- //   var matching = plotFormat===PlotFormats.matching;
+
+    var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -224,24 +173,16 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
-
-
-            console.log("validTimeStr=" + validTimeStr );
             validTime =" ";
             if (validTimeStr != "All"){
                 validTime =" and  m0.hour IN("+validTimeStr+")"
             }
-            console.log("validTime=" + validTime);
             statement = statement.replace('{{validTime}}', validTime);
-
-
 
             console.log("query=" + statement);
             var queryResult = queryDB(statement,validTimeStr,qxmin,qxmax,interval,averageStr);
             d = queryResult.data;
             ctime = queryResult.ctime;
-            console.log("d length="+ d.length);
-            console.log("ctime length="+ ctime.length);
             interval=queryResult.interval;
             if (d[0] === undefined) {
                 error = "No data returned";
@@ -427,28 +368,16 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             for (var ci = 0; ci < numCurves; ci++) {
                 dataset[ci].data = [];
                 dataset[ci].data = new_curve_dd[ci];
-                console.log("ci=" +ci+" d=" + dataset[ci].data);
-
             }
-
-
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom;
-
             if (diffFrom != null) {
-
-
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
-
-                console.log("d1=" + minuendData );
-                console.log("d2=" +  subtrahendData);
-
-
                 // add dataset copied from minuend
                 var d = [];
                 // do the differencing of the data
@@ -464,8 +393,6 @@ dataSeriesZoom = function(plotParams, plotFunction) {
                     ymin = ymin < d[i][1] ? ymin : d[i][1];
                     ymax = ymax > d[i][1] ? ymax : d[i][1];
                 }
-
-
                 var mean = 0;
                 for (var i = 0; i < d.length; i++) {
                     mean = mean + d[i][1];
@@ -478,14 +405,9 @@ dataSeriesZoom = function(plotParams, plotFunction) {
             }
         }
 
-
-
-
         //////////////////
 
         }//end of matching
-
-
 
     // generate y-axis
     var yaxes = [];

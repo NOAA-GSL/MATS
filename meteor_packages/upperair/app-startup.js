@@ -369,14 +369,13 @@ settings = function () {
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Settings.remove({});
     }
-    if (Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
-    //if (Settings.find().count() == 0) {
+    if (Settings.find().count() == 0) {
         Settings.insert({
             LabelPrefix: "C-",
             Title: "Upper Air",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: resetFromCode
+            resetFromCode: true
         });
     }
 };

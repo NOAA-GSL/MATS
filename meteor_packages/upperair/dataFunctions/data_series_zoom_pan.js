@@ -79,30 +79,13 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 };
 
 dataSeriesZoom = function (plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        return dstr;
-    };
-
-
-    var curveDates =  plotParams.dates.split(' - ');
-    var fromDateStr = curveDates[0];
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = curveDates[1];
-    var toDate = dateConvert(toDateStr);
+    console.log(JSON.stringify(plotParams));
+    var dateRange = Modules.server.util.getDateRange(plotParams.dates);
+    var fromDate = dateRange.fromDate;
+    var toDate = dateRange.toDate;
+    // convert dates for sql
+    fromDate = moment(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
+    toDate = moment(toDate, "MM-DD-YYYY").format('YYYY-M-D');
 
     var weitemp = fromDate.split("-");
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
@@ -110,6 +93,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var mxmax = qxmax;// used to draw zero line
     var mxmin = qxmin; // used to draw zero line
+
     var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -122,7 +106,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         //console.log("diffFrom=" + diffFrom);
         var model = CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        var region = RegionDescriptions.findOne({description:curve['region']}).regionMapTable;
+        var region = RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
         //var region = CurveParams.findOne({name: 'region'}).optionsMap[model][curve['region']][0];
         var tableRegion = CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
         var label = curve['label'];
@@ -278,7 +262,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var pOptions = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
-           // mean: "<div style='color:"+ color+"'"+ label + "- mean = " + mean.toPrecision(4)+"</div>",
+            // mean: "<div style='color:"+ color+"'"+ label + "- mean = " + mean.toPrecision(4)+"</div>",
             annotation:  label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
@@ -304,18 +288,18 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
         //console.log("in matching");
         for (var di = 0; di < dataLength; di++) {
-        for (var ci = 0; ci < numCurves; ci++) {
+            for (var ci = 0; ci < numCurves; ci++) {
                 /* it is possible to have a curve that does not have any data at the front */
-           // console.log("di="+di+"  ci="+ci);
+                // console.log("di="+di+"  ci="+ci);
                 if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
                     matchNullIndexes.push(di);
                     break;
-        }
+                }
             }
         }
         for (var mi = 0; mi < matchNullIndexes.length; mi++) {
             var index = matchNullIndexes[mi];
-        for (var ci = 0; ci < numCurves; ci++) {
+            for (var ci = 0; ci < numCurves; ci++) {
                 if (dataset[ci].data[index] !== undefined) {
                     dataset[ci].data[index][1] = null;
                 }

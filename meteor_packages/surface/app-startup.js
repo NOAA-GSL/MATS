@@ -314,7 +314,7 @@ settings = function () {
             Title: "Surface",
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: resetFromCode
+            resetFromCode: true
         });
     }
 };

@@ -88,12 +88,15 @@ Template.graph.helpers({
                 PlotParams.findOne({name:'plotFormat'}).optionsMap[p.plotFormat] !== undefined) {
                 format = PlotParams.findOne({name:'plotFormat'}).optionsMap[p.plotFormat];
             }
+            if (format === undefined){
+                format = "Unmatched";
+            }
             if ((Session.get("plotType") === undefined) || Session.get("plotType") === PlotTypes.timeSeries) {
-                return p.curve-dates + " : " + format;
+                return "TimeSeries " + p.dates + " : " + format;
             } else if (Session.get("plotType") === PlotTypes.profile) {
                 return "Profile: " + format;
             } else {
-                return "Scatter: " + format;
+                return "Scatter: " + p.dates + " : " + format;
             }
         } else {
             return "no plot params";

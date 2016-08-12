@@ -111,24 +111,6 @@ var get_err = function (sub_val_array, sub_secs_array) {
 };
 
 dataProfileZoom = function(plotParams, plotFunction) {
-    var dateConvert = function (dStr) {
-        if (dStr === undefined || dStr === " ") {
-            var now = new Date();
-            var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            var yr = date.getFullYear();
-            var day = date.getDate();
-            var month = date.getMonth();
-            var dstr = yr + "-" + month + '-' + day;
-            return dstr;
-        }
-        var dateArray = dStr.split('/');
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var dstr = yr + "-" + month + '-' + day;
-        return dstr;
-    };
-
     var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -146,8 +128,8 @@ dataProfileZoom = function(plotParams, plotFunction) {
         fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
         var toDateStr = curveDates.split( ' - ')[1]; // get the to part
         toDateStr = toDateStr.split(' ')[0];  // strip off time field
-        var curveDatesDateRangeFrom = dateConvert(fromDateStr);
-        var curveDatesDateRangeTo = dateConvert(toDateStr);
+        var curveDatesDateRangeFrom = moment(fromDateStr, "MM-DD-YYYY").format('YYYY-M-D');
+        var curveDatesDateRangeTo = moment(toDateStr, "MM-DD-YYYY").format('YYYY-M-D');
         var top = curve['top'];
         var bottom = curve['bottom'];
         var color = curve['color'];
@@ -342,11 +324,11 @@ dataProfileZoom = function(plotParams, plotFunction) {
             };
             data[di][6] = label +
                 "<br>" + -data[di][1] + "mb" +
-                "<br> " + statisticSelect + ":" + data[di][0].toPrecision(4) +
-                "<br>  stde:" + errorResult.stde_betsy.toPrecision(4) +
-                "<br>  mean:" + errorResult.d_mean.toPrecision(4) +
+                "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4));
+                "<br>  stde:" + (errorResult.stde_betsy === null ? null : errorResult.stde_betsy.toPrecision(4)) +
+                "<br>  mean:" + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + errorResult.lag1.toPrecision(4);
+                "<br>  lag1:" + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4));
         }
     }
 
