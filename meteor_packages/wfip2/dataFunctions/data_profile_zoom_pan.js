@@ -280,14 +280,6 @@ dataProfileZoom = function (plotParams, plotFunction) {
                     d[0]=[];
 
                 } else {
-                for (var j = 0; j < d.length; j++){
-                    if (d[j][0] > xAxisMax){
-                        xAxisMax = d[j][0];
-                    }
-                    if (d[j][0] < xAxisMin){
-                        xAxisMin = d[j][0];
-                    }
-                }
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
@@ -447,6 +439,17 @@ dataProfileZoom = function (plotParams, plotFunction) {
             }
         }
     }
+    //Find the min and max for the graph on the xaxis
+    for (var k = 0; k < curvesLength; k++) {
+        for (var j = 0; j < dataset[k].data.length; j++) {
+            if (dataset[k].data[j][0] > xAxisMax) {
+                xAxisMax = dataset[k].data[j][0];
+            }
+            if (dataset[k].data[j][0] < xAxisMin) {
+                xAxisMin = dataset[k].data[j][0];
+            }
+        }
+    }
 
     // generate y-axis
     var yaxes = [];
@@ -482,8 +485,8 @@ dataProfileZoom = function (plotParams, plotFunction) {
         }],
         xaxis: {
             zoomRange: [0.1,10],
-            max: xAxisMax * 1.2,
-            min: xAxisMin * 0.2
+            max: xAxisMax > 0 ? xAxisMax * 1.6 : xAxisMax * 0.6,
+            min: xAxisMin < 0 ? xAxisMin * 1.6 : xAxisMin * 0.6
         },
         yaxes: yaxes,
         yaxis: yaxis,
