@@ -149,7 +149,8 @@ Template.item.events({
         }
     },
     'click .help' : function() {
-        $("#matshelp").load("/help/" + this.help + " #matshelp");
+        var helpref = Session.get("app").helpref;
+        $("#matshelp").load(helpref + "/" + this.help + " #matshelp");
         $("#helpModal").modal('show');
     }
 });
