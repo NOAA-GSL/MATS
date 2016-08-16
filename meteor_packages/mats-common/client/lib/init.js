@@ -30,3 +30,12 @@ Accounts.ui.config({
     }
 });
 
+var ref = location.href;
+var pathArray = location.href.split( '/' );
+var protocol = pathArray[0];
+var hostport = pathArray[2];
+var app = pathArray[3];
+var matsref = protocol + "//" + hostport;
+var appName = app;
+Session.set ("app",{appName:app,matsref:matsref, appref:ref, helpref:ref + "/help"});
+

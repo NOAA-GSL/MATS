@@ -75,7 +75,8 @@ Package.onUse(function(api) {
   api.addFiles("lib/regression.js",['client','server']);
   api.export("regression",['client','server']);
   api.addFiles("lib/error/error.js", ['client','server']);
-  api.addFiles("templates/topnav/topNav.html", "client");
+  api.addFiles("templates/topnav/top_nav.html", "client");
+  api.addFiles("templates/topnav/top_nav.js", "client");
   api.addFiles("templates/spinner/spinner.html", "client");
 
 

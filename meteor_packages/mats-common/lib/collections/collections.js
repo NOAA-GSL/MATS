@@ -32,11 +32,6 @@ Router.route('/data', function() {
     });
 });
 
-Router.route('/', function () {
-    this.render('Home', {
-    });
-});
-
 Router.route('/wfip2', function () {
     this.render('Home', {
     });
@@ -61,6 +56,25 @@ Router.route('/ceiling', function () {
     this.render('Home', {
     });
 });
+
+
+Router.route('/app', function () {
+    this.render('Home', {
+    });
+});
+
+Router.route('/', function () {
+    var pathArray = location.href.split( '/' );
+    var protocol = pathArray[0];
+    var host = pathArray[2];
+    if (host.indexOf('localhost') === 0) {
+        this.render('Home',{});
+    } else {
+        Router.go(Session.get("app").matsref);
+    }
+});
+
+
 
 
 InputTypes = {
