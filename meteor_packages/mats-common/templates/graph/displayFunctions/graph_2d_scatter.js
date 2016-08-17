@@ -71,15 +71,16 @@ graph2dScatter = function(result) {
         $( "input[id$='-curve-show-hide']" ).click(function (event) {
             event.preventDefault();
             var id = event.target.id;
-            var label = id.replace('-curve-show-hide','') +'-best fit';
+            var curveLabel = id.replace('-curve-show-hide','');
+            var label = curveLabel +'-best fit';
             for (var c = 0; c < dataset.length; c++) {
                 // find the bestfit line - if it exists
                 if (dataset[c].label.search(label) > -1) {
                     dataset[c].lines.show = !dataset[c].lines.show;
                     if (dataset[c].lines.show == true) {
-                        Session.set(label + "hideButtonText", 'hide curve');
+                        Session.set(curveLabel + "hideButtonText", 'hide curve');
                     } else {
-                        Session.set(label + "hideButtonText", 'show curve');
+                        Session.set(curveLabel + "hideButtonText", 'show curve');
                     }
                 }
             }
