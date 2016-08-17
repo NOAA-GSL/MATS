@@ -19,8 +19,15 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     }
 
     // still here? process the sites
+    // for each axis... axisArr.length
+    // for every site... tSiteIds.length
+    // if completeness test not required ... qualityLevels == 0
+    //      save precalculated levels
+    // else
+    //      recalculate level statistics
+    //      save recalculated levels
     var axisArr = ['xaxis', 'yaxis'];
-    for (var ai = 0; ai < axisArr.length; ai++) {
+    for (var ai = 0; ai < axisArr.length; ai++) {   //iterate axis
         var axisStr = axisArr[ai];
         var tSiteIds = Object.keys(tSitesX);
         var commonLevelsBasisLength = levelBasisX.length;
@@ -33,7 +40,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
         var siteSum = 0;
         var siteNum = 0;
         var filteredSites = [];   // used for the modal data view
-        for (var si = 0; si < tSiteIds.length; si++) {
+        for (var si = 0; si < tSiteIds.length; si++) {    //iterate sites
             var siteId = tSiteIds[si];
             var siteMean = 0;
             if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
@@ -48,17 +55,25 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                 // recalculate sMean for filtered levels
                 var sLevels = rawAxisData[axisStr]['data'][axisTime][siteId]['levels'];
                 //combine the levels and the values into single array (for using in the modal data view) - raw values - unfiltered
-                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues = rawAxisData[axisStr]['data'][axisTime][siteId].levels.map(function(level, index) { return [level, rawAxisData[axisStr]['data'][axisTime][siteId].values[index]] });
+                rawAxisData[axisStr]['data'][axisTime][siteId].levelsValues =
+                    rawAxisData[axisStr]['data'][axisTime][siteId].levels.map(function(level, index) {
+                        return [level, rawAxisData[axisStr]['data'][axisTime][siteId].values[index]];
+                    });
 
                 // What we really want is to put in a quality control
                 // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
-                // in order to qualify the data?" In other words, throw away any data that doesn't meet the quality criteria.
+                // in order to qualify the data?" In other words, throw away any data that doesn't meet the completeness criteria.
                 var matchQuality = (sLevels.length / commonLevelsBasisLength) * 100;
                 if (matchQuality < qualityLevels) {
-                    continue;
+                    continue;  // throw this site away - it does not qualify because it does not have enough levels
                 }
+                filteredSites = rawAxisData[axisStr]['data'][axisTime];
+                filteredSites[siteId].levelsValues =
+                    filteredSites[siteId].levels.map(function(level, index) {
+                        return [level, filteredSites[siteId].values[index]];
+                    });
                 var sValues = rawAxisData[axisStr]['data'][axisTime][siteId]['values'];
-                filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
+
                 for (var li = 0; li < sLevels.length; li++) {
                     siteSum += sValues[li];
                     siteNum++;
