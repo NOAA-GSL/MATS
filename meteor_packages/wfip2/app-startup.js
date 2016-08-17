@@ -562,7 +562,9 @@ curveTextPatterns = function () {
                 ['', 'yaxis-variable', ', '],
                 ['fcst_len:', 'yaxis-forecast length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
-                ['','curve-dates','']
+                ['','curve-dates',' '],
+                ['lc', 'level completeness',' '],
+                ['sc', 'site completeness','']
             ]
         });
 
