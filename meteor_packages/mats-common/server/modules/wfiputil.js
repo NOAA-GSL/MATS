@@ -47,7 +47,6 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
             if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
                 siteNum ++;
                 siteSum += rawAxisData[axisStr]['data'][axisTime][siteId]['mean'];
-                //siteNum +=  rawAxisData[axisStr]['data'][axisTime][siteId]['numLevels'];
                 filteredSites = rawAxisData[axisStr]['data'][axisTime];
                 //combine the levels and the values into single array (for using in the modal data view)
                 filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function(level, index) { return [level, filteredSites[siteId].values[index]] });
