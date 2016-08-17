@@ -51,7 +51,7 @@ cd meteor_packages
 julian=`date +%Y%j`
 find . -name version.html | while read x
 do
-	cat $x | sed 's|<i>\d+</i>|<i>2015328</i>|' > /tmp/version.html
+	cat $x | sed "s|<i>[0-9]*</i>|<i>${julian}</i>|" > /tmp/version.html
 	mv /tmp/version.html $x
 	git commit -m"versioned per build" $x
 done
