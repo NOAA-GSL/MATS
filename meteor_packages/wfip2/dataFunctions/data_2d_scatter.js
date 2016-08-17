@@ -102,8 +102,8 @@ var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator
                     resultData[time][siteid].sum = sum;
                     resultData[time][siteid].numLevels = numLevels;
                     resultData[time][siteid].mean = mean;
-                    resultData[time][siteid].max = Math.max(values);
-                    resultData[time][siteid].min = Math.min(values);
+                    resultData[time][siteid].max = Math.max.apply(null,values);
+                    resultData[time][siteid].min = Math.min.apply(null,values);
                 }
                 // fill in missing times - there must be an entry at each minInterval
                 // if there are multiple entries for a given time average them into one time entry
@@ -164,7 +164,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var rawAxisData = {};
         var curve = curves[curveIndex];
 
-        for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) {
+        for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
             // each axis has a data source - get the right data source and derive the model
@@ -201,7 +201,6 @@ data2dScatter = function (plotParams, plotFunction) {
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast length'];
             curves[curveIndex].variableStat = variableStr + ":"; // stash the variableStat to use it later for axis options
-            var d = [];
             var statement = '';
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z, " + myVariable + " ,sites_siteid " +
