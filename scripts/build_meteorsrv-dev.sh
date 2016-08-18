@@ -57,7 +57,8 @@ do
 done
 cd ..
 
-git push gerrit:MATS_for_EMB origin:master
+#git push gerrit:MATS_for_EMB origin:master
+git push
 
 #build the apps
 cd apps

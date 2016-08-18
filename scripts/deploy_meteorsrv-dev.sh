@@ -52,5 +52,8 @@ do
 	cd ../..
 done	
 echo rm -rf /tmp/tmpbuilds
+cd /builds/deployments
+buildDate=`date | tr ':' '-' | tr ' ' '_'`
+git commit -a -m "deployed on $buildDate"
 date
 echo "$0 ----------------- finished" 
