@@ -26,7 +26,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
                     var siteid = rows[rowIndex].sites_siteid;
                     var sub_z = JSON.parse(rows[rowIndex].z);
                     var sub_ws = JSON.parse(rows[rowIndex].ws);
-
                    if (ctime.indexOf(avSeconds * 1000)<0){
                        ctime.push(avSeconds * 1000);
                    }
@@ -66,7 +65,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
                         ws_time[avSeconds].push(this_mean_ws);
                     }
                 }
-
                 ctime.sort();
                 var interval= ctime[0]*100000;
                 var time_diff;
@@ -134,7 +132,6 @@ var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_va
 };
 
 dataSeriesZoom = function (plotParams, plotFunction) {
-
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var curveDates =  plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
@@ -195,7 +192,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var statement = "";
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z,ws,sites_siteid " +
                     "from obs_recs as o , " + model +
@@ -255,8 +251,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 ws_z_time = queryResult.ws_z_time;
                 site_z_time = queryResult.site_z_time;
             }
-
-
         }
         var pointSymbol = "circle";
         switch (curveIndex % 5) {
@@ -284,19 +278,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         } else {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
-
         var mean = 0;
-
-        //if (d[0] != undefined) {
         for (var i = 0; i < d.length; i++) {
-
             mean = mean + (d[i][1]);
         }
-
         mean = mean / d.length;
-        // }
-
-
         var options = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
@@ -310,16 +296,9 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             lines: {show: true, fill: false}
         };
 
-
         dataset.push(options);
-        //console.log(curveIndex + " mean=" + dataset[curveIndex].annotation);
-        // console.log("before match1 dataset="+dataset[curveIndex].data);
     }
-
     var numCurves = dataset.length;
-    //console.log(" numCurves=" + numCurves);
-
-
     if (matching) {
         var num_all_sites = 0;
         for (var ci = 0; ci < numCurves; ci++) {
@@ -329,50 +308,30 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 num_all_sites = num_all_sites + 1;
             }
         }
-
         var matchInterval = 0;
         for (var ci = 0; ci < numCurves; ci++) {
             var this_interval = dataset[ci].interval;
             if (this_interval > matchInterval) matchInterval = this_interval;
         }
-
-
         var ws_z_time0 = dataset[0].ws_z_time;
-
         var keys_time0 = Object.keys(ws_z_time0);
-
         dataset[0].data = [];
-
         var secondsIntersection = keys_time0;
         for (var ci = 1; ci < numCurves; ci++) {
             var this_ws_z_time = dataset[ci].ws_z_time;
             var keys_time = Object.keys(this_ws_z_time);
-
-            // secondsIntersection = _.intersection(keys_time,keys_time0);
             secondsIntersection = _.intersection(keys_time, secondsIntersection);
             dataset[ci].data = [];
         }
-
         //console.log("secondsInte=" + secondsIntersection);
-        // for each timestamp, look for common levels btw curves
         for (var si = 0; si < secondsIntersection.length; si++) {
             var this_secs = secondsIntersection[si];
             var these_z0 = Object.keys(dataset[0].ws_z_time[this_secs]);
-            // console.log("these_secs=" + this_secs);
-
             var zsIntersection = these_z0;
-
-            // common levels for this time btw curves
             for (var ci = 1; ci < numCurves; ci++) {
                 var these_z = Object.keys(dataset[ci].ws_z_time[this_secs]);
                 zsIntersection = _.intersection(these_z, zsIntersection);
-
             }
-
-            //console.log("zsInte=" + zsIntersection);
-            // at this time, this commonn levels, looking for common stns
-
-
             if (num_all_sites === numCurves) { // all curves with selection of all stations
                 var stnsIntersection = {};
                 for (var zi = 0; zi < zsIntersection.length; zi++) {
@@ -384,49 +343,34 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         // stnsIntersection[this_z] = _.intersection(these_stns, these_stn0);
                         stnsIntersection[this_z] = _.intersection(these_stns, stnsIntersection[this_z]);
                     }
-
                 }
             }
-
-
             for (var ci = 0; ci < numCurves; ci++) {
                 var new_ws_list = [];
-
                 for (var zi = 0; zi < zsIntersection.length; zi++) {
                     var this_z = zsIntersection[zi];
                     var new_ws;
-
                     if (num_all_sites === numCurves) { // all curves with selection of all stations
-
                         for (var stni = 0; stni < stnsIntersection[this_z].length; stni++) {
                             var this_stn = stnsIntersection[this_z][stni];
                             var this_index = dataset[ci].site_z_time[this_secs][this_z].indexOf(this_stn);
-
                             new_ws = dataset[ci].ws_z_time[this_secs][this_z][this_index];
                             new_ws_list.push(new_ws);
-
-
                         }
-
                     } else {
                         new_ws = dataset[ci].ws_z_time[this_secs][this_z];
                         new_ws_list.push(new_ws);
-
                     }
-
                 }
-
                 var flattened = new_ws_list.reduce(function (a, b) {
                     return a.concat(b);
                 }, []);
-
 
                 if (flattened.length > 0) {
                     var new_mean = 0;
                     for (var ii = 0; ii < flattened.length; ii++) {
                         // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
                         new_mean = new_mean + flattened[ii];
-
                     }
                     dataset[ci].data.push([this_secs * 1000, new_mean / flattened.length]);
                 }
@@ -438,18 +382,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 }
                 mean = mean / d.length;
                 dataset[ci].annotation = label + "- mean = " + mean.toPrecision(4);
-
             }
-
-
         }
 
         var dataLength = dataset[0].data.length;
-
         var matchNullIndexes = [];
         for (var di = 0; di < dataLength; di++) {
             for (var ci = 0; ci < numCurves; ci++) {
-
                 if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
                     matchNullIndexes.push(di);
                     break;
@@ -465,19 +404,14 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
         }
 
-
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             var curve = curves[curveIndex];
             var diffFrom = curve.diffFrom;
-
             if (diffFrom != null) {
-
-
                 var minuendIndex = diffFrom[0];
                 var subtrahendIndex = diffFrom[1];
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
-                var minuendDataOptions = dataOptions[minuendIndex];
                 // add dataset copied from minuend
                 var d = [];
                 // do the differencing of the data
@@ -493,24 +427,16 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     ymin = ymin < d[i][1] ? ymin : d[i][1];
                     ymax = ymax > d[i][1] ? ymax : d[i][1];
                 }
-
-
                 var mean = 0;
                 for (var i = 0; i < d.length; i++) {
                     mean = mean + d[i][1];
                 }
                 mean = mean / d.length;
-
                 dataset[curveIndex].data = d;
                 dataset[curveIndex].annotation = label + "- mean = " + mean.toPrecision(4);
-
             }
         }
-
-
     }// end of match
-
-
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -594,7 +520,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
 
-
     dataset.push(dataZero = {
         annotation: "",
         color: 'black',
@@ -609,6 +534,4 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     };
     //console.log("result", JSON.stringify(result,null,2));
     plotFunction(result);
-
-
 };
