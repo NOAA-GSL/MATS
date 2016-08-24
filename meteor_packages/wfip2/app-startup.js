@@ -51,43 +51,6 @@ scatter2dParams = function() {
                 help: "axis-selector.html"
             });
 
-
-        // var filterOptions = {};
-        // filterOptions[PlotAxisFilters.level] = "by level";
-        // filterOptions[PlotAxisFilters.site] = "by site";
-        //
-        // Scatter2dParams.insert(
-        //     {
-        //         name: 'scatter2d axis matching',
-        //         type: InputTypes.checkBoxGroup,
-        //         optionsMap: filterOptions,
-        //         options: Object.keys(filterOptions),
-        //         controlButtonCovered: true,
-        //         default: PlotAxisFilters.none,
-        //         controlButtonVisibility: 'block',
-        //         displayOrder: 2,
-        //         displayPriority: 1,
-        //         displayGroup: 1
-        //     });
-        //
-        // Scatter2dParams.insert(
-        //     {
-        //         name: 'scatter2d axis matching quality',
-        //         type: InputTypes.numberSpinner,
-        //         optionsMap:{},
-        //         options:[],
-        //         min: '10',
-        //         max: '100',
-        //         step: '5',
-        //         controlButtonCovered: true,
-        //         unique: false,
-        //         default: '70',
-        //         controlButtonVisibility: 'block',
-        //         displayOrder: 3,
-        //         displayPriority: 1,
-        //         displayGroup: 1
-        //     });
-
         var bestFits = {};
         bestFits[BestFits.none] = "None";
         bestFits[BestFits.linear] = "Linear regression";
@@ -221,9 +184,9 @@ curveParams = function () {
 
         var statisticOptionsMap = {
             mean:['mean'],
-            rms:['rmse'],
-            rmse:['mae'],
-            bias:['bias']
+            bias:['bias'],
+            rmse:['rmse'],
+            mae:['mae']
         };
 
 

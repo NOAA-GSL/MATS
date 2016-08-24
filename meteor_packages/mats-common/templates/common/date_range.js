@@ -48,7 +48,7 @@ Template.dateRange.onRendered(function() {
             "timePicker": true,
             "timePicker24Hour": true,
             "autoApply": true,
-            format: 'MM/DD/YYYY H:mm'
+            format: 'MM/DD/YYYY HH:mm'
         });
     });
 });

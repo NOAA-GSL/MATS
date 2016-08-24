@@ -1,136 +1,3 @@
-
-var queryWFIP2DB = function (statement, xmin, xmax, top, bottom, interval, my_variable) {
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var ws_z_time = {};
-    var site_z_time = {};
-    var all_z = [];  // all the levels for all the times
-    wfip2Pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            if (my_variable == 'ws') {
-                ymin = Number(rows[0].stat);
-                ymax = Number(rows[0].stat);
-                var ws_time = {};
-                var ctime = [];
-                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var avSeconds = Number(rows[rowIndex].avtime);
-                    var siteid = rows[rowIndex].sites_siteid;
-                    var sub_z = JSON.parse(rows[rowIndex].z);
-                    var sub_ws = JSON.parse(rows[rowIndex].ws);
-                   if (ctime.indexOf(avSeconds * 1000)<0){
-                       ctime.push(avSeconds * 1000);
-                   }
-                    if (ws_time[avSeconds] === undefined) {  // wind speed for a given time - might be empty
-                        ws_time[avSeconds] = [];
-                    }
-                    var this_mean_ws = 0;
-                    var n_z = 0;
-                    for (var j = 0; j < sub_ws.length; j++) {   //loop through all the windspeeds for this time
-                        var this_ws = sub_ws[j];
-                        var this_z = Math.floor(sub_z[j]); // jeff put float number for level - round down to an int
-                        if (all_z.indexOf(this_z) == -1) {
-                            all_z.push(this_z);
-                        }
-                        // ws_z_time is for matching levels for each timestamp
-                        if (ws_z_time[avSeconds] === undefined) {
-                            ws_z_time[avSeconds] = {};
-                        }
-                        if (ws_z_time[avSeconds][this_z] === undefined) {
-                            ws_z_time[avSeconds][this_z] = [];
-                        }
-                        if (site_z_time[avSeconds] === undefined) {
-                            site_z_time[avSeconds] = {};
-                        }
-                        if (site_z_time[avSeconds][this_z] === undefined) {
-                            site_z_time[avSeconds][this_z] = [];
-                        }
-                        if (this_z >= bottom && this_z <= top) {
-                            this_mean_ws = this_mean_ws + this_ws;
-                            n_z = n_z + 1;
-                            ws_z_time[avSeconds][this_z].push(this_ws);
-                            site_z_time[avSeconds][this_z].push(siteid);
-                        }
-                    }
-                    if (n_z > 0) {
-                        this_mean_ws = this_mean_ws / n_z;
-                        ws_time[avSeconds].push(this_mean_ws);
-                    }
-                }
-                ctime.sort();
-                var interval= ctime[0]*100000;
-                var time_diff;
-
-                for (var ii =0; ii<ctime.length-1;ii++){
-                    time_diff = ctime[ii+1] - ctime[ii];
-                    if ( time_diff< interval) {
-                        interval = time_diff;
-                    }
-                }
-              var max_sample_time = 0;
-                var keys = Object.keys(ws_time);
-                for (var jj = 0; jj < keys.length; jj++) {
-                    var key = keys[jj];
-                    if (ws_time[key].length > max_sample_time) {
-                        max_sample_time = ws_time[key].length;
-                    }
-                }
-                xmin = keys[0] * 1000;
-                xmax = keys[keys.length - 1] * 1000;
-                var loopTime = xmin;
-                while (loopTime < xmax + 1) {
-                    if (ctime.indexOf(loopTime) < 0) {
-                        d.push([loopTime, null]);
-                    } else {
-                        this_key = loopTime / 1000;
-                        var ws_array = ws_time[this_key];
-                        if (ws_array.length > 0) {
-                            var mean_ws;
-                            var sum_ws = 0;
-                            for (var jjj = 0; jjj < ws_array.length; jjj++) {
-                                sum_ws = sum_ws + ws_array[jjj];
-                            }
-                            mean_ws = sum_ws / ws_array.length;
-                            d.push([loopTime, mean_ws]);
-                        }
-                    }
-                    loopTime = loopTime + interval;
-                }
-                dFuture['return']();
-            } else {
-                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var avSeconds = Number(rows[rowIndex].avtime);
-                    var my_value = Number(rows[rowIndex].dis);
-                    d.push([avSeconds * 1000, my_value]);
-                }
-                dFuture['return']();
-            }
-        }
-    });
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        data: d,
-        error: error,
-        ws_z_time: ws_z_time,
-        site_z_time: site_z_time,
-        ymin: ymin,
-        ymax: ymax,
-        N0: 20,
-        N_times: 20,
-        interval: interval,
-        all_z: all_z
-    };
-};
-
 dataSeriesZoom = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var curveDates =  plotParams.dates.split(' - ');
@@ -138,32 +5,38 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var fromDate = Modules.server.util.dateConvert(fromDateStr);
     var toDateStr = curveDates[1];
     var toDate = Modules.server.util.dateConvert(toDateStr);    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    var mxmax = qxmax;// used to draw zero line
-    var mxmin = qxmin; // used to draw zero line
-    var matching = plotParams.plotAction === PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var dataOptions = [];
-    var variableStatSet = Object.create(null);
+    // used to find the max and minimum for the y axis
+    // used in yaxisOptions for scaling the graph
+    var xAxisMax = Number.MIN_VALUE;
+    var xAxisMin = Number.MAX_VALUE;
+    var yAxisMax = Number.MIN_VALUE;
+    var yAxisMin = Number.MAX_VALUE;
+    var matchTime = plotParams.matchFormat.indexOf(MatchFormats.time) !== -1;
+    var matchLevel = plotParams.matchFormat.indexOf(MatchFormats.level) !== -1;
+    var matchSite = plotParams.matchFormat.indexOf(MatchFormats.site) !== -1;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var dataSource = (curve['data source']);
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
-        var dataSource = (curve['data source']);
-        var my_variable;
-        if (curve['variable'] == 'wind_speed' || curve['variable'] == 'wind_direction') {
-            my_variable = CurveParams.findOne({name: 'variable'}).variableMap[curve['variable']];
-        } else {
-
-            my_variable = curve['variable'];
+        var myVariable;
+        // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
+        // discriminators are not.
+        // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
+        var variableMap = CurveParams.findOne({name: 'variable'}).variableMap;
+        var isDiscriminator = false;
+        myVariable = variableMap[curve['variable']];
+        if (myVariable === undefined) {
+            myVariable = curve['variable'];
+            isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
+
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -177,31 +50,24 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][PlotTypes.timeSeries];
-        var variable = variableOptionsMap[variableStr];
+        var variable = variableOptionsMap[dataSource][variableStr];
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast length'];
-        curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
-        var xmax;
-        var ymax;
-        var xmin;
-        var ymin;
-        var interval;
-        var d = [];
         var statement = "";
         if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve
+            // this is a database driven curve, not a difference curve - do those after Matching
             if (model.includes("recs")) {
-                statement = "select valid_utc as avtime,z,ws,sites_siteid " +
+                statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
                     "from obs_recs as o , " + model +
                     " where  obs_recs_obsrecid = o.obsrecid" +
                     " and instruments_instrid=" + instrument_id +
                     " and valid_utc>=" + Modules.server.util.secsConvert(fromDate) +
                     " and valid_utc<=" + Modules.server.util.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
-                if (my_variable != 'ws') {
-                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid, " + my_variable + " as dis " +
+                if (isDiscriminator) {
+                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
@@ -212,7 +78,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
-                    statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
+                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
@@ -224,7 +90,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                         " and " + discriminator + " <=" + disc_upper
                 }
             } else {
-                statement = "select valid_utc as avtime ,z ,ws,sites_siteid  " +
+                statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
@@ -232,227 +98,298 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                     " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
-            var ws_z_time;
-            var site_z_time;
-            var queryResult = queryWFIP2DB(statement, qxmin, qxmax, top, bottom, interval, my_variable);
-            d = queryResult.data;
-            ws_z_time = queryResult.ws_z_time;
-            if (d[0] === undefined) {
-                //    no data set emply array
-                d[0] = [];
-            } else {
-                xmin = d[0][0];
-                xmax = d[d.length - 1][0];
-                mxmax = mxmax > xmax ? xmax : mxmax;
-                mxmin = mxmin < xmin ? mxmin : xmin;
-                error = queryResult.error;
-                ws_z_time = queryResult.ws_z_time;
-                site_z_time = queryResult.site_z_time;
-            }
-        }
-        var pointSymbol = "circle";
-        switch (curveIndex % 5) {
-            case 0:
-                pointSymbol = "circle";
-                break;
-            case 1:
-                pointSymbol = "square";
-                break;
-            case 2:
-                pointSymbol = "diamond";
-                break;
-            case 3:
-                pointSymbol = "triangle";
-                break;
-            case 4:
-                pointSymbol = "cross";
-                break;
-        }
-        var yAxisIndex = 1;
+            var queryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
 
-        if (variableStat in variableStatSet) {
-            yAxisIndex = variableStatSet[variableStat].index;
-            variableStatSet[variableStat].label = variableStatSet[variableStat].label + " | " + label;
+            /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
+             data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
+             and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
+             need to be accounted for here. Also there can be missing times so we need to iterate through each set of times,
+             based on the minimum interval for the data set, and fill in missing times with null values.
+
+             We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+
+             We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
+             the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
+             criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+             The data from the query is of the form
+             result =  {
+                 error: error,
+                 data: resultData,
+                 allLevels: allLevels,
+                 allSites: allSiteIds,
+                 allTimes: allTimes,
+                 minInterval: minInterval,
+                 mean:cumulativeMovingAverage
+             }
+             where ....
+             resultData = {
+                 time0: {
+                     sites: {
+                         site0: {
+                             levels:[],
+                             values:[],
+                             sum: Number,
+                             mean: Number,
+                             numLevels: Number,
+                             max: Number,
+                             min: Number
+                         },
+                         site1: {...},
+                         .
+                         .
+                         siten:{...},
+                     }
+                     timeMean: Number   // cumulativeMovingMean for this time
+                     timeLevels: [],
+                     timeSites:[]
+                 },
+                 time1:{....},
+                     .
+                     .
+                 timen:{....}
+             }
+             where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
+             There is at least one real (non null) value for each site.
+             */
+            
+            curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
+            var levelCompleteness = curve['level completeness'];
+            var siteCompleteness = curve['site completeness'];
+            var levelBasis = _.union.apply(_, queryResult.allLevels);
+            var siteBasis = _.union.apply(_, queryResult.allSites);
+
+            var pairData = _.pairs(queryResult.data).sort(function(a,b){ return a[0] - b[0]});
+            var normalizedData = pairData.map(function (timeObjPair, index) {   // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
+                var value = null;
+                var time = Number(timeObjPair[0]);
+                var timeObj  = timeObjPair[1];
+                var tooltip = label  +
+                    "<br>seconds" + time +
+                    "<br>time:" +  new Date(Number(time)).toUTCString() +
+                    "<br> value:" + value;
+                xAxisMin = time < xAxisMin ? time : xAxisMin;
+                xAxisMax = time > xAxisMax ? time : xAxisMax;
+                if (timeObj == null) {
+                    return [time, null, null, tooltip];
+                }
+                yAxisMin = timeObj.timeMean < yAxisMin ? timeObj.timeMean : yAxisMin;
+                yAxisMax = timeObj.timeMean > yAxisMax ? timeObj.timeMean : yAxisMax;
+
+                var sites = Object.keys(timeObj.sites).map(Number);
+                var sitesLength = sites.length;
+                var includedSites = _.intersection(sites,siteBasis);
+                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                if (sitesQuality < siteCompleteness) {
+                    return [time, null, null, tooltip];   //throw this time away, it doesn't have enough sites
+                }
+                if (levelCompleteness == 0) {
+                    value  = timeObj.timeMean.toPrecision(4);
+                    tooltip = label  +
+                        "<br>seconds" + time +
+                        "<br>time:" +  new Date(Number(time)).toUTCString() +
+                        "<br> value:" + value;
+                    return [time, value, timeObj, tooltip]; // any level count is good
+                }
+                // still here - have to recalculate mean based on level completeness
+                var sum = 0;
+                var n = 0;
+                for (var si = 0; si < sitesLength; si++) {
+                    var sLevels = timeObj.sites[[sites[si]]].levels;
+                    var includedLevels = _.intersection(sLevels,levelBasis);
+                    var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                    if (levelsQuality > levelCompleteness) {
+                        sum += timeObj.sites[[sites[si]]].sum;
+                        n += timeObj.sites[[sites[si]]].numLevels;
+                    } // else don't count it in - skip over it, it isn't complete enough
+                }
+                value = (sum / n).toPrecision(4);
+                tooltip = label  +
+                    "<br>seconds" + time +
+                    "<br>time:" +  new Date(Number(time)).toUTCString() +
+                    "<br> value:" + value;
+                return [time, value, timeObj, tooltip];   // recalculated mean
+            });
         } else {
-            variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
+            //skip difference curves - do them after matching
+            var baseCurve = 0;  // eventually this will com from plotParams
+            var fromStartTime = dataset[diffFrom][0];
+            var baseStartTime = dataset[baseCurveIndex][0];
+            var fromEndTime = dataset[diffFrom][dataset[diffFrom].length-1];
+            var baseEndTime = dataset[baseCurveIndex][dataset[baseCurveIndex].length-1];
+            var time = fromStartTime > baseStartTime ? fromStartTime : baseStartTime;
+            var endTime = fromEndTime < baseEndTime ? fromEndTime : baseEndTime;
+            var fromIndex = 0;
+            var baseIndex = 0;
+            normalizedData = [];
+            while (time < endTime) {
+                while (dataset[baseCurve][baseIndex][0] < dataset[diffFrom][fromIndex][0]) {
+                    // increment the base index until it catches up
+                    baseIndex++;
+                }
+                while (dataset[diffFrom][fromIndex][0] < dataset[baseCurve][baseIndex][0]) {
+                    // increment the from index until it catches up
+                    fromIndex++;
+                }
+                // now they should both be pointing at the same time
+
+                var fromValue = dataset[diffFrom][fromIndex];
+                var baseValue = dataset[0][baseIndex];
+                var diffValue;
+                if (fromValue == null || baseValue == null) {
+                    diffValue = null;
+                } else {
+                    diffValue = fromValue - baseValue;
+                }
+                var tooltip = label  +
+                    "<br>seconds" + time +
+                    "<br>time:" +  new Date(Number(time)).toUTCString() +
+
+                    "<br> diffValue:" + diffValue;
+
+                normalizedData.push([time, diffValue, {}, tooltip]);
+            }
         }
-        var mean = 0;
-        for (var i = 0; i < d.length; i++) {
-            mean = mean + (d[i][1]);
-        }
-        mean = mean / d.length;
+        var pointSymbol = Modules.server.wfip2.getPointSymbol (curveIndex);
+        var mean = queryResult.mean;
         var options = {
-            yaxis: variableStatSet[variableStat].index,
-            label: label,
-            ws_z_time: ws_z_time,
-            site_z_time: site_z_time,
+            yaxis: curveIndex + 1,  // the y axis position to the right of the graph
+            label: label, 
             color: color,
-            annotation: label + "- mean = " + mean.toPrecision(4),
-            data: d,
-            interval: interval,
+            data: normalizedData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
-            lines: {show: true, fill: false}
+            lines: {show: true, fill: false},
+            annotation: label + "- mean = " + mean.toPrecision(4)
         };
-
         dataset.push(options);
-    }
-    var numCurves = dataset.length;
-    if (matching) {
-        var num_all_sites = 0;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var this_id = dataset[ci].site;
+    }  // end for curves
 
-            if (this_id === "All") {
-                num_all_sites = num_all_sites + 1;
+    // matching
+    if (curvesLength > 1 && (plotParams['plotAction'] === PlotActions.matched) && (matchLevel || matchSite || matchTime)) {
+        /*
+         Have to go through all the times,
+         for all the curves,
+         iterating at the minimum interval for all the curves
+         and setting to null all the y-values for which
+         any curve has a y-value that is null,
+         or fails to meet the other matching criteria.
+         */
+
+        // find the earliest and latest time and minimumInterval from all the curves
+        var earliestTime = Number.MAX_VALUE;
+        var latestTime = 0;
+        var minimumInterval = Number.MAX_VALUE;
+        // don't do any diff curves here, they are covered by the base curve anyway
+        for (var ci = 0; ci < curvesLength; ci ++) {
+            if (curves[ci].diffFrom) {
+                break;
             }
         }
-        var matchInterval = 0;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var this_interval = dataset[ci].interval;
-            if (this_interval > matchInterval) matchInterval = this_interval;
+        var realCurvesLength = ci;
+        for (var rci = 0; rci < realCurvesLength; rci ++) {
+            earliestTime = Number((curves[rci].queryResult.allTimes[0] < earliestTime) ? curves[rci].queryResult.allTimes[0] : earliestTime);
+            latestTime = Number((curves[rci].queryResult.allTimes[curves[rci].queryResult.allTimes.length -1] >
+                latestTime) ? curves[rci].queryResult.allTimes[curves[rci].queryResult.allTimes.length -1] : latestTime);
+            minimumInterval = Number((curves[rci].queryResult.minInterval < minimumInterval) ? (curves[rci].queryResult.minInterval) : minimumInterval);
         }
-        var ws_z_time0 = dataset[0].ws_z_time;
-        var keys_time0 = Object.keys(ws_z_time0);
-        dataset[0].data = [];
-        var secondsIntersection = keys_time0;
-        for (var ci = 1; ci < numCurves; ci++) {
-            var this_ws_z_time = dataset[ci].ws_z_time;
-            var keys_time = Object.keys(this_ws_z_time);
-            secondsIntersection = _.intersection(keys_time, secondsIntersection);
-            dataset[ci].data = [];
+
+        /* need a moving pointer for each curve data set.
+            The data arrays for the curves may not all start at the same time for each curve
+            so we skip incrementing the data index for any curve that has
+            not yet had any time element defined for this time.
+            The indexes are initialized to -1 so that the first time in a curve data array will cause the index to be 0.
+            There shouldn't be any holes because the QueryDB should have filled them in.
+         */
+        var dataIndexes = {};
+        for (ci = 0; ci < curvesLength; ci ++) {
+            dataIndexes[ci] = -1;
         }
-        //console.log("secondsInte=" + secondsIntersection);
-        for (var si = 0; si < secondsIntersection.length; si++) {
-            var this_secs = secondsIntersection[si];
-            var these_z0 = Object.keys(dataset[0].ws_z_time[this_secs]);
-            var zsIntersection = these_z0;
-            for (var ci = 1; ci < numCurves; ci++) {
-                var these_z = Object.keys(dataset[ci].ws_z_time[this_secs]);
-                zsIntersection = _.intersection(these_z, zsIntersection);
-            }
-            if (num_all_sites === numCurves) { // all curves with selection of all stations
-                var stnsIntersection = {};
-                for (var zi = 0; zi < zsIntersection.length; zi++) {
-                    var this_z = zsIntersection[zi];
-                    var these_stn0 = dataset[0].site_z_time[this_secs][this_z];
-                    stnsIntersection[this_z] = these_stn0;
-                    for (var ci = 1; ci < numCurves; ci++) {
-                        var these_stns = dataset[ci].site_z_time[this_secs][this_z];
-                        // stnsIntersection[this_z] = _.intersection(these_stns, these_stn0);
-                        stnsIntersection[this_z] = _.intersection(these_stns, stnsIntersection[this_z]);
-                    }
-                }
-            }
-            for (var ci = 0; ci < numCurves; ci++) {
-                var new_ws_list = [];
-                for (var zi = 0; zi < zsIntersection.length; zi++) {
-                    var this_z = zsIntersection[zi];
-                    var new_ws;
-                    if (num_all_sites === numCurves) { // all curves with selection of all stations
-                        for (var stni = 0; stni < stnsIntersection[this_z].length; stni++) {
-                            var this_stn = stnsIntersection[this_z][stni];
-                            var this_index = dataset[ci].site_z_time[this_secs][this_z].indexOf(this_stn);
-                            new_ws = dataset[ci].ws_z_time[this_secs][this_z][this_index];
-                            new_ws_list.push(new_ws);
+        time = earliestTime;
+        while (time < latestTime) {
+            var timeMatches = true;
+            var levelsMatches = true;
+            var sitesMatches = true;
+            var levelsToMatch = [];
+            var sitesToMatch = [];
+            for (ci = 0; ci < curvesLength; ci++) {
+                // the dataset data arrays may not always start with the same time
+                if (dataIndexes[ci] == -1 && dataset[ci].data[0][0] === undefined) {
+                    timeMatches = false;
+                    levelsMatches = false;
+                    sitesMatches = false;
+                } else {
+                    dataIndexes[ci]++;
+                    if (curves[ci].diffFrom === null || curves[ci].diffFrom === undefined) {
+                        var queryResultDataTime = curves[ci].queryResult.data[time];
+                        if (matchTime) {
+                            if (queryResultDataTime == null || (queryResultDataTime.timeMean == null)) {
+                                timeMatches = false;
+                            }
                         }
-                    } else {
-                        new_ws = dataset[ci].ws_z_time[this_secs][this_z];
-                        new_ws_list.push(new_ws);
+                        if (matchLevel) {
+                            if (queryResultDataTime == null || _.isEqual(levelsToMatch, queryResultDataTime.timeLevels) === false) {
+                                levelsMatches = false;
+                            }
+                        }
+                        if (matchSite) {
+                            if (queryResultDataTime == null || _.isEqual(sitesToMatch, queryResultDataTime.timeSites) === false) {
+                                sitesMatches = false;
+                            }
+                        }
                     }
                 }
-                var flattened = new_ws_list.reduce(function (a, b) {
-                    return a.concat(b);
-                }, []);
-
-                if (flattened.length > 0) {
-                    var new_mean = 0;
-                    for (var ii = 0; ii < flattened.length; ii++) {
-                        // console.log("new_ws_list="+ii+" "+new_ws_list[ii]);
-                        new_mean = new_mean + flattened[ii];
+            }
+            if ((timeMatches === false) ||
+                (levelsMatches === false) ||
+                (sitesMatches === false)) {
+                for (var sci = 0; sci < curvesLength; sci++) {
+                    // have to null this value out for all the curves because it does not match (either time was null or levels or sites did not match)
+                    if (dataset[sci].data[dataIndexes[sci]] !== undefined) {
+                        dataset[sci].data[dataIndexes[sci]][1] = null;
                     }
-                    dataset[ci].data.push([this_secs * 1000, new_mean / flattened.length]);
                 }
 
-                var mean = 0;
-                var d = dataset[ci].data;
-                for (var i = 0; i < d.length; i++) {
-                    mean = mean + d[i][1];
-                }
-                mean = mean / d.length;
-                dataset[ci].annotation = label + "- mean = " + mean.toPrecision(4);
             }
-        }
+            time = time + minimumInterval;
+        } // end of while time
+    } // end of if matching
 
-        var dataLength = dataset[0].data.length;
-        var matchNullIndexes = [];
-        for (var di = 0; di < dataLength; di++) {
-            for (var ci = 0; ci < numCurves; ci++) {
-                if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
-                    matchNullIndexes.push(di);
-                    break;
-                }
+   // squeeze out surplus nulls.
+    var squeezedData = [];
+    for (var dsi = 0; dsi < dataset.length; dsi++) { //iterate the curves in the dataset
+        squeezedData = [];
+        var value = dataset[dsi].data[0][1];
+        var previousValue = value;
+        for (var dsci = 0; dsci < dataset[dsi].data.length; dsci++) { //iterate the times in the curve dataset
+            value = dataset[dsi].data[dsci][1];
+            if (previousValue == null && value == null) {
+                continue;
             }
+            squeezedData.push(dataset[dsi].data[dsci]);
+            previousValue = value;
         }
-        for (var mi = 0; mi < matchNullIndexes.length; mi++) {
-            var index = matchNullIndexes[mi];
-            for (var ci = 0; ci < numCurves; ci++) {
-                if (dataset[ci].data[index] !== undefined) {
-                    dataset[ci].data[index][1] = null;
-                }
-            }
-        }
+        dataset[dsi].data = squeezedData;
+    }
 
-        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-            var curve = curves[curveIndex];
-            var diffFrom = curve.diffFrom;
-            if (diffFrom != null) {
-                var minuendIndex = diffFrom[0];
-                var subtrahendIndex = diffFrom[1];
-                var minuendData = dataset[minuendIndex].data;
-                var subtrahendData = dataset[subtrahendIndex].data;
-                // add dataset copied from minuend
-                var d = [];
-                // do the differencing of the data
-                for (var i = 0; i < minuendData.length; i++) {
-                    d[i] = [];
-                    d[i][0] = subtrahendData[i][0];
-                    if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
-                        d[i][1] = Math.abs(minuendData[i][1] - subtrahendData[i][1]);
-                    } else {
-                        d[i][1] = null;
-                    }
-                    // ymin and ymax will change with diff
-                    ymin = ymin < d[i][1] ? ymin : d[i][1];
-                    ymax = ymax > d[i][1] ? ymax : d[i][1];
-                }
-                var mean = 0;
-                for (var i = 0; i < d.length; i++) {
-                    mean = mean + d[i][1];
-                }
-                mean = mean / d.length;
-                dataset[curveIndex].data = d;
-                dataset[curveIndex].annotation = label + "- mean = " + mean.toPrecision(4);
-            }
-        }
-    }// end of match
+
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
-        var variableStat = curves[dsi].variableStat;
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: variableStatSet[variableStat].label + " : " + variableStr,
+            axisLabel: curve['label'] + ":" + curve['variable'] + ":" + curve['data source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1
+            alignTicksWithAxis: 1,
+            min: yAxisMin * 0.95,
+            max: yAxisMax * 0.95
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
@@ -503,6 +440,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         },
         grid: {
             hoverable: true,
+            clickable: true,
             borderWidth: 3,
             mouseActiveRadius: 50,
             backgroundColor: "white",
@@ -510,7 +448,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {
             }
@@ -524,7 +462,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         annotation: "",
         color: 'black',
         points: {show: false},
-        data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]
+        data: [[xAxisMin, 0, "zero"], [xAxisMax, 0, "zero"]]
     });
 
     var result = {

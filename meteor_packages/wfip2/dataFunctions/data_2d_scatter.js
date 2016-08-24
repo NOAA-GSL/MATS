@@ -1,143 +1,5 @@
-
-
-var queryWFIP2DB = function (statement, top, bottom, myVariable, isDiscriminator) {
-    var dFuture = new Future();
-    var error = "";
-    var resultData = {};
-    var minInterval = Number.MAX_VALUE;
-    var allSiteIds = [];
-    var allLevels = [];
-    var allTimes = [];
-    wfip2Pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-                /*
-                 We must map the query result to a data structure like this...
-                 var resultData = {
-                         time0: {
-                             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-                                 levels: [],
-                                 values: [],
-                                 sum: 0;
-                                 mean: 0;
-                                 numLevels: numLevels;
-                                 max: max;
-                                 min: min
-                             },
-                             site1: {
-                                 .
-                                 .
-                             },
-                             .
-                             .
-                             site2: {
-                                 .
-                                 .
-                             }
-                             },
-                        time1:{
-                            ....
-                        },
-                             .
-                             .
-                        timen:{
-                              ...
-                             },
-                 };
-            */
-                var time = 0;
-                var lastTime = 0;
-                var rowIndex;
-                var allSitesSet = new Set();
-
-                for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
-                    var interval = time - lastTime;
-                    if (interval !== 0 && interval < minInterval) {  // account for the same times in a row
-                        minInterval = interval;
-                    }
-                    lastTime = time;
-                    var siteid = rows[rowIndex].sites_siteid;
-                    allSitesSet.add(siteid);
-                    var values = [];
-                    var levels = [];
-                    if (isDiscriminator)  {
-                        // discriminators do not return arrays of values
-                        levels = JSON.parse(rows[rowIndex].z);
-                        values = [Number(rows[rowIndex][myVariable])];
-                    } else {
-                        // conventional variable
-                        levels = JSON.parse(rows[rowIndex].z);
-                        values = JSON.parse(rows[rowIndex][myVariable]);
-                    }
-                    // apply level filter, remove any levels and corresponding values that are not within the boundary.
-                    // there are always the same number of levels as values, they correspond one to one (in database).
-                    // filter backwards so the the level array is safely modified.
-                    for (var l = levels.length - 1; l >= 0; l--) {
-                        var lvl = levels[l];
-                        if (lvl < bottom || lvl > top) {
-                            levels.splice(l,1);
-                            values.splice(l,1);
-                        }
-                    }
-                    allLevels.push(levels);  // array of level arrays - two dimensional
-                    var sum = values.reduce(function (a,b) {return a + b;},0);
-                    var numLevels = levels.length;
-                    var mean = sum / numLevels;
-                    if(resultData[time] === undefined) {
-                        resultData[time] = {};
-                    }
-                    if (resultData[time][siteid] === undefined) {
-                        resultData[time][siteid] = {};
-                    }
-                    resultData[time][siteid].levels = levels;
-                    resultData[time][siteid].values = values;
-                    resultData[time][siteid].sum = sum;
-                    resultData[time][siteid].numLevels = numLevels;
-                    resultData[time][siteid].mean = mean;
-                    resultData[time][siteid].max = Math.max.apply(null,values);
-                    resultData[time][siteid].min = Math.min.apply(null,values);
-                }
-                // fill in missing times - there must be an entry at each minInterval
-                // if there are multiple entries for a given time average them into one time entry
-                // get an array of all the times for every site
-                allSiteIds = Array.from(allSitesSet);
-                allTimes = Object.keys(resultData);
-
-                for (var k = 0; k < allTimes.length -1; k++) {
-                    time = Number(allTimes[k]);
-                    var nextTime = allTimes[k+1];
-                    while ((nextTime - time) > minInterval) {
-                        time = time + minInterval;
-                        resultData[time] = null;
-                    }
-                }
-                dFuture['return']();
-            }
-    });
-
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        error: error,
-        data: resultData,
-        allLevels: allLevels,
-        allSites: allSiteIds,
-        allTimes: allTimes,
-        minInterval: minInterval
-    };
-};
-
 data2dScatter = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
-
     var curveDates =  plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = Modules.server.util.dateConvert(fromDateStr);
@@ -146,24 +8,22 @@ data2dScatter = function (plotParams, plotFunction) {
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
-    var dataset = [];
     var curveKeys = Object.keys(curves[0]);
+    var dataset = [];
     var axisLabelList = curveKeys.filter(function (key) {
         return key.indexOf('axis-label') === 1;
     });
-
     // used to find the max and minimum for the axis
+    // used in xaxesOptions and yaxisOptions for scaling the graph
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
-
     var bf = [];   // used for bestFit data
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
+        var truthAxisData = {};
         var curve = curves[curveIndex];
-
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
             var axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data source']);
@@ -172,6 +32,13 @@ data2dScatter = function (plotParams, plotFunction) {
             var model = tmp[0];
             var instrument_id = tmp[1];
             var myVariable;
+            // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
+            // only the truth model is different form the curves other parameters
+            var statistic = curve[axis + "-" + 'statistic'];
+            var truthDataSource = curve[axis + "-" + 'truth data source'];
+            tmp = CurveParams.findOne({name: 'data source'}).optionsMap[truthDataSource][0].split(',');
+            var truthModel = tmp[0];
+            var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
             // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
             // discriminators are not.
             // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
@@ -200,7 +67,7 @@ data2dScatter = function (plotParams, plotFunction) {
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast length'];
-            curves[curveIndex].variableStat = variableStr + ":"; // stash the variableStat to use it later for axis options
+
             var statement = '';
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z, " + myVariable + " ,sites_siteid " +
@@ -244,12 +111,58 @@ data2dScatter = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
-            var queryResult = queryWFIP2DB(statement, top, bottom, myVariable, isDiscriminator);
+
+            var truthStatement = '';
+            if (truthModel.includes("recs")) {
+                truthStatement = "select valid_utc as avtime,z, " + myVariable + " ,sites_siteid " +
+                    "from obs_recs as o , " + truthModel +
+                    " where  obs_recs_obsrecid = o.obsrecid" +
+                    " and instruments_instrid=" + instrument_id +
+                    " and valid_utc>=" + Modules.server.util.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.util.secsConvert(toDate);
+            } else if (truthModel.includes("hrrr_wfip")) {
+                if (isDiscriminator) {
+                    truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
+                        " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
+                        " and " + discriminator + " >=" + disc_lower +
+                        " and " + discriminator + " <=" + disc_upper;
+                } else {
+                    truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                        "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                        " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
+                        " and " + discriminator + " >=" + disc_lower +
+                        " and " + discriminator + " <=" + disc_upper;
+                }
+            } else {
+                truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                    "from " + truthModel + ", nwp_recs  " +
+                    " where nwps_nwpid=" + instrument_id +
+                    " and nwp_recs_nwprecid=nwprecid" +
+                    " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
+                    " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
+                    " and fcst_end_utc=" + 3600 * forecastLength;
+            }
+            truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+            var queryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
             rawAxisData[axis] = queryResult;
+            if (truthRequired == true) {
+                console.log("truthStatement: " + truthStatement);
+                var truthQueryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,truthStatement, top, bottom, myVariable, isDiscriminator);
+                truthAxisData[axis] = truthQueryResult;
+            }
         }   // for axis loop
-
-
-
+        
         /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
          data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
          and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
@@ -268,7 +181,8 @@ data2dScatter = function (plotParams, plotFunction) {
              allLevels: allLevels,
              allSites: allSiteIds,
              allTimes: allTimes,
-             minInterval: minInterval
+             minInterval: minInterval,
+             mean:cumulativeMovingAverage
          }
           where ....
          resultData = {
@@ -280,12 +194,14 @@ data2dScatter = function (plotParams, plotFunction) {
                             mean: Number,
                             numLevels: Number,
                             max: Number,
-                            min: Number
-                        },
+                            min: Number                        },
                         site1: {...},
                         .
                         .
-                        siten:{...}
+                        siten:{...},
+                        timeMean: Number,   // cumulativeMovingMean for this time
+                        timeLevels: [],
+                        timeSites:[]
                 },
                 time1:{....},
                 .
@@ -295,8 +211,6 @@ data2dScatter = function (plotParams, plotFunction) {
          where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
          There is at least one real (non null) value for each site.
          */
-
-
 
         // used for getDatum
         var levelCompletenessX = curve['xaxis-level completeness'];
@@ -397,26 +311,8 @@ data2dScatter = function (plotParams, plotFunction) {
             xaxisIndex++;
             yaxisIndex++;
         }
-
         normalizedAxisData.sort(Modules.server.util.sortFunction);
-        var pointSymbol = "circle";
-        switch (curveIndex % 5) {
-            case 0:
-                pointSymbol = "circle";
-                break;
-            case 1:
-                pointSymbol = "square";
-                break;
-            case 2:
-                pointSymbol = "diamond";
-                break;
-            case 3:
-                pointSymbol = "triangle";
-                break;
-            case 4:
-                pointSymbol = "cross";
-                break;
-        }
+        var pointSymbol = Modules.server.wfip2.getPointSymbol (curveIndex);
         // sort these by x axis
         var options = {
             yaxis: curveIndex + 1,
@@ -424,7 +320,6 @@ data2dScatter = function (plotParams, plotFunction) {
             color: color,
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
-            //necessary to make the 'hide points' button work properly
             lines: {show: false},
             annotation: ""
         };

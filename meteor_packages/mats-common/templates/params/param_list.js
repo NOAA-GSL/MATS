@@ -87,29 +87,36 @@ Template.paramList.events({
             }
             var l = paramElems.length;
             if (Session.get('editMode')) {
+                var changingCurveLabel = Session.get('editMode');
                 Session.set('editMode', '');
                 var labelId = 'label-' + InputTypes.textInput;
                 var label = document.getElementById(labelId);
                 label.disabled = false;
 
                 for (var i = 0; i < l; i++) {
+                     if (paramElems[i].name == "label") {
+                         p[paramElems[i].name] = changingCurveLabel;  // don't change the label when editing a curve
+                         continue;
+                     }
                     if (paramElems[i].type === "select-multiple") {
+                        p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                         p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
                     } else {
                         if (paramElems[i].type === "radio") {
                             if (paramElems[i].checked){
+                                p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                                 p[paramElems[i].name] = paramElems[i].value;
                             }
                         } else if (paramElems[i].type === "checkbox") {
                             if (paramElems[i].checked){
-                                if (p[paramElems[i].name] === undefined) {
-                                    p[paramElems[i].name] = [];
-                                }
+                                p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                                 p[paramElems[i].name].push(paramElems[i].value);
                             }
                     } else if (paramElems[i].type === "button") {
+                            p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
+                            p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                             p[paramElems[i].name] = (paramElems[i]).value;
                         }
                     }

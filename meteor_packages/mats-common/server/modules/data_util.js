@@ -29,11 +29,11 @@ var dateConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
         var now = new Date();
         var date = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var hour = date.getHours();
-        var minute = date.getMinutes();
+        var yr = date.getUTCFullYear();
+        var day = date.getUTCDate();
+        var month = date.getUTCMonth();
+        var hour = date.getUTCHours();
+        var minute = date.getUTCMinutes();
         return month + "/" + day + '/' + yr + ' ' + hour + ":" + minute;
     }
     var dateParts = dStr.split(' ');

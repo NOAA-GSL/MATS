@@ -1,208 +1,65 @@
 
-//var queryWFIP2DB = function (statement, validTimeStr, statisticSelect, label) {
-var queryWFIP2DB = function (statement) {
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var ws_z = {};
-    var site_z_time ={};
-    var ws_z_time = {};
-    wfip2Pool.query(statement, function (err, rows) {
-            // query callback - build the curve data from the results - or set an error
-            if (err != undefined) {
-                error = err.message;
-                dFuture['return']();
-            } else if (rows === undefined || rows.length === 0) {
-                error = 'No data to plot: ' + err;
-                // done waiting - error condition
-                dFuture['return']();
-            } else {
-                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    //var avVal = Number(rows[rowIndex].z);
-                    var z = (rows[rowIndex].z);
-                    var avVal = z.substring(1, z.length - 1);
-                    var ws = rows[rowIndex].ws;
-                    var stat = ws.substring(1, ws.length - 1);
-                    var valid_utc = Number(rows[rowIndex].valid_utc);
-                    var site_id = Number(rows[rowIndex].sites_siteid);
-                    var sub_values = avVal.split(',');
-                    var sub_ws = stat.split(',').map(Number);
-                    for (var j = 0; j < sub_ws.length; j++) {
-                        var this_z = Number(sub_values[j]);
-                        var this_ws = sub_ws[j];
-                        if (ws_z[this_z] === undefined) {
-                            ws_z[this_z] = [];
-                        }
-                        ws_z[this_z].push(this_ws);
-                        if (site_z_time[this_z] === undefined) {
-                            site_z_time[this_z] = {};
-                        }
-                        if (site_z_time[this_z][valid_utc] === undefined) {
-                            site_z_time[this_z][valid_utc] = [];
-                        }
-                        site_z_time[this_z][valid_utc].push(site_id);
-
-                        if (ws_z_time[this_z] === undefined) {
-                            ws_z_time[this_z] = {};
-                        }
-                        if (ws_z_time[this_z][valid_utc] === undefined) {
-                            ws_z_time[this_z][valid_utc] = [];
-                        }
-                        ws_z_time[this_z][valid_utc].push(this_ws);
-                    }
-                }// end of loop row
-                var max_sample_level = 0;
-                var keys = Object.keys(ws_z);
-                for (var jj = 0; jj < keys.length; jj++) {
-                    var key = keys[jj];
-                    if (ws_z[key].length > max_sample_level) {
-                        max_sample_level = ws_z[key].length;
-                    }
-                }
-                for (var jj = 0; jj < keys.length; jj++) {
-                    var key = keys[jj];
-                    var ws_array = ws_z[key];
-                    var mean_ws;
-                    var sum_ws = 0;
-                    if (ws_array.length > 0.5 * max_sample_level) {
-                        for (var jjj = 0; jjj < ws_array.length; jjj++) {
-                            sum_ws = sum_ws + ws_array[jjj];
-                        }
-                        mean_ws = sum_ws / ws_array.length;
-                        d.push([mean_ws, key, -1]);
-                    }
-                }
-                // done waiting - have results
-                dFuture['return']();
-            }
-        }
-    );
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        data: d,
-        error: error,
-        ws_z_time: ws_z_time,
-        site_z_time: site_z_time,
-        ymin: ymin,
-        ymax: ymax
-    };
-};
-
-var get_err = function (sub_val_array, sub_secs_array) {
-    var n = sub_val_array.length;
-    var n_good = 0;
-    var sum_d = 0;
-    var sum2_d = 0;
-    for (var i = 0; i < n; i++) {
-        n_good = n_good + 1;
-        sum_d = sum_d + sub_val_array[i];
-        sum2_d = sum2_d + sub_val_array[i] * sub_val_array[i];
-    }
-    var d_mean = sum_d / n_good;
-    var sd2 = sum2_d / n_good - d_mean * d_mean;
-    var sd = Math.sqrt(sd2);
-    // find minimum delta_time, if any value missing, set null
-    var last_secs = -1e30;
-    var min_delta = 1e30;
-    var min_secs = 1e30;
-    var max_secs = -1e30;
-    for (i = 0; i < sub_secs_array.length; i++) {
-        var secs = (sub_secs_array[i]);
-        var delta = secs - last_secs;
-        if (delta < min_delta) {
-            min_delta = delta;
-        }
-        if (secs < min_secs) {
-            min_secs = secs;
-        }
-        if (secs > max_secs) {
-            max_secs = secs;
-        }
-        last_secs = secs;
-    }
-
-    var data_wg = [];
-    var n_gaps = 0;
-    var loopTime = min_secs;
-    while (loopTime < max_secs + 1) {
-        if (sub_secs_array.indexOf(loopTime) < 0) {
-            data_wg.push(null);
-            n_gaps = n_gaps + 1;
-        } else {
-            var d_idx = sub_secs_array.indexOf(loopTime);
-            data_wg.push(sub_val_array[d_idx]);
-        }
-        loopTime = loopTime + min_delta;
-    }
-    var r = [];
-    for (var lag = 0; lag <= 1; lag++) {
-        r[lag] = 0;
-        var n_in_lag = 0;
-        for (var t = 0; t < n - lag; t++) {
-            if (data_wg[t] != null && data_wg[t + lag] != null) {
-                r[lag] = r[lag] + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
-                n_in_lag++;
-            }
-        }
-        if (n_in_lag > 0 && sd > 0) {
-            r[lag] = r[lag] / (n_in_lag * sd * sd);
-        } else {
-            r[lag] = null;
-        }
-    }
-    if (r[1] >= 1) {
-        r[1] = .99999;
-    }
-
-    var betsy = Math.sqrt((n_good - 1) * (1. - r[1]));
-    var stde_betsy;
-    if (betsy != 0) {
-        stde_betsy = sd / betsy;
-    } else {
-        stde_betsy = null;
-    }
-    return {d_mean: d_mean, stde_betsy: stde_betsy, n_good: n_good, lag1: r[1]};
-};
-
 dataProfileZoom = function (plotParams, plotFunction) {
-    var matching = plotParams.plotAction === PlotActions.matched;
+    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
+    var dataset = [];
+    // used to find the max and minimum for the y axis
+    // used in yaxisOptions for scaling the graph
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
-    var dataset = [];
-    var siteIds = {};
+    var yAxisMax = Number.MIN_VALUE;
+    var yAxisMin = Number.MAX_VALUE;
+    var matchTime = plotParams.matchFormat.indexOf(MatchFormats.time) !== -1;
+    var matchLevel = plotParams.matchFormat.indexOf(MatchFormats.level) !== -1;
+    var matchSite = plotParams.matchFormat.indexOf(MatchFormats.site) !== -1;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
-        var diffFrom = curve.diffFrom; // [minuend, subtrahend]
-        var label = curve['label'];
+        var diffFrom = curve.diffFrom;
+        var dataSource = (curve['data source']);
         var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
+        var myVariable;
+        // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
+        // discriminators are not.
+        // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
+        var variableMap = CurveParams.findOne({name: 'variable'}).variableMap;
+        var isDiscriminator = false;
+        myVariable = variableMap[curve['variable']];
+        if (myVariable === undefined) {
+            myVariable = curve['variable'];
+            isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
+        }
+
         var region = CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
-        siteIds[curveIndex] = [];
+        var siteIds = [];
         for (var i = 0; i < siteNames.length; i++) {
             var siteId = SiteMap.findOne({siteName: siteNames[i]}).siteId;
-            siteIds[curveIndex].push(siteId);
+            siteIds.push(siteId);
         }
-        var instruments_instrid = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][1];
+        var label = (curve['label']);
+        var top = Number(curve['top']);
+        var bottom = Number(curve['bottom']);
+        var color = curve['color'];
+        var variableStr = curve['variable'];
+        var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][PlotTypes.timeSeries];
+        var variable = variableOptionsMap[dataSource][variableStr];
+        var discriminator = curve['discriminator'];
+        var disc_upper = curve['upper'];
+        var disc_lower = curve['lower'];
+        var forecastLength = curve['forecast length'];
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = curveDates.split(' - ')[0]; // get the from part
         var curveDatesDateRangeTo = curveDates.split(' - ')[1]; // get the to part
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
-        var variableStr = curve['variable'];
-        var variableOptionsMap = CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][PlotTypes.profile];
-        var variable = variableOptionsMap[variableStr];
-        var forecastLength = curve['forecast length'];
-        var d = [];
+        var statistic = curve['statistic'];
+        var statement = "";
         if (diffFrom == null) {
             if (model.includes("recs")) {  //obs
-                var statement = "select sites_siteid,valid_utc,z,ws " +
+
+                var statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid"  +
                     " from obs_recs as o ," + model + "   as s " +
                     //" where valid_utc=1454526000 " +
                     " where valid_utc >= " + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
@@ -210,7 +67,7 @@ dataProfileZoom = function (plotParams, plotFunction) {
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
             } else {//model
-                var statement = "select sites_siteid,valid_utc,z ,ws " +
+                var statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid" +
                     " from " + model + ", nwp_recs  " +
                     "where valid_utc>= " + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
                     " and analysis_utc+fcst_end_utc>=" + Modules.server.util.secsConvert(curveDatesDateRangeFrom) +
@@ -222,44 +79,147 @@ dataProfileZoom = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
             console.log("query=" + statement);
-            var ws_z_time;
-            var site_z_time;
-            var queryResult = queryWFIP2DB(statement);
-            d = queryResult.data;
-            if (d[0] === undefined) {
-                    //    no data set emply array
-                    d[0]=[];
-             } else {
-                ws_z_time = queryResult.ws_z_time;
-                site_z_time = queryResult.site_z_time;
+            var queryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+            /*
+             result =  {
+                 error: error,
+                 data: resultData,
+                 allLevels: allLevels,
+                 allSites: allSiteIds,
+                 allTimes: allTimes,
+                 minInterval: minInterval,
+                 mean:cumulativeMovingAverage
+             }
+             where ....
+             resultData = {
+             time0: {
+                 sites: {
+                     site0: {
+                         levels:[],
+                         values:[],
+                         sum: Number,
+                         mean: Number,
+                         numLevels: Number,
+                         max: Number,
+                         min: Number
+                     },
+                     site1: {...},
+                     .
+                     .
+                     siten:{...},
+                 }
+                 timeMean: Number   // cumulativeMovingMean for this time
+                 timeLevels: [],
+                 timeSites:[]
+                 },
+                 time1:{....},
+                 .
+                 .
+                 timen:{....}
+             }
+             where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
+             There is at least one real (non null) value for each site.
+
+             we need this structure where the values are qualified by site and level completeness.
+             levelValues: {
+             l1: [val1, val2, val3, .... valn],
+             l2: [val1, val2, val3, .....valn],
+             .
+             .
+             .
+             ln: [val1,val2,val3, ..... valn
+             }
+
+             from this we derive ....
+             levelStats : {
+                 20: {
+                 mean: m,
+                 bias: b,
+                 rmse : r,
+                 mae: ma
+                 },
+                 40: {...},
+                 60: {...},
+                 .
+                 .
+                 .
+                 ln: {...}
+             }
+
+             */
+            curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
+            var levelCompleteness = curve['level completeness'];
+            var siteCompleteness = curve['site completeness'];
+            var levelBasis = _.union.apply(_, queryResult.allLevels);
+            var siteBasis = _.union.apply(_, queryResult.allSites);
+            var levelValues = {};
+            var allTimes = queryResult.allTimes;
+            for (var t=0; t < allTimes.length; t++) {
+                var time = allTimes[t];
+                var timeObj = queryResult.data[time];
+                var sites = Object.keys(timeObj.sites).map(Number);
+                var sitesLength = sites.length;
+                var includedSites = _.intersection(sites,siteBasis);
+                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                if (sitesQuality > siteCompleteness) {
+                    // time is qualified for sites, count the qualified levels
+                    for (var si = 0; si < sitesLength; si++) {
+                        var sLevels = timeObj.sites[[sites[si]]].levels;
+                        var sValues = timeObj.sites[[sites[si]]].values;
+                        var includedLevels = _.intersection(sLevels, levelBasis);
+                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                        if (levelsQuality > levelCompleteness) {
+                            for (var l = 0; l < sLevels.length; l++) {
+                                if (levelValues[sLevels[l]] === undefined) {
+                                    levelValues[sLevels[l]] = [];
+                                }
+                                levelValues[sLevels[l]].push(sValues[l]);
+                            }
+                        } // else don't count it in - skip over it, it isn't complete enough
+                    }
+                }
             }
+            // now we have levelValues qualified by site and level completeness
+            // now get levelStats
+
+            var levelStats = {};
+            var qualifiedLevels = Object.keys(levelValues);
+            for (l = 0; l < qualifiedLevels.length; l++) {
+                var sum = _.reduce(levelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
+                var num = levelValues[qualifiedLevels[l]].length;
+                var mean = sum / num;
+                if (levelStats[qualifiedLevels[l]] === undefined) {
+                    levelStats[qualifiedLevels[l]] = {};
+                }
+
+                levelStats[qualifiedLevels[l]][statistic] = mean;
+            }
+        }  // if diffFrom == null
+
+        var d = [];
+        var levels = Object.keys(levelStats);
+        for (l =0; l < levels.length; l++) {
+            var level = levels[l];
+            var value = levelStats[level][statistic];
+            xAxisMin = xAxisMin < value ? xAxisMin : value;
+            xAxisMax = xAxisMax > value ? xAxisMax : value;
+            yAxisMin = yAxisMin < level ? yAxisMin : level;
+            yAxisMax = yAxisMax > level ? yAxisMax : level;
+            var tooltip = label  +
+                "<br>level: " + level +
+                "<br>statistic: " +  statistic +
+                "<br> value: " + value;
+
+            d.push([value,level,-1,{level:level, values:levelValues[level], levelStats:levelStats[level]},tooltip]);
+            //d.push([value,level,-1]);
         }
-        var pointSymbol = "circle";
-        switch (curveIndex % 5) {
-            case 0:
-                pointSymbol = "circle";
-                break;
-            case 1:
-                pointSymbol = "square";
-                break;
-            case 2:
-                pointSymbol = "diamond";
-                break;
-            case 3:
-                pointSymbol = "triangle";
-                break;
-            case 4:
-                pointSymbol = "cross";
-                break;
-        }
-        var yAxisIndex = 1;
+
+        var pointSymbol = Modules.server.wfip2.getPointSymbol (curveIndex);
         var options = {
-            //yaxis: variableStatSet[variableStat].index,
+            //yaxis:curveIndex,
             label: label,
             color: color,
             data: d,
-            ws_z_time: ws_z_time,
-            site_z_time: site_z_time,
             points: {
                 symbol: pointSymbol,
                 fillColor: color,
@@ -280,117 +240,8 @@ dataProfileZoom = function (plotParams, plotFunction) {
             }
         };
         dataset.push(options);
-    }
-    if (matching) {
-        if (diffFrom != null) {
-            var numCurves = diffFrom.length;
-        } else {
-            var numCurves = curves.length;
-        }
-        var all_curve_z = [];
-        var single_stn = true;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var data = dataset[ci].data;
-            var this_curve_z = [];
-            for (var di = 0; di < data.length; di++) {
-                var this_z = data[di][1];
-                this_curve_z.push(this_z);
-            }
-            all_curve_z.push(this_curve_z);
-            if (siteIds[ci].length != 1) {
-                single_stn = false;
-            }
-        }
-        for (var ci = 0; ci < numCurves; ci++) {
-            dataset[ci].data = []
-        }
-        var subZIntersection = _.intersection.apply(this, all_curve_z);
-        for (var zi = 0; zi < subZIntersection.length; zi++) {
-            var common_z = subZIntersection[zi];
-            var all_time = [];
-            for (curveIndex = 0; curveIndex < numCurves; curveIndex++) {
-                var this_time_z = Object.keys(dataset[curveIndex].ws_z_time[common_z]);
-                all_time.push(this_time_z);
-            }
-            var subSecIntersection = _.intersection.apply(this, all_time);
-            if (single_stn == false) {
-                var stnsIntersection = {};
-                for (var si = 0; si < subSecIntersection.length; si++) {
-                    var this_secs = subSecIntersection[si];
-                    var all_site = [];
-                    for (var ci = 0; ci < numCurves; ci++) {
-                        var these_stns = dataset[ci].site_z_time[common_z][this_secs];
-                        all_site.push(these_stns);
-                    }
-                    stnsIntersection[this_secs] = _.intersection.apply(this, all_site);
-                }
-            }
-            for (curveIndex = 0; curveIndex < numCurves; curveIndex++) {
-                var new_ws_list = [];
-                for (var si = 0; si < subSecIntersection.length; si++) {
-                    var this_secs = subSecIntersection[si];
-                    var this_ws_z_time = dataset[curveIndex].ws_z_time[common_z][this_secs];
-                    var new_ws;
-                    if (single_stn == false) {
-                        for (var stni = 0; stni < stnsIntersection[this_secs].length; stni++) {
-                            var this_stn = stnsIntersection[this_secs][stni];
-                            var this_index = dataset[curveIndex].site_z_time[common_z][this_secs].indexOf(this_stn);
-                            new_ws = dataset[curveIndex].ws_z_time[common_z][this_secs][this_index];
-                            new_ws_list.push(new_ws);
-                        }
-                    }
-                    else {
-                        new_ws = this_ws_z_time;
-                        new_ws_list.push(new_ws);
-                    }
-                }
-                var flattened = new_ws_list.reduce(function (a, b) {
-                    return a.concat(b);
-                }, []);
-                if (flattened.length > 0) {
-                    var new_mean = 0;
-                    for (var ii = 0; ii < flattened.length; ii++) {
-                        new_mean = new_mean + flattened[ii];
-                    }
-                    dataset[curveIndex].data.push([new_mean / flattened.length, common_z, -1]);
-                }
-            }
-        }
+    }   // for curves
 
-        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-            var curve = curves[curveIndex];
-            var diffFrom = curve.diffFrom; // [minuend, subtrahend]
-            if (diffFrom != null) {
-                var minuendIndex = diffFrom[0];
-                var subtrahendIndex = diffFrom[1];
-                var minuendData = dataset[minuendIndex].data;
-                var subtrahendData = dataset[subtrahendIndex].data;
-                // do the differencing
-                d = [];
-                var l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
-                for (var i = 0; i < l; i++) { // each pressure level
-                    d[i] = [];
-                    // pressure level
-                    d[i][1] = subtrahendData[i][1];
-                    // values diff
-                    d[i][0] = minuendData[i][0] - subtrahendData[i][0];
-                    d[i][2] = -1;
-                }
-                dataset[curveIndex].data = d;
-            }
-        }
-    }
-    //Find the min and max for the graph on the xaxis
-    for (var k = 0; k < curvesLength; k++) {
-        for (var j = 0; j < dataset[k].data.length; j++) {
-            if (dataset[k].data[j][0] > xAxisMax) {
-                xAxisMax = dataset[k].data[j][0];
-            }
-            if (dataset[k].data[j][0] < xAxisMin) {
-                xAxisMin = dataset[k].data[j][0];
-            }
-        }
-    }
 
     // generate y-axis
     var yaxes = [];
@@ -407,7 +258,6 @@ dataProfileZoom = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1
-            //ticks:[[-1000,1000],[-900,900],[-800,800],[-700,700],[-600,600],[-500,500],[-400,400],[-300,300],[-200,200],[-100,100],[0,0]]
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
@@ -425,7 +275,7 @@ dataProfileZoom = function (plotParams, plotFunction) {
             color: 'grey'
         }],
         xaxis: {
-            zoomRange: [0.1,10],
+            zoomRange: [0.1, 10],
             max: xAxisMax > 0 ? xAxisMax * 1.6 : xAxisMax * 0.6,
             min: xAxisMin < 0 ? xAxisMin * 1.6 : xAxisMin * 0.6
         },
@@ -459,19 +309,34 @@ dataProfileZoom = function (plotParams, plotFunction) {
         },
         grid: {
             hoverable: true,
+            clickable: true,
             borderWidth: 3,
             mouseActiveRadius: 50,
             backgroundColor: "white",
             axisMargin: 20
         },
+        /* tooltips NOTE:
+         There are two kinds of tooltips...
+         1) content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+         xDateFormat: "%Y-%m-%d:%H",
+         onHover: function (flotItem, $tooltipEl) {
+         which will cause the y value to be presented with the text "<br>%x:<br>value %y where %y is the y value"
+         and ...
+         content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+         which will present the text defined by a string in the last data position of the dataset array i.e.
+         [[x1,y1,"tooltiptext1"],[x2,y3,"tooltiptext2"]....[xn,yn,"tooltiptextn"]]
+         The tooltip text is expected to be an html snippet.
+         */
+
         tooltip: true,
         tooltipOpts: {
-            // the ct value is the third [2] element of the data series for profiles. This is the tooltip content.
-             content: "<span style='font-size:150%'><strong>%ct</strong></span>"
-            //content: "<span style='font-size:150%'><strong>%y</strong></span>"
-            //content: "<span style='font-size:150%'><strong><br>value %x<br>at %y m</strong></span>"
+            // the ct value is the third [2] element of the data series. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
+    // add black 0 line curve
+    dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,yAxisMin,"zero"],[0,yAxisMax,"zero"]]});
+
     var result = {
         error: error,
         data: dataset,
