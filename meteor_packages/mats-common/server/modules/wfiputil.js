@@ -1,7 +1,7 @@
 Modules.server.wfip2 = {};
 
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                         levelBasisX, levelBasisY, siteBasisX, siteBasisY) {
+                         levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic) {
     // sum and average all of the means for all of the sites
     var datum = {};
     var commonSitesBasisLengthX = siteBasisX.length;
@@ -18,13 +18,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
         return []; // reject this site (it does not qualify for y axis) for this time
     }
 
-    // still here? process the sites
-    // for each axis... axisArr.length
-    // for every site... tSiteIds.length
-    // if completeness test not required ... qualityLevels == 0
-    //      save precalculated levels
-    // else
-    //      recalculate level statistics
+    //      calculate level statistics
     //      save recalculated levels
     var axisArr = ['xaxis', 'yaxis'];
     for (var ai = 0; ai < axisArr.length; ai++) {   //iterate axis
@@ -37,66 +31,131 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
             commonLevelsBasisLength = levelBasisY.length;
             qualityLevels = levelCompletenessY;
         }
-        var siteSum = 0;
-        var siteNum = 0;
-        var filteredSites = [];   // used for the modal data view
+        var siteLevelNum = 0; // the total number of entries, values for all the qualified levels, for all the qualified sites
+        var siteLevelSum = 0; // the total sum of all the entries (values) for all the  qualified levels for all the qualified sites
+        var siteLevelBiasSum = 0; //  the total sum of all the bias's for all the qualified levels for all the qualified sites
+        var siteLevelBiasNum = 0; // the total number of bias values for all the qualified levels in all the qualified sites
+                                  // (some experiment entries may not have had a corresponding truth entry so the  siteLevelBiasNum
+                                  // might not be the same as the siteLevelNum)
+
         for (var si = 0; si < tSiteIds.length; si++) {    //iterate sites
             var siteId = tSiteIds[si];
-            var siteMean = 0;
-
-            if (qualityLevels == 0) {  // no need to recalculate if everything is accepted i.e. quality = 0
-                siteNum ++;
-                siteSum += rawAxisData[axisStr]['data'][axisTime].sites[siteId]['mean'];
-                filteredSites = rawAxisData[axisStr]['data'][axisTime].sites;
-                //combine the levels and the values into single array (for using in the modal data view)
-                if (filteredSites[siteId].levels) {
-                    filteredSites[siteId].levelsValues = filteredSites[siteId].levels.map(function (level, index) {
-                        return [level, filteredSites[siteId].values[index]]
+            // quality filter is required (>0)  so we have to recalculate the statistics for this site for qualified levels
+            // recalculate sMean for filtered levels
+            var siteLevels = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['levels'];
+            //combine the levels and the values into single array (for using in the modal data view) - raw values - unfiltered
+            if (rawAxisData[axisStr]['data'][axisTime].sites[siteId].levels) {
+                rawAxisData[axisStr]['data'][axisTime].sites[siteId].levelsValues =
+                    rawAxisData[axisStr]['data'][axisTime].sites[siteId].levels.map(function (level, index) {
+                        return [level, rawAxisData[axisStr]['data'][axisTime].sites[siteId].values[index]];
                     });
-                } else {
-                    filteredSites[siteId].levelsValues = [];
-                }
-                rawAxisData[axisStr]['data'][axisTime].sites[siteId].levelsValues = filteredSites[siteId].levelsValues;
             } else {
-                // quality filter is required (>0)  so we have to recalculate the statistics for this site for qualified levels
-                // recalculate sMean for filtered levels
-                var sLevels = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['levels'];
-                //combine the levels and the values into single array (for using in the modal data view) - raw values - unfiltered
-                if (rawAxisData[axisStr]['data'][axisTime].sites[siteId].levels) {
-                    rawAxisData[axisStr]['data'][axisTime].sites[siteId].levelsValues =
-                        rawAxisData[axisStr]['data'][axisTime].sites[siteId].levels.map(function (level, index) {
-                            return [level, rawAxisData[axisStr]['data'][axisTime].sites[siteId].values[index]];
-                        });
-                } else {
-                    rawAxisData[axisStr]['data'][axisTime].sites[siteId].levelsValues = [];
-                }
+                rawAxisData[axisStr]['data'][axisTime].sites[siteId].levelsValues = [];
+            }
 
-                // What we really want is to put in a quality control
-                // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
-                // in order to qualify the data?" In other words, throw away any data that doesn't meet the completeness criteria.
-                var matchQuality = (sLevels.length / commonLevelsBasisLength) * 100;
-                if (matchQuality < qualityLevels) {
-                    continue;  // throw this site away - it does not qualify because it does not have enough levels
-                }
-                filteredSites = rawAxisData[axisStr]['data'][axisTime].sites;
-                filteredSites[siteId].levelsValues =
-                    filteredSites[siteId].levels.map(function(level, index) {
-                        return [level, filteredSites[siteId].values[index]];
-                    });
-                var sValues = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['values'];
-
-                for (var li = 0; li < sLevels.length; li++) {
-                    siteSum += sValues[li];
-                    siteNum++;
+            // What we really want is to put in a quality control
+            // that says "what percentage of the commonSitesBasis set of levels does the Levels for this site and time need to be
+            // in order to qualify the data?" In other words, throw away any data that doesn't meet the completeness criteria.
+            var matchQuality = (siteLevels.length / commonLevelsBasisLength) * 100;
+            if (matchQuality < qualityLevels) {
+                continue;  // throw this site away - it does not qualify because it does not have enough levels
+            }
+            var filteredSites = rawAxisData[axisStr]['data'][axisTime].sites;
+            filteredSites[siteId].levelsValues =
+                filteredSites[siteId].levels.map(function(level, index) {
+                    return [level, filteredSites[siteId].values[index]];
+                });
+            var siteValues = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['values'];
+            for (var li = 0; li < siteLevels.length; li++) {
+                var siteLevelValue = siteValues[li];
+                switch (statistic) {
+                    case "bias":
+                    case "mae":
+                        // find siteLevelBias and sum it in
+                        var truthValue = null;
+                        var biasValue = null;
+                        try {
+                            truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
+                            if (statistic == "mae") {
+                                biasValue = Math.abs(siteLevelValue - truthValue);
+                            } else {
+                                biasValue = siteLevelValue - truthValue;
+                            }
+                            siteLevelBiasSum += biasValue;
+                            siteLevelBiasNum++;
+                        } catch (nodata){
+                            // apparently there is no data in the truth curve that matches this time
+                            truthValue = null;
+                        }
+                        break;
+                    case "rmse":
+                        var truthValue = null;
+                        var biasValue = null;
+                        try {
+                            truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
+                            biasValue = siteLevelValue - truthValue;
+                            biasValue = biasValue * biasValue;  // square the difference
+                            siteLevelBiasSum += biasValue;
+                            siteLevelBiasNum++;
+                        } catch (nodata){
+                            // apparently there is no data in the truth curve that matches this time
+                            truthValue = null;
+                        }
+                        break;
+                    case "mean":
+                    default:
+                        try {
+                            siteLevelSum += siteLevelValue;
+                            siteLevelNum++;
+                        } catch (ignore) {}
+                        break;
                 }
             }
         }
-
-        siteMean = siteSum / siteNum;
-        datum[axisStr + '-mean'] = siteMean;
-        datum[axisStr + '-sites'] = rawAxisData[axisStr]['data'][axisTime].sites;  // used to get levelsValues from raw data for data modal
+        // we set bad numbers to null so that they can be squeezed out upstream
+        switch (statistic) {
+            case "bias":
+            case "mae":
+                var siteBias = null;
+                try {
+                    siteBias = siteLevelBiasSum / siteLevelBiasNum;
+                    if (isNaN(siteBias)) {
+                        siteBias = null;
+                    }
+                } catch (bad){
+                    siteBias = null;
+                }
+                datum[axisStr + '-value'] = siteBias;
+                break;
+            case "rmse":
+                var siteMse = null;
+                try {
+                    siteMse = Math.sqrt(siteLevelBiasSum / siteLevelBiasNum);
+                    if (isNaN(siteMse)) {
+                        siteMse = null;
+                    }
+                } catch (bad) {
+                    siteMse = null;
+                }
+                datum[axisStr + '-value'] = siteMse;
+                break;
+            case "mean":
+            default:
+                try {
+                    var siteMean = siteLevelSum / siteLevelNum;
+                    if (isNaN(siteMean)) {
+                        siteMean = null;
+                    }
+                } catch (bad) {
+                    siteMean = null;
+                }
+                datum[axisStr + '-value'] = siteMean;
+                break;
+        }
+        datum[axisStr + '-sites'] = rawAxisData[axisStr]['data'][axisTime].sites;  // used to get level siteValues from raw data for data modal
         datum[axisStr + '-filteredSites'] = filteredSites;
     }
+    // returns {xaxis-value:avalue,yaxis-value:avalue,xaxis-sites:[some sites],yaxis-sites:[some sites],xaxis-filteredsites:[some sites],yaxis-filteredsites:[some sites]}
     return datum;
 };
 Modules.server.wfip2.getDatum = getDatum;

@@ -63,6 +63,8 @@ Template.curveItem.events({
     },
     'click .edit-curve': function (event) {
         Session.set('editMode', this.label);
+        // reset scatter plot apply stuff
+        Modules.client.util.resetScatterApply();
         // set param values to this curve
         var keys = [];
         for(var k in this) keys.push(k);

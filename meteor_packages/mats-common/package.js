@@ -62,12 +62,18 @@ Package.onUse(function(api) {
   api.export("PlotAxisFilters");
   api.export("SiteMap");
 
-  //Modules
+  //Modules for both
   api.addFiles("both/modules/_modules.js", ['client','server']);
+
+  //Modules for server
   api.addFiles("server/modules/_modules.js", "server");
-  api.addFiles("client/modules/_modules.js", "client");
   api.addFiles("server/modules/wfiputil.js", "server");
   api.addFiles("server/modules/data_util.js", "server");
+
+  //Modules for client
+  api.addFiles("client/modules/_modules.js", "client");
+  api.addFiles("client/modules/client_util.js", "client");
+
   api.export("Modules",['client','server']);
 
   api.addFiles("lib/util.js", ['client','server']);
@@ -78,6 +84,7 @@ Package.onUse(function(api) {
   api.addFiles("templates/topnav/top_nav.html", "client");
   api.addFiles("templates/topnav/top_nav.js", "client");
   api.addFiles("templates/spinner/spinner.html", "client");
+  api.addFiles("templates/spinner/spinner.js", "client");
 
 
   api.addFiles('templates/Home.html', "client");
@@ -200,6 +207,8 @@ Package.onUse(function(api) {
   api.addAssets('public/img/bg.png', "client");
   api.addAssets('public/img/noaa_transparent.gif', "client");
   api.addAssets('public/img/spinner.gif', "client");
+  api.addAssets('public/img/building_spinner.gif', "client");
+  api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
   api.addAssets('public/subtle_grunge_@2X.png', "client");
   api.addAssets('public/help/best-fit.html', "client");

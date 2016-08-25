@@ -22,7 +22,6 @@ data2dScatter = function (plotParams, plotFunction) {
     var bf = [];   // used for bestFit data
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
-        var truthAxisData = {};
         var curve = curves[curveIndex];
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
             var axis = axisLabelList[axisIndex].split('-')[0];
@@ -38,6 +37,7 @@ data2dScatter = function (plotParams, plotFunction) {
             var truthDataSource = curve[axis + "-" + 'truth data source'];
             tmp = CurveParams.findOne({name: 'data source'}).optionsMap[truthDataSource][0].split(',');
             var truthModel = tmp[0];
+            var truthInstrument_id = tmp[1];
             var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
             // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
             // discriminators are not.
@@ -117,14 +117,14 @@ data2dScatter = function (plotParams, plotFunction) {
                 truthStatement = "select valid_utc as avtime,z, " + myVariable + " ,sites_siteid " +
                     "from obs_recs as o , " + truthModel +
                     " where  obs_recs_obsrecid = o.obsrecid" +
-                    " and instruments_instrid=" + instrument_id +
+                    " and instruments_instrid=" + truthInstrument_id +
                     " and valid_utc>=" + Modules.server.util.secsConvert(fromDate) +
                     " and valid_utc<=" + Modules.server.util.secsConvert(toDate);
             } else if (truthModel.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
                     truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
+                        " where nwps_nwpid=" + truthInstrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
                         " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
@@ -135,7 +135,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 } else {
                     truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
                         "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
+                        " where nwps_nwpid=" + truthInstrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
                         " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
@@ -147,7 +147,7 @@ data2dScatter = function (plotParams, plotFunction) {
             } else {
                 truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
                     "from " + truthModel + ", nwp_recs  " +
-                    " where nwps_nwpid=" + instrument_id +
+                    " where nwps_nwpid=" + truthInstrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
                     " and valid_utc >=" + Modules.server.util.secsConvert(fromDate) +
                     " and valid_utc<=" + Modules.server.util.secsConvert(toDate) +
@@ -156,10 +156,13 @@ data2dScatter = function (plotParams, plotFunction) {
             truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             var queryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
             rawAxisData[axis] = queryResult;
+            /*
+            For a statistical calculation that requires a truth curve - need to go through again for the truth curve.
+             */
             if (truthRequired == true) {
                 console.log("truthStatement: " + truthStatement);
                 var truthQueryResult = Modules.server.wfip2.queryWFIP2DB(wfip2Pool,truthStatement, top, bottom, myVariable, isDiscriminator);
-                truthAxisData[axis] = truthQueryResult;
+                rawAxisData[axis + '-truth'] = truthQueryResult;
             }
         }   // for axis loop
         
@@ -251,19 +254,20 @@ data2dScatter = function (plotParams, plotFunction) {
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                     datum = Modules.server.wfip2.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                                             levelBasisX, levelBasisY, siteBasisX, siteBasisY);
-                    xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
-                    xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
-                    yAxisMax = datum['yaxis-mean'] > yAxisMax ? datum['yaxis-mean'] : yAxisMax;
-                    yAxisMin = datum['yaxis-mean'] < yAxisMin ? datum['yaxis-mean'] : yAxisMin;
+                                             levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic);
+                    xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
+                    xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
+                    yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
+                    yAxisMin = datum['yaxis-value'] < yAxisMin ? datum['yaxis-value'] : yAxisMin;
+                    
                     rawXSites = datum['xaxis-sites'];
                     filteredXSites = datum['xaxis-filteredSites'];
                     rawYSites = datum['yaxis-sites'];
                     filteredYSites = datum['yaxis-filteredSites'];
                     time = new Date(Number(xaxisTime)).toUTCString();
                     seconds = xaxisTime/1000;
-                    xValue = datum['xaxis-mean'];
-                    yValue = datum['yaxis-mean'];
+                    xValue = datum['xaxis-value'];
+                    yValue = datum['yaxis-value'];
                     tooltipText = label  +
                         "<br>seconds" + seconds +
                         "<br>time:" + time +
@@ -286,19 +290,19 @@ data2dScatter = function (plotParams, plotFunction) {
                 if (xaxisTime === yaxisTime && xaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                         datum = Modules.server.wfip2.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                        levelBasisX, levelBasisY, siteBasisX, siteBasisY);
-                        xAxisMax = datum['xaxis-mean'] > xAxisMax ? datum['xaxis-mean'] : xAxisMax;
-                        xAxisMin = datum['xaxis-mean'] < xAxisMin ? datum['xaxis-mean'] : xAxisMin;
-                        yAxisMax = datum['yaxis-mean'] > yAxisMax ? datum['yaxis-mean'] : yAxisMax;
-                        yAxisMin = datum['yaxis-mean'] < yAxisMin ? datum['yaxis-mean'] : yAxisMin;
+                        levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic);
+                        xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
+                        xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
+                        yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
+                        yAxisMin = datum['yaxis-value'] < yAxisMin ? datum['yaxis-value'] : yAxisMin;
                         rawXSites = datum['xaxis-sites'];
                         filteredXSites = datum['xaxis-filteredSites'];
                         rawYSites = datum['yaxis-sites'];
                         filteredYSites = datum['yaxis-filteredSites'];
                         time = new Date(Number(xaxisTime)).toUTCString();
                         seconds = xaxisTime/1000;
-                        xValue = datum['xaxis-mean'];
-                        yValue = datum['yaxis-mean'];
+                        xValue = datum['xaxis-value'];
+                        yValue = datum['yaxis-value'];
                         tooltipText = label  +
                             "<br>seconds" + seconds +
                             "<br>time:" + time +
@@ -312,6 +316,7 @@ data2dScatter = function (plotParams, plotFunction) {
             yaxisIndex++;
         }
         normalizedAxisData.sort(Modules.server.util.sortFunction);
+
         var pointSymbol = Modules.server.wfip2.getPointSymbol (curveIndex);
         // sort these by x axis
         var options = {
@@ -321,7 +326,7 @@ data2dScatter = function (plotParams, plotFunction) {
             data: normalizedAxisData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
             lines: {show: false},
-            annotation: ""
+            annotation: label + ": statistic: " + statistic
         };
         dataset.push(options);
 

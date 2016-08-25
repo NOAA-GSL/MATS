@@ -74,6 +74,7 @@ Template.plotList.events({
     },
     'click .submit-params': function (event, template) {
         var plotAction = Session.get('plotParameter');
+        Session.set("spinner_img", "building_spinner.gif");
         document.getElementById("spinner").style.display="block";
         event.preventDefault();
         var action = event.currentTarget.name;
@@ -82,6 +83,7 @@ Template.plotList.events({
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
             setError("There are no curves to plot!");
+            Session.set("spinner_img", "building_spinner.gif");
             document.getElementById("spinner").style.display="none";
             return false;
         }
@@ -123,6 +125,7 @@ Template.plotList.events({
             case "save":
                 if (!Meteor.user()) {
                     setError("You must be logged in to use the 'save' feature");
+                    Session.set("spinner_img", "building_spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -131,6 +134,7 @@ Template.plotList.events({
                     (document.getElementById('save_to').value === "" ||
                     document.getElementById('save_to').value === undefined)) {
                     $("#saveModal").modal('show');
+                    Session.set("spinner_img", "building_spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -155,6 +159,7 @@ Template.plotList.events({
                 document.getElementById('save_as').value = "";
                 document.getElementById('save_to').value = "";
                 $("#saveModal").modal('hide');
+                Session.set("spinner_img", "building_spinner.gif");
                 document.getElementById("spinner").style.display="none";
                 return false;
                 break;
@@ -164,6 +169,7 @@ Template.plotList.events({
                     ((document.getElementById('restore_from_public').value === "" ||
                       document.getElementById('restore_from_public').value === undefined))){
                     $("#restoreModal").modal('show');
+                    Session.set("spinner_img", "building_spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -215,6 +221,7 @@ Template.plotList.events({
                 document.getElementById('restore_from_public').value = "";
                 document.getElementById('restore_from_private').value = "";
                 $("#restoreModal").modal('hide');
+                Session.set("spinner_img", "building_spinner.gif");
                 document.getElementById("spinner").style.display="none";
                 return false;
                 break;
@@ -224,6 +231,7 @@ Template.plotList.events({
                 var plotGraphFunction = PlotGraphFunctions.findOne({plotType: plotType});
                 if (plotGraphFunction === undefined) {
                     setError("do not have a plotGraphFunction for this plotType: " + plotType);
+                    Session.set("spinner_img", "building_spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -233,11 +241,13 @@ Template.plotList.events({
                     //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
                         setError(error.toLocaleString());
+                        Session.set("spinner_img", "building_spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
                     if (result.error !== undefined && result.error !== "") {
                         setError(result.error);
+                        Session.set("spinner_img", "building_spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
@@ -262,7 +272,6 @@ Template.plotList.events({
                 });
                 break;
         }
-        //document.getElementById("spinner").style.display="none";
         return false;
     }
 });

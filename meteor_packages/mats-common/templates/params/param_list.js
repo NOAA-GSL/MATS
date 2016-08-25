@@ -35,21 +35,16 @@ Template.paramList.events({
     'click .reset': function(event,template) {
         //location.reload();
         event.preventDefault();
-        if (getPlotType() == PlotTypes.scatter2d) {
-            Session.set('axisCurveIcon', 'fa-asterisk');
-            Session.set('xaxisCurveText', 'XAXIS NOT YET APPLIED');
-            Session.set('yaxisCurveText', 'YAXIS NOT YET APPLIED');
-            Session.set('xaxisCurveColor', 'red');
-            Session.set('yaxisCurveColor', 'red');
-            document.getElementById('scatter2d-best-fit-radioGroup-none').checked = true;
-            document.getElementById('axis-selector-radioGroup-xaxis').checked = true
-        }
+        Modules.client.util.resetScatterApply();
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
+
+        // DO THIS DIFFERENTLY!!!!! USE A SESSION VARIABLE!!!
         Blaze.remove(Blaze.getView(paramView));
         Blaze.remove(Blaze.getView(plotView));
         Blaze.render(Template.paramList,document.getElementById('paramView'));
         Blaze.render(Template.plotList,document.getElementById('plotView'));
+
     },
 
     // restore settings
@@ -59,15 +54,20 @@ Template.paramList.events({
         return false;
     },
     // add curve
+    // save changes
+    /*
+        Note: when adding a curve or saving changes after editing a curve there is a special
+        case for scatter plots. Each hidden axis parameter must get set with the value from the regular parameter.
+     */
     'submit form': function (event, template) {
         event.preventDefault();
+            var isScatter = getPlotType() === PlotTypes.scatter2d;
             var curves = Session.get('Curves');
             var p = {};
             var elems = event.target.valueOf().elements;
             var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
-
-            if (getPlotType() === PlotTypes.scatter2d) {
+            if (isScatter) {
                 var scatterCurveNames = [];
                 for (var i=0; i<curveNames.length;i++) {
                     scatterCurveNames.push(curveNames[i]);
@@ -80,7 +80,7 @@ Template.paramList.events({
                 return _.contains(curveNames, elem.name);
             });
             // add in the scatter2d parameters if it is a scatter plot.
-            if (getPlotType() == PlotTypes.scatter2d) {
+            if (isScatter) {
                 $(":input[id^='scatter2d']:input[name*='scatter2d']" ).each( function() {
                     paramElems.push(this);
                 });
@@ -99,24 +99,23 @@ Template.paramList.events({
                          continue;
                      }
                     if (paramElems[i].type === "select-multiple") {
+                        // define a p value if it doesn't exist (necessary for adding truth values)
                         p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
-                        p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
+                        p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function () {
+                            return (this.value)
+                        }).get();
                     } else {
                         if (paramElems[i].type === "radio") {
                             if (paramElems[i].checked){
-                                p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                                 p[paramElems[i].name] = paramElems[i].value;
                             }
                         } else if (paramElems[i].type === "checkbox") {
                             if (paramElems[i].checked){
-                                p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                                 p[paramElems[i].name].push(paramElems[i].value);
                             }
                     } else if (paramElems[i].type === "button") {
-                            p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
-                            p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                             p[paramElems[i].name] = (paramElems[i]).value;
                         }
                     }
