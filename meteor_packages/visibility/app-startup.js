@@ -95,12 +95,12 @@ CurveParams.remove({});
         );
         CurveParams.insert(
             {
-                name: 'data source',
+                name: 'data-source',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
-                dependentNames: ["region", "forecast length"],
+                dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: 'Bak13',
                 unique: false,
@@ -115,7 +115,7 @@ CurveParams.remove({});
                 type: InputTypes.select,
                 optionsMap:regionModelOptionsMap,
                 options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]],   // convenience
-                superiorName: 'data source',
+                superiorName: 'data-source',
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]][0],
@@ -219,11 +219,11 @@ CurveParams.remove({});
         optionsMap = {};
         CurveParams.insert(
             {
-                name: 'forecast length',
+                name: 'forecast-length',
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
-                superiorName: 'data source',
+                superiorName: 'data-source',
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -237,7 +237,7 @@ CurveParams.remove({});
 
         CurveParams.insert(
             {
-                name: 'valid time',
+                name: 'valid-time',
                 type: InputTypes.select,
                 options:['All','0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23'],
                 selected: 'All',
@@ -270,12 +270,12 @@ curveTextPatterns = function () {
             plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data source', ':'],
+                ['', 'data-source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
             ]
         });
@@ -283,12 +283,12 @@ curveTextPatterns = function () {
             plotType: PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data source', ':'],
+                ['', 'data-source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['','curve-dates','']
             ]

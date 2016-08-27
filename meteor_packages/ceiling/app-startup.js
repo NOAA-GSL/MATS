@@ -91,7 +91,7 @@ curveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model",
-                dependentNames: ["region", "forecast length"],
+                dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: 'HRRR',
                 unique: false,
@@ -212,7 +212,7 @@ curveParams = function () {
 
         CurveParams.insert(
             {
-                name: 'forecast length',
+                name: 'forecast-length',
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
@@ -233,7 +233,7 @@ curveParams = function () {
       //  optionsMap = {'All':[""],0:[0],6:[6],12:[12],18:[18]};
         CurveParams.insert(
             {
-                name: 'valid time',
+                name: 'valid-time',
                 type: InputTypes.select,
               //  optionsMap:optionsMap,
              //   options:Object.keys(optionsMap),   // convenience
@@ -273,8 +273,8 @@ curveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
             ]
         });
@@ -286,8 +286,8 @@ curveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['','curve-dates','']
             ]

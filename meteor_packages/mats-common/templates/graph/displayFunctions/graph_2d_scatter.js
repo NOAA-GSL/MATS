@@ -1,5 +1,5 @@
 graph2dScatter = function(result) {
-    Session.set("spinner_img", "drawing_spinner.gif");
+    Session.set("spinner_img", "spinner.gif");
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
@@ -157,7 +157,7 @@ graph2dScatter = function(result) {
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     // hide the spinner
-    Session.set("spinner_img", "building_spinner.gif");
+    Session.set("spinner_img", "spinner.gif");
     document.getElementById("spinner").style.display="none";
 
     $("#placeholder").bind('plotclick', function(event,pos,item) {

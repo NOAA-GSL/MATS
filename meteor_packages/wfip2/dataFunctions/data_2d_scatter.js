@@ -25,17 +25,17 @@ data2dScatter = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
             var axis = axisLabelList[axisIndex].split('-')[0];
-            var dataSource = (curve[axis + '-' + 'data source']);
+            var dataSource = (curve[axis + '-' + 'data-source']);
             // each axis has a data source - get the right data source and derive the model
-            var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[dataSource][0].split(','); 
+            var tmp = CurveParams.findOne({name: 'data-source'}).optionsMap[dataSource][0].split(','); 
             var model = tmp[0];
             var instrument_id = tmp[1];
             var myVariable;
             // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
             // only the truth model is different form the curves other parameters
             var statistic = curve[axis + "-" + 'statistic'];
-            var truthDataSource = curve[axis + "-" + 'truth data source'];
-            tmp = CurveParams.findOne({name: 'data source'}).optionsMap[truthDataSource][0].split(',');
+            var truthDataSource = curve[axis + "-" + 'truth-data-source'];
+            tmp = CurveParams.findOne({name: 'data-source'}).optionsMap[truthDataSource][0].split(',');
             var truthModel = tmp[0];
             var truthInstrument_id = tmp[1];
             var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
@@ -66,7 +66,7 @@ data2dScatter = function (plotParams, plotFunction) {
             var discriminator = curve[axis + '-' + 'discriminator'];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
-            var forecastLength = curve[axis + '-' + 'forecast length'];
+            var forecastLength = curve[axis + '-' + 'forecast-length'];
 
             var statement = '';
             if (model.includes("recs")) {
@@ -216,10 +216,10 @@ data2dScatter = function (plotParams, plotFunction) {
          */
 
         // used for getDatum
-        var levelCompletenessX = curve['xaxis-level completeness'];
-        var levelCompletenessY = curve['xaxis-level completeness'];
-        var siteCompletenessX = curve['xaxis-site completeness'];
-        var siteCompletenessY = curve['yaxis-site completeness'];
+        var levelCompletenessX = curve['xaxis-level-completeness'];
+        var levelCompletenessY = curve['xaxis-level-completeness'];
+        var siteCompletenessX = curve['xaxis-site-completeness'];
+        var siteCompletenessY = curve['yaxis-site-completeness'];
         var levelBasisX = _.union.apply(_,rawAxisData['xaxis'].allLevels);
         var levelBasisY = _.union.apply(_,rawAxisData['yaxis'].allLevels);
         var siteBasisX = _.union.apply(_,rawAxisData['xaxis'].allSites);
@@ -361,7 +361,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var xaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-data source'],
+            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
@@ -387,7 +387,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-data source'],
+            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,

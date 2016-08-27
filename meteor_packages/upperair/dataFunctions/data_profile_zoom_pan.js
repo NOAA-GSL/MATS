@@ -147,10 +147,10 @@ dataProfileZoom = function(plotParams, plotFunction) {
         statistic = statistic + "," + statisticOptionsMap[statisticSelect][2];
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid time'];
-        var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
+        var validTimeStr = curve['valid-time'];
+        var validTimeOptionsMap = CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         var validTime = validTimeOptionsMap[validTimeStr][0];
-        var forecastLength = curve['forecast length'];
+        var forecastLength = curve['forecast-length'];
         // variableStat is used to determine which axis a curve should use.
         // This variableStatSet object is used like a set and if a curve has the same
         // variable and statistic (variableStat) it will use the same axis,

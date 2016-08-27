@@ -21,8 +21,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var dataSource = (curve['data source']);
-        var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
+        var dataSource = (curve['data-source']);
+        var tmp = CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
         var myVariable;
@@ -54,7 +54,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
-        var forecastLength = curve['forecast length'];
+        var forecastLength = curve['forecast-length'];
         var statement = "";
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching
@@ -155,8 +155,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
              */
             
             curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
-            var levelCompleteness = curve['level completeness'];
-            var siteCompleteness = curve['site completeness'];
+            var levelCompleteness = curve['level-completeness'];
+            var siteCompleteness = curve['site-completeness'];
             var levelBasis = _.union.apply(_, queryResult.allLevels);
             var siteBasis = _.union.apply(_, queryResult.allSites);
 
@@ -381,7 +381,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['label'] + ":" + curve['variable'] + ":" + curve['data source'],
+            axisLabel: curve['label'] + ":" + curve['variable'] + ":" + curve['data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,

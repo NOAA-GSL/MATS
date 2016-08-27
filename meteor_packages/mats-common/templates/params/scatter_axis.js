@@ -110,7 +110,7 @@ Template.scatter2d.helpers({
         }
     },
     isAxis: function(param) {
-      return param.name === 'axis selector';
+      return param.name === 'axis-selector';
     },
     displayScatter2d: function() {
         if (getPlotType() == PlotTypes.scatter2d) {
@@ -120,7 +120,7 @@ Template.scatter2d.helpers({
         }
     },
     label: function(param, parent) {
-        if (parent.name === "scatter2d best fit") {
+        if (parent.name === "scatter2d-best-fit") {
             return parent.optionsMap[this];
         } else {
             return this;

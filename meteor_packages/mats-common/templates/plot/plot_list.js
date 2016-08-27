@@ -74,7 +74,7 @@ Template.plotList.events({
     },
     'click .submit-params': function (event, template) {
         var plotAction = Session.get('plotParameter');
-        Session.set("spinner_img", "building_spinner.gif");
+        Session.set("spinner_img", "spinner.gif");
         document.getElementById("spinner").style.display="block";
         event.preventDefault();
         var action = event.currentTarget.name;
@@ -83,7 +83,7 @@ Template.plotList.events({
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
             setError("There are no curves to plot!");
-            Session.set("spinner_img", "building_spinner.gif");
+            Session.set("spinner_img", "spinner.gif");
             document.getElementById("spinner").style.display="none";
             return false;
         }
@@ -125,7 +125,7 @@ Template.plotList.events({
             case "save":
                 if (!Meteor.user()) {
                     setError("You must be logged in to use the 'save' feature");
-                    Session.set("spinner_img", "building_spinner.gif");
+                    Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -134,7 +134,7 @@ Template.plotList.events({
                     (document.getElementById('save_to').value === "" ||
                     document.getElementById('save_to').value === undefined)) {
                     $("#saveModal").modal('show');
-                    Session.set("spinner_img", "building_spinner.gif");
+                    Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -150,6 +150,8 @@ Template.plotList.events({
                 Session.set('plotName', saveAs);
                 // get the settings to save out of the session
                 p = Session.get("PlotParams");
+                var paramData = getElementValues();
+                p['paramData'] = paramData;
                 Meteor.call('saveSettings',saveAs, p, permission, function(error){
                     if (error) {
                         setError(error.message);
@@ -159,7 +161,7 @@ Template.plotList.events({
                 document.getElementById('save_as').value = "";
                 document.getElementById('save_to').value = "";
                 $("#saveModal").modal('hide');
-                Session.set("spinner_img", "building_spinner.gif");
+                Session.set("spinner_img", "spinner.gif");
                 document.getElementById("spinner").style.display="none";
                 return false;
                 break;
@@ -169,7 +171,7 @@ Template.plotList.events({
                     ((document.getElementById('restore_from_public').value === "" ||
                       document.getElementById('restore_from_public').value === undefined))){
                     $("#restoreModal").modal('show');
-                    Session.set("spinner_img", "building_spinner.gif");
+                    Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -181,47 +183,35 @@ Template.plotList.events({
                 Session.set('plotName', restoreFrom);
 
                 p = CurveSettings.findOne({name:restoreFrom});
-                // now set all the curves....
+                // now set all the curves.... This will refresh the curves list
                 Session.set('Curves',p.data.curves);
-                // reset all the curve params....
-                var view = document.getElementById('paramList');
-                Blaze.remove(Blaze.getView(view));
-                Blaze.render(Template.paramList,document.getElementById('paramView'));
 
                 // now set the PlotParams
-                PlotParams.find({}).fetch().forEach(function(plotParam){
-                    var name = plotParam.name;
-                    var type = plotParam.type;
-                    var options = plotParam.options;
-
-                    if (type == InputTypes.dateRange) {
-                        document.getElementById(name + '-' + type).value = p.data;
-                    } else if (type == InputTypes.radioGroup) {
-                        for (var i = 0; i < options.length; i++) {
-                            if (options[i] === p.data[name]) {
-                                document.getElementById(name + "-" + type + "-" + options[i]).checked = true;
-                                break;
-                            }
-                        }
-                    } else if (type == InputTypes.checkBoxGroup) {
-                        for (var i = 0; i < options.length; i++) {
-                            if (_.contains(p.data[name],options[i])) {
-                                document.getElementById(name + "-" + type + "-" + options[i]).checked = true;
-                                break;
-                            }
-                        }
-                    } else if (type === InputTypes.numberSpinner || type === InputTypes.select || type === InputTypes.textInput) {
-                        document.getElementById(name + '-' + type).value = p.data[name];
-                    }
+                var params = PlotParams.find({}).fetch();
+                params.forEach(function(plotParam){
+                    setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
                 });
+                
+                // reset the form parameters
+                params = CurveParams.find({}).fetch();
+                params.forEach(function(plotParam) {
+                    setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
+                });
+                
+                // reset the scatter parameters 
+                params = Scatter2dParams.find({}).fetch();
+                params.forEach(function(plotParam) {
+                    setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);
+                });
+
                 // reset the plotParams
                 Session.set("PlotParams", p);
-                //set the used defaults so that subsequent adds get a corre default
+                //set the used defaults so that subsequent adds get a core default
                 setUsedColorsAndLabels();
                 document.getElementById('restore_from_public').value = "";
                 document.getElementById('restore_from_private').value = "";
                 $("#restoreModal").modal('hide');
-                Session.set("spinner_img", "building_spinner.gif");
+                Session.set("spinner_img", "spinner.gif");
                 document.getElementById("spinner").style.display="none";
                 return false;
                 break;
@@ -231,7 +221,7 @@ Template.plotList.events({
                 var plotGraphFunction = PlotGraphFunctions.findOne({plotType: plotType});
                 if (plotGraphFunction === undefined) {
                     setError("do not have a plotGraphFunction for this plotType: " + plotType);
-                    Session.set("spinner_img", "building_spinner.gif");
+                    Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
@@ -241,13 +231,13 @@ Template.plotList.events({
                     //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
                         setError(error.toLocaleString());
-                        Session.set("spinner_img", "building_spinner.gif");
+                        Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
                     if (result.error !== undefined && result.error !== "") {
                         setError(result.error);
-                        Session.set("spinner_img", "building_spinner.gif");
+                        Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }

@@ -39,7 +39,7 @@ scatter2dParams = function() {
     if (Scatter2dParams.find().count() == 0) {
         Scatter2dParams.insert(
             {
-                name: 'axis selector',
+                name: 'axis-selector',
                 type: InputTypes.radioGroup,
                 options: ['xaxis', 'yaxis'],
                 controlButtonCovered: true,
@@ -61,7 +61,7 @@ scatter2dParams = function() {
 
         Scatter2dParams.insert(
             {
-                name: 'scatter2d best fit',
+                name: 'scatter2d-best-fit',
                 type: InputTypes.radioGroup,
                 optionsMap: bestFits,
                 options: Object.keys(bestFits),
@@ -166,12 +166,12 @@ curveParams = function () {
         );
         CurveParams.insert(
             {
-                name: 'data source',
+                name: 'data-source',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["sites","forecast length","variable"],
+                dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -197,8 +197,8 @@ curveParams = function () {
                 optionsMap:statisticOptionsMap,
                 options:Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
-                disableOtherFor:{'truth data source':[statisticOptionsMap.mean][0]},
-                hideOtherFor:{'truth data source':[statisticOptionsMap.mean][0]},
+                disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},
+                hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},
                 unique: false,
                 default: statisticOptionsMap.mean,
                 controlButtonVisibility: 'block',
@@ -210,12 +210,12 @@ curveParams = function () {
 
         CurveParams.insert(
             {
-                name: 'truth data source',
+                name: 'truth-data-source',
                 type: InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["sites","forecast length","variable"],
+                dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -247,7 +247,7 @@ curveParams = function () {
                 optionsMap:siteOptionsMap,
                 options:siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                superiorName: 'data source',
+                superiorName: 'data-source',
                 controlButtonCovered: true,
                 unique: false,
                 default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
@@ -280,7 +280,7 @@ curveParams = function () {
 
         CurveParams.insert(
             {
-                name: 'site completeness',
+                name: 'site-completeness',
                 type: InputTypes.numberSpinner,
                 optionsMap:{},
                 options:[],
@@ -304,7 +304,7 @@ curveParams = function () {
                 variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
                 optionsMap: variableOptionsMap,
                 options:variableOptionsMap[PlotTypes.timeSeries][Object.keys(variableOptionsMap[PlotTypes.timeSeries])[0]],   // convenience
-                superiorName: 'data source',
+                superiorName: 'data-source',
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
@@ -318,11 +318,11 @@ curveParams = function () {
         optionsMap = {};
         CurveParams.insert(
             {
-                name: 'forecast length',
+                name: 'forecast-length',
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorName: 'data source',
+                superiorName: 'data-source',
                 //selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -371,7 +371,7 @@ curveParams = function () {
             });
         CurveParams.insert(
             {
-                name: 'level completeness',
+                name: 'level-completeness',
                 type: InputTypes.numberSpinner,
                 optionsMap:{},
                 options:[],
@@ -480,7 +480,7 @@ curveTextPatterns = function () {
             plotType: PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data source', ':'],
+                ['', 'data-source', ':'],
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
@@ -489,14 +489,14 @@ curveTextPatterns = function () {
                 [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast length', 'h ']
+                ['fcst_len:', 'forecast-length', 'h ']
             ]
         });
         CurveTextPatterns.insert({
             plotType: PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data source', ':'],
+                ['', 'data-source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
@@ -505,7 +505,7 @@ curveTextPatterns = function () {
                 [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast length', 'h '],
+                ['fcst_len:', 'forecast-length', 'h '],
                 ['','curve-dates','']
             ]
         });
@@ -513,21 +513,21 @@ curveTextPatterns = function () {
             plotType: PlotTypes.scatter2d,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'xaxis-data source', ':'],
+                ['', 'xaxis-data-source', ':'],
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
-                ['fcst_len:', 'xaxis-forecast length', 'h, '],
+                ['fcst_len:', 'xaxis-forecast-length', 'h, '],
                 ['', 'xaxis-discriminator', ', '],
-                ['', 'yaxis-data source', ':'],
+                ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
-                ['fcst_len:', 'yaxis-forecast length', 'h, '],
+                ['fcst_len:', 'yaxis-forecast-length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
                 ['','curve-dates',' '],
-                ['lc', 'level completeness',' '],
-                ['sc', 'site completeness','']
+                ['lc', 'level-completeness',' '],
+                ['sc', 'site-completeness','']
             ]
         });
 
@@ -543,11 +543,11 @@ scatterAxisTextPattern = function () {
             plotType: PlotTypes.scatter2d,
             textPattern: [
                 ['label', ':'],
-                ['data source', ':'],
+                ['data-source', ':'],
                 ['region', ':'],
                 ['sites', ':'],
                 ['variable', ':'],
-                ['forecast length', ':'],
+                ['forecast-length', ':'],
                 ['discriminator',""]
             ]
         });

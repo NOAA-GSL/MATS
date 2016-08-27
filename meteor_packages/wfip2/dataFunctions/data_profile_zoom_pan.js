@@ -17,8 +17,8 @@ dataProfileZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var dataSource = (curve['data source']);
-        var tmp = CurveParams.findOne({name: 'data source'}).optionsMap[curve['data source']][0].split(',');
+        var dataSource = (curve['data-source']);
+        var tmp = CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
         var myVariable;
@@ -50,7 +50,7 @@ dataProfileZoom = function (plotParams, plotFunction) {
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
-        var forecastLength = curve['forecast length'];
+        var forecastLength = curve['forecast-length'];
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = curveDates.split(' - ')[0]; // get the from part
         var curveDatesDateRangeTo = curveDates.split(' - ')[1]; // get the to part
@@ -148,8 +148,8 @@ dataProfileZoom = function (plotParams, plotFunction) {
 
              */
             curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
-            var levelCompleteness = curve['level completeness'];
-            var siteCompleteness = curve['site completeness'];
+            var levelCompleteness = curve['level-completeness'];
+            var siteCompleteness = curve['site-completeness'];
             var levelBasis = _.union.apply(_, queryResult.allLevels);
             var siteBasis = _.union.apply(_, queryResult.allSites);
             var levelValues = {};

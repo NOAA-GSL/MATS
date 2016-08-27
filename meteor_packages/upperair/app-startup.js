@@ -96,7 +96,7 @@ curveParams = function () {
                 tableMap:modelTableMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["region", "forecast length"],
+                dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -184,7 +184,7 @@ curveParams = function () {
         optionsMap = {All:['All'], Clear:['Clear'], Cloudy:['Cloudy']};
         CurveParams.insert(
             {
-                name: 'cloud coverage',
+                name: 'cloud-coverage',
                 type: InputTypes.select,
                 optionsMap: optionsMap,
                 options:Object.keys(optionsMap),   // convenience
@@ -200,7 +200,7 @@ curveParams = function () {
         optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
         CurveParams.insert(
             {
-                name: 'valid time',
+                name: 'valid-time',
                 type: InputTypes.select,
                 optionsMap: optionsMap,
                 options:Object.keys(optionsMap),   // convenience
@@ -243,7 +243,7 @@ curveParams = function () {
         optionsMap = {};
         CurveParams.insert(
             {
-                name: 'forecast length',
+                name: 'forecast-length',
                 type: InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
@@ -334,8 +334,8 @@ curveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
             ]
         });
@@ -347,8 +347,8 @@ curveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast length', 'h '],
-                [' valid time:', 'valid time', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['','curve-dates','']
             ]

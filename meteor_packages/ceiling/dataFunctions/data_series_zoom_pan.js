@@ -127,14 +127,14 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var statisticOptionsMap = CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
         statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimeStr = curve['valid time'];
+        var validTimeStr = curve['valid-time'];
        // var validTimeOptionsMap = CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
        // var validTime = validTimeOptionsMap[validTimeStr][0];
 
         var averageStr = curve['average'];
         var averageOptionsMap = CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast length'];
+        var forecastLength = curve['forecast-length'];
         // variableStat is used to determine which axis a curve should use.
         // This variableStatSet object is used like a set and if a curve has the same
         // variable and statistic (variableStat) it will use the same axis,

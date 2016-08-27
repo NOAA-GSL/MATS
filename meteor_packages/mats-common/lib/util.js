@@ -460,7 +460,11 @@ getValueElementForParamName = function(paramName) {
 // get the current selected value in the document element that corresponds to the param name
 // Note that the value should be reflected in the adjoining control button value textContent.
 getValueForParamName = function(paramName){
-    return getValueElementForParamName(paramName).textContent;
+    try {
+        return getValueElementForParamName(paramName).textContent;
+    } catch (error) {
+        return "";
+    }
 };
 
 
@@ -482,7 +486,7 @@ setValueTextForParamName = function(paramName, text) {
             return;
         }
         if (param.type === InputTypes.dateRange) {
-            value = document.getElementById(name + '-' + type).value;
+            value = document.getElementById(name + '-' + param.type).value;
             text = value;
         } else if (param.multiple) {
             // .... if multi selected  get the first .. last
@@ -510,33 +514,143 @@ setValueTextForParamName = function(paramName, text) {
 // get the document id for the element that corresponds to the param name
 getInputIdForParamName = function(paramName) {
     var param = CurveParams.findOne({name: paramName});
-    if (param !== undefined) {
-        var id = param.name + "-" + param.type;
-        return id;
+    if (param === undefined) {
+        param = PlotParams.findOne({name: paramName});
+        if (param === undefined) {
+            param = Scatter2dParams.findOne({name: paramName});
+            if (param === undefined) {
+                return undefined;
+            }
+        }
     }
+    return (param.name + "-" + param.type).replace(/ /g,'-');
 };
 
 // get the document element that corresponds to the param name
 getInputElementForParamName = function(paramName) {
-    return document.getElementById(getInputIdForParamName(paramName));
+    var id = getInputIdForParamName(paramName);
+    if (id === undefined) {
+        return undefined;
+    }
+    return document.getElementById(id);
 };
 
 // set the input for the element that corresponds to the param name
-setInputForParamName = function(paramName) {
+// also sets a data-mats-currentValue attribute
+setInputForParamName = function(paramName,value) {
     var id = getInputIdForParamName(paramName);
-    // set the element ... type dependent
-    //FIX ME - NOT COMPLETE
-};
 
-// set the data for the element that corresponds to the param name
-// setElementDataForParamName = function (paramName, value) {
-//     var elem = document.getElementById(InputTypes.controlButton + "-" + paramName + '-value');
-//
-//     elem.setAttribute("data-mats-currentValue", value);
-// };
+    var idSelectorStr = "#" + id;
+    var idSelector = $(idSelectorStr);
+    idSelector.val(value);
+    idSelector.attr("data-mats-currentValue", value);
+    idSelector.trigger("change");
+};
 
 getElementDataForParamName = function(paramName) {
     var elem = document.getElementById(InputTypes.controlButton + "-" + paramName + '-value');
     return elem.getAttribute("data-mats-currentValue");
 };
 
+getElementValues = function() {
+    var data = {
+        curveParams:{},
+        plotParams:{},
+        scatterParams:{}
+    };
+    var axis = ['xaxis-', 'yaxis-'];
+    var params = CurveParams.find({}).fetch();
+    params.forEach(function(param){
+        var val = "";
+        if (param.type === InputTypes.radioGroup) {
+            var selector = "input:radio[name='" + param.name + "']:checked";
+            val =$(selector).val()
+        } else if (param.type === InputTypes.checkBoxGroup) {
+            var selector = "input[name='" + param.name + "']:checked";
+            val =$(selector).map(function(_, el) {
+                return $(el).val();
+            }).get();
+        } else {
+            var idSelect = '#' + getInputIdForParamName(param.name);
+            val = $(idSelect).val();
+        }
+        data.curveParams[param.name] = val;
+        if (getPlotType() == PlotTypes.scatter2d) {
+            for (var a = 0; a < axis.length; a++ ) {
+                var axisStr = axis[a];
+                var name = axisStr + param.name;
+                var val = "";
+                if (param.type === InputTypes.radioGroup) {
+                    var selector = "input:radio[name='" + name + "']:checked";
+                    val =$(selector).val()
+                } else if (param.type === InputTypes.checkBoxGroup) {
+                    var selector = "input[name='" + name + "']:checked";
+                    val =$(selector).map(function(_, el) {
+                        return $(el).val();
+                    }).get();
+                } else {
+                    var idSelect = '#' + getInputIdForParamName(name);
+                    val = $(idSelect).val();
+                }
+                data.curveParams[name] = val;
+            }
+        }
+    });
+
+    params = PlotParams.find({}).fetch();
+    params.forEach(function(param){
+        var val = "";
+        if (param.type === InputTypes.radioGroup) {
+            var selector = "input:radio[name='" + param.name + "']:checked";
+            val =$(selector).val()
+        } else if (param.type === InputTypes.checkBoxGroup) {
+            var selector = "input[name='" + param.name + "']:checked";
+            val =$(selector).map(function(_, el) {
+                return $(el).val();
+            }).get();
+        } else {
+            var idSelect = '#' + getInputIdForParamName(param.name);
+            val = $(idSelect).val();
+        }
+        data.plotParams[param.name] = val;
+    });
+
+    params = Scatter2dParams.find({}).fetch();
+    params.forEach(function(param){
+        var val = "";
+        if (param.type === InputTypes.radioGroup) {
+            var selector = "input:radio[name='" + param.name + "']:checked";
+            val =$(selector).val()
+        } else if (param.type === InputTypes.checkBoxGroup) {
+            var selector = "input[name='" + param.name + "']:checked";
+            val =$(selector).map(function(_, el) {
+                return $(el).val();
+            }).get();
+        } else {
+            var idSelect = '#' + getInputIdForParamName(param.name);
+            val = $(idSelect).val();
+        }
+        data.scatterParams[param.name] = val;
+        if (getPlotType() == PlotTypes.scatter2d) {
+            for (var a = 0; a < axis.length; a++ ) {
+                var axisStr = axis[a];
+                var name = axisStr + param.name;
+                var val = "";
+                if (param.type === InputTypes.radioGroup) {
+                    var selector = "input:radio[name='" + name + "']:checked";
+                    val =$(selector).val()
+                } else if (param.type === InputTypes.checkBoxGroup) {
+                    var selector = "input[name='" + name + "']:checked";
+                    val =$(selector).map(function(_, el) {
+                        return $(el).val();
+                    }).get();
+                } else {
+                    var idSelect = '#' + getInputIdForParamName(name);
+                    val = $(idSelect).val();
+                }
+                data.scatterParams[name] = val;
+            }
+        }
+    });
+    return data;
+};
