@@ -1,0 +1,51 @@
+{
+  "name": "jquery.json-viewer",
+  "version": "1.1.0",
+  "description": "jQuery plugin for displaying JSON data",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abodelot/jquery.json-viewer.git"
+  },
+  "keywords": [
+    "jquery-plugin",
+    "json",
+    "json-viewer",
+    "json2html"
+  ],
+  "author": {
+    "name": "Alexandre Bodelot",
+    "email": "alexandre.bodelot@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abodelot/jquery.json-viewer/issues"
+  },
+  "homepage": "https://github.com/abodelot/jquery.json-viewer",
+  "gitHead": "5eee9ed4019b3607a5e57175ae74803737ced251",
+  "_id": "jquery.json-viewer@1.1.0",
+  "scripts": {},
+  "_shasum": "e97878cfa64c938a1eaf8d25cdf61f04d53df78d",
+  "_from": "jquery.json-viewer@",
+  "_npmVersion": "3.5.3",
+  "_nodeVersion": "5.1.0",
+  "_npmUser": {
+    "name": "abodelot",
+    "email": "alexandre.bodelot@gmail.com"
+  },
+  "dist": {
+    "shasum": "e97878cfa64c938a1eaf8d25cdf61f04d53df78d",
+    "tarball": "https://registry.npmjs.org/jquery.json-viewer/-/jquery.json-viewer-1.1.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "abodelot",
+      "email": "alexandre.bodelot@gmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-6-west.internal.npmjs.com",
+    "tmp": "tmp/jquery.json-viewer-1.1.0.tgz_1456420186245_0.512151604052633"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/jquery.json-viewer/-/jquery.json-viewer-1.1.0.tgz"
+}
