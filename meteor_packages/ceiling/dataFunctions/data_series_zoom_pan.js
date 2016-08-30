@@ -116,7 +116,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var model = CurveParams.findOne({name:'model'}).optionsMap[curve['model']][0];
         var region = curve['region'];
-        var threshhold = CurveParams.findOne({name:'threshhold'}).optionsMap[curve['threshhold']][0];
+        var threshHold = CurveParams.findOne({name:'threshHold'}).optionsMap[curve['threshHold']][0];
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
@@ -176,7 +176,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
                " ,min(m0.time) as min_secs"+
                ",max(m0.time) as max_secs"+
                 ", {{statistic}} " +
-                    "from {{model}}_{{threshhold}}_{{forecastLength}}_{{region}} as m0"+
+                    "from {{model}}_{{threshHold}}_{{forecastLength}}_{{region}} as m0"+
             " where 1=1" +
                 "{{validTime}} " +
             " and m0.yy+m0.ny+m0.yn+m0.nn > 0"+
@@ -186,7 +186,7 @@ dataSeriesZoom = function(plotParams, plotFunction) {
 
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{threshhold}}', threshhold);
+            statement = statement.replace('{{threshHold}}', threshHold);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);

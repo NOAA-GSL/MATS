@@ -119,7 +119,7 @@ curveParams = function () {
                 displayGroup: 1
             });
 
-        optionsMap = {
+        var optionsMap = {
 
             'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat,' +
             'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
@@ -172,7 +172,7 @@ curveParams = function () {
         };
         CurveParams.insert(
             {
-                name: 'threshhold',
+                name: 'threshHold',
                 type: InputTypes.select,
                 optionsMap: optionsMap,
                 options:Object.keys(optionsMap),   // convenience
