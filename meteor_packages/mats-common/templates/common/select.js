@@ -1,7 +1,13 @@
-var refreshPeer = function(peerName) {
+import { matsMethods } from 'meteor/randyp:mats-common';
+import { matsTypes} from 'meteor/randyp:mats-common';
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
+
+ var refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
-        var targetParam = CurveParams.findOne({name:peerName});
+        var targetParam = matsCollections.CurveParams.findOne({name:peerName});
         var targetId  = targetParam.name + '-' + targetParam.type;
         var targetElem = document.getElementById(targetId);
         var refreshMapEvent = new CustomEvent("refresh", {
@@ -18,7 +24,7 @@ var refreshDependents = function(dependentNames) {
         // refresh the dependents
         for (var i = 0; i < dependentNames.length; i++) {
             var name = dependentNames[i];
-            var targetParam = CurveParams.findOne({name: name});
+            var targetParam = matsCollections.CurveParams.findOne({name: name});
             var targetId = targetParam.name + '-' + targetParam.type;
             var targetElem = document.getElementById(targetId);
             var refreshEvent = new CustomEvent("refresh", {
@@ -38,16 +44,16 @@ var checkDisableOther = function(item) {
         // Use the options to enable disable that item.
         var controlledSelectors = Object.keys(item.disableOtherFor);
         for (var i = 0; i < controlledSelectors.length; i++) {
-            var elem = getInputElementForParamName(item.name);
+            var elem = matsParamUtils.getInputElementForParamName(item.name);
             if (!elem) {
                 return;
             }
             var selectedOption = elem.selectedOptions;
             var selectedText = selectedOption[0].text;
             if ($.inArray(selectedText, item.disableOtherFor[controlledSelectors[i]]) !== -1) {
-                getInputElementForParamName(controlledSelectors[i]).disabled = true;
+                matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
             } else {
-                getInputElementForParamName(controlledSelectors[i]).disabled = false;
+                matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = false;
             }
         }
     }
@@ -59,16 +65,16 @@ var checkHideOther = function(item) {
         // this item controls the visibility of at least one other item.
         var controlledSelectors = Object.keys(item.hideOtherFor);
         for (var i = 0; i < controlledSelectors.length; i++) {
-            var elem = getInputElementForParamName(item.name);
+            var elem = matsParamUtils.getInputElementForParamName(item.name);
             if (!elem) {
                 return;
             }
             var selectedOption = elem.selectedOptions;
             var selectedText = selectedOption[0].text;
             
-            var otherControlElem = getControlElementForParamName(controlledSelectors[i]);
-            var otherInputElement = getInputElementForParamName(controlledSelectors[i]);
-            var otherValueElement =  getValueElementForParamName(controlledSelectors[i]);
+            var otherControlElem = matsParamUtils.getControlElementForParamName(controlledSelectors[i]);
+            var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
+            var otherValueElement =  matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
                 
             if ($.inArray(selectedText, item.hideOtherFor[controlledSelectors[i]]) !== -1) {
                 otherControlElem.style.display  = 'none';
@@ -101,7 +107,7 @@ Template.select.rendered = function(){
     var optionsMap = this.data.optionsMap;
     var peerName = this.data.peerName;
     var dependentNames = this.data.dependentNames;
-    var dispElem = document.getElementById(InputTypes.controlButton + "-" + this.data.name + '-value');
+    var dispElem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value');
     var superiorName = this.data.superiorName;
     var refresh = function(selectedSuperiorValue) {
         /*
@@ -111,9 +117,9 @@ Template.select.rendered = function(){
          */
         /*
         plotTypeDependent means that the optionsMap has a top level plotType. i.e
-         optionsMap = { PlotTypes.profile: {all my options for profile},
-         PlotTypes.scatter2d : {all my options for scatter2d},
-         PlotTypes.timeSeries: {all my options for time series}
+         optionsMap = { matsTypes.PlotTypes.profile: {all my options for profile},
+         matsTypes.PlotTypes.scatter2d : {all my options for scatter2d},
+         matsTypes.PlotTypes.timeSeries: {all my options for time series}
          */
 
         // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
@@ -125,14 +131,14 @@ Template.select.rendered = function(){
                 brothers.push(elems[i]);
         }
         var options = {};
-        if (plotTypeDependent && getPlotType()) {
-            options = optionsMap[getPlotType()][selectedSuperiorValue];
+        if (plotTypeDependent && matsPlotUtils.getPlotType()) {
+            options = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
         } else {
             options = optionsMap[selectedSuperiorValue];
         }
-        Meteor.call('setSelectParamOptions', name, options, function (error) {
+        matsMethods.setSelectParamOptions.call({name:name, options:options}, function (error) {
             if (error) {
-                setError(error.message);
+                setError( "matsMethods.setSelectParamOptions: from select.js error: " + error.message );
             }
         });
         for (var i = 0; i < brothers.length; i++) {
@@ -157,7 +163,7 @@ Template.select.rendered = function(){
     // register refresh event for any superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
         if (superiorName) {
-            var superiorElement = getInputElementForParamName(superiorName);
+            var superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
             var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
             refresh(selectedSuperiorValue);
         }
@@ -165,7 +171,7 @@ Template.select.rendered = function(){
     // register refresh event for axis change to use to enforce a refresh
     elem.addEventListener('axisRefresh', function () {
         // Don't know why I have to do this, I expected the parameter data to be in the context....
-        var paramData = CurveParams.findOne({name:this.name},{dependentNames:1,peerName:1});
+        var paramData = matsCollections.CurveParams.findOne({name:this.name},{dependentNames:1,peerName:1});
         var peerName = paramData.peerName;
         var dependentNames = paramData.dependentNames;
         if (peerName) {
@@ -182,7 +188,7 @@ Template.select.rendered = function(){
     checkDisableOther(this.data);
     checkHideOther(this.data);
 
-    var superiorElement = getInputElementForParamName(superiorName);
+    var superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
     if (superiorElement) {
         var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
         refresh(selectedSuperiorValue);
@@ -218,7 +224,7 @@ Template.select.events({
     'change': function() {
         refreshPeer(this.peerName);
         refreshDependents(this.dependentNames);
-        setValueTextForParamName(this.name);
+        matsParamUtils.setValueTextForParamName(this.name);
         checkDisableOther(this);
         checkHideOther(this);
      },
@@ -233,6 +239,6 @@ Template.select.events({
         for(var i = 0; i < elements.length; i++){
             elements[i].selected = select;
         }
-        setValueTextForParamName(event.target.dataset.name, "");  // will override text if values are selected
+        matsParamUtils.setValueTextForParamName(event.target.dataset.name, "");  // will override text if values are selected
     }
 });

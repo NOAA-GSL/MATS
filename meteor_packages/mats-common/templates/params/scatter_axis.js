@@ -1,3 +1,6 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
 
 Template.scatter2d.helpers({
     xaxisCurveText: function() {
@@ -49,7 +52,7 @@ Template.scatter2d.helpers({
         return "2d Scatter Plot Axis Selection"
     },
     scatter2dParams: function () {
-        var params = Scatter2dParams.find({}).fetch();
+        var params = matsCollections.Scatter2dParams.find({}).fetch();
         return params;
     },
     scatter2dOptions: function() {
@@ -69,16 +72,16 @@ Template.scatter2d.helpers({
     
     type: function(param) {
         switch (param.type) {
-            case InputTypes.checkBoxGroup:
+            case matsTypes.InputTypes.checkBoxGroup:
                 return "checkbox";
                 break;
-            case InputTypes.radioGroup:
+            case matsTypes.InputTypes.radioGroup:
                 return "radio";
                 break;
-            case InputTypes.select:
+            case matsTypes.InputTypes.select:
                 return "select";
                 break;
-            case InputTypes.numberSpinner:
+            case matsTypes.InputTypes.numberSpinner:
                 return "number";
                 break;
             default:
@@ -99,7 +102,7 @@ Template.scatter2d.helpers({
         return id;
     },
     plotType : function() {
-      return PlotTypes.scatter2d;  
+      return matsTypes.PlotTypes.scatter2d;  
     },
     isDefault: function (param) {
         var def = param.default;
@@ -113,7 +116,7 @@ Template.scatter2d.helpers({
       return param.name === 'axis-selector';
     },
     displayScatter2d: function() {
-        if (getPlotType() == PlotTypes.scatter2d) {
+        if (matsPlotUtils.getPlotType() == matsTypes.PlotTypes.scatter2d) {
             return "block";
         } else {
             return "none";
@@ -144,7 +147,7 @@ Template.scatter2d.helpers({
         return axis;
     },
     isNumberSpinner: function(param) {
-        return param.type === InputTypes.numberSpinner;
+        return param.type === matsTypes.InputTypes.numberSpinner;
     },
     hasHelp: function() {
         return this.help !== undefined;
@@ -155,7 +158,7 @@ Template.scatter2d.events({
     'click .apply-params-to-axis': function(event) {
         var axis = document.querySelector('input[name="axis-selector"]:checked').value;
         var elems = document.getElementsByClassName("data-input");
-        var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
+        var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
         var curveNames = _.pluck(curveParams, "name");
         var param_elems = _.filter(elems, function (elem) {
             return _.contains(curveNames, elem.name);
@@ -187,11 +190,7 @@ Template.scatter2d.events({
         }
         var axisCurveId = axis + "-curve";
         var span = document.getElementById(axisCurveId);
-        // while( span.firstChild ) {
-        //     span.removeChild( span.firstChild );
-        // }
-        //span.appendChild( document.createTextNode(axis + " " + getAxisText(getPlotType())) );
-        Session.set(axis + 'CurveText', axis + " " + getAxisText(getPlotType()));
+        Session.set(axis + 'CurveText', axis + " " + matsPlotUtils.getAxisText(matsPlotUtils.getPlotType()));
         Session.set(axis + 'CurveColor', 'green');
         Session.set('axisCurveIcon', "fa-check");
         // select the other radio button

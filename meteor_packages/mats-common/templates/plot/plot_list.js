@@ -1,10 +1,17 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import { matsMethods } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
+
 Template.plotList.helpers({
     Title: function() {
-       return Settings.findOne({},{fields:{Title:1}}).Title;
+       return matsCollections.Settings.findOne({},{fields:{Title:1}}).Title;
     } ,
     PlotParamGroups: function () {
         var groupNums = [];
-        var params = CurveParams.find({},{fields:{displayGroup:1}}).fetch();
+        var params = matsCollections.CurveParams.find({},{fields:{displayGroup:1}}).fetch();
         for (var i = 0; i < params.length; i++) {
             groupNums.push(params[i].displayGroup);
         }
@@ -16,7 +23,7 @@ Template.plotList.helpers({
     },
     privateRestoreNames: function() {
         var names = [];
-        var l = CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
+        var l = matsCollections.CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
         for (var i = 0; i < l.length; i++) {
             if (l[i].owner === Meteor.userId() && l[i].permission === "private") {
                 names.push(l[i].name);
@@ -26,7 +33,7 @@ Template.plotList.helpers({
     },
     publicRestoreNames: function() {
         var names = [];
-        var l = CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
+        var l = matsCollections.CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
         for (var i = 0; i < l.length; i++) {
             if (l[i].permission === "public") {
                 names.push(l[i].name);
@@ -61,9 +68,9 @@ Template.plotList.events({
 
     // catch a click on a diff plotFormat radio button.
     'click .data-input' : function() {
-        var formats = Object.keys(PlotFormats);
+        var formats = Object.keys(matsTypes.PlotFormats);
         if ($.inArray(this.toString(),formats) !== -1) {
-                checkDiffs();
+                matsCurveUtils.checkDiffs();
         }
     },
     'click .restore-from-private' : function() {
@@ -90,32 +97,32 @@ Template.plotList.events({
         p.curves = [];
         p.plotAction = plotAction;
         curves.forEach(function(curve){p.curves.push(curve)});
-        PlotParams.find({}).fetch().forEach(function(plotParam){
+        matsCollections.PlotParams.find({}).fetch().forEach(function(plotParam){
             var name = plotParam.name;
             var type = plotParam.type;
             var options = plotParam.options;
 
-            if (type == InputTypes.radioGroup) {
+            if (type == matsTypes.InputTypes.radioGroup) {
                 for (var i=0; i<options.length; i++) {
                     if (document.getElementById(name+"-" + type + "-" + options[i]).checked == true) {
                         p[name] = options[i];
                         break;
                     }
                 }
-            } else if (type == InputTypes.checkBoxGroup) {
+            } else if (type == matsTypes.InputTypes.checkBoxGroup) {
                 p[name] = [];
                 for (var i = 0; i < options.length; i++) {
                     if (document.getElementById(name + "-" + type + "-" + options[i]).checked) {
                         p[name].push(options[i]);
                     }
                 }
-            } else if (type == InputTypes.dateRange) {
+            } else if (type == matsTypes.InputTypes.dateRange) {
                 p[name] = document.getElementById(name + '-' + type).value;
-            } else if (type == InputTypes.numberSpinner) {
+            } else if (type == matsTypes.InputTypes.numberSpinner) {
                 p[name] = document.getElementById(name + '-' + type).value;
-            } else if (type == InputTypes.select) {
+            } else if (type == matsTypes.InputTypes.select) {
                 p[name] = document.getElementById(name + '-' + type).value;
-            } else if (type == InputTypes.textInput) {
+            } else if (type == matsTypes.InputTypes.textInput) {
                 p[name] = document.getElementById(name + '-' + type).value;
             }
         });
@@ -150,11 +157,11 @@ Template.plotList.events({
                 Session.set('plotName', saveAs);
                 // get the settings to save out of the session
                 p = Session.get("PlotParams");
-                var paramData = getElementValues();
+                var paramData = matsParamUtils.getElementValues();
                 p['paramData'] = paramData;
-                Meteor.call('saveSettings',saveAs, p, permission, function(error){
+                matsMethods.saveSettings.call( saveAs, p, permission, function(error){
                     if (error) {
-                        setError(error.message);
+                        setError("matsMethods.saveSettings from plot_list.js " +error.message);
                     }
                 });
 
@@ -182,24 +189,24 @@ Template.plotList.events({
                 //console.log("restore settings from " + restoreFrom);
                 Session.set('plotName', restoreFrom);
 
-                p = CurveSettings.findOne({name:restoreFrom});
+                p = matsCollections.CurveSettings.findOne({name:restoreFrom});
                 // now set all the curves.... This will refresh the curves list
                 Session.set('Curves',p.data.curves);
 
                 // now set the PlotParams
-                var params = PlotParams.find({}).fetch();
+                var params = matsCollections.PlotParams.find({}).fetch();
                 params.forEach(function(plotParam){
                     setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
                 });
                 
                 // reset the form parameters
-                params = CurveParams.find({}).fetch();
+                params = matsCollections.CurveParams.find({}).fetch();
                 params.forEach(function(plotParam) {
                     setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
                 });
                 
                 // reset the scatter parameters 
-                params = Scatter2dParams.find({}).fetch();
+                params = matsCollections.Scatter2dParams.find({}).fetch();
                 params.forEach(function(plotParam) {
                     setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);
                 });
@@ -207,7 +214,7 @@ Template.plotList.events({
                 // reset the plotParams
                 Session.set("PlotParams", p);
                 //set the used defaults so that subsequent adds get a core default
-                setUsedColorsAndLabels();
+                matsCurveUtils.setUsedColorsAndLabels();
                 document.getElementById('restore_from_public').value = "";
                 document.getElementById('restore_from_private').value = "";
                 $("#restoreModal").modal('hide');
@@ -217,20 +224,20 @@ Template.plotList.events({
                 break;
             case "plot":
             default:
-                var plotType = getPlotType();
-                var plotGraphFunction = PlotGraphFunctions.findOne({plotType: plotType});
-                if (plotGraphFunction === undefined) {
-                    setError("do not have a plotGraphFunction for this plotType: " + plotType);
+                var pt = matsPlotUtils.getPlotType();
+                var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
+                if (pgf === undefined) {
+                    setError("plot_list.js - plot -do not have a plotGraphFunction for this plotType: " + pt);
                     Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
-                var graphFunction = plotGraphFunction.graphFunction;
 
-                Meteor.call('getGraphData', p, plotType, function (error, result) {
+                var graphFunction = pgf.graphFunction;
+                matsMethods.getGraphData.call( {plotParams:p, plotType:pt}, function (error, result) {
                     //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
-                        setError(error.toLocaleString());
+                        setError("matsMethods.getGraphData from plot_list.js : error: " + error.toLocaleString());
                         Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
@@ -246,12 +253,14 @@ Template.plotList.events({
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    PlotResult = jQuery.extend(true,{}, result);
+                    matsCurveUtils.PlotResult = jQuery.extend(true,{}, result);
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
                     document.getElementById("plotType").style.display = "none";
-                    document.getElementById("scatter2d").style.display = "none";
+                    if (document.getElementById("scatter2d")){
+                        document.getElementById("scatter2d").style.display = "none";
+                    }
                     document.getElementById("plotButton").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
                     document.getElementById("plot-buttons-grp").style.display = "block";

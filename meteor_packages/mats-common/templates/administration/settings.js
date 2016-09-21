@@ -1,22 +1,25 @@
+import { Meteor } from 'meteor/meteor';
+import {matsCollections} from 'meteor/randyp:mats-common';
+
 Template.settings.helpers({
     LabelPrefix: function(){
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         return settings === undefined ? "" : settings.LabelPrefix;
     },
     Title: function(){
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         return settings === undefined ? "" : settings.Title;
     },
     LineWidth: function(){
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         return settings === undefined ? "" : settings.LineWidth;
     },
     NullFillString: function(){
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         return settings === undefined ? "" : settings.NullFillString;
     },
     ResetFromCodeChecked: function(){
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         if (settings && settings.resetFromCode == true) {
             return "checked";
         } else {

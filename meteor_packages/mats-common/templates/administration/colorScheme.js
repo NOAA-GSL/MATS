@@ -1,6 +1,9 @@
+import { Meteor } from 'meteor/meteor';
+import {matsCollections} from 'meteor/randyp:mats-common';
+
 Template.colorScheme.helpers({
     colorOptions : function() {
-        var colorScheme = ColorScheme.findOne({});
+        var colorScheme = matsCollections.ColorScheme.findOne({});
         if (colorScheme === undefined) {return false;}
         var colors = colorScheme.colors;
         var colorOptions = [];
@@ -16,7 +19,7 @@ Template.colorScheme.events({
         var removeColor = document.getElementById("removeColor").value;
         var insertAfterColor = document.getElementById("insertAfterColor").value;
         var newColor = document.getElementById("colorSchemePicker").value;
-        var colors = ColorScheme.findOne({}).colors;
+        var colors = matsCollections.ColorScheme.findOne({}).colors;
         if (newColor) {
             var insertAfterIndex = 0;
             if (insertAfterColor) {
@@ -27,7 +30,6 @@ Template.colorScheme.events({
                     setError(error.message);
                 }
             });
-            colors = ColorScheme.findOne({}).colors;
         }
         if (removeColor) {
             Meteor.call('removeColor', removeColor, function (error) {
@@ -37,9 +39,6 @@ Template.colorScheme.events({
             });
         }
         // reset modal
-        removeColor = null;
-        insertAfterColor = null;
-        newColor = null;
         document.getElementById("removeColor").value = "";
         document.getElementById("insertAfterColor").value = "";
         document.getElementById("colorSchemePicker").color="rgb(255,255,255)";
@@ -50,9 +49,7 @@ Template.colorScheme.events({
     },
     'click .cancel-color-scheme': function() {
         // reset the form
-        removeColor = null;
-        insertAfterColor = null;
-        newColor = null;
+        document.getElementById("removeColor").value = null;
         document.getElementById("removeColor").value = "";
         document.getElementById("insertAfterColor").value = "";
         document.getElementById("colorSchemePicker").color="rgb(255,255,255)";

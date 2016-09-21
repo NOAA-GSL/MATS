@@ -1,3 +1,8 @@
+import { Meteor } from 'meteor/meteor';
+import { Hooks } from 'meteor/differential:event-hooks';
+import {matsTypes } from 'meteor/randyp:mats-common';
+import {matsCollections } from 'meteor/randyp:mats-common';
+
 Accounts.onLogin(function() {
     Meteor.call('getUserAddress', function (error, result) {
         if (error !== undefined) {
@@ -6,7 +11,7 @@ Accounts.onLogin(function() {
             return false;
         }
         var roles = ['user']; // everyone who signs in is a user
-        var auth = Authorization.findOne({email: result});
+        var auth = matsCollections.Authorization.findOne({email: result});
         if (auth) {
             roles = roles.concat(auth.roles);
         }
@@ -47,7 +52,7 @@ Template.administration.helpers({
         }
     },
     showResetNow: function() {
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         if (document.getElementById("ResetFromCode") == null) {
             return "none";
         }
@@ -79,7 +84,7 @@ Template.administration.events({
         $("#settingsModal").modal('show');
     },
     'click .curveParams': function () {
-        var params = CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
+        var params = matsCollections.CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
         Session.set('params',params);
         $("#curveParamsModal").modal('show');
     },
@@ -120,7 +125,7 @@ Template.administration.events({
         $("#resetModal").modal('show');
         document.getElementById("ResetFromCode").checked = false;
 
-        var settings = Settings.findOne({});
+        var settings = matsCollections.Settings.findOne({});
         settings.resetFromCode = false;
         Meteor.call('setSettings', settings, function (error) {
             if (error) {

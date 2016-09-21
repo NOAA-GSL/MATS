@@ -1,3 +1,7 @@
+import { matsTypes } from 'meteor/randyp:mats-common';
+ import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
+
 var duplicate = function(param) {
     var obj = {};
     var keys = Object.keys(param);
@@ -14,7 +18,7 @@ filterParams = function(params) {
 If the plottype is a 2d scatter plot we need to basically create a new set of parameters (except for the label)
 for each axis. The double set of parameters will get sent back to the backend.
  */
-    if (getPlotType() === PlotTypes.scatter2d) {
+    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d) {
         var xparams = [];
         var yparams = [];
         var newParams = [];
@@ -41,7 +45,7 @@ Template.curveParamGroup.helpers({
     CurveParams: function (num) {
         var restoreSettingsTime = Session.get("restoreSettingsTime"); // used to force re-render
         var lastUpdate = Session.get('lastUpdate');
-            var params = CurveParams.find({displayGroup:num},{sort:["displayOrder", "asc"]}).fetch();
+            var params = matsCollections.CurveParams.find({displayGroup:num},{sort:["displayOrder", "asc"]}).fetch();
             params = filterParams(params);
             return params;
     },

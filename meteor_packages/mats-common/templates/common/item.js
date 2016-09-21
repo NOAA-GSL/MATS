@@ -1,7 +1,11 @@
+import { matsTypes } from 'meteor/randyp:mats-common';
+import { matsCurveUtils } from  'meteor/randyp:mats-common';
+import {matsParamUtils } from 'meteor/randyp:mats-common';
+
 Template.item.helpers({
     value: function() {
         if (this.name === "label") {
-            return getNextCurveLabel();
+            return matsCurveUtils.getNextCurveLabel();
         }
         if (this.name === 'dates' || this.name == 'curve-dates') {
             var today = new Date();
@@ -24,34 +28,34 @@ Template.item.helpers({
       return this.help !== undefined;
     },
     isSelect: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.select));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.select));
     },
     isSelectMap: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.selectMap));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.selectMap));
     },
     isInput: function () {
-        return ((typeof this.type !== 'undefined')  && (this.type == InputTypes.textInput));
+        return ((typeof this.type !== 'undefined')  && (this.type == matsTypes.InputTypes.textInput));
     },
     isSpinner: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.numberSpinner));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.numberSpinner));
     },
     isDateRange: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.dateRange));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.dateRange));
     },
     isCheckBoxGroup: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.checkBoxGroup));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.checkBoxGroup));
     },
     isRadioGroup: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == InputTypes.radioGroup));
+        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.radioGroup));
     },
     controlButton: function() {
-        return InputTypes.controlButton + "-" + this.name;
+        return matsTypes.InputTypes.controlButton + "-" + this.name;
     },
     resetButton: function() {
-        return InputTypes.resetButton + "-" + this.type;
+        return matsTypes.InputTypes.resetButton + "-" + this.type;
     },
     element: function() {
-        return InputTypes.element + "-" + this.name;
+        return matsTypes.InputTypes.element + "-" + this.name;
     },
     display: function() {
         if (this.hidden) {
@@ -82,7 +86,7 @@ Template.item.helpers({
 
 Template.item.events({
     'click .control-button': function (event) {
-        var elem = document.getElementById(InputTypes.element + "-" + this.name);
+        var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
         if (elem === undefined) {
             return false;
         }
@@ -112,14 +116,14 @@ Template.item.events({
         if (this.displayPriority !== undefined) {
             Session.set('displayPriority', this.displayPriority + 1);
         }
-        var formats = Object.keys(PlotFormats);
+        var formats = Object.keys(matsTypes.PlotFormats);
         if ($.inArray(this,formats) !== -1){
             Session.set('diffStatus',this);
         }
     },
     'change .data-input': function (event) {
-        if (this.type !== InputTypes.numberSpinner) {
-            var elem = document.getElementById(InputTypes.element + "-" + this.name);
+        if (this.type !== matsTypes.InputTypes.numberSpinner) {
+            var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
             if (elem === undefined) {
                 return false;
             }
@@ -134,8 +138,8 @@ Template.item.events({
     },
 
     'blur .data-input': function () {
-        if (this.type === InputTypes.numberSpinner) {
-            var elem = document.getElementById(InputTypes.element + "-" + this.name);
+        if (this.type === matsTypes.InputTypes.numberSpinner) {
+            var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
             if (elem === undefined) {
                 return false;
             }
@@ -159,9 +163,9 @@ Template.textInput.events({
     'change, blur': function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name,text);
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
         } catch (error){
-            setValueTextForParamName(event.target.name, "");
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
     }
 });
@@ -170,9 +174,9 @@ Template.select.events({
     'change, blur' : function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name, text);
+            matsParamUtils.setValueTextForParamName(event.target.name, text);
         } catch (error){
-            setValueTextForParamName(event.target.name, "");
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
     }
 });
@@ -181,10 +185,9 @@ Template.numberSpinner.events({
     'change, blur': function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name,text);
-            console.log("elementData is:", getElementDataForParamName(event.target.name));
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
         } catch (error){
-            setValueTextForParamName(event.target.name, "");
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
     }
 });
@@ -195,10 +198,9 @@ Template.radioGroup.events({
     'change, blur': function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name,text);
-            console.log("elementData is:", getElementDataForParamName(event.target.name));
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
         } catch (error){
-            setValueTextForParamName(event.target.name, "");
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
     }
 });
@@ -208,18 +210,16 @@ Template.checkboxGroup.events({
     'change, blur': function (event) {
         try {
             var text = event.currentTarget.value;
-            setValueTextForParamName(event.target.name, text);
-            console.log("elementData is:", getElementDataForParamName(event.target.name));
+            matsParamUtils.setValueTextForParamName(event.target.name, text);
         } catch (error) {
-            setValueTextForParamName(event.target.name, "");
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        console.log("elementData is:", getElementDataForParamName(event.target.name));
     }
 });
 
 Template.dateRange.events({
     'change, blur': function (event) {
-        document.getElementById(InputTypes.controlButton + "-" + this.name + "-value").textContent = event.currentTarget.value;
+        document.getElementById(matsTypes.InputTypes.controlButton + "-" + this.name + "-value").textContent = event.currentTarget.value;
     }
 });
 

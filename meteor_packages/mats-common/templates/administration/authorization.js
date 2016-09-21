@@ -1,9 +1,12 @@
+import { Meteor } from 'meteor/meteor';
+import {matsCollections} from 'meteor/randyp:mats-common';
+
 Template.authorization.helpers({
     roleOptions : function() {
-        return Roles.find({}).fetch();
+        return matsCollections.Roles.find({}).fetch();
     },
     emailOptions: function(){
-        return Authorization.find({}).fetch();
+        return matsCollections.Authorization.find({}).fetch();
     }
 });
 

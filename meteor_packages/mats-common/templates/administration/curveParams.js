@@ -1,3 +1,6 @@
+import { Meteor } from 'meteor/meteor';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
 /**
  * Created by pierce on 8/13/15.
  */
@@ -8,7 +11,7 @@ Template.curveParams.onRendered(function () {
 Template.curveParams.helpers({
     curveParams : function() {
         if (Session.get('params') === undefined) {
-            var params = CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
+            var params = matsCollections.CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
             Session.set('params',params);
         }
         return Session.get('params');
@@ -116,7 +119,7 @@ Template.curveParams.helpers({
 
     },
     types: function() {
-        return Object.keys(InputTypes);
+        return Object.keys(matsTypes.InputTypes);
     },
     errorMessage: function() {
         return Session.get("curveParamsErrorMessage");
@@ -125,9 +128,8 @@ Template.curveParams.helpers({
         return Session.get("curveParamsErrorType") === errType;
     },
     restoreDates: function() {
-        //var saveSeconds = SavedCurveParams.find({},{clName:{$exists:false}});
         try {
-            var scp = SavedCurveParams.findOne({'clName': 'changeList'});
+            var scp = matsCollections.SavedCurveParams.findOne({'clName': 'changeList'});
             var cl = scp.changeList;
             var dates = [];
             for (var i = 0; i < cl.length; i++) {
@@ -153,7 +155,7 @@ Template.curveParams.helpers({
     },
     restoreDate: function() {
         try {
-            var scp = SavedCurveParams.findOne({'clName': 'changeList'});
+            var scp = matsCollections.SavedCurveParams.findOne({'clName': 'changeList'});
             var cl = scp.changeList;
             var utcSeconds = cl[cl.length - 1].savedAt;
             var user = cl[cl.length - 1].user.split('@')[0].replace('.', ' ');
@@ -250,7 +252,7 @@ Template.curveParams.events({
         var optionsMap = {};
         params.push({
             name: 'New-' + seconds,
-            type: InputTypes.textInput,
+            type: matsTypes.InputTypes.textInput,
             optionsMap: optionsMap,
             options: Object.keys(optionsMap),   // convenience
             controlButtonCovered: true,
@@ -266,7 +268,7 @@ Template.curveParams.events({
     },
     'click .curveParams-selection-remove': function () {
         event.preventDefault();
-        removeName = document.getElementById("curveParams-selection").value;
+        var removeName = document.getElementById("curveParams-selection").value;
         var params = Session.get('params');
         var newParams = params.filter(function (value) {
             return value.name != removeName
@@ -409,24 +411,24 @@ Template.curveParams.events({
             // save the current settings and mark comment as prior to
             var saveSecond = new Date() / 1000 | 0;
             var comment = document.getElementById('applyCurveParamsComment').value;
-            var paramsCursor = CurveParams.find({});
-            var cl = SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
+            var paramsCursor = matsCollections.CurveParams.find({});
+            var cl = matsCollections.SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
             if (cl === undefined) {
-                SavedCurveParams.insert({clName: 'changeList', changeList:[]});
-                cl = SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
+                matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList:[]});
+                cl = matsCollections.SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
             }
             var id = cl._id;
-            SavedCurveParams.update({_id:id},{$push:{changeList:{user: emailAddress, comment: "prior to ..." + comment, savedAt: saveSecond}} });
+            matsCollections.SavedCurveParams.update({_id:id},{$push:{changeList:{user: emailAddress, comment: "prior to ..." + comment, savedAt: saveSecond}} });
             paramsCursor.forEach(function(doc) {
                 delete doc._id;
                 doc.savedSecond = saveSecond;
-                SavedCurveParams.insert(doc);
+                matsCollections.SavedCurveParams.insert(doc);
             });
 
             // now reconcile the session values and the CurveParams collection
             resetError();
             var params = Session.get('params');
-            var curveParams = CurveParams.find({}).fetch();
+            var curveParams = matsCollections.CurveParams.find({}).fetch();
             var paramNames = _.pluck(params,'name');
             var curveParamNames =  _.pluck(curveParams,'name');
 
@@ -436,9 +438,9 @@ Template.curveParams.events({
             });
             for (var i=0; i < namesToRemoveFromCollection.length; i++) {
                 var rName = namesToRemoveFromCollection[i];
-                var cParam = CurveParams.findOne({name:rName});
+                var cParam = matsCollections.CurveParams.findOne({name:rName});
                 var cid = cParam._id;
-                CurveParams.remove({_id:cid});
+                matsCollections.CurveParams.remove({_id:cid});
             }
 
             // iterate all the params in the session and overwrite/insert them
@@ -448,33 +450,33 @@ Template.curveParams.events({
                     return obj.name === paramName;
                 })[0];
 
-                var curveParam = CurveParams.findOne({name:paramName});
+                var curveParam = matsCollections.CurveParams.findOne({name:paramName});
                 if (curveParam) {
                     // update
                     var cid = curveParam._id;
                     delete param._id;
-                    CurveParams.update({_id:cid},{$set:param});
+                    matsCollections.CurveParams.update({_id:cid},{$set:param});
                 } else {
                     //insert
-                    CurveParams.insert(param);
+                    matsCollections.CurveParams.insert(param);
                 }
             }
 
             // now save the settings after modification
             saveSecond = saveSecond + 1;
-            paramsCursor = CurveParams.find({});
-            cl = SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
+            paramsCursor = matsCollections.CurveParams.find({});
+            cl = matsCollections.SavedCurveParams.findOne({'clName':'changeList'},{_id:1});
             id = cl._id;
-            SavedCurveParams.update({_id:id},{$push:{changeList:{user: emailAddress, comment: "post ..." + comment, savedAt: saveSecond}} });
+            matsCollections.SavedCurveParams.update({_id:id},{$push:{changeList:{user: emailAddress, comment: "post ..." + comment, savedAt: saveSecond}} });
             paramsCursor.forEach(function(doc) {
                 delete doc._id;
                 doc.savedSecond = saveSecond;
-                SavedCurveParams.insert(doc);
+                matsCollections.SavedCurveParams.insert(doc);
             });
 
             reset();
             // read the params back out from the DB and set them into the Session (resets the form)
-            params = CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
+            params = matsCollections.CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
             Session.set('params',params);
             Session.set('lastUpdate', Date.now());// force re-render to get the optionMap
             $("#applyCurveParamsModal").modal('hide');
@@ -484,7 +486,7 @@ Template.curveParams.events({
     'click .cancel-curveParams': function() {
         event.preventDefault();
         reset();
-        var params = CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
+        var params = matsCollections.CurveParams.find({}, {sort: {displayOrder:1}}).fetch();
         Session.set('params',params);
         document.getElementById("curveParams-selection").value = "";
         Session.set('lastUpdate', Date.now());// force re-render to get the optionMap
@@ -537,14 +539,14 @@ Template.curveParams.events({
         event.preventDefault();
         var restoreFromSeconds = document.getElementById("restoreFromSeconds");
         var savedSecond = restoreFromSeconds.getAttribute('data-second');
-        var savedParams = SavedCurveParams.find({'savedSecond':Number(savedSecond)});
+        var savedParams = matsCollections.SavedCurveParams.find({'savedSecond':Number(savedSecond)});
         savedParams.forEach(function(doc) {
             delete doc._id;
             delete doc.savedSecond;
             var name = doc.name;
-            var curveParam = CurveParams.findOne({name:name});
+            var curveParam = matsCollections.CurveParams.findOne({name:name});
             var id = curveParam._id;
-            CurveParams.update({_id:id},{$set:doc});
+            matsCollections.CurveParams.update({_id:id},{$set:doc});
         });
         Session.set('lastUpdate', Date.now());// force re-render
         $("#restoreCurveParamsModal").modal('hide');

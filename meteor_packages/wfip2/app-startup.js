@@ -699,7 +699,7 @@ var containsPoint = function(pointArray,point) {
     
 
 Meteor.startup(function () {
-    Future = Npm.require('fibers/future');
+    Future = require('fibers/future');
 
     if (process.env.NODE_ENV === "development" || Settings.findOne({}) === undefined || Settings.findOne({}).resetFromCode === undefined || Settings.findOne({}).resetFromCode == true) {
         Databases.remove({});

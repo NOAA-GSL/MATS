@@ -1,23 +1,26 @@
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsMethods} from 'meteor/randyp:mats-common';
 
-    //Template.export.rendered = function() {
-    //    Meteor.call('getDataFunctionFileList', function (error, result) {
-    //        //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
-    //        if (error !== undefined) {
-    //            setError(error.toLocaleString());
-    //            return false;
-    //        }
-    //        Session.set('dataFunctionFileList',result);
-    //    });
-    //    Meteor.call('getGraphFunctionFileList', function (error, result) {
-    //        //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
-    //        if (error !== undefined) {
-    //            setError(error.toLocaleString());
-    //            return false;
-    //        }
-    //        Session.set('graphFunctionFileList',result);
-    //    });
-    //
-    //};
+
+Template.export.rendered = function() {
+       matsMethods.getDataFunctionFileList.call( function (error, result) {
+           //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
+           if (error !== undefined) {
+               setError("matsMethods.getDataFunctionFileList from template export error: " + error.toLocaleString());
+               return false;
+           }
+           Session.set('dataFunctionFileList',result);
+       });
+       matsMethods.getGraphFunctionFileList.call(function (error, result) {
+           //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
+           if (error !== undefined) {
+               setError("matsMethods.graphFunctionFileList from export.js error: " + error.toLocaleString());
+               return false;
+           }
+           Session.set('graphFunctionFileList',result);
+       });
+
+    };
 
     Template.export.helpers({
         dataFiles: function() {
@@ -42,15 +45,15 @@
         });
         if(parameterOut) {
             var data = {};
-            data.CurveParams = CurveParams.find({}).fetch();
-            data.PlotParams = PlotParams.find({}).fetch();
-            data.PlotGraphFunctions = PlotGraphFunctions.find({}).fetch();
-            data.Settings = Settings.find({}).fetch();
-            data.ColorScheme = ColorScheme.find({}).fetch();
-            data.Authorization = Authorization.find({}).fetch();
-            data.Roles = Roles.find({}).fetch();
-            data.Databases = Databases.find({}).fetch();
-            data.Credentials = Credentials.find({}).fetch();
+            data.CurveParams = matsCollections.CurveParams.find({}).fetch();
+            data.PlotParams = matsCollections.PlotParams.find({}).fetch();
+            data.PlotGraphFunctions = matsCollections.PlotGraphFunctions.find({}).fetch();
+            data.Settings = matsCollections.Settings.find({}).fetch();
+            data.ColorScheme = matsCollections.ColorScheme.find({}).fetch();
+            data.Authorization = matsCollections.Authorization.find({}).fetch();
+            data.Roles = matsCollections.Roles.find({}).fetch();
+            data.Databases = matsCollections.Databases.find({}).fetch();
+            data.Credentials = matsCollections.Credentials.find({}).fetch();
             var json = JSON.stringify(data, null, 2);
             var blob = new Blob([json], {type: "application/json"});
             var url = URL.createObjectURL(blob);
@@ -65,7 +68,7 @@
 
         if (dataFiles.length > 0) {
             dataFiles.forEach(function(file){
-                Meteor.call('readFunctionFile','data',file, function (error, result) {
+                methods.readFunctionFile('data',file, function (error, result) {
                     if (error !== undefined) {
                         setError(error.toLocaleString());
                         return false;
@@ -86,7 +89,7 @@
 
         if (graphFiles.length > 0) {
             graphFiles.forEach(function(file){
-                Meteor.call('readFunctionFile','graph', file, function (error, result) {
+                methods.readFunctionFile('graph', file, function (error, result) {
                     if (error !== undefined) {
                         setError(error.toLocaleString());
                         return false;

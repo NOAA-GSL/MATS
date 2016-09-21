@@ -10,10 +10,6 @@
  *
  * Modified slightly for compatibility with meteor and MATS - RTP
 **/
-
-// ;(function() {
-//     'use strict';
-//
     var gaussianElimination = function(a, o) {
            var i = 0, j = 0, k = 0, maxrow = 0, tmp = 0, n = a.length - 1, x = new Array(o);
            for (i = 0; i < n; i++) {
@@ -42,7 +38,7 @@
            return (x);
     };
 
-        var methods = {
+    var methods = {
             linear: function(data) {
                 var sum = [0, 0, 0, 0, 0], n = 0, results = [];
 
@@ -234,16 +230,9 @@
             }
         };
 
-    regression = function(method, data, order) {
+    export default regression = function(method, data, order) {
        if (typeof method == 'string') {
            return methods[method](data, order);
        }
     };
 
-// if (typeof exports !== 'undefined') {
-//     module.exports = regression;
-// } else {
-//     window.regression = regression;
-// }
-
-//}());

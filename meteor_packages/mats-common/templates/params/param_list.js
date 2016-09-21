@@ -1,8 +1,13 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import {matsPlotUtils } from 'meteor/randyp:mats-common';
+
 Template.paramList.helpers({
     CurveParamGroups: function() {
         var lastUpdate = Session.get('lastUpdate');
         var groupNums = [];
-        var params = CurveParams.find({}).fetch();
+        var params = matsCollections.CurveParams.find({}).fetch();
         params = filterParams(params);
         for (var i = 0; i < params.length; i++) {
             groupNums.push(params[i].displayGroup);
@@ -28,14 +33,14 @@ Template.paramList.helpers({
 Template.paramList.events({
     'click .edit-cancel': function() {
         Session.set('editMode','');
-        var labelId = 'label-' + InputTypes.textInput;
+        var labelId = 'label-' + matsTypes.InputTypes.textInput;
         var label = document.getElementById(labelId);
         label.disabled = false;
     },
     'click .reset': function(event,template) {
         //location.reload();
         event.preventDefault();
-        Modules.client.util.resetScatterApply();
+        matsCurveUtils.resetScatterApply();
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
 
@@ -61,11 +66,11 @@ Template.paramList.events({
      */
     'submit form': function (event, template) {
         event.preventDefault();
-            var isScatter = getPlotType() === PlotTypes.scatter2d;
+            var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
             var curves = Session.get('Curves');
             var p = {};
             var elems = event.target.valueOf().elements;
-            var curveParams = CurveParams.find({}, {fields: {name: 1}}).fetch();
+            var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
             if (isScatter) {
                 var scatterCurveNames = [];
@@ -89,7 +94,7 @@ Template.paramList.events({
             if (Session.get('editMode')) {
                 var changingCurveLabel = Session.get('editMode');
                 Session.set('editMode', '');
-                var labelId = 'label-' + InputTypes.textInput;
+                var labelId = 'label-' + matsTypes.InputTypes.textInput;
                 var label = document.getElementById(labelId);
                 label.disabled = false;
 
@@ -155,21 +160,21 @@ Template.paramList.events({
                         }
                     }
                     if (paramElems[i].name === 'label') {
-                        if (_.indexOf(getUsedLabels(), (paramElems[i]).value) != -1) {
+                        if (_.indexOf(matsCurveUtils.getUsedLabels(), (paramElems[i]).value) != -1) {
                             setError('labels need to be unique - change ' + (paramElems[i]).value + " to something else");
                             return false;
                         }
                     }
                 }
-                p.color = getNextCurveColor();
+                p.color = matsCurveUtils.getNextCurveColor();
                 curves.push(p);
                 var elem = document.getElementById("curveList");
                 elem.style.display = "block";
             }
 
             Session.set('Curves', curves);
-            setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
-            checkDiffs();
+            matsCurveUtils.setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
+            matsCurveUtils.checkDiffs();
             return false;
     }
 });

@@ -1,7 +1,9 @@
+import {matsCollections} from 'meteor/randyp:mats-common';
+
 Template.plotGraphFunctions.helpers({
     plotGraphFunction : function() {
         if (Session.get("PlotGraphFunctions") === undefined || Session.get("PlotGraphFunctions").length == 0){
-            Session.set("PlotGraphFunctions",PlotGraphFunctions.find({}).fetch());
+            Session.set("PlotGraphFunctions",matsCollections.PlotGraphFunctions.find({}).fetch());
         }
         return Session.get("PlotGraphFunctions");
     },
@@ -72,7 +74,7 @@ Template.plotGraphFunctions.events({
         event.preventDefault();
         //
         var sPlotGraphFunctions = Session.get("PlotGraphFunctions");
-        var plotGraphFunctions = PlotGraphFunctions.find({}).fetch();
+        var plotGraphFunctions = matsCollections.PlotGraphFunctions.find({}).fetch();
         var sPlotTypes = _.pluck(sPlotGraphFunctions,'plotType');
         var plotTypes =  _.pluck(plotGraphFunctions,'plotType');
 
@@ -82,9 +84,9 @@ Template.plotGraphFunctions.events({
         });
         for (var ip=0; ip < toRemoveFromCollection.length; ip++) {
             var p = toRemoveFromCollection[ip];
-            var plotType = PlotGraphFunctions.findOne({plotType:p});
+            var plotType = matsCollections.PlotGraphFunctions.findOne({plotType:p});
             var id = plotType._id;
-            PlotGraphFunctions.remove({_id:id});
+            matsCollections.PlotGraphFunctions.remove({_id:id});
         }
         // iterate all the ones in the session and overwrite/add them
         for (var i=0; i < sPlotTypes.length; i++) {
@@ -93,18 +95,18 @@ Template.plotGraphFunctions.events({
                 return obj.plotType === s;
             })[0];
 
-            var pt = PlotGraphFunctions.findOne({plotType:s});
+            var pt = matsCollections.PlotGraphFunctions.findOne({plotType:s});
             if (pt) {
                 // update
                 var ptid = pt._id;
                 delete spgf._id;
-                PlotGraphFunctions.update({_id:ptid},{$set:spgf});
+                matsCollections.PlotGraphFunctions.update({_id:ptid},{$set:spgf});
             } else {
                 //insert
-                PlotGraphFunctions.insert(spgf);
+                matsCollections.PlotGraphFunctions.insert(spgf);
             }
         }
-        Session.set("PlotGraphFunctions",PlotGraphFunctions.find({}).fetch());
+        Session.set("PlotGraphFunctions",matsCollections.PlotGraphFunctions.find({}).fetch());
         $("#plotGraphFunctionsModal").modal('hide');
         return false;
     },

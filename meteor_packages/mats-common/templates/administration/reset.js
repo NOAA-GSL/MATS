@@ -1,3 +1,4 @@
+import { Meteor } from 'meteor/meteor';
 
 
 Template.reset.events({
