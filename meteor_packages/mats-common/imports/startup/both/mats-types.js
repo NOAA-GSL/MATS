@@ -19,7 +19,8 @@ var  InputTypes = {
 var  PlotTypes = {
     timeSeries : "TimeSeries",
     profile : "Profile",
-    scatter2d : "Scatter2d"
+    scatter2d : "Scatter2d",
+    dieoff : "dieOff"
 };
 
 var  PlotFormats = {

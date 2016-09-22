@@ -131,8 +131,8 @@ Package.onUse(function(api) {
   api.addFiles("templates/graph/graph.html", "client");
   api.addFiles("templates/graph/graph.js", "client");
   
-  api.addFiles("templates/graph/displayFunctions/graph_series_zoom_pan.js", "client");
-  api.addFiles("templates/graph/displayFunctions/graph_profile_zoom_pan.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_series.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
   api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
   
   api.addFiles("templates/graph/text_profile_output.html", "client");

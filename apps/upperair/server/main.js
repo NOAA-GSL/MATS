@@ -429,14 +429,14 @@ var doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphSeriesZoom",
-            dataFunction: "dataSeriesZoom",
+            graphFunction: "graphSeries",
+            dataFunction: "dataSeries",
             checked:true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
-            graphFunction: "graphProfileZoom",
-            dataFunction: "dataProfileZoom",
+            graphFunction: "graphProfile",
+            dataFunction: "dataProfile",
             checked: false
         });
     }
