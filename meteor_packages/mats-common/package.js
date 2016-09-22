@@ -59,6 +59,7 @@ Package.onUse(function(api) {
   api.export("matsPlotUtils",['client','server']);
   api.export("matsDataUtils",['server']);
   api.export("regression",['client','server']);
+  api.export("matsWfipUtils",['server']);
   
   // add imports
   //both

@@ -1,5 +1,6 @@
+const Future = require('fibers/future');
 
-export var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic) {
     // sum and average all of the means for all of the sites
     var datum = {};
@@ -65,14 +66,16 @@ export var getDatum = function (rawAxisData, axisTime, levelCompletenessX, level
                     return [level, filteredSites[siteId].values[index]];
                 });
             var siteValues = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['values'];
+            var truthValue;
+            var biasValue;
             for (var li = 0; li < siteLevels.length; li++) {
                 var siteLevelValue = siteValues[li];
                 switch (statistic) {
                     case "bias":
                     case "mae":
                         // find siteLevelBias and sum it in
-                        var truthValue = null;
-                        var biasValue = null;
+                        truthValue = null;
+                        biasValue = null;
                         try {
                             truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
                             if (statistic == "mae") {
@@ -88,8 +91,8 @@ export var getDatum = function (rawAxisData, axisTime, levelCompletenessX, level
                         }
                         break;
                     case "rmse":
-                        var truthValue = null;
-                        var biasValue = null;
+                        truthValue = null;
+                        biasValue = null;
                         try {
                             truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
                             biasValue = siteLevelValue - truthValue;
@@ -158,7 +161,7 @@ export var getDatum = function (rawAxisData, axisTime, levelCompletenessX, level
     return datum;
 };
 
-export var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator) {
+var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -319,7 +322,7 @@ export var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable
     };
 };
 
-export var getPointSymbol = function(curveIndex) {
+var getPointSymbol = function(curveIndex) {
     var pointSymbol = "circle";
     switch (curveIndex % 5) {
         case 0:
@@ -340,3 +343,9 @@ export var getPointSymbol = function(curveIndex) {
     }
     return pointSymbol;
 };
+
+export default matsWfipUtils = {
+    getDatum:getDatum,
+    queryWFIP2DB:queryWFIP2DB,
+    getPointSymbol:getPointSymbol
+}

@@ -562,7 +562,6 @@ Meteor.startup(() => {
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
 
@@ -617,6 +616,8 @@ Meteor.startup(() => {
             regionModelOptionsMap[myModels[i]].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
         }
     }
+
+    console.log("Running in " + process.env.NODE_ENV + " mode...");
     doRoles();
     doAuthorization();
     doCredentials();

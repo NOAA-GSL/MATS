@@ -89,7 +89,8 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 };
 
 dataSeriesZoom = function (plotParams, plotFunction) {
-    console.log(JSON.stringify(plotParams));
+    console.log(JSON.stringify(plotParams,null,2));
+    var dataRequests = {}; // used to store data queries
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -114,10 +115,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        //console.log("diffFrom=" + diffFrom);
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
-        //var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[model][curve['region']][0];
         var tableRegion = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
         var label = curve['label'];
         var top = curve['top'];
@@ -198,6 +197,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{average}}', average);
             console.log("query=" + statement);
+            dataRequests[curve.label] = statement;
             var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
             d = queryResult.data;
             if (d[0] === undefined) {
@@ -212,13 +212,10 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            //console.log("in different curve" );
-
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1];
             var minuendData = dataset[minuendIndex].data;
             var subtrahendData = dataset[subtrahendIndex].data;
-            var minuendDataOptions = dataOptions[minuendIndex];
             // add dataset copied from minuend
             var d = [];
             // do the differencing of the data
@@ -278,7 +275,6 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
         };
-        //console.log("d="+d);
 
         dataset.push(pOptions);
         // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
@@ -290,16 +286,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
-    //console.log("matching="+matching);
     if (matching) {
         var dataLength = dataset[0].data.length;
         var matchNullIndexes = [];
 
-        //console.log("in matching");
         for (var di = 0; di < dataLength; di++) {
             for (var ci = 0; ci < numCurves; ci++) {
                 /* it is possible to have a curve that does not have any data at the front */
-                // console.log("di="+di+"  ci="+ci);
                 if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
                     matchNullIndexes.push(di);
                     break;
@@ -396,11 +389,15 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {color: 'black', points: {show: false},annotation:"", data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+    dataset.push( {color: 'black', points: {show: false},annotation:"", data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
     var result = {
         error: error,
         data: dataset,
-        options: options
+        options: options,
+        basis:{
+            plotParams:plotParams,
+            queries:dataRequests
+        }
     };
     plotFunction(result);
 };

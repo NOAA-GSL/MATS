@@ -74,10 +74,24 @@ var getBestFit = function() {
     return "";  // error condition actually - shouldn't ever happen
 };
 
-export default matsPlotUtils = {
+ var containsPoint = function(pointArray,point) {
+     var lat = point[0];
+     var lon = point[1];
+     for (var i =0; i < pointArray.length; i++) {
+         var pLat = pointArray[i][0];
+         var pLon = pointArray[i][1];
+         if (lat === pLat && lon === pLon) {
+             return true
+         }
+     }
+     return false;
+ };
+
+ export default matsPlotUtils = {
     getAxisText:getAxisText,
     getCurveText:getCurveText,
     getPlotType:getPlotType,
     getPlotFormat:getPlotFormat,
-    getBestFit:getBestFit
+    getBestFit:getBestFit,
+    containsPoint:containsPoint
 };

@@ -514,7 +514,7 @@ Meteor.startup(function () {
         Console.log(err.message);
     }
 
-
+    console.log("Running in " + process.env.NODE_ENV + " mode...");
     doRoles();
     doAuthorization();
     doCredentials();

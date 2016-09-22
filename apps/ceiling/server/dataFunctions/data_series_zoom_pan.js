@@ -97,6 +97,7 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 
 dataSeriesZoom = function (plotParams, plotFunction) {
     console.log(JSON.stringify(plotParams,null,2));
+    var dataRequests = {}; // used to store data queries
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -207,6 +208,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTime}}', validTime);
 
             console.log("query=" + statement);
+            dataRequests[curve.label] = statement;
             var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
             d = queryResult.data;
             ctime = queryResult.ctime;
@@ -330,13 +332,13 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         }
 
         var timeIntersection = dataset[0].ctime;
-        console.log("timeIntersection=" + timeIntersection);
+        //console.log("timeIntersection=" + timeIntersection);
         for (var ci = 1; ci < numCurves; ci++) {
             var this_time = dataset[ci].ctime;
             timeIntersection = _.intersection(this_time, timeIntersection);
         }
 
-        console.log("timeIntersection=" + timeIntersection);
+        //console.log("timeIntersection=" + timeIntersection);
         var new_curve_dd = {};
         for (var ci = 0; ci < numCurves; ci++) {
             new_curve_dd[ci] = [];
@@ -383,7 +385,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
         for (var ci = 0; ci < numCurves; ci++) {
             dataset[ci].data = [];
             dataset[ci].data = new_curve_dd[ci];
-            console.log("ci=" + ci + " data=" + JSON.stringify(dataset[ci].data));
+            //console.log("ci=" + ci + " data=" + JSON.stringify(dataset[ci].data));
         }
 
         for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -395,8 +397,8 @@ dataSeriesZoom = function (plotParams, plotFunction) {
                 var minuendData = dataset[minuendIndex].data;
                 var subtrahendData = dataset[subtrahendIndex].data;
 
-                console.log("d1=" + minuendData);
-                console.log("d2=" + subtrahendData);
+                //console.log("d1=" + minuendData);
+                //console.log("d2=" + subtrahendData);
 
 
                 // add dataset copied from minuend
@@ -511,7 +513,7 @@ dataSeriesZoom = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push(dataZero = {
+    dataset.push({
         color: 'black',
         points: {show: false},
         annotation: "",
@@ -522,7 +524,11 @@ dataSeriesZoom = function (plotParams, plotFunction) {
     var result = {
         error: error,
         data: dataset,
-        options: options
+        options: options,
+        basis:{
+            plotParams:plotParams,
+            queries:dataRequests
+        }
     };
     plotFunction(result);
 };

@@ -60,7 +60,7 @@ var doPlotParams = function () {
                 optionsMap: plotFormats,
                 options: Object.keys(plotFormats),
                 default: plotFormats[matsTypes.PlotFormats.none],
-                controlButtonCovered: false,
+                controlButtonCovered: true,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -421,8 +421,8 @@ Meteor.startup(function () {
             role: "sum_data",
             status: "active",
             host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
+            user        : 'readonly',
+            password    : 'ReadOnly@2016!',
             database    : 'visibility_sums',
             connectionLimit : 10
         });
@@ -431,8 +431,8 @@ Meteor.startup(function () {
             role: "model_data",
             status: "active",
             host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
+            user        : 'readonly',
+            password    : 'ReadOnly@2016!',
             database    : 'visibility',
             connectionLimit : 10
         });
@@ -487,7 +487,6 @@ Meteor.startup(function () {
                 console.log(err.message);
             }
             if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
                 console.log('No data in database ' + modelSettings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows.length; i++) {
@@ -530,7 +529,7 @@ Meteor.startup(function () {
      Console.log(err.message);
      }
      */
-
+    console.log("Running in " + process.env.NODE_ENV + " mode...");
     doRoles();
     doAuthorization();
     doCredentials();

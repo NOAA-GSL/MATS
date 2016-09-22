@@ -230,7 +230,7 @@
             }
         };
 
-    export default regression = function(method, data, order) {
+    export default  regression = function(method, data, order) {
        if (typeof method == 'string') {
            return methods[method](data, order);
        }

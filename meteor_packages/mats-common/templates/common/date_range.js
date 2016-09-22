@@ -34,7 +34,7 @@ Template.dateRange.onRendered(function() {
             document.getElementById('curve-dates-item').style.display = "none";
         }
         if (document.getElementById('dates-item')) {
-            document.getElementById('dates-item').style.display = "block";
+                document.getElementById('dates-item').style.display = "block";
         }
     } else {
         if (document.getElementById('curve-dates-item')) {
@@ -45,6 +45,7 @@ Template.dateRange.onRendered(function() {
         }
     }
     var name = this.data.name;
+    //var name = matsTypes.InputTypes.controlButton + "-" + this.data.name + "-value";
     $(function() {
             $('input[name=' + name + ']').daterangepicker({
             "timePicker": true,

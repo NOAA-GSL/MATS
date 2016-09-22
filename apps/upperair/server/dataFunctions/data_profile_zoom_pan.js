@@ -120,6 +120,8 @@ var get_err = function (sub_val_array, sub_secs_array) {
 };
 
 dataProfileZoom = function(plotParams, plotFunction) {
+    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
+    var dataRequests = {}; // used to store data queries
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -196,6 +198,7 @@ dataProfileZoom = function(plotParams, plotFunction) {
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             console.log("query=" + statement);
+            dataRequests[curve.label] = statement;
             d = queryDB(statement, validTimeStr, statisticSelect, label);
         } else {
             // this is a difference curve
@@ -419,11 +422,15 @@ dataProfileZoom = function(plotParams, plotFunction) {
     };
 
     // add black 0 line curve
-    dataset.push(dataZero = {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
+    dataset.push( {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
     var result = {
         error: error,
         data: dataset,
-        options: pOptions
+        options: pOptions,
+        basis:{
+            plotParams:plotParams,
+            queries:dataRequests
+        }
     };
     plotFunction(result);
 };

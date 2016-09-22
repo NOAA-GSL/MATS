@@ -4,6 +4,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsMethods} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
 
 var width = function () {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -316,5 +317,9 @@ Template.graph.events({
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
         $("#sendModal").modal('hide');
+    },
+    'click .basis': function () {
+        Session.set("data",matsCurveUtils.PlotResult.basis);
+        $("#dataModal").modal('show');
     }
 });

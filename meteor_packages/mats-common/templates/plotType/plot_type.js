@@ -11,7 +11,14 @@ Template.plotType.helpers({
        } else {
            return matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
        }
-   }
+   },
+    display: function() {    // don't display the choice if there is only one choice
+        if (matsCollections.PlotGraphFunctions.find({}).fetch().length === 1) {
+            return "hidden";
+        } else {
+            return "";
+        }
+    }
 });
 
 var refreshDependents = function(dependentNames) {
