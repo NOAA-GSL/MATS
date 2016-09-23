@@ -155,7 +155,7 @@ Template.select.rendered = function(){
                 }
             }
         }
-
+        matsParamUtils.setValueTextForParamName(name,options[0]);
         refreshPeer(peerName);
         refreshDependents(dependentNames);
     };

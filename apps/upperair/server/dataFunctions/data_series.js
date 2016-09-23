@@ -116,7 +116,6 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var dataOptions = [];
     var variableStatSet = Object.create(null);
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -154,10 +153,10 @@ dataSeries = function (plotParams, plotFunction) {
         // The axis number is assigned to the variableStatSet value, which is the variableStat.
         var variableStat = variableStr + ":" + statisticSelect;
         curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
-        var xmax;
-        var ymax;
-        var xmin;
-        var ymin;
+        var xmax = Number.MIN_VALUE;
+        var ymax = Number.MIN_VALUE;
+        var xmin = Number.MAX_VALUE;
+        var ymin = Number.MAX_VALUE;
         var interval;
 
         if (averageStr == "None") {
@@ -234,8 +233,10 @@ dataSeries = function (plotParams, plotFunction) {
                     d[i][1] = null;
                 }
                 // ymin and ymax will change with diff
-                ymin = ymin < d[i][1] ? ymin : d[i][1];
-                ymax = ymax > d[i][1] ? ymax : d[i][1];
+                if (d[i][1] !== null) {
+                    ymin = ymin < d[i][1] ? ymin : d[i][1];
+                    ymax = ymax > d[i][1] ? ymax : d[i][1];
+                }
             }
         }
 
@@ -269,6 +270,10 @@ dataSeries = function (plotParams, plotFunction) {
         var mean =0 ;
         for (var i = 0; i < d.length; i++) {
             mean =   mean +d[i][1];
+            if (d[i][1] !== null) {
+                ymin = d[i][1] < ymin ? d[i][1] : ymin;
+                ymax = d[i][1] > ymax ? d[i][1] : ymax;
+            }
         }
         mean = mean/d.length;
         var pOptions = {
@@ -330,7 +335,9 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1
+            alignTicksWithAxis: 1,
+            //min: ymin * 0.8,
+            //max: ymax * 0.8
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
@@ -395,7 +402,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to find the minimum and maximum x value for making the zero curve
-    dataset.push( {color: 'black', points: {show: false},annotation:"", data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
+    //dataset.push( {color: 'black', points: {show: false},annotation:"", data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]});
     var result = {
         error: error,
         data: dataset,

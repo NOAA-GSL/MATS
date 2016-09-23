@@ -33,6 +33,7 @@ dataSeries = function (plotParams, plotFunction) {
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
     var baseCurveIndex = 0;
     var options;
+    var curveQueryResults = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -170,7 +171,8 @@ dataSeries = function (plotParams, plotFunction) {
              There is at least one real (non null) value for each site.
              */
 
-            curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
+            //curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
+            curveQueryResults[curveIndex] = queryResult; // save raw data for matching
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = _.union.apply(_, queryResult.allLevels);
@@ -304,10 +306,11 @@ dataSeries = function (plotParams, plotFunction) {
             }
         }
         for (var rci = 0; rci < ci; rci ++) {
-            earliestTime = Number((curves[rci].queryResult.allTimes[0] < earliestTime) ? curves[rci].queryResult.allTimes[0] : earliestTime);
-            latestTime = Number((curves[rci].queryResult.allTimes[curves[rci].queryResult.allTimes.length -1] >
-            latestTime) ? curves[rci].queryResult.allTimes[curves[rci].queryResult.allTimes.length -1] : latestTime);
-            minimumInterval = Number((curves[rci].queryResult.minInterval < minimumInterval) ? (curves[rci].queryResult.minInterval) : minimumInterval);
+            //earliestTime = Number((curves[rci].queryResult.allTimes[0] < earliestTime) ? curves[rci].queryResult.allTimes[0] : earliestTime);
+            earliestTime = Number((curveQueryResults[rci].allTimes[0] < earliestTime) ? curveQueryResults[rci].allTimes[0] : earliestTime);
+            latestTime = Number((curveQueryResults[rci].allTimes[curveQueryResults[rci].allTimes.length -1] >
+            latestTime) ? curveQueryResults[rci].allTimes[curveQueryResults[rci].allTimes.length -1] : latestTime);
+            minimumInterval = Number((curveQueryResults[rci].minInterval < minimumInterval) ? (curveQueryResults[rci].minInterval) : minimumInterval);
         }
 
         /* need a moving pointer for each curve data set.
@@ -337,7 +340,8 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     dataIndexes[ci]++;
                     if (curves[ci].diffFrom === null || curves[ci].diffFrom === undefined) {
-                        var queryResultDataTime = curves[ci].queryResult.data[time];
+                        //var queryResultDataTime = curves[ci].queryResult.data[time];
+                        var queryResultDataTime = curveQueryResults[ci].data[time];
                         if (matchTime) {
                             if (queryResultDataTime == null || (queryResultDataTime.timeMean == null)) {
                                 timeMatches = false;
@@ -405,8 +409,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMin * 0.95,
-            max: yAxisMax * 0.95
+            min: yAxisMin * 0.9,
+            max: yAxisMax * 0.9
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
