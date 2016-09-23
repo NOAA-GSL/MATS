@@ -158,7 +158,6 @@ dataProfile = function (plotParams, plotFunction) {
              }
 
              */
-            curves[curveIndex]['queryResult'] = queryResult; // save raw data for matching
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = _.union.apply(_, queryResult.allLevels);
