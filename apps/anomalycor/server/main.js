@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { mysql } from 'meteor/pcel:mysql';
 //import { Future } from 'fibers/future';  // this is broken somehow in meteor 1.4.1 - shouldn't be - might be fixed in later release
+// this has changed
 const Future = Npm.require('fibers/future');
 import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
