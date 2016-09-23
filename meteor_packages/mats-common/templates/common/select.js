@@ -107,7 +107,8 @@ Template.select.rendered = function(){
     var optionsMap = this.data.optionsMap;
     var peerName = this.data.peerName;
     var dependentNames = this.data.dependentNames;
-    var dispElem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value');
+    var dispElemName = matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value';
+    var dispElem = document.getElementById(dispElemName);
     var superiorName = this.data.superiorName;
     var refresh = function(selectedSuperiorValue) {
         /*
@@ -125,6 +126,10 @@ Template.select.rendered = function(){
         // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
         var name = elem.name;
         var elems = document.getElementsByClassName("data-input");
+        if (!elem.selectedIndex) {
+            elem.selectedIndex = 0;
+        }
+        var selectedText = elem.options[elem.selectedIndex].text;
         var brothers = [];
         for (var i=0; i<elems.length; i++) {
             if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
@@ -136,7 +141,13 @@ Template.select.rendered = function(){
         } else {
             options = optionsMap[selectedSuperiorValue];
         }
-        matsMethods.setSelectParamOptions.call({name:name, options:options}, function (error) {
+
+        var selectedOptionIndex = options.indexOf(selectedText);
+        if (selectedOptionIndex == -1) {
+            setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText +  "' is no longer an option ");
+        }
+        selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
+        matsMethods.setSelectParamOptions.call({name:name, options:options, optionIndex:selectedOptionIndex}, function (error) {
             if (error) {
                 setError( "matsMethods.setSelectParamOptions: from select.js error: " + error.message );
             }
@@ -150,12 +161,13 @@ Template.select.rendered = function(){
                     belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
                     // set the display button to first value
                     if (i === 0) {
+                        matsParamUtils.setValueTextForParamName(dispElemName,options[i]);
                         dispElem.textContent = options[i];
                     }
                 }
             }
         }
-        matsParamUtils.setValueTextForParamName(name,options[0]);
+
         refreshPeer(peerName);
         refreshDependents(dependentNames);
     };
@@ -221,10 +233,10 @@ Template.select.helpers({
 });
 
 Template.select.events({
-    'change': function() {
+    'change': function(event) {
         refreshPeer(this.peerName);
+        matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.selectedIndex].text);
         refreshDependents(this.dependentNames);
-        matsParamUtils.setValueTextForParamName(this.name);
         checkDisableOther(this);
         checkHideOther(this);
      },

@@ -39,7 +39,7 @@ var getValueIdForParamName = function(paramName) {
 };
 
 // set the VALUE BOX text for the element that corresponds to the param name
-var setValueTextForParamName = function(paramName, text) {
+var setValueTextForParamName = function(paramName, text, callback) {
     try {
         var text = text;
         var value = text;

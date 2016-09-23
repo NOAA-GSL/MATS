@@ -42,6 +42,18 @@ Template.graph.onCreated(function () {
         document.getElementById("textProfileView").style.display = "none";
         document.getElementById("textScatter2dView").style.display = "none";
     });
+
+    $(document).keyup(function(event) {
+        if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
+            document.getElementById('graph-control').style.display = 'block';
+            document.getElementById('showAdministration').style.display = 'block';
+            document.getElementById('navbar').style.display = 'block';
+            document.getElementById('footnav').style.display = 'block';
+            document.getElementById('curve-text-buttons-grp').style.display = 'block';
+            document.getElementById('plotType').style.display = 'block';
+            Session.set("printMode", false);
+        }
+    });
 });
 
 
@@ -181,31 +193,21 @@ Template.graph.events({
         window.open(location);
         return false;
     },
-    'click .print': function () {
-        document.getElementById('graph-control').style.display = 'none';
-        document.getElementById('administration').style.display = 'none';
-        document.getElementById('navbar').style.display = 'none';
-        document.getElementById('footnav').style.display = 'none';
-        document.getElementById('curve-text-buttons-grp').style.display = 'none';
-        html2canvas(document.getElementById('graph-container'), {
-            onrendered: function (canvas) {
-                var image = canvas.toDataURL('image/png');
-                var win = window.open("", "MATS Print View");
-                win.document.body.innerHTML = "<html style='margin:0;padding:0;border:0;'>" +
-                    '<style type="text/css">html, title, body, img { height: 100%;margin:0;padding:0;border:0 }</style>' +
-                    "<head>" +
-                    "</head>" +
-                    "<body'>" +
-                    "<img src=" + image + "></img>" +
-                    "</body>" +
-                    "</html>";
-            }
-        });
+    'click .header': function(event){
         document.getElementById('graph-control').style.display = 'block';
-        document.getElementById('administration').style.display = 'block';
+        document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
         document.getElementById('curve-text-buttons-grp').style.display = 'block';
+    },
+    'click .print': function () {
+        Session.set("printMode", true);
+        document.getElementById('graph-control').style.display = 'none';
+        document.getElementById('showAdministration').style.display = 'none';
+        document.getElementById('navbar').style.display = 'none';
+        document.getElementById('footnav').style.display = 'none';
+        document.getElementById('curve-text-buttons-grp').style.display = 'none';
+        document.getElementById('plotType').style.display = 'none';
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
@@ -214,7 +216,6 @@ Template.graph.events({
         window[graphFunction](dataset, options);
     },
     'click .plotButton': function () {
-        var plotType = matsPlotUtils.getPlotType();
         document.getElementById("plotButton").style.display = "none";
         document.getElementById("textButton").style.display = "block";
         document.getElementById("plot-buttons-grp").style.display = "block";
@@ -267,56 +268,6 @@ Template.graph.events({
             return false;
         }
         $("#sendModal").modal('show');
-    },
-    'click .send': function () {
-        var title = "";
-        if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
-            title = "";
-        } else {
-            title = matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-        }
-        var plotText = "";
-        var p = Session.get('PlotParams');
-        if (p !== undefined) {
-            plotText = p.curve - dates + " : " + p.plotFormat;
-        } else {
-            plotText = "no plot params";
-        }
-
-        var subject = title + " : " + plotText;
-        document.getElementById('graph-control').style.display = 'none';
-        document.getElementById('administration').style.display = 'none';
-        document.getElementById('navbar').style.display = 'none';
-        document.getElementById('footnav').style.display = 'none';
-
-
-        $("#sendModal").modal('hide');
-        html2canvas(document.getElementById('graph-container'), {
-            onrendered: function (canvas) {
-                var toAddress = document.getElementById('sendAddress').value;
-                matsMethods.addSentAddress.call(toAddress, function (error) {
-                    if (error) {
-                        setError('matsMethods.addSentAddress from graph.js error: ' + error.message);
-                        $("#sendModal").modal('hide');
-                        return false;
-                    }
-                });
-                var image = canvas.toDataURL('image/png');
-
-                matsMethods.emailImage.call(image, toAddress, subject, function (error) {
-                    if (error) {
-                        setError("matsMethods.emailImage from graph.js " + error.message);
-                        $("#sendModal").modal('hide');
-                        return false;
-                    }
-                });
-            }
-        });
-        document.getElementById('graph-control').style.display = 'block';
-        document.getElementById('administration').style.display = 'block';
-        document.getElementById('navbar').style.display = 'block';
-        document.getElementById('footnav').style.display = 'block';
-        $("#sendModal").modal('hide');
     },
     'click .basis': function () {
         Session.set("data",matsCurveUtils.PlotResult.basis);

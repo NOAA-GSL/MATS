@@ -327,14 +327,18 @@ const setSelectParamOptions = new ValidatedMethod({
         name: 'matsMethods.setSelectParamOptions',
         validate: new SimpleSchema({
             name: {type: String},
-            options: {type: [String]}
+            options: {type: [String]},
+            optionIndex: {type: Number, optional:true}
         }).validator( { clean: true, filter: false } ),
-        run({name, options}){
+        run({name, options, optionIndex}){
             var param = matsCollections.CurveParams.findOne({name: name});
+            if (optionIndex === undefined) {
+                optionIndex = 0;
+            }
             if (param) {
                 param.options = options;
                 var param_id = param._id;
-                matsCollections.CurveParams.update(param_id, {$set: {options: options}});
+                matsCollections.CurveParams.update(param_id, {$set: {options: options, default:options[optionIndex]}});
             }
             return false;
         }

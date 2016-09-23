@@ -57,7 +57,7 @@ var doPlotParams = function () {
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
                 options: Object.keys(plotFormats),
-                default: plotFormats[matsTypes.PlotFormats.none],
+                default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,

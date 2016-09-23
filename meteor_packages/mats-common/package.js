@@ -72,7 +72,6 @@ Package.onUse(function(api) {
 
   //client
   api.addFiles('imports/startup/client/curve_util.js');
-  api.addFiles('imports/startup/client/html2canvas.js');
   api.addFiles('imports/startup/client/index.js');
   api.addFiles('imports/startup/client/init.js');
   api.addFiles('imports/startup/client/jquery.json-viewer.css');
@@ -91,6 +90,7 @@ Package.onUse(function(api) {
   //client
   api.addFiles('client/main.js', "client");
   api.addFiles('client/error.js', "client");
+  api.addFiles('client/info.js', "client");
 
   //server
   api.addFiles('server/main.js', "server");
@@ -127,7 +127,10 @@ Package.onUse(function(api) {
   
   api.addFiles("templates/error/error.html", "client");
   api.addFiles("templates/error/error.js", "client");
-  
+
+  api.addFiles("templates/info/info.html", "client");
+  api.addFiles("templates/info/info.js", "client");
+
   api.addFiles("templates/graph/graph.html", "client");
   api.addFiles("templates/graph/graph.js", "client");
   
