@@ -441,7 +441,7 @@ dataSeries = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            //axisLabel: variableStatSet[variableStat].label + " : " + variableStat,
+            axisLabel: curve.label,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,

@@ -21,7 +21,6 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
     var ctime = [];
     var ymin;
     var ymax;
-
     sumPool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -34,7 +33,7 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
         } else {
             ymin = Number(rows[0].avtime);
             ymax = Number(rows[0].avtime);
-            var curveTime = [] ;
+            var curveTime = [];
             var curveStat = [];
             var N0_max=0;
             var N_times_max;
@@ -63,7 +62,6 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
-
             interval = time_interval * 1000;
             xmin = Number(rows[0].avtime) * 1000;
 
