@@ -12,12 +12,13 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
         database: 1,
         connectionLimit: 1
     });
-    var sumPool = mysql.createPool(sumSettings);    var dFuture = new Future();
+    var sumPool = mysql.createPool(sumSettings);
+    var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    var ctime=[] ;
+    var ctime = [];
     var ymin;
     var ymax;
 
@@ -33,15 +34,15 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
         } else {
             ymin = Number(rows[0].avtime);
             ymax = Number(rows[0].avtime);
-            var curveTime=[] ;
-            var curveStat =[];
+            var curveTime = [] ;
+            var curveStat = [];
             var N0_max=0;
             var N_times_max;
 //            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
-                var stat = rows[rowIndex].stat0;
+                var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
                 if (rowIndex < rows.length - 1) {
@@ -64,10 +65,10 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
             }
 
             interval = time_interval * 1000;
-            xmin = Number(rows[0].avtime)*1000;
-            var loopTime =xmin;
-            while (loopTime < xmax + 1) {
+            xmin = Number(rows[0].avtime) * 1000;
 
+            var loopTime = xmin;
+            while (loopTime < xmax + 1) {
                 if (curveTime.indexOf(loopTime) < 0) {
                     d.push([loopTime, null]);
                     ctime.push(loopTime);
@@ -123,7 +124,6 @@ dataSeries = function (plotParams, plotFunction) {
     var mxmin = qxmin; // used to draw zero line
 
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
-
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;

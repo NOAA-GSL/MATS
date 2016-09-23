@@ -7,16 +7,22 @@ const Future = require('fibers/future');
 
 // use future to wait for the query callback to complete
 var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
-    var sumSettings = matsCollections.Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+    var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     var sumPool = mysql.createPool(sumSettings);
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
+    var ctime = [];
     var ymin;
     var ymax;
-    // modelPool.query(statement, function (err, rows) {
     sumPool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {

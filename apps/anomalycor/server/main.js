@@ -134,28 +134,28 @@ var doCurveParams = function () {
 
 
         optionsMap = {
-            'TSS (True Skill Score)': ['(sum(m0.yy)+0.00) / sum(m0.yy+m0.ny) + (sum(m0.nn)+0.00) / sum(m0.nn+m0.yn) - 1 as stat0'],
+            'TSS (True Skill Score)': ['(sum(m0.yy)+0.00) / sum(m0.yy+m0.ny) + (sum(m0.nn)+0.00) / sum(m0.nn+m0.yn) - 1 as stat'],
 
-            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) / 1000 as stat0'],
+            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) / 1000 as stat'],
 
-            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) / 1000 as stat0'],
+            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) / 1000 as stat'],
 
-            'Ratio (Nlow / Ntot)': ['sum(m0.yy+m0.ny+0.000) / sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat0'],
+            'Ratio (Nlow / Ntot)': ['sum(m0.yy+m0.ny+0.000) / sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat'],
 
-            'PODy (POD of visibility < threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) as stat0'],
+            'PODy (POD of visibility < threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) as stat'],
 
-            'PODn (POD of visibility > threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) as stat0'],
+            'PODn (POD of visibility > threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) as stat'],
 
-            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy) as stat0'],
+            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy) as stat'],
 
-            'Bias (Forecast low cigs/actual)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat0'],
+            'Bias (Forecast low cigs/actual)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat'],
 
-            'N in average (to nearest 100)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/100000 as stat0'],
+            'N in average (to nearest 100)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/100000 as stat'],
 
-            'CSI (Critical Success Index)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn) as stat0'],
+            'CSI (Critical Success Index)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn) as stat'],
 
             'HSS (Heidke Skill Score)': ['2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) / ((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) + ' +
-            '(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as  stat0']
+            '(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as  stat']
         };
 
         matsCollections.CurveParams.insert(

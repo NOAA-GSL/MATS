@@ -35,7 +35,9 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
             ymax = Number(rows[0].avtime);
             var curveTime = [];
             var curveStat = [];
-            var N0_max = 0;
+            var N0_max=0;
+            var N_times_max;
+//            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
@@ -51,7 +53,9 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 
 
                 if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) N_times_max = N_times_loop;
+                if (N_times_loop > N_times) {
+                    N_times_max = N_times_loop;
+                }
 
                 curveTime.push(avSeconds * 1000);
                 curveStat.push(stat);
@@ -87,19 +91,15 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
     });
     // wait for future to finish
     dFuture.wait();
-
-
-    return {
-        data: d,
-        error: error,
-        ymin: ymin,
-        ymax: ymax,
-        N0: N0,
-        N_times: N_times,
-        averageStr: averageStr,
-        interval: interval,
-        ctime: ctime
-    };
+    return {data:d,
+        error:error,
+        ymin:ymin,
+        ymax:ymax,
+        N0:N0,
+        N_times:N_times,
+        averageStr:averageStr,
+        interval:interval,
+        ctime:ctime};
 };
 
 dataSeries = function (plotParams, plotFunction) {
