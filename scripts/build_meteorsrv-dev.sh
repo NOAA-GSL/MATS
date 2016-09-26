@@ -57,6 +57,10 @@ do
 	npm cache clean
     # create new minor version for app (build date)
     julian=`date +%Y%j`
+    if [ ! -d "private" ]; then
+    	mkdir "private"
+    fi
+
     echo version >> private/version
 
     git push gerrit:MATS_for_EMB origin:master
