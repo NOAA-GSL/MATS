@@ -46,12 +46,6 @@ if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
 fi
-# create new minor versions for apps (build date)
-julian=`date +%Y%j`
-echo version >> private/version
-
-git push gerrit:MATS_for_EMB origin:master
-git push
 
 #build the apps
 cd apps
@@ -61,6 +55,12 @@ do
 	echo "building app $x"
 	meteor reset
 	npm cache clean
+    # create new minor version for app (build date)
+    julian=`date +%Y%j`
+    echo version >> private/version
+
+    git push gerrit:MATS_for_EMB origin:master
+    git push
 	meteor build /builds
 	cd ..
 done
