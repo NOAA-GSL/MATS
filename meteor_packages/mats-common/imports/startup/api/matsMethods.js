@@ -650,5 +650,4 @@ export default matsMethods = {
     saveSettings:saveSettings,
     addSentAddress:addSentAddress,
     emailImage:emailImage
-//    fred:fred
 };
