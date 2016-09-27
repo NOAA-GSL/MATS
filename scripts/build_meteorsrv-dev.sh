@@ -46,19 +46,6 @@ if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
 fi
-# create new minor versions for apps (build date)
-cd meteor_packages
-julian=`date +%Y%j`
-find . -name version.html | while read x
-do
-	cat $x | sed "s|<i>[0-9]*</i>|<i>${julian}</i>|" > /tmp/version.html
-	mv /tmp/version.html $x
-	git commit -m"versioned per build" $x
-done
-cd ..
-
-#git push gerrit:MATS_for_EMB origin:master
-git push
 
 #build the apps
 cd apps
@@ -67,6 +54,17 @@ do
 	cd $x
 	echo "building app $x"
 	meteor reset
+	npm cache clean
+    # create new minor version for app (build date)
+    julian=`date +%Y%j`
+    if [ ! -d "private" ]; then
+    	mkdir "private"
+    fi
+
+    echo version >> private/version
+
+    git push gerrit:MATS_for_EMB origin:master
+    git push
 	meteor build /builds
 	cd ..
 done

@@ -79,7 +79,6 @@ Package.onUse(function(api) {
 
   //server
   api.addFiles('imports/startup/server/data_util.js');
-  api.addFiles('imports/startup/server/googleCred.js');
   api.addFiles('imports/startup/server/index.js');
   api.addFiles('imports/startup/server/publications.js');
   api.addFiles('imports/startup/server/wfiputil.js');
@@ -112,7 +111,8 @@ Package.onUse(function(api) {
   api.addFiles("templates/spinner/spinner.js", "client");
   
   api.addFiles('templates/Home.html', "client");
-  api.addFiles('templates/version.html', "client");
+  api.addFiles('templates/version/version.html', "client");
+  api.addFiles('templates/version/version.js', "client");
 
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
