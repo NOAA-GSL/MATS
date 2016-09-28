@@ -66,7 +66,7 @@ const secsConvert = function (dStr) {
             hour = timeArray[0];
             minute = timeArray[1];
         }
-        var my_date = new Date(yr, month - 1, day, hour, minute, 0);
+        var my_date = new Date(Date.UTC(yr, month - 1, day, hour, minute, 0));
         // to UTC time, not local time
         var date_in_secs = my_date.getTime();
     }
