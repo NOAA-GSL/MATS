@@ -18,6 +18,7 @@ shell-server@0.2.1            # Server-side component of the `meteor shell` comm
 pcel:mysql
 seba:minifiers-autoprefixer
 iron:router@1.0.13
+#useraccounts:iron-routing@1.14.2
 session
 momentjs:moment
 randyp:mats-common

@@ -585,6 +585,11 @@ var doSettings = function () {
             resetFromCode: true
         });
     }
+    // always do the version...
+    var settings = matsCollections.Settings.findOne();
+    var settingsId = settings._id;
+    settings.version = Assets.getText('version');
+    matsCollections.Settings.update(settingsId,{$set:settings});
 };
 
 var doColorScheme = function () {
@@ -925,7 +930,7 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    console.log("Running in " + process.env.NODE_ENV + " mode...");
+    
 
     doRoles();
     doAuthorization();
@@ -939,6 +944,7 @@ Meteor.startup(function () {
     doScatterAxisTextPattern();
     doPlotParams();
     doCurveTextPatterns();
+    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
 });
 
 

@@ -324,6 +324,11 @@ var doSettings = function () {
             resetFromCode: true
         });
     }
+    // always do the version...
+    var settings = matsCollections.Settings.findOne();
+    var settingsId = settings._id;
+    settings.version = Assets.getText('version');
+    matsCollections.Settings.update(settingsId,{$set:settings});
 };
 
 var doColorScheme = function () {
@@ -529,7 +534,7 @@ Meteor.startup(function () {
      Console.log(err.message);
      }
      */
-    console.log("Running in " + process.env.NODE_ENV + " mode...");
+    
     doRoles();
     doAuthorization();
     doCredentials();
@@ -540,11 +545,7 @@ Meteor.startup(function () {
     doSavedCurveParams();
     doPlotParams();
     doCurveTextPatterns();
-
-    // $(window).resize(function() {
-    //     $('#map').css('height', window.innerHeight - 82 - 45);
-    // });
-    // $(window).resize(); // trigger resize event
+    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
 });
 
 
