@@ -4,6 +4,7 @@ import { mysql } from 'meteor/pcel:mysql';
 const Future = Npm.require('fibers/future');
 import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
 
 var modelOptionsMap ={};
 //var regionOptionsMap ={};
