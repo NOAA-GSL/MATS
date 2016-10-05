@@ -86,7 +86,7 @@ Template.textSeriesOutput.helpers({
             return;
         }
         var time = matsCurveUtils.PlotResult.data[0].data[rowIndex][0];
-        var line = "<td>" + moment.utc(time).format('YYYY-MM-DD:HH') + "</td>";
+        var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD:HH') + "</td>";
         var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
