@@ -233,15 +233,15 @@ Template.select.helpers({
 });
 
 Template.select.events({
-    'change': function(event) {
+    'change .select': function(event) {
         refreshPeer(this.peerName);
-        matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.selectedIndex].text);
+        matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[(event.currentTarget).attributes['data-selectid'].value].text);
         refreshDependents(this.dependentNames);
         checkDisableOther(this);
         checkHideOther(this);
      },
     'change .selectAll': function(event) {
-        var selectorId = event.target.dataset.selectid;
+        var selectorId = (event.currentTarget).attributes['data-selectid'].value;
         var elem = document.getElementById(selectorId);
         var select = false;
         if (event.target.checked == true) {
