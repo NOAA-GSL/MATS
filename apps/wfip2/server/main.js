@@ -495,6 +495,7 @@ var doCurveTextPatterns = function () {
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
+                ['', 'statistic', ':'],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
                 [' discriminators:', 'discriminator', ', '],
@@ -511,6 +512,7 @@ var doCurveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
+                ['', 'statistic', ':'],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
                 [' discriminators:', 'discriminator', ', '],
@@ -528,12 +530,14 @@ var doCurveTextPatterns = function () {
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
+                ['', 'xaxis-statistic', ':'],
                 ['fcst_len:', 'xaxis-forecast-length', 'h, '],
                 ['', 'xaxis-discriminator', ', '],
                 ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
+                ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
                 ['','curve-dates',' '],
@@ -590,7 +594,7 @@ var doSettings = function () {
     // always do the version...
     var settings = matsCollections.Settings.findOne();
     var settingsId = settings._id;
-    settings.version = Assets.getText('version');
+    settings['version'] = Assets.getText('version');
     matsCollections.Settings.update(settingsId,{$set:settings});
 };
 
