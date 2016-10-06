@@ -207,30 +207,30 @@ dataSeries = function (plotParams, plotFunction) {
              }
              where ....
              resultData = {
-             time0: {
-             sites: {
-             site0: {
-             levels:[],
-             values:[],
-             sum: Number,
-             mean: Number,
-             numLevels: Number,
-             max: Number,
-             min: Number
-             },
-             site1: {...},
-             .
-             .
-             siten:{...},
-             }
-             timeMean: Number   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
-             },
-             time1:{....},
-             .
-             .
-             timen:{....}
+                 time0: {
+                     sites: {
+                         site0: {
+                             levels:[],
+                             values:[],
+                             sum: Number,
+                             mean: Number,
+                             numLevels: Number,
+                             max: Number,
+                             min: Number
+                         },
+                         site1: {...},
+                         .
+                         .
+                         siten:{...},
+                         }
+                         timeMean: Number   // cumulativeMovingMean for this time
+                         timeLevels: [],
+                         timeSites:[]
+                     },
+                     time1:{....},
+                     .
+                     .
+                     timen:{....}
              }
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.

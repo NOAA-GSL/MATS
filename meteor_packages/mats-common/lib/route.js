@@ -33,10 +33,10 @@ Router.route('/app', function () {
     this.render('Home',{});
 });
 
-Router.route('/_oauth/google', function () {
-    var query = this.params.query;
-    Router.go('http://localhost:3000/_oauth/google' + query);
-});
+// Router.route('/_oauth/google', function () {
+//     var query = this.params.query;
+//     Router.go('http://localhost:3000/wfip2/_oauth/google' + query);
+// });
 
 
 Router.route('/', function () {
