@@ -1,5 +1,5 @@
-import { Meteor } from 'meteor/meteor';
-import {methods} from 'meteor/randyp:mats-common';
+
+import {matsMethods} from 'meteor/randyp:mats-common';
 
 
 Template.import.events({
@@ -18,7 +18,7 @@ Template.import.events({
                 return function(e) {
                     var name = e.target.fileName;
                     try {
-                        Meteor.call('restoreFromFile', "data", name, e.target.result, function (error) {
+                        matsMethods.restoreFromFile({type:"graph", name:name, data:e.target.result}, function (error) {
                             if (error) {
                                 setError(error.message);
                             }
@@ -49,7 +49,7 @@ Template.import.events({
                 return function(e) {
                     var name = e.target.fileName;
                     try {
-                        methods.restoreFromFile("graph", name, e.target.result, function (error) {
+                        matsMethods.restoreFromFile({type:"graph", name:name, data:e.target.result}, function (error) {
                             if (error) {
                                 setError(error.message);
                             }
@@ -81,7 +81,7 @@ Template.import.events({
                     var name = e.target.fileName;
                     try {
                         var data = JSON.parse(e.target.result);
-                       methods.restoreFromParameterFile( name, data, function (error) {
+                       matsMethods.restoreFromParameterFile( {name:name, data:data}, function (error) {
                             if (error) {
                                 setError(error.message);
                             }

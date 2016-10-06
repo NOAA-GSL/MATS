@@ -78,24 +78,24 @@ const restoreFromFile = new ValidatedMethod({
             data: {type: Object, blackbox:true}
         }).validator(),
 
-        run(type, name, data){
+        run(params){
             if (Meteor.isServer) {
-                console.log("restoring " + type + " file " + name);
+                console.log("restoring " + params.type + " file " + params.name);
                 var path = "";
-                if (type == "data") {
-                    path = "../web.browser/app/lib/dataFunctions/" + name;
-                } else if (type == "graph") {
-                    path = "../web.browser/app/lib/displayFunctions/" + name;
+                if (params.type == "data") {
+                    path = "../web.browser/app/lib/dataFunctions/" + params.name;
+                } else if (params.ype == "graph") {
+                    path = "../web.browser/app/lib/displayFunctions/" + params.name;
                 } else {
                     return ("error - wrong tyoe");
                 }
-                console.log('importing ' + type + ' file: ' + path);
+                console.log('importing ' + params.type + ' file: ' + path);
                 var fs = Npm.require('fs');
-                fs.writeFile(path, data.toString(), function (err) {
+                fs.writeFile(path, params.data.toString(), function (err) {
                     if (err) {
                         return (err.toLocaleString());
                     }
-                    console.log('imported ' + type + ' file: ' + path);
+                    console.log('imported ' + params.type + ' file: ' + path);
                 });
             }
         }
@@ -104,9 +104,11 @@ const restoreFromFile = new ValidatedMethod({
 const restoreFromParameterFile = new ValidatedMethod({
     name: 'matsMethods.restoreFromParameterFile',
     validate: new SimpleSchema({
+        name: {type:String},
         data: {type: Object, blackbox:true}
     }).validator(),
-    run (data) {
+    run (params) {
+        var data = params.data;
         if (Meteor.isServer) {
             var d = [];
             if (data.CurveParams) {
@@ -273,12 +275,12 @@ const insertColor = new ValidatedMethod({
             newColor: {type: String},
             insertAfterIndex: {type: Number}
         }).validator(),
-        run(newColor, insertAfterIndex){
-            if (newColor == "rgb(255,255,255)") {
+        run(params){
+            if (params.newColor == "rgb(255,255,255)") {
                 return false;
             }
             var colorScheme = matsCollections.ColorScheme.findOne({});
-            colorScheme.colors.splice(insertAfterIndex, 0, newColor);
+            colorScheme.colors.splice(params.insertAfterIndex, 0, newColor);
             matsCollections.update({}, colorScheme);
             return false;
         }
@@ -330,15 +332,15 @@ const setSelectParamOptions = new ValidatedMethod({
             options: {type: [String]},
             optionIndex: {type: Number, optional:true}
         }).validator( { clean: true, filter: false } ),
-        run({name, options, optionIndex}){
-            var param = matsCollections.CurveParams.findOne({name: name});
-            if (optionIndex === undefined) {
-                optionIndex = 0;
+        run(params){
+            var param = matsCollections.CurveParams.findOne({name: params.name});
+            if (params.optionIndex === undefined) {
+                params.optionIndex = 0;
             }
             if (param) {
-                param.options = options;
+                param.options = params.options;
                 var param_id = param._id;
-                matsCollections.CurveParams.update(param_id, {$set: {options: options, default:options[optionIndex]}});
+                matsCollections.CurveParams.update(param_id, {$set: {options: params.options, default:params.options[params.optionIndex]}});
             }
             return false;
         }
@@ -507,13 +509,13 @@ const getGraphData = new ValidatedMethod({
             type: String
         }
     }).validator(),
-    run(plotParams){
+    run(params){
         if (Meteor.isServer) {
             const Future = Npm.require('fibers/future');
             var future = new Future();
-            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: plotParams.plotType});
+            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
-            global[dataFunction](plotParams.plotParams, function (results) {
+            global[dataFunction](params.plotParams, function (results) {
                 future["return"](results);
             });
             return future.wait();
@@ -524,21 +526,28 @@ const getGraphData = new ValidatedMethod({
 var saveSettings = new ValidatedMethod({
     name: 'matsMethods.saveSettings',
     validate: new SimpleSchema({
-        saveAs: {type: String},
-        p: {type: Object,blackbox:true},
-        permission: {type: String}
-    }).validator(),
-    run(saveAs, p, permission){
-        if (!Meteor.userId()) {
-            throw new Meteor.Error("not-logged-in");
+        saveAs: {
+            type: String
+        },
+        p: {
+            type: Object,
+            blackbox:true
+        },
+        permission: {
+            type: String
         }
-        matsCollections.CurveSettings.upsert({name: saveAs}, {
-            name: saveAs,
-            data: p,
-            owner: Meteor.userId(),
-            permission: permission,
+    }).validator(),
+    run(params){
+        // if (!Meteor.userId()) {
+        //     throw new Meteor.Error("not-logged-in");
+        // }
+        matsCollections.CurveSettings.upsert({name: params.saveAs}, {
+            name: params.saveAs,
+            data: params.p,
+            owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
+            permission: params.permission,
             savedAt: new Date(),
-            savedBy: Meteor.user().services.google.email.toLowerCase()
+            savedBy: Meteor.user() == null ? "anonymous" : Meteor.user().services.google.email.toLowerCase()
         });
     }
 });
@@ -564,7 +573,10 @@ const emailImage = new ValidatedMethod({
         toAddress: {type: String},
         subject: {type: String}
     }).validator(),
-    run(imageStr, toAddress, subject){
+    run(params){
+        var imageStr = params.imageStr;
+        var toAddress = params.toAddress;
+        var subject = params.subject;
         if (!Meteor.userId()) {
             throw new Meteor.Error(401,"not-logged-in");
         }

@@ -321,7 +321,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                help: "variable-help.html"
             });
 
         optionsMap = {};
@@ -411,7 +412,8 @@ var doCurveParams = function () {
                 multiple: false,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6
+                displayGroup: 6,
+                help: "discriminator-help.html"
             });
 
 
