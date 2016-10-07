@@ -61,7 +61,7 @@ do
     	mkdir "private"
     fi
 
-    echo version >> private/version
+    echo "$julian" > private/version
 
     git push gerrit:MATS_for_EMB origin:master
     git push

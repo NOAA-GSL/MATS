@@ -1,6 +1,6 @@
 import {matsTypes} from "meteor/randyp:mats-common";
 import {matsCollections} from "meteor/randyp:mats-common";
-import {methods} from "meteor/randyp:mats-common";
+import {matsMethods} from "meteor/randyp:mats-common";
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 
@@ -121,10 +121,10 @@ Template.curveList.events({
 
         switch (action) {
             case "save":
-                if (!!Meteor.user()) {
-                    setError("You must be logged in to use the 'save' feature");
-                    return false;
-                }
+                // if (!!Meteor.user()) {
+                //     setError("You must be logged in to use the 'save' feature");
+                //     return false;
+                // }
                 if ((document.getElementById('save_as').value === "" ||
                     document.getElementById('save_as').value === undefined) &&
                     (document.getElementById('save_to').value === "" ||
@@ -142,7 +142,7 @@ Template.curveList.events({
                 console.log("saving settings to " + saveAs);
                 // get the settings to save out of the session
                 p = Session.get("PlotParams");
-                methods.saveSettings(saveAs, p, function (error) {
+                matsMethods.saveSettings.call( {saveAs:saveAs, p:p},  function(error){
                     if (error) {
                         setError(error);
                     }
@@ -223,7 +223,7 @@ Template.curveList.events({
                 var graphFunction = plotGraphFunction.graphFunction;
 
 
-                methods.getGraphData(p, plotType, function (error, result) {
+                matsMethods.getGraphData({p:p, plotType:plotType}, function (error, result) {
                     //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
                         setError(error.toLocaleString());

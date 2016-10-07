@@ -3,7 +3,7 @@
  */
 import '../imports/startup/server/index.js';
 import '../imports/startup/both/index.js';
-
+import {ServiceConfiguration} from 'meteor/service-configuration';
 
 var setGoogleCred = function () {
     /*
@@ -20,7 +20,7 @@ var setGoogleCred = function () {
         var _id = "";
         var cred;
         try {
-            cred = matsCollections.ServiceConfiguration.findOne({});
+            cred = ServiceConfiguration.configurations.findOne({service:'google'});
             if (cred) {
                 cid = cred.clientId;
                 cSecret = cred.secret;
@@ -45,9 +45,9 @@ var setGoogleCred = function () {
         if (gid != cid || gSecret != cSecret) {
             // reset gid and gSecret
             if (cred) {
-                matsCollections.ServiceConfiguration.update(_id, {$set: {secret: gSecret, clientId: gid}});
+                ServiceConfiguration.configurations.update(_id, {$set: {secret: gSecret, clientId: gid}});
             } else {
-                matsCollections.ServiceConfiguration.insert({secret: gSecret, clientId: gid});
+                ServiceConfiguration.configurations.insert({service: "google",loginStyle: "popup", secret: gSecret, clientId: gid});
             }
         }
     }

@@ -321,7 +321,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 4,
+                help: "variable-help.html"
             });
 
         optionsMap = {};
@@ -411,7 +412,8 @@ var doCurveParams = function () {
                 multiple: false,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6
+                displayGroup: 6,
+                help: "discriminator-help.html"
             });
 
 
@@ -493,6 +495,7 @@ var doCurveTextPatterns = function () {
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
+                ['', 'statistic', ':'],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
                 [' discriminators:', 'discriminator', ', '],
@@ -509,6 +512,7 @@ var doCurveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
+                ['', 'statistic', ':'],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],
                 [' discriminators:', 'discriminator', ', '],
@@ -526,12 +530,14 @@ var doCurveTextPatterns = function () {
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
+                ['', 'xaxis-statistic', ':'],
                 ['fcst_len:', 'xaxis-forecast-length', 'h, '],
                 ['', 'xaxis-discriminator', ', '],
                 ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
+                ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
                 ['','curve-dates',' '],
@@ -585,6 +591,11 @@ var doSettings = function () {
             resetFromCode: true
         });
     }
+    // always do the version...
+    var settings = matsCollections.Settings.findOne();
+    var settingsId = settings._id;
+    settings['version'] = Assets.getText('version');
+    matsCollections.Settings.update(settingsId,{$set:settings});
 };
 
 var doColorScheme = function () {
@@ -925,7 +936,7 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    console.log("Running in " + process.env.NODE_ENV + " mode...");
+    
 
     doRoles();
     doAuthorization();
@@ -939,6 +950,7 @@ Meteor.startup(function () {
     doScatterAxisTextPattern();
     doPlotParams();
     doCurveTextPatterns();
+    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
 });
 
 

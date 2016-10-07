@@ -21,6 +21,13 @@ Template.plotList.helpers({
     curves: function () {
         return Session.get('Curves');
     },
+    privateDisabled: function() {
+        if (!Meteor.user()) {
+            return "disabled";
+        } else {
+            return "";
+        }
+    },
     privateRestoreNames: function() {
         var names = [];
         var l = matsCollections.CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
@@ -33,10 +40,10 @@ Template.plotList.helpers({
     },
     publicRestoreNames: function() {
         var names = [];
-        var l = matsCollections.CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
-        for (var i = 0; i < l.length; i++) {
-            if (l[i].permission === "public") {
-                names.push(l[i].name);
+        var savedSettings = matsCollections.CurveSettings.find({},{fields:{name:1,owner:1,permission:1}}).fetch();
+        for (var i = 0; i < savedSettings.length; i++) {
+            if (savedSettings[i].permission === "public") {
+                names.push(savedSettings[i].name);
             }
         }
         return names;
@@ -130,12 +137,12 @@ Template.plotList.events({
 
         switch (action) {
             case "save":
-                if (!Meteor.user()) {
-                    setError("You must be logged in to use the 'save' feature");
-                    Session.set("spinner_img", "spinner.gif");
-                    document.getElementById("spinner").style.display="none";
-                    return false;
-                }
+                // if (!Meteor.user()) {
+                //     setError("You must be logged in to use the 'save' feature");
+                //     Session.set("spinner_img", "spinner.gif");
+                //     document.getElementById("spinner").style.display="none";
+                //     return false;
+                // }
                 if ((document.getElementById('save_as').value === "" ||
                     document.getElementById('save_as').value === undefined) &&
                     (document.getElementById('save_to').value === "" ||
@@ -159,7 +166,7 @@ Template.plotList.events({
                 p = Session.get("PlotParams");
                 var paramData = matsParamUtils.getElementValues();
                 p['paramData'] = paramData;
-                matsMethods.saveSettings.call( saveAs, p, permission, function(error){
+                matsMethods.saveSettings.call( {saveAs:saveAs, p:p, permission:permission}, function(error){
                     if (error) {
                         setError("matsMethods.saveSettings from plot_list.js " +error.message);
                     }
@@ -196,19 +203,19 @@ Template.plotList.events({
                 // now set the PlotParams
                 var params = matsCollections.PlotParams.find({}).fetch();
                 params.forEach(function(plotParam){
-                    setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
+                    matsParamUtils.setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
                 });
                 
                 // reset the form parameters
                 params = matsCollections.CurveParams.find({}).fetch();
                 params.forEach(function(plotParam) {
-                    setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
+                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
                 });
                 
                 // reset the scatter parameters 
                 params = matsCollections.Scatter2dParams.find({}).fetch();
                 params.forEach(function(plotParam) {
-                    setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);
+                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);
                 });
 
                 // reset the plotParams

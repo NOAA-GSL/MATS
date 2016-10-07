@@ -1,5 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsMethods} from 'meteor/randyp:mats-common';
 
 Template.colorScheme.helpers({
     colorOptions : function() {
@@ -25,7 +26,7 @@ Template.colorScheme.events({
             if (insertAfterColor) {
                 insertAfterIndex = colors.indexOf(insertAfterColor);
             }
-            Meteor.call('insertColor', newColor, insertAfterIndex, function (error) {
+            matsMethods.insertColor({newColor:newColor,insertAfterIndex:insertAfterIndex}, function (error) {
                 if (error) {
                     setError(error.message);
                 }
