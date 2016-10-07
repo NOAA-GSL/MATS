@@ -34,6 +34,10 @@ dataProfile = function (plotParams, plotFunction) {
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
+        tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+        var truthModel = tmp[0];
+        var truthInstrument_id = tmp[1];
+
         var myVariable;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
@@ -91,70 +95,98 @@ dataProfile = function (plotParams, plotFunction) {
             console.log("query=" + statement);
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+            var truthQueryResult;
+            if (statistic != "mean"){
+                // need a truth data source for statistic
+                if (truthModel.includes("recs")) {  //obs
+                    statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid"  +
+                        " from obs_recs as o ," + truthModel + "   as s " +
+                        //" where valid_utc=1454526000 " +
+                        " where valid_utc >= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        " and valid_utc <= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                        " and obs_recs_obsrecid = o.obsrecid " +
+                        " and instruments_instrid=" + truthInstrument_id;
+                } else {//truthModel
+                    statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid" +
+                        " from " + truthModel + ", nwp_recs  " +
+                        "where valid_utc>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        " and analysis_utc+fcst_end_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        "  and valid_utc<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                        " and analysis_utc+fcst_end_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                        " and nwps_nwpid= " + truthInstrument_id +
+                        " and nwp_recs_nwprecid=nwprecid " +
+                        " and fcst_end_utc=" + 3600 * forecastLength;
+                }
+                statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
+                console.log("query=" + statement);
+                dataRequests['truth-' + curve.label] = statement;
+                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+
+            }
             /*
              result =  {
-             error: error,
-             data: resultData,
-             allLevels: allLevels,
-             allSites: allSiteIds,
-             allTimes: allTimes,
-             minInterval: minInterval,
-             mean:cumulativeMovingAverage
+                 error: error,
+                 data: resultData,
+                 allLevels: allLevels,
+                 allSites: allSiteIds,
+                 allTimes: allTimes,
+                 minInterval: minInterval,
+                 mean:cumulativeMovingAverage
              }
-             where ....
+                 where ....
              resultData = {
-             time0: {
-             sites: {
-             site0: {
-             levels:[],
-             values:[],
-             sum: Number,
-             mean: Number,
-             numLevels: Number,
-             max: Number,
-             min: Number
-             },
-             site1: {...},
-             .
-             .
-             siten:{...},
-             }
-             timeMean: Number   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
-             },
-             time1:{....},
-             .
-             .
-             timen:{....}
+                 time0: {
+                     sites: {
+                         site0: {
+                             levels:[],
+                             values:[],
+                             sum: Number,
+                             mean: Number,
+                             numLevels: Number,
+                             max: Number,
+                             min: Number
+                         },
+                         site1: {...},
+                             .
+                             .
+                         siten:{...},
+                         }
+                     timeMean: Number   // cumulativeMovingMean for this time
+                     timeLevels: [],
+                     timeSites:[]
+                 },
+                 time1:{....},
+                 .
+                 .
+                 timen:{....}
              }
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
 
              we need this structure where the values are qualified by site and level completeness.
              levelValues: {
-             l1: [val1, val2, val3, .... valn],
-             l2: [val1, val2, val3, .....valn],
-             .
-             .
-             .
-             ln: [val1,val2,val3, ..... valn
+                 l1: [val1, val2, val3, .... valn],
+                 l2: [val1, val2, val3, .....valn],
+                 .
+                 .
+                 .
+                 ln: [val1,val2,val3, ..... valn
              }
 
              from this we derive ....
              levelStats : {
-             20: {
-             mean: m,
-             bias: b,
-             rmse : r,
-             mae: ma
-             },
-             40: {...},
-             60: {...},
-             .
-             .
-             .
-             ln: {...}
+                 20: {
+                     mean: m,
+                     bias: b,
+                     rmse : r,
+                     mae: ma
+                 },
+                 40: {...},
+                 60: {...},
+                 .
+                 .
+                 .
+                 ln: {...}
              }
 
              */
@@ -162,30 +194,67 @@ dataProfile = function (plotParams, plotFunction) {
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = _.union.apply(_, queryResult.allLevels);
             var siteBasis = _.union.apply(_, queryResult.allSites);
+            if (statistic != "mean") {
+                // have to consider the truth curve when determining the basis if we are doing stats other than mean
+                var truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
+                var truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
+                levelBasis = _.union(levelBasis,truthLevelBasis);
+                siteBasis = _.union(siteBasis,truthSiteBasis);
+            }
             var levelValues = {};
-            var allTimes = queryResult.allTimes;
+            var truthLevelValues = {};
+            var allTimes;
+            if (statistic == "mean") {
+                allTimes = queryResult.allTimes;
+            } else {
+                allTimes = _.intersection(queryResult.allTimes,truthQueryResult.allTimes)
+            }
             for (var t=0; t < allTimes.length; t++) {
                 var time = allTimes[t];
-                var timeObj = queryResult.data[time];
-                var sites = Object.keys(timeObj.sites).map(Number);
-                var sitesLength = sites.length;
-                var includedSites = _.intersection(sites,siteBasis);
-                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-                if (sitesQuality > siteCompleteness) {
-                    // time is qualified for sites, count the qualified levels
-                    for (var si = 0; si < sitesLength; si++) {
-                        var sLevels = timeObj.sites[[sites[si]]].levels;
-                        var sValues = timeObj.sites[[sites[si]]].values;
-                        var includedLevels = _.intersection(sLevels, levelBasis);
-                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
-                        if (levelsQuality > levelCompleteness) {
-                            for (var l = 0; l < sLevels.length; l++) {
-                                if (levelValues[sLevels[l]] === undefined) {
-                                    levelValues[sLevels[l]] = [];
+                    var timeObj = queryResult.data[time];
+                    var sites = Object.keys(timeObj.sites).map(Number);
+                    var sitesLength = sites.length;
+                    var includedSites = _.intersection(sites, siteBasis);
+                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                    if (sitesQuality > siteCompleteness) {
+                        // time is qualified for sites, count the qualified levels
+                        for (var si = 0; si < sitesLength; si++) {
+                            var sLevels = timeObj.sites[[sites[si]]].levels;
+                            var sValues = timeObj.sites[[sites[si]]].values;
+                            var includedLevels = _.intersection(sLevels, levelBasis);
+                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                            if (levelsQuality > levelCompleteness) {
+                                for (var l = 0; l < sLevels.length; l++) {
+                                    if (levelValues[sLevels[l]] === undefined) {
+                                        levelValues[sLevels[l]] = [];
+                                    }
+                                    levelValues[sLevels[l]].push(sValues[l]);
                                 }
-                                levelValues[sLevels[l]].push(sValues[l]);
-                            }
-                        } // else don't count it in - skip over it, it isn't complete enough
+                            } // else don't count it in - skip over it, it isn't complete enough
+                        }
+                    }
+                if (statistic != "mean") {
+                    var timeObj = truthQueryResult.data[time];
+                    var sites = Object.keys(timeObj.sites).map(Number);
+                    var sitesLength = sites.length;
+                    var includedSites = _.intersection(sites, siteBasis);
+                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                    if (sitesQuality > siteCompleteness) {
+                        // time is qualified for sites, count the qualified levels
+                        for (var si = 0; si < sitesLength; si++) {
+                            var sLevels = timeObj.sites[[sites[si]]].levels;
+                            var sValues = timeObj.sites[[sites[si]]].values;
+                            var includedLevels = _.intersection(sLevels, levelBasis);
+                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                            if (levelsQuality > levelCompleteness) {
+                                for (var l = 0; l < sLevels.length; l++) {
+                                    if (truthLevelValues[sLevels[l]] === undefined) {
+                                        truthLevelValues[sLevels[l]] = [];
+                                    }
+                                    truthLevelValues[sLevels[l]].push(sValues[l]);
+                                }
+                            } // else don't count it in - skip over it, it isn't complete enough
+                        }
                     }
                 }
             }
@@ -193,18 +262,89 @@ dataProfile = function (plotParams, plotFunction) {
             // now get levelStats
 
             var levelStats = {};
-            var qualifiedLevels = Object.keys(levelValues);
-            for (l = 0; l < qualifiedLevels.length; l++) {
-                var sum = _.reduce(levelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
-                var num = levelValues[qualifiedLevels[l]].length;
-                var mean = sum / num;
-                if (levelStats[qualifiedLevels[l]] === undefined) {
-                    levelStats[qualifiedLevels[l]] = {};
-                }
-
-                levelStats[qualifiedLevels[l]][statistic] = mean;
+            var qualifiedLevels;
+            if (statistic == "mean") {
+                qualifiedLevels = Object.keys(levelValues);
+            } else {
+                qualifiedLevels = _.intersection(Object.keys(levelValues), Object.keys(truthLevelValues));
+            }
+            var statValue;
+            var statSum;
+            var statNum;
+            var values;
+            var truthValues;
+            var vindex;
+            switch (statistic) {
+                case "bias":
+                case "mae":
+                    // bias and mae are almost the same.... mae just absolutes the difference
+                    // find siteLevelBias and sum it in
+                    try {
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statNum = 0;
+                            statSum =0;
+                            values = levelValues[qualifiedLevels[l]];
+                            truthValues = truthLevelValues[qualifiedLevels[l]];
+                            for (vindex = 0; vindex < values.length; vindex++) {
+                                if (statistic == "mae") {
+                                    statValue = Math.abs(values[vindex] - truthValues[vindex]);
+                                } else {
+                                    statValue = values[vindex] - truthValues[vindex];
+                                }
+                                statSum += statValue;
+                                statNum++;
+                            }
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = statSum/statNum;
+                        }
+                    } catch (ignore) {
+                        // apparently there is no data in the truth curve that matches this time
+                        statValue = null;
+                    }
+                    break;
+                case "rmse":
+                    try {
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statNum = 0;
+                            statSum =0;
+                            values = levelValues[qualifiedLevels[l]];
+                            truthValues = truthLevelValues[qualifiedLevels[l]];
+                            for (vindex = 0; vindex < values.length;vindex++) {
+                                statValue = values[vindex] - truthValues[vindex];
+                                statValue = Math.pow((values[vindex] - truthValues[vindex]),2);  // square the difference
+                                statSum += statValue;
+                                statNum++;
+                            }
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum/statNum);
+                        }
+                    } catch (ignore) {
+                        statValue = null;
+                    }
+                    break;
+                case "mean":
+                default:
+                    try {
+                        statNum = 0;
+                        statSum =0;
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statSum = _.reduce(levelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
+                            statNum = levelValues[qualifiedLevels[l]].length;
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = statSum/statNum;
+                        }
+                    } catch (ignore) {
+                    }
+                    break;
             }
         }  // if diffFrom == null
+
 
         var d = [];
         var levels = Object.keys(levelStats);

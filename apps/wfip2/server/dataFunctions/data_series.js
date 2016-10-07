@@ -244,7 +244,7 @@ dataSeries = function (plotParams, plotFunction) {
             levelBasis = _.union.apply(_, queryResult.allLevels);
             siteBasis = _.union.apply(_, queryResult.allSites);
             if (statistic != "mean") {
-                // have to consider the truth curve
+                // have to consider the truth curve when determining the basis if we are doing stats other than mean
                 var truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
                 var truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
                 levelBasis = _.union(levelBasis,truthLevelBasis);
@@ -370,7 +370,7 @@ dataSeries = function (plotParams, plotFunction) {
                                         biasValue = null;
                                         try {
                                             biasValue = siteLevelValue - truthSiteLevelValue;
-                                            biasValue = biasValue * biasValue;  // square the difference
+                                            biasValue = Math.pow(biasValue,2);  // square the difference
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
                                         } catch (nodata) {
