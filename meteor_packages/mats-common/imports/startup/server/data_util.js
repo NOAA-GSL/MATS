@@ -75,9 +75,20 @@ const secsConvert = function (dStr) {
     return date_in_secs / 1000;
 };
 
+const  arraysEqual = function (a,b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+};
+
 export default matsDataUtils = {
     getDateRange: getDateRange,
     sortFunction: sortFunction,
     dateConvert: dateConvert,
-    secsConvert: secsConvert
+    secsConvert: secsConvert,
+    arraysEqual: arraysEqual
 }
