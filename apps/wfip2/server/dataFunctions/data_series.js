@@ -482,37 +482,44 @@ dataSeries = function (plotParams, plotFunction) {
                 valIndex++;
             }
         } else {
-            //skip difference curves - do them after matching
-            var baseCurve = 0;  // eventually this will com from plotParams
-            var fromStartTime = dataset[diffFrom][0];
-            var baseStartTime = dataset[baseCurveIndex][0];
-            var fromEndTime = dataset[diffFrom][dataset[diffFrom].length - 1];
-            var baseEndTime = dataset[baseCurveIndex][dataset[baseCurveIndex].length - 1];
-            var time = fromStartTime > baseStartTime ? fromStartTime : baseStartTime;
-            var endTime = fromEndTime < baseEndTime ? fromEndTime : baseEndTime;
-            var fromIndex = 0;
-            var baseIndex = 0;
+            var minuendIndex = diffFrom[0];
+            var subtrahendIndex = diffFrom[1]; // base curve
+            var minuendData = dataset[minuendIndex].data;
+            var subtrahendData = dataset[subtrahendIndex].data;
+            var minuendEndTime = minuendData[minuendData.length - 1][0];
+            var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
+            var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
             normalizedData = [];
             // calculate difference curve values
-            while (time < endTime) {
-                while (dataset[baseCurve][baseIndex][0] < dataset[diffFrom][fromIndex][0]) {
-                    // increment the base index until it catches up
-                    baseIndex++;
-                }
-                while (dataset[diffFrom][fromIndex][0] < dataset[baseCurve][baseIndex][0]) {
-                    // increment the from index until it catches up
-                    fromIndex++;
-                }
-                // now they should both be pointing at the same time
-                var fromValue = dataset[diffFrom][fromIndex];
-                var baseValue = dataset[0][baseIndex];
+            // minuend - subtrahend = difference.
+            // the minuend is the curve from which the base curve values will be subtracted
+            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
+                // if necessary, increment the base index until it catches up
+                subtrahendIndex++;
+            }
+            while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
+                // if necessary, increment the from index until it catches up
+                minuendIndex++;
+            }
+            // now the times should be equal
+            var diffTime = minuendData[minuendIndex][0];
+            while (diffTime < diffEndTime) {
+                var fromValue = minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex][1];
                 var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
-                var seconds = time / 1000;
-                var tooltip = label + v +
-                "<br>seconds" + seconds +
-                "<br>time:" + new Date(Number(time)).toUTCString() +
+                var diffSeconds = diffTime / 1000;
+                var d = new Date(Number(diffTime)).toUTCString();
+                tooltip = label +
+                "<br>seconds:" + diffSeconds +
+                "<br>time:" + d +
                 "<br> diffValue:" + diffValue;
-                normalizedData.push([seconds, diffValue, {}, tooltip]);
+                // the difference curve might affect the yAxis min and max - not the xAxis min and max
+                yAxisMin = diffValue < yAxisMin ? diffValue : yAxisMin;
+                yAxisMax = diffValue > yAxisMax ? diffValue : yAxisMax;
+                normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
+                diffTime = Number(diffTime) + Number(minInterval);
+                subtrahendIndex++;
+                minuendIndex++;
             }
         }
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
