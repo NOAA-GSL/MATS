@@ -32,15 +32,16 @@ dataSeries = function (plotParams, plotFunction) {
     // used in yaxisOptions for scaling the graph
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
-    var yAxisMax = Number.MIN_VALUE;
-    var yAxisMin = Number.MAX_VALUE;
+    var yAxisMaxes = [];
+    var yAxisMins = [];
     var minInterval = Number.MAX_VALUE;
     var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
     var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
-    var baseCurveIndex = 0;
     var options;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        yAxisMaxes[curveIndex] = Number.MIN_VALUE;
+        yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var dataSource = (curve['data-source']);
@@ -50,7 +51,7 @@ dataSeries = function (plotParams, plotFunction) {
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
-        var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+        tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
         var truthModel = tmp[0];
         var truthInstrument_id = tmp[1];
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
@@ -467,8 +468,8 @@ dataSeries = function (plotParams, plotFunction) {
                             value = siteMean;
                             break;
                     }
-                    yAxisMin = value < yAxisMin ? value : yAxisMin;
-                    yAxisMax = value > yAxisMax ? value : yAxisMax;
+                    yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
+                    yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
 
                     var seconds = time / 1000;
                     tooltip = label +
@@ -513,9 +514,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "<br>seconds:" + diffSeconds +
                 "<br>time:" + d +
                 "<br> diffValue:" + diffValue;
-                // the difference curve might affect the yAxis min and max - not the xAxis min and max
-                yAxisMin = diffValue < yAxisMin ? diffValue : yAxisMin;
-                yAxisMax = diffValue > yAxisMax ? diffValue : yAxisMax;
+                yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
+                yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
                 normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
                 diffTime = Number(diffTime) + Number(minInterval);
                 subtrahendIndex++;
@@ -628,15 +628,15 @@ dataSeries = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['label'] + ":" + curve['variable'] + ":" + curve['data-source'],
+            axisLabel: curves[dsi]['label'] + ":" + curves[dsi]['variable'] + ":" + curves[dsi]['data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMin * 0.9,
-            max: yAxisMax * 0.9
+            min: yAxisMins[dsi] * 1.1,
+            max: yAxisMaxes[dsi] * 1.1
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
