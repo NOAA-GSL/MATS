@@ -6,6 +6,8 @@ touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
 
+requestedApp = "$1"
+
 echo "$0 ----------- started"
 date
  
@@ -51,6 +53,9 @@ fi
 cd apps
 find . -maxdepth 1 -type d -not -path "." | while read x
 do
+    if  [[ $#  -eq 1 ]] && [[ ! $x -eq $requestedApp ]]; then
+        continue
+    fi
 	cd $x
 	echo "building app $x"
 	meteor reset
