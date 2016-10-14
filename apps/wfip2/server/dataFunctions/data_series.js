@@ -32,15 +32,16 @@ dataSeries = function (plotParams, plotFunction) {
     // used in yaxisOptions for scaling the graph
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
-    var yAxisMax = Number.MIN_VALUE;
-    var yAxisMin = Number.MAX_VALUE;
+    var yAxisMaxes = [];
+    var yAxisMins = [];
+    var minInterval = Number.MAX_VALUE;
     var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
     var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
-    var baseCurveIndex = 0;
     var options;
-    var curveQueryResults = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        yAxisMaxes[curveIndex] = Number.MIN_VALUE;
+        yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var dataSource = (curve['data-source']);
@@ -50,7 +51,7 @@ dataSeries = function (plotParams, plotFunction) {
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
-        var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+        tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
         var truthModel = tmp[0];
         var truthInstrument_id = tmp[1];
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
@@ -222,26 +223,27 @@ dataSeries = function (plotParams, plotFunction) {
                          timeLevels: [],
                          timeSites:[]
                      },
-                     time1:{....},
-                     .
-                     .
-                     timen:{....}
+                 time1:{....},
+                 .
+                 .
+                 timen:{....}
              }
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
              */
 
-            curveQueryResults[curveIndex] = queryResult; // save raw data for matching
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis;
             var siteBasis;
             levelBasis = _.union.apply(_, queryResult.allLevels);
             siteBasis = _.union.apply(_, queryResult.allSites);
+            var truthLevelBasis;
+            var truthSiteBasis;
             if (statistic != "mean") {
                 // have to consider the truth curve when determining the basis if we are doing stats other than mean
-                var truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
-                var truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
+                truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
+                truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
                 levelBasis = _.union(levelBasis,truthLevelBasis);
                 siteBasis = _.union(siteBasis,truthSiteBasis);
             }
@@ -250,74 +252,108 @@ dataSeries = function (plotParams, plotFunction) {
              Convert an object into a list of [key, value] pairs.
              _.pairs({one: 1, two: 2, three: 3});
              => [["one", 1], ["two", 2], ["three", 3]]
+             we want [[time0,obj],[time1,obj],....[timen,obj]]
              */
-            var pairData = _.pairs(queryResult.data).sort(function (a, b) {
+            var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
                 return a[0] - b[0]
             });
-            // for mean calulations we do not have a truth curve.
-            var truthData = [];
-            if (statistic == "mean") {
-                truthData = pairData;
-            } else {
-                truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
-                    return a[0] - b[0]
-                });
-            }
-            //var normalizedData = pairData.map(function (timeObjPair) {
+
+
+            //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
             // and skip any where there isn't a corresponding time.
             // we make our calculations where there are corresponding times.
-            var truthMaxIndex = truthData.length - 1;
-            var valMaxIndex = pairData.length - 1;
-            var truthIndex = 0;
+            var valMaxIndex = verificationData.length - 1;
             var valIndex = 0;
-            var valTime = pairData[0][0];
-            var truthTime = pairData[0][0];
+            var valTime = verificationData[0][0];
             var normalizedData = [];
+            // deal with the truth - you can't handle the truth! (if statistic is mean)
+            var truthData = [];
+            var truthMaxIndex = valMaxIndex;
+            var truthTime = valTime;
+            var truthIndex = 0; // just make the truth indexing not matter - if statistic is mean
+            if (statistic != "mean") {
+                truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                    return a[0] - b[0]
+                });
+                truthMaxIndex = truthData.length - 1;
+                truthTime = verificationData[0][0];
+            }
+
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
-                valTime = pairData[valIndex][0];
-                truthTime = truthData[truthIndex][0];
+                valTime = verificationData[valIndex][0];
+                // determine and remember the minimum interval for use in matching based on verification data
+                var interval;
+                if (verificationData[valIndex + 1][0]) {
+                    interval = verificationData[valIndex + 1][0] - verificationData[valIndex][0];
+                    minInterval = interval < minInterval ? interval : minInterval;
+                }
+                // determine and remember the minimum interval for use in matching based on truth data
+                if (statistic != "mean") {
+                    truthTime = truthData[truthIndex][0];
+                    if (truthData[truthIndex + 1][0]) {
+                        interval = truthData[truthIndex + 1][0] - truthData[truthIndex][0];
+                        minInterval = interval < minInterval ? interval : minInterval;
+                    }
+                }
                 if (valTime < truthTime) {
                     valIndex++;
                     continue;
-                } else if (truthTime < valTime) {
+                } else if ( statistic != "mean" && truthTime < valTime) {
                     truthIndex++;
                     continue;
                 } else {
-                    //times are equal
+                    //times are now equal we can calculate the value for this time
                     value = null;
-                    var time = pairData[valIndex][0];
-                    var timeObj = pairData[valIndex][1];
-                    var truthTimeObj = truthData[truthIndex][1];
+                    var time = verificationData[valIndex][0];
+                    var timeObj = verificationData[valIndex][1];
+                    var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
                     var tooltip = label +
                         "<br>seconds" + time +
                         "<br>time:" + new Date(Number(valTime)).toUTCString() +
                         "<br> value:" + value;
                     xAxisMin = time < xAxisMin ? time : xAxisMin;
                     xAxisMax = time > xAxisMax ? time : xAxisMax;
-                    if (timeObj == null) {
+                    if (!timeObj) {
+                        var seconds = time / 1000;
+                        tooltip = label +
+                            "<br>seconds: " + seconds +
+                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                            "<br> statistic: " + statistic +
+                            "<br> value:" + null;
+                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
                         continue;
                     }
-                    if (truthTimeObj == null) {
+                    if (statistic != "mean" && !truthTimeObj) {
+                        var seconds = time / 1000;
+                        tooltip = label +
+                            "<br>seconds: " + seconds +
+                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                            "<br> statistic: " + statistic +
+                            "<br> value:" + null;
+                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                         truthIndex++;
                         continue;
                     }
-
-                    // yAxisMin = timeObj.timeMean < yAxisMin ? timeObj.timeMean : yAxisMin;
-                    // yAxisMax = timeObj.timeMean > yAxisMax ? timeObj.timeMean : yAxisMax;
-
-                    var valSites = Object.keys(timeObj.sites).map(Number);
-                    var truthSites = Object.keys(truthTimeObj.sites).map(Number);
-                    var sites = _.intersection(valSites, truthSites);
+                    var valSites = Object.keys(timeObj.sites).map(Number).sort();
+                    var truthSites = statistic == "mean" ? [] : Object.keys(truthTimeObj.sites).map(Number).sort();
+                    var sites = statistic == "mean" ?  valSites : _.intersection(valSites, truthSites);
                     var sitesLength = sites.length;
                     var includedSites = _.intersection(sites, siteBasis);
                     var sitesQuality = (includedSites.length / siteBasis.length) * 100;
                     if (sitesQuality < siteCompleteness) {
-                        //return [time, null, null, tooltip];   //throw this time away, it doesn't have enough sites
+                        //throw this time away, it doesn't have enough sites
+                        var seconds = time / 1000;
+                        tooltip = label +
+                            "<br>seconds: " + seconds +
+                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                            "<br> statistic: " + statistic +
+                            "<br> value:" + null;
+                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
-                        truthIndex++;
+                        statistic == "mean" && truthIndex++;
                         continue;
                     }
 
@@ -331,16 +367,16 @@ dataSeries = function (plotParams, plotFunction) {
                     for (var si = 0; si < sitesLength; si++) {
                         var valSLevels = timeObj.sites[[sites[si]]].levels;
                         var sValues = timeObj.sites[[sites[si]]].values;
-                        var truthSLevels = truthTimeObj.sites[[sites[si]]].levels;
-                        var sLevels = _.intersection(valSLevels,truthSLevels);
-                        var truthSValues = truthTimeObj.sites[[sites[si]]].values;
+                        var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].levels;
+                        var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels,truthSLevels);
+                        var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].values;
                         var includedLevels = _.intersection(sLevels, levelBasis);
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
                             // here we make the various calculations
                             for (var li = 0; li < sLevels.length; li++) {
                                 var siteLevelValue = sValues[li];
-                                var truthSiteLevelValue = truthSValues[li];
+                                var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
                                 var biasValue;
                                 switch (statistic) {
                                     case "bias":
@@ -385,7 +421,7 @@ dataSeries = function (plotParams, plotFunction) {
                             }
                         } // else don't count it in - skip over it, it isn't complete enough
                     }
-                    // we set bad numbers to null so that they can be squeezed out upstream
+                    // we set bad numbers to null
                     var value;
                     switch (statistic) {
                         case "bias":
@@ -427,8 +463,8 @@ dataSeries = function (plotParams, plotFunction) {
                             value = siteMean;
                             break;
                     }
-                    yAxisMin = value < yAxisMin ? value : yAxisMin;
-                    yAxisMax = value > yAxisMax ? value : yAxisMax;
+                    yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
+                    yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
 
                     var seconds = time / 1000;
                     tooltip = label +
@@ -438,48 +474,47 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> value:" + value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
-                truthIndex++;
+                statistic == "mean" && truthIndex++;
                 valIndex++;
             }
         } else {
-            //skip difference curves - do them after matching
-            var baseCurve = 0;  // eventually this will com from plotParams
-            var fromStartTime = dataset[diffFrom][0];
-            var baseStartTime = dataset[baseCurveIndex][0];
-            var fromEndTime = dataset[diffFrom][dataset[diffFrom].length - 1];
-            var baseEndTime = dataset[baseCurveIndex][dataset[baseCurveIndex].length - 1];
-            var time = fromStartTime > baseStartTime ? fromStartTime : baseStartTime;
-            var endTime = fromEndTime < baseEndTime ? fromEndTime : baseEndTime;
-            var fromIndex = 0;
-            var baseIndex = 0;
+            var minuendIndex = diffFrom[0];
+            var subtrahendIndex = diffFrom[1]; // base curve
+            var minuendData = dataset[minuendIndex].data;
+            var subtrahendData = dataset[subtrahendIndex].data;
+            var minuendEndTime = minuendData[minuendData.length - 1][0];
+            var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
+            var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
             normalizedData = [];
-            while (time < endTime) {
-                while (dataset[baseCurve][baseIndex][0] < dataset[diffFrom][fromIndex][0]) {
-                    // increment the base index until it catches up
-                    baseIndex++;
-                }
-                while (dataset[diffFrom][fromIndex][0] < dataset[baseCurve][baseIndex][0]) {
-                    // increment the from index until it catches up
-                    fromIndex++;
-                }
-                // now they should both be pointing at the same time
-
-                var fromValue = dataset[diffFrom][fromIndex];
-                var baseValue = dataset[0][baseIndex];
-                var diffValue;
-                if (fromValue == null || baseValue == null) {
-                    diffValue = null;
-                } else {
-                    diffValue = fromValue - baseValue;
-                }
-                var seconds = time / 1000;
-                var tooltip = label + v;
-                "<br>seconds" + seconds +
-                "<br>time:" + new Date(Number(time)).toUTCString() +
-
+            // calculate difference curve values
+            // minuend - subtrahend = difference.
+            // the minuend is the curve from which the base curve values will be subtracted
+            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
+                // if necessary, increment the base index until it catches up
+                subtrahendIndex++;
+            }
+            while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
+                // if necessary, increment the from index until it catches up
+                minuendIndex++;
+            }
+            // now the times should be equal
+            var diffTime = minuendData[minuendIndex][0];
+            while (diffTime < diffEndTime) {
+                var fromValue = minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex][1];
+                var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
+                var diffSeconds = diffTime / 1000;
+                var d = new Date(Number(diffTime)).toUTCString();
+                tooltip = label +
+                "<br>seconds:" + diffSeconds +
+                "<br>time:" + d +
                 "<br> diffValue:" + diffValue;
-
-                normalizedData.push([seconds, diffValue, {}, tooltip]);
+                yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
+                yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
+                normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
+                diffTime = Number(diffTime) + Number(minInterval);
+                subtrahendIndex++;
+                minuendIndex++;
             }
         }
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
@@ -499,92 +534,85 @@ dataSeries = function (plotParams, plotFunction) {
     // matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (matchLevel || matchSite || matchTime)) {
         /*
-         Have to go through all the times,
+         Have to go through all the dataset times,
          for all the curves,
          iterating at the minimum interval for all the curves
          and setting to null all the y-values for which
          any curve has a y-value that is null,
          or fails to meet the other matching criteria.
          */
-
-        // find the earliest and latest time and minimumInterval from all the curves
-        var earliestTime = Number.MAX_VALUE;
-        var latestTime = 0;
-        var minimumInterval = Number.MAX_VALUE;
-        // don't do any diff curves here, they are covered by the base curve anyway
-        for (var ci = 0; ci < curvesLength; ci++) {
-            if (curves[ci].diffFrom) {
-                break;
-            }
-        }
-        for (var rci = 0; rci < ci; rci++) {
-            //earliestTime = Number((curves[rci].queryResult.allTimes[0] < earliestTime) ? curves[rci].queryResult.allTimes[0] : earliestTime);
-            earliestTime = Number((curveQueryResults[rci].allTimes[0] < earliestTime) ? curveQueryResults[rci].allTimes[0] : earliestTime);
-            latestTime = Number((curveQueryResults[rci].allTimes[curveQueryResults[rci].allTimes.length - 1] >
-            latestTime) ? curveQueryResults[rci].allTimes[curveQueryResults[rci].allTimes.length - 1] : latestTime);
-            minimumInterval = Number((curveQueryResults[rci].minInterval < minimumInterval) ? (curveQueryResults[rci].minInterval) : minimumInterval);
-        }
-
-        /* need a moving pointer for each curve data set.
-         The data arrays for the curves may not all start at the same time for each curve
-         so we skip incrementing the data index for any curve that has
-         not yet had any time element defined for this time.
-         The indexes are initialized to -1 so that the first time in a curve data array will cause the index to be 0.
-         There shouldn't be any holes because the QueryDB should have filled them in.
-         */
         var dataIndexes = {};
+        var ci;
+        var sci;
         for (ci = 0; ci < curvesLength; ci++) {
-            dataIndexes[ci] = -1;
+            dataIndexes[ci] = 0;
         }
-        time = earliestTime;
-        while (time < latestTime) {
-            var timeMatches = true;
-            var levelsMatches = true;
-            var sitesMatches = true;
-            var levelsToMatch = [];
-            var sitesToMatch = [];
+        //xAxisMin and xAxisMax are the earliest and latest times, minInterval is the minimum time interval
+        time = Number(xAxisMin);
+        var timeMatches;
+        var levelsMatches;
+        var sitesMatches;
+        var levelsToMatch;
+        var sitesToMatch;
+        var mySites;
+        var myLevels;
+        while (time < xAxisMax) {
+            timeMatches = true;
+            levelsMatches = true;
+            sitesMatches = true;
+            levelsToMatch = [];
+            sitesToMatch = [];
             for (ci = 0; ci < curvesLength; ci++) {
                 // the dataset data arrays may not always start with the same time
-                if (dataIndexes[ci] == -1 && dataset[ci].data[0][0] === undefined) {
+                if (!(dataset[ci].data) || !(dataset[ci].data.length) || !(dataset[ci].data[0][0])) {
                     timeMatches = false;
                     levelsMatches = false;
                     sitesMatches = false;
                 } else {
-                    dataIndexes[ci]++;
-                    if (curves[ci].diffFrom === null || curves[ci].diffFrom === undefined) {
-                        //var queryResultDataTime = curves[ci].queryResult.data[time];
-                        var queryResultDataTime = curveQueryResults[ci].data[time];
-                        if (matchTime) {
-                            if (queryResultDataTime == null || (queryResultDataTime.timeMean == null)) {
-                                timeMatches = false;
-                            }
+                    if (matchTime) {
+                        // if this index is undefined or is set to null for the time or the value, have to set all curves for this index to null
+                        if (!(dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] && dataset[ci].data[dataIndexes[ci]][1])) {
+                            timeMatches = false;
+                            break;
                         }
-                        if (matchLevel) {
-                            if (queryResultDataTime == null || _.isEqual(levelsToMatch, queryResultDataTime.timeLevels) === false) {
-                                levelsMatches = false;
-                            }
+                    }
+                    if (matchLevel){
+                        if (levelsToMatch.length == 0) {
+                            levelsToMatch = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
                         }
-                        if (matchSite) {
-                            if (queryResultDataTime == null || _.isEqual(sitesToMatch, queryResultDataTime.timeSites) === false) {
-                                sitesMatches = false;
-                            }
+                        myLevels = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
+                        if (matsDataUtils.arraysEqual(myLevels, levelsToMatch) == false) {
+                            levelsMatches = false;
+                            break;
+                        }
+                    }
+                    if (matchSite) {
+                        if (sitesToMatch.length == 0) {
+                            sitesToMatch = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
+                        }
+                        mySites = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
+                        if (matsDataUtils.arraysEqual(mySites, sitesToMatch) == false) {
+                            sitesMatches = false;
+                            break;
                         }
                     }
                 }
-            }
-            if ((timeMatches === false) ||
-                (levelsMatches === false) ||
-                (sitesMatches === false)) {
-                for (var sci = 0; sci < curvesLength; sci++) {
-                    // have to null this value out for all the curves because it does not match (either time was null or levels or sites did not match)
-                    if (dataset[sci].data[dataIndexes[sci]] !== undefined) {
-                        dataset[sci].data[dataIndexes[sci]][1] = null;
+             }   // for all the curves
+            for (sci = 0; sci < curvesLength; sci++) {
+                // have to null this value out for all the curves because it does not match (either time was null or levels or sites did not match)
+                if ((timeMatches === false) ||
+                    (levelsMatches === false) ||
+                    (sitesMatches === false)) {
+                    if (dataset[sci].data[dataIndexes[sci]] === undefined) {
+                        dataset[sci].data[dataIndexes[sci]] = [];
+                        dataset[sci].data[dataIndexes[sci]][0] = time;
                     }
+                    dataset[sci].data[dataIndexes[sci]][1] = null;
                 }
-
+                dataIndexes[sci]++;
             }
-            time = time + minimumInterval;
-        } // end of while time
+            time = time + minInterval;
+        } // while time
     } // end of if matching
 
     // generate y-axis
@@ -595,15 +623,15 @@ dataSeries = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['label'] + ":" + curve['variable'] + ":" + curve['data-source'],
+            axisLabel: curves[dsi]['label'] + ":" + curves[dsi]['variable'] + ":" + curves[dsi]['data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMin * 0.9,
-            max: yAxisMax * 0.9
+            min: yAxisMins[dsi] * 1.1,
+            max: yAxisMaxes[dsi] * 1.1
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
