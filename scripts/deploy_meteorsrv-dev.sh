@@ -5,6 +5,8 @@ if [[ $USER != "www-data" ]]; then
 		exit 1
 	fi 
 
+requestedApp = "$1"
+
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
@@ -32,6 +34,9 @@ fi
 cd /web
 find /tmp/tmpbuilds -maxdepth 1 -type f -not -path "/tmp/tmpbuilds" -name "*.gz" 2>/dev/null | while read x
 do
+    if  [[ $#  -eq 1 ]] && [[ ! "$x" -eq "${requestedApp}.tar.gz" ]]; then
+        continue
+    fi
 	echo "processing $x"
 	appname=`basename $x | cut -f1 -d"."`
 	echo "appname $appname"
