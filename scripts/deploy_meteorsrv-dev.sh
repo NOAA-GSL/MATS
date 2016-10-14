@@ -34,7 +34,7 @@ fi
 cd /web
 find /tmp/tmpbuilds -maxdepth 1 -type f -not -path "/tmp/tmpbuilds" -name "*.gz" 2>/dev/null | while read x
 do
-    if  [[ $#  -eq 1 ]] && [[ ! "$x" -eq "${requestedApp}.tar.gz" ]]; then
+    if  [ $#  -eq 1 ] && [ ! "$x" ==  "/tmp/tmpbuilds/${requestedApp}.tar.gz" ]; then
         continue
     fi
 	echo "processing $x"
