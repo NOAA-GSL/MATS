@@ -5,7 +5,7 @@ if [[ $USER != "www-data" ]]; then
 		exit 1
 	fi 
 
-requestedApp = "$1"
+requestedApp="$1"
 
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
