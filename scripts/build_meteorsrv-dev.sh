@@ -53,7 +53,7 @@ fi
 cd apps
 find . -maxdepth 1 -type d -not -path "." | while read x
 do
-    if  [[ $#  -eq 1 ]] && [[ ! $x -eq $requestedApp ]]; then
+    if  [[ $#  -eq 1 ]] && [[ ! $x == "./${requestedApp}" ]]; then
         continue
     fi
 	cd $x
