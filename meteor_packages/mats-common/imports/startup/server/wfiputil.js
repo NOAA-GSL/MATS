@@ -267,7 +267,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     resultData[time] = {sites:{}};
                     cumulativeMovingMeanForTime = 0;
                     siteCount = 0;
-                    timeLevels = [];
+                    resultData[time].timeLevels = [];
                     timeSites = [];
                 }
                 if (resultData[time].sites[siteid] === undefined) {
@@ -287,7 +287,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 // store timeMean each row because we don't know how many times there are
                 // the last one will be the one returned
                 resultData[time].timeMean = cumulativeMovingMeanForTime;
-                resultData[time].timeLevels = _.union(resultData[time].timeLevels,levels);
+                resultData[time].timeLevels = _.union(resultData[time].timeLevels, levels);
                 resultData[time].timeSites = timeSites;
             }
             // fill in missing times - there must be an entry at each minInterval
@@ -295,6 +295,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             // get an array of all the times for every site
             allSiteIds = Array.from(allSitesSet);
             allTimes = Object.keys(resultData).sort(); //Very important to sort the keys!
+            time = allTimes[0];
             for (var k = 0; k < allTimes.length -1; k++) {
                 time = Number(allTimes[k]);
                 var nextTime = allTimes[k+1];

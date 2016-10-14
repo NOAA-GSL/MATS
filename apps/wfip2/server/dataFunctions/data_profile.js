@@ -91,7 +91,7 @@ dataProfile = function (plotParams, plotFunction) {
                     " and nwp_recs_nwprecid=nwprecid " +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
-            statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("query=" + statement);
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
@@ -117,7 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
                         " and nwp_recs_nwprecid=nwprecid " +
                         " and fcst_end_utc=" + 3600 * forecastLength;
                 }
-                statement = statement + "  and sites_siteid in (" + siteIds[curveIndex].toString() + ")";
+                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
                 console.log("query=" + statement);
                 dataRequests['truth-' + curve.label] = statement;
                 truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
@@ -201,7 +201,7 @@ dataProfile = function (plotParams, plotFunction) {
                 levelBasis = _.union(levelBasis,truthLevelBasis);
                 siteBasis = _.union(siteBasis,truthSiteBasis);
             }
-            var levelValues = {};
+            var verificationLevelValues = {};
             var truthLevelValues = {};
             var allTimes;
             if (statistic == "mean") {
@@ -210,70 +210,69 @@ dataProfile = function (plotParams, plotFunction) {
                 allTimes = _.intersection(queryResult.allTimes,truthQueryResult.allTimes)
             }
             for (var t=0; t < allTimes.length; t++) {
+                /*
+                If statistic is not "mean" then we need a set of truth values to diff from the verification values.
+                The sites and levels have to match for the truth to make any sense.
+                 */
                 var time = allTimes[t];
-                    var timeObj = queryResult.data[time];
-                    var sites = Object.keys(timeObj.sites).map(Number);
-                    var sitesLength = sites.length;
-                    var includedSites = _.intersection(sites, siteBasis);
-                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-                    if (sitesQuality > siteCompleteness) {
-                        // time is qualified for sites, count the qualified levels
-                        for (var si = 0; si < sitesLength; si++) {
-                            var sLevels = timeObj.sites[[sites[si]]].levels;
-                            var sValues = timeObj.sites[[sites[si]]].values;
-                            var includedLevels = _.intersection(sLevels, levelBasis);
-                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
-                            if (levelsQuality > levelCompleteness) {
-                                for (var l = 0; l < sLevels.length; l++) {
-                                    if (levelValues[sLevels[l]] === undefined) {
-                                        levelValues[sLevels[l]] = [];
-                                    }
-                                    levelValues[sLevels[l]].push(sValues[l]);
-                                }
-                            } // else don't count it in - skip over it, it isn't complete enough
-                        }
-                    }
+                var timeObj = queryResult.data[time];
+                var verificationSites = Object.keys(timeObj.sites).map(Number);
+                var truthSites = [];
+                var truthTimeObj;
                 if (statistic != "mean") {
-                    var timeObj = truthQueryResult.data[time];
-                    var sites = Object.keys(timeObj.sites).map(Number);
-                    var sitesLength = sites.length;
-                    var includedSites = _.intersection(sites, siteBasis);
-                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-                    if (sitesQuality > siteCompleteness) {
-                        // time is qualified for sites, count the qualified levels
-                        for (var si = 0; si < sitesLength; si++) {
-                            var sLevels = timeObj.sites[[sites[si]]].levels;
-                            var sValues = timeObj.sites[[sites[si]]].values;
-                            var includedLevels = _.intersection(sLevels, levelBasis);
-                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
-                            if (levelsQuality > levelCompleteness) {
-                                for (var l = 0; l < sLevels.length; l++) {
+                    truthTimeObj = truthQueryResult.data[time];
+                    truthSites = Object.keys(truthTimeObj.sites).map(Number);
+                }
+                var sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
+                var sitesLength = sites.length;
+                var includedSites = _.intersection(sites, siteBasis);
+                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                if (sitesQuality > siteCompleteness) {
+                    // time is qualified for sites, count the qualified levels
+                    for (var si = 0; si < sitesLength; si++) {
+                        var sLevels;
+                        var verificationValues = timeObj.sites[[sites[si]]].values;
+                        var truthValues;
+                        if (statistic != "mean") {
+                            sLevels = _.intersection(timeObj.sites[[sites[si]]].levels, truthTimeObj.sites[[sites[si]]].levels);
+                            truthValues = truthTimeObj.sites[[sites[si]]].values;
+                        } else {
+                            sLevels = timeObj.sites[[sites[si]]].levels;
+                        }
+                        var includedLevels = _.intersection(sLevels, levelBasis);
+                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                        if (levelsQuality > levelCompleteness) {
+                            for (var l = 0; l < sLevels.length; l++) {
+                                if (verificationLevelValues[sLevels[l]] === undefined) {
+                                    verificationLevelValues[sLevels[l]] = [];
+                                }
+                                verificationLevelValues[sLevels[l]].push(verificationValues[l]);
+                                if (statistic != "mean") {
                                     if (truthLevelValues[sLevels[l]] === undefined) {
                                         truthLevelValues[sLevels[l]] = [];
                                     }
-                                    truthLevelValues[sLevels[l]].push(sValues[l]);
+                                    truthLevelValues[sLevels[l]].push(truthValues[l]);
                                 }
-                            } // else don't count it in - skip over it, it isn't complete enough
-                        }
+                            }
+                        } // else don't count it in - skip over it, it isn't complete enough
                     }
                 }
             }
-            // now we have levelValues qualified by site and level completeness
+            // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
             // now get levelStats
 
             var levelStats = {};
             var qualifiedLevels;
             if (statistic == "mean") {
-                qualifiedLevels = Object.keys(levelValues);
+                qualifiedLevels = Object.keys(verificationLevelValues);
             } else {
-                qualifiedLevels = _.intersection(Object.keys(levelValues), Object.keys(truthLevelValues));
+                qualifiedLevels = _.intersection(Object.keys(verificationLevelValues), Object.keys(truthLevelValues));
             }
             var statValue;
             var statSum;
             var statNum;
             var values;
-            var truthValues;
-            var vindex;
+            var vIndex;
             switch (statistic) {
                 case "bias":
                 case "mae":
@@ -283,13 +282,13 @@ dataProfile = function (plotParams, plotFunction) {
                         for (l = 0; l < qualifiedLevels.length; l++) {
                             statNum = 0;
                             statSum =0;
-                            values = levelValues[qualifiedLevels[l]];
+                            values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
-                            for (vindex = 0; vindex < values.length; vindex++) {
+                            for (vIndex = 0; vIndex < values.length; vIndex++) {
                                 if (statistic == "mae") {
-                                    statValue = Math.abs(values[vindex] - truthValues[vindex]);
+                                    statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
                                 } else {
-                                    statValue = values[vindex] - truthValues[vindex];
+                                    statValue = values[vIndex] - truthValues[vIndex];
                                 }
                                 statSum += statValue;
                                 statNum++;
@@ -309,11 +308,11 @@ dataProfile = function (plotParams, plotFunction) {
                         for (l = 0; l < qualifiedLevels.length; l++) {
                             statNum = 0;
                             statSum =0;
-                            values = levelValues[qualifiedLevels[l]];
+                            values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
-                            for (vindex = 0; vindex < values.length;vindex++) {
-                                statValue = values[vindex] - truthValues[vindex];
-                                statValue = Math.pow((values[vindex] - truthValues[vindex]),2);  // square the difference
+                            for (vIndex = 0; vIndex < values.length;vIndex++) {
+                                statValue = values[vIndex] - truthValues[vIndex];
+                                statValue = Math.pow((values[vIndex] - truthValues[vIndex]),2);  // square the difference
                                 statSum += statValue;
                                 statNum++;
                             }
@@ -332,8 +331,8 @@ dataProfile = function (plotParams, plotFunction) {
                         statNum = 0;
                         statSum =0;
                         for (l = 0; l < qualifiedLevels.length; l++) {
-                            statSum = _.reduce(levelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
-                            statNum = levelValues[qualifiedLevels[l]].length;
+                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
+                            statNum = verificationLevelValues[qualifiedLevels[l]].length;
                             if (levelStats[qualifiedLevels[l]] === undefined) {
                                 levelStats[qualifiedLevels[l]] = {};
                             }
@@ -343,25 +342,69 @@ dataProfile = function (plotParams, plotFunction) {
                     }
                     break;
             }
-        }  // if diffFrom == null
-
-
-        var d = [];
-        var levels = Object.keys(levelStats);
-        for (l =0; l < levels.length; l++) {
-            var level = levels[l];
-            var value = levelStats[level][statistic];
-            xAxisMin = xAxisMin < value ? xAxisMin : value;
-            xAxisMax = xAxisMax > value ? xAxisMax : value;
-            yAxisMin = yAxisMin < level ? yAxisMin : level;
-            yAxisMax = yAxisMax > level ? yAxisMax : level;
-            var tooltip = label  +
-                "<br>level: " + level +
-                "<br>statistic: " +  statistic +
-                "<br> value: " + value;
-
-            d.push([value,level,-1,{level:level, values:levelValues[level], levelStats:levelStats[level]},tooltip]);
-            //d.push([value,level,-1]);
+            var d = [];
+            var levels = Object.keys(levelStats);
+            for (l =0; l < levels.length; l++) {
+                var level = levels[l];
+                var value = levelStats[level][statistic];
+                xAxisMin = xAxisMin < value ? xAxisMin : value;
+                xAxisMax = xAxisMax > value ? xAxisMax : value;
+                yAxisMin = yAxisMin < level ? yAxisMin : level;
+                yAxisMax = yAxisMax > level ? yAxisMax : level;
+                var tooltip = label  +
+                    "<br>level: " + level +
+                    "<br>statistic: " +  statistic +
+                    "<br> value: " + value;
+                d.push([value,level,-1,{level:level, statistic:statistic, values:{verification:verificationLevelValues[level], truth:truthLevelValues[level]}, levelStats:levelStats[level]},tooltip]);
+            } // end  if diffFrom == null
+        }  else { // difference curve
+            var minuendIndex = diffFrom[0];
+            var subtrahendIndex = diffFrom[1]; // base curve
+            var minuendData = dataset[minuendIndex].data;
+            var subtrahendData = dataset[subtrahendIndex].data;
+            var minuendLevelValues = {};
+            var minuendLevels = [];
+            var minuendStatistic = null;
+            var subtrahendStatistic = null;
+            var i;
+            var level;
+            var value;
+            for (i = 0; i < minuendData.length; i ++) {
+                level = minuendData[i][1];
+                value = minuendData[i][0];
+                if (!minuendStatistic) {
+                    minuendStatistic =  minuendData[i][3].statistic;
+                }
+                minuendLevels.push(level);
+                minuendLevelValues[level] = value;
+            }
+            var subtrahendLevels = [];
+            var subtrahendLevelValues = {};
+            for (i = 0; i < subtrahendData.length; i ++) {
+                level = subtrahendData[i][1];
+                value = subtrahendData[i][0];
+                if (!subtrahendStatistic) {
+                    subtrahendStatistic = subtrahendData[i][3].statistic;
+                }
+                subtrahendLevels.push(level);
+                subtrahendLevelValues[level] = value;
+            }
+            var d = [];
+            var commonLevels = _.intersection(subtrahendLevels,minuendLevels);
+            for (i = 0; i < commonLevels.length; i++){
+                level = commonLevels[i];
+                value = minuendLevelValues[level] - subtrahendLevelValues[level];
+                xAxisMin = xAxisMin < value ? xAxisMin : value;
+                xAxisMax = xAxisMax > value ? xAxisMax : value;
+                yAxisMin = yAxisMin < level ? yAxisMin : level;
+                yAxisMax = yAxisMax > level ? yAxisMax : level;
+                var tooltip = label  +
+                    "<br>level: " + level +
+                    "<br>minuend statistic: " + minuendStatistic +
+                    "<br>subtrahend statistic: " + subtrahendStatistic +
+                    "<br> diff value: " + value;
+                d.push([value,level,-1,{level:level, values:{minuend:minuendLevelValues[level], subtrahend:subtrahendLevelValues[level]}, levelStats:{minuend:minuendStatistic,subtrahend:subtrahendStatistic}},tooltip]);
+            }
         }
 
         var pointSymbol = matsWfipUtils.getPointSymbol (curveIndex);
