@@ -736,7 +736,8 @@ Meteor.startup(function () {
     });
     try {
 
-        var statement = "select model,regions,model_value from regions_per_model_mats";
+//        var statement = "SELECT model, fcst_lens, fcst_interval FROM WFIP2.fcst_lens_per_model, nwps";
+        var statement = "select model,regions,model_value,fcst_interval from regions_per_model_mats";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -749,13 +750,12 @@ Meteor.startup(function () {
                 matsCollections.Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
-
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid = model_values[1];
-
+                    var fcst_interval = rows[i].fcst_interval * 1000; // convert from seconds
                     var valueList = [];
-                    valueList.push(table_name+','+instruments_instrid);
+                    valueList.push(table_name + ',' + instruments_instrid + ',' + fcst_interval);
                     modelOptionsMap[model] = valueList;
                     variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
                     variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];

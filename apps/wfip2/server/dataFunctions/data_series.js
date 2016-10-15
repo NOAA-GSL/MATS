@@ -28,13 +28,11 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    // used to find the max and minimum for the y axis
-    // used in yaxisOptions for scaling the graph
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMaxes = [];
     var yAxisMins = [];
-    var minInterval = Number.MAX_VALUE;
+    var maxValidInterval = Number.MIN_VALUE;    //used for differencing and matching
     var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
     var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
@@ -48,12 +46,22 @@ dataSeries = function (plotParams, plotFunction) {
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
+        var verificationFcstInterval = tmp[2];
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
         tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
         var truthModel = tmp[0];
         var truthInstrument_id = tmp[1];
+        var truthFcstInterval = tmp[2];
+        // maxFcstInterval is used for determining maxValidInterval which is used for differencing and matching
+        var maxFcstInterval;
+            if (statistic == "mean") {
+                maxFcstInterval = verificationFcstInterval;
+            } else {
+                maxFcstInterval = truthFcstInterval > verificationFcstInterval ? truthFcstInterval : verificationFcstInterval;
+            }
+        maxValidInterval = maxValidInterval > maxFcstInterval ? maxFcstInterval : maxFcstInterval;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
@@ -287,21 +295,10 @@ dataSeries = function (plotParams, plotFunction) {
 
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
-                valTime = verificationData[valIndex][0];
-                // determine and remember the minimum interval for use in matching based on verification data
-                var interval;
-                if (verificationData[valIndex + 1][0]) {
-                    interval = verificationData[valIndex + 1][0] - verificationData[valIndex][0];
-                    minInterval = interval < minInterval ? interval : minInterval;
-                }
-                // determine and remember the minimum interval for use in matching based on truth data
                 if (statistic != "mean") {
                     truthTime = truthData[truthIndex][0];
-                    if (truthData[truthIndex + 1][0]) {
-                        interval = truthData[truthIndex + 1][0] - truthData[truthIndex][0];
-                        minInterval = interval < minInterval ? interval : minInterval;
-                    }
                 }
+                valTime = verificationData[valIndex][0];
                 if (valTime < truthTime) {
                     valIndex++;
                     continue;
@@ -314,10 +311,6 @@ dataSeries = function (plotParams, plotFunction) {
                     var time = verificationData[valIndex][0];
                     var timeObj = verificationData[valIndex][1];
                     var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
-                    var tooltip = label +
-                        "<br>seconds" + time +
-                        "<br>time:" + new Date(Number(valTime)).toUTCString() +
-                        "<br> value:" + value;
                     xAxisMin = time < xAxisMin ? time : xAxisMin;
                     xAxisMax = time > xAxisMax ? time : xAxisMax;
                     if (!timeObj) {
@@ -339,7 +332,9 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br> statistic: " + statistic +
                             "<br> value:" + null;
                         normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
-                        truthIndex++;
+                        if (statistic != "mean") {
+                            truthIndex++;
+                        }
                         continue;
                     }
                     var valSites = Object.keys(timeObj.sites).map(Number).sort();
@@ -358,7 +353,9 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br> value:" + null;
                         normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
-                        statistic == "mean" && truthIndex++;
+                        if (statistic != "mean") {
+                            truthIndex++;
+                        }
                         continue;
                     }
 
@@ -479,14 +476,16 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> value:" + value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
-                statistic == "mean" && truthIndex++;
+                if (statistic != "mean") {
+                    truthIndex++;
+                }
                 valIndex++;
             }
-        } else {
-            var minuendIndex = diffFrom[0];
-            var subtrahendIndex = diffFrom[1]; // base curve
-            var minuendData = dataset[minuendIndex].data;
-            var subtrahendData = dataset[subtrahendIndex].data;
+        } else {   // this is a difference curve... we have to use the maximum valid interval
+            var minuendIndex = 0;
+            var subtrahendIndex = 0; // base curve
+            var minuendData = dataset[diffFrom[0]].data;
+            var subtrahendData = dataset[diffFrom[1]].data;
             var minuendEndTime = minuendData[minuendData.length - 1][0];
             var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
             var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
@@ -494,7 +493,7 @@ dataSeries = function (plotParams, plotFunction) {
             // calculate difference curve values
             // minuend - subtrahend = difference.
             // the minuend is the curve from which the base curve values will be subtracted
-            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
+            while (subtrahendData[subtrahendIndex] < minuendData[minuendIndex]) {
                 // if necessary, increment the base index until it catches up
                 subtrahendIndex++;
             }
@@ -505,8 +504,8 @@ dataSeries = function (plotParams, plotFunction) {
             // now the times should be equal
             var diffTime = minuendData[minuendIndex][0];
             while (diffTime < diffEndTime) {
-                var fromValue = minuendData[minuendIndex][1];
-                var baseValue = subtrahendData[subtrahendIndex][1];
+                var fromValue = minuendData[minuendIndex] == undefined ? null : minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex] == undefined ? null : subtrahendData[subtrahendIndex][1];
                 var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
                 var diffSeconds = diffTime / 1000;
                 var d = new Date(Number(diffTime)).toUTCString();
@@ -517,7 +516,7 @@ dataSeries = function (plotParams, plotFunction) {
                 yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
                 yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
                 normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
-                diffTime = Number(diffTime) + Number(minInterval);
+                diffTime = Number(diffTime) + Number(maxValidInterval);
                 subtrahendIndex++;
                 minuendIndex++;
             }
@@ -552,7 +551,7 @@ dataSeries = function (plotParams, plotFunction) {
         for (ci = 0; ci < curvesLength; ci++) {
             dataIndexes[ci] = 0;
         }
-        //xAxisMin and xAxisMax are the earliest and latest times, minInterval is the minimum time interval
+        //xAxisMin and xAxisMax are the earliest and latest times, maxValidInterval is the maximum valid time interval
         time = Number(xAxisMin);
         var timeMatches;
         var levelsMatches;
@@ -616,7 +615,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 dataIndexes[sci]++;
             }
-            time = time + minInterval;
+            time = Number(time) + Number(maxValidInterval);
         } // while time
     } // end of if matching
 

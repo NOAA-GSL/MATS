@@ -284,6 +284,11 @@ data2dScatter = function (plotParams, plotFunction) {
                     seconds = xaxisTime/1000;
                     xValue = datum['xaxis-value'];
                     yValue = datum['yaxis-value'];
+                    if (xValue == null || yValue == null) {
+                        xaxisIndex++;
+                        yaxisIndex++;
+                        continue;
+                    }
                     tooltipText = label  +
                         "<br>seconds" + seconds +
                         "<br>time:" + time +
