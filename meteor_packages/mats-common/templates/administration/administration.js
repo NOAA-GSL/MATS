@@ -2,9 +2,11 @@ import { Meteor } from 'meteor/meteor';
 import { Hooks } from 'meteor/differential:event-hooks';
 import {matsTypes } from 'meteor/randyp:mats-common';
 import {matsCollections } from 'meteor/randyp:mats-common';
+import {matsMethods } from 'meteor/randyp:mats-common';
 
 Accounts.onLogin(function() {
-    Meteor.call('getUserAddress', function (error, result) {
+        matsMethods.getUserAddress.call(function (error, result) {
+        //Meteor.call('getUserAddress', function (error, result) {
         if (error !== undefined) {
             Session.set('roles', []);
             setError(error.toLocaleString());

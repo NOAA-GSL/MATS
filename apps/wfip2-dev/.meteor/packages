@@ -17,7 +17,6 @@ ecmascript@0.5.8_1              # Enable ECMAScript2015+ syntax in app code
 shell-server@0.2.1            # Server-side component of the `meteor shell` command
 pcel:mysql
 seba:minifiers-autoprefixer
-iron:router@1.0.13
 session@1.1.6
 momentjs:moment
 randyp:mats-common

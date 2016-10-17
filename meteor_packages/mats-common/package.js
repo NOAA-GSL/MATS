@@ -34,8 +34,6 @@ Package.onUse(function(api) {
   api.use("mdg:validated-method");
   api.use('session');
   api.imply('session');
-  api.use("iron:router@1.0.13");
- // api.use("useraccounts:iron-routing@1.14.2");
   api.use("twbs:bootstrap");
   api.use("fortawesome:fontawesome");
   api.use("msavin:mongol");
@@ -88,6 +86,7 @@ Package.onUse(function(api) {
   api.addFiles('footer.html', "client");
 
   //client
+  api.addFiles('client/main.html', "client");
   api.addFiles('client/main.js', "client");
   api.addFiles('client/error.js', "client");
   api.addFiles('client/info.js', "client");
@@ -100,9 +99,6 @@ Package.onUse(function(api) {
   api.addFiles('lib/param_util.js', ['client','server']);
   api.addFiles('lib/plot_util.js', ['client','server']);
   api.addFiles('lib/math_util.js', ['client','server']);
-  api.addFiles('lib/route.js', ['client','server']);
-
-
 
   // templates
   api.addFiles("templates/topnav/top_nav.html", "client");
