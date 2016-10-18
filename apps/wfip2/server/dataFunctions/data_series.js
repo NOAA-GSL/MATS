@@ -46,22 +46,22 @@ dataSeries = function (plotParams, plotFunction) {
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
-        var verificationFcstInterval = tmp[2];
+        var verificationRunInterval = tmp[2];
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
         tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
         var truthModel = tmp[0];
         var truthInstrument_id = tmp[1];
-        var truthFcstInterval = tmp[2];
-        // maxFcstInterval is used for determining maxValidInterval which is used for differencing and matching
-        var maxFcstInterval;
+        var truthRunInterval = tmp[2];
+        // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
+        var maxRunInterval;
             if (statistic == "mean") {
-                maxFcstInterval = verificationFcstInterval;
+                maxRunInterval = verificationRunInterval;
             } else {
-                maxFcstInterval = truthFcstInterval > verificationFcstInterval ? truthFcstInterval : verificationFcstInterval;
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
             }
-        maxValidInterval = maxValidInterval > maxFcstInterval ? maxFcstInterval : maxFcstInterval;
+        maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
@@ -551,8 +551,40 @@ dataSeries = function (plotParams, plotFunction) {
         for (ci = 0; ci < curvesLength; ci++) {
             dataIndexes[ci] = 0;
         }
+        // for matching - the begin time must be the first coinciding time for all the curves.
+        // Once we know at which index the curves coincide we can increment by the maxValidInterval.
         //xAxisMin and xAxisMax are the earliest and latest times, maxValidInterval is the maximum valid time interval
         time = Number(xAxisMin);
+        var done = false;
+        while (!done) {
+            var same = true;
+            for (ci = 0; ci < curvesLength; ci++) {
+                if (dataIndexes[ci] >= dataset[ci].data.length) {
+                    same = false;
+                    done = true; // I went past the end - no coinciding points
+                    break;
+                }
+                if (ci == curvesLength -1)  {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
+                        dataIndexes[0]++;
+                        same = false;
+                    }
+                } else {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
+                        dataIndexes[ci + 1]++;
+                        same = false;
+                    }
+                }
+            }
+            if (same) {
+                done = true;
+                time = dataset[0].data[dataIndexes[0]][0];
+            }
+        }
+        for (ci = 0; ci < curvesLength; ci++) {
+            console.log( "curve " + ci + "  " + dataset[ci].data[dataIndexes[ci]][0]);
+        }
+        // now the indexes point to the same time which is the earliest coinciding time, or they are off the list.
         var timeMatches;
         var levelsMatches;
         var sitesMatches;
@@ -560,6 +592,7 @@ dataSeries = function (plotParams, plotFunction) {
         var sitesToMatch;
         var mySites;
         var myLevels;
+        var newDataSet = [];
         while (time < xAxisMax) {
             timeMatches = true;
             levelsMatches = true;
@@ -567,17 +600,21 @@ dataSeries = function (plotParams, plotFunction) {
             levelsToMatch = [];
             sitesToMatch = [];
             for (ci = 0; ci < curvesLength; ci++) {
-                // the dataset data arrays may not always start with the same time
-                if (!(dataset[ci].data) || !(dataset[ci].data.length) || !(dataset[ci].data[0][0])) {
+                // move this curves index to equal or exceed the new time
+                while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < time) {
+                    dataIndexes[ci]++;
+                }
+                // if the time isn't right or the data is null it doesn't match
+                if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != time) {
                     timeMatches = false;
                     levelsMatches = false;
                     sitesMatches = false;
+                    break;
                 } else {
                     if (matchTime) {
-                        // if this index is undefined or is set to null for the time or the value, have to set all curves for this index to null
+                        // if there is no data entry here at this time it doesn't match
                         if (!(dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] && dataset[ci].data[dataIndexes[ci]][1])) {
                             timeMatches = false;
-                            break;
                         }
                     }
                     if (matchLevel){
@@ -587,7 +624,6 @@ dataSeries = function (plotParams, plotFunction) {
                         myLevels = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
                         if (matsDataUtils.arraysEqual(myLevels, levelsToMatch) == false) {
                             levelsMatches = false;
-                            break;
                         }
                     }
                     if (matchSite) {
@@ -597,26 +633,34 @@ dataSeries = function (plotParams, plotFunction) {
                         mySites = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
                         if (matsDataUtils.arraysEqual(mySites, sitesToMatch) == false) {
                             sitesMatches = false;
-                            break;
                         }
                     }
                 }
              }   // for all the curves
-            for (sci = 0; sci < curvesLength; sci++) {
-                // have to null this value out for all the curves because it does not match (either time was null or levels or sites did not match)
-                if ((timeMatches === false) ||
-                    (levelsMatches === false) ||
-                    (sitesMatches === false)) {
-                    if (dataset[sci].data[dataIndexes[sci]] === undefined) {
-                        dataset[sci].data[dataIndexes[sci]] = [];
-                        dataset[sci].data[dataIndexes[sci]][0] = time;
+            if (timeMatches && levelsMatches && sitesMatches) {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    if (!newDataSet[sci]) {
+                        newDataSet[sci]={};
+                        var keys = Object.keys(dataset[sci]);
+                        for (var k =0; k < keys.length; k++) {
+                            var key = keys[k];
+                            if (key == "data") {
+                                newDataSet[sci][key] = [];
+                            } else {
+                                newDataSet[sci][key] = dataset[sci][key];
+                            }
+                        }
                     }
-                    dataset[sci].data[dataIndexes[sci]][1] = null;
+                    newDataSet[sci].data.push(dataset[sci].data[dataIndexes[sci]]);
                 }
-                dataIndexes[sci]++;
+            } else {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci].data.push([time,null]);
+                }
             }
             time = Number(time) + Number(maxValidInterval);
         } // while time
+        dataset = newDataSet;
     } // end of if matching
 
     // generate y-axis
@@ -634,8 +678,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMins[dsi] * 1.1,
-            max: yAxisMaxes[dsi] * 1.1
+            min: yAxisMins[dsi] * 0.8,
+            max: yAxisMaxes[dsi] * 1.2
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
