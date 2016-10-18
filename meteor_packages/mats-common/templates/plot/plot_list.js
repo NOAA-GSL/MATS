@@ -65,7 +65,7 @@ Template.plotList.events({
     'click .delete-selected' : function() {
         var deleteThis = document.getElementById('save_to').value;
         if (deleteThis !== undefined && deleteThis !== "") {
-            Meteor.call('deleteSetting',deleteThis, function(error){
+            matsMethods.deleteSettings.call({name:deleteThis}, function(error){
                 if (error) {
                     setError(error.message);
                 }

@@ -21,3 +21,5 @@ session@1.1.6
 momentjs:moment
 randyp:mats-common
 accounts-google
+accounts-base
+accounts-ui
