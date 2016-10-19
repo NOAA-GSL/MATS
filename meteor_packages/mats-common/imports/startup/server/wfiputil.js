@@ -173,7 +173,6 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
     var timeCount = 0;
     var cumulativeMovingMeanForTime = 0;
     var siteCount =0;
-    var timeLevels = [];
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
         // every row is a time and a site with a level array and a values array
@@ -242,7 +241,8 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 var levels = [];
                 if (isDiscriminator)  {
                     // discriminators do not return arrays of values
-                    levels = JSON.parse(rows[rowIndex].z);
+                    // discriminators levels are invalid - just make them one special level Number.MIN_VALUE
+                    levels = [Number.MIN_VALUE];
                     values = [Number(rows[rowIndex][myVariable])];
                 } else {
                     // conventional variable
@@ -252,11 +252,12 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
+                // always accept levels that are Number.MIN_VALUE - they are special discriminators
                 for (var l = levels.length - 1; l >= 0; l--) {
                     var lvl = levels[l];
-                    if (lvl < bottom || lvl > top) {
-                        levels.splice(l,1);
-                        values.splice(l,1);
+                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                        levels.splice(l, 1);
+                        values.splice(l, 1);
                     }
                 }
                 allLevels.push(levels);  // array of level arrays - two dimensional
