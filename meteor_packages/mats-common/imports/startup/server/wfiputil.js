@@ -240,7 +240,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 var values = [];
                 var levels = [];
                 if (isDiscriminator)  {
-                    // discriminators do not return arrays of values
+                    // discriminators do not return arrays of values, just a single value
                     // discriminators levels are invalid - just make them one special level Number.MIN_VALUE
                     levels = [Number.MIN_VALUE];
                     values = [Number(rows[rowIndex][myVariable])];
