@@ -523,7 +523,7 @@ const getGraphData = new ValidatedMethod({
     }
 });
 
-var saveSettings = new ValidatedMethod({
+const saveSettings = new ValidatedMethod({
     name: 'matsMethods.saveSettings',
     validate: new SimpleSchema({
         saveAs: {
@@ -555,7 +555,7 @@ var saveSettings = new ValidatedMethod({
     }
 });
 
-var deleteSettings = new ValidatedMethod({
+const deleteSettings = new ValidatedMethod({
     name: 'matsMethods.deleteSettings',
     validate: new SimpleSchema({
         name: {
