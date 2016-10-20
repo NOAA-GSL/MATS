@@ -541,14 +541,34 @@ var saveSettings = new ValidatedMethod({
         // if (!Meteor.userId()) {
         //     throw new Meteor.Error("not-logged-in");
         // }
+        if (Meteor.isServer) {
+            var user =  Meteor.user().services.google.email.toLowerCase();
+        }
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
             name: params.saveAs,
             data: params.p,
             owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
             permission: params.permission,
             savedAt: new Date(),
-            savedBy: Meteor.user() == null ? "anonymous" : Meteor.user().services.google.email.toLowerCase()
+            savedBy: Meteor.user() == null ? "anonymous" : user
         });
+    }
+});
+
+var deleteSettings = new ValidatedMethod({
+    name: 'matsMethods.deleteSettings',
+    validate: new SimpleSchema({
+        name: {
+            type: String
+        }
+    }).validator(),
+    run(params){
+        if (!Meteor.userId()) {
+             throw new Meteor.Error("not-logged-in");
+        }
+        if (Meteor.isServer) {
+            matsCollections.CurveSettings.remove({name: params.name});
+        }
     }
 });
 
@@ -660,6 +680,7 @@ export default matsMethods = {
     applyAuthorization:applyAuthorization,
     getGraphData:getGraphData,
     saveSettings:saveSettings,
+    deleteSettings:deleteSettings,
     addSentAddress:addSentAddress,
     emailImage:emailImage
 };

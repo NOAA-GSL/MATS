@@ -735,8 +735,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
     try {
-
-        var statement = "select model,regions,model_value from regions_per_model_mats";
+        var statement = "select model,regions,model_value,run_interval from regions_per_model_mats";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -749,13 +748,12 @@ Meteor.startup(function () {
                 matsCollections.Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
-
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid = model_values[1];
-
+                    var run_interval = rows[i].run_interval * 1000; // convert from seconds
                     var valueList = [];
-                    valueList.push(table_name+','+instruments_instrid);
+                    valueList.push(table_name + ',' + instruments_instrid + ',' + run_interval);
                     modelOptionsMap[model] = valueList;
                     variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
                     variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];

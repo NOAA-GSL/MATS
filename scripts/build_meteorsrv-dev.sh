@@ -6,7 +6,7 @@ touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
 
-requestedApp = "$1"
+requestedApp="$1"
 
 echo "$0 ----------- started"
 date

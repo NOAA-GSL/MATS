@@ -46,8 +46,8 @@ dataSeries = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var dataSource = (curve['data-source']);
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var table = tmp[0];
-        var this_id = tmp[1];
+        var model = tmp[0];
+        var instrument_id = tmp[1];
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
@@ -86,40 +86,44 @@ dataSeries = function (plotParams, plotFunction) {
         var statement = "";
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching
-            if (table.includes("recs")) {
+            if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
-                    "from obs_recs as o , " + table +
-                    " where  observationid = o.obsrecid " +
-                    " and instruments_instrid = this_id " +
-                    " and valid_utc >= " + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc <= " + matsDataUtils.secsConvert(toDate);
-            } else if (table.includes("hrrr_wfip")) {
+                    "from obs_recs as o , " + model +
+                    " where  obs_recs_obsrecid = o.obsrecid" +
+                    " and instruments_instrid=" + instrument_id +
+                    " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+            } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
                     statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
-                        " from " + table + ", nwp_recs,  " + dataSource + "_discriminator" +
-                        " where discriminator_record_id = this_id " +
-                        " and valid_utc >= " + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc <= " + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc = " + 3600 * forecastLength +
+                        " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
                     statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        " from " + table + ", nwp_recs,  " +
-                        " where nwp_record_id = this_id" +
-                        " and valid_utc >= " + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc <= " + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc = " + 3600 * forecastLength +
-                        " and " + discriminator + " >= " + disc_lower +
-                        " and " + discriminator + " <= " + disc_upper
+                        "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
+                        " where nwps_nwpid=" + instrument_id +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
+                        " and " + discriminator + " >=" + disc_lower +
+                        " and " + discriminator + " <=" + disc_upper
                 }
             } else {
-                statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
-                    " from " + table + ", nwp_recs  " +
-                    " where nwp_record_id = this_id " +
-                    " where valid_utc >= " + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc <= " + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_end_utc = " + 3600 * forecastLength;
+                statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
+                    "from " + model + ", nwp_recs  " +
+                    " where nwp_recs_nwprecid=nwprecid" +
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                    " and fcst_end_utc=" + (3600 * forecastLength);
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
@@ -166,11 +170,10 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + truthModel + ", nwp_recs  " +
-                        " where nwps_nwpid=" + truthInstrument_id +
-                        " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc=" + 3600 * forecastLength;
+                        " where nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >= " + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc) <= " + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + (3600 * forecastLength);
                 }
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 console.log("statement: " + statement);
