@@ -793,7 +793,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
+        var statement = "SELECT siteid, name,description,lat,lon,elev,instruments_instrid FROM sites, instruments_per_site where sites.siteid = instruments_per_site.sites_siteid;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -804,9 +804,13 @@ Meteor.startup(function () {
             } else {
                 siteMarkerOptionsMap = [];
                 siteOptionsMap.model = [];
-                siteOptionsMap.sodar = [];
-                siteOptionsMap.profiler_915 = [];
-
+                //siteOptionsMap.sodar = [];
+                //siteOptionsMap.profiler_915 = [];
+                var instrumentNames = matsCollections.Instruments.find({},{fields:{'name':1, 'instrument_id': 1, '_id': 0}}).fetch();
+                for (var j = 0; j< instrumentNames.length; j++) {
+                    var name = instrumentNames[j].name;
+                    siteOptionsMap[name] = [];
+                }
                 var points = [];
                 matsCollections.SiteMap.remove({});
                 for (var i = 0; i < rows.length; i++) {
@@ -827,16 +831,17 @@ Meteor.startup(function () {
                     }
                     points.push(point);
                     var elev = rows[i].elev;
-                    if (description.includes("SODAR")) {
-                        var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:"SODAR", peerOption:name, highLightColor:'pink'}};
-                        siteMarkerOptionsMap.push(obj);
-                        siteOptionsMap.model.push(name);
-                        siteOptionsMap.sodar.push(name);
-                    } else {
-                        var obj = {point:point,elevation:elev, options:{title:description, color:"blue", size:20, network:"PROFILE", peerOption:name, highLightColor:'cyan'}};
-                        siteMarkerOptionsMap.push(obj);
-                        siteOptionsMap.model.push(name);
-                        siteOptionsMap.profiler_915.push(name);
+                    var instrid = rows[i].instruments_instrid;
+
+                    for (var j = 0; j< instrumentNames.length; j++) {
+                        var int_name = instrumentNames[j].name;
+                        var id = instrumentNames[j].instrument_id;
+                        if (instrid == id) {
+                            var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:int_name, peerOption:name, highLightColor:'pink'}};
+                            siteMarkerOptionsMap.push(obj);
+                            siteOptionsMap.model.push(name);
+                            siteOptionsMap[int_name].push(name);
+                        }
                     }
                 }
                 var modelNames = matsCollections.Models.find({},{fields:{'name':1, '_id': 0}}).fetch();
