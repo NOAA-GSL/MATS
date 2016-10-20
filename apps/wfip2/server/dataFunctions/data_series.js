@@ -93,7 +93,7 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var statement = "";
         if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve - do those after Matching
+            // this is a database driven curve, not a difference curve - do those after Matching ..
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
                     "from obs_recs as o , " + model +
