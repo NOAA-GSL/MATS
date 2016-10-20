@@ -769,6 +769,30 @@ Meteor.startup(function () {
     }
 
     try {
+        var statement = "SELECT instrid, short_name FROM instruments;";
+        var qFuture = new Future();
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fileds) {
+            if (err != undefined) {
+                console.log(err.message);
+            }
+            if (rows == undefined || rows.length == 0) {
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
+            } else {
+                matsCollections.Instruments.remove({});
+                for (var i = 0; i < rows.length; i++) {
+                    var instrid = rows[i].instrid;
+                    var instrument = rows[i].short_name.trim();
+                    matsCollections.Instruments.insert({name: instrument, instrument_id: instrid});
+                }
+            }
+            qFuture['return']();
+        }));
+        qFuture.wait();
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
         var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
