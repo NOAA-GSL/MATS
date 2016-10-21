@@ -296,7 +296,15 @@ debugger;
             // if there are multiple entries for a given time average them into one time entry
             // get an array of all the times for every site
             allSiteIds = Array.from(allSitesSet);
-            allTimes = Object.keys(resultData).sort(); //Very important to sort the keys!
+            allTimes = Object.keys(resultData).sort(function(a,b){
+                if (Number(a) > Number(b)) {
+                    return 1;
+                }
+                if (Number(a) < Number(b)) {
+                    return -1;
+                }
+                return 0;
+            }); //Very important to sort the keys!
             time = allTimes[0];
             for (var k = 0; k < allTimes.length -1; k++) {
                 time = Number(allTimes[k]);

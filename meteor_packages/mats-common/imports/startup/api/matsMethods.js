@@ -538,12 +538,7 @@ const saveSettings = new ValidatedMethod({
         }
     }).validator(),
     run(params){
-        // if (!Meteor.userId()) {
-        //     throw new Meteor.Error("not-logged-in");
-        // }
-        if (Meteor.isServer) {
-            var user =  Meteor.user().services.google.email.toLowerCase();
-        }
+        var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
             name: params.saveAs,
             data: params.p,
