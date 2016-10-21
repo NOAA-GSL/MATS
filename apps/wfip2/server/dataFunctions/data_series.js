@@ -28,6 +28,12 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
+    var yAxisBoundaries = {};
+    /* axis boundaries is an object keyed by variable.
+        Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
+        each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
+        the yaxisoptions can derive the ymax and ymin from this object.
+     */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMaxes = [];
@@ -467,7 +473,6 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
                     yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
-
                     var seconds = time / 1000;
                     tooltip = label +
                         "<br>seconds: " + seconds +
@@ -521,6 +526,17 @@ dataSeries = function (plotParams, plotFunction) {
                 minuendIndex++;
             }
         }
+        if (yAxisBoundaries[variable] === undefined) {
+            yAxisBoundaries[variable] = {
+                min: Number.MAX_VALUE,
+                max: Number.MIN_VALUE
+            }
+        }
+        yAxisBoundaries[variable] = {
+            min: yAxisBoundaries[variable].min < yAxisMins[curveIndex] ? yAxisBoundaries[variable].min : yAxisMins[curveIndex],
+            max: yAxisBoundaries[variable].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variable].max : yAxisMaxes[curveIndex]
+        };
+
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         var mean = queryResult.mean;
         options = {
@@ -668,6 +684,7 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxis = [];
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
+        var yAxisPad = (yAxisBoundaries[curves[dsi][variable]].max - yAxisBoundaries[curves[dsi][variable]].min) * .05;
         var yaxesOptions = {
             position: position,
             color: 'grey',
@@ -678,8 +695,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMins[dsi] * 0.8,
-            max: yAxisMaxes[dsi] * 1.2
+            min: yAxisBoundaries[curves[dsi][variable]].min - yAxisPad,
+            max: yAxisBoundaries[curves[dsi][variable]].max + yAxisPad
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
