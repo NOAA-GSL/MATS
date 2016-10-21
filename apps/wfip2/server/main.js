@@ -783,7 +783,7 @@ Meteor.startup(function () {
                     var instrid = rows[i].instrid;
                     var instrument = rows[i].short_name.trim();
                     var color = rows[i].color.trim();
-                    var highlight = rows[i].trim();
+                    var highlight = rows[i].highlight.trim();
                     matsCollections.Instruments.insert({name: instrument, instrument_id: instrid, color: color, highlight: higlight});
                 }
             }
