@@ -16,6 +16,7 @@ var RegionsPerModel = new Mongo.Collection("RegionsPerModel");
 var SitesPerModel = new Mongo.Collection("SitesPerModel");
 var RegionDescriptions = new Mongo.Collection("RegionDescriptions");
 var Models = new Mongo.Collection("Models");
+var Instruments = new Mongo.Collection("Instruments");
 var FcstLensPerModel = new Mongo.Collection("FcstLensPerModel");
 var CurveSettings = new Mongo.Collection("CurveSettings");
 var Settings = new Mongo.Collection("Settings");
@@ -45,6 +46,7 @@ export default matsCollections = {
     SitesPerModel:SitesPerModel,
     RegionDescriptions:RegionDescriptions,
     Models:Models,
+    Instruments:Instruments,
     FcstLensPerModel:FcstLensPerModel,
     CurveSettings:CurveSettings,
     Settings:Settings,

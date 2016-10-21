@@ -769,7 +769,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "SELECT instrid, short_name FROM instruments;";
+        var statement = "SELECT instrid, short_name, color, highlight FROM instruments;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fileds) {
             if (err != undefined) {
@@ -782,7 +782,9 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows.length; i++) {
                     var instrid = rows[i].instrid;
                     var instrument = rows[i].short_name.trim();
-                    matsCollections.Instruments.insert({name: instrument, instrument_id: instrid});
+                    var color = rows[i].color.trim();
+                    var highlight = rows[i].trim();
+                    matsCollections.Instruments.insert({name: instrument, instrument_id: instrid, color: color, highlight: higlight});
                 }
             }
             qFuture['return']();
@@ -806,7 +808,7 @@ Meteor.startup(function () {
                 siteOptionsMap.model = [];
                 //siteOptionsMap.sodar = [];
                 //siteOptionsMap.profiler_915 = [];
-                var instrumentNames = matsCollections.Instruments.find({},{fields:{'name':1, 'instrument_id': 1, '_id': 0}}).fetch();
+                var instrumentNames = matsCollections.Instruments.find({},{fields:{'name':1, 'instrument_id': 1, 'color':1, 'highlight':1, '_id': 0}}).fetch();
                 for (var j = 0; j< instrumentNames.length; j++) {
                     var name = instrumentNames[j].name;
                     siteOptionsMap[name] = [];
@@ -836,8 +838,10 @@ Meteor.startup(function () {
                     for (var j = 0; j< instrumentNames.length; j++) {
                         var int_name = instrumentNames[j].name;
                         var id = instrumentNames[j].instrument_id;
+                        var base_color = instrumentNames[j].color;
+                        var highlight_color = instrumentNames[j].highlight;
                         if (instrid == id) {
-                            var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:int_name, peerOption:name, highLightColor:'pink'}};
+                            var obj = {point:point,elevation:elev, options:{title:description, color:base_color, size:20, network:int_name, peerOption:name, highLightColor:highlight_color}};
                             siteMarkerOptionsMap.push(obj);
                             siteOptionsMap.model.push(name);
                             siteOptionsMap[int_name].push(name);
