@@ -226,6 +226,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             var allSitesSet = new Set();
 
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+debugger;
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
                 var interval = time - lastTime;
                 if (interval !== 0 && interval < minInterval) {  // account for the same times in a row
