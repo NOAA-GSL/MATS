@@ -226,6 +226,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             var allSitesSet = new Set();
 
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+debugger;
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
                 var interval = time - lastTime;
                 if (interval !== 0 && interval < minInterval) {  // account for the same times in a row
@@ -295,7 +296,15 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             // if there are multiple entries for a given time average them into one time entry
             // get an array of all the times for every site
             allSiteIds = Array.from(allSitesSet);
-            allTimes = Object.keys(resultData).sort(); //Very important to sort the keys!
+            allTimes = Object.keys(resultData).sort(function(a,b){
+                if (Number(a) > Number(b)) {
+                    return 1;
+                }
+                if (Number(a) < Number(b)) {
+                    return -1;
+                }
+                return 0;
+            }); //Very important to sort the keys!
             time = allTimes[0];
             for (var k = 0; k < allTimes.length -1; k++) {
                 time = Number(allTimes[k]);

@@ -61,7 +61,7 @@ do
 	meteor reset
 	npm cache clean
     # create new minor version for app (build date)
-    vdate=`date +%Y/%m/%d:%H:%M`
+    vdate=`date +%Y/%m/%d/%H:%M`
     if [ ! -d "private" ]; then
     	mkdir "private"
     fi
