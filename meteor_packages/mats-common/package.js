@@ -1,6 +1,6 @@
 Package.describe({
   name: 'randyp:mats-common',
-  version: '1.0.5',
+  version: '1.4.0',
   // Brief, one-line summary of the package.
   summary: 'MATS common files provides common functionality for mats apps',
   // URL to the Git repository containing the source code for this package.
@@ -11,109 +11,130 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.2.1');
+  api.versionsFrom('1.4.1.1');
+  Npm.depends({
+    'fibers':'1.0.14',
+    'fs':'0.0.2',
+    "meteor-node-stubs":"0.2.3"
+  });
+  api.mainModule("server/main.js", "server");
+  api.mainModule("client/main.js", "client");
+  api.use('aldeed:simple-schema@1.5.3');
+  api.imply('aldeed:simple-schema@1.5.3');
+  api.use('mdg:validated-method');
   api.use('ecmascript');
+  api.use('modules');
+  api.imply('ecmascript');
   api.use(['templating'], 'client');
   api.use("accounts-google", 'client');
   api.use("accounts-ui", 'client');
-  api.use("differential:event-hooks", ['client','server']);
   api.use("service-configuration",'server');
   api.use("yasinuslu:json-view","client");
   api.use("dangrossman:bootstrap-daterangepicker");
-  api.imply("differential:event-hooks");
+  api.use("mdg:validated-method");
   api.use('session');
-  api.use("iron:router");
-  api.imply("accounts-google");
-  api.imply("accounts-ui");
-  api.addFiles("lib/collections/collections.js", ['client','server']);
+  api.imply('session');
+  api.use("twbs:bootstrap");
+  api.use("fortawesome:fontawesome");
+  api.use("msavin:mongol");
+  api.use("differential:event-hooks");
+  api.use("risul:bootstrap-colorpicker");
+  api.use("logging");
+  api.use("reload");
+  api.use("random");
+  api.use("ejson");
+  api.use("spacebars");
+  api.use("check");
+  api.use("bevanhunt:leaflet");
+  api.use("randyp:flot");
 
-  api.export("ServiceConfiguration","server");
-  api.export("CurveParams");  
-  api.export("Scatter2dParams");
-  api.export("CurveTextPatterns");
-  api.export("ScatterAxisTextPattern");
-  api.export("SavedCurveParams");
-  api.export("PlotParams");
-  api.export("SavedPlotParams");
-  api.export("PlotGraphFunctions");
-  api.export("SavedPlotGraphFunctions");
-  api.export("RegionsPerModel");
-  api.export("SitesPerModel");
-  api.export("RegionDescriptions");
-  api.export("Models");
-  api.export("FcstLensPerModel");
-  api.export("CurveSettings");
-  api.export("Settings");
-  api.export("ColorScheme");
-  api.export("SentAddresses");
-  api.export("Authorization");
-  api.export("Roles");
-  api.export("SavedRoles");
-  api.export("Databases");
-  api.export("SavedDatabases");
-  api.export("Credentials");
-  api.export("SavedCredentials");
-  api.export("InputTypes");
-  api.export("PlotTypes");
-  api.export("PlotFormats");
-  api.export("PlotActions");
-  api.export("BestFits");
-  api.export("MatchFormats");
-  api.export("PlotAxisFilters");
-  api.export("SiteMap");
-
-  //Modules for both
-  api.addFiles("both/modules/_modules.js", ['client','server']);
-
-  //Modules for server
-  api.addFiles("server/modules/_modules.js", "server");
-  api.addFiles("server/modules/wfiputil.js", "server");
-  api.addFiles("server/modules/data_util.js", "server");
-
-  //Modules for client
-  api.addFiles("client/modules/_modules.js", "client");
-  api.addFiles("client/modules/client_util.js", "client");
-
-  api.export("Modules",['client','server']);
-
-  api.addFiles("lib/util.js", ['client','server']);
-  api.export("mean",['client','server']);
-  api.addFiles("lib/regression.js",['client','server']);
+  // modules
+  api.export("matsCollections",['client','server']);
+  api.export("matsTypes",['client','server']);
+  api.export("matsMethods",['client','server']);
+  api.export("matsCurveUtils",['client']);
+  api.export("matsParamUtils",['client','server']);
+  api.export("matsMathUtils",['client','server']);
+  api.export("matsPlotUtils",['client','server']);
+  api.export("matsDataUtils",['server']);
   api.export("regression",['client','server']);
-  api.addFiles("lib/error/error.js", ['client','server']);
+  api.export("matsWfipUtils",['server']);
+  
+  // add imports
+  //both
+  api.addFiles('imports/startup/both/index.js');
+  api.addFiles('imports/startup/both/mats-types.js');
+  api.addFiles('imports/startup/both/mats-collections.js');
+
+  //api
+  api.addFiles('imports/startup/api/matsMethods.js');
+
+  //client
+  api.addFiles('imports/startup/client/curve_util.js');
+  api.addFiles('imports/startup/client/index.js');
+  api.addFiles('imports/startup/client/init.js');
+  api.addFiles('imports/startup/client/jquery.json-viewer.css');
+  api.addFiles('imports/startup/client/jquery.json-viewer.js');
+
+  //server
+  api.addFiles('imports/startup/server/data_util.js');
+  api.addFiles('imports/startup/server/index.js');
+  api.addFiles('imports/startup/server/publications.js');
+  api.addFiles('imports/startup/server/wfiputil.js');
+
+  // top level
+  api.addFiles('footer.html', "client");
+
+  //client
+  api.addFiles('client/main.html', "client");
+  api.addFiles('client/main.js', "client");
+  api.addFiles('client/error.js', "client");
+  api.addFiles('client/info.js', "client");
+
+  //server
+  api.addFiles('server/main.js', "server");
+
+  //lib
+  api.addFiles("lib/regression.js", ['client','server']);
+  api.addFiles('lib/param_util.js', ['client','server']);
+  api.addFiles('lib/plot_util.js', ['client','server']);
+  api.addFiles('lib/math_util.js', ['client','server']);
+
+  // templates
   api.addFiles("templates/topnav/top_nav.html", "client");
   api.addFiles("templates/topnav/top_nav.js", "client");
+  
   api.addFiles("templates/spinner/spinner.html", "client");
   api.addFiles("templates/spinner/spinner.js", "client");
-
-
+  
   api.addFiles('templates/Home.html', "client");
-  api.addFiles('client/lib/helpers.js', "client");
-  api.addFiles('client/lib/html2canvas.js', "client");
-  api.addFiles('client/lib/init.js', "client");
-  api.addFiles('footer.html', "client");
-  api.addFiles('server/plot_service.js', "server");
-  api.addFiles('client/main.html', "client");
+  api.addFiles('templates/version/version.html', "client");
+  api.addFiles('templates/version/version.js', "client");
 
   api.addFiles("templates/plot/plot_list.html", "client");
   api.addFiles("templates/plot/plot_list.js", "client");
+  
   api.addFiles('templates/help/help.html', "client");
+  
   api.addFiles('templates/showData/data.html', "client");
   api.addFiles('templates/showData/data.js', "client");
-
+  
   api.addFiles("templates/plot/plot_param_group.html", "client");
   api.addFiles("templates/plot/plot_param_group.js", "client");
   
   api.addFiles("templates/error/error.html", "client");
   api.addFiles("templates/error/error.js", "client");
 
+  api.addFiles("templates/info/info.html", "client");
+  api.addFiles("templates/info/info.js", "client");
+
   api.addFiles("templates/graph/graph.html", "client");
   api.addFiles("templates/graph/graph.js", "client");
-
-  api.addFiles("templates/graph/displayFunctions/graph_series_zoom_pan.js", "client");
-  api.addFiles("templates/graph/displayFunctions/graph_profile_zoom_pan.js", "client");
+  
+  api.addFiles("templates/graph/displayFunctions/graph_series.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
   api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
-
+  
   api.addFiles("templates/graph/text_profile_output.html", "client");
   api.addFiles("templates/graph/text_profile_output.js", "client");
 
@@ -200,6 +221,7 @@ Package.onUse(function(api) {
   api.addFiles("templates/administration/administration.html", "client");
   api.addFiles("templates/administration/administration.js", "client");
 
+  // static assets
   api.addAssets('public/img/arrow-down.gif', "client");
   api.addAssets('public/img/arrow-left.gif', "client");
   api.addAssets('public/img/arrow-right.gif', "client");
@@ -211,8 +233,6 @@ Package.onUse(function(api) {
   api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
   api.addAssets('public/subtle_grunge_@2X.png', "client");
-  api.addAssets('public/help/best-fit.html', "client");
-  api.addAssets('public/help/axisMatchingHelp.html', "client");
 });
 
 Package.onTest(function(api) {

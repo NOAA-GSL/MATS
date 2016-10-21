@@ -1,3 +1,9 @@
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import { matsTypes } from 'meteor/randyp:mats-common';
+import { moment } from 'meteor/momentjs:moment';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
+
 Template.textScatter2dOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
@@ -21,7 +27,7 @@ Template.textScatter2dOutput.helpers({
     },
     curveText: function () {
         this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
-        var text = getCurveText(getPlotType(),this);
+        var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
         return text;
     },
     headers: function(curve) {
@@ -29,19 +35,10 @@ Template.textScatter2dOutput.helpers({
         var plotResultsUpDated = Session.get('PlotResultsUpDated');
 
         if (plotResultsUpDated !== undefined) {
-            if (PlotResult.length >1) {
+            if (matsCurveUtils.PlotResult.length >1) {
                 bFitLabel = "best fit";
             }
         }
-        // var curves = Session.get("Curves");
-        // var i = 0;
-        // for (i = 0; i < curves.length; i++){
-        //     if (curve.label === curves[i].label) {
-        //     }
-            // if (PlotResult.data[i].label.indexOf(curves[i].label) === 0 && PlotResult.data[i].label.indexOf("-best") > 1) {
-            //      bFitLabel = PlotResult.data[i].label;
-            // }
-        //}
         var str = "<th>" + curve.label + " x axis</th>" +
             "<th>" + curve.label + " y axis </th>" +
             "<th>" + bFitLabel + "</th>";
@@ -62,7 +59,7 @@ Template.textScatter2dOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (getPlotType() != PlotTypes.scatter2d) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.scatter2d) {
             return [];
         }
 
@@ -72,23 +69,23 @@ Template.textScatter2dOutput.helpers({
                 break;
             }
         }
-        if (PlotResult.data === undefined) {
+        if (matsCurveUtils.PlotResult.data === undefined) {
             return [];
         }
-        var dataRows = _.range(PlotResult.data[i].data.length - 1);
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[i].data.length - 1);
         return dataRows;
     },
     points: function(curve, rowIndex) {
-        if (PlotResult.data === undefined) {
+        if (matsCurveUtils.PlotResult.data === undefined) {
             return "";
         }
         var line = '';
-        for (var i = 0; i < PlotResult.data.length; i++) {
-            if (PlotResult.data[i].label == curve.label) {
-                line += "<td>" + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
+        for (var i = 0; i < matsCurveUtils.PlotResult.data.length; i++) {
+            if (matsCurveUtils.PlotResult.data[i].label == curve.label) {
+                line += "<td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
             }
-            if (PlotResult.data[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4).length) == Number(PlotResult.data[i].data[rowIndex][0]).toPrecision(4)) {
-                line += "</td> <td>" + Number(PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>"
+            if (matsCurveUtils.PlotResult.data[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4).length) == Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4)) {
+                line += "</td> <td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>"
             }
         }
         return line;
@@ -97,7 +94,7 @@ Template.textScatter2dOutput.helpers({
 
 Template.textScatter2dOutput.events({
     'click .export': function() {
-        var settings = Settings.findOne({},{fields:{NullFillString:1}});
+        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
@@ -112,12 +109,12 @@ Template.textScatter2dOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        var curveNums = PlotResult.data.length - 1;
-        var dataRows = _.range(PlotResult.data[0].data.length - 1);
+        var curveNums = matsCurveUtils.PlotResult.data.length - 1;
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length - 1);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment.utc(Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][0])).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                var pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);

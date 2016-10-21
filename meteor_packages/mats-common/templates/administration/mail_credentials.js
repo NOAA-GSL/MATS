@@ -1,19 +1,22 @@
+import { Meteor } from 'meteor/meteor';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {methods} from 'meteor/randyp:mats-common';
 
 Template.mailCredentials.helpers({
     name : function() {
-        var credentials = Credentials.findOne({});
+        var credentials = matsCollections.Credentials.findOne({});
         return credentials === undefined ? "" : credentials.name;
     },
     client_id: function(){
-        var credentials = Credentials.findOne({});
+        var credentials = matsCollections.Credentials.findOne({});
         return credentials === undefined ? "" : credentials.clientId;
     },
     client_secret: function(){
-        var credentials = Credentials.findOne({});
+        var credentials = matsCollections.Credentials.findOne({});
         return credentials === undefined ? "" : credentials.clientSecret;
     },
     refresh_token: function(){
-        var credentials = Credentials.findOne({});
+        var credentials = matsCollections.Credentials.findOne({});
         return credentials === undefined ? "" : credentials.refresh_token;
     }
 
@@ -31,7 +34,7 @@ Template.mailCredentials.events({
         settings.clientId = clientId;
         settings.clientSecret = clientSecret;
         settings.clientRefreshToken = clientRefreshToken;
-        Meteor.call('setCredentials', settings, function (error) {
+        methods.setCredentials( settings, function (error) {
             if (error) {
                 setError(error.message);
             }
@@ -46,7 +49,7 @@ Template.mailCredentials.events({
     },
     'click .cancel-credentials': function() {
         // reset the form
-        var credentials = Credentials.findOne({});
+        var credentials = matsCollections.Credentials.findOne({});
         document.getElementById("credentials-name").value = credentials.name;
         document.getElementById("credentials_client_id").value = credentials.clientId;
         document.getElementById("credentials_client_secret").value = credentials.clientSecret;

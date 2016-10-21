@@ -1,9 +1,12 @@
+import {matsCollections} from 'meteor/randyp:mats-common';
+import { matsMethods } from 'meteor/randyp:mats-common';
+
 Template.databases.onRendered(function () {
     reset();
 });
 Template.databases.helpers({
     databases : function() {
-        dbs = Databases.find({}).fetch();
+        dbs = matsCollections.Databases.find({}).fetch();
         dbs.unshift({name:"New Database"});
         return dbs;
     },
@@ -53,7 +56,7 @@ Template.databases.events({
             reset();
             return false;
         }
-        var db = Databases.findOne({name:dbName});
+        var db = matsCollections.Databases.findOne({name:dbName});
         document.getElementById("database-selection").value = "";
         document.getElementById("database-name").value = db.name;
         document.getElementById("database-role-model").checked = db.role == "model";
@@ -79,7 +82,7 @@ Template.databases.events({
             settings.status = "standby";
         } else if (document.getElementById("database-status-active").checked === true) {
             // set any other database with this role to standby
-            Databases.upsert({});
+            matsCollections.Databases.upsert({});
             settings.status = "active";
         }
         settings.host = document.getElementById("database-host").value;
@@ -113,9 +116,9 @@ Template.databases.events({
             return false;
         }
 
-        Meteor.call('applyDatabaseSettings', settings, function (error) {
+        matsMethods.applyDatabaseSettings.call( settings, function (error) {
             if (error) {
-                setError('',error.message);
+                setError('matsMethods.applyDatabaseSettings from Template.databases.events: 121 error:' + error.message);
                 return false;
             }
         });
@@ -125,9 +128,9 @@ Template.databases.events({
     },
     'click .remove-database': function() {
         var dbName = document.getElementById("database-name").value;
-        Meteor.call('removeDatabase', dbName, function (error) {
+        matsMethods.removeDatabase.call( dbName, function (error) {
             if (error) {
-                setError('',error.message);
+                setError('matsMethods.removeDatabase from Template.databases.events: 121 error:' + error.message);
             }
         });
         reset();

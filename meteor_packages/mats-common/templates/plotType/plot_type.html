@@ -1,8 +1,8 @@
 <template name="plotType">
-    <div id="plotType" class="container-fluid">
+    <div id="plotType" class="container-fluid" style="display:block;">
         <span style="font-size:large; font-weight: bold;">{{title}}&nbsp;&nbsp;</span>
         {{#each plotTypes}}
-            <input class="plot-type-{{plotType}}" type=radio name="plot-type" id="plot-type-{{plotType}}" value="{{plotType}}" checked={{checked}} /> <label style="font-size: large;">{{plotType}}</label>
+            <input class="plot-type-{{plotType}}" type=radio name="plot-type" id="plot-type-{{plotType}}" {{display}} value="{{plotType}}" checked={{checked}} /> <label style="font-size: large;">{{plotType}}</label>
         {{/each}}
     </div>
 </template>

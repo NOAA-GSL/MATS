@@ -1,3 +1,5 @@
+import { matsTypes } from 'meteor/randyp:mats-common';
+
 var startInit = function() {
     var today = new Date();
     var thenDate = new Date(today.getTime() - 30*24*60*60*1000);
@@ -26,13 +28,13 @@ Template.dateRange.onRendered(function() {
 
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
-    if ((document.getElementById('plot-type-' + PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + PlotTypes.timeSeries).checked === true) ||
-        (document.getElementById('plot-type-' + PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + PlotTypes.scatter2d).checked === true)) {
+    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) ||
+        (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true)) {
         if (document.getElementById('curve-dates-item')) {
             document.getElementById('curve-dates-item').style.display = "none";
         }
         if (document.getElementById('dates-item')) {
-            document.getElementById('dates-item').style.display = "block";
+                document.getElementById('dates-item').style.display = "block";
         }
     } else {
         if (document.getElementById('curve-dates-item')) {
@@ -43,6 +45,7 @@ Template.dateRange.onRendered(function() {
         }
     }
     var name = this.data.name;
+    //var name = matsTypes.InputTypes.controlButton + "-" + this.data.name + "-value";
     $(function() {
             $('input[name=' + name + ']').daterangepicker({
             "timePicker": true,

@@ -1,3 +1,9 @@
+import { matsTypes } from "meteor/randyp:mats-common";
+import { matsCollections } from 'meteor/randyp:mats-common';
+import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import { matsPlotUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
+
 Template.curveItem.rendered = function() {
     // the value used for the colorpicker (l) MUST match the returned value in the colorpick helper
     var label = this.data.label;
@@ -16,7 +22,7 @@ Template.curveItem.helpers({
         if (this.diffFrom === undefined) {
             var plotType = Session.get('plotType');
             if (plotType === undefined) {
-                var pfuncs = PlotGraphFunctions.find({}).fetch();
+                var pfuncs = matsCollections.PlotGraphFunctions.find({}).fetch();
                 for (var i = 0; i < pfuncs.length; i++) {
                     if (pfuncs[i].checked === true) {
                         Session.set('plotType', pfuncs[i].plotType);
@@ -25,7 +31,7 @@ Template.curveItem.helpers({
                 plotType = Session.get('plotType');
             }
             this.regionName = this.region.split(' ')[0];
-            return getCurveText(plotType, this);
+            return matsPlotUtils.getCurveText(plotType, this);
         } else {
             return this.label + ":  Difference";
         }
@@ -56,23 +62,23 @@ Template.curveItem.events({
         var color = this.color;
         var Curves = _.reject(Session.get('Curves'),function(item){return item.label === label});
         Session.set('Curves',Curves);
-        clearUsedLabel(label);
-        clearUsedColor(color);
-        checkDiffs();
+        matsCurveUtils.clearUsedLabel(label);
+        matsCurveUtils.clearUsedColor(color);
+        matsCurveUtils.checkDiffs();
         return false;
     },
     'click .edit-curve': function (event) {
         Session.set('editMode', this.label);
         // reset scatter plot apply stuff
-        Modules.client.util.resetScatterApply();
+        matsCurveUtils.resetScatterApply();
         // set param values to this curve
         var keys = [];
         for(var k in this) keys.push(k);
         var fElements = document.getElementById("paramForm").elements;
         for (var i =0; i < fElements.length; i++) {
-            setValueTextForParamName(fElements[i].name,fElements[i].value);
+            matsParamUtils.setValueTextForParamName(fElements[i].name,fElements[i].value);
         }
-        var labelId = 'label-' + InputTypes.textInput;
+        var labelId = 'label-' + matsTypes.InputTypes.textInput;
         var label = document.getElementById(labelId);
         label.disabled = true;
         // set parameters to this ones values
