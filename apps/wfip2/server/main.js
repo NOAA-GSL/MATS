@@ -853,9 +853,9 @@ Meteor.startup(function () {
                             };
                             siteMarkerOptionsMap.push(obj);
                             siteOptionsMap[int_name].push(name);
-                            //if ((siteOptionsMap.model).indexOf(name) === -1) {
-                            siteOptionsMap.model.push(name);
-                            //}
+                            if ((siteOptionsMap.model).indexOf(name) === -1) {
+                                siteOptionsMap.model.push(name);
+                            }
                         }
                     }
                 }
