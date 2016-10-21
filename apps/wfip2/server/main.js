@@ -806,8 +806,6 @@ Meteor.startup(function () {
             } else {
                 siteMarkerOptionsMap = [];
                 siteOptionsMap.model = [];
-                //siteOptionsMap.sodar = [];
-                //siteOptionsMap.profiler_915 = [];
                 var instrumentNames = matsCollections.Instruments.find({},{fields:{'name':1, 'instrument_id': 1, 'color':1, 'highlight':1, '_id': 0}}).fetch();
                 for (var j = 0; j< instrumentNames.length; j++) {
                     var name = instrumentNames[j].name;
@@ -843,16 +841,24 @@ Meteor.startup(function () {
                         if (instrid == id) {
                             var obj = {point:point,elevation:elev, options:{title:description, color:base_color, size:20, network:int_name, peerOption:name, highLightColor:highlight_color}};
                             siteMarkerOptionsMap.push(obj);
-                            siteOptionsMap.model.push(name);
                             siteOptionsMap[int_name].push(name);
+                            if ((siteOptionsMap.model).indexOf(name) === -1) {
+                                siteOptionsMap.model.push(name);
+                            }
                         }
                     }
                 }
                 var modelNames = matsCollections.Models.find({},{fields:{'name':1, '_id': 0}}).fetch();
                 for (var i=0; i < modelNames.length; i++) {
                     var mName = modelNames[i].name;
-                    var mNameUpper = mName.toUpperCase();
-                    if (((mNameUpper).indexOf('SODAR') === -1) && ((mNameUpper).indexOf('PROFILE') === -1)) {
+                    var test = 1;
+                    for (var j = 0; j< instrumentNames.length; j++) {
+                        var int_name = instrumentNames[j].name;
+                        if ((mName).indexOf(int_name) !== -1) {
+                            test = 0;
+                        }
+                    }
+                    if (test == 1){
                         siteOptionsMap[mName] = siteOptionsMap['model'];
                     }
                 }
