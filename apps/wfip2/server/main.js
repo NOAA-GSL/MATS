@@ -839,12 +839,23 @@ Meteor.startup(function () {
                         var base_color = instrumentNames[j].color;
                         var highlight_color = instrumentNames[j].highlight;
                         if (instrid == id) {
-                            var obj = {point:point,elevation:elev, options:{title:description, color:base_color, size:20, network:int_name, peerOption:name, highLightColor:highlight_color}};
+                            var obj = {
+                                point: point,
+                                elevation: elev,
+                                options: {
+                                    title: description,
+                                    color: base_color,
+                                    size: 20,
+                                    network: int_name,
+                                    peerOption: name,
+                                    highLightColor: highlight_color
+                                }
+                            };
                             siteMarkerOptionsMap.push(obj);
                             siteOptionsMap[int_name].push(name);
-                            if ((siteOptionsMap.model).indexOf(name) === -1) {
-                                siteOptionsMap.model.push(name);
-                            }
+                            //if ((siteOptionsMap.model).indexOf(name) === -1) {
+                            siteOptionsMap.model.push(name);
+                            //}
                         }
                     }
                 }
