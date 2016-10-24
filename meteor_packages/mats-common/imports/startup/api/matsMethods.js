@@ -523,7 +523,7 @@ const getGraphData = new ValidatedMethod({
     }
 });
 
-var saveSettings = new ValidatedMethod({
+const saveSettings = new ValidatedMethod({
     name: 'matsMethods.saveSettings',
     validate: new SimpleSchema({
         saveAs: {
@@ -538,12 +538,7 @@ var saveSettings = new ValidatedMethod({
         }
     }).validator(),
     run(params){
-        // if (!Meteor.userId()) {
-        //     throw new Meteor.Error("not-logged-in");
-        // }
-        if (Meteor.isServer) {
-            var user =  Meteor.user().services.google.email.toLowerCase();
-        }
+        var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
             name: params.saveAs,
             data: params.p,
@@ -555,7 +550,7 @@ var saveSettings = new ValidatedMethod({
     }
 });
 
-var deleteSettings = new ValidatedMethod({
+const deleteSettings = new ValidatedMethod({
     name: 'matsMethods.deleteSettings',
     validate: new SimpleSchema({
         name: {

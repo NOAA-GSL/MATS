@@ -28,6 +28,12 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
+    var yAxisBoundaries = {};
+    /* axis boundaries is an object keyed by variable.
+        Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
+        each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
+        the yaxisoptions can derive the ymax and ymin from this object.
+     */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMaxes = [];
@@ -93,7 +99,7 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var statement = "";
         if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve - do those after Matching
+            // this is a database driven curve, not a difference curve - do those after Matching ..
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
                     "from obs_recs as o , " + model +
@@ -103,35 +109,35 @@ dataSeries = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 }
             } else {
-                statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -139,7 +145,7 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += queryResult.error + "\n";
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
             }
 
             // for mean calulations we do not have a truth curve.
@@ -154,35 +160,35 @@ dataSeries = function (plotParams, plotFunction) {
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else if (truthModel.includes("hrrr_wfip")) {
                     if (isDiscriminator) {
-                        statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
+                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
                             " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                             " where nwps_nwpid=" + truthInstrument_id +
                             " and modelid= modelid_rec" +
                             " and nwp_recs_nwprecid=nwprecid" +
-                            " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                             " and fcst_end_utc=" + 3600 * forecastLength +
                             " and " + discriminator + " >=" + disc_lower +
                             " and " + discriminator + " <=" + disc_upper
                     } else {
-                        statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                             "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                             " where nwps_nwpid=" + truthInstrument_id +
                             " and modelid= modelid_rec" +
                             " and nwp_recs_nwprecid=nwprecid" +
-                            " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                             " and fcst_end_utc=" + 3600 * forecastLength +
                             " and " + discriminator + " >=" + disc_lower +
                             " and " + discriminator + " <=" + disc_upper
                     }
                 } else {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + truthModel + ", nwp_recs  " +
                         " where nwps_nwpid=" + truthInstrument_id +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength;
                 }
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -190,7 +196,7 @@ dataSeries = function (plotParams, plotFunction) {
                 dataRequests[curve.label] = statement;
                 var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    error += truthQueryResult.error + "\n";
+                    error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
                 }
             }
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
@@ -467,7 +473,6 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
                     yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
-
                     var seconds = time / 1000;
                     tooltip = label +
                         "<br>seconds: " + seconds +
@@ -521,6 +526,17 @@ dataSeries = function (plotParams, plotFunction) {
                 minuendIndex++;
             }
         }
+        if (yAxisBoundaries[variable] === undefined) {
+            yAxisBoundaries[variable] = {
+                min: Number.MAX_VALUE,
+                max: Number.MIN_VALUE
+            }
+        }
+        yAxisBoundaries[variable] = {
+            min: yAxisBoundaries[variable].min < yAxisMins[curveIndex] ? yAxisBoundaries[variable].min : yAxisMins[curveIndex],
+            max: yAxisBoundaries[variable].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variable].max : yAxisMaxes[curveIndex]
+        };
+
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         var mean = queryResult.mean;
         options = {
@@ -668,6 +684,7 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxis = [];
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
+        var yAxisPad = (yAxisBoundaries[curves[dsi][variable]].max - yAxisBoundaries[curves[dsi][variable]].min) * .05;
         var yaxesOptions = {
             position: position,
             color: 'grey',
@@ -678,8 +695,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMins[dsi] * 0.8,
-            max: yAxisMaxes[dsi] * 1.2
+            min: yAxisBoundaries[curves[dsi][variable]].min - yAxisPad,
+            max: yAxisBoundaries[curves[dsi][variable]].max + yAxisPad
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
