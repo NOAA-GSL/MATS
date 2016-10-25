@@ -22,17 +22,27 @@ import { matsParamUtils } from 'meteor/randyp:mats-common';
 var refreshDependents = function(dependentNames) {
     if (dependentNames) {
         // refresh the dependents
+        var selectAllbool;
         for (var i = 0; i < dependentNames.length; i++) {
             var name = dependentNames[i];
             var targetParam = matsCollections.CurveParams.findOne({name: name});
             var targetId = targetParam.name + '-' + targetParam.type;
             var targetElem = document.getElementById(targetId);
+            selectAllbool = document.getElementById('selectAll').checked;
             var refreshEvent = new CustomEvent("refresh", {
                 detail: {
                     refElement: event.target
                 }
             });
             targetElem.dispatchEvent(refreshEvent);
+            if (selectAllbool && name == 'sites') {
+                var elements = targetElem.options;
+                var select = true;
+                for(var i = 0; i < elements.length; i++){
+                    elements[i].selected = select;
+                }
+                matsParamUtils.setValueTextForParamName(name, "");
+            }
         }
     }
 };
