@@ -4,14 +4,13 @@
       <entry key="PACKAGE_DIRS" value="$PROJECT_DIR$/meteor_packages" />
     </option>
     <option name="exePath" value="/usr/local/bin/meteor" />
-    <option name="name" value="AC" />
     <option name="startBrowserSettings">
       <browser url="http://localhost:3000" />
     </option>
     <meteor-runner-state>
-      <option name="startBrowserSettings">
+      <startBrowserSettings>
         <browser url="http://localhost:3000" />
-      </option>
+      </startBrowserSettings>
     </meteor-runner-state>
     <RunnerSettings RunnerId="Basic" />
     <ConfigurationWrapper RunnerId="Basic" />

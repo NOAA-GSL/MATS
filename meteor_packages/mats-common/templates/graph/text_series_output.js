@@ -5,6 +5,8 @@ import { moment } from 'meteor/momentjs:moment';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsMathUtils } from 'meteor/randyp:mats-common';
 
+var curveIndexes;
+
 Template.textSeriesOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
@@ -45,6 +47,7 @@ Template.textSeriesOutput.helpers({
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
          made that unworkable.
          */
+
         var plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
@@ -64,6 +67,15 @@ Template.textSeriesOutput.helpers({
             }
         }
         var dataRows = _.range(matsCurveUtils.PlotResult.data[maxi].data.length - 1);
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length == 0) {
+            return false;
+        }
+        var curveNums = curves.length;
+        curveIndexes = [];
+        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
+            curveIndexes.push(0);
+        }
         return dataRows;
     },
     points: function(rowIndex) {
@@ -83,7 +95,7 @@ Template.textSeriesOutput.helpers({
         }
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
-            return;
+            return false;
         }
         var time = matsCurveUtils.PlotResult.data[0].data[rowIndex][0];
         var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD:HH') + "</td>";
@@ -93,11 +105,33 @@ Template.textSeriesOutput.helpers({
         }
         var fillStr = settings.NullFillString;
         var curveNums = curves.length;
-        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-            if (matsCurveUtils.PlotResult.data[curveIndex] && matsCurveUtils.PlotResult.data[curveIndex].data && matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex]) {
-                var pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null ? (Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
-                line += "<td>" + pdata + "</td>";
-            }
+        // have to keep a collection of curve indexes because a row does not necessarily have the same time for each curve entry.
+        // We must only set data when the times match on a curve.
+        // The technique is to find what the minimum time (minTime) for all the curves at this rowIndex is, and then add data for each curve that matches that time.
+        // increment the data pointer (curveIndexes[curveIndex]) ONLY for each curve when its time matches the minTime.
+        // The pointers are initialized in the dataRows helper.
+        var curveIndex;
+        var minTime = Number.MAX_VALUE;
+        for (curveIndex = 0; curveIndex < curveNums; curveIndex++) {
+            try {
+                // if a time doesn't exist for a curve it will throw exception and won't mess up the minTime
+                minTime = minTime < matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0] ? minTime : matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0];
+            } catch (no_data_this_time_this_curve){}
+        }
+        var pdata = fillStr;
+        for (curveIndex = 0; curveIndex < curveNums; curveIndex++) {
+            pdata = fillStr;
+            try {
+                // if there isn't any data in this curve for this time, catch the exception, ignore it and use fillStr
+                // otherwise save the data in the line
+                // do NOT increment the data pointer unless there is a match (curveIndexes[curveIndex]++ comes after any Exception would be thrown)
+                if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0] == minTime) {
+                    pdata = Number(matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][1]).toPrecision(4);
+                    curveIndexes[curveIndex]++;
+                }
+            } catch (no_data_this_time_this_curve) {}
+            // pdata is either real value or fillStr
+            line += "<td>" + pdata + "</td>";
         }
         return line;
     },
