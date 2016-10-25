@@ -255,6 +255,7 @@ Template.plotList.events({
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
+
                     document.getElementById('graph-container').style.display = 'block';
                     document.getElementById('plotType').style.display = 'none';
                     document.getElementById('paramList').style.display = 'none';
