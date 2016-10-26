@@ -597,9 +597,9 @@ dataSeries = function (plotParams, plotFunction) {
                 time = dataset[0].data[dataIndexes[0]][0];
             }
         }
-        for (ci = 0; ci < curvesLength; ci++) {
-            console.log( "curve " + ci + "  " + dataset[ci].data[dataIndexes[ci]][0]);
-        }
+        // for (ci = 0; ci < curvesLength; ci++) {
+        //     console.log( "curve " + ci + "  " + dataset[ci].data[dataIndexes[ci]][0]);
+        // }
         // now the indexes point to the same time which is the earliest coinciding time, or they are off the list.
         var timeMatches;
         var levelsMatches;
