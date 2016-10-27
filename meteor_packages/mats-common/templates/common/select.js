@@ -4,6 +4,7 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
+
  var refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
@@ -35,13 +36,24 @@ var refreshDependents = function(dependentNames) {
                 }
             });
             targetElem.dispatchEvent(refreshEvent);
-            if (selectAllbool && name == 'sites') {
-                var elements = targetElem.options;
-                var select = true;
-                for(var i = 0; i < elements.length; i++){
-                    elements[i].selected = select;
+            var elements = targetElem.options;
+            var select = true;
+            if (targetElem.multiple) {
+                if (selectAllbool) {
+                    for (var i = 0; i < elements.length; i++) {
+                        elements[i].selected = select;
+                    }
+                    matsParamUtils.setValueTextForParamName(name, "");
                 }
-                matsParamUtils.setValueTextForParamName(name, "");
+                else {
+
+                    var previously_selected = Session.get('selected');
+                    for (var i = 0; i < elements.length; i++) {
+                        if (_.indexOf(previously_selected, elements[i].text) != -1) {
+                            elements[i].selected = select;
+                        }
+                    }
+                }
             }
         }
     }
@@ -136,6 +148,8 @@ Template.select.rendered = function(){
         // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
         var name = elem.name;
         var elems = document.getElementsByClassName("data-input");
+        Session.set('selected', $(elem).val());
+
         if (!elem.selectedIndex) {
             elem.selectedIndex = 0;
         }
