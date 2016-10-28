@@ -5,7 +5,7 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 
 const saveResultData = function(result){
-    var publicDir = "/web/static";
+    var publicDir = "/web/static/";
     var graphDataDir = ".graphData/";
     var publicGraphDir = publicDir + "/" + graphDataDir;
     var fs = require('fs');
@@ -19,7 +19,7 @@ const saveResultData = function(result){
     }
     var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
     var tStamp = moment(new Date()).utc().format();
-    var datFileName = user + "-" + tStamp;
+    var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
     var link = Meteor.absoluteUrl.defaultOptions.rootUrl + graphDataDir + datFileName;
     var files = fs.readdirSync(publicGraphDir);
