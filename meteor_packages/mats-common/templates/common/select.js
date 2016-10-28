@@ -40,20 +40,21 @@ var refreshDependents = function(dependentNames) {
             var select = true;
             if (targetElem.multiple) {
                 if (selectAllbool) {
-                    for (var i = 0; i < elements.length; i++) {
-                        elements[i].selected = select;
+                    for (var i1 = 0; i1 < elements.length; i1++) {
+                        elements[i1].selected = select;
                     }
                     matsParamUtils.setValueTextForParamName(name, "");
                 }
                 else {
-
                     var previously_selected = Session.get('selected');
-                    for (var i = 0; i < elements.length; i++) {
-                        if (_.indexOf(previously_selected, elements[i].text) != -1) {
-                            elements[i].selected = select;
+                    for (var i2 = 0; i2 < elements.length; i2++) {
+                        if (_.indexOf(previously_selected, elements[i2].text) != -1) {
+                            elements[i2].selected = select;
                         }
                     }
                 }
+            } else {
+
             }
         }
     }
