@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # 
 if [[ $USER != "www-data" ]]; then 
 		echo "This script must be run as www-data!" 

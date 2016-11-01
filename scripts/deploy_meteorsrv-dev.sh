@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # 
 if [[ $USER != "www-data" ]]; then 
 		echo "This script must be run as www-data!" 
@@ -23,7 +23,16 @@ if [[ ! -d "/tmp/tmpbuilds" ]]; then
 fi
 
 rm -rf /tmp/tmpbuilds/*
+requiredSpace=`du -c /builds/*.tar.gz | grep total | cut -f1`
+availableSpace=`df -P /tmp | tail -1 | tr -s ' ' | cut -d' ' -f4`
+if (( availableSpace < requiredSpace ));
+    then echo "not enough space in /tmp"
+    exit 1
+fi
 cp /builds/*.tar.gz /tmp/tmpbuilds
+if [ $? -ne 0 ]; then
+        echo "error:  cp /builds/*.tar.gz /tmp/tmpbuilds failed"
+fi
 if [[ ! -d "/tmp/tmpbuilds" ]]; then
 	echo "failed to  copy /builds to /tmp/tmpbuilds"
 	echo exiting
