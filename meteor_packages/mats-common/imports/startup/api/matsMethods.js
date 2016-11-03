@@ -5,7 +5,7 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 
 const saveResultData = function(result){
-    var publicDir = process.cwd() + "/../web.browser/app";
+    var publicDir = "/web/static/";
     var graphDataDir = ".graphData/";
     var publicGraphDir = publicDir + "/" + graphDataDir;
     var fs = require('fs');
@@ -15,10 +15,11 @@ const saveResultData = function(result){
         }
     } catch (e) {
         console.log('api.matsMethods.saveResultData', "error: " + e);
+        return "Error creating directory " + publicGraphDir + " <br>" + e;
     }
     var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
     var tStamp = moment(new Date()).utc().format();
-    var datFileName = user + "-" + tStamp;
+    var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
     var link = Meteor.absoluteUrl.defaultOptions.rootUrl + graphDataDir + datFileName;
     var files = fs.readdirSync(publicGraphDir);
@@ -47,12 +48,14 @@ const saveResultData = function(result){
         fs.unlink(path, function(err){
             if (err) {
                 console.log('api.matsMethods.saveResultData', "could not remove file: " + path);
+                return "console.log('api.matsMethods.saveResultData could not remove file: <br>" + path + " <br>" + err;
             }
         });
     }
     fs.writeFile(fName, JSON.stringify(result, null, 2), function (err) {
         if (err) {
             console.log('api.matsMethods.saveResultData', "could not write file: " + fName + "error: " + err);
+            return "api.matsMethods.saveResultData could not write file: <BR>" + fName + " <BR> error: " + err;
         }
     });
     return link;

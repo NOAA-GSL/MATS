@@ -556,7 +556,7 @@ dataSeries = function (plotParams, plotFunction) {
         /*
          Have to go through all the dataset times,
          for all the curves,
-         iterating at the minimum interval for all the curves
+         iterating at the maximum valid interval for all the curves
          and setting to null all the y-values for which
          any curve has a y-value that is null,
          or fails to meet the other matching criteria.
@@ -597,10 +597,7 @@ dataSeries = function (plotParams, plotFunction) {
                 time = dataset[0].data[dataIndexes[0]][0];
             }
         }
-        // for (ci = 0; ci < curvesLength; ci++) {
-        //     console.log( "curve " + ci + "  " + dataset[ci].data[dataIndexes[ci]][0]);
-        // }
-        // now the indexes point to the same time which is the earliest coinciding time, or they are off the list.
+
         var timeMatches;
         var levelsMatches;
         var sitesMatches;

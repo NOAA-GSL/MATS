@@ -4,6 +4,7 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
+
  var refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
@@ -22,17 +23,39 @@ import { matsParamUtils } from 'meteor/randyp:mats-common';
 var refreshDependents = function(dependentNames) {
     if (dependentNames) {
         // refresh the dependents
+        var selectAllbool;
         for (var i = 0; i < dependentNames.length; i++) {
             var name = dependentNames[i];
             var targetParam = matsCollections.CurveParams.findOne({name: name});
             var targetId = targetParam.name + '-' + targetParam.type;
             var targetElem = document.getElementById(targetId);
+            selectAllbool = document.getElementById('selectAll').checked;
             var refreshEvent = new CustomEvent("refresh", {
                 detail: {
                     refElement: event.target
                 }
             });
             targetElem.dispatchEvent(refreshEvent);
+            var elements = targetElem.options;
+            var select = true;
+            if (targetElem.multiple) {
+                if (selectAllbool) {
+                    for (var i1 = 0; i1 < elements.length; i1++) {
+                        elements[i1].selected = select;
+                    }
+                    matsParamUtils.setValueTextForParamName(name, "");
+                }
+                else {
+                    var previously_selected = Session.get('selected');
+                    for (var i2 = 0; i2 < elements.length; i2++) {
+                        if (_.indexOf(previously_selected, elements[i2].text) != -1) {
+                            elements[i2].selected = select;
+                        }
+                    }
+                }
+            } else {
+
+            }
         }
     }
 };
@@ -126,6 +149,8 @@ Template.select.rendered = function(){
         // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
         var name = elem.name;
         var elems = document.getElementsByClassName("data-input");
+        Session.set('selected', $(elem).val());
+
         if (!elem.selectedIndex) {
             elem.selectedIndex = 0;
         }

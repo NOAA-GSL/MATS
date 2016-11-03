@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # 
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
@@ -43,8 +43,8 @@ else
 fi
 
 #build all the apps
-export PACKAGE_DIRS=`find $PWD -name meteor_packages`
-if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
+export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
+if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
 fi
