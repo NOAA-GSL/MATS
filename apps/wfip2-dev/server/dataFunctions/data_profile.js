@@ -77,11 +77,11 @@ dataProfile = function (plotParams, plotFunction) {
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
             } else {//model
-                statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid" +
+                statement = "select (analysis_utc + fcst_end_utc) as avtime,z," + myVariable + ",sites_siteid" +
                     " from " + model + ", nwp_recs  " +
-                    "where valid_utc>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                    "where (analysis_utc + fcst_end_utc)>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
                     " and analysis_utc+fcst_end_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                    "  and valid_utc<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                    "  and (analysis_utc + fcst_end_utc)<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
                     " and analysis_utc+fcst_end_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
                     " and nwps_nwpid= " + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid " +

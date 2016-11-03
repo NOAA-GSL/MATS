@@ -28,13 +28,17 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    // used to find the max and minimum for the y axis
-    // used in yaxisOptions for scaling the graph
+    var yAxisBoundaries = {};
+    /* axis boundaries is an object keyed by variable.
+        Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
+        each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
+        the yaxisoptions can derive the ymax and ymin from this object.
+     */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMaxes = [];
     var yAxisMins = [];
-    var minInterval = Number.MAX_VALUE;
+    var maxValidInterval = Number.MIN_VALUE;    //used for differencing and matching
     var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
     var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
@@ -48,12 +52,22 @@ dataSeries = function (plotParams, plotFunction) {
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         var model = tmp[0];
         var instrument_id = tmp[1];
+        var verificationRunInterval = tmp[2];
         var myVariable;
         var statistic = curve['statistic'];
         var truthDataSource = curve['truth-data-source'];
         tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
         var truthModel = tmp[0];
         var truthInstrument_id = tmp[1];
+        var truthRunInterval = tmp[2];
+        // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
+        var maxRunInterval;
+            if (statistic == "mean") {
+                maxRunInterval = verificationRunInterval;
+            } else {
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
+            }
+        maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
@@ -85,7 +99,7 @@ dataSeries = function (plotParams, plotFunction) {
         var forecastLength = curve['forecast-length'];
         var statement = "";
         if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve - do those after Matching
+            // this is a database driven curve, not a difference curve - do those after Matching ..
             if (model.includes("recs")) {
                 statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
                     "from obs_recs as o , " + model +
@@ -95,24 +109,24 @@ dataSeries = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
@@ -120,17 +134,18 @@ dataSeries = function (plotParams, plotFunction) {
             } else {
                 statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
-                    " where nwp_recs_nwprecid=nwprecid" +
+                    " where nwps_nwpid=" + instrument_id +
+                    " and nwp_recs_nwprecid=nwprecid" +
                     " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
                     " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_end_utc=" + (3600 * forecastLength);
+                    " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += queryResult.error + "\n";
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
             }
 
             // for mean calulations we do not have a truth curve.
@@ -145,42 +160,43 @@ dataSeries = function (plotParams, plotFunction) {
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else if (truthModel.includes("hrrr_wfip")) {
                     if (isDiscriminator) {
-                        statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid" +
+                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
                             " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                             " where nwps_nwpid=" + truthInstrument_id +
                             " and modelid= modelid_rec" +
                             " and nwp_recs_nwprecid=nwprecid" +
-                            " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                             " and fcst_end_utc=" + 3600 * forecastLength +
                             " and " + discriminator + " >=" + disc_lower +
                             " and " + discriminator + " <=" + disc_upper
                     } else {
-                        statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                             "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                             " where nwps_nwpid=" + truthInstrument_id +
                             " and modelid= modelid_rec" +
                             " and nwp_recs_nwprecid=nwprecid" +
-                            " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                             " and fcst_end_utc=" + 3600 * forecastLength +
                             " and " + discriminator + " >=" + disc_lower +
                             " and " + discriminator + " <=" + disc_upper
                     }
                 } else {
-                    statement = "select valid_utc as avtime ,z ," + myVariable + ",sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
                         "from " + truthModel + ", nwp_recs  " +
-                        " where nwp_recs_nwprecid=nwprecid" +
-                        " and (analysis_utc + fcst_end_utc) >= " + matsDataUtils.secsConvert(fromDate) +
-                        " and (analysis_utc + fcst_end_utc) <= " + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc=" + (3600 * forecastLength);
+                        " where nwps_nwpid=" + truthInstrument_id +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength;
                 }
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 console.log("statement: " + statement);
                 dataRequests[curve.label] = statement;
                 var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    error += truthQueryResult.error + "\n";
+                    error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
                 }
             }
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
@@ -285,21 +301,10 @@ dataSeries = function (plotParams, plotFunction) {
 
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
-                valTime = verificationData[valIndex][0];
-                // determine and remember the minimum interval for use in matching based on verification data
-                var interval;
-                if (verificationData[valIndex + 1][0]) {
-                    interval = verificationData[valIndex + 1][0] - verificationData[valIndex][0];
-                    minInterval = interval < minInterval ? interval : minInterval;
-                }
-                // determine and remember the minimum interval for use in matching based on truth data
                 if (statistic != "mean") {
                     truthTime = truthData[truthIndex][0];
-                    if (truthData[truthIndex + 1][0]) {
-                        interval = truthData[truthIndex + 1][0] - truthData[truthIndex][0];
-                        minInterval = interval < minInterval ? interval : minInterval;
-                    }
                 }
+                valTime = verificationData[valIndex][0];
                 if (valTime < truthTime) {
                     valIndex++;
                     continue;
@@ -312,10 +317,6 @@ dataSeries = function (plotParams, plotFunction) {
                     var time = verificationData[valIndex][0];
                     var timeObj = verificationData[valIndex][1];
                     var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
-                    var tooltip = label +
-                        "<br>seconds" + time +
-                        "<br>time:" + new Date(Number(valTime)).toUTCString() +
-                        "<br> value:" + value;
                     xAxisMin = time < xAxisMin ? time : xAxisMin;
                     xAxisMax = time > xAxisMax ? time : xAxisMax;
                     if (!timeObj) {
@@ -337,7 +338,9 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br> statistic: " + statistic +
                             "<br> value:" + null;
                         normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
-                        truthIndex++;
+                        if (statistic != "mean") {
+                            truthIndex++;
+                        }
                         continue;
                     }
                     var valSites = Object.keys(timeObj.sites).map(Number).sort();
@@ -356,7 +359,9 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br> value:" + null;
                         normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
-                        statistic == "mean" && truthIndex++;
+                        if (statistic != "mean") {
+                            truthIndex++;
+                        }
                         continue;
                     }
 
@@ -468,7 +473,6 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
                     yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
-
                     var seconds = time / 1000;
                     tooltip = label +
                         "<br>seconds: " + seconds +
@@ -477,14 +481,16 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> value:" + value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
-                statistic == "mean" && truthIndex++;
+                if (statistic != "mean") {
+                    truthIndex++;
+                }
                 valIndex++;
             }
-        } else {
-            var minuendIndex = diffFrom[0];
-            var subtrahendIndex = diffFrom[1]; // base curve
-            var minuendData = dataset[minuendIndex].data;
-            var subtrahendData = dataset[subtrahendIndex].data;
+        } else {   // this is a difference curve... we have to use the maximum valid interval
+            var minuendIndex = 0;
+            var subtrahendIndex = 0; // base curve
+            var minuendData = dataset[diffFrom[0]].data;
+            var subtrahendData = dataset[diffFrom[1]].data;
             var minuendEndTime = minuendData[minuendData.length - 1][0];
             var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
             var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
@@ -492,7 +498,7 @@ dataSeries = function (plotParams, plotFunction) {
             // calculate difference curve values
             // minuend - subtrahend = difference.
             // the minuend is the curve from which the base curve values will be subtracted
-            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
+            while (subtrahendData[subtrahendIndex] < minuendData[minuendIndex]) {
                 // if necessary, increment the base index until it catches up
                 subtrahendIndex++;
             }
@@ -503,8 +509,8 @@ dataSeries = function (plotParams, plotFunction) {
             // now the times should be equal
             var diffTime = minuendData[minuendIndex][0];
             while (diffTime < diffEndTime) {
-                var fromValue = minuendData[minuendIndex][1];
-                var baseValue = subtrahendData[subtrahendIndex][1];
+                var fromValue = minuendData[minuendIndex] == undefined ? null : minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex] == undefined ? null : subtrahendData[subtrahendIndex][1];
                 var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
                 var diffSeconds = diffTime / 1000;
                 var d = new Date(Number(diffTime)).toUTCString();
@@ -515,11 +521,22 @@ dataSeries = function (plotParams, plotFunction) {
                 yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
                 yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
                 normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
-                diffTime = Number(diffTime) + Number(minInterval);
+                diffTime = Number(diffTime) + Number(maxValidInterval);
                 subtrahendIndex++;
                 minuendIndex++;
             }
         }
+        if (yAxisBoundaries[variable] === undefined) {
+            yAxisBoundaries[variable] = {
+                min: Number.MAX_VALUE,
+                max: Number.MIN_VALUE
+            }
+        }
+        yAxisBoundaries[variable] = {
+            min: yAxisBoundaries[variable].min < yAxisMins[curveIndex] ? yAxisBoundaries[variable].min : yAxisMins[curveIndex],
+            max: yAxisBoundaries[variable].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variable].max : yAxisMaxes[curveIndex]
+        };
+
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         var mean = queryResult.mean;
         options = {
@@ -550,8 +567,40 @@ dataSeries = function (plotParams, plotFunction) {
         for (ci = 0; ci < curvesLength; ci++) {
             dataIndexes[ci] = 0;
         }
-        //xAxisMin and xAxisMax are the earliest and latest times, minInterval is the minimum time interval
+        // for matching - the begin time must be the first coinciding time for all the curves.
+        // Once we know at which index the curves coincide we can increment by the maxValidInterval.
+        //xAxisMin and xAxisMax are the earliest and latest times, maxValidInterval is the maximum valid time interval
         time = Number(xAxisMin);
+        var done = false;
+        while (!done) {
+            var same = true;
+            for (ci = 0; ci < curvesLength; ci++) {
+                if (dataIndexes[ci] >= dataset[ci].data.length) {
+                    same = false;
+                    done = true; // I went past the end - no coinciding points
+                    break;
+                }
+                if (ci == curvesLength -1)  {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
+                        dataIndexes[0]++;
+                        same = false;
+                    }
+                } else {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
+                        dataIndexes[ci + 1]++;
+                        same = false;
+                    }
+                }
+            }
+            if (same) {
+                done = true;
+                time = dataset[0].data[dataIndexes[0]][0];
+            }
+        }
+        // for (ci = 0; ci < curvesLength; ci++) {
+        //     console.log( "curve " + ci + "  " + dataset[ci].data[dataIndexes[ci]][0]);
+        // }
+        // now the indexes point to the same time which is the earliest coinciding time, or they are off the list.
         var timeMatches;
         var levelsMatches;
         var sitesMatches;
@@ -559,6 +608,7 @@ dataSeries = function (plotParams, plotFunction) {
         var sitesToMatch;
         var mySites;
         var myLevels;
+        var newDataSet = [];
         while (time < xAxisMax) {
             timeMatches = true;
             levelsMatches = true;
@@ -566,17 +616,21 @@ dataSeries = function (plotParams, plotFunction) {
             levelsToMatch = [];
             sitesToMatch = [];
             for (ci = 0; ci < curvesLength; ci++) {
-                // the dataset data arrays may not always start with the same time
-                if (!(dataset[ci].data) || !(dataset[ci].data.length) || !(dataset[ci].data[0][0])) {
+                // move this curves index to equal or exceed the new time
+                while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < time) {
+                    dataIndexes[ci]++;
+                }
+                // if the time isn't right or the data is null it doesn't match
+                if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != time) {
                     timeMatches = false;
                     levelsMatches = false;
                     sitesMatches = false;
+                    break;
                 } else {
                     if (matchTime) {
-                        // if this index is undefined or is set to null for the time or the value, have to set all curves for this index to null
+                        // if there is no data entry here at this time it doesn't match
                         if (!(dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] && dataset[ci].data[dataIndexes[ci]][1])) {
                             timeMatches = false;
-                            break;
                         }
                     }
                     if (matchLevel){
@@ -586,7 +640,6 @@ dataSeries = function (plotParams, plotFunction) {
                         myLevels = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
                         if (matsDataUtils.arraysEqual(myLevels, levelsToMatch) == false) {
                             levelsMatches = false;
-                            break;
                         }
                     }
                     if (matchSite) {
@@ -596,26 +649,34 @@ dataSeries = function (plotParams, plotFunction) {
                         mySites = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
                         if (matsDataUtils.arraysEqual(mySites, sitesToMatch) == false) {
                             sitesMatches = false;
-                            break;
                         }
                     }
                 }
              }   // for all the curves
-            for (sci = 0; sci < curvesLength; sci++) {
-                // have to null this value out for all the curves because it does not match (either time was null or levels or sites did not match)
-                if ((timeMatches === false) ||
-                    (levelsMatches === false) ||
-                    (sitesMatches === false)) {
-                    if (dataset[sci].data[dataIndexes[sci]] === undefined) {
-                        dataset[sci].data[dataIndexes[sci]] = [];
-                        dataset[sci].data[dataIndexes[sci]][0] = time;
+            if (timeMatches && levelsMatches && sitesMatches) {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    if (!newDataSet[sci]) {
+                        newDataSet[sci]={};
+                        var keys = Object.keys(dataset[sci]);
+                        for (var k =0; k < keys.length; k++) {
+                            var key = keys[k];
+                            if (key == "data") {
+                                newDataSet[sci][key] = [];
+                            } else {
+                                newDataSet[sci][key] = dataset[sci][key];
+                            }
+                        }
                     }
-                    dataset[sci].data[dataIndexes[sci]][1] = null;
+                    newDataSet[sci].data.push(dataset[sci].data[dataIndexes[sci]]);
                 }
-                dataIndexes[sci]++;
+            } else {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci].data.push([time,null]);
+                }
             }
-            time = time + minInterval;
+            time = Number(time) + Number(maxValidInterval);
         } // while time
+        dataset = newDataSet;
     } // end of if matching
 
     // generate y-axis
@@ -623,6 +684,7 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxis = [];
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
+        var yAxisPad = (yAxisBoundaries[curves[dsi][variable]].max - yAxisBoundaries[curves[dsi][variable]].min) * .05;
         var yaxesOptions = {
             position: position,
             color: 'grey',
@@ -633,8 +695,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: yAxisMins[dsi] * 1.1,
-            max: yAxisMaxes[dsi] * 1.1
+            min: yAxisBoundaries[curves[dsi][variable]].min - yAxisPad,
+            max: yAxisBoundaries[curves[dsi][variable]].max + yAxisPad
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]

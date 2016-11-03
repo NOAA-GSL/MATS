@@ -61,13 +61,13 @@ do
 	meteor reset
 	npm cache clean
     # create new minor version for app (build date)
-    julian=`date +%Y%j`
+    vdate=`date +%Y/%m/%d/%H:%M`
     if [ ! -d "private" ]; then
     	mkdir "private"
     fi
 
-    echo "$julian" > private/version
-
+    echo "$vdate" > private/version
+    git commit -m"new version" private/version
     git push gerrit:MATS_for_EMB origin:master
     git push
 	meteor build /builds
