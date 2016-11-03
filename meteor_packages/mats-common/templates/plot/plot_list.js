@@ -65,7 +65,7 @@ Template.plotList.events({
     'click .delete-selected' : function() {
         var deleteThis = document.getElementById('save_to').value;
         if (deleteThis !== undefined && deleteThis !== "") {
-            Meteor.call('deleteSetting',deleteThis, function(error){
+            matsMethods.deleteSettings.call({name:deleteThis}, function(error){
                 if (error) {
                     setError(error.message);
                 }
@@ -255,6 +255,7 @@ Template.plotList.events({
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
+
                     document.getElementById('graph-container').style.display = 'block';
                     document.getElementById('plotType').style.display = 'none';
                     document.getElementById('paramList').style.display = 'none';

@@ -1,7 +1,7 @@
 const Future = require('fibers/future');
 
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                         levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic) {
+                         levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic) {
     // sum and average all of the means for all of the sites
     var datum = {};
     var commonSitesBasisLengthX = siteBasisX.length;
@@ -23,10 +23,17 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     var axisArr = ['xaxis', 'yaxis'];
     for (var ai = 0; ai < axisArr.length; ai++) {   //iterate axis
         var axisStr = axisArr[ai];
-        var tSiteIds = Object.keys(tSitesX);
-        var commonLevelsBasisLength = levelBasisX.length;
-        var qualityLevels = levelCompletenessX;
-        if (axisArr[ai] == 'yaxis') {
+        var tSiteIds;
+        var commonLevelsBasisLength;
+        var qualityLevels;
+        var statistic;
+        if (axisArr[ai] == 'xaxis') {
+            statistic = xStatistic;
+            tSiteIds = Object.keys(tSitesX);
+            commonLevelsBasisLength = levelBasisX.length;
+            qualityLevels = levelCompletenessX;
+        } else if (axisArr[ai] == 'yaxis') {
+            statistic = yStatistic;
             tSiteIds = Object.keys(tSitesY);
             commonLevelsBasisLength = levelBasisY.length;
             qualityLevels = levelCompletenessY;
@@ -70,6 +77,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
             var biasValue;
             for (var li = 0; li < siteLevels.length; li++) {
                 var siteLevelValue = siteValues[li];
+
                 switch (statistic) {
                     case "bias":
                     case "mae":
@@ -77,14 +85,18 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                         truthValue = null;
                         biasValue = null;
                         try {
-                            truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
-                            if (statistic == "mae") {
-                                biasValue = Math.abs(siteLevelValue - truthValue);
+                            if (rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li]) {
+                                truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
+                                if (statistic == "mae") {
+                                    biasValue = Math.abs(siteLevelValue - truthValue);
+                                } else {
+                                    biasValue = siteLevelValue - truthValue;
+                                }
+                                siteLevelBiasSum += biasValue;
+                                siteLevelBiasNum++;
                             } else {
-                                biasValue = siteLevelValue - truthValue;
+                                continue; // this level did not exist for this site
                             }
-                            siteLevelBiasSum += biasValue;
-                            siteLevelBiasNum++;
                         } catch (nodata){
                             // apparently there is no data in the truth curve that matches this time
                             truthValue = null;
@@ -94,11 +106,15 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                         truthValue = null;
                         biasValue = null;
                         try {
-                            truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
-                            biasValue = siteLevelValue - truthValue;
-                            biasValue = biasValue * biasValue;  // square the difference
-                            siteLevelBiasSum += biasValue;
-                            siteLevelBiasNum++;
+                            if (rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li]) {
+                                truthValue = rawAxisData[axisStr + '-truth']['data'][axisTime].sites[siteId].values[li];
+                                biasValue = siteLevelValue - truthValue;
+                                biasValue = biasValue * biasValue;  // square the difference
+                                siteLevelBiasSum += biasValue;
+                                siteLevelBiasNum++;
+                            } else {
+                                continue; // this level did not exist for this site
+                            }
                         } catch (nodata){
                             // apparently there is no data in the truth curve that matches this time
                             truthValue = null;
@@ -173,7 +189,6 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
     var timeCount = 0;
     var cumulativeMovingMeanForTime = 0;
     var siteCount =0;
-    var timeLevels = [];
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
         // every row is a time and a site with a level array and a values array
@@ -241,8 +256,9 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 var values = [];
                 var levels = [];
                 if (isDiscriminator)  {
-                    // discriminators do not return arrays of values
-                    levels = JSON.parse(rows[rowIndex].z);
+                    // discriminators do not return arrays of values, just a single value
+                    // discriminators levels are invalid - just make them one special level Number.MIN_VALUE
+                    levels = [Number.MIN_VALUE];
                     values = [Number(rows[rowIndex][myVariable])];
                 } else {
                     // conventional variable
@@ -252,11 +268,12 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
+                // always accept levels that are Number.MIN_VALUE - they are special discriminators
                 for (var l = levels.length - 1; l >= 0; l--) {
                     var lvl = levels[l];
-                    if (lvl < bottom || lvl > top) {
-                        levels.splice(l,1);
-                        values.splice(l,1);
+                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                        levels.splice(l, 1);
+                        values.splice(l, 1);
                     }
                 }
                 allLevels.push(levels);  // array of level arrays - two dimensional
@@ -294,7 +311,15 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             // if there are multiple entries for a given time average them into one time entry
             // get an array of all the times for every site
             allSiteIds = Array.from(allSitesSet);
-            allTimes = Object.keys(resultData).sort(); //Very important to sort the keys!
+            allTimes = Object.keys(resultData).sort(function(a,b){
+                if (Number(a) > Number(b)) {
+                    return 1;
+                }
+                if (Number(a) < Number(b)) {
+                    return -1;
+                }
+                return 0;
+            }); //Very important to sort the keys!
             time = allTimes[0];
             for (var k = 0; k < allTimes.length -1; k++) {
                 time = Number(allTimes[k]);

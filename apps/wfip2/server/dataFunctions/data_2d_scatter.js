@@ -6,7 +6,6 @@ import { matsDataUtils } from 'meteor/randyp:mats-common';
 import { matsWfipUtils } from 'meteor/randyp:mats-common';
 import { regression } from 'meteor/randyp:mats-common';
 
-const Future = require('fibers/future');
 data2dScatter = function (plotParams, plotFunction) {
     var wfip2Settings = matsCollections.Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     var wfip2Pool = mysql.createPool(wfip2Settings);
@@ -36,6 +35,8 @@ data2dScatter = function (plotParams, plotFunction) {
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
+    var xStatistic;
+    var yStatistic;
     var bf = [];   // used for bestFit data
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
@@ -50,7 +51,13 @@ data2dScatter = function (plotParams, plotFunction) {
             var myVariable;
             // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
             // only the truth model is different form the curves other parameters
+
             var statistic = curve[axis + "-" + 'statistic'];
+            if (axis == "xaxis") {
+                xStatistic = statistic;
+            } else if (axis == "yaxis") {
+                yStatistic = statistic;
+            }
             var truthDataSource = curve[axis + "-" + 'truth-data-source'];
             tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[truthDataSource][0].split(',');
             var truthModel = tmp[0];
@@ -95,35 +102,35 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 } else {
-                    statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 }
             } else {
-                statement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -139,35 +146,35 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (truthModel.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid"  +
+                    truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                         " where nwps_nwpid=" + truthInstrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 } else {
-                    truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                    truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                         "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                         " where nwps_nwpid=" + truthInstrument_id +
                         " and modelid= modelid_rec" +
                         " and nwp_recs_nwprecid=nwprecid" +
-                        " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                         " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 }
             } else {
-                truthStatement = "select valid_utc as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                     "from " + truthModel + ", nwp_recs  " +
                     " where nwps_nwpid=" + truthInstrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and valid_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate) +
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
                     " and fcst_end_utc=" + 3600 * forecastLength;
             }
             truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
@@ -242,6 +249,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var siteBasisY = _.union.apply(_,rawAxisData['yaxis'].allSites);
 
         // normalize data
+        // We have to include only the entries where the times match for both x and y.
 
         var normalizedAxisData = [];
         var xaxisIndex = 0;
@@ -270,7 +278,7 @@ data2dScatter = function (plotParams, plotFunction) {
             if (xaxisTime === yaxisTime) {
                 if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                     datum = matsWfipUtils.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                        levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic);
+                        levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic);
                     xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
                     xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
                     yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
@@ -284,6 +292,11 @@ data2dScatter = function (plotParams, plotFunction) {
                     seconds = xaxisTime/1000;
                     xValue = datum['xaxis-value'];
                     yValue = datum['yaxis-value'];
+                    if (xValue == null || yValue == null) {
+                        xaxisIndex++;
+                        yaxisIndex++;
+                        continue;
+                    }
                     tooltipText = label  +
                         "<br>seconds" + seconds +
                         "<br>time:" + time +
@@ -298,15 +311,15 @@ data2dScatter = function (plotParams, plotFunction) {
                     xaxisTime = xaxisTimes[xaxisIndex];
                 }
                 // skip up y if necessary
-                while (xaxisTime > yaxisTime && yaxisIndex < yaxisLength) {
+                while (yaxisTime < xaxisTime && yaxisIndex < yaxisLength) {
                     yaxisIndex++;
                     yaxisTime = yaxisTimes[yaxisIndex];
                 }
                 // push if equal
-                if (xaxisTime === yaxisTime && xaxisTime) {
+                if (xaxisTime === yaxisTime && xaxisTime !== null && xaxisTime != undefined) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                         datum = matsWfipUtils.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                            levelBasisX, levelBasisY, siteBasisX, siteBasisY, statistic);
+                            levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic);
                         xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
                         xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
                         yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
@@ -368,7 +381,7 @@ data2dScatter = function (plotParams, plotFunction) {
             };
             bf.push(bfOptions);
         }
-    }
+    } // end for curves
 
     // generate x-axis
     var xaxes = [];
@@ -382,7 +395,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var xaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-data-source'],
+            axisLabel: curve['xaxis-label'] + ":" + curve['xaxis-variable'] + ":" + curve['xaxis-statistic'] + ":" + curve['xaxis-data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,
@@ -408,7 +421,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var yaxesOptions = {
             position: position,
             color: 'grey',
-            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-data-source'],
+            axisLabel: curve['yaxis-label'] + ":" + curve['yaxis-variable'] + ":" + curve['yaxis-statistic'] + ":" + curve['yaxis-data-source'],
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 16,

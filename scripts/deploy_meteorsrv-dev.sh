@@ -1,11 +1,11 @@
-#!/usr/bin/bash
+#!/bin/bash
 # 
 if [[ $USER != "www-data" ]]; then 
 		echo "This script must be run as www-data!" 
 		exit 1
 	fi 
 
-requestedApp = "$1"
+requestedApp="$1"
 
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
@@ -23,7 +23,16 @@ if [[ ! -d "/tmp/tmpbuilds" ]]; then
 fi
 
 rm -rf /tmp/tmpbuilds/*
+requiredSpace=`du -c /builds/*.tar.gz | grep total | cut -f1`
+availableSpace=`df -P /tmp | tail -1 | tr -s ' ' | cut -d' ' -f4`
+if (( availableSpace < requiredSpace ));
+    then echo "not enough space in /tmp"
+    exit 1
+fi
 cp /builds/*.tar.gz /tmp/tmpbuilds
+if [ $? -ne 0 ]; then
+        echo "error:  cp /builds/*.tar.gz /tmp/tmpbuilds failed"
+fi
 if [[ ! -d "/tmp/tmpbuilds" ]]; then
 	echo "failed to  copy /builds to /tmp/tmpbuilds"
 	echo exiting
@@ -34,7 +43,7 @@ fi
 cd /web
 find /tmp/tmpbuilds -maxdepth 1 -type f -not -path "/tmp/tmpbuilds" -name "*.gz" 2>/dev/null | while read x
 do
-    if  [[ $#  -eq 1 ]] && [[ ! "$x" -eq "${requestedApp}.tar.gz" ]]; then
+    if  [ $#  -eq 1 ] && [ ! "$x" ==  "/tmp/tmpbuilds/${requestedApp}.tar.gz" ]; then
         continue
     fi
 	echo "processing $x"

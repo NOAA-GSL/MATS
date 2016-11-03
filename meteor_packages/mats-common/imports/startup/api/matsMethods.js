@@ -4,6 +4,64 @@ import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 
+const saveResultData = function(result){
+    var publicDir = "/web/static/";
+    var graphDataDir = ".graphData/";
+    var publicGraphDir = publicDir + "/" + graphDataDir;
+    var fs = require('fs');
+    try {
+        if (!fs.existsSync(publicGraphDir)) {
+            fs.mkdirSync(publicGraphDir);
+        }
+    } catch (e) {
+        console.log('api.matsMethods.saveResultData', "error: " + e);
+        return "Error creating directory " + publicGraphDir + " <br>" + e;
+    }
+    var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
+    var tStamp = moment(new Date()).utc().format();
+    var datFileName = user + "-" + tStamp +".json";
+    var fName = publicGraphDir + datFileName;
+    var link = Meteor.absoluteUrl.defaultOptions.rootUrl + graphDataDir + datFileName;
+    var files = fs.readdirSync(publicGraphDir);
+    files.sort(function(a, b) {
+        return fs.statSync(publicGraphDir + a).mtime.getTime() -
+            fs.statSync(publicGraphDir + b).mtime.getTime();
+    });
+    // bin the files based on user
+    var fileBin = {};
+    for (var fIndex = 0; fIndex < files.length; fIndex++) {
+        var f = files[fIndex];
+        var u = f.split('-')[0];
+        fileBin[u] = fileBin[u] == undefined ? [] : fileBin[u];
+        fileBin[u].push (f);
+    }
+    var removeThese = [];
+    var fBins = Object.keys(fileBin);
+    for (fIndex = 0; fIndex < fBins.length; fIndex++) {
+        if (fileBin[fBins[fIndex]].length > 20) {
+            var oldOnes = fileBin[fBins[fIndex]].slice(0,fileBin[fBins[fIndex]].length - 20);
+            removeThese = removeThese.concat(oldOnes);
+        }
+    }
+    for (fIndex = 0; fIndex < removeThese.length; fIndex++) {
+        var path = publicGraphDir + removeThese[fIndex];
+        fs.unlink(path, function(err){
+            if (err) {
+                console.log('api.matsMethods.saveResultData', "could not remove file: " + path);
+                return "console.log('api.matsMethods.saveResultData could not remove file: <br>" + path + " <br>" + err;
+            }
+        });
+    }
+    fs.writeFile(fName, JSON.stringify(result, null, 2), function (err) {
+        if (err) {
+            console.log('api.matsMethods.saveResultData', "could not write file: " + fName + "error: " + err);
+            return "api.matsMethods.saveResultData could not write file: <BR>" + fName + " <BR> error: " + err;
+        }
+    });
+    return link;
+};
+
+
 const getDataFunctionFileList = new ValidatedMethod({
     name: 'matsMethods.getDataFunctionFileList',
     validate: new SimpleSchema({}).validator(),
@@ -516,6 +574,7 @@ const getGraphData = new ValidatedMethod({
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
             global[dataFunction](params.plotParams, function (results) {
+                results.basis['dataLink'] = saveResultData(results);
                 future["return"](results);
             });
             return future.wait();
@@ -523,7 +582,7 @@ const getGraphData = new ValidatedMethod({
     }
 });
 
-var saveSettings = new ValidatedMethod({
+const saveSettings = new ValidatedMethod({
     name: 'matsMethods.saveSettings',
     validate: new SimpleSchema({
         saveAs: {
@@ -538,17 +597,32 @@ var saveSettings = new ValidatedMethod({
         }
     }).validator(),
     run(params){
-        // if (!Meteor.userId()) {
-        //     throw new Meteor.Error("not-logged-in");
-        // }
+        var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
             name: params.saveAs,
             data: params.p,
             owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
             permission: params.permission,
             savedAt: new Date(),
-            savedBy: Meteor.user() == null ? "anonymous" : Meteor.user().services.google.email.toLowerCase()
+            savedBy: Meteor.user() == null ? "anonymous" : user
         });
+    }
+});
+
+const deleteSettings = new ValidatedMethod({
+    name: 'matsMethods.deleteSettings',
+    validate: new SimpleSchema({
+        name: {
+            type: String
+        }
+    }).validator(),
+    run(params){
+        if (!Meteor.userId()) {
+             throw new Meteor.Error("not-logged-in");
+        }
+        if (Meteor.isServer) {
+            matsCollections.CurveSettings.remove({name: params.name});
+        }
     }
 });
 
@@ -641,6 +715,7 @@ const emailImage = new ValidatedMethod({
     }
 });
 
+
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
     getGraphFunctionFileList:getGraphFunctionFileList,
@@ -660,6 +735,7 @@ export default matsMethods = {
     applyAuthorization:applyAuthorization,
     getGraphData:getGraphData,
     saveSettings:saveSettings,
+    deleteSettings:deleteSettings,
     addSentAddress:addSentAddress,
     emailImage:emailImage
 };

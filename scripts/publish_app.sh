@@ -39,13 +39,13 @@ fi
 
 appname=`echo $deployment_file | cut -d'-' -f1`
 
-scp /builds/deployments/${deployment_file} mats:/deployments/${deployment_file}
+scp /builds/deployments/${deployment_file} mats.gsd.esrl.noaa.gov:/deployments/${deployment_file}
 
-ssh mats "cd /web/${appname}/bundle; tar -czf /deployments/save/${appname}.tar.gz ."
+ssh mats.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; tar -czf /deployments/save/${appname}.tar.gz ."
 
-ssh mats "cd /web/${appname}/bundle; rm -rf *"
+ssh mats.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; rm -rf *"
 
-ssh mats "cd /web/${appname}/bundle; tar -xzf /deployments/$deployment_file"
+ssh mats.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; tar -xzf /deployments/$deployment_file"
 
 echo "do not forget to restart nginx"
 

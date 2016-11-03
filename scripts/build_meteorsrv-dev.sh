@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # 
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
@@ -6,7 +6,7 @@ touch $logname
 exec > >(tee -i $logname)
 exec 2>&1
 
-requestedApp = "$1"
+requestedApp="$1"
 
 echo "$0 ----------- started"
 date
@@ -43,8 +43,8 @@ else
 fi
 
 #build all the apps
-export PACKAGE_DIRS=`find $PWD -name meteor_packages`
-if [[ ! "$PACKAGE_DIRS" =~ "meteor_packages" ]]; then
+export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
+if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
 fi
@@ -61,13 +61,13 @@ do
 	meteor reset
 	npm cache clean
     # create new minor version for app (build date)
-    julian=`date +%Y%j`
+    vdate=`date +%Y/%m/%d/%H:%M`
     if [ ! -d "private" ]; then
     	mkdir "private"
     fi
 
-    echo "$julian" > private/version
-
+    echo "$vdate" > private/version
+    git commit -m"new version" private/version
     git push gerrit:MATS_for_EMB origin:master
     git push
 	meteor build /builds

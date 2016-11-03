@@ -735,8 +735,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
     try {
-
-        var statement = "select model,regions,model_value from regions_per_model_mats";
+        var statement = "select model,regions,model_value,run_interval from regions_per_model_mats";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
@@ -749,13 +748,12 @@ Meteor.startup(function () {
                 matsCollections.Models.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var model = rows[i].model.trim();
-
                     var model_values = rows[i].model_value.split(',');
                     var table_name = model_values[0];
                     var instruments_instrid = model_values[1];
-
+                    var run_interval = rows[i].run_interval * 1000; // convert from seconds
                     var valueList = [];
-                    valueList.push(table_name+','+instruments_instrid);
+                    valueList.push(table_name + ',' + instruments_instrid + ',' + run_interval);
                     modelOptionsMap[model] = valueList;
                     variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
                     variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
@@ -771,7 +769,33 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "SELECT siteid, name,description,lat,lon,elev FROM sites;";
+        var statement = "SELECT instrid, short_name, color, highlight FROM instruments;";
+        var qFuture = new Future();
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fileds) {
+            if (err != undefined) {
+                console.log(err.message);
+            }
+            if (rows == undefined || rows.length == 0) {
+                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
+            } else {
+                matsCollections.Instruments.remove({});
+                for (var i = 0; i < rows.length; i++) {
+                    var instrid = rows[i].instrid;
+                    var instrument = rows[i].short_name.trim();
+                    var color = rows[i].color.trim();
+                    var highlight = rows[i].highlight.trim();
+                    matsCollections.Instruments.insert({name: instrument, instrument_id: instrid, color: color, highlight: highlight});
+                }
+            }
+            qFuture['return']();
+        }));
+        qFuture.wait();
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        var statement = "SELECT siteid, name,description,lat,lon,elev,instruments_instrid FROM sites, instruments_per_site where sites.siteid = instruments_per_site.sites_siteid;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -782,9 +806,11 @@ Meteor.startup(function () {
             } else {
                 siteMarkerOptionsMap = [];
                 siteOptionsMap.model = [];
-                siteOptionsMap.sodar = [];
-                siteOptionsMap.profiler_915 = [];
-
+                var instrumentNames = matsCollections.Instruments.find({},{fields:{'name':1, 'instrument_id': 1, 'color':1, 'highlight':1, '_id': 0}}).fetch();
+                for (var j = 0; j< instrumentNames.length; j++) {
+                    var name = instrumentNames[j].name;
+                    siteOptionsMap[name] = [];
+                }
                 var points = [];
                 matsCollections.SiteMap.remove({});
                 for (var i = 0; i < rows.length; i++) {
@@ -805,23 +831,45 @@ Meteor.startup(function () {
                     }
                     points.push(point);
                     var elev = rows[i].elev;
-                    if (description.includes("SODAR")) {
-                        var obj = {point:point,elevation:elev, options:{title:description, color:"red", size:20, network:"SODAR", peerOption:name, highLightColor:'pink'}};
-                        siteMarkerOptionsMap.push(obj);
-                        siteOptionsMap.model.push(name);
-                        siteOptionsMap.sodar.push(name);
-                    } else {
-                        var obj = {point:point,elevation:elev, options:{title:description, color:"blue", size:20, network:"PROFILE", peerOption:name, highLightColor:'cyan'}};
-                        siteMarkerOptionsMap.push(obj);
-                        siteOptionsMap.model.push(name);
-                        siteOptionsMap.profiler_915.push(name);
+                    var instrid = rows[i].instruments_instrid;
+
+                    for (var j = 0; j< instrumentNames.length; j++) {
+                        var int_name = instrumentNames[j].name;
+                        var id = instrumentNames[j].instrument_id;
+                        var base_color = instrumentNames[j].color;
+                        var highlight_color = instrumentNames[j].highlight;
+                        if (instrid == id) {
+                            var obj = {
+                                point: point,
+                                elevation: elev,
+                                options: {
+                                    title: description,
+                                    color: base_color,
+                                    size: 20,
+                                    network: int_name,
+                                    peerOption: name,
+                                    highLightColor: highlight_color
+                                }
+                            };
+                            siteMarkerOptionsMap.push(obj);
+                            siteOptionsMap[int_name].push(name);
+                            if ((siteOptionsMap.model).indexOf(name) === -1) {
+                                siteOptionsMap.model.push(name);
+                            }
+                        }
                     }
                 }
                 var modelNames = matsCollections.Models.find({},{fields:{'name':1, '_id': 0}}).fetch();
                 for (var i=0; i < modelNames.length; i++) {
                     var mName = modelNames[i].name;
-                    var mNameUpper = mName.toUpperCase();
-                    if (((mNameUpper).indexOf('SODAR') === -1) && ((mNameUpper).indexOf('PROFILE') === -1)) {
+                    var test = 1;
+                    for (var j = 0; j< instrumentNames.length; j++) {
+                        var int_name = instrumentNames[j].name;
+                        if ((mName).indexOf(int_name) !== -1) {
+                            test = 0;
+                        }
+                    }
+                    if (test == 1){
                         siteOptionsMap[mName] = siteOptionsMap['model'];
                     }
                 }
