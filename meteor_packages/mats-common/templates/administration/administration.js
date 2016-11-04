@@ -5,21 +5,19 @@ import {matsCollections } from 'meteor/randyp:mats-common';
 import {matsMethods } from 'meteor/randyp:mats-common';
 
 Accounts.onLogin(function() {
-        matsMethods.getUserAddress.call(function (error, result) {
-        //Meteor.call('getUserAddress', function (error, result) {
-        if (error !== undefined) {
-            Session.set('roles', []);
-            setError(error.toLocaleString());
-            return false;
-        }
-        var roles = ['user']; // everyone who signs in is a user
-        var auth = matsCollections.Authorization.findOne({email: result});
-        if (auth) {
-            roles = roles.concat(auth.roles);
-        }
-        Session.set('roles', roles);
-        Session.set('signedIn', new Date().getTime());// force re-render after sign in success
-    });
+        matsMethods.getAuthorizations.call(function(error, result) {
+            if (error !== undefined) {
+                Session.set('roles', []);
+                setError(error.toLocaleString());
+                return false;
+            }
+            authList = result;
+            for (var ai = 0; ai < authList.length; ai++){
+                var roles = authList[ai];
+                Session.set('roles', roles);
+                Session.set('signedIn', new Date().getTime());// force re-render after sign in success
+            }
+        });
 });
 
 Hooks.onLoggedOut = function (userid){
@@ -33,6 +31,9 @@ Hooks.onLoggedOut = function (userid){
 };
 
 Template.administration.helpers({
+    adminChanged: function() {
+      return Session.get('adminChanged');
+    },
     signedIn: function(){
         var d = new Date(Session.get('signedIn'));
         return (d.toDateString() + " " +d.toTimeString()).split("+")[0];
@@ -54,6 +55,7 @@ Template.administration.helpers({
         }
     },
     showResetNow: function() {
+        var adminChanged = Session.get('adminChanged');
         var settings = matsCollections.Settings.findOne({});
         if (document.getElementById("ResetFromCode") == null) {
             return "none";
@@ -129,7 +131,7 @@ Template.administration.events({
 
         var settings = matsCollections.Settings.findOne({});
         settings.resetFromCode = false;
-        Meteor.call('setSettings', settings, function (error) {
+        matsMethods.setSettings.call({settings:settings}, function (error) {
             if (error) {
                 setError(error.message);
             }

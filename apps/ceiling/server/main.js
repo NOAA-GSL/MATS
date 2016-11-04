@@ -400,10 +400,11 @@ var doAuthorization = function () {
     }
     if (matsCollections.Authorization.find().count() == 0) {
         matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "xue.wei@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
     }
-    matsCollections.Authorization.upsert({email: "mats.gsd@noaa.gov"},{$set: {roles: ["administrator"]}});
 };
 
 var doRoles = function () {
