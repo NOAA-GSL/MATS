@@ -363,21 +363,24 @@ const setSettings = new ValidatedMethod({
         validate: new SimpleSchema({
             settings: {type: Object, blackbox:true}
         }).validator(),
-        run(settings){
-            var labelPrefix = settings.labelPrefix;
-            var title = settings.title;
-            var lineWidth = settings.lineWidth;
-            var nullFillString = settings.nullFillString;
-            var resetFromCode = settings.resetFromCode;
-            matsCollections.Settings.update({}, {
-                $set: {
-                    LabelPrefix: labelPrefix,
-                    Title: title,
-                    LineWidth: lineWidth,
-                    NullFillString: nullFillString,
-                    resetFromCode: resetFromCode
-                }
-            });
+        run(params){
+            if (Meteor.isServer) {
+                var settings = params.settings;
+                var labelPrefix = settings.labelPrefix;
+                var title = settings.title;
+                var lineWidth = settings.lineWidth;
+                var nullFillString = settings.nullFillString;
+                var resetFromCode = settings.resetFromCode;
+                matsCollections.Settings.update({}, {
+                    $set: {
+                        LabelPrefix: labelPrefix,
+                        Title: title,
+                        LineWidth: lineWidth,
+                        NullFillString: nullFillString,
+                        resetFromCode: resetFromCode
+                    }
+                });
+            }
             return false;
         }
     });
@@ -554,7 +557,19 @@ const applyAuthorization = new ValidatedMethod({
     }
 });
 
-
+const getAuthorizations = new ValidatedMethod({
+    name: 'matsMethods.getAuthorizations',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+        var roles = [];
+        if (Meteor.isServer) {
+            var userEmail = Meteor.user().services.google.email.toLowerCase();
+            roles = matsCollections.Authorization.findOne({email: userEmail}).roles;
+        }
+        return roles;
+    }
+});
 
 const getGraphData = new ValidatedMethod({
     name: 'matsMethods.getGraphData',
@@ -732,6 +747,7 @@ export default matsMethods = {
     setSelectParamOptions:setSelectParamOptions,
     setCredentials:setCredentials,
     removeAuthorization:removeAuthorization,
+    getAuthorizations:getAuthorizations,
     applyAuthorization:applyAuthorization,
     getGraphData:getGraphData,
     saveSettings:saveSettings,

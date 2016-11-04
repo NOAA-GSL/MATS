@@ -73,7 +73,8 @@ dataSeries = function (plotParams, plotFunction) {
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
         var isDiscriminator = false;
-        myVariable = variableMap[curve['variable']];
+        var variableStr = curve['variable'];
+        myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
             myVariable = curve['variable'];
             isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
@@ -90,9 +91,9 @@ dataSeries = function (plotParams, plotFunction) {
         var top = Number(curve['top']);
         var bottom = Number(curve['bottom']);
         var color = curve['color'];
-        var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
-        var variable = variableOptionsMap[dataSource][variableStr];
+
+        //var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
+        //var variable = variableOptionsMap[dataSource][variableStr];
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
@@ -526,15 +527,15 @@ dataSeries = function (plotParams, plotFunction) {
                 minuendIndex++;
             }
         }
-        if (yAxisBoundaries[variable] === undefined) {
-            yAxisBoundaries[variable] = {
+        if (yAxisBoundaries[variableStr] === undefined) {
+            yAxisBoundaries[variableStr] = {
                 min: Number.MAX_VALUE,
                 max: Number.MIN_VALUE
             }
         }
-        yAxisBoundaries[variable] = {
-            min: yAxisBoundaries[variable].min < yAxisMins[curveIndex] ? yAxisBoundaries[variable].min : yAxisMins[curveIndex],
-            max: yAxisBoundaries[variable].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variable].max : yAxisMaxes[curveIndex]
+        yAxisBoundaries[variableStr] = {
+            min: yAxisBoundaries[variableStr].min < yAxisMins[curveIndex] ? yAxisBoundaries[variableStr].min : yAxisMins[curveIndex],
+            max: yAxisBoundaries[variableStr].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variableStr].max : yAxisMaxes[curveIndex]
         };
 
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
@@ -679,22 +680,38 @@ dataSeries = function (plotParams, plotFunction) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
+    var yLabels = {};
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
-        var yAxisPad = (yAxisBoundaries[curves[dsi][variable]].max - yAxisBoundaries[curves[dsi][variable]].min) * .05;
-        var yaxesOptions = {
-            position: position,
-            color: 'grey',
-            axisLabel: curves[dsi]['label'] + ":" + curves[dsi]['variable'] + ":" + curves[dsi]['data-source'],
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
-            min: yAxisBoundaries[curves[dsi][variable]].min - yAxisPad,
-            max: yAxisBoundaries[curves[dsi][variable]].max + yAxisPad
-        };
+        var vStr = curves[dsi].variable;
+        var yAxisPad = (yAxisBoundaries[vStr].max - yAxisBoundaries[vStr].min) * .05;
+        if (yLabels[vStr] == undefined) {
+            yLabels[vStr] = {label:curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'], curveNumber:dsi};
+            yaxesOptions = {
+                position: position,
+                color: 'grey',
+                axisLabel: yLabels[vStr],
+                axisLabelColour: "black",
+                axisLabelUseCanvas: true,
+                axisLabelFontSizePixels: 16,
+                axisLabelFontFamily: 'Verdana, Arial',
+                axisLabelPadding: 3,
+                alignTicksWithAxis: 1,
+                min: yAxisBoundaries[vStr].min - yAxisPad,
+                max: yAxisBoundaries[vStr].max + yAxisPad
+            };
+        } else {
+            yLabels[vStr].label = curves[dsi]['label'] + " | " + yLabels[vStr].label;
+            // set the yAxesOption that has this key to this new label
+            // find the yaxes element that has this labelKey]
+            var curveNum = yLabels[vStr].curveNumber;
+            yaxes[curveNum].axisLabel = yLabels[vStr].label;
+            yaxesOptions = {
+                min: yAxisBoundaries[vStr].min - yAxisPad,
+                max: yAxisBoundaries[vStr].max + yAxisPad,
+                grid:{show:false}
+            };
+        }
         var yaxisOptions = {
             zoomRange: [0.1, 10]
         };

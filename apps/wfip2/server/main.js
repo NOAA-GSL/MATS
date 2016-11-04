@@ -689,10 +689,11 @@ var doAuthorization = function () {
     }
     if (matsCollections.Authorization.find().count() == 0) {
         matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "xue.wei@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
     }
-    matsCollections.Authorization.upsert({email: "mats.gsd@noaa.gov"},{$set: {roles: ["administrator"]}});
 };
 
 var doRoles = function () {
@@ -738,7 +739,7 @@ Meteor.startup(function () {
         var statement = "select model,regions,model_value,run_interval from regions_per_model_mats";
         var qFuture = new Future();
 
-        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
             if (err != undefined) {
                 console.log(err.message);
             }
@@ -771,7 +772,7 @@ Meteor.startup(function () {
     try {
         var statement = "SELECT instrid, short_name, color, highlight FROM instruments;";
         var qFuture = new Future();
-        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fileds) {
+        wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
             if (err != undefined) {
                 console.log(err.message);
             }

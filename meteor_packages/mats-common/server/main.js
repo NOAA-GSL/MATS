@@ -30,10 +30,12 @@ var setGoogleCred = function () {
         }
         switch (hostname.split('.')[0]) {
             case "mats":
+            case "mats1":
                 gid = "499180266722-d4rn615s4s8tenra4tdisbl1i34uvu82.apps.googleusercontent.com";
                 gSecret = "FrIhQ0kZWei2z5RPLAq-84BI";
                 break;
             case "mats-dev":
+            case "mats-dev1":
                 gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
                 gSecret = "bEgiYA-8vBddG0aLmzLq74gR";
                 break;

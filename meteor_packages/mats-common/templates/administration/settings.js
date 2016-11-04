@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import {matsCollections} from 'meteor/randyp:mats-common';
-
+import {matsMethods} from 'meteor/randyp:mats-common';
 Template.settings.helpers({
     LabelPrefix: function(){
         var settings = matsCollections.Settings.findOne({});
@@ -41,7 +41,7 @@ Template.settings.events({
         settings.lineWidth = lineWidth;
         settings.nullFillString = nullFillString;
         settings.resetFromCode = resetFromCode;
-        Meteor.call('setSettings', settings, function (error) {
+        matsMethods.setSettings.call({'settings':settings}, function (error) {
             if (error) {
                 setError(error.message);
             }
@@ -53,6 +53,7 @@ Template.settings.events({
         //document.getElementById("NullFillString").value = "";
         //document.getElementById("ResetFromCode").checked = false;
         $("#settingsModal").modal('hide');
+        Session.set("adminChanged", new Date());
         return false;
     },
     'click .cancel-settings': function() {
