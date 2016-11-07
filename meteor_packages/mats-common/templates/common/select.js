@@ -23,13 +23,15 @@ import { matsParamUtils } from 'meteor/randyp:mats-common';
 var refreshDependents = function(dependentNames) {
     if (dependentNames) {
         // refresh the dependents
-        var selectAllbool;
+        var selectAllbool = false;
         for (var i = 0; i < dependentNames.length; i++) {
             var name = dependentNames[i];
             var targetParam = matsCollections.CurveParams.findOne({name: name});
             var targetId = targetParam.name + '-' + targetParam.type;
             var targetElem = document.getElementById(targetId);
-            selectAllbool = document.getElementById('selectAll').checked;
+            if (document.getElementById('selectAll')) {
+                selectAllbool = document.getElementById('selectAll').checked;
+            }
             var refreshEvent = new CustomEvent("refresh", {
                 detail: {
                     refElement: event.target
