@@ -61,7 +61,7 @@ do
 	cd $appname
 	tar -xzf $x
 	cd bundle
-	(cd programs/server && meteor npm install)
+	(cd programs/server && meteor npm install && npm rebuild)
 	tar czf /builds/deployments/"$appname"-dply.tar.gz .
 	cd ../..
 done	
