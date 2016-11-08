@@ -682,18 +682,18 @@ dataSeries = function (plotParams, plotFunction) {
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {label:curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'], curveNumber:dsi};
             yaxesOptions = {
-            position: position,
-            color: 'grey',
+                position: position,
+                color: 'grey',
                 axisLabel: yLabels[vStr],
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
+                axisLabelColour: "black",
+                axisLabelUseCanvas: true,
+                axisLabelFontSizePixels: 16,
+                axisLabelFontFamily: 'Verdana, Arial',
+                axisLabelPadding: 3,
+                alignTicksWithAxis: 1,
                 min: yAxisBoundaries[vStr].min - yAxisPad,
                 max: yAxisBoundaries[vStr].max + yAxisPad
-        };
+            };
         } else {
             yLabels[vStr].label = curves[dsi]['label'] + " | " + yLabels[vStr].label;
             // set the yAxesOption that has this key to this new label

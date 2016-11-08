@@ -468,10 +468,11 @@ var doAuthorization = function () {
     }
     if (matsCollections.Authorization.find().count() == 0) {
         matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "xue.wei@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
     }
-    matsCollections.Authorization.upsert({email: "mats.gsd@noaa.gov"},{$set: {roles: ["administrator"]}});
 };
 
 var doRoles = function () {
@@ -483,8 +484,7 @@ var doRoles = function () {
     }
 };
 
-Meteor.startup(() => {
-  // code to run on server at startup
+Meteor.startup(function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Databases.remove({});
     }
