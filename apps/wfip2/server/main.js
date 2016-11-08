@@ -725,7 +725,7 @@ Meteor.startup(function () {
             host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user        : 'readonly',
             password    : 'Readonlyp@$$405',
-            database    : 'WFIP2',
+            database    : 'WFIP2_v2',
             connectionLimit : 10
         });
     }
