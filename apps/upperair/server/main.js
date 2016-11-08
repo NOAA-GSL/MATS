@@ -204,7 +204,7 @@ var doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
+        optionsMap = {BOTH: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
