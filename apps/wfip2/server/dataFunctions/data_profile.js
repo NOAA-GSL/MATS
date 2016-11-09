@@ -81,15 +81,15 @@ dataProfile = function (plotParams, plotFunction) {
                     " and obs_recs_obsrecid = o.obsrecid " +
                     " and instruments_instrid=" + instrument_id;
             } else {//model
-                statement = "select (cycle_utc + fcst_utc_offset) as avtime,z," + myVariable + ",sites_siteid" +
+                statement = "select (analysis_utc + fcst_end_utc) as avtime,z," + myVariable + ",sites_siteid" +
                     " from " + model + ", nwp_recs  " +
-                    "where (cycle_utc + fcst_utc_offset)>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                    " and analysis_utc+fcst_utc_offset>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                    "  and (cycle_utc + fcst_utc_offset)<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
-                    " and analysis_utc+fcst_utc_offset <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                    "where (analysis_utc + fcst_end_utc)>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                    " and analysis_utc+fcst_end_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                    "  and (analysis_utc + fcst_end_utc)<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                    " and analysis_utc+fcst_end_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
                     " and nwps_nwpid= " + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid " +
-                    " and fcst_utc_offset=" + 3600 * forecastLength;
+                    " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("query=" + statement);
@@ -107,15 +107,15 @@ dataProfile = function (plotParams, plotFunction) {
                         " and obs_recs_obsrecid = o.obsrecid " +
                         " and instruments_instrid=" + truthInstrument_id;
                 } else {//truthModel
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime,z," + myVariable + ",sites_siteid" +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime,z," + myVariable + ",sites_siteid" +
                         " from " + truthModel + ", nwp_recs  " +
-                        "where (cycle_utc + fcst_utc_offset)>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and analysis_utc+fcst_utc_offset>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        "  and (cycle_utc + fcst_utc_offset)<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
-                        " and analysis_utc+fcst_utc_offset <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                        "where (analysis_utc + fcst_end_utc)>= " + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        " and analysis_utc+fcst_end_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        "  and (analysis_utc + fcst_end_utc)<= " + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
+                        " and analysis_utc+fcst_end_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
                         " and nwps_nwpid= " + truthInstrument_id +
                         " and nwp_recs_nwprecid=nwprecid " +
-                        " and fcst_utc_offset=" + 3600 * forecastLength;
+                        " and fcst_end_utc=" + 3600 * forecastLength;
                 }
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
                 console.log("query=" + statement);
