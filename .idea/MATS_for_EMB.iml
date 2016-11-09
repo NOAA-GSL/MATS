@@ -32,6 +32,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/wfip2_dev/.meteor/local" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
