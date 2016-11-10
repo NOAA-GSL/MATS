@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Used to copy an existingApp MATS application to another name.
+# Used to copy existing Apps and part od .meteor to the production server
 #logDir="/builds/buildArea/logs"
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
@@ -10,43 +10,56 @@ touch $logname
 echo "$0 ----------- started"
 date
 
-usage="$0 [--help || deployment_file]"
+usage="$0 [--help]"
 
 deployment_file=$1
 
 if [ "$1" == "--help" ]; then
         cat <<xxxxxENDxxxx
-This program will copy an existing MATS application deployment file to the public server (mats1) into the /deployments directory overwriting any deployment file of the same name that might be there.
-The most recent deployment files are always located on mats-dev1 in /builds/deployments/. These
-deployment files are gzipped tarballs with names that reflect the application name. i.e.
-upperair-dply.tar.gz is the deployment file for the upperair application.
-Once the deployment file is copied the current matching deployment in /web will be archived (tared up and gz'd) and moved to /deployments/save overwriting any saved deployment of the same name.
-
-Then the new deployment will be un zipped and untarred into the /web location.
-
-Once the deployment is finished you will need to log onto mats1 and sudo restart nginx.
+This program will rsync the current /web directory to the production server. It copies a selected list of apps that are found in
+MATS_for_EMB/scripts/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
+the node part of phusion passenger.
 xxxxxENDxxxx
 exit 0
 fi
 
-if [ ! -f "/builds/deployments/$deployment_file" ]; then
-    echo "ERROR: $deployment_file app archive does not exist: usage: $usage"
-    echo "these app archives currently exist..."
-    ls -1 /builds/deployments
-    echo "exiting"
-    exit 1
+rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/  mats1.gsd.esrl.noaa.gov:
+rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  mats1.gsd.esrl.noaa.gov:
+
+echo "do not forget to restart nginx on mats1.gsd.esrl.noaa.gov, and to check the links for node and npm that are in /usrlocal/bin"
+
+exit 0
+[www-data@mats-dev1 scripts]$ which bash
+/bin/bash
+[www-data@mats-dev1 scripts]$ cat publish_app.sh
+#!/bin/sh
+#
+# Used to copy existing Apps and part od .meteor to the production server
+#logDir="/builds/buildArea/logs"
+logDir="/builds/buildArea/logs"
+logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
+touch $logname
+#exec > >(tee -i $logname)
+#exec 2>&1
+echo "$0 ----------- started"
+date
+
+usage="$0 [--help]"
+
+deployment_file=$1
+
+if [ "$1" == "--help" ]; then
+        cat <<xxxxxENDxxxx
+This program will rsync the current /web directory to the production server. It copies a selected list of apps that are found in
+MATS_for_EMB/scripts/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
+the node part of phusion passenger.
+xxxxxENDxxxx
+exit 0
 fi
 
-appname=`echo $deployment_file | cut -d'-' -f1`
+rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/  mats1.gsd.esrl.noaa.gov:
+rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  mats1.gsd.esrl.noaa.gov:
 
-scp /builds/deployments/${deployment_file} mats1.gsd.esrl.noaa.gov:/deployments/${deployment_file}
-
-ssh mats1.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; tar -czf /deployments/save/${appname}.tar.gz ."
-
-ssh mats1.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; rm -rf *"
-
-ssh mats1.gsd.esrl.noaa.gov "cd /web/${appname}/bundle; tar -xzf /deployments/$deployment_file"
-
-echo "do not forget to restart nginx on mats1.gsd.esrl.noaa.gov"
+echo "do not forget to restart nginx on mats1.gsd.esrl.noaa.gov, and to check the links for node and npm that are in /usrlocal/bin"
 
 exit 0
