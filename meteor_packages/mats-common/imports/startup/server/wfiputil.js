@@ -344,7 +344,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
         allSites: allSiteIds,
         allTimes: allTimes,
         minInterval: minInterval,
-        mean:cumulativeMovingAverage
+        cumulativeMovingAverage:cumulativeMovingAverage
     };
 };
 

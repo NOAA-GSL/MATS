@@ -99,6 +99,9 @@ dataSeries = function (plotParams, plotFunction) {
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'];
         var statement = "";
+        var count = 0;
+        var sum = 0;
+        var average = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if (model.includes("recs")) {
@@ -299,7 +302,6 @@ dataSeries = function (plotParams, plotFunction) {
                 truthMaxIndex = truthData.length - 1;
                 truthTime = verificationData[0][0];
             }
-
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
                 if (statistic != "mean") {
@@ -480,6 +482,8 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br>time: " + new Date(Number(valTime)).toUTCString() +
                         "<br> statistic: " + statistic +
                         "<br> value:" + value;
+                    count ++;
+                    sum = sum + value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
                 if (statistic != "mean") {
@@ -487,35 +491,46 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 valIndex++;
             }
+            average = sum / count;
         } else {   // this is a difference curve... we have to use the maximum valid interval
             var minuendIndex = 0;
             var subtrahendIndex = 0; // base curve
             var minuendData = dataset[diffFrom[0]].data;
             var subtrahendData = dataset[diffFrom[1]].data;
-            var minuendEndTime = minuendData[minuendData.length - 1][0];
-            var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
+            var minuendEndTime = (minuendData[minuendData.length - 1])[0];
+            var subtrahendEndTime = (subtrahendData[subtrahendData.length - 1])[0];
             var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
             normalizedData = [];
             // calculate difference curve values
             // minuend - subtrahend = difference.
             // the minuend is the curve from which the base curve values will be subtracted
-            while (subtrahendData[subtrahendIndex] < minuendData[minuendIndex]) {
+            while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
                 // if necessary, increment the base index until it catches up
                 subtrahendIndex++;
             }
-            while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
+            while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
                 // if necessary, increment the from index until it catches up
                 minuendIndex++;
             }
             // now the times should be equal
-            var diffTime = minuendData[minuendIndex][0];
+            count = 0;
+            sum = 0;
+            var diffTime = (minuendData[minuendIndex])[0];
             while (diffTime < diffEndTime) {
-                var fromValue = minuendData[minuendIndex] == undefined ? null : minuendData[minuendIndex][1];
-                var baseValue = subtrahendData[subtrahendIndex] == undefined ? null : subtrahendData[subtrahendIndex][1];
+                while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
+                    // if necessary, increment the base index until it catches up
+                    subtrahendIndex++;
+                }
+                while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
+                    // if necessary, increment the from index until it catches up
+                    minuendIndex++;
+                }
+                var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
                 var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
                 var diffSeconds = diffTime / 1000;
                 var d = new Date(Number(diffTime)).toUTCString();
-                tooltip = label +
+                var tooltip = label +
                 "<br>seconds:" + diffSeconds +
                 "<br>time:" + d +
                 "<br> diffValue:" + diffValue;
@@ -525,7 +540,10 @@ dataSeries = function (plotParams, plotFunction) {
                 diffTime = Number(diffTime) + Number(maxValidInterval);
                 subtrahendIndex++;
                 minuendIndex++;
+                count++;
+                sum += diffValue;
             }
+            average = sum / count;
         }
         if (yAxisBoundaries[variableStr] === undefined) {
             yAxisBoundaries[variableStr] = {
@@ -539,7 +557,7 @@ dataSeries = function (plotParams, plotFunction) {
         };
 
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
-        var mean = queryResult.mean;
+        //var mean = queryResult.mean;
         options = {
             yaxis: curveIndex + 1,  // the y axis position to the right of the graph
             label: label,
@@ -547,7 +565,7 @@ dataSeries = function (plotParams, plotFunction) {
             data: normalizedData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
             lines: {show: true, fill: false},
-            annotation: label + "- mean = " + mean.toPrecision(4)
+            annotation: label + "- mean = " + average.toPrecision(4)
         };
         dataset.push(options);
     }  // end for curves

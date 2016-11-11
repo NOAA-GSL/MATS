@@ -107,7 +107,7 @@ var doPlotParams = function () {
             });
 
         var plotFormats = {};
-        plotFormats[matsTypes.PlotFormats.absolute] = "absolute diffs";
+        plotFormats[matsTypes.PlotFormats.absolute] = "diffs";
         plotFormats[matsTypes.PlotFormats.none] = "no diffs";
         matsCollections.PlotParams.insert(
             {
