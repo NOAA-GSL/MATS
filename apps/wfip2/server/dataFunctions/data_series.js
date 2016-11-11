@@ -708,7 +708,7 @@ dataSeries = function (plotParams, plotFunction) {
             yaxesOptions = {
                 position: position,
                 color: 'grey',
-                axisLabel: yLabels[vStr],
+                axisLabel: yLabels[vStr].label,
                 axisLabelColour: "black",
                 axisLabelUseCanvas: true,
                 axisLabelFontSizePixels: 16,
@@ -724,7 +724,8 @@ dataSeries = function (plotParams, plotFunction) {
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
             yaxes[curveNum].axisLabel = yLabels[vStr].label;
-            yaxesOptions = {
+            var yaxesOptions = {
+                show: false,
                 min: yAxisBoundaries[vStr].min - yAxisPad,
                 max: yAxisBoundaries[vStr].max + yAxisPad,
                 grid:{show:false}
