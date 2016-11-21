@@ -483,7 +483,7 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> statistic: " + statistic +
                         "<br> value:" + value;
                     count ++;
-                    sum = sum + value;
+                    sum += value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
                 if (statistic != "mean") {
