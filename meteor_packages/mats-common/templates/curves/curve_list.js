@@ -3,6 +3,7 @@ import {matsCollections} from "meteor/randyp:mats-common";
 import {matsMethods} from "meteor/randyp:mats-common";
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 Template.curveList.helpers({
     curves: function () {
@@ -108,7 +109,8 @@ Template.curveList.events({
                     }
                 }
             } else if (type == matsTypes.InputTypes.dateRange) {
-                p[name] = document.getElementById(name + '-' + type).value;
+                p[name] = matsParamUtils.getValueForParamName(name);
+//                p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.numberSpinner) {
                 p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.select) {
@@ -186,7 +188,8 @@ Template.curveList.events({
                     var options = plotParam.options;
 
                     if (type == matsTypes.InputTypes.dateRange) {
-                        document.getElementById(name + '-' + type).value = p.data;
+                        matsParamUtils.setValueTextForParamName(p.data);
+                        //document.getElementById(name + '-' + type).value = p.data;
                     } else if (type == matsTypes.InputTypes.radioGroup) {
                         for (var i = 0; i < options.length; i++) {
                             if (options[i] === p.data[name]) {

@@ -39,6 +39,7 @@ var getValueIdForParamName = function(paramName) {
 };
 
 // set the VALUE BOX text for the element that corresponds to the param name
+
 var setValueTextForParamName = function(paramName, text, callback) {
     try {
         var text = text;
@@ -50,10 +51,7 @@ var setValueTextForParamName = function(paramName, text, callback) {
         if (param === undefined) {
             return;
         }
-        if (param.type === matsTypes.InputTypes.dateRange) {
-            value = document.getElementById(name + '-' + param.type).value;
-            text = value;
-        } else if (param.multiple) {
+        if (param.multiple) {
             // .... if multi selected  get the first .. last
             var selection = getInputElementForParamName(paramName).selectedOptions;
             if (selection.length == 0) {
@@ -81,11 +79,11 @@ var getInputIdForParamName = function(paramName) {
     var param = matsCollections.CurveParams.findOne({name: paramName});
     if (param === undefined) {
         param = matsCollections.PlotParams.findOne({name: paramName});
+    }
+    if (param === undefined) {
+        param = matsCollections.Scatter2dParams.findOne({name: paramName});
         if (param === undefined) {
-            param = matsCollections.Scatter2dParams.findOne({name: paramName});
-            if (param === undefined) {
-                return undefined;
-            }
+            return undefined;
         }
     }
     return (param.name + "-" + param.type).replace(/ /g,'-');

@@ -44,7 +44,8 @@ var doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: "dateHelp.html"
             });
 
         var plotFormats = {};
@@ -315,7 +316,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                help: "dateHelp.html"
             });
     }
 };

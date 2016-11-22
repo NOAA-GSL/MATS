@@ -1,4 +1,5 @@
 import { matsTypes } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
 
 var startInit = function() {
     var today = new Date();
@@ -44,27 +45,53 @@ Template.dateRange.onRendered(function() {
             document.getElementById('dates-item').style.display = "none";
         }
     }
-    var name = this.data.name;
-    //var name = matsTypes.InputTypes.controlButton + "-" + this.data.name + "-value";
+
+    const name = this.data.name;
+    const idref = name + "-item";
+    const elem = document.getElementById('element-dates');
+
     $(function() {
-            $('input[name=' + name + ']').daterangepicker({
+            $('#' + idref).daterangepicker({
             "timePicker": true,
             "timePicker24Hour": true,
+            "timePickerIncrement": 15,
             "autoApply": true,
-            format: 'MM/DD/YYYY HH:mm'
+            "startDate": startInit(),
+            "endDate": stopInit(),
+            "showDropdowns":true,
+            locale: {
+                format: 'MM/DD/YYYY H:mm'
+            },
+            ranges: {
+                'Today': [moment().startOf('day'), moment().endOf('day')],
+                'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+                'Last 7 Full Days': [moment().subtract(7, 'days').startOf('day'), moment().startOf('day')],
+                'Last 30 Full Days': [moment().subtract(30, 'days').startOf('day'), moment().startOf('day')],
+                'Last 60 Full Days': [moment().subtract(60, 'days').startOf('day'), moment().startOf('day')],
+                'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
+                'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
+            },
+            "alwaysShowCalendars":true
         });
+        matsParamUtils.setValueTextForParamName(name,startInit() + ' - ' + stopInit());
     });
+
+    $('#' + idref).on('apply.daterangepicker', function(ev, picker) {
+        if (picker.startDate.toString() == picker.endDate.toString()) {
+            setError("Your start and end dates coincide, you must select a range!");
+            return false;
+        }
+        const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
+        matsParamUtils.setValueTextForParamName(name,valStr);
+        elem.style.display = "none";
+    });
+    $('#' + idref).on('hide.daterangepicker', function(ev, picker) {
+        elem.style.display = "none";
+    });
+    $('#' + idref).on('cancel.daterangepicker', function(ev, picker) {
+        elem.style.display = "none";
+    });
+
 });
 
-Template.dateRange.helpers({
-    value: function() {
-        return startInit() + " - " + stopInit();
-    },
-    startInitial: function() {
-        return startInit();
-    },
-    stopInitial: function() {
-        return stopInit();
-    }
-});
 
