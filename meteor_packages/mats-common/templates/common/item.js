@@ -217,9 +217,4 @@ Template.checkboxGroup.events({
     }
 });
 
-Template.dateRange.events({
-    'change, blur': function (event) {
-        document.getElementById(matsTypes.InputTypes.controlButton + "-" + this.name + "-value").textContent = event.currentTarget.value;
-    }
-});
 

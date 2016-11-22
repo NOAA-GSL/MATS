@@ -124,7 +124,8 @@ Template.plotList.events({
                     }
                 }
             } else if (type == matsTypes.InputTypes.dateRange) {
-                p[name] = document.getElementById(name + '-' + type).value;
+                p[name] = matsParamUtils.getValueForParamName(name);
+                //p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.numberSpinner) {
                 p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.select) {
