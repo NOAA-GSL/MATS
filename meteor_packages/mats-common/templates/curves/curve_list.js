@@ -110,7 +110,6 @@ Template.curveList.events({
                 }
             } else if (type == matsTypes.InputTypes.dateRange) {
                 p[name] = matsParamUtils.getValueForParamName(name);
-//                p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.numberSpinner) {
                 p[name] = document.getElementById(name + '-' + type).value;
             } else if (type == matsTypes.InputTypes.select) {
@@ -189,7 +188,6 @@ Template.curveList.events({
 
                     if (type == matsTypes.InputTypes.dateRange) {
                         matsParamUtils.setValueTextForParamName(p.data);
-                        //document.getElementById(name + '-' + type).value = p.data;
                     } else if (type == matsTypes.InputTypes.radioGroup) {
                         for (var i = 0; i < options.length; i++) {
                             if (options[i] === p.data[name]) {

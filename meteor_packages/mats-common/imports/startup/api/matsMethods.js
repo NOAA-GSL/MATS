@@ -588,10 +588,15 @@ const getGraphData = new ValidatedMethod({
             var future = new Future();
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
-            global[dataFunction](params.plotParams, function (results) {
-                results.basis['dataLink'] = saveResultData(results);
-                future["return"](results);
-            });
+            try {
+                global[dataFunction](params.plotParams, function (results) {
+                    results.basis['dataLink'] = saveResultData(results);
+                    future["return"](results);
+                });
+            } catch(badThingHappened) {
+                 throw new Meteor.Error(badThingHappened.message,"Error in getGraphData function:" + dataFunction);
+            }
+
             return future.wait();
         }
     }
