@@ -22,9 +22,8 @@ the node part of phusion passenger.
 xxxxxENDxxxx
 exit 0
 fi
-
-rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/  ${server}:
-rsync -ravl --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:
+rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/.meteor  ${server}:/web
+rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:/web
 
 echo "do not forget to restart nginx on ${server}."
 echo "and check the links for node and npm that are in /usrlocal/bin. If the meteor install has changed (due to meteor upgrade), fix these links"
