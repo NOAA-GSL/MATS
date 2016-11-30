@@ -174,13 +174,13 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and fcst_utc_offset=" + 3600 * forecastLength;
             }
             truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-            rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+            rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, 0);
             /*
              For a statistical calculation that requires a truth curve - need to go through again for the truth curve.
              */
             if (truthRequired == true) {
                 console.log("truthStatement: " + truthStatement);
-                rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool,truthStatement, top, bottom, myVariable, isDiscriminator);
+                rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool,truthStatement, top, bottom, myVariable, isDiscriminator, 0);
             }
             dataRequests[curve.label] = {statement:statement,truthStatement:truthStatement}
         }   // for axis loop

@@ -5,6 +5,8 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 
+const Future = require('fibers/future');
+
 dataSeries = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
@@ -48,37 +50,48 @@ dataSeries = function (plotParams, plotFunction) {
         yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var dataSource = (curve['data-source']);
+        var dataSource = curve['data-source'];
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var model = tmp[0];
-        var instrument_id = tmp[1];
-        var verificationRunInterval = tmp[2];
+        var dataSource_is_instrument = parseInt(tmp[0]);
+        var dataSource_tablename = tmp[1];
+        var dataSource_id = tmp[2];
+        var verificationRunInterval = tmp[3];
+        var dataSource_is_json = parseInt(tmp[4]);
+        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwp', '_discriminator');
+
         var myVariable;
         var statistic = curve['statistic'];
-        var truthDataSource = curve['truth-data-source'];
-        tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-        var truthModel = tmp[0];
-        var truthInstrument_id = tmp[1];
-        var truthRunInterval = tmp[2];
+
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
-        var maxRunInterval;
-            if (statistic == "mean") {
-                maxRunInterval = verificationRunInterval;
-            } else {
-                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
-            }
+        var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-        var isDiscriminator = false;
+        var dataSource_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
             myVariable = curve['variable'];
-            isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
+            dataSource_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
+
+        statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
+        //console.log("statement: " + statement);
+        var dFuture = new Future();
+        dFuture['hd'] = 0;
+        wfip2Pool.query(statement, function (err, rows) {
+            if (err != undefined) {
+                error = '   has_discriminator error: ' + err.message;
+            } else {
+                dFuture['hd'] = rows[0]['hd'];
+            }
+            dFuture['return']();
+        });
+        dFuture.wait();
+        var dataSource_has_discriminator = dFuture['hd'];
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
@@ -101,28 +114,33 @@ dataSeries = function (plotParams, plotFunction) {
         var statement = "";
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
-            if (model.includes("recs")) {
-                statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
-                    "from obs_recs as o , " + model +
-                    " where  obs_recs_obsrecid = o.obsrecid" +
-                    " and instruments_instrid=" + instrument_id +
-                    " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-            } else if (model.includes("hrrr_wfip")) {
+            if ( dataSource_is_instrument ) {
+                if (dataSource_is_json) {
+                    statement = "select O.valid_utc as avtime, cast( data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                } else {
+                    statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                }
+            } else if (dataSource_has_discriminator) {
                 if (isDiscriminator) {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid" +
-                        " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
-                        " and " + model + ".nwp_recs_nwprecid=nwprecid" +
+                        " from " + dataSource_tablename + " as M, nwp_recs,  " + dataSource_tablename + " as D" +
+                        " where M.nwp_recs_nwprecid=nwprecid" +
+                        " and D.nwp_recs_nwprecid=nwprecid" +
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
                         " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper
                 } else {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
-                        " and " + model + ".nwp_recs_nwprecid=nwprecid" +
+                        "from " + dataSource_tablename + " as M, nwp_recs,  " + dataSource_tablename + " as D" +
+                        " where M.nwp_recs_nwprecid=nwprecid" +
+                        " and D.nwp_recs_nwprecid=nwprecid" +
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
                         " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
                         " and " + discriminator + " >=" + disc_lower +
@@ -130,68 +148,98 @@ dataSeries = function (plotParams, plotFunction) {
                 }
             } else {
                 statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                    "from " + model + ", nwp_recs  " +
-                    " where nwps_nwpid=" + instrument_id +
-                    " and nwp_recs_nwprecid=nwprecid" +
+                    "from " + dataSource_tablename + ", nwp_recs  " +
+                    " where nwp_recs_nwprecid=nwprecid" +
                     " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_utc_offset=" + 3600 * forecastLength;
+                    " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate);
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json);
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
+                throw error;
             }
 
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
-                if (truthModel.includes("recs")) {
-                    statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
-                        "from obs_recs as o , " + truthModel +
-                        " where  obs_recs_obsrecid = o.obsrecid" +
-                        " and instruments_instrid=" + truthInstrument_id +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-                } else if (truthModel.includes("hrrr_wfip")) {
-                    if (isDiscriminator) {
-                        statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid" +
-                            " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                            " where nwps_nwpid=" + truthInstrument_id +
-                            " and " + truthModel + ".nwp_recs_nwprecid=nwprecid" +
-                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                            " and fcst_utc_offset=" + 3600 * forecastLength +
-                            " and " + discriminator + " >=" + disc_lower +
-                            " and " + discriminator + " <=" + disc_upper
+                var truthDataSource = curve['truth-data-source'];
+                var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+                var truthDataSource_is_instrument = tmp[0];
+                var truthDataSource_tablename= tmp[1];
+                var truthDataSource_id = tmp[2];
+                var truthRunInterval = tmp[3];
+                var truthDataSource_is_json = tmp[4];
+                var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
+                maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+
+                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
+                //console.log("statement: " + statement);
+                dFuture = new Future();
+                dFuture['hd'] = 0;
+                wfip2Pool.query(statement, function (err, rows) {
+                    if (err != undefined) {
+                        error = '    has_discriminator error: ' + err.message;
                     } else {
-                        statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                            "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                            " where nwps_nwpid=" + truthInstrument_id +
-                            " and " + truthModel + ".nwp_recs_nwprecid=nwprecid" +
-                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                            " and fcst_utc_offset=" + 3600 * forecastLength +
-                            " and " + discriminator + " >=" + disc_lower +
-                            " and " + discriminator + " <=" + disc_upper
+                        dFuture['hd'] = rows[0]['hd'];
+                    }
+                    dFuture['return']();
+                });
+                dFuture.wait();
+                var truthDataSource_has_discriminator = dFuture['hd'];
+
+                if (truthDataSource_is_instrument) {
+                    if (truthDataSource_is_json) {
+                        statement = "select O.valid_utc as avtime, data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                    } else {
+                        statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                     }
                 } else {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        "from " + truthModel + ", nwp_recs  " +
-                        " where nwps_nwpid=" + truthInstrument_id +
-                        " and nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_utc_offset=" + 3600 * forecastLength;
-                }
-                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-                console.log("statement: " + statement);
-                dataRequests[curve.label] = statement;
-                var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
-                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
+                    if (dataSource_has_discriminator) {
+                        if (isDiscriminator) {
+                            statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid" +
+                                " from " + truthDataSource_tablename + " as T, nwp_recs,  " + truthDataSource_tablename + " as D" +
+                                " where T.nwp_recs_nwprecid=nwprecid" +
+                                " and D.nwp_recs_nwprecid=nwprecid" +
+                                " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                                " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
+                                " and " + discriminator + " >=" + disc_lower +
+                                " and " + discriminator + " <=" + disc_upper
+                        } else {
+                            statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
+                                "from " + truthDataSource_tablename + " as T, nwp_recs,  " + truthDataSource_tablename + " as D" +
+                                " where T.nwp_recs_nwprecid=nwprecid" +
+                                " and D.nwp_recs_nwprecid=nwprecid" +
+                                " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                                " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
+                                " and " + discriminator + " >=" + disc_lower +
+                                " and " + discriminator + " <=" + disc_upper
+                        }
+                    } else {
+                        statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
+                            "from " + truthDataSource_tablename + ", nwp_recs  " +
+                            " where nwp_recs_nwprecid=nwprecid" +
+                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate);
+                    }
+
+                    statement = statement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                    //console.log("statement: " + statement);
+                    dataRequests[curve.label] = statement;
+                    var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
+                    if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                        error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
+                        throw error;
+                    }
                 }
             }
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.

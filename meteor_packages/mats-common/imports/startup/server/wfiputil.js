@@ -177,7 +177,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator) {
+var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, isJSON) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -261,24 +261,42 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     levels = [Number.MIN_VALUE];
                     values = [Number(rows[rowIndex][myVariable])];
                 } else {
-                    // conventional variable
-                    levels = JSON.parse(rows[rowIndex].z);
-                    values = JSON.parse(rows[rowIndex][myVariable]);
+                    if (isJSON)  {
+                        // JSON variable -- stored as JSON structure 'data' in the DB
+                        levels = JSON.parse(rows[rowIndex].data)['z'].split(',');
+                        values = JSON.parse(rows[rowIndex].data)[myVariable].split(',');
+                    } else {
+                        // conventional variable -- stored as text in the DB
+                        levels = JSON.parse(rows[rowIndex].z);
+                        values = JSON.parse(rows[rowIndex][myVariable]);
+                    }
+                    for ( var i = 0; i < levels.length; i++ ) {
+                        levels[i] = parseFloat( levels[i] )
+                        values[i] = parseFloat( values[i] )
+
+                    }
                 }
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
                 // always accept levels that are Number.MIN_VALUE - they are special discriminators
-                for (var l = levels.length - 1; l >= 0; l--) {
-                    var lvl = levels[l];
-                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
-                        levels.splice(l, 1);
-                        values.splice(l, 1);
-                    }
-                }
-                allLevels.push(levels);  // array of level arrays - two dimensional
-                var sum = values.reduce(function (a,b) {return a + b;},0);
                 var numLevels = levels.length;
+                if ( numLevels > 1 ) {
+                  for (var l = levels.length - 1; l >= 0; l--) {
+                      var lvl = levels[l];
+                      if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                          levels.splice(l, 1);
+                          values.splice(l, 1);
+                      }
+                  }
+                }
+                allLevels.push(levels);  // array of level arrays - two dimensions
+                if ( numLevels > 1 ) {
+                    var sum = values.reduce(function (a,b) {return a + b;},0);
+                } else {
+                    var sum = values;
+                }
+
                 var mean = sum / numLevels;
                 if(resultData[time] === undefined) {
                     resultData[time] = {sites:{}};

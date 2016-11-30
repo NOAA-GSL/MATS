@@ -7,6 +7,7 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 
 
+var datesMap ={};
 var modelOptionsMap ={};
 var regionOptionsMap ={};
 var siteOptionsMap ={};
@@ -15,6 +16,7 @@ var discriminatorOptionsMap ={};
 var upperOptionsMap = {};
 var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
+var variableFieldsMap = {};
 var variableOptionsMap = {};
 variableOptionsMap[matsTypes.PlotTypes.profile] = {};
 variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
@@ -187,7 +189,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                dates:datesMap
             });
 
 
@@ -231,7 +234,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 2,
-                displayGroup: 2
+                displayGroup: 2,
+                dates:datesMap
             });
 
         matsCollections.CurveParams.insert(
@@ -310,7 +314,8 @@ var doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
+                //variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
+                variableMap: variableFieldsMap,
                 optionsMap: variableOptionsMap,
                 options:variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
                 superiorName: 'data-source',
@@ -735,8 +740,10 @@ Meteor.startup(function () {
     wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
+
+
     try {
-        var statement = "select model,regions,model_value,run_interval from regions_per_model_mats";
+        var statement = "call get_data_sources();";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
@@ -747,19 +754,50 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 matsCollections.Models.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model.trim();
-                    var model_values = rows[i].model_value.split(',');
-                    var table_name = model_values[0];
-                    var instruments_instrid = model_values[1];
-                    var run_interval = rows[i].run_interval * 1000; // convert from seconds
+                for (var i = 0; i < rows[0].length; i++) {
+                    var model = rows[0][i].model;
+                    var is_instrument = rows[0][i].is_instrument;
+                    var tablename = rows[0][i].tablename;
+                    var thisid = rows[0][i].thisid;
+                    var cycle_interval = rows[0][i].cycle_interval;
+                    var variable_names = rows[0][i].variable_names.split(',');
+                    var is_json = rows[0][i].isJSON;
+
+                    var mindate = rows[0][i].mindate;
+                    var maxdate = rows[0][i].maxdate;
+
                     var valueList = [];
-                    valueList.push(table_name + ',' + instruments_instrid + ',' + run_interval);
+                    valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json);
                     modelOptionsMap[model] = valueList;
-                    variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
-                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
-                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
-                    matsCollections.Models.insert({name: model, table_name: table_name,instruments_instrid:instruments_instrid});
+                    datesMap = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\"}";
+
+                    var labels = [];
+                    for (var j = 0; j < variable_names.length; j++) {
+                        var statement2 = "select getVariableInfo('" + variable_names[j] + "') as info;";
+                        var qFuture2 = new Future();
+                        var wfip2Pool2 = mysql.createPool(wfip2Settings);
+                        wfip2Pool2.on('connection2', function (connection) {
+                            connection2.query('set group_concat_max_len = 4294967295')
+                        });
+                        wfip2Pool2.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
+                            if (err2 != undefined) {
+                                console.log(err2.message);
+                            }
+                            if (rows2 === undefined || rows2.length === 0) {
+                                console.log('No data in database ' + wfip2Settings.database + "! query:" + statement2);
+                            } else {
+                                var infostring = rows2[0].info.split('|');
+                                labels.push(infostring[0]);
+                                variableFieldsMap[infostring[0]] = variable_names[j];
+                            }
+                            qFuture2['return']();
+                        }));
+                    qFuture2.wait();
+                    }
+                    variableOptionsMap[matsTypes.PlotTypes.profile][model] = labels;
+                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = labels;
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = labels;
+                    matsCollections.Models.insert({name: model, table_name: tablename, thisid: thisid});
                 }
             }
             qFuture['return']();
@@ -912,7 +950,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
+        var statement = "CALL fl_per_model();";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -922,10 +960,27 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model;
-                    var forecastLengths = rows[i].fcst_lens;
+                    var model = rows[0][i].model;
+                    var forecastLengths = rows[0][i].fcst_lens;
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
-                    if (model === 'hrrr_wfip') {
+
+                    statement = "select has_discriminator('" + model.toString() + "') as hd";
+                    console.log("statement: " + statement);
+                    var dFuture = new Future();
+                    dFuture['hd'] = 0;
+                    wfip2Pool.query(statement, function (err, rows) {
+                        if (err != undefined) {
+                            error = "   has_discriminator error: " + err.message;
+                        } else {
+                            dFuture['hd'] = rows[0]['hd'];
+                        }
+                        dFuture['return']();
+                    });
+                    dFuture.wait();
+                    var model_has_discriminator = dFuture['hd'];
+                    console.log("model_has_discriminator: " + model_has_discriminator.toString());
+
+                    if (model_has_discriminator) {
                         variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
                             'wind_speed',
                             'wind_direction'
@@ -944,11 +999,11 @@ Meteor.startup(function () {
                             variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push(discriminators[j]);
                             variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push(discriminators[j]);
                         }
-                    } else {
-                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
-                    }
+                    }// else {
+                        //variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
+                        // variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
+                        //variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
+                    //}
                 }
             }
             qFuture['return']();

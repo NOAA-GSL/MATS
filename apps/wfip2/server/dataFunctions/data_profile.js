@@ -94,7 +94,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             console.log("query=" + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, 0);
             var truthQueryResult;
             if (statistic != "mean"){
                 // need a truth data source for statistic
@@ -120,7 +120,7 @@ dataProfile = function (plotParams, plotFunction) {
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
                 console.log("query=" + statement);
                 dataRequests['truth-' + curve.label] = statement;
-                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator);
+                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, 0);
 
             }
             /*
