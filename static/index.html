@@ -133,7 +133,7 @@
                 <li ng-repeat="item in items"><a class="btn btn-primary" style="font-size:large;font-weight: bold"
                            href="/{{item.app}}">{{item.displayName}}</a>
                 </li>
-                <li ng-if="previous.length > 0">
+                <li>
                     <select onchange="location = this.options[this.selectedIndex].value;" class="form-control">
                         <option ng-repeat="option in previous" value="{{option.app}}">{{option.displayName}}</option>
                     </select>
