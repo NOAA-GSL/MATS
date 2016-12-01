@@ -6,5 +6,9 @@
 	{
 		"app":"surface",
 		"displayName":"Surface"
+	},
+	{
+		"app":"surface-previous",
+		"displayName":"Surface-previous"
 	}
 ]
