@@ -16,7 +16,7 @@ exec 2>&1
 echo "$0 ----------- started"
 date
  
-#git the builds top version
+#get the builds top version
 if [[ ! -d "/tmp/tmpbuilds" ]]; then
 	mkdir -p /tmp/tmpbuilds
 	chmod 777 /tmp/tmpbuilds
@@ -66,8 +66,5 @@ do
 	cd ../..
 done	
 echo rm -rf /tmp/tmpbuilds
-cd /builds/deployments
-buildDate=`date | tr ':' '-' | tr ' ' '_'`
-git commit -a -m "deployed on $buildDate"
 date
 echo "$0 ----------------- finished" 
