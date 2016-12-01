@@ -1,7 +1,23 @@
 #!/bin/sh
 #
-# Used to copy existing Apps and part od .meteor to the production server
+# Used to copy existing Apps and part of .meteor to the production server
 #logDir="/builds/buildArea/logs"
+
+# This script should be modified in the following way...
+# There should be a previous location on the target.
+# the contents of the /web directory on the target server should be a link to a directory named after the publish date. i.e. 2016xxx where xxx is the julian day.
+# initially this directory is a copy (cp -a) of the existing /web.
+# there is a directory named previous that contains the contents of the website as it existed prior to the last update.
+# 1. the current /web is rsynced (with delete) to the "previous"
+# 1. the existing /web is archived to a new directory that is named after the publish date. i.e. 2016xxx where xxx is the julian day.
+# 2. the new publication /web (from the dev server) is rsync'd to this new directory.
+# 3. the /web link is re-established to the newly rsync'd directory.
+# 4. the old directory is removed
+
+# This is like a copy on write and minimizes the time that the web pages are in transition, thereby minimizing the chance that incomplete content might be accessed.
+# It also gives us a backup copy of what was actually deployed previously.
+
+
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
