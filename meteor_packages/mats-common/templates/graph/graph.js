@@ -184,7 +184,9 @@ Template.graph.events({
         if (document.getElementById("plotTypeContainer")) {
             document.getElementById("plotTypeContainer").style.display="block";
         }
-
+        if (document.getElementById("scatterView")) {
+            document.getElementById("scatterView").style.display="block";
+        }
         if (document.getElementById("scatter2d")) {
             document.getElementById("scatter2d").style.display = "block";
         }

@@ -255,6 +255,9 @@ Template.curveList.events({
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";
                     }
+                    if (document.getElementById("scatterView")) {
+                        document.getElementById("scatterView").style.display="none";
+                    }
                     if (document.getElementById("scatter2d")) {
                         document.getElementById("scatter2d").style.display = "none";
                     }
