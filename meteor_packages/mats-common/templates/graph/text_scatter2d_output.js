@@ -72,7 +72,7 @@ Template.textScatter2dOutput.helpers({
         if (matsCurveUtils.PlotResult.data === undefined) {
             return [];
         }
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[i].data.length - 1);
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[i].data.length);
         return dataRows;
     },
     points: function(curve, rowIndex) {
@@ -110,7 +110,7 @@ Template.textScatter2dOutput.events({
         }
         data.push(clabels);
         var curveNums = matsCurveUtils.PlotResult.data.length - 1;
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length - 1);
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
             var line = moment.utc(Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][0])).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {

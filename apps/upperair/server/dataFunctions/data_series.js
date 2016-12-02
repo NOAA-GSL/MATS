@@ -108,8 +108,6 @@ dataSeries = function (plotParams, plotFunction) {
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     weitemp = toDate.split("-");
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    var mxmax = qxmax;// used to draw zero line
-    var mxmin = qxmin; // used to draw zero line
 
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
@@ -209,10 +207,8 @@ dataSeries = function (plotParams, plotFunction) {
                 error = "no data returned for curve " + curves[curveIndex].label;
                 d[0] = [];
             } else {
-                xmin = d[0][0];
-                xmax = d[d.length - 1][0];
-                mxmax = mxmax > xmax ? xmax : mxmax;
-                mxmin = mxmin < xmin ? mxmin : xmin;
+                xmin = xmin < d[0][0] ? xmin : d[0][0];
+                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
                 error = queryResult.error;
             }
         } else {
@@ -231,11 +227,6 @@ dataSeries = function (plotParams, plotFunction) {
                     d[i][1] = minuendData[i][1] - subtrahendData[i][1];
                 } else {
                     d[i][1] = null;
-                }
-                // ymin and ymax will change with diff
-                if (d[i][1] !== null) {
-                    ymin = ymin < d[i][1] ? ymin : d[i][1];
-                    ymax = ymax > d[i][1] ? ymax : d[i][1];
                 }
             }
         }
@@ -267,15 +258,15 @@ dataSeries = function (plotParams, plotFunction) {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
 
-        var mean =0 ;
+        var sum =0 ;
         for (var i = 0; i < d.length; i++) {
-            mean =   mean +d[i][1];
+            sum =   sum + d[i][1];
             if (d[i][1] !== null) {
-                ymin = d[i][1] < ymin ? d[i][1] : ymin;
-                ymax = d[i][1] > ymax ? d[i][1] : ymax;
+                 ymin = ymin < d[i][1] ? ymin : d[i][1];
+                 ymax = ymax > d[i][1] ? ymax : d[i][1];
             }
         }
-        mean = mean/d.length;
+        var mean = sum / d.length;
         var pOptions = {
             yaxis: variableStatSet[variableStat].index,
             label: label,
@@ -320,6 +311,7 @@ dataSeries = function (plotParams, plotFunction) {
         }
     }
 
+    var yPad = (ymax -ymin) * 0.2;
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -336,8 +328,8 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            //min: ymin * 0.8,
-            //max: ymax * 0.8
+            min: ymin - yPad,
+            max: ymax + yPad
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]

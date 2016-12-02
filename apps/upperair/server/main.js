@@ -44,7 +44,8 @@ var doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: "dateHelp.html"
             });
 
         var plotFormats = {};
@@ -204,7 +205,7 @@ var doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.fcst_len = 0'], '12-UTC': ['and m0.fcst_len = 12']};
+        optionsMap = {BOTH: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
@@ -315,7 +316,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 5,
+                help: "dateHelp.html"
             });
     }
 };

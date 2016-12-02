@@ -102,34 +102,36 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (model.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid"  +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
-                        " and " + model + ".nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_utc_offset=" + 3600 * forecastLength +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 } else {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                         "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
                         " where nwps_nwpid=" + instrument_id +
-                        " and " + model + ".nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_utc_offset=" + 3600 * forecastLength +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 }
             } else {
-                statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                statement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                     "from " + model + ", nwp_recs  " +
                     " where nwps_nwpid=" + instrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_utc_offset=" + 3600 * forecastLength;
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                    " and fcst_end_utc=" + 3600 * forecastLength;
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
@@ -144,34 +146,36 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
             } else if (truthModel.includes("hrrr_wfip")) {
                 if (isDiscriminator) {
-                    truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid"  +
+                    truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid"  +
                         " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                         " where nwps_nwpid=" + truthInstrument_id +
-                        " and " + truthModel + ".nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_utc_offset=" + 3600 * forecastLength +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 } else {
-                    truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                    truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                         "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
                         " where nwps_nwpid=" + truthInstrument_id +
-                        " and " + truthModel + ".nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_utc_offset=" + 3600 * forecastLength +
+                        " and modelid= modelid_rec" +
+                        " and nwp_recs_nwprecid=nwprecid" +
+                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                        " and fcst_end_utc=" + 3600 * forecastLength +
                         " and " + discriminator + " >=" + disc_lower +
                         " and " + discriminator + " <=" + disc_upper;
                 }
             } else {
-                truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime ,z , " + myVariable + " ,sites_siteid  " +
+                truthStatement = "select (analysis_utc + fcst_end_utc) as avtime ,z , " + myVariable + " ,sites_siteid  " +
                     "from " + truthModel + ", nwp_recs  " +
                     " where nwps_nwpid=" + truthInstrument_id +
                     " and nwp_recs_nwprecid=nwprecid" +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_utc_offset=" + 3600 * forecastLength;
+                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
+                    " and fcst_end_utc=" + 3600 * forecastLength;
             }
             truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, 0);

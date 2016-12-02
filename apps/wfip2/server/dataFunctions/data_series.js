@@ -5,8 +5,6 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 
-const Future = require('fibers/future');
-
 dataSeries = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
@@ -112,6 +110,9 @@ dataSeries = function (plotParams, plotFunction) {
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'];
         var statement = "";
+        var count = 0;
+        var sum = 0;
+        var average = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if ( dataSource_is_instrument ) {
@@ -522,6 +523,8 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br>time: " + new Date(Number(valTime)).toUTCString() +
                         "<br> statistic: " + statistic +
                         "<br> value:" + value;
+                    count ++;
+                    sum += value;
                     normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
                 }
                 if (statistic != "mean") {
@@ -529,6 +532,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 valIndex++;
             }
+            average = sum / count;
         } else {   // this is a difference curve... we have to use the maximum valid interval
             var minuendIndex = 0;
             var subtrahendIndex = 0; // base curve
@@ -550,14 +554,24 @@ dataSeries = function (plotParams, plotFunction) {
                 minuendIndex++;
             }
             // now the times should be equal
-            var diffTime = minuendData[minuendIndex][0];
+            count = 0;
+            sum = 0;
+            var diffTime = (minuendData[minuendIndex])[0];
             while (diffTime < diffEndTime) {
-                var fromValue = minuendData[minuendIndex] == undefined ? null : minuendData[minuendIndex][1];
-                var baseValue = subtrahendData[subtrahendIndex] == undefined ? null : subtrahendData[subtrahendIndex][1];
+                while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
+                    // if necessary, increment the base index until it catches up
+                    subtrahendIndex++;
+                }
+                while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
+                    // if necessary, increment the from index until it catches up
+                    minuendIndex++;
+                }
+                var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
+                var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
                 var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
                 var diffSeconds = diffTime / 1000;
                 var d = new Date(Number(diffTime)).toUTCString();
-                tooltip = label +
+                var tooltip = label +
                 "<br>seconds:" + diffSeconds +
                 "<br>time:" + d +
                 "<br> diffValue:" + diffValue;
@@ -567,7 +581,10 @@ dataSeries = function (plotParams, plotFunction) {
                 diffTime = Number(diffTime) + Number(maxValidInterval);
                 subtrahendIndex++;
                 minuendIndex++;
+                count++;
+                sum += diffValue;
             }
+            average = sum / count;
         }
         if (yAxisBoundaries[variableStr] === undefined) {
             yAxisBoundaries[variableStr] = {
@@ -732,7 +749,7 @@ dataSeries = function (plotParams, plotFunction) {
             yaxesOptions = {
                 position: position,
                 color: 'grey',
-                axisLabel: yLabels[vStr],
+                axisLabel: yLabels[vStr].label,
                 axisLabelColour: "black",
                 axisLabelUseCanvas: true,
                 axisLabelFontSizePixels: 16,
@@ -748,7 +765,8 @@ dataSeries = function (plotParams, plotFunction) {
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
             yaxes[curveNum].axisLabel = yLabels[vStr].label;
-            yaxesOptions = {
+            var yaxesOptions = {
+                show: false,
                 min: yAxisBoundaries[vStr].min - yAxisPad,
                 max: yAxisBoundaries[vStr].max + yAxisPad,
                 grid:{show:false}

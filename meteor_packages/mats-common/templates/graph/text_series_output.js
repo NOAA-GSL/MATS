@@ -66,7 +66,7 @@ Template.textSeriesOutput.helpers({
                 maxi = i;
             }
         }
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[maxi].data.length - 1);
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[maxi].data.length);
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return false;
@@ -210,7 +210,7 @@ Template.textSeriesOutput.events({
         }
         data.push(clabels);
         var curveNums = matsCurveUtils.PlotResult.data.length - 1;
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length - 1);
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
             var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {

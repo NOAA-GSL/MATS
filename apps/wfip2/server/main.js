@@ -105,11 +105,12 @@ var doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: "dateHelp.html"
             });
 
         var plotFormats = {};
-        plotFormats[matsTypes.PlotFormats.absolute] = "absolute diffs";
+        plotFormats[matsTypes.PlotFormats.absolute] = "diffs";
         plotFormats[matsTypes.PlotFormats.none] = "no diffs";
         matsCollections.PlotParams.insert(
             {
@@ -474,7 +475,8 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 7,
+                help: "dateHelp.html"
             });
     }
 };
@@ -730,7 +732,7 @@ Meteor.startup(function () {
             host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user        : 'readonly',
             password    : 'Readonlyp@$$405',
-            database    : 'WFIP2_v2',
+            database    : 'WFIP2',
             connectionLimit : 10
         });
     }

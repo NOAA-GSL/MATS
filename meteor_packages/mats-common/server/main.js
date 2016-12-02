@@ -37,11 +37,11 @@ var setGoogleCred = function () {
             case "mats-dev":
             case "mats-dev1":
                 gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
-                gSecret = "bEgiYA-8vBddG0aLmzLq74gR";
+                gSecret = "Ra1xCSDnr-ZZX1wgyAHHSbIU";
                 break;
             default:
-                gid = "499180266722-vm8bc8213app5027fqob0v4omk70hogm.apps.googleusercontent.com";
-                gSecret = "W1VBGFeYEdoOdmMcZYkzKTQu";
+                gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
+                gSecret = "Ra1xCSDnr-ZZX1wgyAHHSbIU";
                 break;
         }
         if (gid != cid || gSecret != cSecret) {

@@ -2,6 +2,7 @@ import { matsTypes } from 'meteor/randyp:mats-common'; 
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import {matsPlotUtils } from 'meteor/randyp:mats-common';
+import {matsParamUtils } from 'meteor/randyp:mats-common';
 
 Template.paramList.helpers({
     CurveParamGroups: function() {
@@ -72,6 +73,8 @@ Template.paramList.events({
             var elems = event.target.valueOf().elements;
             var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
+            var dateParams = matsCollections.CurveParams.find({type:matsTypes.InputTypes.dateRange}, {fields: {name: 1}}).fetch();
+            var dateParamNames = _.pluck(dateParams, "name");
             if (isScatter) {
                 var scatterCurveNames = [];
                 for (var i=0; i<curveNames.length;i++) {
@@ -84,6 +87,8 @@ Template.paramList.events({
             var paramElems = _.filter(elems, function (elem) {
                 return _.contains(curveNames, elem.name);
             });
+            // add in any date params (they aren't technically elements)
+            paramElems.push.apply(paramElems,dateParamNames);
             // add in the scatter2d parameters if it is a scatter plot.
             if (isScatter) {
                 $(":input[id^='scatter2d']:input[name*='scatter2d']" ).each( function() {
@@ -103,7 +108,9 @@ Template.paramList.events({
                          p[paramElems[i].name] = changingCurveLabel;  // don't change the label when editing a curve
                          continue;
                      }
-                    if (paramElems[i].type === "select-multiple") {
+                    if ((paramElems[i] instanceof Element) === false) { // isn't really an element - must be a date field - these are only strings
+                        p[paramElems[i]] = matsParamUtils.getValueForParamName(paramElems[i]);
+                    } else if (paramElems[i].type === "select-multiple") {
                         // define a p value if it doesn't exist (necessary for adding truth values)
                         p[paramElems[i].name] = (p[paramElems[i].name] === undefined) ? "" : p[paramElems[i].name];
                         p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function () {
@@ -137,8 +144,9 @@ Template.paramList.events({
                 }
             } else {
                 for (var i = 0; i < l; i++) {
-
-                    if (paramElems[i].type === "select-multiple") {
+                    if ((paramElems[i] instanceof Element) === false) { // isn't really an element - must be a date field - these are only strings
+                        p[paramElems[i]] = matsParamUtils.getValueForParamName(paramElems[i]);
+                    } else if (paramElems[i].type === "select-multiple") {
                         p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
                     } else {
                         if (paramElems[i].type === "radio") {
@@ -159,7 +167,7 @@ Template.paramList.events({
                             p[paramElems[i].name] = (paramElems[i]).value;
                         }
                     }
-                    if (paramElems[i].name === 'label') {
+                    if (paramElems[i].name && paramElems[i].name === 'label') {
                         if (_.indexOf(matsCurveUtils.getUsedLabels(), (paramElems[i]).value) != -1) {
                             setError('labels need to be unique - change ' + (paramElems[i]).value + " to something else");
                             return false;
