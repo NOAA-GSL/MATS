@@ -9,7 +9,7 @@ Template.curveItem.rendered = function() {
     var label = this.data.label;
     $(function () {
         var l = '.' + label + '-colorpick';
-        $(l).colorpicker({format: "rgb"});
+        $(l).colorpicker({format: "rgb", align:"left"});
     });
 };
 

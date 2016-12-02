@@ -2,26 +2,38 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <div id='main'  class="main container-fluid">
+    <div id='main'  class="main container row">
         {{>topNav}}
         {{>administration}}
         {{>spinner}}
         {{>help}}
         {{>data}}
-        {{>plotType}}
-        {{>error}}
-        {{>info}}
-        <div id="scatterView">
-            {{>scatter2d}}
+        <div class="container-fluid pull-left">
+            <div class="container-fluid row pull-left">
+                {{>plotType}}
+            </div>
+            <div class="container-fluid row pull-left">
+                {{>curveList}}
+            </div>
+            <div class="container-fluid row pull-left">
+                {{>error}}
+                {{>info}}
+            </div>
         </div>
-        <div id="paramView">
-            {{>paramList}}
+        <div class="container-fluid pull-left">
+            <div id="scatterView" class="container row pull-left">
+                {{>scatter2d}}
+            </div>
+            <div id="paramView" class="container-fluid row pull-left">
+                {{>paramList}}
+            </div>
+            <div id="plotView" class="container-fluid row pull-left">
+                {{>plotList}}
+            </div>
         </div>
-        <div id="plotView">
-            {{>plotList}}
+        <div>
+            {{>graph}}
         </div>
-        {{>curveList}}
-        {{>graph}}
     </div>
     {{>footer}}
 </template>

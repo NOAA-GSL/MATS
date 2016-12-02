@@ -1,14 +1,15 @@
 <template name="curveList">
-    <div id="curveList"  class="container-fluid" style="display:{{displayCurves}}">
+    <div id="curveList"  class="container-fluid well well-sm pull-left" style="display:{{displayCurves}}">
         {{#each curves}}
             {{> curveItem}}
         {{/each}}
-        <div class="rule"></div>
+        <div class="well well-sm pull-left">
         <button type="button" name="plotUnMatched" id="plot"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" >&nbsp;&nbsp;Plot Unmatched</button>
         <button type="button" name="plotMatched" id="plot"  class="plot-curves-matched btn btn-success  fa fa-area-chart" {{averagesdisabled}}>&nbsp;&nbsp;Plot Matched</button>
         <button type="button" class="btn spacebutton" id="spacer"></button>
         <button type="button" name="save" id="save " class="save-settings btn btn-success   fa fa-cloud-upload">&nbsp;&nbsp;Save Settings</button>
         <button class="remove-all btn btn-danger btn-xs"><i class="fa fa-times remove-all btn btn-warning "></i>&nbsp;&nbsp;Remove All </button>
         <div id="disabledPlots" style="display:{{disabledPlotsHidden}}"><span style="color: red;">Matched plotting is disabled because curve averages are disparate</span></div>
+        </div>
     </div>
 </template>

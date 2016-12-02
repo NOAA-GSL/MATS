@@ -1,8 +1,12 @@
 <template name="plotType">
-    <div id="plotType" class="container-fluid" style="display:block;">
-        <span style="font-size:large; font-weight: bold;">{{title}}&nbsp;&nbsp;</span>
-        {{#each plotTypes}}
-            <input class="plot-type-{{plotType}}" type=radio name="plot-type" id="plot-type-{{plotType}}" {{display}} value="{{plotType}}" checked={{checked}} /> <label style="font-size: large;">{{plotType}}</label>
-        {{/each}}
+    <div id="plotType" class="container pull-left" style="display:block;">
+        <div class="row text-center">
+            <H1 style="font-size:xx-large; font-weight: bold;">{{title}}&nbsp;&nbsp;</H1>
+        </div>
+        <div class="row well well-sm pull-left">
+            {{#each plotTypes}}
+                <input class="plot-type-{{plotType}}" type=radio name="plot-type" id="plot-type-{{plotType}}" {{display}} value="{{plotType}}" checked={{checked}} /> <label style="font-size: large;">{{plotType}}</label>
+            {{/each}}
+        </div>
     </div>
 </template>

@@ -1,6 +1,6 @@
 <template name="plotList">
-    <div id="plotList" class="well well-sm
-     pull-left">
+    <div id="plotList" class=" row container pull-left">
+        <div class = "well well-sm pull-left">
         <form id="plotForm">
             <div class="btn-toolbar btn-group" role="toolbar">
                 {{#each PlotParamGroups}}
@@ -78,5 +78,6 @@
                 <button type="submit" name="restore" id="restore-settings" class="submit-params btn btn-success  btn-xs fa fa-cloud-download" style="display:none"></button>
             </div>
         </form>
+        </div>
     </div>
 </template>
