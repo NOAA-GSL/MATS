@@ -1,12 +1,11 @@
 <template name="paramList">
-    <div id="paramList" class="container-fluid well">
+    <div id="paramList" class="well pull-left">
         <span>{{editMode}} </span>
         <form id="paramForm">
             {{#each CurveParamGroups}}
                 {{> curveParamGroup}}
             {{/each}}
-            <div class="rule"></div>
-            <div class="container-fluid">
+            <div class="pull-left">
                 {{#if isEdit}}
                     <div class="btn-toolbar btn-group btn-xs" role="toolbar">
                         <button type="submit" name="save" id="save" class="btn btn-success fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
@@ -22,5 +21,4 @@
             </div>
         </form>
     </div>
-    <div class="rule"></div>
 </template>
