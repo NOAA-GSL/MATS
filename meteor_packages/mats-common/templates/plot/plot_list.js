@@ -271,6 +271,9 @@ Template.plotList.events({
                     if (document.getElementById("scatter2d")){
                         document.getElementById("scatter2d").style.display = "none";
                     }
+                    if (document.getElementById("scatterView")) {
+                        document.getElementById("scatterView").style.display="none";
+                    }
                     document.getElementById("plotButton").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
                     document.getElementById("plot-buttons-grp").style.display = "block";
