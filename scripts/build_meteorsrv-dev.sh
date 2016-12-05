@@ -73,12 +73,5 @@ do
 	meteor build /builds
 	cd ..
 done
-
-# commit builds
-buildDate=`date | tr ':' '-' | tr ' ' '_'`
-cd /builds
-git add .
-git commit -a -m "built on $buildDate"
-git tag -a "$buildDate" -m "built on $buildDate"
 date
 echo "$0 ----------------- finished" 

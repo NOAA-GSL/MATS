@@ -1,6 +1,6 @@
 <template name="scatter2d">
-    <div id={{plotType}} class="container-fluid well pull-left" style="display:{{displayScatter2d}};">
-        <span style="font-size:large; font-weight: bold;">{{title}}&nbsp;&nbsp;</span>
+    <div class="container well well-sm pull-left" id={{plotType}}  style="display:{{displayScatter2d}};">
+        <span style="font-size:large; font-weight: bold;">{{title}}</span>
         {{#each scatter2dParams}}
             {{#if isNumberSpinner this}}
                 <input class="data-input input-sm" id="{{idParam}}" type="number" value="{{default}}" name="{{name this}}" min="{{min}}" max="{{max}}" step="{{step}}"/>

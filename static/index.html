@@ -25,27 +25,25 @@
 
     <script type='text/javascript'> //<![CDATA[
     function TCtrl($scope, $http) {
-        //var m = {};
         $scope.items = [];
         $scope.previous = [];
         $http({method: "GET", url: "applist.json"}).
         // success callback
         success(function (data) {
             $scope.items = data.filter(
-		function(val){
-			return (val.app.indexOf("-previous") == -1);
+		        function(val){
+			        return (val.app.indexOf("-previous") == -1);
         	});
             $scope.previous = data.filter(
-		function(val){
-			return (val.app.indexOf("-previous") > -1);
+		        function(val){
+			        return (val.app.indexOf("-previous") > -1);
        		});
-	}).
+	    }).
         // error callback
         error(function (data, status, headers, config) {
             alert("Could not read application list: /applist.json \n(should be automatically generated)");
         });
     }
-    //]]>
     </script>
 
 </head>
@@ -128,19 +126,18 @@
             <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0"
                  class="container-fluid">
                 <ul class="nav navbar-nav navbar-left">
-                    <li><a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/emb/">Earth Modeling
-                        Branch(EMB)</a></li>
-                    <li><p class="navbar-text" style="font-size:large;font-weight: bold">Applications ...</p></li>
-
-    	              <li ng-repeat="item in items"><a class="btn btn-primary"
-                                                          style="font-size:large;font-weight: bold"
-                                                          href="/{{item.app}}">{{item.displayName}}</a></li>
-
-		     <li>
-		        <select onchange="location = this.options[this.selectedIndex].value;" class="form-control">
-			  <option ng-repeat="option in previous" value="{{option.app}}">{{option.displayName}}</option>
-                        </select>
-		     </li>
+                <li><a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/emb/">GSD Modeling</a>
+                </li>
+                <li><p class="navbar-text" style="font-size:large;font-weight: bold">Applications ...</p>
+                </li>
+                <li ng-repeat="item in items"><a class="btn btn-primary" style="font-size:large;font-weight: bold"
+                           href="/{{item.app}}">{{item.displayName}}</a>
+                </li>
+                <li ng-show="previous.length">
+                    <select onchange="location = this.options[this.selectedIndex].value;" class="form-control">
+                        <option ng-repeat="option in previous" value="{{option.app}}">{{option.displayName}}</option>
+                    </select>
+                </li>
                 </ul>
 		
             </div>
