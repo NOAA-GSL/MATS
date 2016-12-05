@@ -177,7 +177,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, isJSON) {
+var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, isJSON, disc_lower, disc_upper) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -263,8 +263,8 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 } else {
                     if (isJSON)  {
                         // JSON variable -- stored as JSON structure 'data' in the DB
-                        levels = JSON.parse(rows[rowIndex].data)['z'].split(',');
-                        values = JSON.parse(rows[rowIndex].data)[myVariable].split(',');
+                        levels = JSON.parse(rows[rowIndex].data)['z'];
+                        values = JSON.parse(rows[rowIndex].data)[myVariable];
                     } else {
                         // conventional variable -- stored as text in the DB
                         levels = JSON.parse(rows[rowIndex].z);
@@ -272,8 +272,10 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     }
                     for ( var i = 0; i < levels.length; i++ ) {
                         levels[i] = parseFloat( levels[i] )
-                        values[i] = parseFloat( values[i] )
-
+                        var val = parseFloat( values[i] )
+                        if ( val >= disc_lower && val <= disc_upper ) {
+                          values[i] = val
+                        }
                     }
                 }
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
@@ -294,6 +296,9 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 if ( numLevels > 1 ) {
                     var sum = values.reduce(function (a,b) {return a + b;},0);
                 } else {
+                    // convert scaler json objects into arrays
+                    levels = [levels]
+                    values = [values];
                     var sum = values;
                 }
 

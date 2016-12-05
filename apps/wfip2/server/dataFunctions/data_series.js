@@ -5,6 +5,8 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 
+const Future = require('fibers/future');
+
 dataSeries = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
@@ -55,7 +57,7 @@ dataSeries = function (plotParams, plotFunction) {
         var dataSource_id = tmp[2];
         var verificationRunInterval = tmp[3];
         var dataSource_is_json = parseInt(tmp[4]);
-        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwp', '_discriminator');
+        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
 
         var myVariable;
         var statistic = curve['statistic'];
@@ -68,12 +70,12 @@ dataSeries = function (plotParams, plotFunction) {
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-        var dataSource_isDiscriminator = false;
+        var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
             myVariable = curve['variable'];
-            dataSource_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
+            myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
 
         statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
@@ -117,7 +119,7 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if ( dataSource_is_instrument ) {
                 if (dataSource_is_json) {
-                    statement = "select O.valid_utc as avtime, cast( data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
@@ -127,41 +129,32 @@ dataSeries = function (plotParams, plotFunction) {
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
-            } else if (dataSource_has_discriminator) {
-                if (isDiscriminator) {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid" +
-                        " from " + dataSource_tablename + " as M, nwp_recs,  " + dataSource_tablename + " as D" +
-                        " where M.nwp_recs_nwprecid=nwprecid" +
-                        " and D.nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and " + discriminator + " >=" + disc_lower +
-                        " and " + discriminator + " <=" + disc_upper
-                } else {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        "from " + dataSource_tablename + " as M, nwp_recs,  " + dataSource_tablename + " as D" +
-                        " where M.nwp_recs_nwprecid=nwprecid" +
-                        " and D.nwp_recs_nwprecid=nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and " + discriminator + " >=" + disc_lower +
-                        " and " + discriminator + " <=" + disc_upper
-                }
+            // data source is a model and its JSON
             } else {
-                statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                    "from " + dataSource_tablename + ", nwp_recs  " +
-                    " where nwp_recs_nwprecid=nwprecid" +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate);
+                if (dataSource_is_json) {
+                    statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                } else {
+                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
+                        "from " + dataSource_tablename + " as D, nwp_recs as N" +
+                        " where D.nwp_recs_nwprecid=N.nwprecid" +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate);
+                }
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-            console.log("statement: " + statement);
+
+
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, myVariable_isDiscriminator, dataSource_is_json, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
                 throw error;
             }
+            var truthQueryResult = queryResult;
 
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
@@ -236,13 +229,14 @@ dataSeries = function (plotParams, plotFunction) {
                     statement = statement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                     //console.log("statement: " + statement);
                     dataRequests[curve.label] = statement;
-                    var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
                     if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
                         error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
                         throw error;
                     }
                 }
             }
+
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
              data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
              and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
@@ -309,18 +303,21 @@ dataSeries = function (plotParams, plotFunction) {
                 truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
                 levelBasis = _.union(levelBasis,truthLevelBasis);
                 siteBasis = _.union(siteBasis,truthSiteBasis);
+              /*
+               pairs_.pairs(object)
+               Convert an object into a list of [key, value] pairs.
+               _.pairs({one: 1, two: 2, three: 3});
+               => [["one", 1], ["two", 2], ["three", 3]]
+               we want [[time0,obj],[time1,obj],....[timen,obj]]
+               */
+              var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                  return a[0] - b[0]
+              });
+            } else {
+                var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
+                  return a[0] - b[0]
+                });
             }
-            /*
-             pairs_.pairs(object)
-             Convert an object into a list of [key, value] pairs.
-             _.pairs({one: 1, two: 2, three: 3});
-             => [["one", 1], ["two", 2], ["three", 3]]
-             we want [[time0,obj],[time1,obj],....[timen,obj]]
-             */
-            var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
-                return a[0] - b[0]
-            });
-
 
             //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
@@ -331,17 +328,21 @@ dataSeries = function (plotParams, plotFunction) {
             var valTime = verificationData[0][0];
             var normalizedData = [];
             // deal with the truth - you can't handle the truth! (if statistic is mean)
-            var truthData = [];
             var truthMaxIndex = valMaxIndex;
             var truthTime = valTime;
             var truthIndex = 0; // just make the truth indexing not matter - if statistic is mean
             if (statistic != "mean") {
-                truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                var truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                     return a[0] - b[0]
                 });
-                truthMaxIndex = truthData.length - 1;
-                truthTime = verificationData[0][0];
+            } else {
+                var truthData = _.pairs(queryResult.data).sort(function (a, b) {
+                    return a[0] - b[0]
+                });
             }
+
+            truthMaxIndex = truthData.length - 1;
+            truthTime = verificationData[0][0];
 
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
@@ -598,7 +599,7 @@ dataSeries = function (plotParams, plotFunction) {
         };
 
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
-        var mean = queryResult.mean;
+        //var mean = queryResult.mean;
         options = {
             yaxis: curveIndex + 1,  // the y axis position to the right of the graph
             label: label,
@@ -606,7 +607,7 @@ dataSeries = function (plotParams, plotFunction) {
             data: normalizedData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
             lines: {show: true, fill: false},
-            annotation: label + "- mean = " + mean.toPrecision(4)
+            annotation: label + "- mean = " + average.toPrecision(4)
         };
         dataset.push(options);
     }  // end for curves
