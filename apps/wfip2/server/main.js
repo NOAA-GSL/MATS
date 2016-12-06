@@ -182,7 +182,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model_mats",
+                optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
@@ -227,7 +227,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model_mats",
+                optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',

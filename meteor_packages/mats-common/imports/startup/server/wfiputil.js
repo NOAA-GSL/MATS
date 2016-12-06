@@ -200,7 +200,10 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
+            error = 'rows undefined error'
+            if ( rows.length === 0 ) {
+                error = '0 data records found';
+            }
             // done waiting - error condition
             dFuture['return']();
         } else {

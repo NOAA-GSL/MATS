@@ -126,6 +126,7 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
+                        " and fcst_utc_offset = " + 3600 * forecastLength +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
@@ -134,14 +135,16 @@ dataSeries = function (plotParams, plotFunction) {
                 if (dataSource_is_json) {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                        " and fcst_utc_offset = " + 3600 * forecastLength +
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 } else {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
                         "from " + dataSource_tablename + " as D, nwp_recs as N" +
                         " where D.nwp_recs_nwprecid=N.nwprecid" +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset)<=" + matsDataUtils.secsConvert(toDate);
+                        " and fcst_utc_offset = " + 3600 * forecastLength +
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
             }
 
@@ -151,8 +154,8 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, myVariable_isDiscriminator, dataSource_is_json, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
-                throw error;
+                //var msg = "Error from queryWFIP2DB: <br>" + queryResult.error + "<br> SQL statement: <br>" + statement + "<br>" ;
+                throw ( Error( queryResult.error ) );
             }
             var truthQueryResult = queryResult;
 
@@ -231,8 +234,8 @@ dataSeries = function (plotParams, plotFunction) {
                     dataRequests[curve.label] = statement;
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
                     if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                        error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
-                        throw error;
+                        //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
+                        throw ( Error( queryResult.error ) );
                     }
                 }
             }
@@ -297,53 +300,33 @@ dataSeries = function (plotParams, plotFunction) {
             siteBasis = _.union.apply(_, queryResult.allSites);
             var truthLevelBasis;
             var truthSiteBasis;
-            if (statistic != "mean") {
-                // have to consider the truth curve when determining the basis if we are doing stats other than mean
-                truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
-                truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
-                levelBasis = _.union(levelBasis,truthLevelBasis);
-                siteBasis = _.union(siteBasis,truthSiteBasis);
-              /*
-               pairs_.pairs(object)
-               Convert an object into a list of [key, value] pairs.
-               _.pairs({one: 1, two: 2, three: 3});
-               => [["one", 1], ["two", 2], ["three", 3]]
-               we want [[time0,obj],[time1,obj],....[timen,obj]]
-               */
-              var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+            var tqrl = truthQueryResult.allLevels.length;
+            var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                   return a[0] - b[0]
-              });
-            } else {
-                var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
-                  return a[0] - b[0]
-                });
-            }
+             });
+            var newtqrl = truthQueryResult.allLevels.length;
+
 
             //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
             // and skip any where there isn't a corresponding time.
             // we make our calculations where there are corresponding times.
-            var valMaxIndex = verificationData.length - 1;
+            var valMaxIndex = verificationData.length;
             var valIndex = 0;
             var valTime = verificationData[0][0];
             var normalizedData = [];
             // deal with the truth - you can't handle the truth! (if statistic is mean)
+            var truthData = [];
             var truthMaxIndex = valMaxIndex;
             var truthTime = valTime;
             var truthIndex = 0; // just make the truth indexing not matter - if statistic is mean
             if (statistic != "mean") {
-                var truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                     return a[0] - b[0]
-                });
-            } else {
-                var truthData = _.pairs(queryResult.data).sort(function (a, b) {
-                    return a[0] - b[0]
-                });
+               });
+               truthMaxIndex = truthData.length - 1;
+               truthTime = verificationData[0][0];
             }
-
-            truthMaxIndex = truthData.length - 1;
-            truthTime = verificationData[0][0];
-
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
                 if (statistic != "mean") {
