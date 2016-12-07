@@ -8,7 +8,7 @@ import {matsWfipUtils} from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 
 dataSeries = function (plotParams, plotFunction) {
-    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
+    //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
     var wfip2Settings = matsCollections.Databases.findOne({role: "wfip2_data", status: "active"}, {
         host: 1,

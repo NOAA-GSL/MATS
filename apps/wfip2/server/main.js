@@ -967,7 +967,7 @@ Meteor.startup(function () {
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
 
                     statement = "select has_discriminator('" + model.toString() + "') as hd";
-                    console.log("statement: " + statement);
+                    //console.log("statement: " + statement);
                     var dFuture = new Future();
                     dFuture['hd'] = 0;
                     wfip2Pool.query(statement, function (err, rows) {
@@ -980,21 +980,21 @@ Meteor.startup(function () {
                     });
                     dFuture.wait();
                     var model_has_discriminator = dFuture['hd'];
-                    console.log("model_has_discriminator: " + model_has_discriminator.toString());
+                    //console.log("model_has_discriminator: " + model_has_discriminator.toString());
 
                     if (model_has_discriminator) {
-                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
+                        //variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
+                        //    'wind_speed',
+                        //    'wind_direction'
+                        //];
+                        //variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [
+                        //    'wind_speed',
+                        //    'wind_direction'
+                        //];
+                        //variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [
+                        //    'wind_speed',
+                        //    'wind_direction'
+                        //];
 
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var j =0; j < discriminators.length; j++) {
