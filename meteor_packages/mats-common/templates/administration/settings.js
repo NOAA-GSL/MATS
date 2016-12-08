@@ -43,7 +43,7 @@ Template.settings.events({
         settings.resetFromCode = resetFromCode;
         matsMethods.setSettings.call({'settings':settings}, function (error) {
             if (error) {
-                setError(error.message);
+                setError(new Error(error.message));
             }
         });
         //// reset modal

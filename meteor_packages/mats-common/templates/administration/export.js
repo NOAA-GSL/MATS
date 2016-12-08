@@ -6,7 +6,7 @@ Template.export.rendered = function() {
        matsMethods.getDataFunctionFileList.call( function (error, result) {
            //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
            if (error !== undefined) {
-               setError("matsMethods.getDataFunctionFileList from template export error: " + error.toLocaleString());
+               setError(new Error("matsMethods.getDataFunctionFileList from template export error: " + error.toLocaleString()));
                return false;
            }
            Session.set('dataFunctionFileList',result);
@@ -14,7 +14,7 @@ Template.export.rendered = function() {
        matsMethods.getGraphFunctionFileList.call(function (error, result) {
            //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
            if (error !== undefined) {
-               setError("matsMethods.graphFunctionFileList from export.js error: " + error.toLocaleString());
+               setError(new Error)("matsMethods.graphFunctionFileList from export.js error: " + error.toLocaleString());
                return false;
            }
            Session.set('graphFunctionFileList',result);
@@ -70,7 +70,7 @@ Template.export.rendered = function() {
             dataFiles.forEach(function(file){
                 methods.readFunctionFile('data',file, function (error, result) {
                     if (error !== undefined) {
-                        setError(error.toLocaleString());
+                        setError(new Error(error.toLocaleString()));
                         return false;
                     }
                     data = result;
@@ -91,7 +91,7 @@ Template.export.rendered = function() {
             graphFiles.forEach(function(file){
                 methods.readFunctionFile('graph', file, function (error, result) {
                     if (error !== undefined) {
-                        setError(error.toLocaleString());
+                        setError(new Error(error.toLocaleString()));
                         return false;
                     }
                     data = result;

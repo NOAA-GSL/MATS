@@ -78,7 +78,7 @@ Template.dateRange.onRendered(function() {
 
     $('#' + idref).on('apply.daterangepicker', function(ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
-            setError("Your start and end dates coincide, you must select a range!");
+            setError(new Error("Your start and end dates coincide, you must select a range!"));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
@@ -90,6 +90,20 @@ Template.dateRange.onRendered(function() {
     });
     $('#' + idref).on('cancel.daterangepicker', function(ev, picker) {
         elem.style.display = "none";
+    });
+
+    const refresh = function(selectedSuperiorValue) {
+        var value = selectedSuperiorValue;
+        /* date refresh stuff goes here*/
+    };
+
+    // register refresh event for any superior to use to enforce a refresh of the options list
+    elem.addEventListener('refresh', function (e) {
+        if (superiorName) {
+            const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
+            const selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+            refresh(selectedSuperiorValue);
+        }
     });
 
 });

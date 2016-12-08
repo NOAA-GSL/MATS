@@ -5,7 +5,7 @@ Template.reset.events({
     'click .apply_reset': function () {
         Meteor.call('reset', function (error) {
             if (error) {
-                setError(error.message);
+                setError(new Error(error.message));
             }
         });
         $("#resetModal").modal('hide');

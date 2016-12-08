@@ -26,7 +26,7 @@ Template.authorization.events({
 
         Meteor.call('applyAuthorization', settings, function (error) {
             if (error) {
-                setError(error.message);
+                setError(new Error(error.message));
             }
         });
         // reset modal
@@ -54,7 +54,7 @@ Template.authorization.events({
 
         Meteor.call('removeAuthorization', settings, function (error) {
             if (error) {
-                setError(error.message);
+                setError(new Error(error.message));
             }
         });
         // reset modal

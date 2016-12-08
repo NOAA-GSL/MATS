@@ -20,11 +20,11 @@ Template.import.events({
                     try {
                         matsMethods.restoreFromFile({type:"graph", name:name, data:e.target.result}, function (error) {
                             if (error) {
-                                setError(error.message);
+                                setError(new Error(error.message));
                             }
                         });
                     } catch(exc) {
-                        setError("Error reading file: " + name + " - "+ exc.toLocaleString());
+                        setError(new Error("Error reading file: " + name + " - "+ exc.toLocaleString()));
                     }
                 };
             })(f);
@@ -51,11 +51,11 @@ Template.import.events({
                     try {
                         matsMethods.restoreFromFile({type:"graph", name:name, data:e.target.result}, function (error) {
                             if (error) {
-                                setError(error.message);
+                                setError(new Error(error.message));
                             }
                         });
                     } catch(exc) {
-                        setError("Error reading file: " + name + " - "+ exc.toLocaleString());
+                        setError(new Error("Error reading file: " + name + " - "+ exc.toLocaleString()));
                     }
                 };
             })(f);
@@ -83,11 +83,11 @@ Template.import.events({
                         var data = JSON.parse(e.target.result);
                        matsMethods.restoreFromParameterFile( {name:name, data:data}, function (error) {
                             if (error) {
-                                setError(error.message);
+                                setError(new Error(error.message));
                             }
                         });
                     } catch (exc) {
-                        setError("Error reading file: " + name + " - " + exc.toLocaleString());
+                        setError(new Error("Error reading file: " + name + " - " + exc.toLocaleString()));
                     }
                 };
             })(f);

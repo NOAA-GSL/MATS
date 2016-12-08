@@ -43,8 +43,14 @@ Template.curveList.helpers({
             }
         }
         return "none"
+    },
+    editMode: function() {
+        if (Session.get('editMode') === '') {
+            return '';
+        } else {
+            return "Changing " + Session.get('editMode');
+        }
     }
-
 });
 
 
@@ -82,7 +88,7 @@ Template.curveList.events({
         var curves = Session.get('Curves');
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
-            setError("There are no curves to plot!");
+            setError(new Error("There are no curves to plot!"));
             return false;
         }
         p.curves = [];
@@ -145,7 +151,7 @@ Template.curveList.events({
                 p = Session.get("PlotParams");
                 matsMethods.saveSettings.call( {saveAs:saveAs, p:p},  function(error){
                     if (error) {
-                        setError(error);
+                        setError(new Error(error));
                     }
                 });
                 document.getElementById('save_as').value = "";
@@ -155,7 +161,7 @@ Template.curveList.events({
                 break;
             case "restore":
                 if (!!Meteor.user()) {
-                    setError("You must be logged in to use the 'restore' feature");
+                    setError(new Error("You must be logged in to use the 'restore' feature"));
                 }
                 if ((document.getElementById('restore_from').value === "" ||
                     document.getElementById('restore_from').value === undefined)) {
@@ -218,7 +224,7 @@ Template.curveList.events({
                 var plotType = matsPlotUtils.getPlotType();
                 var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: plotType});
                 if (plotGraphFunction === undefined) {
-                    setError("do not have a plotGraphFunction for this plotType: " + plotType);
+                    setError(new Error("do not have a plotGraphFunction for this plotType: " + plotType));
                     return false;
                 }
                 var graphFunction = plotGraphFunction.graphFunction;
@@ -227,11 +233,11 @@ Template.curveList.events({
                 matsMethods.getGraphData({p:p, plotType:plotType}, function (error, result) {
                     //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
-                        setError(error.toLocaleString());
+                        setError(new Error(error.message));
                         return false;
                     }
                     if (result.error !== undefined && result.error !== "") {
-                        setError(result.error);
+                        setError(new Error(result.error));
                         return false;
                     }
                     if (document.getElementById('graph-container')) {

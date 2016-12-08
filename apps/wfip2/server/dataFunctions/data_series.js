@@ -150,6 +150,7 @@ dataSeries = function (plotParams, plotFunction) {
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
+                throw (new Error(error));
             }
 
             // for mean calulations we do not have a truth curve.
@@ -201,6 +202,7 @@ dataSeries = function (plotParams, plotFunction) {
                 var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
                     error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
+                    throw (new Error(error));
                 }
             }
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.

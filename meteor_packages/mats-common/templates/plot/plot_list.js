@@ -67,7 +67,7 @@ Template.plotList.events({
         if (deleteThis !== undefined && deleteThis !== "") {
             matsMethods.deleteSettings.call({name:deleteThis}, function(error){
                 if (error) {
-                    setError(error.message);
+                    setError(new Error(error.message));
                 }
             });
         }
@@ -96,7 +96,7 @@ Template.plotList.events({
         var curves = Session.get('Curves');
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
-            setError("There are no curves to plot!");
+            setError(new Error("There are no curves to plot!"));
             Session.set("spinner_img", "spinner.gif");
             document.getElementById("spinner").style.display="none";
             return false;
@@ -137,12 +137,6 @@ Template.plotList.events({
 
         switch (action) {
             case "save":
-                // if (!Meteor.user()) {
-                //     setError("You must be logged in to use the 'save' feature");
-                //     Session.set("spinner_img", "spinner.gif");
-                //     document.getElementById("spinner").style.display="none";
-                //     return false;
-                // }
                 if ((document.getElementById('save_as').value === "" ||
                     document.getElementById('save_as').value === undefined) &&
                     (document.getElementById('save_to').value === "" ||
@@ -168,7 +162,7 @@ Template.plotList.events({
                 p['paramData'] = paramData;
                 matsMethods.saveSettings.call( {saveAs:saveAs, p:p, permission:permission}, function(error){
                     if (error) {
-                        setError("matsMethods.saveSettings from plot_list.js " +error.message);
+                        setError(new Error("matsMethods.saveSettings from plot_list.js " +error.message));
                     }
                 });
 
@@ -234,7 +228,7 @@ Template.plotList.events({
                 var pt = matsPlotUtils.getPlotType();
                 var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
                 if (pgf === undefined) {
-                    setError("plot_list.js - plot -do not have a plotGraphFunction for this plotType: " + pt);
+                    setError(new Error("plot_list.js - plot -do not have a plotGraphFunction for this plotType: " + pt));
                     Session.set("spinner_img", "spinner.gif");
                     document.getElementById("spinner").style.display="none";
                     return false;
@@ -242,15 +236,14 @@ Template.plotList.events({
 
                 var graphFunction = pgf.graphFunction;
                 matsMethods.getGraphData.call( {plotParams:p, plotType:pt}, function (error, result) {
-                    //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
                     if (error !== undefined) {
-                        setError("matsMethods.getGraphData from plot_list.js : error: " + error.toLocaleString());
+                        setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error.toLocaleString()));
                         Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;
                     }
                     if (result.error !== undefined && result.error !== "") {
-                        setError(result.error);
+                        setError(new Error(result.error));
                         Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display="none";
                         return false;

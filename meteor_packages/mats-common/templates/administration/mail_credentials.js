@@ -36,7 +36,7 @@ Template.mailCredentials.events({
         settings.clientRefreshToken = clientRefreshToken;
         methods.setCredentials( settings, function (error) {
             if (error) {
-                setError(error.message);
+                setError(new Error(error.message));
             }
         });
         // reset modal
