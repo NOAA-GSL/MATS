@@ -185,7 +185,7 @@ var doCurveParams = function () {
                 optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
-                default: 'hrrr_esrl',
+                default: 'HRRR ESRL',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -230,7 +230,7 @@ var doCurveParams = function () {
                 optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
-                default: 'hrrr_esrl',
+                default: 'HRRR ERSL',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -761,7 +761,7 @@ Meteor.startup(function () {
                     var is_instrument = rows[0][i].is_instrument;
                     var tablename = rows[0][i].tablename;
                     var thisid = rows[0][i].thisid;
-                    var cycle_interval = rows[0][i].cycle_interval;
+                    var cycle_interval = rows[0][i].cycle_interval * 1000;   // seconds to ms
                     var variable_names = rows[0][i].variable_names.split(',');
                     var is_json = rows[0][i].isJSON;
                     var color = rows[0][i].color;
@@ -812,7 +812,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "SELECT instrid, short_name, color, highlight FROM instruments;";
+        var statement = "SELECT instrid, short_name, description, color, highlight FROM instruments;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
             if (err != undefined) {
@@ -824,7 +824,8 @@ Meteor.startup(function () {
                 matsCollections.Instruments.remove({});
                 for (var i = 0; i < rows.length; i++) {
                     var instrid = rows[i].instrid;
-                    var instrument = rows[i].short_name.trim();
+                    //var instrument = rows[i].short_name.trim();
+                    var instrument = rows[i].description;
                     var color = rows[i].color.trim();
                     var highlight = rows[i].highlight.trim();
                     matsCollections.Instruments.insert({name: instrument, instrument_id: instrid, color: color, highlight: highlight});
@@ -877,7 +878,7 @@ Meteor.startup(function () {
                     var instrid = rows[i].instruments_instrid;
 
                     for (var j = 0; j< instrumentNames.length; j++) {
-                        var int_name = instrumentNames[j].description;
+                        var int_name = instrumentNames[j].name;
                         var id = instrumentNames[j].instrument_id;
                         var base_color = instrumentNames[j].color;
                         var highlight_color = instrumentNames[j].highlight;
@@ -964,7 +965,7 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows[0].length; i++) {
-                    var model = rows[0][i].model;
+                    var model = rows[0][i].description;
                     var forecastLengths = rows[0][i].fcst_lens;
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
 

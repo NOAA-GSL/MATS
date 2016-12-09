@@ -53,6 +53,9 @@ Template.curveItem.helpers({
     },
     log: function() {
         console.log(this);
+    },
+    DBcurve: function() {
+        return (this.diffFrom === undefined);
     }
 });
 
