@@ -3,6 +3,7 @@ import { matsTypes} from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import {moment} from 'meteor/momentjs:moment'
 
 
  var refreshPeer = function(peerName) {
@@ -40,23 +41,38 @@ var refreshDependents = function(dependentNames) {
             targetElem.dispatchEvent(refreshEvent);
             var elements = targetElem.options;
             var select = true;
-            if (targetElem.multiple) {
-                if (selectAllbool) {
-                    for (var i1 = 0; i1 < elements.length; i1++) {
-                        elements[i1].selected = select;
-                    }
-                    matsParamUtils.setValueTextForParamName(name, "");
-                }
-                else {
-                    var previously_selected = Session.get('selected');
-                    for (var i2 = 0; i2 < elements.length; i2++) {
-                        if (_.indexOf(previously_selected, elements[i2].text) != -1) {
-                            elements[i2].selected = select;
-                        }
-                    }
-                }
+
+            if ( targetParam.type === matsTypes.InputTypes.dateRange ) {
+                // update the dates widget to reflect the date range of the newly selected data source
+                var selectedText = event.currentTarget.options[event.currentTarget.options.selectedIndex].text;
+                var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates[selectedText];
+                var mindate = JSON.parse(datesMap).mindate;
+                var maxdate = JSON.parse(datesMap).maxdate;
+
+
+                targetElem.data('daterangepicker').startDate = moment( mindate, "MM/DD/YYYY hh:mm" );;
+                targetElem.data('daterangepicker').stopDate = moment( maxdate, "MM/DD/YYYY hh:mm" );;
+                matsParamUtils.setValueTextForParamName( 'dates', mindate + ' - ' + maxdate );
             } else {
 
+                if (targetElem.multiple) {
+                    if (selectAllbool) {
+                        for (var i1 = 0; i1 < elements.length; i1++) {
+                            elements[i1].selected = select;
+                        }
+                        matsParamUtils.setValueTextForParamName(name, "");
+                    }
+                    else {
+                        var previously_selected = Session.get('selected');
+                        for (var i2 = 0; i2 < elements.length; i2++) {
+                            if (_.indexOf(previously_selected, elements[i2].text) != -1) {
+                                elements[i2].selected = select;
+                            }
+                        }
+                    }
+                } else {
+
+                }
             }
         }
     }
@@ -117,6 +133,7 @@ var checkHideOther = function(item) {
 Template.select.rendered = function(){
     var ref = this.data.name + '-' + this.data.type;
     var elem = document.getElementById(ref);
+
     if (this.firstNode.selectedIndex == -1) {
         if (this.data.default && this.data.default != "" && this.data.options) {
             var defaultIndex = this.data.options.indexOf(this.data.default);

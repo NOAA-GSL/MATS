@@ -183,7 +183,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable"],
+                dependentNames: ["sites","forecast-length","variable","dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -228,7 +228,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable"],
+                dependentNames: ["sites","forecast-length","variable","dates","curve-dates"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -745,7 +745,8 @@ Meteor.startup(function () {
 
 
     try {
-        var statement = "call get_data_sources();";
+        var statement = "" +
+            "";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
@@ -764,14 +765,16 @@ Meteor.startup(function () {
                     var cycle_interval = rows[0][i].cycle_interval;
                     var variable_names = rows[0][i].variable_names.split(',');
                     var is_json = rows[0][i].isJSON;
+                    var color = rows[0][i].color;
+
 
                     var mindate = rows[0][i].mindate;
                     var maxdate = rows[0][i].maxdate;
 
                     var valueList = [];
-                    valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json);
+                    valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
                     modelOptionsMap[model] = valueList;
-                    datesMap = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\"}";
+                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\"}";
 
                     var labels = [];
                     for (var j = 0; j < variable_names.length; j++) {

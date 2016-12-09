@@ -126,7 +126,6 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and fcst_utc_offset = " + 3600 * forecastLength +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
@@ -135,16 +134,14 @@ dataSeries = function (plotParams, plotFunction) {
                 if (dataSource_is_json) {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                        " and fcst_utc_offset = " + 3600 * forecastLength +
-                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
                 } else {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
                         "from " + dataSource_tablename + " as D, nwp_recs as N" +
                         " where D.nwp_recs_nwprecid=N.nwprecid" +
-                        " and fcst_utc_offset = " + 3600 * forecastLength +
-                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
                 }
             }
 
