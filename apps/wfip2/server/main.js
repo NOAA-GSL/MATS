@@ -261,7 +261,7 @@ var doCurveParams = function () {
                 optionsMap:siteOptionsMap,
                 options:siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
@@ -319,7 +319,7 @@ var doCurveParams = function () {
                 variableMap: variableFieldsMap,
                 optionsMap: variableOptionsMap,
                 options:variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
@@ -338,7 +338,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 //selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -429,7 +429,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap:upperOptionsMap,
                 options:Object.keys(upperOptionsMap),   // convenience
-                superiorName: 'discriminator',
+                superiorNames: ['discriminator'],
                 min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
                 max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
@@ -448,7 +448,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap:lowerOptionsMap,
                 options:Object.keys(lowerOptionsMap),   // convenience
-                superiorName: 'discriminator',
+                superiorNames: ['discriminator'],
                 min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
                 step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
@@ -757,7 +757,7 @@ Meteor.startup(function () {
             } else {
                 matsCollections.Models.remove({});
                 for (var i = 0; i < rows[0].length; i++) {
-                    var model = rows[0][i].model;
+                    var model = rows[0][i].description;
                     var is_instrument = rows[0][i].is_instrument;
                     var tablename = rows[0][i].tablename;
                     var thisid = rows[0][i].thisid;
@@ -857,7 +857,7 @@ Meteor.startup(function () {
                 var points = [];
                 matsCollections.SiteMap.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var name = rows[i].name;
+                    var name = rows[i].description;
                     var siteid = rows[i].siteid;
                     matsCollections.SiteMap.insert({siteName: name,  siteId: siteid});
                     var description = rows[i].description;
@@ -877,7 +877,7 @@ Meteor.startup(function () {
                     var instrid = rows[i].instruments_instrid;
 
                     for (var j = 0; j< instrumentNames.length; j++) {
-                        var int_name = instrumentNames[j].name;
+                        var int_name = instrumentNames[j].description;
                         var id = instrumentNames[j].instrument_id;
                         var base_color = instrumentNames[j].color;
                         var highlight_color = instrumentNames[j].highlight;
@@ -985,28 +985,11 @@ Meteor.startup(function () {
                     //console.log("model_has_discriminator: " + model_has_discriminator.toString());
 
                     if (model_has_discriminator) {
-                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [
-                            'wind_speed',
-                            'wind_direction'
-                        ];
-
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var j =0; j < discriminators.length; j++) {
                             variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push(discriminators[j]);
                             variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push(discriminators[j]);
                         }
-                    } else {
-                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
                     }
                 }
             }
