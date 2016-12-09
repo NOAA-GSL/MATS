@@ -95,7 +95,7 @@ Template.databases.events({
             return false;
         }
         if (settings.name === "") {
-            setError(name,"you have to set a name");
+            setError("name","you have to set a name");
             return false;
         }
         // ONLY ONE CAN BE ACTIVE FOR A GIVEN ROLE
@@ -118,7 +118,7 @@ Template.databases.events({
 
         matsMethods.applyDatabaseSettings.call( settings, function (error) {
             if (error) {
-                setError('matsMethods.applyDatabaseSettings from Template.databases.events: 121 error:' + error.message);
+                setError(new error('matsMethods.applyDatabaseSettings from Template.databases.events: 121 error:' + error.message));
                 return false;
             }
         });
@@ -130,7 +130,7 @@ Template.databases.events({
         var dbName = document.getElementById("database-name").value;
         matsMethods.removeDatabase.call( dbName, function (error) {
             if (error) {
-                setError('matsMethods.removeDatabase from Template.databases.events: 121 error:' + error.message);
+                setError(new Error('matsMethods.removeDatabase from Template.databases.events: 121 error:' + error.message));
             }
         });
         reset();

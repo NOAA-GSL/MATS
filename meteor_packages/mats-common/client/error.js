@@ -1,18 +1,31 @@
-setError = function(message){
-    var err = new Error();
-    var caller_line = err.stack.split("\n")[3];
-    var index = caller_line.indexOf("at ");
-    var clean = caller_line.slice(index+2, caller_line.length);
-    Session.set('errorMessage', message + " <br>" + clean);
-    document.getElementById('error').style.display='block';
-    window.scrollTo(0, 0);
+setError = function(error){
+    var myError = "";
+    var myStackTrace = "";
+    if (typeof(error) === "string" || error instanceof String) {
+        myError = new Error(error);
+    } else {
+        myError = error;
+    }
+    Session.set('errorMessage', myError.message);
+    if (myError.stack) {
+        myStackTrace = myError.stack;
+    } else {
+        myStackTrace = "StackTrace unavailable";
+    }
+    Session.set('stackTrace',myStackTrace);
+    $("#error").modal('show');
 };
 
 clearError = function(message){
     Session.set('errorMessage', '');
-    document.getElementById('error').style.display='none';
+    Session.set('stackTrace', '');
+    $("#error").modal('hide');
 };
 
 getError = function() {
     return Session.get('errorMessage');
+};
+
+getStack = function() {
+    return Session.get('stackTrace');
 };

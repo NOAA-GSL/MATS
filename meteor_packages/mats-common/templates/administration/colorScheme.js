@@ -28,14 +28,14 @@ Template.colorScheme.events({
             }
             matsMethods.insertColor({newColor:newColor,insertAfterIndex:insertAfterIndex}, function (error) {
                 if (error) {
-                    setError(error.message);
+                    setError(new Error(error.message));
                 }
             });
         }
         if (removeColor) {
             Meteor.call('removeColor', removeColor, function (error) {
                 if (error) {
-                    setError(error.message);
+                    setError(new Error(error.message));
                 }
             });
         }

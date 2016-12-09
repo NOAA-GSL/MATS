@@ -1,6 +1,7 @@
 <template name="paramList">
     <div id="paramList" class="well pull-left">
-        <span>{{editMode}} </span>
+        <i style="color: #4cae4c; font-size:0.5em;" class="expand fa fa-plus"></i> <i style="color: #4cae4c; font-size:0.7em;" class="collapse fa fa-minus"></i>
+
         <form id="paramForm">
             {{#each CurveParamGroups}}
                 {{> curveParamGroup}}

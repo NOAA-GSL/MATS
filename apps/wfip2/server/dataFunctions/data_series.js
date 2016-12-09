@@ -151,8 +151,8 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, myVariable_isDiscriminator, dataSource_is_json, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                //var msg = "Error from queryWFIP2DB: <br>" + queryResult.error + "<br> SQL statement: <br>" + statement + "<br>" ;
-                throw ( Error( queryResult.error ) );
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
+                throw (new Error(error));
             }
             var truthQueryResult = queryResult;
 

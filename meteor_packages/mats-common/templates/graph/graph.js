@@ -267,7 +267,7 @@ Template.graph.events({
     'click .share': function () {
         // show address modal
         if (!Meteor.user()) {
-            setError("You must be logged in to use the 'share' feature");
+            setError(new Error("You must be logged in to use the 'share' feature"));
             return false;
         }
         $("#sendModal").modal('show');

@@ -19,13 +19,6 @@ Template.paramList.helpers({
     isEdit: function() {
         return Session.get('editMode') != '';
     },
-    editMode: function() {
-        if (Session.get('editMode') === '') {
-            return '';
-        } else {
-            return "Changing " + Session.get('editMode');
-        }
-    },
     log: function() {
         console.log(this);
     }
@@ -52,7 +45,12 @@ Template.paramList.events({
         Blaze.render(Template.plotList,document.getElementById('plotView'));
 
     },
-
+    'click .expand': function() {
+        matsParamUtils.expandParams();
+    },
+    'click .collapse': function() {
+        matsParamUtils.collapseParams();
+    },
     // restore settings
     'click .restore-settings': function(event) {
         event.preventDefault();
@@ -169,7 +167,7 @@ Template.paramList.events({
                     }
                     if (paramElems[i].name && paramElems[i].name === 'label') {
                         if (_.indexOf(matsCurveUtils.getUsedLabels(), (paramElems[i]).value) != -1) {
-                            setError('labels need to be unique - change ' + (paramElems[i]).value + " to something else");
+                            setError(new Error('labels need to be unique - change ' + (paramElems[i]).value + " to something else"));
                             return false;
                         }
                     }

@@ -8,7 +8,7 @@ Accounts.onLogin(function() {
         matsMethods.getAuthorizations.call(function(error, result) {
             if (error !== undefined) {
                 Session.set('roles', []);
-                setError(error.toLocaleString());
+                setError(new Error(error.toLocaleString()));
                 return false;
             }
             authList = result;
@@ -133,7 +133,7 @@ Template.administration.events({
         settings.resetFromCode = false;
         matsMethods.setSettings.call({settings:settings}, function (error) {
             if (error) {
-                setError(error.message);
+                setError(new error(error.message));
             }
         });
     }

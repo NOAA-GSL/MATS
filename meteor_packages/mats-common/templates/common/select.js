@@ -3,16 +3,15 @@ import { matsTypes} from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
-import {moment} from 'meteor/momentjs:moment'
 
 
- var refreshPeer = function(peerName) {
+ const refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
-        var targetParam = matsCollections.CurveParams.findOne({name:peerName});
-        var targetId  = targetParam.name + '-' + targetParam.type;
-        var targetElem = document.getElementById(targetId);
-        var refreshMapEvent = new CustomEvent("refresh", {
+        const targetParam = matsCollections.CurveParams.findOne({name:peerName});
+        const targetId  = targetParam.name + '-' + targetParam.type;
+        const targetElem = document.getElementById(targetId);
+        const refreshMapEvent = new CustomEvent("refresh", {
             detail: {
                 refElement: event.target
             }
@@ -21,76 +20,61 @@ import {moment} from 'meteor/momentjs:moment'
     }
 };
 
-var refreshDependents = function(dependentNames) {
+const refreshDependents = function(dependentNames) {
     if (dependentNames) {
         // refresh the dependents
         var selectAllbool = false;
         for (var i = 0; i < dependentNames.length; i++) {
-            var name = dependentNames[i];
-            var targetParam = matsCollections.CurveParams.findOne({name: name});
-            var targetId = targetParam.name + '-' + targetParam.type;
-            var targetElem = document.getElementById(targetId);
+            const name = dependentNames[i];
+            const targetParam = matsCollections.CurveParams.findOne({name: name});
+            const targetId = targetParam.name + '-' + targetParam.type;
+            const targetElem = document.getElementById(targetId);
             if (document.getElementById('selectAll')) {
                 selectAllbool = document.getElementById('selectAll').checked;
             }
-            var refreshEvent = new CustomEvent("refresh", {
+            const refreshEvent = new CustomEvent("refresh", {
                 detail: {
                     refElement: event.target
                 }
             });
             targetElem.dispatchEvent(refreshEvent);
-            var elements = targetElem.options;
-            var select = true;
-
-            if ( targetParam.type === matsTypes.InputTypes.dateRange ) {
-                // update the dates widget to reflect the date range of the newly selected data source
-                var selectedText = event.currentTarget.options[event.currentTarget.options.selectedIndex].text;
-                var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates[selectedText];
-                var mindate = JSON.parse(datesMap).mindate;
-                var maxdate = JSON.parse(datesMap).maxdate;
-
-
-                targetElem.data('daterangepicker').startDate = moment( mindate, "MM/DD/YYYY hh:mm" );;
-                targetElem.data('daterangepicker').stopDate = moment( maxdate, "MM/DD/YYYY hh:mm" );;
-                matsParamUtils.setValueTextForParamName( 'dates', mindate + ' - ' + maxdate );
+            const elements = targetElem.options;
+            const select = true;
+            if (targetElem.multiple) {
+                if (selectAllbool) {
+                    for (var i1 = 0; i1 < elements.length; i1++) {
+                        elements[i1].selected = select;
+                    }
+                    matsParamUtils.setValueTextForParamName(name, "");
+                }
+                else {
+                    const previously_selected = Session.get('selected');
+                    for (var i2 = 0; i2 < elements.length; i2++) {
+                        if (_.indexOf(previously_selected, elements[i2].text) != -1) {
+                            elements[i2].selected = select;
+                        }
+                    }
+                }
             } else {
 
-                if (targetElem.multiple) {
-                    if (selectAllbool) {
-                        for (var i1 = 0; i1 < elements.length; i1++) {
-                            elements[i1].selected = select;
-                        }
-                        matsParamUtils.setValueTextForParamName(name, "");
-                    }
-                    else {
-                        var previously_selected = Session.get('selected');
-                        for (var i2 = 0; i2 < elements.length; i2++) {
-                            if (_.indexOf(previously_selected, elements[i2].text) != -1) {
-                                elements[i2].selected = select;
-                            }
-                        }
-                    }
-                } else {
-
-                }
             }
         }
     }
 };
 
-var checkDisableOther = function(item) {
+const checkDisableOther = function(item) {
 // check for enable controlled - This select might have control of another selector
     if (item.disableOtherFor !== undefined) {
         // this item controls the enable/disable properties of at least one other item.
         // Use the options to enable disable that item.
-        var controlledSelectors = Object.keys(item.disableOtherFor);
+        const controlledSelectors = Object.keys(item.disableOtherFor);
         for (var i = 0; i < controlledSelectors.length; i++) {
-            var elem = matsParamUtils.getInputElementForParamName(item.name);
+            const elem = matsParamUtils.getInputElementForParamName(item.name);
             if (!elem) {
                 return;
             }
-            var selectedOption = elem.selectedOptions;
-            var selectedText = selectedOption[0].text;
+            const selectedOption = elem.selectedOptions;
+            const selectedText = selectedOption[0].text;
             if ($.inArray(selectedText, item.disableOtherFor[controlledSelectors[i]]) !== -1) {
                 matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
             } else {
@@ -100,19 +84,19 @@ var checkDisableOther = function(item) {
     }
 };
 
-var checkHideOther = function(item) {
+const checkHideOther = function(item) {
 // check for hide controlled - This select might have control of another selectors visibility
     if (item.hideOtherFor !== undefined) {
         // this item controls the visibility of at least one other item.
-        var controlledSelectors = Object.keys(item.hideOtherFor);
+        const controlledSelectors = Object.keys(item.hideOtherFor);
         for (var i = 0; i < controlledSelectors.length; i++) {
-            var elem = matsParamUtils.getInputElementForParamName(item.name);
+            const elem = matsParamUtils.getInputElementForParamName(item.name);
             if (!elem) {
                 return;
             }
-            var selectedOption = elem.selectedOptions;
-            var selectedText = selectedOption[0].text;
-            
+            const selectedOption = elem.selectedOptions;
+            const selectedText = selectedOption[0].text;
+
             var otherControlElem = matsParamUtils.getControlElementForParamName(controlledSelectors[i]);
             var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
             var otherValueElement =  matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
@@ -131,9 +115,8 @@ var checkHideOther = function(item) {
 };
 
 Template.select.rendered = function(){
-    var ref = this.data.name + '-' + this.data.type;
-    var elem = document.getElementById(ref);
-
+    const ref = this.data.name + '-' + this.data.type;
+    const elem = document.getElementById(ref);
     if (this.firstNode.selectedIndex == -1) {
         if (this.data.default && this.data.default != "" && this.data.options) {
             var defaultIndex = this.data.options.indexOf(this.data.default);
@@ -145,14 +128,14 @@ Template.select.rendered = function(){
             this.firstNode.selectedIndex = 0;
         }
     }
-    var plotTypeDependent = this.data.plotTypeDependent === true;
-    var optionsMap = this.data.optionsMap;
-    var peerName = this.data.peerName;
-    var dependentNames = this.data.dependentNames;
-    var dispElemName = matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value';
-    var dispElem = document.getElementById(dispElemName);
-    var superiorName = this.data.superiorName;
-    var refresh = function(selectedSuperiorValue) {
+    const plotTypeDependent = this.data.plotTypeDependent === true;
+    const optionsMap = this.data.optionsMap;
+    const peerName = this.data.peerName;
+    const dependentNames = this.data.dependentNames;
+    const dispElemName = matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value';
+    const dispElem = document.getElementById(dispElemName);
+    const superiorNames = this.data.superiorNames;
+    const refresh = function(superiors) {
         /*
         Because there may be axis "brothers" This refresh must go and
         see if there are any such elements that are essentially hidden copies
@@ -164,72 +147,126 @@ Template.select.rendered = function(){
          matsTypes.PlotTypes.scatter2d : {all my options for scatter2d},
          matsTypes.PlotTypes.timeSeries: {all my options for time series}
          */
+        try {
+            // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
+            const name = elem.name;
+            const elems = document.getElementsByClassName("data-input");
+            Session.set('selected', $(elem).val());
 
-        // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
-        var name = elem.name;
-        var elems = document.getElementsByClassName("data-input");
-        Session.set('selected', $(elem).val());
-
-        if (!elem.selectedIndex) {
-            elem.selectedIndex = 0;
-        }
-        var selectedText = elem.options[elem.selectedIndex].text;
-        var brothers = [];
-        for (var i=0; i<elems.length; i++) {
-            if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
-                brothers.push(elems[i]);
-        }
-        var options = {};
-        if (plotTypeDependent && matsPlotUtils.getPlotType()) {
-            options = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
-        } else {
-            options = optionsMap[selectedSuperiorValue];
-        }
-
-        var selectedOptionIndex = options.indexOf(selectedText);
-        if (selectedOptionIndex == -1) {
-            setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText +  "' is no longer an option ");
-        }
-        selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
-        matsMethods.setSelectParamOptions.call({name:name, options:options, optionIndex:selectedOptionIndex}, function (error) {
-            if (error) {
-                setError( "matsMethods.setSelectParamOptions: from select.js error: " + error.message );
+            if (!elem.selectedIndex) {
+                elem.selectedIndex = 0;
             }
-        });
-        for (var i = 0; i < brothers.length; i++) {
-            var belem = brothers[i];
-            var belemSelectedOptions =$(belem.selectedOptions).map(function(){return(this.value)}).get();
-            if (belemSelectedOptions.length === 0) {
-                belem.options.length = 0;
-                for (var i = 0; i < options.length; i++) {
-                    belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
-                    // set the display button to first value
-                    if (i === 0) {
-                        matsParamUtils.setValueTextForParamName(dispElemName,options[i]);
-                        dispElem.textContent = options[i];
+            const selectedText = elem.options[elem.selectedIndex].text;
+            var brothers = [];
+            for (var i = 0; i < elems.length; i++) {
+                if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
+                    brothers.push(elems[i]);
+            }
+            var options = null;
+            var selectedSuperiorValues =[];
+            for (var superiorIndex = 0; superiorIndex < superiors.length; superiorIndex++) {
+                var superior = superiors[superiorIndex];
+                var selectedSuperiorValue = superior.value;
+                selectedSuperiorValues.push(selectedSuperiorValue);;;;;;;
+                var superiorOptions = [];
+                if (plotTypeDependent && matsPlotUtils.getPlotType()) {
+                    superiorOptions = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
+                } else {
+                    superiorOptions = optionsMap[selectedSuperiorValue];
+                }
+                /* tricky little bit here:
+                If the controlButton for this superior element is hidden it has been hidden
+                because it has a visibility dependency on another param i.e. truth-data-source
+                is dependent upon statistic such that if the statistic is "mean" the truth-data-source
+                is hidden. See the wfip2 main.js statistic param as an example....
+                 "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+                 and
+                 "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+                 are the fields that cause the truth-data-source to be hidden when statistic is set to "mean".
+                 In that condition (controlButton is hidden) the superior should not be used as an intersection in the selected sites.
+                 matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
+                 for this element (this superior) is hidden.
+                */
+                if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
+                    if (options === null) {
+                        options = superiorOptions;
+                    } else {
+                        options = _.intersection(options, superiorOptions);
                     }
                 }
             }
-        }
+            if (options === null || options === undefined) {
+                options = [];
+            }
+            var selectedOptionIndex = options.indexOf(selectedText);
+            var sviText = "";
+            if (selectedOptionIndex == -1 ) {
+                for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {
+                    superior = superiors[svi];
+                    if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
+                        if (svi > 0) {
+                            sviText += " and ";
+                        }
+                        sviText += selectedSuperiorValues[svi]
+                    }
+                }
+                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
+            }
+            selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
+            matsMethods.setSelectParamOptions.call({
+                name: name,
+                options: options,
+                optionIndex: selectedOptionIndex
+            }, function (error) {
+                if (error) {
+                    setError(new Error("matsMethods.setSelectParamOptions: from select.js error: " + error.message));
+                }
+            });
+            for (var i = 0; i < brothers.length; i++) {
+                const belem = brothers[i];
+                const belemSelectedOptions = $(belem.selectedOptions).map(function () {
+                    return (this.value)
+                }).get();
+                if (belemSelectedOptions.length === 0) {
+                    belem.options.length = 0;
+                    for (var i = 0; i < options.length; i++) {
+                        belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
+                        // set the display button to first value
+                        if (i === 0) {
+                            matsParamUtils.setValueTextForParamName(dispElemName, options[i]);
+                            dispElem.textContent = options[i];
+                        }
+                    }
+                }
+            }
 
-        refreshPeer(peerName);
-        refreshDependents(dependentNames);
-    };
+            refreshPeer(peerName);
+            refreshDependents(dependentNames);
+        } catch (e) {
+            e.message = "Error in select.js refresh: " + e.message;
+            setError(e)
+        }
+    };  // refresh function
+
 
     // register refresh event for any superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
-        if (superiorName) {
-            var superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
-            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-            refresh(selectedSuperiorValue);
+        if (superiorNames) {
+            var superiors = [];
+            for (var sn = 0; sn < superiorNames.length; sn++) {
+                var superiorElement = matsParamUtils.getInputElementForParamName(superiorNames[sn]);
+                var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+                superiors.push ({element:superiorElement, value:selectedSuperiorValue});
+            }
+            refresh(superiors);
         }
     });
     // register refresh event for axis change to use to enforce a refresh
     elem.addEventListener('axisRefresh', function () {
         // Don't know why I have to do this, I expected the parameter data to be in the context....
-        var paramData = matsCollections.CurveParams.findOne({name:this.name},{dependentNames:1,peerName:1});
-        var peerName = paramData.peerName;
-        var dependentNames = paramData.dependentNames;
+        const paramData = matsCollections.CurveParams.findOne({name:this.name},{dependentNames:1,peerName:1});
+        const peerName = paramData.peerName;
+        const dependentNames = paramData.dependentNames;
         if (peerName) {
             if (refreshPeer){
                 refreshPeer(peerName);
@@ -241,13 +278,24 @@ Template.select.rendered = function(){
             }
         }
     });
-    checkDisableOther(this.data);
-    checkHideOther(this.data);
-
-    var superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
-    if (superiorElement) {
-        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-        refresh(selectedSuperiorValue);
+    try {
+        checkDisableOther(this.data);
+        checkHideOther(this.data);
+        if (superiorNames) {
+            var superiors = [];
+            for (var ssi = 0; ssi < superiorNames.length; ssi++) {
+                var superiorName = superiorNames[ssi];
+                const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
+                if (superiorElement) {
+                    var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+                    superiors.push ({element:superiorElement, value:selectedSuperiorValue});
+                }
+            }
+            refresh(superiors);
+        }
+    } catch (e) {
+        e.message = "Error in select.js render function: " + e.message;
+        setError(e)
     }
 };
 
@@ -285,13 +333,13 @@ Template.select.events({
         checkHideOther(this);
      },
     'change .selectAll': function(event) {
-        var selectorId = (event.currentTarget).attributes['data-selectid'].value;
-        var elem = document.getElementById(selectorId);
+        const selectorId = (event.currentTarget).attributes['data-selectid'].value;
+        const elem = document.getElementById(selectorId);
         var select = false;
         if (event.target.checked == true) {
             select = true;
         }
-        var elements = elem.options;
+        const elements = elem.options;
         for(var i = 0; i < elements.length; i++){
             elements[i].selected = select;
         }

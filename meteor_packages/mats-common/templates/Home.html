@@ -9,25 +9,30 @@
         {{>help}}
         {{>data}}
         <div class="container pull-left">
+            {{>error}}
             <div class="container row pull-left" id="plotTypeContainer">
                 {{>plotType}}
             </div>
-            <div class="container row pull-left">
-                {{>curveList}}
-            </div>
-            <div class="container row pull-left">
-                {{>error}}
-                {{>info}}
-            </div>
-            <div id="scatterView" class="container row pull-left">
-                {{>scatter2d}}
-            </div>
-            <div id="paramView" class="container row pull-left">
-                {{>paramList}}
-            </div>
-            <div id="plotView" class="container row pull-left">
-                {{>plotList}}
-            </div>
+            {{#if Template.subscriptionsReady}}
+                <div class="container row pull-left">
+                    {{>curveList}}
+                </div>
+                <div class="container row pull-left">
+                    {{>error}}
+                    {{>info}}
+                </div>
+                <div id="scatterView" class="container row pull-left">
+                    {{>scatter2d}}
+                </div>
+                <div id="paramView" class="container row pull-left">
+                    {{>paramList}}
+                </div>
+                <div id="plotView" class="container row pull-left">
+                    {{>plotList}}
+                </div>
+            {{else}}
+                Loading...
+            {{/if}}
         </div>
         <div>
             {{>graph}}

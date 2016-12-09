@@ -1,5 +1,6 @@
 <template name="curveList">
     <div id="curveList"  class="container well well-sm pull-left" style="display:{{displayCurves}}">
+        <span>{{editMode}} </span>
         {{#each curves}}
             {{> curveItem}}
         {{/each}}

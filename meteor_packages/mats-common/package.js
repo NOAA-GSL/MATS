@@ -108,6 +108,7 @@ Package.onUse(function(api) {
   api.addFiles("templates/spinner/spinner.js", "client");
   
   api.addFiles('templates/Home.html', "client");
+  api.addFiles('templates/Home.js', "client");
   api.addFiles('templates/version/version.html', "client");
   api.addFiles('templates/version/version.js', "client");
 

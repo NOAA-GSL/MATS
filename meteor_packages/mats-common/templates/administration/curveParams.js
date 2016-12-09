@@ -403,7 +403,7 @@ Template.curveParams.events({
         // first backup the existing parameters
         Meteor.call('getUserAddress', function (error, result) {
             if (error !== undefined) {
-                setError(error.toLocaleString());
+                setError(new Error(error.message));
                 return false;
             }
 

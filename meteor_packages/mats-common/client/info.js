@@ -1,12 +1,11 @@
 setInfo = function(message){
     Session.set('infoMessage', message);
-    document.getElementById('info').style.display='block';
-    window.scrollTo(0, 0);
+    $("#info").modal('show');
 };
 
 clearInfo = function(message){
     Session.set('infoMessage', '');
-    document.getElementById('info').style.display='none';
+    $("#info").modal('hide');
 };
 
 getInfo = function() {
