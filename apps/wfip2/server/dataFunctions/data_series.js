@@ -5,8 +5,10 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 
+const Future = require('fibers/future');
+
 dataSeries = function (plotParams, plotFunction) {
-    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
+    //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
     var wfip2Settings = matsCollections.Databases.findOne({role: "wfip2_data", status: "active"}, {
         host: 1,
@@ -48,37 +50,48 @@ dataSeries = function (plotParams, plotFunction) {
         yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var dataSource = (curve['data-source']);
+        var dataSource = curve['data-source'];
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var model = tmp[0];
-        var instrument_id = tmp[1];
-        var verificationRunInterval = tmp[2];
+        var dataSource_is_instrument = parseInt(tmp[0]);
+        var dataSource_tablename = tmp[1];
+        var dataSource_id = tmp[2];
+        var verificationRunInterval = tmp[3];
+        var dataSource_is_json = parseInt(tmp[4]);
+        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
+
         var myVariable;
         var statistic = curve['statistic'];
-        var truthDataSource = curve['truth-data-source'];
-        tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-        var truthModel = tmp[0];
-        var truthInstrument_id = tmp[1];
-        var truthRunInterval = tmp[2];
+
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
-        var maxRunInterval;
-            if (statistic == "mean") {
-                maxRunInterval = verificationRunInterval;
-            } else {
-                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
-            }
+        var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-        var isDiscriminator = false;
+        var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
             myVariable = curve['variable'];
-            isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
+            myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
+
+        statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
+        //console.log("statement: " + statement);
+        var dFuture = new Future();
+        dFuture['hd'] = 0;
+        wfip2Pool.query(statement, function (err, rows) {
+            if (err != undefined) {
+                throw( new Error( "dataSeries error = has_discriminator error: " + err.message ) );
+            } else {
+                dFuture['hd'] = rows[0]['hd'];
+            }
+            dFuture['return']();
+        });
+        dFuture.wait();
+        var dataSource_has_discriminator = dFuture['hd'];
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
@@ -104,107 +117,112 @@ dataSeries = function (plotParams, plotFunction) {
         var average = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
-            if (model.includes("recs")) {
-                statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
-                    "from obs_recs as o , " + model +
-                    " where  obs_recs_obsrecid = o.obsrecid" +
-                    " and instruments_instrid=" + instrument_id +
-                    " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                    " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-            } else if (model.includes("hrrr_wfip")) {
-                if (isDiscriminator) {
-                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
-                        " from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
-                        " and modelid= modelid_rec" +
-                        " and nwp_recs_nwprecid=nwprecid" +
-                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc=" + 3600 * forecastLength +
-                        " and " + discriminator + " >=" + disc_lower +
-                        " and " + discriminator + " <=" + disc_upper
+            if ( dataSource_is_instrument ) {
+                if (dataSource_is_json) {
+                    statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else {
-                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        "from " + model + ", nwp_recs,  " + dataSource + "_discriminator" +
-                        " where nwps_nwpid=" + instrument_id +
-                        " and modelid= modelid_rec" +
-                        " and nwp_recs_nwprecid=nwprecid" +
-                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc=" + 3600 * forecastLength +
-                        " and " + discriminator + " >=" + disc_lower +
-                        " and " + discriminator + " <=" + disc_upper
+                    statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
+            // data source is a model and its JSON
             } else {
-                statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                    "from " + model + ", nwp_recs  " +
-                    " where nwps_nwpid=" + instrument_id +
-                    " and nwp_recs_nwprecid=nwprecid" +
-                    " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                    " and fcst_end_utc=" + 3600 * forecastLength;
+                if (dataSource_is_json) {
+                    statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                } else {
+                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
+                        "from " + dataSource_tablename + " as D, nwp_recs as N" +
+                        " where D.nwp_recs_nwprecid=N.nwprecid" +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                }
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-            console.log("statement: " + statement);
+
+
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, myVariable_isDiscriminator, dataSource_is_json, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
                 throw (new Error(error));
             }
+            var truthQueryResult = queryResult;
 
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
-                if (truthModel.includes("recs")) {
-                    statement = "select valid_utc as avtime,z," + myVariable + ",sites_siteid " +
-                        "from obs_recs as o , " + truthModel +
-                        " where  obs_recs_obsrecid = o.obsrecid" +
-                        " and instruments_instrid=" + truthInstrument_id +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-                } else if (truthModel.includes("hrrr_wfip")) {
-                    if (isDiscriminator) {
-                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid" +
-                            " from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                            " where nwps_nwpid=" + truthInstrument_id +
-                            " and modelid= modelid_rec" +
-                            " and nwp_recs_nwprecid=nwprecid" +
-                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                            " and fcst_end_utc=" + 3600 * forecastLength +
-                            " and " + discriminator + " >=" + disc_lower +
-                            " and " + discriminator + " <=" + disc_upper
+                var truthDataSource = curve['truth-data-source'];
+                var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+                var truthDataSource_is_instrument = tmp[0];
+                var truthDataSource_tablename = tmp[1];
+                var truthDataSource_id = tmp[2];
+                var truthRunInterval = tmp[3];
+                var truthDataSource_is_json = tmp[4];
+                var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
+                maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+
+                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
+                //console.log("statement: " + statement);
+                dFuture = new Future();
+                dFuture['hd'] = 0;
+                wfip2Pool.query(statement, function (err, rows) {
+                    if (err != undefined) {
+                        throw( new Error("data series error = has_discriminator error: " + err.message) );
                     } else {
-                        statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                            "from " + truthModel + ", nwp_recs,  " + truthDataSource + "_discriminator" +
-                            " where nwps_nwpid=" + truthInstrument_id +
-                            " and modelid= modelid_rec" +
-                            " and nwp_recs_nwprecid=nwprecid" +
-                            " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                            " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                            " and fcst_end_utc=" + 3600 * forecastLength +
-                            " and " + discriminator + " >=" + disc_lower +
-                            " and " + discriminator + " <=" + disc_upper
+                        dFuture['hd'] = rows[0]['hd'];
+                    }
+                    dFuture['return']();
+                });
+                dFuture.wait();
+                var truthDataSource_has_discriminator = dFuture['hd'];
+
+                if (truthDataSource_is_instrument) {
+                    if (truthDataSource_is_json) {
+                        statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                    } else {
+                        statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                     }
                 } else {
-                    statement = "select (analysis_utc + fcst_end_utc) as avtime ,z ," + myVariable + ",sites_siteid  " +
-                        "from " + truthModel + ", nwp_recs  " +
-                        " where nwps_nwpid=" + truthInstrument_id +
-                        " and nwp_recs_nwprecid=nwprecid" +
-                        " and (analysis_utc + fcst_end_utc) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (analysis_utc + fcst_end_utc)<=" + matsDataUtils.secsConvert(toDate) +
-                        " and fcst_end_utc=" + 3600 * forecastLength;
-                }
-                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-                console.log("statement: " + statement);
-                dataRequests[curve.label] = statement;
-                var truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, isDiscriminator);
-                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
-                    throw (new Error(error));
+                    if (dataSource_is_json) {
+                        statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                            " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                    } else {
+                        statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
+                            "from " + truthDataSource_tablename + " as D, nwp_recs as N" +
+                            " where D.nwp_recs_nwprecid=N.nwprecid" +
+                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                            " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                    }
+
+
+                    statement = statement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                    //console.log("statement: " + statement);
+                    dataRequests[curve.label] = statement;
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
+                    if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                        //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
+                        throw ( new Error(truthQueryResult.error) );
+                    }
                 }
             }
+
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
              data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
              and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
@@ -265,30 +283,18 @@ dataSeries = function (plotParams, plotFunction) {
             siteBasis = _.union.apply(_, queryResult.allSites);
             var truthLevelBasis;
             var truthSiteBasis;
-            if (statistic != "mean") {
-                // have to consider the truth curve when determining the basis if we are doing stats other than mean
-                truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
-                truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
-                levelBasis = _.union(levelBasis,truthLevelBasis);
-                siteBasis = _.union(siteBasis,truthSiteBasis);
-            }
-            /*
-             pairs_.pairs(object)
-             Convert an object into a list of [key, value] pairs.
-             _.pairs({one: 1, two: 2, three: 3});
-             => [["one", 1], ["two", 2], ["three", 3]]
-             we want [[time0,obj],[time1,obj],....[timen,obj]]
-             */
-            var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
-                return a[0] - b[0]
-            });
+            var tqrl = truthQueryResult.allLevels.length;
+            var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                  return a[0] - b[0]
+             });
+            var newtqrl = truthQueryResult.allLevels.length;
 
 
             //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
             // and skip any where there isn't a corresponding time.
             // we make our calculations where there are corresponding times.
-            var valMaxIndex = verificationData.length - 1;
+            var valMaxIndex = verificationData.length;
             var valIndex = 0;
             var valTime = verificationData[0][0];
             var normalizedData = [];
@@ -300,9 +306,9 @@ dataSeries = function (plotParams, plotFunction) {
             if (statistic != "mean") {
                 truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                     return a[0] - b[0]
-                });
-                truthMaxIndex = truthData.length - 1;
-                truthTime = verificationData[0][0];
+               });
+               truthMaxIndex = truthData.length - 1;
+               truthTime = verificationData[0][0];
             }
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
@@ -499,53 +505,63 @@ dataSeries = function (plotParams, plotFunction) {
             var subtrahendIndex = 0; // base curve
             var minuendData = dataset[diffFrom[0]].data;
             var subtrahendData = dataset[diffFrom[1]].data;
-            var minuendEndTime = (minuendData[minuendData.length - 1])[0];
-            var subtrahendEndTime = (subtrahendData[subtrahendData.length - 1])[0];
+            var minuendEndTime = minuendData[minuendData.length - 1][0];
+            var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
             var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
             normalizedData = [];
             // calculate difference curve values
             // minuend - subtrahend = difference.
             // the minuend is the curve from which the base curve values will be subtracted
-            while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
+            while (subtrahendData[subtrahendIndex] < minuendData[minuendIndex]) {
                 // if necessary, increment the base index until it catches up
                 subtrahendIndex++;
             }
-            while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
+            while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
                 // if necessary, increment the from index until it catches up
                 minuendIndex++;
             }
             // now the times should be equal
             count = 0;
             sum = 0;
-            var diffTime = (minuendData[minuendIndex])[0];
-            while (diffTime < diffEndTime) {
-                while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
-                    // if necessary, increment the base index until it catches up
+            try {
+                var diffTime = (minuendData[minuendIndex])[0];
+                while ( (diffTime < diffEndTime) && (subtrahendIndex < subtrahendData.length - 1) && (minuendIndex < minuendData.length - 1) ) {
+                    while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
+                        // if necessary, increment the base index until it catches up
+                        subtrahendIndex++;
+                    }
+                    while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
+                        // if necessary, increment the from index until it catches up
+                        minuendIndex++;
+                    }
+                    var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
+                    var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
+                    var diffValue = (fromValue == null || baseValue == null) ? null : fromValue - baseValue;
+                    var diffSeconds = diffTime / 1000;
+                    var d = new Date(Number(diffTime)).toUTCString();
+                    var tooltip = label +
+                        "<br>seconds:" + diffSeconds +
+                        "<br>time:" + d +
+                        "<br> diffValue:" + diffValue;
+                    yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
+                    yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
+                    normalizedData.push([diffTime, diffValue, {
+                        seconds: diffSeconds,
+                        date: d,
+                        minuend: fromValue,
+                        subtrahend: baseValue
+                    }, tooltip]);
+                    diffTime = Number(diffTime) + Number(maxValidInterval);
                     subtrahendIndex++;
-                }
-                while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
-                    // if necessary, increment the from index until it catches up
                     minuendIndex++;
+                    count++;
+                    sum += diffValue;
                 }
-                var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
-                var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
-                var diffValue = (fromValue == null || baseValue == null) ?  null : fromValue - baseValue;
-                var diffSeconds = diffTime / 1000;
-                var d = new Date(Number(diffTime)).toUTCString();
-                var tooltip = label +
-                "<br>seconds:" + diffSeconds +
-                "<br>time:" + d +
-                "<br> diffValue:" + diffValue;
-                yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
-                yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
-                normalizedData.push([diffTime, diffValue, {seconds:diffSeconds,date:d,minuend:fromValue,subtrahend:baseValue}, tooltip]);
-                diffTime = Number(diffTime) + Number(maxValidInterval);
-                subtrahendIndex++;
-                minuendIndex++;
-                count++;
-                sum += diffValue;
+                average = sum / count;
+            } catch ( err ) {
+                console.log( "caught error");
+                throw( new Error( "caught " + err.message ));
             }
-            average = sum / count;
         }
         if (yAxisBoundaries[variableStr] === undefined) {
             yAxisBoundaries[variableStr] = {

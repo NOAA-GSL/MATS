@@ -177,7 +177,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator) {
+var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, isJSON, disc_lower, disc_upper) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -191,6 +191,9 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
     var siteCount =0;
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
+
+        console.log("in queryWFIP2DB statement: " + statement);
+
         // every row is a time and a site with a level array and a values array
         // the time an site combination form a unique pair but there
         // can certainly be multiple times that are the same
@@ -200,7 +203,10 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
+            error = 'rows undefined error'
+            if ( rows.length === 0 ) {
+                error = '0 data records found';
+            }
             // done waiting - error condition
             dFuture['return']();
         } else {
@@ -261,24 +267,47 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     levels = [Number.MIN_VALUE];
                     values = [Number(rows[rowIndex][myVariable])];
                 } else {
-                    // conventional variable
-                    levels = JSON.parse(rows[rowIndex].z);
-                    values = JSON.parse(rows[rowIndex][myVariable]);
+                    if (isJSON)  {
+                        // JSON variable -- stored as JSON structure 'data' in the DB
+                        levels = JSON.parse(rows[rowIndex].data)['z'];
+                        values = JSON.parse(rows[rowIndex].data)[myVariable];
+                    } else {
+                        // conventional variable -- stored as text in the DB
+                        levels = JSON.parse(rows[rowIndex].z);
+                        values = JSON.parse(rows[rowIndex][myVariable]);
+                    }
+                    for ( var i = 0; i < levels.length; i++ ) {
+                        levels[i] = parseFloat( levels[i] )
+                        var val = parseFloat( values[i] )
+                        if ( val >= disc_lower && val <= disc_upper ) {
+                          values[i] = val
+                        }
+                    }
                 }
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
                 // always accept levels that are Number.MIN_VALUE - they are special discriminators
-                for (var l = levels.length - 1; l >= 0; l--) {
-                    var lvl = levels[l];
-                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
-                        levels.splice(l, 1);
-                        values.splice(l, 1);
-                    }
-                }
-                allLevels.push(levels);  // array of level arrays - two dimensional
-                var sum = values.reduce(function (a,b) {return a + b;},0);
                 var numLevels = levels.length;
+                if ( numLevels > 1 ) {
+                  for (var l = levels.length - 1; l >= 0; l--) {
+                      var lvl = levels[l];
+                      if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                          levels.splice(l, 1);
+                          values.splice(l, 1);
+                      }
+                  }
+                }
+                allLevels.push(levels);  // array of level arrays - two dimensions
+                if ( numLevels > 1 ) {
+                    var sum = values.reduce(function (a,b) {return a + b;},0);
+                } else {
+                    // convert scaler json objects into arrays
+                    levels = [levels]
+                    values = [values];
+                    var sum = values;
+                }
+
                 var mean = sum / numLevels;
                 if(resultData[time] === undefined) {
                     resultData[time] = {sites:{}};

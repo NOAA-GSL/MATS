@@ -593,8 +593,13 @@ const getGraphData = new ValidatedMethod({
                     results.basis['dataLink'] = saveResultData(results);
                     future["return"](results);
                 });
-            } catch(badThingHappened) {
-                 throw new Meteor.Error(badThingHappened.message,"Error in getGraphData function:" + dataFunction);
+            } catch(dataFunctionError) {
+                if ( dataFunctionError.message === '0 data records found') {
+                     console.log("dataFunctionError.message = " + dataFunctionError.message);
+                    //modal_dialog( "no data found");
+                    // return(??)
+                }
+                throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
             }
 
             return future.wait();

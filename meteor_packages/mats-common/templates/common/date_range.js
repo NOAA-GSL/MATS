@@ -1,5 +1,6 @@
 import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
 
 var startInit = function() {
     var today = new Date();
@@ -9,6 +10,9 @@ var startInit = function() {
     var month = thenDate.getMonth() + 1;
     var hour = thenDate.getHours();
     var minute = thenDate.getMinutes();
+    //var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates;
+    //var mindate = JSON.parse(datesMap).mindate;
+    //return( mindate );
     return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
 };
 var stopInit = function() {
@@ -18,6 +22,9 @@ var stopInit = function() {
     var month = today.getMonth() + 1;
     var hour = today.getHours();
     var minute = today.getMinutes();
+    //var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates;
+    //var maxdate = JSON.parse(datesMap).maxdate;
+    //return( maxdate );
     return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
 };
 
