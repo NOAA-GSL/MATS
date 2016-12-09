@@ -134,8 +134,8 @@ Template.select.rendered = function(){
     const dependentNames = this.data.dependentNames;
     const dispElemName = matsTypes.InputTypes.controlButton + "-" + this.data.name + '-value';
     const dispElem = document.getElementById(dispElemName);
-    const superiorName = this.data.superiorName;
-    const refresh = function(selectedSuperiorValue) {
+    const superiorNames = this.data.superiorNames;
+    const refresh = function(superiors) {
         /*
         Because there may be axis "brothers" This refresh must go and
         see if there are any such elements that are essentially hidden copies
@@ -162,15 +162,55 @@ Template.select.rendered = function(){
                 if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
                     brothers.push(elems[i]);
             }
-            var options = {};
-            if (plotTypeDependent && matsPlotUtils.getPlotType()) {
-                options = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
-            } else {
-                options = optionsMap[selectedSuperiorValue];
+            var options = null;
+            var selectedSuperiorValues =[];
+            for (var superiorIndex = 0; superiorIndex < superiors.length; superiorIndex++) {
+                var superior = superiors[superiorIndex];
+                var selectedSuperiorValue = superior.value;
+                selectedSuperiorValues.push(selectedSuperiorValue);;;;;;;
+                var superiorOptions = [];
+                if (plotTypeDependent && matsPlotUtils.getPlotType()) {
+                    superiorOptions = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
+                } else {
+                    superiorOptions = optionsMap[selectedSuperiorValue];
+                }
+                /* tricky little bit here:
+                If the controlButton for this superior element is hidden it has been hidden
+                because it has a visibility dependency on another param i.e. truth-data-source
+                is dependent upon statistic such that if the statistic is "mean" the truth-data-source
+                is hidden. See the wfip2 main.js statistic param as an example....
+                 "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+                 and
+                 "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+                 are the fields that cause the truth-data-source to be hidden when statistic is set to "mean".
+                 In that condition (controlButton is hidden) the superior should not be used as an intersection in the selected sites.
+                 matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
+                 for this element (this superior) is hidden.
+                */
+                if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
+                    if (options === null) {
+                        options = superiorOptions;
+                    } else {
+                        options = _.intersection(options, superiorOptions);
+                    }
+                }
+            }
+            if (options === null || options === undefined) {
+                options = [];
             }
             var selectedOptionIndex = options.indexOf(selectedText);
-            if (selectedOptionIndex == -1) {
-                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + selectedSuperiorValue);
+            var sviText = "";
+            if (selectedOptionIndex == -1 ) {
+                for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {
+                    superior = superiors[svi];
+                    if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
+                        if (svi > 0) {
+                            sviText += " and ";
+                        }
+                        sviText += selectedSuperiorValues[svi]
+                    }
+                }
+                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
             selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
             matsMethods.setSelectParamOptions.call({
@@ -208,12 +248,17 @@ Template.select.rendered = function(){
         }
     };  // refresh function
 
+
     // register refresh event for any superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
-        if (superiorName) {
-            const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
-            const selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-            refresh(selectedSuperiorValue);
+        if (superiorNames) {
+            var superiors = [];
+            for (var sn = 0; sn < superiorNames.length; sn++) {
+                var superiorElement = matsParamUtils.getInputElementForParamName(superiorNames[sn]);
+                var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+                superiors.push ({element:superiorElement, value:selectedSuperiorValue});
+            }
+            refresh(superiors);
         }
     });
     // register refresh event for axis change to use to enforce a refresh
@@ -233,13 +278,24 @@ Template.select.rendered = function(){
             }
         }
     });
-    checkDisableOther(this.data);
-    checkHideOther(this.data);
-
-    const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
-    if (superiorElement) {
-        const selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-        refresh(selectedSuperiorValue);
+    try {
+        checkDisableOther(this.data);
+        checkHideOther(this.data);
+        if (superiorNames) {
+            var superiors = [];
+            for (var ssi = 0; ssi < superiorNames.length; ssi++) {
+                var superiorName = superiorNames[ssi];
+                const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
+                if (superiorElement) {
+                    var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+                    superiors.push ({element:superiorElement, value:selectedSuperiorValue});
+                }
+            }
+            refresh(superiors);
+        }
+    } catch (e) {
+        e.message = "Error in select.js render function: " + e.message;
+        setError(e)
     }
 };
 

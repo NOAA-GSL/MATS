@@ -113,7 +113,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:regionModelOptionsMap,
                 options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
-                superiorName: 'model',
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
@@ -220,7 +220,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
-                superiorName: 'model',
+                superiorNames: ['model'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
