@@ -183,7 +183,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable","dates", "curve-dates"],
+                dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -228,7 +228,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable","dates","curve-dates"],
+                dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
                 default: 'hrrr_esrl',
                 unique: false,
@@ -745,8 +745,7 @@ Meteor.startup(function () {
 
 
     try {
-        var statement = "" +
-            "";
+        var statement = "call get_data_sources();";
         var qFuture = new Future();
 
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows) {
@@ -964,7 +963,7 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
-                for (var i = 0; i < rows.length; i++) {
+                for (var i = 0; i < rows[0].length; i++) {
                     var model = rows[0][i].model;
                     var forecastLengths = rows[0][i].fcst_lens;
                     forecastLengthOptionsMap[model] = forecastLengths.split(',');
@@ -986,29 +985,29 @@ Meteor.startup(function () {
                     //console.log("model_has_discriminator: " + model_has_discriminator.toString());
 
                     if (model_has_discriminator) {
-                        //variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
-                        //    'wind_speed',
-                        //    'wind_direction'
-                        //];
-                        //variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [
-                        //    'wind_speed',
-                        //    'wind_direction'
-                        //];
-                        //variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [
-                        //    'wind_speed',
-                        //    'wind_direction'
-                        //];
+                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
+                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
+                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [
+                            'wind_speed',
+                            'wind_direction'
+                        ];
 
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var j =0; j < discriminators.length; j++) {
                             variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push(discriminators[j]);
                             variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push(discriminators[j]);
                         }
-                    }// else {
-                        //variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
-                        // variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
-                        //variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
-                    //}
+                    } else {
+                        variableOptionsMap[matsTypes.PlotTypes.profile][model] = ['wind_speed', 'wind_direction'];
+                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = ['wind_speed', 'wind_direction'];
+                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = ['wind_speed', 'wind_direction'];
+                    }
                 }
             }
             qFuture['return']();
