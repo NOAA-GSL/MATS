@@ -257,7 +257,7 @@ var doCurveParams = function () {
                 optionsMap:siteOptionsMap,
                 options:siteOptionsMap[Object.keys(siteOptionsMap)[0]],
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
@@ -314,7 +314,7 @@ var doCurveParams = function () {
                 variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
                 optionsMap: variableOptionsMap,
                 options:variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
@@ -333,7 +333,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
                 options:Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorName: 'data-source',
+                superiorNames: ['data-source','truth-data-source'],
                 //selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -424,7 +424,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap:upperOptionsMap,
                 options:Object.keys(upperOptionsMap),   // convenience
-                superiorName: 'discriminator',
+                superiorNames: ['discriminator'],
                 min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
                 max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                 step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
@@ -443,7 +443,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap:lowerOptionsMap,
                 options:Object.keys(lowerOptionsMap),   // convenience
-                superiorName: 'discriminator',
+                superiorNames: ['discriminator'],
                 min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                 max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
                 step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
