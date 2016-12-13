@@ -965,9 +965,11 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows[0].length; i++) {
-                    var model = rows[0][i].description;
+//                    var model = rows[0][i].description;
+                    var model = rows[0][i].model;
+                    var description = rows[0][i].description;
                     var forecastLengths = rows[0][i].fcst_lens;
-                    forecastLengthOptionsMap[model] = forecastLengths.split(',');
+                    forecastLengthOptionsMap[description] = forecastLengths.split(',');
 
                     statement = "select has_discriminator('" + model.toString() + "') as hd";
                     //console.log("statement: " + statement);
@@ -988,8 +990,8 @@ Meteor.startup(function () {
                     if (model_has_discriminator) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var j =0; j < discriminators.length; j++) {
-                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push(discriminators[j]);
-                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push(discriminators[j]);
+                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push(discriminators[j]);
+                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push(discriminators[j]);
                         }
                     }
                 }
