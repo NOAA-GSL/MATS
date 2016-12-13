@@ -66,6 +66,7 @@ Template.dateRange.onRendered(function() {
             "startDate": startInit(),
             "endDate": stopInit(),
             "showDropdowns":true,
+            "drops": "up",
             locale: {
                 format: 'MM/DD/YYYY H:mm'
             },
