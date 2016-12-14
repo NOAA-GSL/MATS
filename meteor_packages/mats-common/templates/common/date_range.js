@@ -101,8 +101,9 @@ Template.dateRange.onRendered(function() {
     });
 
     const refresh = function(selectedSuperiorValue) {
-        var value = selectedSuperiorValue;
+        //var selectedText = selectedSuperiorValue;
         /* date refresh stuff goes here*/
+
     };
 
     // register refresh event for any superior to use to enforce a refresh of the options list

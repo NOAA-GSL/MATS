@@ -189,9 +189,9 @@ Template.select.rendered = function(){
                 */
                 if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
                     if (options === null) {
-                        options = superiorOptions;
+                        options = superiorOptions.sort();
                     } else {
-                        options = _.intersection(options, superiorOptions);
+                        options = _.intersection(options, superiorOptions).sort();
                     }
                 }
             }
@@ -309,11 +309,11 @@ Template.select.helpers({
     },
     options: function() {
         if (this.default === undefined || this.default === "") {
-            this.default = this.options[0];
+            this.default = this.options.sort()[0];
             // set the default value
-            this.value = this.options[0];
+            this.value = this.options.sort()[0];
         }
-        return this.options;
+        return this.options.sort();
     },
     multiple:function(){
         if(this.multiple===true)
@@ -326,6 +326,18 @@ Template.select.helpers({
 
 Template.select.events({
     'change .data-input': function(event) {
+        //alert( "change data-input for " + this.name );
+        if ( (this.name == 'data-source') || (this.name == 'truth-data-source') ) {
+          // update the dates widget to reflect the date range of the newly selected data source
+          var selectedText = event.currentTarget.options[event.currentTarget.options.selectedIndex].text;
+
+          var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates[selectedText];
+          var mindate = JSON.parse(datesMap).mindate;
+          var maxdate = JSON.parse(datesMap).maxdate;
+          $("#dates-item").data('daterangepicker').startDate = moment( mindate, "MM/DD/YYYY hh:mm" );;
+          $("#dates-item").data('daterangepicker').stopDate = moment( maxdate, "MM/DD/YYYY hh:mm" );;
+          matsParamUtils.setValueTextForParamName( 'dates', mindate + ' - ' + maxdate );
+        }
         refreshPeer(this.peerName);
         matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
         refreshDependents(this.dependentNames);
