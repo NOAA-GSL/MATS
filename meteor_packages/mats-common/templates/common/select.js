@@ -4,7 +4,6 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
-
  const refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
@@ -167,7 +166,7 @@ Template.select.rendered = function(){
             for (var superiorIndex = 0; superiorIndex < superiors.length; superiorIndex++) {
                 var superior = superiors[superiorIndex];
                 var selectedSuperiorValue = superior.value;
-                selectedSuperiorValues.push(selectedSuperiorValue);;;;;;;
+                selectedSuperiorValues.push(selectedSuperiorValue);
                 var superiorOptions = [];
                 if (plotTypeDependent && matsPlotUtils.getPlotType()) {
                     superiorOptions = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
@@ -189,9 +188,9 @@ Template.select.rendered = function(){
                 */
                 if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
                     if (options === null) {
-                        options = superiorOptions;
+                        options = matsParamUtils.typeSort(superiorOptions);
                     } else {
-                        options = _.intersection(options, superiorOptions);
+                        options = matsParamUtils.typeSort(_.intersection(options, superiorOptions));
                     }
                 }
             }
@@ -308,12 +307,13 @@ Template.select.helpers({
         }
     },
     options: function() {
+        var sOptions = matsParamUtils.typeSort(this.options);
         if (this.default === undefined || this.default === "") {
-            this.default = this.options[0];
+            this.default = sOptions[0];
             // set the default value
-            this.value = this.options[0];
+            this.value = sOptions[0];
         }
-        return this.options;
+        return sOptions;
     },
     multiple:function(){
         if(this.multiple===true)
