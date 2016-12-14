@@ -4,6 +4,7 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
+
  const refreshPeer = function(peerName) {
     if (peerName ) {
         // refresh the peer
