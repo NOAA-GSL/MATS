@@ -769,11 +769,13 @@ Meteor.startup(function () {
 
                     var mindate = rows[0][i].mindate;
                     var maxdate = rows[0][i].maxdate;
+                    var minutc = rows[0][i].minutc;
+                    var maxutc = rows[0][i].maxutc;
 
                     var valueList = [];
                     valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
                     modelOptionsMap[model] = valueList;
-                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\"}";
+                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\", \"minutc\":\"" + minutc + "\", \"maxutc\":\"" + maxutc + "\"}}";
 
                     var labels = [];
                     for (var j = 0; j < variable_names.length; j++) {

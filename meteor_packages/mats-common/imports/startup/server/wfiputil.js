@@ -278,10 +278,11 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     }
                     for ( var i = 0; i < levels.length; i++ ) {
                         levels[i] = parseFloat( levels[i] )
-                        var val = parseFloat( values[i] )
-                        if ( val >= disc_lower && val <= disc_upper ) {
-                          values[i] = val
-                        }
+                        values[i] = parseFloat( values[i] )
+                        // var  val = parseFloat( values[i] )
+                        //if ( val >= disc_lower && val <= disc_upper ) {
+                        //  values[i] = val
+                        //}
                     }
                 }
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
