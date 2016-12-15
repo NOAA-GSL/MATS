@@ -203,7 +203,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
-            error = 'rows undefined error'
+            error = 'rows undefined error';;;
             if ( rows.length === 0 ) {
                 error = '0 data records found';
             }
@@ -277,8 +277,8 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                         values = JSON.parse(rows[rowIndex][myVariable]);
                     }
                     for ( var i = 0; i < levels.length; i++ ) {
-                        levels[i] = parseFloat( levels[i] )
-                        values[i] = parseFloat( values[i] )
+                        levels[i] = parseFloat( levels[i] );
+                        values[i] = parseFloat( values[i] );
                         // var  val = parseFloat( values[i] )
                         //if ( val >= disc_lower && val <= disc_upper ) {
                         //  values[i] = val
@@ -304,7 +304,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                     var sum = values.reduce(function (a,b) {return a + b;},0);
                 } else {
                     // convert scaler json objects into arrays
-                    levels = [levels]
+                    levels = [levels];;;
                     values = [values];
                     var sum = values;
                 }
