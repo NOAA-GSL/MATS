@@ -22,7 +22,15 @@ Template.item.helpers({
             this.default = then + " to " + now;
             this.value = then + " to " + now;
         }
-        return this.value?this.value:this.default;
+        if (this.value) {
+            return this.value;
+        } else {
+            if (this.type === matsTypes.InputTypes.select && this.default === -1) {
+                return matsTypes.InputTypes.unused;
+            } else {
+                return this.default;
+            }
+        }
     },
     hasHelp: function() {
       return this.help !== undefined;
