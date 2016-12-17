@@ -55,10 +55,11 @@ Template.dateRange.onRendered(function() {
 
     const name = this.data.name;
     const idref = name + "-item";
-    const elem = document.getElementById('element-dates');
+    const elem = document.getElementById('element-' + name);
 
     $(function() {
             $('#' + idref).daterangepicker({
+            "parentEL":$('#' + idref),
             "timePicker": true,
             "timePicker24Hour": true,
             "timePickerIncrement": 15,
@@ -93,10 +94,7 @@ Template.dateRange.onRendered(function() {
         matsParamUtils.setValueTextForParamName(name,valStr);
         elem.style.display = "none";
     });
-    $('#' + idref).on('hide.daterangepicker', function(ev, picker) {
-        elem.style.display = "none";
-    });
-    $('#' + idref).on('cancel.daterangepicker', function(ev, picker) {
+    $('#' + idref).on('cancel.daterangepicker', function() {
         elem.style.display = "none";
     });
 
@@ -115,5 +113,3 @@ Template.dateRange.onRendered(function() {
     });
 
 });
-
-

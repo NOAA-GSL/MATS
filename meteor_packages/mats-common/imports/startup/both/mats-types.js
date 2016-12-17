@@ -13,7 +13,8 @@ var  InputTypes = {
     controlButton: 'controlButton',
     element: 'element',
     selectMap: 'selectMap',
-    custom: 'custom'
+    custom: 'custom',
+    unused:"unused"
     };
 
 var  PlotTypes = {
