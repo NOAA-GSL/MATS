@@ -784,11 +784,7 @@ Meteor.startup(function () {
                     for (var j = 0; j < variable_names.length; j++) {
                         var statement2 = "select getVariableInfo('" + variable_names[j] + "') as info;";
                         var qFuture2 = new Future();
-                        var wfip2Pool2 = mysql.createPool(wfip2Settings);
-                        wfip2Pool2.on('connection2', function (connection) {
-                            connection2.query('set group_concat_max_len = 4294967295')
-                        });
-                        wfip2Pool2.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
+                        wfip2Pool.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
                             if (err2 != undefined) {
                                 console.log(err2.message);
                             }
