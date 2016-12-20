@@ -64,7 +64,7 @@ var getPlotFormat = function() {
 
 // Determine which BestFit radio button is checked
 var getBestFit = function() {
-    var buttons = document.getElementsByName('scatter2d-best-fit');
+    var buttons = document.getElementsByName('Fit Type');
     var optionsMap = matsCollections.PlotParams.findOne({name:'bestFit'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {

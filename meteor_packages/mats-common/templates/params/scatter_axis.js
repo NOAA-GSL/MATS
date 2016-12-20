@@ -49,7 +49,7 @@ Template.scatter2d.helpers({
         }
     },
     title: function() {
-        return "2d Scatter Plot Axis Selection"
+        return "Scatter Plot parameters"
     },
     scatter2dParams: function () {
         var params = matsCollections.Scatter2dParams.find({}).fetch();
@@ -123,7 +123,7 @@ Template.scatter2d.helpers({
         }
     },
     label: function(param, parent) {
-        if (parent.name === "scatter2d-best-fit") {
+        if (parent.name === "Fit Type") {
             return parent.optionsMap[this];
         } else {
             return this;

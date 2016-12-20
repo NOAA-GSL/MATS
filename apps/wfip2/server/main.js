@@ -41,7 +41,7 @@ var dstr = dstrOneMonthPrior + " - " + dstrToday;
  
 var doScatter2dParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.PlotParams.remove({});
+        matsCollections.Scatter2dParams.remove({});
     }
 
     // NOTE: the name beginning with 'scatter2d' is significant because if it begins
@@ -72,7 +72,7 @@ var doScatter2dParams = function () {
 
         matsCollections.Scatter2dParams.insert(
             {
-                name: 'scatter2d-best-fit',
+                name: 'Fit Type',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: bestFits,
                 options: Object.keys(bestFits),
@@ -185,7 +185,7 @@ var doCurveParams = function () {
                 optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
-                default: 'HRRR ESRL',
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -210,10 +210,11 @@ var doCurveParams = function () {
                 optionsMap:statisticOptionsMap,
                 options:Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
+                dependentNames: ["sites","forecast-length","variable"],
                 disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},
                 hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},
                 unique: false,
-                default: statisticOptionsMap.mean,
+                default: Object.keys(statisticOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -230,7 +231,7 @@ var doCurveParams = function () {
                 optionsQuery:"call get_data_sources()",
                 dependentNames: ["sites","forecast-length","variable"],
                 controlButtonCovered: true,
-                default: 'HRRR ERSL',
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -247,7 +248,7 @@ var doCurveParams = function () {
                 options:Object.keys(regionOptionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: regionOptionsMap[Object.keys(regionOptionsMap)[0]],
+                default: regionOptionsMap[Object.keys(regionOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -282,7 +283,7 @@ var doCurveParams = function () {
                 controlButtonCovered: true,
                 unique: false,
                 //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
-                default:"map",
+                default:Object.keys(siteMarkerOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -323,7 +324,7 @@ var doCurveParams = function () {
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
-                default: 'wind_speed',
+                default: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -360,7 +361,7 @@ var doCurveParams = function () {
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '5000',
+                default: '200',
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -378,7 +379,7 @@ var doCurveParams = function () {
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '0',
+                default: '40',
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
@@ -411,9 +412,11 @@ var doCurveParams = function () {
                 optionsMap:discriminatorOptionsMap,
                 options:Object.keys(discriminatorOptionsMap),   // convenience
                 dependentNames: ['upper','lower'],
+                disableOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
+                hideOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(discriminatorOptionsMap)[0],
+                default: -1,   // -1 means selection is optional - enables clear selection button
                 controlButtonVisibility: 'block',
                 multiple: false,
                 displayOrder: 1,
@@ -769,11 +772,13 @@ Meteor.startup(function () {
 
                     var mindate = rows[0][i].mindate;
                     var maxdate = rows[0][i].maxdate;
+                    var minutc = rows[0][i].minutc;
+                    var maxutc = rows[0][i].maxutc;
 
                     var valueList = [];
                     valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
                     modelOptionsMap[model] = valueList;
-                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\"}";
+                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\", \"minutc\":\"" + minutc + "\", \"maxutc\":\"" + maxutc + "\"}}";
 
                     var labels = [];
                     for (var j = 0; j < variable_names.length; j++) {
@@ -965,9 +970,11 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows[0].length; i++) {
-                    var model = rows[0][i].description;
+//                    var model = rows[0][i].description;
+                    var model = rows[0][i].model;
+                    var description = rows[0][i].description;
                     var forecastLengths = rows[0][i].fcst_lens;
-                    forecastLengthOptionsMap[model] = forecastLengths.split(',');
+                    forecastLengthOptionsMap[description] = forecastLengths.split(',');
 
                     statement = "select has_discriminator('" + model.toString() + "') as hd";
                     //console.log("statement: " + statement);
@@ -988,8 +995,8 @@ Meteor.startup(function () {
                     if (model_has_discriminator) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
                         for (var j =0; j < discriminators.length; j++) {
-                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push(discriminators[j]);
-                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push(discriminators[j]);
+                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push(discriminators[j]);
+                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push(discriminators[j]);
                         }
                     }
                 }
@@ -1002,7 +1009,7 @@ Meteor.startup(function () {
     }
 
     try {
-        var statement = "select regionMapTable,description from region_descriptions_mats;";
+        var statement = "select description from region_descriptions_mats;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -1013,12 +1020,12 @@ Meteor.startup(function () {
             } else {
                 matsCollections.RegionDescriptions.remove({});
                 for (var i = 0; i < rows.length; i++) {
-                    var regionMapTable = (rows[i].regionMapTable);
+                    //var regionMapTable = (rows[i].regionMapTable);
                     var description = rows[i].description;
                     var valueList = [];
-                    valueList.push(regionMapTable);
+                    valueList.push(description);
                     regionOptionsMap[description] = valueList;
-                    matsCollections.RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
+                    //matsCollections.RegionDescriptions.insert({regionMapTable: regionMapTable,  description: description});
                 }
             }
             qFuture['return']();

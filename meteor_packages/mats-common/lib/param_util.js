@@ -218,13 +218,19 @@ const getElementValues = function() {
     return data;
 };
 
+
 const expandParams = function() {
     const params = matsCollections.CurveParams.find({}).fetch();
     params.forEach(function(param) {
         if (param.type !== matsTypes.InputTypes.selectMap) {
             const selector = "element" + "-" + param.name;
-            if (document.getElementById(selector)) {
-                document.getElementById(selector).style.display = "block";
+            const elem = document.getElementById(selector);
+            if (elem) {
+                elem.style.display = "block";
+                const dataElem = document.getElementById(param.name + "-" + param.type);
+                if (dataElem.options && dataElem.selectedIndex >= 0) {
+                    dataElem.options[dataElem.selectedIndex].scrollIntoView();
+                }
             }
         }
     });
@@ -242,6 +248,23 @@ const collapseParams = function() {
     });
 };
 
+const typeSort = function (arr) {
+    var i;
+    var type = "numerical";
+    for (i=0;i<arr.length;i++) {
+        if (isNaN(Number(arr[i]))) {
+            type = "canonical";
+            break;
+        }
+    }
+    if (type === "numerical") {
+        arr.sort(function(a,b){return a - b;});
+    } else {
+        arr.sort();
+    }
+    return arr;
+};
+
 export default matsParamUtils = {
     getControlButtonIdForParamName:getControlButtonIdForParamName,
     getControlElementForParamName:getControlElementForParamName,
@@ -254,5 +277,6 @@ export default matsParamUtils = {
     getElementValues:getElementValues,
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
-    collapseParams:collapseParams
+    collapseParams:collapseParams,
+    typeSort:typeSort
 };
