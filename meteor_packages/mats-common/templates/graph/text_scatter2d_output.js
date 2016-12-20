@@ -84,7 +84,7 @@ Template.textScatter2dOutput.helpers({
             if (matsCurveUtils.PlotResult.data[i].label == curve.label) {
                 line += "<td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>";
             }
-            if (matsCurveUtils.PlotResult.data[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4).length) == Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4)) {
+            if (matsCurveUtils.PlotResult.data[i].label && matsCurveUtils.PlotResult.data[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4).length) == Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][0]).toPrecision(4)) {
                 line += "</td> <td>" + Number(matsCurveUtils.PlotResult.data[i].data[rowIndex][1]).toPrecision(4) + "</td>"
             }
         }

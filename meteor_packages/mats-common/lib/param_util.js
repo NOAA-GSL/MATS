@@ -242,6 +242,23 @@ const collapseParams = function() {
     });
 };
 
+const typeSort = function (arr) {
+    var i;
+    var type = "numerical";
+    for (i=0;i<arr.length;i++) {
+        if (isNaN(Number(arr[i]))) {
+            type = "canonical";
+            break;
+        }
+    }
+    if (type === "numerical") {
+        arr.sort(function(a,b){return a - b;});
+    } else {
+        arr.sort();
+    }
+    return arr;
+};
+
 export default matsParamUtils = {
     getControlButtonIdForParamName:getControlButtonIdForParamName,
     getControlElementForParamName:getControlElementForParamName,
@@ -254,5 +271,6 @@ export default matsParamUtils = {
     getElementValues:getElementValues,
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
-    collapseParams:collapseParams
+    collapseParams:collapseParams,
+    typeSort:typeSort
 };
