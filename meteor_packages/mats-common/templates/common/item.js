@@ -123,7 +123,6 @@ Template.item.events({
                     });
                     m.dispatchEvent(resizeMapEvent);
                 }
-
             }
         }
     },
