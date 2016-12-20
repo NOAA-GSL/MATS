@@ -103,7 +103,13 @@ Template.item.events({
         } else {
             if (elem !== null) {
                 elem.style.display = "block";
-                if (this.type == "selectMap") {
+                if (this.type == matsTypes.InputTypes.select) {
+                    var s = document.getElementById(this.name + '-' + this.type);
+                    if (s.options && s.selectedIndex >= 0) {
+                        s.options[s.selectedIndex].scrollIntoView();
+                    }
+                }
+                if (this.type == matsTypes.InputTypes.selectMap) {
                     var ref = this.name + '-' + this.type;
                     var m = document.getElementById(ref);
                     var data = {
@@ -117,6 +123,7 @@ Template.item.events({
                     });
                     m.dispatchEvent(resizeMapEvent);
                 }
+
             }
         }
     },

@@ -266,6 +266,8 @@ Template.select.rendered = function(){
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
             selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
+            elem.selectedIndex = selectedOptionIndex;
+            elem.options[elem.selectedIndex].scrollIntoView();
             matsMethods.setSelectParamOptions.call({
                 name: name,
                 options: options,
@@ -316,6 +318,10 @@ Template.select.rendered = function(){
             }
             refresh(superiors);
         }
+        if (elem && elem.options && elem.selectedIndex >= 0) {
+            elem.options[elem.selectedIndex].scrollIntoView();
+        }
+
     } catch (e) {
         e.message = "Error in select.js render function: " + e.message;
         setError(e)
