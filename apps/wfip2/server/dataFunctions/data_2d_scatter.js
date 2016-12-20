@@ -374,15 +374,15 @@ data2dScatter = function (plotParams, plotFunction) {
         };
         dataset.push(options);
 
-        if (curve['scatter2d-best-fit'] && curve['scatter2d-best-fit'] !== matsTypes.BestFits.none) {
-            var regressionResult = regression(curve['scatter2d-best-fit'], normalizedAxisData);
+        if (curve['Fit Type'] && curve['Fit Type'] !== matsTypes.BestFits.none) {
+            var regressionResult = regression(curve['Fit Type'], normalizedAxisData);
             var regressionData = regressionResult.points;
             regressionData.sort(matsDataUtils.sortFunction);
 
             var regressionEquation = regressionResult.string;
             var bfOptions = {
                 yaxis: options.yaxis,
-                label: options.label + "-best fit " + curve['scatter2d-best-fit'],
+                label: options.label + "-best fit " + curve['Fit Type'],
                 color: options.color,
                 data: regressionData,
                 points: {symbol: options.points.symbol, fillColor: color, show: false, radius: 1},
@@ -390,7 +390,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     show: true,
                     fill: false
                 },
-                annotation: options.label + " - Best Fit: " + curve['scatter2d-best-fit'] + " fn: " + regressionEquation
+                annotation: options.label + " - Best Fit: " + curve['Fit Type'] + " fn: " + regressionEquation
             };
             bf.push(bfOptions);
         }

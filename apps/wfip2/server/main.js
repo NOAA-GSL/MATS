@@ -41,7 +41,7 @@ var dstr = dstrOneMonthPrior + " - " + dstrToday;
  
 var doScatter2dParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.PlotParams.remove({});
+        matsCollections.Scatter2dParams.remove({});
     }
 
     // NOTE: the name beginning with 'scatter2d' is significant because if it begins
@@ -72,7 +72,7 @@ var doScatter2dParams = function () {
 
         matsCollections.Scatter2dParams.insert(
             {
-                name: 'scatter2d-best-fit',
+                name: 'Fit Type',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: bestFits,
                 options: Object.keys(bestFits),
@@ -784,11 +784,7 @@ Meteor.startup(function () {
                     for (var j = 0; j < variable_names.length; j++) {
                         var statement2 = "select getVariableInfo('" + variable_names[j] + "') as info;";
                         var qFuture2 = new Future();
-                        var wfip2Pool2 = mysql.createPool(wfip2Settings);
-                        wfip2Pool2.on('connection2', function (connection) {
-                            connection2.query('set group_concat_max_len = 4294967295')
-                        });
-                        wfip2Pool2.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
+                        wfip2Pool.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
                             if (err2 != undefined) {
                                 console.log(err2.message);
                             }

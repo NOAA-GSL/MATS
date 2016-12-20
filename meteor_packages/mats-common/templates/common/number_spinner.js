@@ -35,7 +35,9 @@ Template.numberSpinner.rendered = function () {
 
     elem.addEventListener('refresh', function (e) {
         var superiorElement = e.detail.refElement;
-        var superiorSelection = superiorElement.options[superiorElement.selectedIndex].text;
-        refresh(superiorSelection);
+        if (superiorElement.selectedIndex && superiorElement.options[superiorElement.selectedIndex]) {
+            var superiorSelection = superiorElement.options[superiorElement.selectedIndex].text;
+            refresh(superiorSelection);
+        }
     });
 };

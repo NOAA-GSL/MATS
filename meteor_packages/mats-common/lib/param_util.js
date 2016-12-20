@@ -218,13 +218,19 @@ const getElementValues = function() {
     return data;
 };
 
+
 const expandParams = function() {
     const params = matsCollections.CurveParams.find({}).fetch();
     params.forEach(function(param) {
         if (param.type !== matsTypes.InputTypes.selectMap) {
             const selector = "element" + "-" + param.name;
-            if (document.getElementById(selector)) {
-                document.getElementById(selector).style.display = "block";
+            const elem = document.getElementById(selector);
+            if (elem) {
+                elem.style.display = "block";
+                const dataElem = document.getElementById(param.name + "-" + param.type);
+                if (dataElem.options && dataElem.selectedIndex >= 0) {
+                    dataElem.options[dataElem.selectedIndex].scrollIntoView();
+                }
             }
         }
     });
