@@ -41,7 +41,7 @@ var dstr = dstrOneMonthPrior + " - " + dstrToday;
  
 var doScatter2dParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.PlotParams.remove({});
+        matsCollections.Scatter2dParams.remove({});
     }
 
     // NOTE: the name beginning with 'scatter2d' is significant because if it begins
@@ -72,7 +72,7 @@ var doScatter2dParams = function () {
 
         matsCollections.Scatter2dParams.insert(
             {
-                name: 'scatter2d-best-fit',
+                name: 'Fit Type',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: bestFits,
                 options: Object.keys(bestFits),
