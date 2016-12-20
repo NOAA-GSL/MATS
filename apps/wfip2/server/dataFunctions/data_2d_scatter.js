@@ -129,7 +129,7 @@ data2dScatter = function (plotParams, plotFunction) {
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else {
                     statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " where  obs_recs_obswfdbrecid = O.obsrecid" +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
@@ -145,7 +145,7 @@ data2dScatter = function (plotParams, plotFunction) {
 
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
             console.log("statement: " + statement);
-            var rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json, disc_lower, disc_upper );
+            rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json, disc_lower, disc_upper );
             if (rawAxisData[axis].error !== undefined && rawAxisData[axis].error !== "") {
                 error += "Error from verification query: <br>" + rawAxisData[axis].error + "<br> query: <br>" + statement + "<br>" ;
                 throw (new Error(error));
