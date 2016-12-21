@@ -228,7 +228,7 @@ const expandParams = function() {
             if (elem) {
                 elem.style.display = "block";
                 const dataElem = document.getElementById(param.name + "-" + param.type);
-                if (dataElem.options && dataElem.selectedIndex >= 0) {
+                if (dataElem && dataElem.options && dataElem.selectedIndex >= 0) {
                     dataElem.options[dataElem.selectedIndex].scrollIntoView();
                 }
             }
