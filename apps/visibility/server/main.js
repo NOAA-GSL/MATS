@@ -448,15 +448,19 @@ Meteor.startup(function () {
 
 
     var modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-
-    var modelPool = mysql.createPool(modelSettings);
-
+    // the pool is intended to be global
+    modelPool = mysql.createPool(modelSettings);
     modelPool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+    var sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
+    // the pool is intended to be global
+    sumPool = mysql.createPool(sumSettings);
+    sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
     try {
-
         var statement = "select model,regions_name,model_value from visibility.regions_per_model";
         var qFuture = new Future();
         modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {

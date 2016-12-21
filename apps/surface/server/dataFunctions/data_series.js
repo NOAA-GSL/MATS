@@ -5,14 +5,6 @@ const Future = require('fibers/future');
 
 // use future to wait for the query callback to complete
 var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
-    var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    var sumPool = mysql.createPool(sumSettings);
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";

@@ -449,10 +449,15 @@ Meteor.startup(function () {
     var statement;
     var qFuture;
 
-    // var myModels = [];
-    var modelPool = mysql.createPool(modelSettings);
-
+    // the pool is intended to be global
+    modelPool = mysql.createPool(modelSettings);
     modelPool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+    var sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
+    // the pool is intended to be global
+    sumPool = mysql.createPool(sumSettings);
+    sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 

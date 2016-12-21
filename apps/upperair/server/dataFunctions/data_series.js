@@ -4,17 +4,9 @@ import { mysql } from 'meteor/pcel:mysql';
 import { moment } from 'meteor/momentjs:moment'
 import { matsDataUtils } from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
-
 // use future to wait for the query callback to complete
+
 var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
-    var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    var sumPool = mysql.createPool(sumSettings);
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -27,11 +19,9 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
             error = err.message;
-            dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
             error = 'No data to plot: ' + err;
             // done waiting - error condition
-            dFuture['return']();
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
@@ -58,9 +48,7 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
                 xmin = Number(rows[0].avtime) * 1000;
             }
             var loopTime = xmin;
-
             while (loopTime < xmax + 1) {
-
                 if (curveTime.indexOf(loopTime) < 0) {
                     d.push([loopTime, null]);
                 } else {
@@ -77,8 +65,8 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
                 loopTime = loopTime + interval;
             }
             // done waiting - have results
-            dFuture['return']();
         }
+        dFuture['return']();
     });
     // wait for future to finish
     dFuture.wait();

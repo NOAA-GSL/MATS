@@ -728,10 +728,6 @@ Meteor.startup(function () {
             name:"wfip2Setting",
             role: "wfip2_data",
             status: "active",
-            // host        : 'wfip2-db.gsd.esrl.noaa.gov',
-            // user        : 'dev',
-            // password    : 'Pass4userdev*',
-
             host        : 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user        : 'readonly',
             password    : 'Readonlyp@$$405',
@@ -741,11 +737,11 @@ Meteor.startup(function () {
     }
 
     var wfip2Settings = matsCollections.Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var wfip2Pool = mysql.createPool(wfip2Settings);
+    // the pool is intended to be global
+    wfip2Pool = mysql.createPool(wfip2Settings);
     wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-
 
     try {
         var statement = "call get_data_sources();";
