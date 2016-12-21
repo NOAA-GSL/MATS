@@ -123,7 +123,7 @@ data2dScatter = function (plotParams, plotFunction) {
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else {
                     statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
+                        " where  obs_recs_obswfdbrecid = O.obsrecid" +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 }
