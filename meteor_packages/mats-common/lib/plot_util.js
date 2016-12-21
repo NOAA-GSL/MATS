@@ -30,7 +30,7 @@ var getCurveText = function(plotType, curve){
 
     for (var i = 0; i < curveTextPattern.length; i++) {
         var a = curveTextPattern[i];
-        if ( matsParamUtils.getInputElementForParamName(a[1]) !== undefined && (matsParamUtils.getValueForParamName(a[1]) == matsTypes.InputTypes.unused || matsParamUtils.getInputElementForParamName(a[1]).style.display==='none' ) ) {
+        if (curve[a[1]] === undefined) {
             continue;
         }
         text += a[0];

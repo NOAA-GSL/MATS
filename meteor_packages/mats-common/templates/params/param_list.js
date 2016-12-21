@@ -71,8 +71,32 @@ Template.paramList.events({
             var elems = event.target.valueOf().elements;
             var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
+            // remove any hidden params or unused ones
+            // iterate backwards so that we can splice to remove
+            for (var cindex = curveNames.length; cindex >= 0; cindex--) {
+                var cname = curveNames[cindex];
+                var isHidden = matsParamUtils.getInputElementForParamName(cname) &&
+                    matsParamUtils.getInputElementForParamName(cname).style &&
+                    matsParamUtils.getInputElementForParamName(cname).style.display==='none';
+                var isUnused = matsParamUtils.getInputElementForParamName(cname) !== undefined &&
+                    matsParamUtils.getValueForParamName(cname) == matsTypes.InputTypes.unused;
+                if (isHidden || isUnused) {
+                    curveNames.splice(cindex,1);
+                }
+            }
+
             var dateParams = matsCollections.CurveParams.find({type:matsTypes.InputTypes.dateRange}, {fields: {name: 1}}).fetch();
             var dateParamNames = _.pluck(dateParams, "name");
+            // remove any hidden date params or unused ones
+            // iterate backwards so that we can splice to remove
+            // dates are a little different - there is no element named paramName-paramtype because of the way daterange widgets are attached
+            // Instead we have to look for a document element with an id element-paramName
+            for (var dindex = dateParamNames.length-1; dindex >= 0; dindex--) {
+                var dElem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + dateParamNames[dindex]);
+                if (dElem && dElem.style && dElem.style.display==='none') {
+                    dateParamNames.splice(dindex,1);
+                }
+            }
             if (isScatter) {
                 var scatterCurveNames = [];
                 for (var i=0; i<curveNames.length;i++) {
