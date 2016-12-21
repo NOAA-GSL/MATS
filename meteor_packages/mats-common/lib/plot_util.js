@@ -1,5 +1,6 @@
  import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import { matsTypes } from 'meteor/randyp:mats-common';
 
 // determine the axisText (used in scatter_axis.js for example)
 // according to the Scatter Axis Text Patterns Pattern defined in
@@ -26,8 +27,12 @@ var getAxisText = function(plotType) {
 var getCurveText = function(plotType, curve){
     var curveTextPattern = matsCollections.CurveTextPatterns.findOne({plotType:plotType}).textPattern;
     var text = "";
+
     for (var i = 0; i < curveTextPattern.length; i++) {
         var a = curveTextPattern[i];
+        if ( matsParamUtils.getInputElementForParamName(a[1]) !== undefined && (matsParamUtils.getValueForParamName(a[1]) == matsTypes.InputTypes.unused || matsParamUtils.getInputElementForParamName(a[1]).style.display==='none' ) ) {
+            continue;
+        }
         text += a[0];
         if (curve[a[1]] instanceof Array && (curve[a[1]].length > 2)) {
             text += curve[a[1]][0] +  ".." + curve[a[1]][curve[a[1]].length -1];

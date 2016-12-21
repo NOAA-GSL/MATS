@@ -26,7 +26,7 @@ const getValueElementForParamName = function(paramName) {
 // Note that the value should be reflected in the adjoining control button value textContent.
 const getValueForParamName = function(paramName){
     try {
-        return getValueElementForParamName(paramName).textContent;
+        return getValueElementForParamName(paramName).textContent.trim();
     } catch (error) {
         return "";
     }
