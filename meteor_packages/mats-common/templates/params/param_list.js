@@ -71,8 +71,35 @@ Template.paramList.events({
             var elems = event.target.valueOf().elements;
             var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
             var curveNames = _.pluck(curveParams, "name");
+            // remove any hidden params or unused ones
+            // iterate backwards so that we can splice to remove
+            for (var cindex = curveNames.length; cindex >= 0; cindex--) {
+                var cname = curveNames[cindex];
+                var isHidden = matsParamUtils.getInputElementForParamName(cname) &&
+                    matsParamUtils.getInputElementForParamName(cname).style &&
+                    matsParamUtils.getInputElementForParamName(cname).style.display==='none';
+                var isUnused = matsParamUtils.getInputElementForParamName(cname) !== undefined &&
+                    matsParamUtils.getValueForParamName(cname) == matsTypes.InputTypes.unused;
+                if (isHidden || isUnused) {
+                    curveNames.splice(cindex,1);
+                }
+            }
+
             var dateParams = matsCollections.CurveParams.find({type:matsTypes.InputTypes.dateRange}, {fields: {name: 1}}).fetch();
             var dateParamNames = _.pluck(dateParams, "name");
+            // remove any hidden date params or unused ones
+            // iterate backwards so that we can splice to remove
+            for (var dindex = dateParamNames.length-1; dindex >= 0; dindex--) {
+                var dname = dateParamNames[dindex];
+                var isHidden = matsParamUtils.getInputElementForParamName(dname) &&
+                    matsParamUtils.getInputElementForParamName(dname).style &&
+                    matsParamUtils.getInputElementForParamName(dname).style.display==='none';
+                var isUnused = matsParamUtils.getInputElementForParamName(dname) !== undefined &&
+                    matsParamUtils.getValueForParamName(dname) == matsTypes.InputTypes.unused;
+                if (isHidden || isUnused) {
+                    dateParamNames.splice(dindex,1);
+                }
+            }
             if (isScatter) {
                 var scatterCurveNames = [];
                 for (var i=0; i<curveNames.length;i++) {
