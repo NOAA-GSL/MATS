@@ -8,12 +8,6 @@ import { regression } from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 
 data2dScatter = function (plotParams, plotFunction) {
-    var wfip2Settings = matsCollections.Databases.findOne({role:"wfip2_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var wfip2Pool = mysql.createPool(wfip2Settings);
-    wfip2Pool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
-
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {};
     var curveDates =  plotParams.dates.split(' - ');
