@@ -4,23 +4,19 @@ import { mysql } from 'meteor/pcel:mysql';
 import { moment } from 'meteor/momentjs:moment';
 const Future = require('fibers/future');
 
-// use future to wait for the query callback to complete
-var queryDB = function (statement, validTimeStr, statisticSelect, label) {
-    var dFuture = new Future();
+const queryDB = function (statement, validTimeStr, statisticSelect, label) {
     var d = [];  // d will contain the curve data
     var error = "";
-    var sumSettings = matsCollections.Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var sumPool = mysql.createPool(sumSettings);
-
+    var pFuture = new Future();
     sumPool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
             if (err != undefined) {
                 error = err.message;
-                dFuture['return']();
+                //pFuture['return']();
             } else if (rows === undefined || rows.length === 0) {
                 error = 'No data to plot: ' + err;
                 // done waiting - error condition
-                dFuture['return']();
+                //pFuture['return']();
             } else {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avVal = Number(rows[rowIndex].avVal);
@@ -31,11 +27,11 @@ var queryDB = function (statement, validTimeStr, statisticSelect, label) {
                 }// end of loop row
             }
             // done waiting - have results
-            dFuture['return']();
+            pFuture['return']();
         }
     );
     // wait for future to finish
-    dFuture.wait();
+    pFuture.wait();
     return d;   // [sub_values,sub_secs] as arrays
 };
 

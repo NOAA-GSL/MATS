@@ -10,17 +10,6 @@ const Future = require('fibers/future');
 dataSeries = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
-    var wfip2Settings = matsCollections.Databases.findOne({role: "wfip2_data", status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    var wfip2Pool = mysql.createPool(wfip2Settings);
-    wfip2Pool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
     var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = matsDataUtils.dateConvert(fromDateStr);
