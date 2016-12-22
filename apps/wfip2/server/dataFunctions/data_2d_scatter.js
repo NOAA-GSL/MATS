@@ -50,27 +50,38 @@ data2dScatter = function (plotParams, plotFunction) {
             var model = tmp[1];
             var instrument_id = tmp[2];
             var myVariable;
-            // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
-            // only the truth model is different form the curves other parameters
-
             var statistic = curve[axis + "-" + 'statistic'];
             if (axis == "xaxis") {
                 xStatistic = statistic;
             } else if (axis == "yaxis") {
                 yStatistic = statistic;
             }
-            var truthDataSource = curve[axis + "-" + 'truth-data-source'];
-            tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[truthDataSource][0].split(',');
-            var truthDataSource_is_instrument = tmp[0];
-            var truthDataSource_tablename = tmp[1];
-            var truthDataSource_id = tmp[2];
-
-            var truthRunInterval = tmp[3];
-            var truthDataSource_is_json = tmp[4];
-            var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
-            var truthModel = tmp[1];
-            var truthInstrument_id = tmp[2];
             var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
+            // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
+            // only the truth model is different form the curves other parameters
+            var truthDataSource;
+            var truthDataSource_is_instrument;
+            var truthDataSource_tablename;
+            var truthDataSource_id;
+            var truthRunInterval;
+            var truthDataSource_is_json;
+            var truthDataSource_discriminator_tablename;
+            var truthModel;
+            var truthInstrument_id;
+
+
+            if (truthRequired) {
+                truthDataSource = curve[axis + "-" + 'truth-data-source'];
+                tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[truthDataSource][0].split(',');
+                truthDataSource_is_instrument = tmp[0];
+                truthDataSource_tablename = tmp[1];
+                truthDataSource_id = tmp[2];
+                truthRunInterval = tmp[3];
+                truthDataSource_is_json = tmp[4];
+                truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
+                truthModel = tmp[1];
+                truthInstrument_id = tmp[2];
+            }
             // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
             // discriminators are not.
             // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
@@ -145,47 +156,47 @@ data2dScatter = function (plotParams, plotFunction) {
                 throw (new Error(error));
             }
 
-            statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
-            //console.log("statement: " + statement);
-            dFuture = new Future();
-            dFuture['hd'] = 0;
-            wfip2Pool.query(statement, function (err, rows) {
-                if (err != undefined) {
-                    throw( new Error("data series error = has_discriminator error: " + err.message) );
-                } else {
-                    dFuture['hd'] = rows[0]['hd'];
-                }
-                dFuture['return']();
-            });
-            dFuture.wait();
-            var truthDataSource_has_discriminator = dFuture['hd'];
-
             var truthStatement = '';
-            if (truthDataSource_is_instrument) {
-                if (truthDataSource_is_json) {
-                    truthStatement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-                } else {
-                    truthStatement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
-                }
-            } else {
-                truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
-                    " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                    " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
-            }
-            truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-
-            /*
-             For a statistical calculation that requires a truth curve - need to go through again for the truth curve.
-             */
             if (truthRequired == true) {
+                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
+                //console.log("statement: " + statement);
+                dFuture = new Future();
+                dFuture['hd'] = 0;
+                wfip2Pool.query(statement, function (err, rows) {
+                    if (err != undefined) {
+                        throw( new Error("data series error = has_discriminator error: " + err.message) );
+                    } else {
+                        dFuture['hd'] = rows[0]['hd'];
+                    }
+                    dFuture['return']();
+                });
+                dFuture.wait();
+                var truthDataSource_has_discriminator = dFuture['hd'];
+
+                if (truthDataSource_is_instrument) {
+                    if (truthDataSource_is_json) {
+                        truthStatement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                    } else {
+                        truthStatement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
+                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                    }
+                } else {
+                    truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                }
+                truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+
+                /*
+                 For a statistical calculation that requires a truth curve - need to go through again for the truth curve.
+                 */
                 console.log("truthStatement: " + truthStatement);
                 rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {

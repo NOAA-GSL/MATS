@@ -41,6 +41,8 @@ var refreshDependents = function(dependentNames) {
 
 Template.plotType.events({
     'click .plot-type-Profile': function(event) {
+        // remove all curves
+        document.getElementById('remove-all') && document.getElementById('remove-all').click();
         // move dates selector to curve parameters - one date range for each curve
         if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
             var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -73,6 +75,8 @@ Template.plotType.events({
         }
     },
     'click .plot-type-TimeSeries': function() {
+        // remove all curves
+        document.getElementById('remove-all') && document.getElementById('remove-all').click();
         // move dates selector to plot parameters - one date range for all curves
         if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
             var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -107,6 +111,8 @@ Template.plotType.events({
         }
     },
     'click .plot-type-Scatter2d': function() {
+        // remove all curves
+        document.getElementById('remove-all') && document.getElementById('remove-all').click();
         if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
             var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
             if (elem && elem.style) {

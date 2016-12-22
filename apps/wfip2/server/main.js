@@ -550,7 +550,6 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
-                ['','curve-dates',' '],
                 ['lc', 'level-completeness',' '],
                 ['sc', 'site-completeness','']
             ]
@@ -795,9 +794,13 @@ Meteor.startup(function () {
                         }));
                     qFuture2.wait();
                     }
-                    variableOptionsMap[matsTypes.PlotTypes.profile][model] = labels;
-                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = labels;
-                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = labels;
+                    variableOptionsMap[matsTypes.PlotTypes.profile][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.profile][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.profile][model],labels);
+                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][model],labels);
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][model],labels);
+
                     matsCollections.Models.insert({name: model, table_name: tablename, thisid: thisid});
                 }
             }
@@ -962,7 +965,6 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows[0].length; i++) {
-//                    var model = rows[0][i].description;
                     var model = rows[0][i].model;
                     var description = rows[0][i].description;
                     var forecastLengths = rows[0][i].fcst_lens;
@@ -982,14 +984,10 @@ Meteor.startup(function () {
                     });
                     dFuture.wait();
                     var model_has_discriminator = dFuture['hd'];
-                    //console.log("model_has_discriminator: " + model_has_discriminator.toString());
-
                     if (model_has_discriminator) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
-                        for (var j =0; j < discriminators.length; j++) {
-                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push(discriminators[j]);
-                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push(discriminators[j]);
-                        }
+                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description],discriminators);
+                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description],discriminators);
                     }
                 }
             }

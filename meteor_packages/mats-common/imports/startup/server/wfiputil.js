@@ -276,13 +276,18 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                         levels = JSON.parse(rows[rowIndex].z);
                         values = JSON.parse(rows[rowIndex][myVariable]);
                     }
-                    for ( var i = 0; i < levels.length; i++ ) {
-                        levels[i] = parseFloat( levels[i] );
-                        values[i] = parseFloat( values[i] );
-                        // var  val = parseFloat( values[i] )
-                        //if ( val >= disc_lower && val <= disc_upper ) {
-                        //  values[i] = val
-                        //}
+
+                    for (var i = 0; i < levels.length; i++) {
+                        var val = parseFloat(values[i])
+                        if ((disc_lower !== undefined) && (disc_upper !== undefined)) {
+                            if (val >= disc_lower && val <= disc_upper) {
+                                values[i] = val
+                                levels[i] = parseFloat(levels[i]);
+                            }
+                        } else {
+                            values[i] = val
+                            levels[i] = parseFloat(levels[i]);
+                        }
                     }
                 }
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
