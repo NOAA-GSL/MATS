@@ -550,7 +550,6 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', 'h, '],
                 ['', 'yaxis-discriminator', ', '],
-                ['','curve-dates',' '],
                 ['lc', 'level-completeness',' '],
                 ['sc', 'site-completeness','']
             ]
@@ -799,7 +798,7 @@ Meteor.startup(function () {
                     variableOptionsMap[matsTypes.PlotTypes.profile][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.profile][model],labels);
                     variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [];
                     variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][model],labels);
-                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = labels;
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [];
                     variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][model],labels);
 
                     matsCollections.Models.insert({name: model, table_name: tablename, thisid: thisid});
@@ -987,13 +986,7 @@ Meteor.startup(function () {
                     var model_has_discriminator = dFuture['hd'];
                     if (model_has_discriminator) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
-
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description] =
-                            variableOptionsMap[matsTypes.PlotTypes.scatter2d][description] === undefined ? [] : variableOptionsMap[matsTypes.PlotTypes.scatter2d][description];
                         variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description],discriminators);
-
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description] =
-                            variableOptionsMap[matsTypes.PlotTypes.timeSeries][description] === undefined ? [] : variableOptionsMap[matsTypes.PlotTypes.timeSeries][description];
                         variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description],discriminators);
                     }
                 }

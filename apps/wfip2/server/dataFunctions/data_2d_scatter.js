@@ -59,6 +59,8 @@ data2dScatter = function (plotParams, plotFunction) {
             } else if (axis == "yaxis") {
                 yStatistic = statistic;
             }
+            var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
+
             var truthDataSource = curve[axis + "-" + 'truth-data-source'];
             tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[truthDataSource][0].split(',');
             var truthDataSource_is_instrument = tmp[0];
@@ -70,7 +72,7 @@ data2dScatter = function (plotParams, plotFunction) {
             var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
             var truthModel = tmp[1];
             var truthInstrument_id = tmp[2];
-            var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
+
             // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
             // discriminators are not.
             // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
