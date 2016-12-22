@@ -10,4 +10,7 @@ Template.Home.onCreated(function(){
     this.subscribe("matsCurveUtils").ready();
     this.subscribe("matsParamUtils").ready();
     this.subscribe("plotType").ready();
+    Meteor._reload.onMigrate(function() {
+        return [false];
+    });
 });
