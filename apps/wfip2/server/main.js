@@ -979,7 +979,6 @@ Meteor.startup(function () {
                     forecastLengths.push.apply(forecastLengths, rows[0][i].fcst_lens.split(',').sort());
                     forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
                     if (is_instrument == 1) {
-                        //forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description] = Array.from(all_fcst_lens).sort());
                         forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
                     } else {
                         forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description], forecastLengths);

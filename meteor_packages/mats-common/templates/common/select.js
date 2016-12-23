@@ -126,7 +126,7 @@ const checkHideOther = function(item) {
                     otherInputElement.style.display = 'block';
                     otherValueElement.style.display = 'block';
                     otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
-                    otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
+                        otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
         }
@@ -137,7 +137,6 @@ const checkHideOther = function(item) {
 };
 
 Template.select.rendered = function(){
-
     const ref = this.data.name + '-' + this.data.type;
     const elem = document.getElementById(ref);
     const plotTypeDependent = this.data.plotTypeDependent === true;
