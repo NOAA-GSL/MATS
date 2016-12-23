@@ -277,6 +277,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                         values = JSON.parse(rows[rowIndex][myVariable]);
                     }
 
+
                     for (var i = 0; i < levels.length; i++) {
                         var val = parseFloat(values[i])
                         if ((disc_lower !== undefined) && (disc_upper !== undefined)) {
