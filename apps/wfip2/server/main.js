@@ -964,30 +964,43 @@ Meteor.startup(function () {
             if (rows === undefined || rows.length === 0) {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
+                var all_fcst_lens = new Set();
+                for (var i = 0; i < rows[0].length; i++) {
+                    these_lengths = rows[0][i].fcst_lens.split(',');
+                    for (var j = 0; j < these_lengths.length; j++) {
+                        all_fcst_lens.add(these_lengths[j]);
+                    }
+                }
                 for (var i = 0; i < rows[0].length; i++) {
                     var model = rows[0][i].model;
                     var description = rows[0][i].description;
-                    var forecastLengths = rows[0][i].fcst_lens;
-                    forecastLengthOptionsMap[description] = forecastLengths.split(',');
-
-                    statement = "select has_discriminator('" + model.toString() + "') as hd";
+                    var is_instrument = modelOptionsMap[description][0].split(',')[0];
+                    var forecastLengths = [];
+                    forecastLengths.push.apply(forecastLengths, rows[0][i].fcst_lens.split(',').sort());
+                    forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
+                    if (is_instrument == 1) {
+                        forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description] = Array.from(all_fcst_lens).sort());
+                    } else {
+                        forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description], forecastLengths);
+                    }
+                    statement = "select has_discriminator('" + description.toString() + "') as hd";
                     //console.log("statement: " + statement);
                     var dFuture = new Future();
                     dFuture['hd'] = 0;
-                    wfip2Pool.query(statement, function (err, rows) {
-                        if (err != undefined) {
-                            error = "   has_discriminator error: " + err.message;
+                    wfip2Pool.query(statement, function (hderr, hdrows) {
+                        if (hderr != undefined) {
+                            error = "   has_discriminator error: " + hderr.message;
                         } else {
-                            dFuture['hd'] = rows[0]['hd'];
+                            dFuture['hd'] = hdrows[0]['hd'];
                         }
                         dFuture['return']();
                     });
                     dFuture.wait();
                     var model_has_discriminator = dFuture['hd'];
-                    if (model_has_discriminator) {
+                    if ( model_has_discriminator == 1) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description],discriminators);
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description],discriminators);
+                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description], discriminators);
+                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description], discriminators);
                     }
                 }
             }
