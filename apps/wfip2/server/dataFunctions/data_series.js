@@ -39,16 +39,14 @@ dataSeries = function (plotParams, plotFunction) {
         yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var dataSource = curve['data-source'];
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var dataSource_is_instrument = parseInt(tmp[0]);
-        var dataSource_tablename = tmp[1];
-        var dataSource_id = tmp[2];
-        var verificationRunInterval = tmp[3];
-        var dataSource_is_json = parseInt(tmp[4]);
-        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
+        var dataSource_has_discriminator = parseInt(tmp[0]);
+        var dataSource_is_instrument = parseInt(tmp[1]);
+        var dataSource_tablename = tmp[2];
+        // var dataSource_id = tmp[3];  not needed
+        var verificationRunInterval = tmp[4];
+        var dataSource_is_json = parseInt(tmp[5]);
 
-        var myVariable;
         var statistic = curve['statistic'];
 
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
@@ -60,25 +58,11 @@ dataSeries = function (plotParams, plotFunction) {
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
         var variableStr = curve['variable'];
-        myVariable = variableMap[variableStr];
+        var myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
-            myVariable = curve['variable'];
+            throw new Error( "variable " + variableStr + " is not is variableMap" );
         }
 
-        statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
-        //console.log("statement: " + statement);
-        var dFuture = new Future();
-        dFuture['hd'] = 0;
-        wfip2Pool.query(statement, function (err, rows) {
-            if (err != undefined) {
-                throw( new Error( "dataSeries error = has_discriminator error: " + err.message ) );
-            } else {
-                dFuture['hd'] = rows[0]['hd'];
-            }
-            dFuture['return']();
-        });
-        dFuture.wait();
-        var dataSource_has_discriminator = dFuture['hd'];
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
@@ -94,10 +78,10 @@ dataSeries = function (plotParams, plotFunction) {
 
         //var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
         //var variable = variableOptionsMap[dataSource][variableStr];
-        var discriminator = curve['discriminator'];
-        var disc_upper = curve['upper'];
-        var disc_lower = curve['lower'];
-        var forecastLength = curve['forecast-length'];
+        var discriminator = curve['discriminator'] === undefined ? matsTypes.InputTypes.unused : curve['discriminator'];
+        var disc_upper = Number( curve['upper'] );
+        var disc_lower = Number( curve['lower'] );
+        var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
         var statement = "";
         var count = 0;
         var sum = 0;
@@ -129,7 +113,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json, disc_lower, disc_upper );
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
                 throw (new Error(error));
@@ -188,7 +172,7 @@ dataSeries = function (plotParams, plotFunction) {
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
-                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
+                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper  );
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
                     //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
                     throw ( new Error(truthQueryResult.error) );
