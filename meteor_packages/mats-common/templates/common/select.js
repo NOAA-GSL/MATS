@@ -125,6 +125,8 @@ const checkHideOther = function(item) {
                     otherControlElem.style.display = 'block';
                     otherInputElement.style.display = 'block';
                     otherValueElement.style.display = 'block';
+                    otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
+                        otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
         }
@@ -221,7 +223,10 @@ Template.select.rendered = function(){
                     superiorOptions = optionsMap[selectedSuperiorValue];
                 }
                 /* tricky little bit here:
-                If the controlButton for this superior element is hidden it has been hidden
+                If the controlButton for this superior element is hidden ....
+                matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null
+                ....
+                it has been hidden
                 because it has a visibility dependency on another param i.e. truth-data-source
                 is dependent upon statistic such that if the statistic is "mean" the truth-data-source
                 is hidden. See the wfip2 main.js statistic param as an example....
@@ -232,17 +237,31 @@ Template.select.rendered = function(){
                  In that condition (controlButton is hidden) the superior should not be used as an intersection in the selected sites.
                  matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
                  for this element (this superior) is hidden.
+
+                Also the unused is tested against the superior...
+                used && unused  -> use the used
+                unused and used -> use the used
+                used and used -> use the intersection
+                unused and unused - set the options to []
                 */
+                var superiorOptionsUsed = (superiorOptions !== null) && (superiorOptions !== matsTypes.InputTypes.unused) && superiorOptions !== [];
+                var myOptionsUsed = (options !== null) && (options !== matsTypes.InputTypes.unused) && options !== [];
                 if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
-                    if (options === null) {
+                    if (!superiorOptionsUsed && !myOptionsUsed) {  // none used - set to []
+                        options = [];
+                        matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
+                    } else if (!myOptionsUsed && superiorOptionsUsed) { // superiors - use those
                         options = matsParamUtils.typeSort(superiorOptions);
-                    } else {
-                        options = matsParamUtils.typeSort(_.intersection(options, superiorOptions));
+                    } else if (myOptionsUsed && !superiorOptionsUsed) {  // mine - use mine
+                        options = matsParamUtils.typeSort(options);
+                    } else if (myOptionsUsed && superiorOptionsUsed) { // both - use the intersection
+                        if ((options && options.length === 0) || (superiorOptions && superiorOptions.length ===0)) {
+                            options = matsParamUtils.typeSort(_.union(options, superiorOptions));
+                        } else {
+                            options = matsParamUtils.typeSort(_.intersection(options, superiorOptions));
+                        }
                     }
                 }
-            }
-            if (options === null || options === undefined) {
-                options = [];
             }
             // reset the options of the select
             var optionsAsString = "";
@@ -267,7 +286,8 @@ Template.select.rendered = function(){
             }
             selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
             elem.selectedIndex = selectedOptionIndex;
-            elem.options[elem.selectedIndex].scrollIntoView();
+            elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
+            elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
             matsMethods.setSelectParamOptions.call({
                 name: name,
                 options: options,
@@ -318,9 +338,7 @@ Template.select.rendered = function(){
             }
             refresh(superiors);
         }
-        if (elem && elem.options && elem.selectedIndex >= 0) {
-            elem.options[elem.selectedIndex].scrollIntoView();
-        }
+        elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
 
     } catch (e) {
         e.message = "Error in select.js render function: " + e.message;
@@ -337,7 +355,10 @@ Template.select.helpers({
         }
     },
     options: function() {
-        var sOptions = matsParamUtils.typeSort(this.options);
+        var sOptions = [];
+        if (this.options !== matsTypes.InputTypes.unused) {
+            sOptions = matsParamUtils.typeSort(this.options);
+        }
         return sOptions;
     },
     multiple:function(){
@@ -358,7 +379,11 @@ Template.select.helpers({
 
 Template.select.events({
     'change .data-input': function(event) {
-        matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
+        if (event.currentTarget.options == []) {
+            matsParamUtils.setValueTextForParamName(this.name,matsTypes.InputTypes.unused);
+        } else {
+            event.currentTarget.options && event.currentTarget.options.selectedIndex && matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
+        }
         // These need to be done in the right order!
         // always check to see if an "other" needs to be hidden or disabled before refreshing
         checkHideOther(this);
