@@ -989,7 +989,7 @@ Meteor.startup(function () {
                 for (var i = 0; i < rows[0].length; i++) {
                     var model = rows[0][i].model;
                     var description = rows[0][i].description;
-                    var is_instrument = modelOptionsMap[description][0].split(',')[0];
+                    var is_instrument = modelOptionsMap[description][0].split(',')[1];
                     var forecastLengths = [];
                     forecastLengths.push.apply(forecastLengths, rows[0][i].fcst_lens.split(',').sort());
                     forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];

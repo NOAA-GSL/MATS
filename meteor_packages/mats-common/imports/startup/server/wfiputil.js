@@ -266,7 +266,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 if (isJSON) {
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        const discrinator = JSON.parse(rows[rowIndex].data)[myDiscriminator];
+                        const discrinator = Number( JSON.parse(rows[rowIndex].data)[myDiscriminator] );
                         if (discrinator < disc_lower || discrinator > disc_upper) {
                             continue;
                         }
