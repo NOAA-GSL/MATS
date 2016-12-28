@@ -770,8 +770,23 @@ Meteor.startup(function () {
                     var minutc = rows[0][i].minutc;
                     var maxutc = rows[0][i].maxutc;
 
+                    statement = "select has_discriminator('" + model.toString() + "') as hd";
+                    //console.log("statement: " + statement);
+                    var dFuture = new Future();
+                    dFuture['hd'] = 0;
+                    wfip2Pool.query(statement, function (err, rows) {
+                        if (err != undefined) {
+                            throw( new Error( "dataSeries error = has_discriminator error: " + err.message ) );
+                        } else {
+                            dFuture['hd'] = rows[0]['hd'];
+                        }
+                        dFuture['return']();
+                    });
+                    dFuture.wait();
+                    var dataSource_has_discriminator = dFuture['hd'];
+
                     var valueList = [];
-                    valueList.push(is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
+                    valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
                     modelOptionsMap[model] = valueList;
                     datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\", \"minutc\":\"" + minutc + "\", \"maxutc\":\"" + maxutc + "\"}}";
 
@@ -787,8 +802,8 @@ Meteor.startup(function () {
                                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement2);
                             } else {
                                 var infostring = rows2[0].info.split('|');
-                                labels.push(infostring[0]);
-                                variableFieldsMap[infostring[0]] = variable_names[j];
+                                labels.push(infostring[1]);
+                                variableFieldsMap[infostring[1]] = variable_names[j];
                             }
                             qFuture2['return']();
                         }));

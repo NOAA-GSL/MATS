@@ -177,7 +177,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDiscriminator, isJSON, disc_lower, disc_upper) {
+var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -259,38 +259,27 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                 if (timeSites.indexOf(siteid) === -1) {
                     timeSites.push(siteid);
                 }
+
                 var values = [];
                 var levels = [];
-                if (isDiscriminator)  {
-                    // discriminators do not return arrays of values, just a single value
-                    // discriminators levels are invalid - just make them one special level Number.MIN_VALUE
-                    levels = [Number.MIN_VALUE];
-                    values = [Number(rows[rowIndex][myVariable])];
-                } else {
-                    if (isJSON)  {
-                        // JSON variable -- stored as JSON structure 'data' in the DB
-                        levels = JSON.parse(rows[rowIndex].data)['z'];
-                        values = JSON.parse(rows[rowIndex].data)[myVariable];
-                    } else {
-                        // conventional variable -- stored as text in the DB
-                        levels = JSON.parse(rows[rowIndex].z);
-                        values = JSON.parse(rows[rowIndex][myVariable]);
-                    }
 
-
-                    for (var i = 0; i < levels.length; i++) {
-                        var val = parseFloat(values[i])
-                        if ((disc_lower !== undefined) && (disc_upper !== undefined)) {
-                            if (val >= disc_lower && val <= disc_upper) {
-                                values[i] = val
-                                levels[i] = parseFloat(levels[i]);
-                            }
-                        } else {
-                            values[i] = val
-                            levels[i] = parseFloat(levels[i]);
+                if (isJSON) {
+                    // JSON variable -- stored as JSON structure 'data' in the DB
+                    if (myDiscriminator !== matsTypes.InputTypes.unused) {
+                        const discrinator = JSON.parse(rows[rowIndex].data)[myDiscriminator];
+                        if (discrinator < disc_lower || discrinator > disc_upper) {
+                            continue;
                         }
                     }
+                    levels = JSON.parse(rows[rowIndex].data)['z'];
+                    values = JSON.parse(rows[rowIndex].data)[myVariable];
+                } else {
+                    // conventional variable -- stored as text in the DB
+                    levels = JSON.parse(rows[rowIndex].z);
+                    values = JSON.parse(rows[rowIndex][myVariable]);
                 }
+
+
                 // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
@@ -305,7 +294,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isDis
                       }
                   }
                 }
-                allLevels.push(levels);  // array of level arrays - two dimensions
+                allLevels.push.apply( allLevels, levels);  // array of level arrays - two dimensions
                 if ( numLevels > 1 ) {
                     var sum = values.reduce(function (a,b) {return a + b;},0);
                 } else {
