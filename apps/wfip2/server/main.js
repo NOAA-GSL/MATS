@@ -942,7 +942,7 @@ Meteor.startup(function () {
 
     try {
 
-        var statement = "select * from discriminator_range;";
+        var statement = "select D.name as name, min_value, max_value, label from discriminator_range as D, variables as V where D.name = V.name;";
         var qFuture = new Future();
         wfip2Pool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
             if (err != undefined) {
@@ -953,13 +953,14 @@ Meteor.startup(function () {
                 console.log('No data in database ' + wfip2Settings.database + "! query:" + statement);
             } else {
                 for (var i = 0; i < rows.length; i++) {
-                    var discriminator = rows[i].name;
+                    var label = rows[i].label;
+                    var name = rows[i].name;
                     var min_value = rows[i].min_value;
                     var max_value = rows[i].max_value;
-                    discriminatorOptionsMap[discriminator] = discriminator;
+                    discriminatorOptionsMap[label] = name;
                     var step = "any";
-                    upperOptionsMap[discriminator] = {min:min_value,max:max_value,step:step,default:max_value};
-                    lowerOptionsMap[discriminator] = {min:min_value,max:max_value,step:step,default:min_value};
+                    upperOptionsMap[label] = {min:min_value,max:max_value,step:step,default:max_value};
+                    lowerOptionsMap[label] = {min:min_value,max:max_value,step:step,default:min_value};
                 }
             }
             qFuture['return']();
@@ -1014,8 +1015,27 @@ Meteor.startup(function () {
                     var model_has_discriminator = dFuture['hd'];
                     if ( model_has_discriminator == 1) {
                         var discriminators = Object.keys(discriminatorOptionsMap);
-                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description], discriminators);
-                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description], discriminators);
+                        var labels = [];
+                        for (var j = 0; j < discriminators.length; j++) {
+                            var statement2 = "select getVariableInfo('" + discriminatorOptionsMap[discriminators[j]] + "') as info;";
+                            var qFuture2 = new Future();
+                            wfip2Pool.query(statement2, Meteor.bindEnvironment(function (err2, rows2) {
+                                if (err2 != undefined) {
+                                    console.log(err2.message);
+                                }
+                                if (rows2 === undefined || rows2.length === 0) {
+                                    console.log('No data in database ' + wfip2Settings.database + "! query:" + statement2);
+                                } else {
+                                    var infostring = rows2[0].info.split('|');
+                                    labels.push(infostring[1]);
+                                    variableFieldsMap[infostring[1]] = discriminatorOptionsMap[discriminators[j]];
+                                }
+                                qFuture2['return']();
+                            }));
+                            qFuture2.wait();
+                        }
+                        variableOptionsMap[matsTypes.PlotTypes.scatter2d][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][description], labels);
+                        variableOptionsMap[matsTypes.PlotTypes.timeSeries][description].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][description], labels);
                     }
                 }
             }

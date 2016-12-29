@@ -192,7 +192,7 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
 
-        console.log("in queryWFIP2DB statement: " + statement);
+        //console.log("in queryWFIP2DB statement: " + statement);
 
         // every row is a time and a site with a level array and a values array
         // the time an site combination form a unique pair but there
@@ -266,26 +266,39 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 if (isJSON) {
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        const discrinator = Number( JSON.parse(rows[rowIndex].data)[myDiscriminator] );
-                        if (discrinator < disc_lower || discrinator > disc_upper) {
+                        var discriminator = Number( JSON.parse(rows[rowIndex].data)[myDiscriminator] );
+                        if (discriminator < disc_lower || discriminator > disc_upper) {
                             continue;
                         }
                     }
-                    levels = JSON.parse(rows[rowIndex].data)['z'];
                     values = JSON.parse(rows[rowIndex].data)[myVariable];
+                    if ( values !== undefined ) {
+                        levels = JSON.parse(rows[rowIndex].data)['z'];
+                    }
                 } else {
                     // conventional variable -- stored as text in the DB
-                    levels = JSON.parse(rows[rowIndex].z);
                     values = JSON.parse(rows[rowIndex][myVariable]);
+                    if (values !== undefined) {
+                        levels = JSON.parse(rows[rowIndex].z);
+                    }
                 }
 
+                // surface values and discriminators are scalars and are returned by the DB a as string
+                if ( typeof(values) === "string" ){
+                    levels = [Number(levels[0])];
+                    values = [Number(values[0])];
+                }
 
-                // apply level filter, remove any levels and corresponding values that are not within the boundary.
+                var numLevels = levels.length;
+                if ( numLevels === 0 ) {
+                    // no data found in this record
+                    continue;
+                }
+
+                if ( numLevels > 1 ) {            // apply level filter, remove any levels and corresponding values that are not within the boundary.
                 // there are always the same number of levels as values, they correspond one to one (in database).
                 // filter backwards so the the level array is safely modified.
-                // always accept levels that are Number.MIN_VALUE - they are special discriminators
-                var numLevels = levels.length;
-                if ( numLevels > 1 ) {
+                // always accept levels that are Number.MIN_VALUE - they are special discriminators{
                   for (var l = levels.length - 1; l >= 0; l--) {
                       var lvl = levels[l];
                       if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
@@ -294,14 +307,12 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                       }
                   }
                 }
+
                 allLevels.push.apply( allLevels, levels);  // array of level arrays - two dimensions
                 if ( numLevels > 1 ) {
                     var sum = values.reduce(function (a,b) {return a + b;},0);
                 } else {
-                    // convert scaler json objects into arrays
-                    levels = [levels];
-                    values = [values];
-                    var sum = values;
+                    var sum = values[0];
                 }
 
                 var mean = sum / numLevels;
