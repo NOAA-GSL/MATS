@@ -60,7 +60,7 @@ dataSeries = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
-            throw new Error( "variable " + variableStr + " is not is variableMap" );
+            throw new Error( "variable " + variableStr + " is not in variableMap" );
         }
 
 
