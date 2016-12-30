@@ -1,6 +1,7 @@
 import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from  'meteor/randyp:mats-common';
 import {matsParamUtils } from 'meteor/randyp:mats-common';
+import {matsCollections } from 'meteor/randyp:mats-common';
 
 Template.item.helpers({
     value: function() {
@@ -136,7 +137,9 @@ Template.item.events({
         }
     },
     'change .data-input': function (event) {
+        event.target.checkValidity();
         if (this.type !== matsTypes.InputTypes.numberSpinner) {
+            event.target.checkValidity();
             var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
             if (elem === undefined) {
                 return false;
@@ -151,8 +154,9 @@ Template.item.events({
         }
     },
 
-    'blur .data-input': function () {
+    'blur .data-input': function (event) {
         if (this.type === matsTypes.InputTypes.numberSpinner) {
+            event.target.checkValidity();
             var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
             if (elem === undefined) {
                 return false;
@@ -170,6 +174,15 @@ Template.item.events({
         var helpref = Session.get("app").helpref;
         $("#matshelp").load(helpref + "/" + this.help + " #matshelp");
         $("#helpModal").modal('show');
+    },
+    'invalid' : function(event) {
+        if (this.type === matsTypes.InputTypes.numberSpinner) {
+            const default_value = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} ).default;
+            setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name + " it must be between " + event.currentTarget.min + " and " + event.currentTarget.max + " -- resetting to default value: " + default_value));
+            event.currentTarget.value = default_value;
+        } else {
+            setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name ) );
+        }
     }
 });
 
@@ -198,6 +211,7 @@ Template.select.events({
 Template.numberSpinner.events({
     'change, blur': function (event) {
         try {
+            event.target.checkValidity();
             var text = event.currentTarget.value;
             matsParamUtils.setValueTextForParamName(event.target.name,text);
         } catch (error){
