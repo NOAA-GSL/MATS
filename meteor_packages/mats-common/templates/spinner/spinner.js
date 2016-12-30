@@ -8,3 +8,10 @@ Template.spinner.helpers({
         return img;
     }
 });
+
+
+Template.spinner.events({
+    'click .cancel': function () {
+        document.getElementById("spinner").style.display = "none";
+    }
+});

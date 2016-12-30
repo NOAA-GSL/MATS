@@ -158,6 +158,7 @@ Package.onUse(function(api) {
   api.addFiles("templates/common/date_range.js", "client");
 
   api.addFiles("templates/common/checkbox_group.html", "client");
+  api.addFiles("templates/common/checkbox_group.js", "client");
 
   api.addFiles("templates/common/number_spinner.html", "client");
   api.addFiles("templates/common/number_spinner.js", "client");

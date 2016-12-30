@@ -149,7 +149,7 @@ Template.select.rendered = function(){
 
     try {
         // register refresh event for axis change to use to enforce a refresh
-        elem.addEventListener('axisRefresh', function () {
+        elem && elem.addEventListener('axisRefresh', function () {
             // Don't know why I have to do this, I expected the parameter data to be in the context....
             const paramData = matsCollections.CurveParams.findOne({name: this.name}, {dependentNames: 1, peerName: 1});
             const peerName = paramData.peerName;
@@ -166,7 +166,7 @@ Template.select.rendered = function(){
             }
         });
         // register refresh event for any superior to use to enforce a refresh of the options list
-        elem.addEventListener('refresh', function (e) {
+        elem && elem.addEventListener('refresh', function (e) {
             if (superiorNames) {
                 var superiors = [];
                 for (var sn = 0; sn < superiorNames.length; sn++) {
@@ -382,7 +382,10 @@ Template.select.events({
         if (event.currentTarget.options == []) {
             matsParamUtils.setValueTextForParamName(this.name,matsTypes.InputTypes.unused);
         } else {
-            event.currentTarget.options && event.currentTarget.options.selectedIndex && matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
+            event.currentTarget.options &&
+            event.currentTarget.options.selectedIndex &&
+            event.currentTarget.options[event.currentTarget.options.selectedIndex] &&
+            matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
         }
         // These need to be done in the right order!
         // always check to see if an "other" needs to be hidden or disabled before refreshing
