@@ -34,21 +34,39 @@ dataSeries = function (plotParams, plotFunction) {
     var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
     var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
     var options;
+    var max_verificationRunInterval = Number.MIN_VALUE;
+    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var curve = curves[curveIndex];
+        const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
+        curve.dataSource_is_instrument = parseInt(tmp[1]);
+        curve.dataSource_tablename = tmp[2];
+        curve.verificationRunInterval = tmp[4];
+        curve.dataSource_is_json = parseInt(tmp[5]);
+        max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
+        if (curve['statistic'] != "mean") {
+            // need a truth data source for statistic
+            const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+            curve.truthDataSource_is_instrument = parseInt(tmp[1]);
+            curve.truthDataSource_tablename = tmp[2];
+            curve.truthRunInterval = tmp[4];
+            curve.truthDataSource_is_json = parseInt(tmp[5]);
+            max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
+        }
+    }
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         yAxisMaxes[curveIndex] = Number.MIN_VALUE;
         yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
-        var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var dataSource_has_discriminator = parseInt(tmp[0]);
-        var dataSource_is_instrument = parseInt(tmp[1]);
-        var dataSource_tablename = tmp[2];
-        // var dataSource_id = tmp[3];  not needed
-        var verificationRunInterval = tmp[4];
-        var dataSource_is_json = parseInt(tmp[5]);
-
+        var dataSource_is_instrument = curve.dataSource_is_instrument;
+        var dataSource_tablename = curve.dataSource_tablename;
+        var verificationRunInterval = curve.verificationRunInterval;
+        if (matchTime) {
+            verificationRunInterval = max_verificationRunInterval;
+        }
+        var dataSource_is_json = curve.dataSource_is_json;
         var statistic = curve['statistic'];
-
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
@@ -62,7 +80,6 @@ dataSeries = function (plotParams, plotFunction) {
         if (myVariable === undefined) {
           throw new Error("variable " + variableStr + " is not in variableMap");
         }
-
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
@@ -82,6 +99,7 @@ dataSeries = function (plotParams, plotFunction) {
         var disc_upper = Number( curve['upper'] );
         var disc_lower = Number( curve['lower'] );
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
+        forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var statement = "";
         var count = 0;
         var sum = 0;
@@ -89,16 +107,18 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if ( dataSource_is_instrument ) {
+                const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
-                    statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    // verificationRunInterval is in milliseconds
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 } else {
-                    statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 }
             // data source is a model and its JSON
             } else {
@@ -113,54 +133,39 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper );
+            try {
+                var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+            } catch (e) {
+                e.message =  "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
+                throw e;
+            }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
                 throw (new Error(error));
             }
             var truthQueryResult = queryResult;
-
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
-                var truthDataSource = curve['truth-data-source'];
-                var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-                var truthDataSource_is_instrument = tmp[0];
-                var truthDataSource_tablename = tmp[1];
-                var truthDataSource_id = tmp[2];
-                var truthRunInterval = tmp[3];
-                var truthDataSource_is_json = tmp[4];
-                var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
+                var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
+                var truthDataSource_tablename = curve.truthDataSource_tablename;
+                var truthRunInterval = curve.truthRunInterval;
+                var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
-
-                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
-                //console.log("statement: " + statement);
-                dFuture = new Future();
-                dFuture['hd'] = 0;
-                wfip2Pool.query(statement, function (err, rows) {
-                    if (err != undefined) {
-                        throw( new Error("data series error = has_discriminator error: " + err.message) );
-                    } else {
-                        dFuture['hd'] = rows[0]['hd'];
-                    }
-                    dFuture['return']();
-                });
-                dFuture.wait();
-                var truthDataSource_has_discriminator = dFuture['hd'];
-
                 var truthStatement = '';
                 if (truthDataSource_is_instrument) {
+                    const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        truthStatement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
                 } else {
                     truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
@@ -172,8 +177,14 @@ dataSeries = function (plotParams, plotFunction) {
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
-                truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper  );
-                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                try {
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper  );
+                } catch (e) {
+                    e.message =  "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
+                    throw e;
+                }
+
+            if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
                     //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
                     throw ( new Error(truthQueryResult.error) );
                 }
@@ -194,8 +205,8 @@ dataSeries = function (plotParams, plotFunction) {
              result =  {
              error: error,
              data: resultData,
-             allLevels: allLevels,
-             allSites: allSiteIds,
+             levelsBasis: levelsBasis,
+             sitesBasis: sitesBasis,
              allTimes: allTimes,
              minInterval: minInterval,
              mean:cumulativeMovingAverage
@@ -233,19 +244,11 @@ dataSeries = function (plotParams, plotFunction) {
 
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
-            var levelBasis;
-            var siteBasis;
-            levelBasis = _.union.apply(_, queryResult.allLevels);
-            siteBasis = _.union.apply(_, queryResult.allSites);
-            var truthLevelBasis;
-            var truthSiteBasis;
-            var tqrl = truthQueryResult.allLevels.length;
+            const levelBasis = queryResult.levelsBasis;
+            const siteBasis = queryResult.sitesBasis;
             var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                   return a[0] - b[0]
              });
-            var newtqrl = truthQueryResult.allLevels.length;
-
-
             //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
             // and skip any where there isn't a corresponding time.
@@ -788,6 +791,11 @@ dataSeries = function (plotParams, plotFunction) {
             queries: dataRequests
         }
     };
-    //console.log("result", JSON.stringify(result,null,2));
-    plotFunction(result);
+    try {
+        plotFunction(result);
+    } catch (e) {
+        console.log("plotting graph result is", JSON.stringify(result,null,2));
+        e.message = "Error plotting graph with function: " + plotFunction.name + " error:" + e.message;
+        throw e;
+    }
 };

@@ -41,14 +41,10 @@ data2dScatter = function (plotParams, plotFunction) {
             var dataSource = (curve[axis + '-' + 'data-source']);
             // each axis has a data source - get the right data source and derive the model
             var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[dataSource][0].split(',');
-            var dataSource_is_instrument = parseInt(tmp[0]);
-            var dataSource_tablename = tmp[1];
-            var dataSource_id = tmp[2];
-            var verificationRunInterval = tmp[3];
-            var dataSource_is_json = parseInt(tmp[4]);
-            var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
-            var model = tmp[1];
-            var instrument_id = tmp[2];
+            var dataSource_is_instrument = parseInt(tmp[1]);
+            var dataSource_tablename = tmp[2];
+            var verificationRunInterval = tmp[4];
+            var dataSource_is_json = parseInt(tmp[5]);
             var myVariable;
             var statistic = curve[axis + "-" + 'statistic'];
             if (axis == "xaxis") {
@@ -73,11 +69,11 @@ data2dScatter = function (plotParams, plotFunction) {
             if (truthRequired) {
                 truthDataSource = curve[axis + "-" + 'truth-data-source'];
                 tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[truthDataSource][0].split(',');
-                truthDataSource_is_instrument = tmp[0];
-                truthDataSource_tablename = tmp[1];
-                truthDataSource_id = tmp[2];
-                truthRunInterval = tmp[3];
-                truthDataSource_is_json = tmp[4];
+                truthDataSource_is_instrument = tmp[1];
+                truthDataSource_tablename = tmp[2];
+                truthDataSource_id = tmp[3];
+                truthRunInterval = tmp[4];
+                truthDataSource_is_json = tmp[5];
                 truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
                 truthModel = tmp[1];
                 truthInstrument_id = tmp[2];
@@ -106,34 +102,23 @@ data2dScatter = function (plotParams, plotFunction) {
             var variableStr = curve[axis + '-' + 'variable'];
             var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.scatter2d];
             var variable = variableOptionsMap[dataSource][variableStr];
-            var discriminator = curve[axis + '-' + 'discriminator'];
+            if (myVariable === undefined) {
+                throw new Error("variable " + variableStr + " is not in variableMap");
+            }
+            var discriminator = curve[axis + '-' + 'discriminator'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'discriminator'];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
-            var forecastLength = curve[axis + '-' + 'forecast-length'];
-
-            var  statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
-            //console.log("statement: " + statement);
-            var dFuture = new Future();
-            dFuture['hd'] = 0;
-            wfip2Pool.query(statement, function (err, rows) {
-                if (err != undefined) {
-                    throw( new Error( "dataSeries error = has_discriminator error: " + err.message ) );
-                } else {
-                    dFuture['hd'] = rows[0]['hd'];
-                }
-                dFuture['return']();
-            });
-            dFuture.wait();
-            var dataSource_has_discriminator = dFuture['hd'];
-
+            var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];
+            forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
+            // verificationRunInterval is in milliseconds
             if ( dataSource_is_instrument ) {
                 if (dataSource_is_json) {
-                    statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
                 } else {
-                    statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
                         " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
@@ -222,8 +207,8 @@ data2dScatter = function (plotParams, plotFunction) {
          result =  {
          error: error,
          data: resultData,
-         allLevels: allLevels,
-         allSites: allSiteIds,
+         levelsBasis: levelsBasis,    // the union of all the levels
+         sitesBasis: sitesBasis,      // the union of all the sites
          allTimes: allTimes,
          minInterval: minInterval,
          mean:cumulativeMovingAverage
@@ -261,10 +246,10 @@ data2dScatter = function (plotParams, plotFunction) {
         var levelCompletenessY = curve['xaxis-level-completeness'];
         var siteCompletenessX = curve['xaxis-site-completeness'];
         var siteCompletenessY = curve['yaxis-site-completeness'];
-        var levelBasisX = _.union.apply(_,rawAxisData['xaxis'].allLevels);
-        var levelBasisY = _.union.apply(_,rawAxisData['yaxis'].allLevels);
-        var siteBasisX = _.union.apply(_,rawAxisData['xaxis'].allSites);
-        var siteBasisY = _.union.apply(_,rawAxisData['yaxis'].allSites);
+        var levelBasisX = rawAxisData['xaxis'].levelsBasis;
+        var levelBasisY = rawAxisData['yaxis'].levelsBasis;
+        var siteBasisX = rawAxisData['xaxis'].sitessBasis;
+        var siteBasisY = rawAxisData['yaxis'].sitessBasis;
 
         // normalize data
         // We have to include only the entries where the times match for both x and y.
