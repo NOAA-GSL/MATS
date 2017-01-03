@@ -1,6 +1,6 @@
 <template name="checkboxGroup">
     <span>
-        &nbsp;&nbsp;<input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}"/>
+        &nbsp;&nbsp;<input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}" {{checkedByDefault ../../default}} />
     </span>
     <span>
         &nbsp;<label for="{{../../name}}-{{../../type}}-{{this}}">{{this}}</label>

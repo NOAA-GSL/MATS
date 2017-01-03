@@ -20,20 +20,25 @@ dataProfile = function (plotParams, plotFunction) {
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
-    // var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
-    // var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
-    // var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
+    var max_verificationRunInterval = Number.MIN_VALUE;
+    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var curve = curves[curveIndex];
+        const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
+        curve.dataSource_is_instrument = parseInt(tmp[1]);
+        curve.dataSource_tablename = tmp[2];
+        curve.verificationRunInterval = tmp[4];
+        curve.dataSource_is_json = parseInt(tmp[5]);
+        max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
+    }
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var dataSource = curve['data-source'];
-        var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var dataSource_is_instrument = parseInt(tmp[1]);
-        var dataSource_tablename = tmp[2];
-        var dataSource_id = tmp[3];
-        var verificationRunInterval = tmp[4];
-        var dataSource_is_json = parseInt(tmp[5]);
-        var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
+        var dataSource_is_instrument = curve.dataSource_is_instrument;
+        var dataSource_tablename = curve.dataSource_tablename;
+        var verificationRunInterval = curve.verificationRunInterval;
+        var dataSource_is_json = curve.dataSource_is_json;
 
         var myVariable;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
@@ -47,22 +52,6 @@ dataProfile = function (plotParams, plotFunction) {
             myVariable = curve['variable'];
             myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
-
-        statement = "select has_discriminator('" + dataSource.toString() + "') as hd";
-        //console.log("statement: " + statement);
-        var dFuture = new Future();
-        dFuture['hd'] = 0;
-        wfip2Pool.query(statement, function (err, rows) {
-            if (err != undefined) {
-                throw( new Error( "dataSeries error = has_discriminator error: " + err.message ) );
-            } else {
-                dFuture['hd'] = rows[0]['hd'];
-            }
-            dFuture['return']();
-        });
-        dFuture.wait();
-        var dataSource_has_discriminator = dFuture['hd'];
-
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -80,7 +69,8 @@ dataProfile = function (plotParams, plotFunction) {
         var discriminator = curve['discriminator'];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
-        var forecastLength = curve['forecast-length'];
+        var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
+        forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = curveDates.split(' - ')[0]; // get the from part
         var curveDatesDateRangeTo = curveDates.split(' - ')[1]; // get the to part
@@ -89,28 +79,31 @@ dataProfile = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if ( dataSource_is_instrument ) {
+                const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
-                    statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)  + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset) ;
                 } else {
-                    statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)  + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
                 }
                 // data source is a model and its JSON
             } else {
                 if (dataSource_is_json) {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
                         " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
                 } else {
                     statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
                         "from " + dataSource_tablename + " as D, nwp_recs as N" +
                         " where D.nwp_recs_nwprecid=N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
                         " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
                 }
@@ -120,7 +113,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, myVariable_isDiscriminator, dataSource_is_json, disc_lower, disc_upper );
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper );
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
                 throw (new Error(error));
@@ -134,10 +127,8 @@ dataProfile = function (plotParams, plotFunction) {
                 var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
                 var truthDataSource_is_instrument = tmp[1];
                 var truthDataSource_tablename = tmp[2];
-                var truthDataSource_id = tmp[3];
                 var truthRunInterval = tmp[4];
                 var truthDataSource_is_json = tmp[5];
-                var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
 
@@ -154,16 +145,14 @@ dataProfile = function (plotParams, plotFunction) {
                     dFuture['return']();
                 });
                 dFuture.wait();
-                var truthDataSource_has_discriminator = dFuture['hd'];
-
                 if (truthDataSource_is_instrument) {
                     if (truthDataSource_is_json) {
-                        statement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
                             " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
                     } else {
-                        statement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
                             " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
@@ -187,9 +176,8 @@ dataProfile = function (plotParams, plotFunction) {
                     statement = statement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                     //console.log("statement: " + statement);
                     dataRequests[curve.label] = statement;
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
                     if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                        //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + statement + " <br>";
                         throw ( new Error(truthQueryResult.error) );
                     }
                 }
@@ -197,8 +185,8 @@ dataProfile = function (plotParams, plotFunction) {
              result =  {
                  error: error,
                  data: resultData,
-                 allLevels: allLevels,
-                 allSites: allSiteIds,
+                 levelsBasis: levelsBasis,
+                 sitesBasis: sitesBasis,
                  allTimes: allTimes,
                  minInterval: minInterval,
                  mean:cumulativeMovingAverage
@@ -260,14 +248,15 @@ dataProfile = function (plotParams, plotFunction) {
              }
 
              */
+
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
-            var levelBasis = _.union.apply(_, queryResult.allLevels);
-            var siteBasis = _.union.apply(_, queryResult.allSites);
+            var levelBasis = queryResult.levelsBasis;
+            var siteBasis = queryResult.sitesBasis;
             if (statistic != "mean") {
                 // have to consider the truth curve when determining the basis if we are doing stats other than mean
-                var truthLevelBasis = _.union.apply(_, truthQueryResult.allLevels);
-                var truthSiteBasis = _.union.apply(_,  truthQueryResult.allSites);
+                var truthLevelBasis = truthQueryResult.levelsBasis;
+                var truthSiteBasis = truthQueryResult.sitesBasis;
                 levelBasis = _.union(levelBasis,truthLevelBasis);
                 siteBasis = _.union(siteBasis,truthSiteBasis);
             }
@@ -528,7 +517,6 @@ dataProfile = function (plotParams, plotFunction) {
         yaxes.push(yaxesOptions);
         yaxis.push(yaxisOptions);
     }
-
     var pOptions = {
         axisLabels: {
             show: true
@@ -599,7 +587,6 @@ dataProfile = function (plotParams, plotFunction) {
     };
     // add black 0 line curve
     dataset.push( {color:'black',points:{show:false},data:[[0,yAxisMin,"zero"],[0,yAxisMax,"zero"]]});
-
     var result = {
         error: error,
         data: dataset,

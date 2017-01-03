@@ -69,7 +69,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
             }
             var filteredSites = rawAxisData[axisStr]['data'][axisTime].sites;
             filteredSites[siteId].levelsValues =
-                filteredSites[siteId].levels.map(function(level, index) {
+                filteredSites[siteId].levels.map(function (level, index) {
                     return [level, filteredSites[siteId].values[index]];
                 });
             var siteValues = rawAxisData[axisStr]['data'][axisTime].sites[siteId]['values'];
@@ -97,7 +97,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                             } else {
                                 continue; // this level did not exist for this site
                             }
-                        } catch (nodata){
+                        } catch (nodata) {
                             // apparently there is no data in the truth curve that matches this time
                             truthValue = null;
                         }
@@ -115,7 +115,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                             } else {
                                 continue; // this level did not exist for this site
                             }
-                        } catch (nodata){
+                        } catch (nodata) {
                             // apparently there is no data in the truth curve that matches this time
                             truthValue = null;
                         }
@@ -125,7 +125,8 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                         try {
                             siteLevelSum += siteLevelValue;
                             siteLevelNum++;
-                        } catch (ignore) {}
+                        } catch (ignore) {
+                        }
                         break;
                 }
             }
@@ -140,7 +141,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
                     if (isNaN(siteBias)) {
                         siteBias = null;
                     }
-                } catch (bad){
+                } catch (bad) {
                     siteBias = null;
                 }
                 datum[axisStr + '-value'] = siteBias;
@@ -177,34 +178,38 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
     var minInterval = Number.MAX_VALUE;
-    var allSiteIds = [];
-    var allLevels = [];
+    var sitesBasis = [];
+    var levelsBasis = [];
     var allTimes = [];
     var cumulativeMovingAverage = 0;
     var timeCount = 0;
     var cumulativeMovingMeanForTime = 0;
-    var siteCount =0;
+    var siteCount = 0;
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
 
         //console.log("in queryWFIP2DB statement: " + statement);
 
         // every row is a time and a site with a level array and a values array
-        // the time an site combination form a unique pair but there
+        // the time and site combination form a unique pair but there
         // can certainly be multiple times that are the same
         // or multiple sites that are the same.
         // query callback - build the curve data from the results - or set an error
+        // Levels are rounded to the nearest integer and bin'd.
+        // Missing levels are added and corresponding missing values are set to null.
+        // values are set to precision(4).
+
         if (err != undefined) {
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
             error = 'rows undefined error';
-            if ( rows.length === 0 ) {
+            if (rows.length === 0) {
                 error = '0 data records found';
             }
             // done waiting - error condition
@@ -213,39 +218,40 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
             /*
              We must map the query row result to a data structure like this...
              var resultData = {
-                 time0: {
-                     sites{
-                         site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-                             levels: [],
-                             values: [],
-                             sum: 0;
-                             mean: 0;
-                             numLevels: numLevels;
-                             max: max;
-                             min: min
-                         },
-                         site1: {..},
-                         .
-                         .
-                         site2: {...},
-                         .
-                         .
-                         siten: {...}
-                     }
-                     timeMean: Number,   // cumulativeMovingMean for this time
-                     timeLevels: [],
-                     timeSites:[]
+             time0: {
+             sites{
+             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+             levels: [],
+             values: [],
+             sum: 0;
+             mean: 0;
+             numLevels: numLevels;
+             max: max;
+             min: min
              },
-                 time1:{ .... },
-                 .
-                 .
-                 timen:{ ... },
+             site1: {..},
+             .
+             .
+             site2: {...},
+             .
+             .
+             siten: {...}
+             }
+             timeMean: Number,   // cumulativeMovingMean for this time
+             timeLevels: [],
+             timeSites:[]
+             },
+             time1:{ .... },
+             .
+             .
+             timen:{ ... },
              };
              */
             var time = 0;
             var lastTime = 0;
             var rowIndex;
             var allSitesSet = new Set();
+            var allLevelsSet = new Set();
 
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
@@ -266,13 +272,13 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 if (isJSON) {
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        var discriminator = Number( JSON.parse(rows[rowIndex].data)[myDiscriminator] );
+                        var discriminator = Number(JSON.parse(rows[rowIndex].data)[myDiscriminator]);
                         if (discriminator < disc_lower || discriminator > disc_upper) {
                             continue;
                         }
                     }
                     values = JSON.parse(rows[rowIndex].data)[myVariable];
-                    if ( values !== undefined ) {
+                    if (values !== undefined) {
                         levels = JSON.parse(rows[rowIndex].data)['z'];
                     }
                 } else {
@@ -284,40 +290,51 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 }
 
                 // surface values and discriminators are scalars and are returned by the DB a as string
-                if ( typeof(values) === "string" ){
+                if (typeof(values) === "string") {
                     levels = [Number(levels[0])];
                     values = [Number(values[0])];
                 }
-
+                // set value precision
+                for (var valIndex = 0; valIndex < values.length; valIndex++) {
+                    values[valIndex] = Number(values[valIndex].toPrecision(4));
+                }
+                for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
+                    levels[lvlIndex] = Math.round(levels[lvlIndex]);
+                }
+                // round levels
                 var numLevels = levels.length;
-                if ( numLevels === 0 ) {
+                if (numLevels === 0) {
                     // no data found in this record
                     continue;
                 }
 
-                if ( numLevels > 1 ) {            // apply level filter, remove any levels and corresponding values that are not within the boundary.
-                // there are always the same number of levels as values, they correspond one to one (in database).
-                // filter backwards so the the level array is safely modified.
-                // always accept levels that are Number.MIN_VALUE - they are special discriminators{
-                  for (var l = levels.length - 1; l >= 0; l--) {
-                      var lvl = levels[l];
-                      if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
-                          levels.splice(l, 1);
-                          values.splice(l, 1);
-                      }
-                  }
+                if (numLevels > 1) {            // apply level filter, remove any levels and corresponding values that are not within the boundary.
+                    // there are always the same number of levels as values, they correspond one to one (in database).
+                    // filter backwards so the the level array is safely modified.
+                    // always accept levels that are Number.MIN_VALUE - they are special discriminators{
+                    for (var l = levels.length - 1; l >= 0; l--) {
+                        var lvl = levels[l];
+                        if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                            // remove this level - filter it out
+                            levels.splice(l, 1);
+                            values.splice(l, 1);
+                        } else {
+                            allLevelsSet.add(lvl);
+                        }
+                    }
                 }
 
-                allLevels.push.apply( allLevels, levels);  // array of level arrays - two dimensions
-                if ( numLevels > 1 ) {
-                    var sum = values.reduce(function (a,b) {return a + b;},0);
+                if (numLevels > 1) {
+                    var sum = values.reduce(function (a, b) {
+                        return a + b;
+                    }, 0);
                 } else {
                     var sum = values[0];
                 }
 
                 var mean = sum / numLevels;
-                if(resultData[time] === undefined) {
-                    resultData[time] = {sites:{}};
+                if (resultData[time] === undefined) {
+                    resultData[time] = {sites: {}};
                     cumulativeMovingMeanForTime = 0;
                     siteCount = 0;
                     resultData[time].timeLevels = [];
@@ -331,12 +348,12 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 resultData[time].sites[siteid].sum = sum;
                 resultData[time].sites[siteid].numLevels = numLevels;
                 resultData[time].sites[siteid].mean = mean;
-                resultData[time].sites[siteid].max = Math.max.apply(null,values);
-                resultData[time].sites[siteid].min = Math.min.apply(null,values);
+                resultData[time].sites[siteid].max = Math.max.apply(null, values);
+                resultData[time].sites[siteid].min = Math.min.apply(null, values);
                 cumulativeMovingAverage = (mean + timeCount * cumulativeMovingAverage) / (timeCount + 1);
-                timeCount ++;
-                cumulativeMovingMeanForTime = (mean + siteCount * cumulativeMovingMeanForTime) / (siteCount +1);
-                siteCount ++;
+                timeCount++;
+                cumulativeMovingMeanForTime = (mean + siteCount * cumulativeMovingMeanForTime) / (siteCount + 1);
+                siteCount++;
                 // store timeMean each row because we don't know how many times there are
                 // the last one will be the one returned
                 resultData[time].timeMean = cumulativeMovingMeanForTime;
@@ -346,8 +363,9 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
             // fill in missing times - there must be an entry at each minInterval
             // if there are multiple entries for a given time average them into one time entry
             // get an array of all the times for every site
-            allSiteIds = Array.from(allSitesSet);
-            allTimes = Object.keys(resultData).sort(function(a,b){
+            sitesBasis = Array.from(allSitesSet);
+            levelsBasis = Array.from(allLevelsSet);
+            allTimes = Object.keys(resultData).sort(function (a, b) {
                 if (Number(a) > Number(b)) {
                     return 1;
                 }
@@ -357,9 +375,9 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
                 return 0;
             }); //Very important to sort the keys!
             time = allTimes[0];
-            for (var k = 0; k < allTimes.length -1; k++) {
+            for (var k = 0; k < allTimes.length - 1; k++) {
                 time = Number(allTimes[k]);
-                var nextTime = allTimes[k+1];
+                var nextTime = allTimes[k + 1];
                 var realInterval = nextTime - time;
                 while (realInterval > minInterval) {
                     time = time + minInterval;
@@ -371,20 +389,20 @@ var queryWFIP2DB = function (wfip2Pool,statement, top, bottom, myVariable, isJSO
         }
     });
 
-    // wait for future to finish
+    // wait for d future to finish - don't ya love it...
     dFuture.wait();
     return {
         error: error,
         data: resultData,
-        allLevels: allLevels,
-        allSites: allSiteIds,
+        levelsBasis: levelsBasis,
+        sitesBasis: sitesBasis,
         allTimes: allTimes,
         minInterval: minInterval,
-        cumulativeMovingAverage:cumulativeMovingAverage
+        cumulativeMovingAverage: cumulativeMovingAverage
     };
 };
 
-var getPointSymbol = function(curveIndex) {
+var getPointSymbol = function (curveIndex) {
     var pointSymbol = "circle";
     switch (curveIndex % 5) {
         case 0:
@@ -407,7 +425,7 @@ var getPointSymbol = function(curveIndex) {
 };
 
 export default matsWfipUtils = {
-    getDatum:getDatum,
-    queryWFIP2DB:queryWFIP2DB,
-    getPointSymbol:getPointSymbol
+    getDatum: getDatum,
+    queryWFIP2DB: queryWFIP2DB,
+    getPointSymbol: getPointSymbol
 }
