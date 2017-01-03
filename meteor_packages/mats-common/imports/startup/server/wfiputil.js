@@ -193,7 +193,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
 
-        //console.log("in queryWFIP2DB statement: " + statement);
+        console.log("in queryWFIP2DB statement: " + statement);
 
         // every row is a time and a site with a level array and a values array
         // the time and site combination form a unique pair but there
@@ -247,19 +247,29 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
              timen:{ ... },
              };
              */
+            var utctime = 0;
             var time = 0;
-            var lastTime = 0;
+            var lastavTime = 0;
+            var prevdiff = Number.MAX_VALUE;
+
             var rowIndex;
             var allSitesSet = new Set();
             var allLevelsSet = new Set();
 
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
-                var interval = time - lastTime;
-                if (interval !== 0 && interval < minInterval) {  // account for the same times in a row
-                    minInterval = interval;
+                var avinterval = time - lastavTime;
+                if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
+                    minInterval = avinterval;
                 }
-                lastTime = time;
+                const thisdiff = utctime - time;
+                if ( thisdiff > prevdiff ) {
+                    continue;
+                } else {
+                    prevdiff = thisdiff;
+                }
+                lastavTime = time;
                 var siteid = rows[rowIndex].sites_siteid;
                 allSitesSet.add(siteid);
                 if (timeSites.indexOf(siteid) === -1) {
@@ -323,6 +333,9 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         }
                     }
                 }
+                // may have dropped sample in above if
+                numLevels = levels.length;
+
 
                 if (numLevels > 1) {
                     var sum = values.reduce(function (a, b) {
