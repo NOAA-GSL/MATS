@@ -28,11 +28,11 @@ dataProfile = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var dataSource = curve['data-source'];
         var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
-        var dataSource_is_instrument = parseInt(tmp[0]);
-        var dataSource_tablename = tmp[1];
-        var dataSource_id = tmp[2];
-        var verificationRunInterval = tmp[3];
-        var dataSource_is_json = parseInt(tmp[4]);
+        var dataSource_is_instrument = parseInt(tmp[1]);
+        var dataSource_tablename = tmp[2];
+        var dataSource_id = tmp[3];
+        var verificationRunInterval = tmp[4];
+        var dataSource_is_json = parseInt(tmp[5]);
         var dataSource_discriminator_tablename = dataSource_tablename.replace('_nwpjson', '_discriminator');
 
         var myVariable;
@@ -132,11 +132,11 @@ dataProfile = function (plotParams, plotFunction) {
                 // need a truth data source for statistic
                 var truthDataSource = curve['truth-data-source'];
                 var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-                var truthDataSource_is_instrument = tmp[0];
-                var truthDataSource_tablename = tmp[1];
-                var truthDataSource_id = tmp[2];
-                var truthRunInterval = tmp[3];
-                var truthDataSource_is_json = tmp[4];
+                var truthDataSource_is_instrument = tmp[1];
+                var truthDataSource_tablename = tmp[2];
+                var truthDataSource_id = tmp[3];
+                var truthRunInterval = tmp[4];
+                var truthDataSource_is_json = tmp[5];
                 var truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
