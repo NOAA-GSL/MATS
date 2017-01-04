@@ -125,9 +125,13 @@ dataProfile = function (plotParams, plotFunction) {
                 // need a truth data source for statistic
                 var truthDataSource = curve['truth-data-source'];
                 var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-                var truthDataSource_is_instrument = tmp[0];
-                var truthDataSource_tablename = tmp[1];
-                var truthDataSource_is_json = tmp[4];
+                var truthDataSource_is_instrument = tmp[1];
+                var truthDataSource_tablename = tmp[2];
+                var truthRunInterval = tmp[4];
+                var truthDataSource_is_json = tmp[5];
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
+                maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+
                 statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
                 //console.log("statement: " + statement);
                 dFuture = new Future();
