@@ -246,7 +246,7 @@ dataSeries = function (plotParams, plotFunction) {
             var siteCompleteness = curve['site-completeness'];
             const levelBasis = queryResult.levelsBasis;
             const siteBasis = queryResult.sitesBasis;
-            var verificationData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+            var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
                   return a[0] - b[0]
              });
             //var normalizedData = verificationData.map(function (timeObjPair) {
