@@ -1,16 +1,16 @@
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { mysql } from 'meteor/pcel:mysql';
-import { moment } from 'meteor/momentjs:moment'
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { matsWfipUtils } from 'meteor/randyp:mats-common';
-import { regression } from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
+import {moment} from 'meteor/momentjs:moment'
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsWfipUtils} from 'meteor/randyp:mats-common';
+import {regression} from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 
 data2dScatter = function (plotParams, plotFunction) {
-    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
+    //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {};
-    var curveDates =  plotParams.dates.split(' - ');
+    var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = matsDataUtils.dateConvert(fromDateStr);
     var toDateStr = curveDates[1];
@@ -20,7 +20,6 @@ data2dScatter = function (plotParams, plotFunction) {
     var curvesLength = curves.length;
     var curveKeys = Object.keys(curves[0]);
     var dataset = [];
-    var curve;
     var axisLabelList = curveKeys.filter(function (key) {
         return key.indexOf('axis-label') === 1;
     });
@@ -30,22 +29,53 @@ data2dScatter = function (plotParams, plotFunction) {
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
+    var maxValidInterval = Number.MIN_VALUE;    //used for differencing and matching
+    var max_verificationRunInterval = Number.MIN_VALUE;
+    var axisIndex;
+    var curveIndex;
+    var axis;
+    var curve;
     var xStatistic;
     var yStatistic;
     var bf = [];   // used for bestFit data
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        for (axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
+            axis = axisLabelList[axisIndex].split('-')[0];
+            curve = curves[curveIndex];
+            const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve[axis + '-data-source']][0].split(',');
+            curve[axis + "-dataSource_is_instrument"] = parseInt(tmp[1]);
+            curve[axis + "-dataSource_tablename"] = tmp[2];
+            curve[axis + "-verificationRunInterval"] = tmp[4];
+            curve[axis + "-dataSource_is_json"] = parseInt(tmp[5]);
+            max_verificationRunInterval = Number(curve[axis + "-verificationRunInterval"]) > Number(max_verificationRunInterval) ? curve[axis + "-verificationRunInterval"] : max_verificationRunInterval;
+            if (curve['statistic'] != "mean") {
+                // need a truth data source for statistic
+                const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve[axis + '-truth-data-source']][0].split(',');
+                curve[axis + "-truthDataSource_is_instrument"] = parseInt(tmp[1]);
+                curve[axis + "-truthDataSource_tablename"] = tmp[2];
+                curve[axis + "-truthRunInterval"] = tmp[4];
+                curve[axis + "-truthDataSource_is_json"] = parseInt(tmp[5]);
+                // might override the datasource assigned max_verificationRunInterval
+                max_verificationRunInterval = Number(curve[axis + "-truthRunInterval"]) > Number(max_verificationRunInterval) ? curve[axis + "-truthRunInterval"] : max_verificationRunInterval;
+            }
+        }
+    }
+
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
         curve = curves[curveIndex];
-        for (var axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
-            var axis = axisLabelList[axisIndex].split('-')[0];
+        for (axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
+            axis = axisLabelList[axisIndex].split('-')[0];
             var dataSource = (curve[axis + '-' + 'data-source']);
             // each axis has a data source - get the right data source and derive the model
-            var tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[dataSource][0].split(',');
-            var dataSource_is_instrument = parseInt(tmp[1]);
-            var dataSource_tablename = tmp[2];
-            var verificationRunInterval = tmp[4];
-            var dataSource_is_json = parseInt(tmp[5]);
-            var myVariable;
+            var dataSource_is_instrument = curve[axis + "-dataSource_is_instrument"];
+            var dataSource_tablename = curve[axis + "-dataSource_tablename"];
+            var verificationRunInterval = curve[axis + "-verificationRunInterval"];
+            var dataSource_is_json = curve[axis + "-dataSource_is_json"];
+            // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
+            var maxRunInterval = verificationRunInterval;
+            maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
             var statistic = curve[axis + "-" + 'statistic'];
             if (axis == "xaxis") {
                 xStatistic = statistic;
@@ -53,41 +83,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 yStatistic = statistic;
             }
             var truthRequired = statistic != "mean"; // Only statistic != "mean" requires truth
-            // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
-            // only the truth model is different form the curves other parameters
-            var truthDataSource;
-            var truthDataSource_is_instrument;
-            var truthDataSource_tablename;
-            var truthDataSource_id;
-            var truthRunInterval;
-            var truthDataSource_is_json;
-            var truthDataSource_discriminator_tablename;
-            var truthModel;
-            var truthInstrument_id;
 
-
-            if (truthRequired) {
-                truthDataSource = curve[axis + "-" + 'truth-data-source'];
-                tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[truthDataSource][0].split(',');
-                truthDataSource_is_instrument = tmp[1];
-                truthDataSource_tablename = tmp[2];
-                truthDataSource_id = tmp[3];
-                truthRunInterval = tmp[4];
-                truthDataSource_is_json = tmp[5];
-                truthDataSource_discriminator_tablename = truthDataSource_tablename.replace('_nwp', '_discriminator');
-                truthModel = tmp[1];
-                truthInstrument_id = tmp[2];
-            }
-            // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
-            // discriminators are not.
-            // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
-            var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-            var isDiscriminator = false;
-            myVariable = variableMap[curve[axis + '-variable']];
-            if (myVariable === undefined) {
-                myVariable = curve[axis + '-variable'];
-                isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
-            }
             var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve[axis + '-' + 'region']][0];
             var siteNames = curve[axis + '-' + 'sites'];
             var siteIds = [];
@@ -99,29 +95,33 @@ data2dScatter = function (plotParams, plotFunction) {
             var top = Number(curve[axis + '-' + 'top']);
             var bottom = Number(curve[axis + '-' + 'bottom']);
             var color = curve['color'];  // color should be same for all axis
+            var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
             var variableStr = curve[axis + '-' + 'variable'];
-            var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.scatter2d];
-            var variable = variableOptionsMap[dataSource][variableStr];
+            var myVariable = variableMap[variableStr];
             if (myVariable === undefined) {
                 throw new Error("variable " + variableStr + " is not in variableMap");
             }
+
             var discriminator = curve[axis + '-' + 'discriminator'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'discriminator'];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];
             forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
             // verificationRunInterval is in milliseconds
-            if ( dataSource_is_instrument ) {
+            var statement = "";
+            if (dataSource_is_instrument) {
+                const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
+                    // verificationRunInterval is in milliseconds
                     statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 } else {
-                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                        " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 }
                 // data source is a model and its JSON
             } else {
@@ -131,44 +131,40 @@ data2dScatter = function (plotParams, plotFunction) {
                     " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
                     " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
             }
-
-
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-            console.log("statement: " + statement);
-            rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_has_discriminator, dataSource_is_json, disc_lower, disc_upper );
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            dataRequests[curve.label] = statement;
+            try {
+                rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+            } catch (e) {
+                e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
+                throw e;
+            }
             if (rawAxisData[axis].error !== undefined && rawAxisData[axis].error !== "") {
-                error += "Error from verification query: <br>" + rawAxisData[axis].error + "<br> query: <br>" + statement + "<br>" ;
+                error += "Error from verification query: <br>" + rawAxisData[axis].error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-
-            var truthStatement = '';
             if (truthRequired == true) {
-                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
-                //console.log("statement: " + statement);
-                dFuture = new Future();
-                dFuture['hd'] = 0;
-                wfip2Pool.query(statement, function (err, rows) {
-                    if (err != undefined) {
-                        throw( new Error("data series error = has_discriminator error: " + err.message) );
-                    } else {
-                        dFuture['hd'] = rows[0]['hd'];
-                    }
-                    dFuture['return']();
-                });
-                dFuture.wait();
-                var truthDataSource_has_discriminator = dFuture['hd'];
-
+                // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
+                // only the truth model is different form the curves other parameters
+                var truthDataSource_is_instrument = curve[axis + "-truthDataSource_is_instrument"];
+                var truthDataSource_tablename = curve[axis + "-truthDataSource_tablename"];
+                var truthRunInterval = curve[axis + "-truthRunInterval"];
+                var truthDataSource_is_json = curve[axis + "-truthDataSource_is_json"];
+                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
+                maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+                var truthStatement = '';
                 if (truthDataSource_is_instrument) {
+                    const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select O.valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        truthStatement = "select O.valid_utc as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(fromDate) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(toDate);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
                 } else {
                     truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
@@ -177,19 +173,20 @@ data2dScatter = function (plotParams, plotFunction) {
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
                         " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
                 }
-                truthStatement = truthStatement + "  and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-
-                /*
-                 For a statistical calculation that requires a truth curve - need to go through again for the truth curve.
-                 */
-                console.log("truthStatement: " + truthStatement);
-                rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_has_discriminator, truthDataSource_is_json);
-                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                dataRequests[curve.label] = truthStatement;
+                try {
+                    rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
+                } catch (e) {
+                    e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
+                    throw e;
+                }
+                if (rawAxisData[axis + '-truth'].error !== undefined && rawAxisData[axis + '-truth'].error !== "") {
                     //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
-                    throw ( new Error(truthQueryResult.error) );
+                    throw ( new Error(rawAxisData[axis + '-truth'].error) );
                 }
             }
-            dataRequests[curve.label] = {statement:statement,truthStatement:truthStatement}
+            dataRequests[curve.label] = {statement: statement, truthStatement: truthStatement}
         }   // for axis loop
 
         /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
@@ -248,8 +245,8 @@ data2dScatter = function (plotParams, plotFunction) {
         var siteCompletenessY = curve['yaxis-site-completeness'];
         var levelBasisX = rawAxisData['xaxis'].levelsBasis;
         var levelBasisY = rawAxisData['yaxis'].levelsBasis;
-        var siteBasisX = rawAxisData['xaxis'].sitessBasis;
-        var siteBasisY = rawAxisData['yaxis'].sitessBasis;
+        var siteBasisX = rawAxisData['xaxis'].sitesBasis;
+        var siteBasisY = rawAxisData['yaxis'].sitesBasis;
 
         // normalize data
         // We have to include only the entries where the times match for both x and y.
@@ -266,7 +263,7 @@ data2dScatter = function (plotParams, plotFunction) {
         var yaxisTime;
         var xaxisTime;
         var datum = {};
-        while (xaxisIndex < xaxisLength  && yaxisIndex < yaxisLength) {
+        while (xaxisIndex < xaxisLength && yaxisIndex < yaxisLength) {
             xaxisTime = xaxisTimes[xaxisIndex];
             yaxisTime = yaxisTimes[yaxisIndex];
             var tooltipText;
@@ -292,7 +289,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     rawYSites = datum['yaxis-sites'];
                     filteredYSites = datum['yaxis-filteredSites'];
                     time = new Date(Number(xaxisTime)).toUTCString();
-                    seconds = xaxisTime/1000;
+                    seconds = xaxisTime / 1000;
                     xValue = datum['xaxis-value'];
                     yValue = datum['yaxis-value'];
                     if (xValue == null || yValue == null) {
@@ -300,12 +297,19 @@ data2dScatter = function (plotParams, plotFunction) {
                         yaxisIndex++;
                         continue;
                     }
-                    tooltipText = label  +
+                    tooltipText = label +
                         "<br>seconds" + seconds +
                         "<br>time:" + time +
                         "<br> xvalue:" + xValue.toPrecision(4) +
                         "<br> yvalue:" + yValue.toPrecision(4);
-                    normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
+                    normalizedAxisData.push([xValue, yValue, {
+                        'time-utc': time,
+                        seconds: seconds,
+                        rawXSites: rawXSites,
+                        filteredXSites: filteredXSites,
+                        rawYSites: rawYSites,
+                        filteredYSites: filteredYSites
+                    }, tooltipText]);
                 }
             } else {
                 // skip up x if necessary
@@ -332,15 +336,24 @@ data2dScatter = function (plotParams, plotFunction) {
                         rawYSites = datum['yaxis-sites'];
                         filteredYSites = datum['yaxis-filteredSites'];
                         time = new Date(Number(xaxisTime)).toUTCString();
-                        seconds = xaxisTime/1000;
+                        seconds = xaxisTime / 1000;
                         xValue = datum['xaxis-value'];
                         yValue = datum['yaxis-value'];
-                        tooltipText = label  +
+                        tooltipText = label +
                             "<br>seconds" + seconds +
                             "<br>time:" + time +
                             "<br> xvalue:" + xValue +
                             "<br> yvalue:" + yValue;
-                        normalizedAxisData.push([xValue, yValue, {'time-utc':time, seconds:seconds, xValue:xValue, yValue:yValue, rawXSites:rawXSites, filteredXSites: filteredXSites, rawYSites: rawYSites, filteredYSites:filteredYSites}, tooltipText]);
+                        normalizedAxisData.push([xValue, yValue, {
+                            'time-utc': time,
+                            seconds: seconds,
+                            xValue: xValue,
+                            yValue: yValue,
+                            rawXSites: rawXSites,
+                            filteredXSites: filteredXSites,
+                            rawYSites: rawYSites,
+                            filteredYSites: filteredYSites
+                        }, tooltipText]);
                     }
                 }
             }
@@ -349,7 +362,7 @@ data2dScatter = function (plotParams, plotFunction) {
         }
         normalizedAxisData.sort(matsDataUtils.sortFunction);
 
-        var pointSymbol = matsWfipUtils.getPointSymbol (curveIndex);
+        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         var options;
 
         // sort these by x axis
@@ -364,15 +377,15 @@ data2dScatter = function (plotParams, plotFunction) {
         };
         dataset.push(options);
 
-        if (curve['Fit Type'] && curve['Fit Type'] !== matsTypes.BestFits.none) {
-            var regressionResult = regression(curve['Fit Type'], normalizedAxisData);
+        if (curve['Fit-Type'] && curve['Fit-Type'] !== matsTypes.BestFits.none) {
+            var regressionResult = regression(curve['Fit-Type'], normalizedAxisData);
             var regressionData = regressionResult.points;
             regressionData.sort(matsDataUtils.sortFunction);
 
             var regressionEquation = regressionResult.string;
             var bfOptions = {
                 yaxis: options.yaxis,
-                label: options.label + "-best fit " + curve['Fit Type'],
+                label: options.label + "-best fit " + curve['Fit-Type'],
                 color: options.color,
                 data: regressionData,
                 points: {symbol: options.points.symbol, fillColor: color, show: false, radius: 1},
@@ -380,7 +393,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     show: true,
                     fill: false
                 },
-                annotation: options.label + " - Best Fit: " + curve['Fit Type'] + " fn: " + regressionEquation
+                annotation: options.label + " - Best Fit: " + curve['Fit-Type'] + " fn: " + regressionEquation
             };
             bf.push(bfOptions);
         }
@@ -405,8 +418,8 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min:xAxisMin * 0.95,
-            max:xAxisMax * 1.05
+            min: xAxisMin * 0.95,
+            max: xAxisMax * 1.05
         };
         var xaxisOptions = {
             zoomRange: [0.1, 10]
@@ -431,8 +444,8 @@ data2dScatter = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min:yAxisMin * 0.95,
-            max:yAxisMax * 1.05
+            min: yAxisMin * 0.95,
+            max: yAxisMax * 1.05
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
@@ -504,9 +517,9 @@ data2dScatter = function (plotParams, plotFunction) {
         error: error,
         data: dataset,
         options: options,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);

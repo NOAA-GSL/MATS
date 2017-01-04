@@ -115,7 +115,7 @@ Template.paramList.events({
             paramElems.push.apply(paramElems,dateParamNames);
             // add in the scatter2d parameters if it is a scatter plot.
             if (isScatter) {
-                $(":input[id^='scatter2d']:input[name*='scatter2d']" ).each( function() {
+                $(":input[id^='Fit-Type']:input[name*='Fit-Type']" ).each( function() {
                     paramElems.push(this);
                 });
             }

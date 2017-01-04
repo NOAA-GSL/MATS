@@ -1,9 +1,9 @@
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { matsWfipUtils } from 'meteor/randyp:mats-common';
-import { mysql } from 'meteor/pcel:mysql';
-import { moment } from 'meteor/momentjs:moment';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsWfipUtils} from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
+import {moment} from 'meteor/momentjs:moment';
 const Future = require('fibers/future');
 
 
@@ -21,6 +21,7 @@ dataProfile = function (plotParams, plotFunction) {
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
+    var maxValidInterval = Number.MIN_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
@@ -29,6 +30,17 @@ dataProfile = function (plotParams, plotFunction) {
         curve.verificationRunInterval = tmp[4];
         curve.dataSource_is_json = parseInt(tmp[5]);
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
+        if (curve['statistic'] != "mean") {
+            // need a truth data source for statistic
+            const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
+            curve.truthDataSource_is_instrument = parseInt(tmp[1]);
+            curve.truthDataSource_tablename = tmp[2];
+            curve.truthRunInterval = tmp[4];
+            curve.truthDataSource_is_json = parseInt(tmp[5]);
+            // might override the datasource assigned max_verificationRunInterval
+            max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
+        }
+
     }
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -63,7 +75,6 @@ dataProfile = function (plotParams, plotFunction) {
         var top = Number(curve['top']);
         var bottom = Number(curve['bottom']);
         var color = curve['color'];
-        var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
         var variable = variableOptionsMap[dataSource][variableStr];
         var discriminator = curve['discriminator'];
@@ -75,47 +86,40 @@ dataProfile = function (plotParams, plotFunction) {
         var curveDatesDateRangeFrom = curveDates.split(' - ')[0]; // get the from part
         var curveDatesDateRangeTo = curveDates.split(' - ')[1]; // get the to part
         var statistic = curve['statistic'];
+        // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
+        var maxRunInterval = verificationRunInterval;
+        maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         var statement;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
-            if ( dataSource_is_instrument ) {
+            if (dataSource_is_instrument) {
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
                     statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)  + utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset) ;
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                 } else {
-                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)  + utcOffset) +
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
                 }
                 // data source is a model and its JSON
             } else {
-                if (dataSource_is_json) {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
-                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                        " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
-                } else {
-                    statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
-                        "from " + dataSource_tablename + " as D, nwp_recs as N" +
-                        " where D.nwp_recs_nwprecid=N.nwprecid" +
-                        " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
-                }
+                statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                    " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                    " and fcst_utc_offset =" + 3600 * forecastLength +
+                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                    " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
             }
-
 
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper );
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
             var truthQueryResult = queryResult;
@@ -123,130 +127,97 @@ dataProfile = function (plotParams, plotFunction) {
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
-                var truthDataSource = curve['truth-data-source'];
-                var tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
-                var truthDataSource_is_instrument = tmp[1];
-                var truthDataSource_tablename = tmp[2];
-                var truthRunInterval = tmp[4];
-                var truthDataSource_is_json = tmp[5];
+                var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
+                var truthDataSource_tablename = curve.truthDataSource_tablename;
+                var truthRunInterval = curve.truthRunInterval;
+                var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
-
-                statement = "select has_discriminator('" + truthDataSource.toString() + "') as hd";
-                //console.log("statement: " + statement);
-                dFuture = new Future();
-                dFuture['hd'] = 0;
-                wfip2Pool.query(statement, function (err, rows) {
-                    if (err != undefined) {
-                        throw( new Error("data series error = has_discriminator error: " + err.message) );
-                    } else {
-                        dFuture['hd'] = rows[0]['hd'];
-                    }
-                    dFuture['return']();
-                });
-                dFuture.wait();
+                var truthStatement = '';
                 if (truthDataSource_is_instrument) {
+                    const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                            " and valid_utc<=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
                 } else {
-                    if (dataSource_is_json) {
-                        statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
-                            " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                            " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo) +
-                            " and fcst_utc_offset =" + 3600 * forecastLength;
-                    } else {
-                        statement = "select (cycle_utc + fcst_utc_offset) as avtime ,z ," + myVariable + ", sites_siteid  " +
-                            "from " + truthDataSource_tablename + " as D, nwp_recs as N" +
-                            " where D.nwp_recs_nwprecid=N.nwprecid" +
-                            " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                            " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
-                    }
-
-
-                    statement = statement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-                    //console.log("statement: " + statement);
-                    dataRequests[curve.label] = statement;
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
-                    if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                        throw ( new Error(truthQueryResult.error) );
-                    }
+                    truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
+                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
                 }
-            }            /*
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                //console.log("statement: " + truthStatement);
+                dataRequests[curve.label] = truthStatement;
+                try {
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
+                } catch (e) {
+                    e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
+                    throw e;
+                }
+                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                    //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
+                    throw ( new Error(truthQueryResult.error) );
+                }
+            }
+            /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
+             data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
+             and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
+             need to be accounted for here. Also there can be missing times so we need to iterate through each set of times,
+             based on the minimum interval for the data set, and fill in missing times with null values.
+
+             We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+
+             We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
+             the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
+             criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+             The data from the query is of the form
              result =  {
-                 error: error,
-                 data: resultData,
-                 levelsBasis: levelsBasis,
-                 sitesBasis: sitesBasis,
-                 allTimes: allTimes,
-                 minInterval: minInterval,
-                 mean:cumulativeMovingAverage
+             error: error,
+             data: resultData,
+             levelsBasis: levelsBasis,
+             sitesBasis: sitesBasis,
+             allTimes: allTimes,
+             minInterval: minInterval,
+             mean:cumulativeMovingAverage
              }
-                 where ....
+             where ....
              resultData = {
-                 time0: {
-                     sites: {
-                         site0: {
-                             levels:[],
-                             values:[],
-                             sum: Number,
-                             mean: Number,
-                             numLevels: Number,
-                             max: Number,
-                             min: Number
-                         },
-                         site1: {...},
-                             .
-                             .
-                         siten:{...},
-                         }
-                     timeMean: Number   // cumulativeMovingMean for this time
-                     timeLevels: [],
-                     timeSites:[]
-                 },
-                 time1:{....},
-                 .
-                 .
-                 timen:{....}
+             time0: {
+             sites: {
+             site0: {
+             levels:[],
+             values:[],
+             sum: Number,
+             mean: Number,
+             numLevels: Number,
+             max: Number,
+             min: Number
+             },
+             site1: {...},
+             .
+             .
+             siten:{...},
+             }
+             timeMean: Number   // cumulativeMovingMean for this time
+             timeLevels: [],
+             timeSites:[]
+             },
+             time1:{....},
+             .
+             .
+             timen:{....}
              }
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
-
-             we need this structure where the values are qualified by site and level completeness.
-             levelValues: {
-                 l1: [val1, val2, val3, .... valn],
-                 l2: [val1, val2, val3, .....valn],
-                 .
-                 .
-                 .
-                 ln: [val1,val2,val3, ..... valn
-             }
-
-             from this we derive ....
-             levelStats : {
-                 20: {
-                     mean: m,
-                     bias: b,
-                     rmse : r,
-                     mae: ma
-                 },
-                 40: {...},
-                 60: {...},
-                 .
-                 .
-                 .
-                 ln: {...}
-             }
-
              */
 
             var levelCompleteness = curve['level-completeness'];
@@ -257,8 +228,8 @@ dataProfile = function (plotParams, plotFunction) {
                 // have to consider the truth curve when determining the basis if we are doing stats other than mean
                 var truthLevelBasis = truthQueryResult.levelsBasis;
                 var truthSiteBasis = truthQueryResult.sitesBasis;
-                levelBasis = _.union(levelBasis,truthLevelBasis);
-                siteBasis = _.union(siteBasis,truthSiteBasis);
+                levelBasis = _.union(levelBasis, truthLevelBasis);
+                siteBasis = _.union(siteBasis, truthSiteBasis);
             }
             var verificationLevelValues = {};
             var truthLevelValues = {};
@@ -266,12 +237,12 @@ dataProfile = function (plotParams, plotFunction) {
             if (statistic == "mean") {
                 allTimes = queryResult.allTimes;
             } else {
-                allTimes = _.intersection(queryResult.allTimes,truthQueryResult.allTimes)
+                allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
-            for (var t=0; t < allTimes.length; t++) {
+            for (var t = 0; t < allTimes.length; t++) {
                 /*
-                If statistic is not "mean" then we need a set of truth values to diff from the verification values.
-                The sites and levels have to match for the truth to make any sense.
+                 If statistic is not "mean" then we need a set of truth values to diff from the verification values.
+                 The sites and levels have to match for the truth to make any sense.
                  */
                 var time = allTimes[t];
                 var timeObj = queryResult.data[time];
@@ -340,7 +311,7 @@ dataProfile = function (plotParams, plotFunction) {
                     try {
                         for (l = 0; l < qualifiedLevels.length; l++) {
                             statNum = 0;
-                            statSum =0;
+                            statSum = 0;
                             values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
                             for (vIndex = 0; vIndex < values.length; vIndex++) {
@@ -355,7 +326,7 @@ dataProfile = function (plotParams, plotFunction) {
                             if (levelStats[qualifiedLevels[l]] === undefined) {
                                 levelStats[qualifiedLevels[l]] = {};
                             }
-                            levelStats[qualifiedLevels[l]][statistic] = statSum/statNum;
+                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
                         }
                     } catch (ignore) {
                         // apparently there is no data in the truth curve that matches this time
@@ -366,19 +337,19 @@ dataProfile = function (plotParams, plotFunction) {
                     try {
                         for (l = 0; l < qualifiedLevels.length; l++) {
                             statNum = 0;
-                            statSum =0;
+                            statSum = 0;
                             values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
-                            for (vIndex = 0; vIndex < values.length;vIndex++) {
+                            for (vIndex = 0; vIndex < values.length; vIndex++) {
                                 statValue = values[vIndex] - truthValues[vIndex];
-                                statValue = Math.pow((values[vIndex] - truthValues[vIndex]),2);  // square the difference
+                                statValue = Math.pow((values[vIndex] - truthValues[vIndex]), 2);  // square the difference
                                 statSum += statValue;
                                 statNum++;
                             }
                             if (levelStats[qualifiedLevels[l]] === undefined) {
                                 levelStats[qualifiedLevels[l]] = {};
                             }
-                            levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum/statNum);
+                            levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum / statNum);
                         }
                     } catch (ignore) {
                         statValue = null;
@@ -388,14 +359,16 @@ dataProfile = function (plotParams, plotFunction) {
                 default:
                     try {
                         statNum = 0;
-                        statSum =0;
+                        statSum = 0;
                         for (l = 0; l < qualifiedLevels.length; l++) {
-                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function(a,b){ return a + b; }, 0);
+                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function (a, b) {
+                                return a + b;
+                            }, 0);
                             statNum = verificationLevelValues[qualifiedLevels[l]].length;
                             if (levelStats[qualifiedLevels[l]] === undefined) {
                                 levelStats[qualifiedLevels[l]] = {};
                             }
-                            levelStats[qualifiedLevels[l]][statistic] = statSum/statNum;
+                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
                         }
                     } catch (ignore) {
                     }
@@ -403,20 +376,25 @@ dataProfile = function (plotParams, plotFunction) {
             }
             var d = [];
             var levels = Object.keys(levelStats);
-            for (l =0; l < levels.length; l++) {
+            for (l = 0; l < levels.length; l++) {
                 var level = levels[l];
                 var value = levelStats[level][statistic];
                 xAxisMin = xAxisMin < value ? xAxisMin : value;
                 xAxisMax = xAxisMax > value ? xAxisMax : value;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
-                var tooltip = label  +
+                var tooltip = label +
                     "<br>level: " + level +
-                    "<br>statistic: " +  statistic +
+                    "<br>statistic: " + statistic +
                     "<br> value: " + value;
-                d.push([value,level,-1,{level:level, statistic:statistic, values:{verification:verificationLevelValues[level], truth:truthLevelValues[level]}, levelStats:levelStats[level]},tooltip]);
+                d.push([value, level, -1, {
+                    level: level,
+                    statistic: statistic,
+                    values: {verification: verificationLevelValues[level], truth: truthLevelValues[level]},
+                    levelStats: levelStats[level]
+                }, tooltip]);
             } // end  if diffFrom == null
-        }  else { // difference curve
+        } else { // difference curve
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1]; // base curve
             var minuendData = dataset[minuendIndex].data;
@@ -428,18 +406,18 @@ dataProfile = function (plotParams, plotFunction) {
             var i;
             var level;
             var value;
-            for (i = 0; i < minuendData.length; i ++) {
+            for (i = 0; i < minuendData.length; i++) {
                 level = minuendData[i][1];
                 value = minuendData[i][0];
                 if (!minuendStatistic) {
-                    minuendStatistic =  minuendData[i][3].statistic;
+                    minuendStatistic = minuendData[i][3].statistic;
                 }
                 minuendLevels.push(level);
                 minuendLevelValues[level] = value;
             }
             var subtrahendLevels = [];
             var subtrahendLevelValues = {};
-            for (i = 0; i < subtrahendData.length; i ++) {
+            for (i = 0; i < subtrahendData.length; i++) {
                 level = subtrahendData[i][1];
                 value = subtrahendData[i][0];
                 if (!subtrahendStatistic) {
@@ -449,24 +427,28 @@ dataProfile = function (plotParams, plotFunction) {
                 subtrahendLevelValues[level] = value;
             }
             var d = [];
-            var commonLevels = _.intersection(subtrahendLevels,minuendLevels);
-            for (i = 0; i < commonLevels.length; i++){
+            var commonLevels = _.intersection(subtrahendLevels, minuendLevels);
+            for (i = 0; i < commonLevels.length; i++) {
                 level = commonLevels[i];
                 value = minuendLevelValues[level] - subtrahendLevelValues[level];
                 xAxisMin = xAxisMin < value ? xAxisMin : value;
                 xAxisMax = xAxisMax > value ? xAxisMax : value;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
-                var tooltip = label  +
+                var tooltip = label +
                     "<br>level: " + level +
                     "<br>minuend statistic: " + minuendStatistic +
                     "<br>subtrahend statistic: " + subtrahendStatistic +
                     "<br> diff value: " + value;
-                d.push([value,level,-1,{level:level, values:{minuend:minuendLevelValues[level], subtrahend:subtrahendLevelValues[level]}, levelStats:{minuend:minuendStatistic,subtrahend:subtrahendStatistic}},tooltip]);
+                d.push([value, level, -1, {
+                    level: level,
+                    values: {minuend: minuendLevelValues[level], subtrahend: subtrahendLevelValues[level]},
+                    levelStats: {minuend: minuendStatistic, subtrahend: subtrahendStatistic}
+                }, tooltip]);
             }
         }
 
-        var pointSymbol = matsWfipUtils.getPointSymbol (curveIndex);
+        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         var options = {
             //yaxis:curveIndex,
             label: label,
@@ -586,14 +568,14 @@ dataProfile = function (plotParams, plotFunction) {
         }
     };
     // add black 0 line curve
-    dataset.push( {color:'black',points:{show:false},data:[[0,yAxisMin,"zero"],[0,yAxisMax,"zero"]]});
+    dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
     var result = {
         error: error,
         data: dataset,
         options: pOptions,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);

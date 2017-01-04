@@ -177,6 +177,10 @@ Template.item.events({
     },
     'invalid' : function(event) {
         if (this.type === matsTypes.InputTypes.numberSpinner) {
+            const param = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} );
+            if (param === undefined) {
+                return;
+            }
             const default_value = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} ).default;
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name + " it must be between " + event.currentTarget.min + " and " + event.currentTarget.max + " -- resetting to default value: " + default_value));
             event.currentTarget.value = default_value;

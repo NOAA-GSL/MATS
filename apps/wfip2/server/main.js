@@ -44,8 +44,8 @@ var doScatter2dParams = function () {
         matsCollections.Scatter2dParams.remove({});
     }
 
-    // NOTE: the name beginning with 'scatter2d' is significant because if it begins
-    // with 'scatter2d' the parameter will get added to the parameter object
+    // NOTE: the name beginning with 'Fit-Type' is significant because if it begins
+    // with 'Fit-Type' the parameter will get added to the parameter object
     // that gets passed to the back end. See param_list.js submit form event.
     if (matsCollections.Scatter2dParams.find().count() == 0) {
         matsCollections.Scatter2dParams.insert(

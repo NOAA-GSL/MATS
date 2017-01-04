@@ -21,9 +21,9 @@ dataSeries = function (plotParams, plotFunction) {
     var dataset = [];
     var yAxisBoundaries = {};
     /* axis boundaries is an object keyed by variable.
-        Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
-        each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
-        the yaxisoptions can derive the ymax and ymin from this object.
+     Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
+     each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
+     the yaxisoptions can derive the ymax and ymin from this object.
      */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
@@ -50,6 +50,7 @@ dataSeries = function (plotParams, plotFunction) {
             curve.truthDataSource_tablename = tmp[2];
             curve.truthRunInterval = tmp[4];
             curve.truthDataSource_is_json = parseInt(tmp[5]);
+            // might override the datasource assigned max_verificationRunInterval
             max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
         }
     }
@@ -78,7 +79,7 @@ dataSeries = function (plotParams, plotFunction) {
         var variableStr = curve['variable'];
         var myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
-          throw new Error("variable " + variableStr + " is not in variableMap");
+            throw new Error("variable " + variableStr + " is not in variableMap");
         }
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
@@ -96,8 +97,8 @@ dataSeries = function (plotParams, plotFunction) {
         //var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
         //var variable = variableOptionsMap[dataSource][variableStr];
         var discriminator = curve['discriminator'] === undefined ? matsTypes.InputTypes.unused : curve['discriminator'];
-        var disc_upper = Number( curve['upper'] );
-        var disc_lower = Number( curve['lower'] );
+        var disc_upper = Number(curve['upper']);
+        var disc_lower = Number(curve['lower']);
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
         forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var statement = "";
@@ -106,7 +107,7 @@ dataSeries = function (plotParams, plotFunction) {
         var average = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
-            if ( dataSource_is_instrument ) {
+            if (dataSource_is_instrument) {
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
                     // verificationRunInterval is in milliseconds
@@ -115,12 +116,12 @@ dataSeries = function (plotParams, plotFunction) {
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 } else {
-                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000+ ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 }
-            // data source is a model and its JSON
+                // data source is a model and its JSON
             } else {
                 statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
@@ -129,21 +130,20 @@ dataSeries = function (plotParams, plotFunction) {
                     " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
             }
 
-
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             try {
                 var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             } catch (e) {
-                e.message =  "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
+                e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>" ;
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-            var truthQueryResult = queryResult;
+            var truthQueryResult;
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
@@ -178,13 +178,12 @@ dataSeries = function (plotParams, plotFunction) {
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper  );
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
                 } catch (e) {
-                    e.message =  "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
+                    e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
                 }
-
-            if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
+                if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
                     //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
                     throw ( new Error(truthQueryResult.error) );
                 }
@@ -213,30 +212,30 @@ dataSeries = function (plotParams, plotFunction) {
              }
              where ....
              resultData = {
-                 time0: {
-                     sites: {
-                         site0: {
-                             levels:[],
-                             values:[],
-                             sum: Number,
-                             mean: Number,
-                             numLevels: Number,
-                             max: Number,
-                             min: Number
-                         },
-                         site1: {...},
-                         .
-                         .
-                         siten:{...},
-                         }
-                         timeMean: Number   // cumulativeMovingMean for this time
-                         timeLevels: [],
-                         timeSites:[]
-                     },
-                 time1:{....},
-                 .
-                 .
-                 timen:{....}
+             time0: {
+             sites: {
+             site0: {
+             levels:[],
+             values:[],
+             sum: Number,
+             mean: Number,
+             numLevels: Number,
+             max: Number,
+             min: Number
+             },
+             site1: {...},
+             .
+             .
+             siten:{...},
+             }
+             timeMean: Number   // cumulativeMovingMean for this time
+             timeLevels: [],
+             timeSites:[]
+             },
+             time1:{....},
+             .
+             .
+             timen:{....}
              }
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
@@ -247,8 +246,8 @@ dataSeries = function (plotParams, plotFunction) {
             const levelBasis = queryResult.levelsBasis;
             const siteBasis = queryResult.sitesBasis;
             var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
-                  return a[0] - b[0]
-             });
+                return a[0] - b[0]
+            });
             //var normalizedData = verificationData.map(function (timeObjPair) {
             // we need to go through all the time objects of both the actual and the truth data series
             // and skip any where there isn't a corresponding time.
@@ -265,9 +264,9 @@ dataSeries = function (plotParams, plotFunction) {
             if (statistic != "mean") {
                 truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
                     return a[0] - b[0]
-               });
-               truthMaxIndex = truthData.length - 1;
-               truthTime = verificationData[0][0];
+                });
+                truthMaxIndex = truthData.length - 1;
+                truthTime = verificationData[0][0];
             }
             while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
                 // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
@@ -278,7 +277,7 @@ dataSeries = function (plotParams, plotFunction) {
                 if (valTime < truthTime) {
                     valIndex++;
                     continue;
-                } else if ( statistic != "mean" && truthTime < valTime) {
+                } else if (statistic != "mean" && truthTime < valTime) {
                     truthIndex++;
                     continue;
                 } else {
@@ -296,7 +295,7 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br>time: " + new Date(Number(valTime)).toUTCString() +
                             "<br> statistic: " + statistic +
                             "<br> value:" + null;
-                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
+                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
                         continue;
                     }
@@ -307,7 +306,7 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br>time: " + new Date(Number(valTime)).toUTCString() +
                             "<br> statistic: " + statistic +
                             "<br> value:" + null;
-                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
+                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                         if (statistic != "mean") {
                             truthIndex++;
                         }
@@ -315,7 +314,7 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     var valSites = Object.keys(timeObj.sites).map(Number).sort();
                     var truthSites = statistic == "mean" ? [] : Object.keys(truthTimeObj.sites).map(Number).sort();
-                    var sites = statistic == "mean" ?  valSites : _.intersection(valSites, truthSites);
+                    var sites = statistic == "mean" ? valSites : _.intersection(valSites, truthSites);
                     var sitesLength = sites.length;
                     var includedSites = _.intersection(sites, siteBasis);
                     var sitesQuality = (includedSites.length / siteBasis.length) * 100;
@@ -327,7 +326,7 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br>time: " + new Date(Number(valTime)).toUTCString() +
                             "<br> statistic: " + statistic +
                             "<br> value:" + null;
-                        normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
+                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                         valIndex++;
                         if (statistic != "mean") {
                             truthIndex++;
@@ -346,7 +345,7 @@ dataSeries = function (plotParams, plotFunction) {
                         var valSLevels = timeObj.sites[[sites[si]]].levels;
                         var sValues = timeObj.sites[[sites[si]]].values;
                         var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].levels;
-                        var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels,truthSLevels);
+                        var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels, truthSLevels);
                         var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].values;
                         var includedLevels = _.intersection(sLevels, levelBasis);
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
@@ -379,7 +378,7 @@ dataSeries = function (plotParams, plotFunction) {
                                         biasValue = null;
                                         try {
                                             biasValue = siteLevelValue - truthSiteLevelValue;
-                                            biasValue = Math.pow(biasValue,2);  // square the difference
+                                            biasValue = Math.pow(biasValue, 2);  // square the difference
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
                                         } catch (nodata) {
@@ -449,9 +448,9 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br>time: " + new Date(Number(valTime)).toUTCString() +
                         "<br> statistic: " + statistic +
                         "<br> value:" + value;
-                    count ++;
+                    count++;
                     sum += value;
-                    normalizedData.push( [time, value, timeObj, tooltip]);   // recalculated statistic
+                    normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                 }
                 if (statistic != "mean") {
                     truthIndex++;
@@ -484,7 +483,7 @@ dataSeries = function (plotParams, plotFunction) {
             sum = 0;
             try {
                 var diffTime = (minuendData[minuendIndex])[0];
-                while ( (diffTime < diffEndTime) && (subtrahendIndex < subtrahendData.length - 1) && (minuendIndex < minuendData.length - 1) ) {
+                while ((diffTime < diffEndTime) && (subtrahendIndex < subtrahendData.length - 1) && (minuendIndex < minuendData.length - 1)) {
                     while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
                         // if necessary, increment the base index until it catches up
                         subtrahendIndex++;
@@ -517,9 +516,9 @@ dataSeries = function (plotParams, plotFunction) {
                     sum += diffValue;
                 }
                 average = sum / count;
-            } catch ( err ) {
-                console.log( "caught error");
-                throw( new Error( "caught " + err.message ));
+            } catch (err) {
+                console.log("caught error");
+                throw( new Error("caught " + err.message));
             }
         }
         if (yAxisBoundaries[variableStr] === undefined) {
@@ -576,7 +575,7 @@ dataSeries = function (plotParams, plotFunction) {
                     done = true; // I went past the end - no coinciding points
                     break;
                 }
-                if (ci == curvesLength -1)  {
+                if (ci == curvesLength - 1) {
                     if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
                         dataIndexes[0]++;
                         same = false;
@@ -626,7 +625,7 @@ dataSeries = function (plotParams, plotFunction) {
                             timeMatches = false;
                         }
                     }
-                    if (matchLevel){
+                    if (matchLevel) {
                         if (levelsToMatch.length == 0) {
                             levelsToMatch = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
                         }
@@ -645,13 +644,13 @@ dataSeries = function (plotParams, plotFunction) {
                         }
                     }
                 }
-             }   // for all the curves
+            }   // for all the curves
             if (timeMatches && levelsMatches && sitesMatches) {
                 for (sci = 0; sci < curvesLength; sci++) {
                     if (!newDataSet[sci]) {
-                        newDataSet[sci]={};
+                        newDataSet[sci] = {};
                         var keys = Object.keys(dataset[sci]);
-                        for (var k =0; k < keys.length; k++) {
+                        for (var k = 0; k < keys.length; k++) {
                             var key = keys[k];
                             if (key == "data") {
                                 newDataSet[sci][key] = [];
@@ -664,7 +663,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
             } else {
                 for (sci = 0; sci < curvesLength; sci++) {
-                    newDataSet[sci].data.push([time,null]);
+                    newDataSet[sci].data.push([time, null]);
                 }
             }
             time = Number(time) + Number(maxValidInterval);
@@ -681,7 +680,10 @@ dataSeries = function (plotParams, plotFunction) {
         var vStr = curves[dsi].variable;
         var yAxisPad = (yAxisBoundaries[vStr].max - yAxisBoundaries[vStr].min) * .05;
         if (yLabels[vStr] == undefined) {
-            yLabels[vStr] = {label:curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'], curveNumber:dsi};
+            yLabels[vStr] = {
+                label: curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'],
+                curveNumber: dsi
+            };
             yaxesOptions = {
                 position: position,
                 color: 'grey',
@@ -705,7 +707,7 @@ dataSeries = function (plotParams, plotFunction) {
                 show: false,
                 min: yAxisBoundaries[vStr].min - yAxisPad,
                 max: yAxisBoundaries[vStr].max + yAxisPad,
-                grid:{show:false}
+                grid: {show: false}
             };
         }
         var yaxisOptions = {
@@ -794,7 +796,7 @@ dataSeries = function (plotParams, plotFunction) {
     try {
         plotFunction(result);
     } catch (e) {
-        console.log("plotting graph result is", JSON.stringify(result,null,2));
+        console.log("plotting graph result is", JSON.stringify(result, null, 2));
         e.message = "Error plotting graph with function: " + plotFunction.name + " error:" + e.message;
         throw e;
     }
