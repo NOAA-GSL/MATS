@@ -8,13 +8,13 @@
         {{>spinner}}
         {{>help}}
         {{>data}}
-        <div class="container pull-left">
+        <div class="container-fluid pull-left">
             {{>error}}
             <div class="container row pull-left" id="plotTypeContainer">
                 {{>plotType}}
             </div>
             {{#if Template.subscriptionsReady}}
-                <div class="container row pull-left">
+                <div class="container-fluid row pull-left">
                     {{>curveList}}
                 </div>
                 <div class="container row pull-left">

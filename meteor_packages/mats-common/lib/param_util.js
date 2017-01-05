@@ -251,6 +251,9 @@ const collapseParams = function() {
 const typeSort = function (arr) {
     var i;
     var type = "numerical";
+    if (arr === undefined) {
+        return arr;
+    }
     for (i=0;i<arr.length;i++) {
         if (isNaN(Number(arr[i]))) {
             type = "canonical";

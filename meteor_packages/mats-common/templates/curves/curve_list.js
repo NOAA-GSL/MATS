@@ -85,6 +85,13 @@ Template.curveList.events({
         event.preventDefault();
         var action = event.currentTarget.name;
         var p = {};
+        // get the plot-type elements checked state
+        const plotTypeElems = $('input[name=plot-type]');
+        p.plotTypes = {};
+        for (ptei = 0; ptei < plotTypeElems.length; ptei++){
+            const ptElem = plotTypeElems[ptei];
+            p.plotTypes[ptElem.value] = ptElem.checked;
+        }
         var curves = Session.get('Curves');
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
@@ -185,6 +192,18 @@ Template.curveList.events({
                 var view = document.getElementById('paramList');
                 Blaze.remove(Blaze.getView(view));
                 Blaze.render(Template.paramList, document.getElementById('paramView'));
+
+                // reset the plotType - have to do this first because the event will remove all the possibly existing curves
+                // get the plot-type elements checked state
+                var plotTypeSaved = false;
+                const plotTypeElems = $('input[name=plot-type]');
+                for (var ptei = 0; ptei < plotTypeElems.length; ptei++) {
+                    var ptElem = plotTypeElems[ptei];
+                    if (p.data.plotTypes && p.data.plotTypes[ptElem.value] === true) {
+                        plotTypeSaved = true;
+                        ptElem.click();
+                    }
+                }
 
                 // now set the PlotParams
                 matsCollections.PlotParams.find({}).fetch().forEach(function (plotParam) {

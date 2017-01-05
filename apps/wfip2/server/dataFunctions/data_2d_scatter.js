@@ -101,8 +101,7 @@ data2dScatter = function (plotParams, plotFunction) {
             if (myVariable === undefined) {
                 throw new Error("variable " + variableStr + " is not in variableMap");
             }
-
-            var discriminator = curve[axis + '-' + 'discriminator'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'discriminator'];
+            var discriminator = variableMap[curve[axis + '-' + 'discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve[axis + '-' + 'discriminator']];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];

@@ -96,7 +96,7 @@ dataSeries = function (plotParams, plotFunction) {
 
         //var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
         //var variable = variableOptionsMap[dataSource][variableStr];
-        var discriminator = curve['discriminator'] === undefined ? matsTypes.InputTypes.unused : curve['discriminator'];
+        var discriminator = variableMap[curve['discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve['discriminator']];
         var disc_upper = Number(curve['upper']);
         var disc_lower = Number(curve['lower']);
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
@@ -143,7 +143,7 @@ dataSeries = function (plotParams, plotFunction) {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-            var truthQueryResult;
+            var truthQueryResult = queryResult;
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
@@ -663,6 +663,8 @@ dataSeries = function (plotParams, plotFunction) {
                 }
             } else {
                 for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
                     newDataSet[sci].data.push([time, null]);
                 }
             }
@@ -670,7 +672,6 @@ dataSeries = function (plotParams, plotFunction) {
         } // while time
         dataset = newDataSet;
     } // end of if matching
-
     // generate y-axis
     var yaxes = [];
     var yaxis = [];

@@ -77,7 +77,7 @@ dataProfile = function (plotParams, plotFunction) {
         var color = curve['color'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
         var variable = variableOptionsMap[dataSource][variableStr];
-        var discriminator = curve['discriminator'];
+        var discriminator = variableMap[curve['discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve['discriminator']];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];

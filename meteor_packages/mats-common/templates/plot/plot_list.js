@@ -93,6 +93,13 @@ Template.plotList.events({
         event.preventDefault();
         var action = event.currentTarget.name;
         var p = {};
+        // get the plot-type elements checked state
+        const plotTypeElems = $('input[name=plot-type]');
+        p.plotTypes = {};
+        for (ptei = 0; ptei < plotTypeElems.length; ptei++){
+            const ptElem = plotTypeElems[ptei];
+            p.plotTypes[ptElem.value] = ptElem.checked;
+        }
         var curves = Session.get('Curves');
         if (curves == 0 && action !== "restore") {
             //alert ("No Curves To plot");
@@ -193,6 +200,73 @@ Template.plotList.events({
                 p = matsCollections.CurveSettings.findOne({name:restoreFrom});
                 // now set all the curves.... This will refresh the curves list
                 Session.set('Curves',p.data.curves);
+                // reset the plotType - have to do this first because the event will remove all the possibly existing curves
+                // get the plot-type elements checked state
+                var plotTypeSaved = false;
+                const plotTypeElems = $('input[name=plot-type]');
+                for (var ptei = 0; ptei < plotTypeElems.length; ptei++){
+                    var ptElem = plotTypeElems[ptei];
+                    if (p.data.plotTypes && p.data.plotTypes[ptElem.value] === true) {
+                        plotTypeSaved = true;
+                        ptElem.checked = true;
+                        Session.set('plotType', ptElem.value);
+                        // We have to set up the display without using click events because that would cause
+                        // the restored curves to be removed
+                        // this seems redundant with the plotType event handlers.
+                        // probably need to improve this.
+                        switch (ptElem.value) {
+                            case matsTypes.PlotTypes.profile:
+                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+                                if (elem && elem.style) {
+                                    elem.style.display="none";
+                                }
+                                elem = document.getElementById('curve-dates-item');
+                                if (elem && elem.style) {
+                                    elem.style.display="block";
+                                }
+                                elem = document.getElementById('dates-item');
+                                if (elem && elem.style) {
+                                    elem.style.display = "none";
+                                }
+                                elem = document.getElementById('average-item');
+                                if (elem && elem.style) {
+                                    elem.style.display = "none";
+                                }
+
+                                break;
+                            case matsTypes.PlotTypes.timeSeries:
+                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+                                if (elem && elem.style) {
+                                    elem.style.display = "none";
+                                }
+                                elem = document.getElementById('curve-dates-item');
+                                if (elem && elem.style) {
+                                    elem.style.display = "none";
+                                }
+                                elem = document.getElementById('dates-item');
+                                if (elem && elem.style) {
+                                    elem.style.display = "block";
+                                }
+                                elem = document.getElementById('average-item');
+                                if (elem && elem.style) {
+                                    elem.style.display = "block";
+                                }
+                                break;
+                            case matsTypes.PlotTypes.scatter2d:
+                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+                                if (elem && elem.style) {
+                                    elem.style.display = "block";
+                                }
+                                break;
+                        }
+                    } else {
+                        ptElem.checked = false;
+                    }
+                }
+                if (plotTypeSaved !== true) {
+                    // set the default
+                    document.getElementById("plot-type-" + matsCollections.PlotGraphFunctions.findOne({checked:true}).plotType).checked = true;
+                }
 
                 // now set the PlotParams
                 var params = matsCollections.PlotParams.find({}).fetch();

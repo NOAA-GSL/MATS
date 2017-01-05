@@ -6,9 +6,9 @@ graphProfile = function(result) {
     for (var i  =0; i < dataset.length; i++){
         var o = dataset[i];
         if (min < 400) {
-            o.points.radius = 1;
+            o.points && (o.points.radius = 1);
         } else {
-            o.points.radius = 2;
+            o.points && (o.points.radius = 2);
         }
     }
     

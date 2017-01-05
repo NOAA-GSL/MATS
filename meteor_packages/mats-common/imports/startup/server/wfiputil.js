@@ -192,9 +192,6 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     var siteCount = 0;
     var timeSites = [];
     wfip2Pool.query(statement, function (err, rows) {
-
-        console.log("in queryWFIP2DB statement: " + statement);
-
         // every row is a time and a site with a level array and a values array
         // the time and site combination form a unique pair but there
         // can certainly be multiple times that are the same
