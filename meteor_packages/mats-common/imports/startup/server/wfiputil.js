@@ -285,25 +285,39 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         }
                     }
                     values = JSON.parse(rows[rowIndex].data)[myVariable];
-                    if (values !== undefined) {
+                    if (values === undefined) {
+                        // no data found in this record
+                        continue;
+                    } else {
                         levels = JSON.parse(rows[rowIndex].data)['z'];
                     }
                 } else {
                     // conventional variable -- stored as text in the DB
                     values = JSON.parse(rows[rowIndex][myVariable]);
-                    if (values !== undefined) {
+                    if (values === undefined) {
+                        // no data found in this record
+                        continue;
+                    } else {
                         levels = JSON.parse(rows[rowIndex].z);
                     }
                 }
 
                 // surface values and discriminators are scalars and are returned by the DB a as string
+                if (values === undefined) {
+                    // no data found in this record
+                    continue;
+                }
                 if (typeof(values) === "string") {
                     levels = [Number(levels[0])];
                     values = [Number(values[0])];
                 }
                 // set value precision
-                for (var valIndex = 0; valIndex < values.length; valIndex++) {
-                    values[valIndex] = Number(values[valIndex].toPrecision(4));
+                try {
+                    for (var valIndex = 0; valIndex < values.length; valIndex++) {
+                        values[valIndex] = Number(values[valIndex].toPrecision(4));
+                    }
+                } catch (e) {
+                    console.log(e);
                 }
                 for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
                     levels[lvlIndex] = Math.round(levels[lvlIndex]);
@@ -401,6 +415,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 
     // wait for d future to finish - don't ya love it...
     dFuture.wait();
+
     return {
         error: error,
         data: resultData,
