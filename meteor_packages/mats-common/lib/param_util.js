@@ -281,5 +281,4 @@ export default matsParamUtils = {
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
     collapseParams:collapseParams,
-    typeSort:typeSort
-};
+    typeSort:typeSort};

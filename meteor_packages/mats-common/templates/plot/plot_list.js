@@ -4,6 +4,7 @@ import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsMethods } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import { matsSelectUtils } from 'meteor/randyp:mats-common';
 
 Template.plotList.helpers({
     Title: function() {
@@ -209,54 +210,17 @@ Template.plotList.events({
                     if (p.data.plotTypes && p.data.plotTypes[ptElem.value] === true) {
                         plotTypeSaved = true;
                         ptElem.checked = true;
-                        Session.set('plotType', ptElem.value);
                         // We have to set up the display without using click events because that would cause
                         // the restored curves to be removed
-                        // this seems redundant with the plotType event handlers.
-                        // probably need to improve this.
                         switch (ptElem.value) {
                             case matsTypes.PlotTypes.profile:
-                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-                                if (elem && elem.style) {
-                                    elem.style.display="none";
-                                }
-                                elem = document.getElementById('curve-dates-item');
-                                if (elem && elem.style) {
-                                    elem.style.display="block";
-                                }
-                                elem = document.getElementById('dates-item');
-                                if (elem && elem.style) {
-                                    elem.style.display = "none";
-                                }
-                                elem = document.getElementById('average-item');
-                                if (elem && elem.style) {
-                                    elem.style.display = "none";
-                                }
-
+                                matsCurveUtils.showProfileFace();
                                 break;
                             case matsTypes.PlotTypes.timeSeries:
-                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-                                if (elem && elem.style) {
-                                    elem.style.display = "none";
-                                }
-                                elem = document.getElementById('curve-dates-item');
-                                if (elem && elem.style) {
-                                    elem.style.display = "none";
-                                }
-                                elem = document.getElementById('dates-item');
-                                if (elem && elem.style) {
-                                    elem.style.display = "block";
-                                }
-                                elem = document.getElementById('average-item');
-                                if (elem && elem.style) {
-                                    elem.style.display = "block";
-                                }
+                                matsCurveUtils.showTimeseriesFace();
                                 break;
                             case matsTypes.PlotTypes.scatter2d:
-                                var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-                                if (elem && elem.style) {
-                                    elem.style.display = "block";
-                                }
+                                matsCurveUtils.showScatterFace();
                                 break;
                         }
                     } else {
@@ -264,7 +228,7 @@ Template.plotList.events({
                     }
                 }
                 if (plotTypeSaved !== true) {
-                    // set the default
+                    // set the default - in the case none was set in an old saved settings
                     document.getElementById("plot-type-" + matsCollections.PlotGraphFunctions.findOne({checked:true}).plotType).checked = true;
                 }
 
@@ -274,13 +238,23 @@ Template.plotList.events({
                     matsParamUtils.setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
                 });
                 
-                // reset the form parameters
-                params = matsCollections.CurveParams.find({}).fetch();
+                // reset the form parameters for the superiors first
+                params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
+                params.forEach(function(plotParam) {
+                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
+                    // need to force a change event on each superior so that the refresh happens and resets its dependents
+                    const id = '#' + matsParamUtils.getInputIdForParamName(plotParam.name);
+                    // refresh the dependents for this superior
+                    matsSelectUtils.refreshDependents(plotParam.dependentNames);
+                });
+
+                // now reset the form parameters for the dependents
+                params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
                 params.forEach(function(plotParam) {
                     matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
                 });
-                
-                // reset the scatter parameters 
+
+                // reset the scatter parameters
                 params = matsCollections.Scatter2dParams.find({}).fetch();
                 params.forEach(function(plotParam) {
                     matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);

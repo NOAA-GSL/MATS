@@ -17,14 +17,14 @@ PlotResult = {};
 /*
  Curve utilities - used to determine curve labels and colors etc.
  */
-var getUsedLabels = function () {
+const getUsedLabels = function () {
     if (Session.get('UsedLabels') === undefined) {
         return [];
     }
     return Session.get('UsedLabels');
 };
 
-var getNextCurveLabel = function () {
+const getNextCurveLabel = function () {
     if (Session.get('NextCurveLabel') === undefined) {
         setNextCurveLabel();
     }
@@ -33,7 +33,7 @@ var getNextCurveLabel = function () {
 
 //determine the next curve Label and set it in the session
 // private, not exported
-var setNextCurveLabel = function () {
+const setNextCurveLabel = function () {
     var usedLabels = Session.get('UsedLabels');
     var settings = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}});
     if (settings === undefined) {
@@ -62,7 +62,7 @@ var setNextCurveLabel = function () {
 
 //determine the next curve color and set it in the session
 // private - not exported
-var setNextCurveColor = function () {
+const setNextCurveColor = function () {
     var usedColors = Session.get('UsedColors');
     var colors = matsCollections.ColorScheme.findOne({}, {fields: {colors: 1}}).colors;
     var lastUsedIndex = -1;
@@ -90,7 +90,7 @@ var setNextCurveColor = function () {
     Session.set('NextCurveColor', nextCurveColor);
 };
 
-var getNextCurveColor = function () {
+const getNextCurveColor = function () {
     if (Session.get('NextCurveColor') === undefined) {
         setNextCurveColor();
     }
@@ -99,7 +99,7 @@ var getNextCurveColor = function () {
 
 //clearUsedDefaultByLabel = function(label) {
 // clear a used label and set the nextCurveLabel to the one just cleared
-var clearUsedLabel = function (label) {
+const clearUsedLabel = function (label) {
     var usedLabels = Session.get('UsedLabels');
     var newUsedLabels = _.reject(usedLabels, function (l) {
         return l == label;
@@ -109,7 +109,7 @@ var clearUsedLabel = function (label) {
 };
 
 //clear a used color and set the nextCurveColor to the one just cleared
-var clearUsedColor = function (color) {
+const clearUsedColor = function (color) {
     var usedColors = Session.get('UsedColors');
     var newUsedColors = _.reject(usedColors, function (c) {
         return c == color;
@@ -121,7 +121,7 @@ var clearUsedColor = function (color) {
 // clear all the used colors and labels and set the nextCurve values
 // to the first in the scheme and the first of the labelPrefix.
 // This is used by the removeAll
-var clearAllUsed = function () {
+const clearAllUsed = function () {
     Session.set('UsedColors', []);
     var colors = matsCollections.ColorScheme.findOne({}, {fields: {colors: 1}}).colors;
     Session.set('NextCurveColor', colors[0]);
@@ -135,7 +135,7 @@ var clearAllUsed = function () {
 // this is used on restore settings to set up the usedColors
 // private - not exported
 //setUsedDefaults = function() {
-var setUsedColors = function () {
+const setUsedColors = function () {
     var curves = Session.get('Curves');
     var usedColors = [];
     for (var i = 0; i < curves.length; i++) {
@@ -147,7 +147,7 @@ var setUsedColors = function () {
 };
 
 //private - not exported
-var setUsedLabels = function () {
+const setUsedLabels = function () {
     var curves = Session.get('Curves');
     var usedLabels = [];
     for (var i = 0; i < curves.length; i++) {
@@ -158,12 +158,12 @@ var setUsedLabels = function () {
     setNextCurveLabel();
 };
 
-var setUsedColorsAndLabels = function () {
+const setUsedColorsAndLabels = function () {
     setUsedColors();
     setUsedLabels();
 };
 
-var resetScatterApply = function() {
+const resetScatterApply = function() {
     if (matsPlotUtils.getPlotType() == matsTypes.PlotTypes.scatter2d) {
         Session.set('axisCurveIcon', 'fa-asterisk');
         Session.set('xaxisCurveText', 'XAXIS NOT YET APPLIED');
@@ -177,7 +177,7 @@ var resetScatterApply = function() {
 
 // add the difference curves
 //private - not exported
-var addDiffs = function () {
+const addDiffs = function () {
     var curves = Session.get('Curves');
     var newCurves = Session.get('Curves');
     // diffs is checked -- have to add diff curves
@@ -243,7 +243,7 @@ var addDiffs = function () {
 
 //remove difference curves
 //private - not exported
-var removeDiffs = function () {
+const removeDiffs = function () {
     var curves = Session.get('Curves');
     var newCurves = _.reject(curves, function (curve) {
         return curve.diffFrom != null
@@ -254,7 +254,7 @@ var removeDiffs = function () {
 
 // resolve the difference curves
 // (used after adding or removing a curve while the show diffs box is checked)
-var checkDiffs = function () {
+const checkDiffs = function () {
     var curves = Session.get('Curves');
     if (matsPlotUtils.getPlotType() == matsTypes.PlotTypes.scatter2d) {
         // scatter plots have no concept of difference curves.
@@ -270,6 +270,88 @@ var checkDiffs = function () {
         }
     }
 };
+const refreshDependents = function(dependentNames) {
+    if (dependentNames) {
+        // refresh the dependents
+        for (var i = 0; i < dependentNames.length; i++) {
+            const name = dependentNames[i];
+            const targetParam = matsCollections.CurveParams.findOne({name: name});
+            const targetId = targetParam.name + '-' + targetParam.type;
+            const targetElem = document.getElementById(targetId);
+            const refreshEvent = new CustomEvent("refresh", {
+                detail: {
+                    refElement: event.target
+                }
+            });
+            targetElem.dispatchEvent(refreshEvent);
+        }
+    }
+};
+
+const showProfileFace = function() {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.profile);
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showTimeseriesFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.timeSeries);
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showScatterFace = function() {
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.scatter2d);
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+
+const removeAllCurves = function() {
+    // remove all curves
+    document.getElementById('remove-all') && document.getElementById('remove-all').click();
+};
 
 export default matsCurveUtils = {
     resetScatterApply:resetScatterApply,
@@ -284,6 +366,11 @@ export default matsCurveUtils = {
     addDiffs:addDiffs,
     removeDiffs:removeDiffs,
     checkDiffs:checkDiffs,
+    showScatterFace:showScatterFace,
+    showTimeseriesFace:showTimeseriesFace,
+    showProfileFace:showProfileFace,
+    refreshDependents:refreshDependents,
+    removeAllCurves:removeAllCurves,
     PlotResult:PlotResult
 };
 

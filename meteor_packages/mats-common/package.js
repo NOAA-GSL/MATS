@@ -1,6 +1,6 @@
 Package.describe({
   name: 'randyp:mats-common',
-  version: '1.4.0',
+  version: '1.4.1',
   // Brief, one-line summary of the package.
   summary: 'MATS common files provides common functionality for mats apps',
   // URL to the Git repository containing the source code for this package.
@@ -53,6 +53,7 @@ Package.onUse(function(api) {
   api.export("matsTypes",['client','server']);
   api.export("matsMethods",['client','server']);
   api.export("matsCurveUtils",['client']);
+  api.export("matsSelectUtils",['client']);
   api.export("matsParamUtils",['client','server']);
   api.export("matsMathUtils",['client','server']);
   api.export("matsPlotUtils",['client','server']);
@@ -71,6 +72,7 @@ Package.onUse(function(api) {
 
   //client
   api.addFiles('imports/startup/client/curve_util.js');
+  api.addFiles('imports/startup/client/select_util.js');
   api.addFiles('imports/startup/client/index.js');
   api.addFiles('imports/startup/client/init.js');
   api.addFiles('imports/startup/client/jquery.json-viewer.css');
@@ -81,6 +83,8 @@ Package.onUse(function(api) {
   api.addFiles('imports/startup/server/index.js');
   api.addFiles('imports/startup/server/publications.js');
   api.addFiles('imports/startup/server/wfiputil.js');
+    api.addFiles('imports/startup/server/wfiputil.js');
+
 
   // top level
   api.addFiles('footer.html', "client");
