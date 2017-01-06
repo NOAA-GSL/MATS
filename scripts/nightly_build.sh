@@ -11,6 +11,6 @@ cd /builds/buildArea
 
 su - www-data -c "./build_deploy_apps.sh ${requestedApp}" 2>&1
 
-service nginx restart 2 >&1
+service nginx restart 2>&1
 
 exit 0
