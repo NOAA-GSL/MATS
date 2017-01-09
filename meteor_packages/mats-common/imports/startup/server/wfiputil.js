@@ -1,3 +1,4 @@
+import {matsCollections} from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
@@ -191,6 +192,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     var cumulativeMovingMeanForTime = 0;
     var siteCount = 0;
     var timeSites = [];
+    const variableInfoMap = matsCollections.CurveParams.findOne({ name: 'variable' });
+    const variableIsDiscriminator = variableInfoMap.infoMap[ myVariable ].type == 2;
     wfip2Pool.query(statement, function (err, rows) {
         // every row is a time and a site with a level array and a values array
         // the time and site combination form a unique pair but there
@@ -290,6 +293,9 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         continue;
                     } else {
                         levels = JSON.parse(rows[rowIndex].data)['z'];
+                        if ( !(Array.isArray(levels))) {
+                            levels = [Number(levels)];
+                        }
                     }
                 } else {
                     // conventional variable -- stored as text in the DB
@@ -307,10 +313,21 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     // no data found in this record
                     continue;
                 }
-                if (typeof(values) === "string") {
-                    levels = [Number(levels[0])];
+
+                if (!(Array.isArray(values))) {
+                    // disciminators are always on the surface
+                    if (variableIsDiscriminator) {
+                        levels = [0];
+                    } else {
+                        levels = [Number(levels[0])];
+                    }
                     values = [Number(values)];
+                } else {
+                    values = values.map(function (a) {
+                        return Number(a);
+                    });
                 }
+
                 // set value precision
                 try {
                     for (var valIndex = 0; valIndex < values.length; valIndex++) {

@@ -18,6 +18,7 @@ var lowerOptionsMap = {};
 var forecastLengthOptionsMap = {};
 var variableFieldsMap = {};
 var variableOptionsMap = {};
+var variableInfoMap = {};
 variableOptionsMap[matsTypes.PlotTypes.profile] = {};
 variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
 variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
@@ -378,6 +379,7 @@ var doCurveParams = function () {
                 //variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
                 variableMap: variableFieldsMap,
                 optionsMap: variableOptionsMap,
+                infoMap: variableInfoMap,
                 options:variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
                 superiorNames: ['data-source','truth-data-source'],
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
@@ -503,6 +505,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ':'],
+                ['', 'truth-data-source', ':'],
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
@@ -520,6 +523,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ':'],
+                ['', 'truth-data-source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'sites', ', '],
                 ['', 'variable', ' '],
@@ -538,6 +542,7 @@ var doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'xaxis-data-source', ':'],
+                ['', 'xaxis-truth-data-source', ':'],
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
@@ -545,6 +550,7 @@ var doCurveTextPatterns = function () {
                 ['fcst_len:', 'xaxis-forecast-length', 'h, '],
                 ['', 'xaxis-discriminator', ', '],
                 ['', 'yaxis-data-source', ':'],
+                ['', 'yaxis-truth-data-source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
@@ -805,6 +811,7 @@ Meteor.startup(function () {
                                 var infostring = rows2[0].info.split('|');
                                 labels.push(infostring[1]);
                                 variableFieldsMap[infostring[1]] = variable_names[j];
+                                variableInfoMap[variable_names[j]] = { 'type': infostring[0], 'units': infostring[2], 'minexpected': infostring[3], 'maxexpected': infostring[4] };
                             }
                             qFuture2['return']();
                         }));
@@ -1030,6 +1037,7 @@ Meteor.startup(function () {
                                     var infostring = rows2[0].info.split('|');
                                     labels.push(infostring[1]);
                                     variableFieldsMap[infostring[1]] = discriminatorOptionsMap[discriminators[j]];
+                                    variableInfoMap[discriminatorOptionsMap[discriminators[j]]] = { 'type': infostring[0], 'units': infostring[2], 'minexpected': infostring[3], 'maxexpected': infostring[4] };
                                 }
                                 qFuture2['return']();
                             }));
