@@ -42,7 +42,8 @@ dataProfile = function (plotParams, plotFunction) {
         }
 
     }
-
+    var xAxisLabel = "";
+    var xAxisLabels = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -57,16 +58,15 @@ dataProfile = function (plotParams, plotFunction) {
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-        var xAxisLabel;
-        var xAxisLabels = [];
         var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
         if (curveIndex == 0) {
-            xAxisLabel = variableStr;
-        } else {
+            xAxisLabel += variableStr;
             xAxisLabels.push(variableStr);
+        } else {
             if ( xAxisLabels.indexOf(variableStr) == -1) {
+                xAxisLabels.push(variableStr);
                 xAxisLabel += " | " + variableStr;
             }
         }
