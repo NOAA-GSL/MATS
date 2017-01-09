@@ -188,10 +188,69 @@ var doCurveParams = function () {
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2,
+                dates:datesMap
+            });
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'discriminator',
+                type: matsTypes.InputTypes.select,
+                optionsMap:discriminatorOptionsMap,
+                options:Object.keys(discriminatorOptionsMap),   // convenience
+                dependentNames: ['upper','lower'],
+                disableOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
+                hideOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
+                controlButtonCovered: true,
+                unique: false,
+                default: -1,   // -1 means selection is optional - enables clear selection button
+                controlButtonVisibility: 'block',
+                multiple: false,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1,
-                dates:datesMap
+                displayGroup: 2,
+                help: "discriminator-help.html"
+            });
+
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'upper',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap:upperOptionsMap,
+                options:Object.keys(upperOptionsMap),   // convenience
+                superiorNames: ['discriminator'],
+                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
+                controlButtonCovered: true,
+                unique: false,
+                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'lower',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap:lowerOptionsMap,
+                options:Object.keys(lowerOptionsMap),   // convenience
+                superiorNames: ['discriminator'],
+                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
+                controlButtonCovered: true,
+                unique: false,
+                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
             });
 
 
@@ -218,7 +277,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2,
+                displayGroup: 3,
                 help: 'wfip2-statistic.html'
             });
 
@@ -236,7 +295,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 2,
-                displayGroup: 2,
+                displayGroup: 3,
                 dates:datesMap
             });
 
@@ -252,7 +311,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
 
         matsCollections.CurveParams.insert(
@@ -269,7 +328,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 multiple: true
             });
 
@@ -287,7 +346,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 multiple: true,
                 defaultMapView: {point:[45.904233, -120.814632], zoomLevel:8, minZoomLevel:4, maxZoomLevel:13},
                 help: 'map-help.html'
@@ -308,7 +367,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 help: "completeness.html"
             });
 
@@ -328,7 +387,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 help: "variable-help.html"
             });
 
@@ -347,7 +406,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
 
         matsCollections.CurveParams.insert(
@@ -365,7 +424,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: 'top-help.html'
             });
         matsCollections.CurveParams.insert(
@@ -383,7 +442,7 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: 'bottom-help.html'
             });
         matsCollections.CurveParams.insert(
@@ -401,68 +460,10 @@ var doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: "completeness.html"
             });
 
-        matsCollections.CurveParams.insert(
-            {
-                name: 'discriminator',
-                type: matsTypes.InputTypes.select,
-                optionsMap:discriminatorOptionsMap,
-                options:Object.keys(discriminatorOptionsMap),   // convenience
-                dependentNames: ['upper','lower'],
-                disableOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
-                hideOtherFor:{'upper':matsTypes.InputTypes.unused,'lower':matsTypes.InputTypes.unused},
-                controlButtonCovered: true,
-                unique: false,
-                default: -1,   // -1 means selection is optional - enables clear selection button
-                controlButtonVisibility: 'block',
-                multiple: false,
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-                help: "discriminator-help.html"
-            });
-
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'upper',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap:upperOptionsMap,
-                options:Object.keys(upperOptionsMap),   // convenience
-                superiorNames: ['discriminator'],
-                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
-                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
-                controlButtonCovered: true,
-                unique: false,
-                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'lower',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap:lowerOptionsMap,
-                options:Object.keys(lowerOptionsMap),   // convenience
-                superiorNames: ['discriminator'],
-                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
-                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
-                controlButtonCovered: true,
-                unique: false,
-                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 6
-            });
 
         matsCollections.CurveParams.insert(
             {

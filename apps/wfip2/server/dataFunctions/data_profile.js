@@ -57,9 +57,19 @@ dataProfile = function (plotParams, plotFunction) {
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
         var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
+        var xAxisLabel;
+        var xAxisLabels = [];
         var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
+        if (curveIndex == 0) {
+            xAxisLabel = variableStr;
+        } else {
+            xAxisLabels.push(variableStr);
+            if ( xAxisLabels.indexOf(variableStr) == -1) {
+                xAxisLabel += " | " + variableStr;
+            }
+        }
         if (myVariable === undefined) {
             myVariable = curve['variable'];
             myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
@@ -95,19 +105,19 @@ dataProfile = function (plotParams, plotFunction) {
             if (dataSource_is_instrument) {
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
-                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                 } else {
-                    statement = "select (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
                 }
                 // data source is a model and its JSON
             } else {
-                statement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
                     " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
@@ -137,18 +147,18 @@ dataProfile = function (plotParams, plotFunction) {
                 if (truthDataSource_is_instrument) {
                     const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        truthStatement = "select (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
                 } else {
-                    truthStatement = "select (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                    truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
                         " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
@@ -504,7 +514,7 @@ dataProfile = function (plotParams, plotFunction) {
             show: true
         },
         xaxes: [{
-            axisLabel: variableStr,
+            axisLabel: xAxisLabel,
             color: 'grey'
         }],
         xaxis: {

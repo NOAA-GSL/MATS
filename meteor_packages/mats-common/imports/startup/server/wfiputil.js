@@ -309,7 +309,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 }
                 if (typeof(values) === "string") {
                     levels = [Number(levels[0])];
-                    values = [Number(values[0])];
+                    values = [Number(values)];
                 }
                 // set value precision
                 try {
@@ -329,21 +329,21 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     continue;
                 }
 
-                if (numLevels > 1) {            // apply level filter, remove any levels and corresponding values that are not within the boundary.
-                    // there are always the same number of levels as values, they correspond one to one (in database).
-                    // filter backwards so the the level array is safely modified.
-                    // always accept levels that are Number.MIN_VALUE - they are special discriminators{
-                    for (var l = levels.length - 1; l >= 0; l--) {
-                        var lvl = levels[l];
-                        if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
-                            // remove this level - filter it out
-                            levels.splice(l, 1);
-                            values.splice(l, 1);
-                        } else {
-                            allLevelsSet.add(lvl);
-                        }
+                // apply level filter, remove any levels and corresponding values that are not within the boundary.
+                // there are always the same number of levels as values, they correspond one to one (in database).
+                // filter backwards so the the level array is safely modified.
+                // always accept levels that are Number.MIN_VALUE - they are special discriminators{
+                for (var l = levels.length - 1; l >= 0; l--) {
+                    var lvl = levels[l];
+                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                        // remove this level - filter it out
+                        levels.splice(l, 1);
+                        values.splice(l, 1);
+                    } else {
+                        allLevelsSet.add(lvl);
                     }
                 }
+
                 // may have dropped sample in above if
                 numLevels = levels.length;
 
