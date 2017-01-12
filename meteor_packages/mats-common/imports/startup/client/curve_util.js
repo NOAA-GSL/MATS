@@ -1,6 +1,7 @@
 import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common';
 
 /*
  global dataset variable - container for graph dataset.
@@ -122,12 +123,15 @@ const clearUsedColor = function (color) {
 // to the first in the scheme and the first of the labelPrefix.
 // This is used by the removeAll
 const clearAllUsed = function () {
-    Session.set('UsedColors', []);
+    Session.set('UsedColors', undefined);
     var colors = matsCollections.ColorScheme.findOne({}, {fields: {colors: 1}}).colors;
     Session.set('NextCurveColor', colors[0]);
-    Session.set('UsedLabels', []);
+    Session.set('UsedLabels', undefined);
     var labelPrefix = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}}).LabelPrefix;
-    Session.set('NextCurveLabel', labelPrefix + 1);
+    Session.set('NextCurveLabel', labelPrefix + 0);
+    Session.set('Curves', []);
+    //matsParamUtils.setValueTextForParamName('label',Session.get('NextCurveLabel'));
+    matsParamUtils.setValueTextForParamName('label','');
 };
 
 // use curves in session to determine which defaults are already used
@@ -159,6 +163,7 @@ const setUsedLabels = function () {
 };
 
 const setUsedColorsAndLabels = function () {
+    matsParamUtils.setValueTextForParamName('label','');  // necessary to prevent duplicates in the label
     setUsedColors();
     setUsedLabels();
 };

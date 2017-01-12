@@ -26,7 +26,7 @@ Template.item.helpers({
         if (this.value) {
             return this.value;
         } else {
-            if (this.type === matsTypes.InputTypes.select && this.default === -1) {
+            if (this.type === matsTypes.InputTypes.select && (this.default === -1 || this.default === undefined || this.default === matsTypes.InputTypes.unused)) {
                 return matsTypes.InputTypes.unused;
             } else {
                 return this.default;
@@ -205,6 +205,10 @@ Template.select.events({
     'change, blur' : function (event) {
         try {
             var text = event.currentTarget.value;
+            if (this.type === matsTypes.InputTypes.select && (text === "" || text === undefined || text === null) &&
+                (this.default === -1 || this.default === undefined || this.default === null)) {
+                text = matsTypes.InputTypes.unused;
+            }
             matsParamUtils.setValueTextForParamName(event.target.name, text);
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");

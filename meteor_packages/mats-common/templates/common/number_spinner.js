@@ -14,7 +14,7 @@ var refresh = function(name) {
     var max = paramData.max;
     for (var si =0; si < superiorNames.length; si++) {
         var superiorElement = matsParamUtils.getInputElementForParamName(superiorNames[si]);
-        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
+        var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] && superiorElement.options[superiorElement.selectedIndex].text;
         const options = optionsMap[selectedSuperiorValue];
         if (options === undefined) {
             continue;
@@ -29,7 +29,7 @@ var refresh = function(name) {
     elem.setAttribute("min", min);
     elem.setAttribute("max",max);
     elem.setAttribute("step",step);
-    dispElem.textContent = dispDefault;
+    matsParamUtils.setValueTextForParamName(dispElem, dispDefault);
     elem.value = dispDefault;
 };
 

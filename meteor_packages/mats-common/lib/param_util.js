@@ -133,6 +133,8 @@ const getElementValues = function() {
             val =$(selector).map(function(_, el) {
                 return $(el).val();
             }).get();
+        } else if (param.type === matsTypes.InputTypes.dateRange) {
+            val = getValueForParamName(param.name);
         } else {
             var idSelect = '#' + getInputIdForParamName(param.name);
             val = $(idSelect).val();

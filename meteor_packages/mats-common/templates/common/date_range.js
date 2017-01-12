@@ -56,14 +56,13 @@ Template.dateRange.onRendered(function() {
     const name = this.data.name;
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
-
     $(function() {
             $('#' + idref).daterangepicker({
+            "autoApply": true,
             "parentEL":$('#' + idref),
             "timePicker": true,
             "timePicker24Hour": true,
             "timePickerIncrement": 15,
-            "autoApply": true,
             "startDate": startInit(),
             "endDate": stopInit(),
             "showDropdowns":true,
@@ -101,10 +100,12 @@ Template.dateRange.onRendered(function() {
     const refresh = function(selectedSuperiorValue) {
         //var selectedText = selectedSuperiorValue;
         /* date refresh stuff goes here*/
-
+        //$('#dates-item').data('daterangepicker').setStartDate(moment ('2014-03-01'))
+        //$('#dates-item').data('daterangepicker').setEndDate(moment ('2014-05-01 00:00'))
+        //matsParamUtils.setValueTextForParamName('dates','2014-03-01 00:00 - 2014-03-5 00:00')
     };
 
-    // register refresh event for any superior to use to enforce a refresh of the options list
+    // register refresh event for y superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
         if (superiorName) {
             const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);

@@ -233,6 +233,7 @@ const refresh = function (paramName) {
                     }
                 } else {
                     options = []; // last resort - prevent an exception
+                    matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
                 }
             }
         } catch (e) {
@@ -287,11 +288,6 @@ const refresh = function (paramName) {
                 belem.options = [];
                 for (var i = 0; i < options.length; i++) {
                     belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
-                    // set the display button to first value
-                    if (i === 0) {
-                        matsParamUtils.setValueTextForParamName(dispElemName, options[i]);
-                        dispElem.textContent = options[i];
-                    }
                 }
             }
         }

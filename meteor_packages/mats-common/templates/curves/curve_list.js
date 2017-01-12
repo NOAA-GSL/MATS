@@ -56,7 +56,6 @@ Template.curveList.helpers({
 
 Template.curveList.events({
     'click .remove-all': function () {
-        Session.set('Curves', []);
         matsCurveUtils.clearAllUsed();
         return false;
     },
