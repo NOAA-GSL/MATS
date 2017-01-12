@@ -182,6 +182,7 @@ Template.plotList.events({
                 return false;
                 break;
             case "restore":
+                matsCurveUtils.clearAllUsed();
                 if (((document.getElementById('restore_from_private').value === "" ||
                       document.getElementById('restore_from_private').value === undefined)) &&
                     ((document.getElementById('restore_from_public').value === "" ||
@@ -235,30 +236,70 @@ Template.plotList.events({
                 // now set the PlotParams
                 var params = matsCollections.PlotParams.find({}).fetch();
                 params.forEach(function(plotParam){
-                    matsParamUtils.setInputForParamName(plotParam.name,p.data.paramData.plotParams[plotParam.name]);
+                    const val =  p.data.paramData.plotParams[plotParam.name] === null ||
+                        p.data.paramData.plotParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : p.data.paramData.plotParams[plotParam.name];
+                    matsParamUtils.setInputForParamName(plotParam.name,val);
                 });
                 
                 // reset the form parameters for the superiors first
                 params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
                 params.forEach(function(plotParam) {
-                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
-                    // need to force a change event on each superior so that the refresh happens and resets its dependents
-                    const id = '#' + matsParamUtils.getInputIdForParamName(plotParam.name);
-                    // refresh the dependents for this superior
-                    matsSelectUtils.refreshDependents(plotParam.dependentNames);
+                    if (plotParam.type === matsTypes.InputTypes.dateRange) {
+                        if (p.data.paramData.curveParams[plotParam.name] === undefined) {
+                            return;   // just like continue
+                        }
+                        const dateArr = p.data.paramData.curveParams[plotParam.name].split(' - ');
+                        const from = dateArr[0];
+                        const to = dateArr[1];
+                        const idref = "#" + plotParam.name + "-item";
+                        $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                        matsParamUtils.setValueTextForParamName(plotParam.name,p.data.paramData.curveParams[plotParam.name]);
+                    } else {
+                        const val =  p.data.paramData.curveParams[plotParam.name] === null ||
+                            p.data.paramData.curveParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : p.data.paramData.curveParams[plotParam.name];
+                        matsParamUtils.setInputForParamName(plotParam.name, val);
+                    }
                 });
 
                 // now reset the form parameters for the dependents
                 params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
                 params.forEach(function(plotParam) {
-                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.curveParams[plotParam.name]);
+                    if (plotParam.type === matsTypes.InputTypes.dateRange) {
+                        if (p.data.paramData.curveParams[plotParam.name] === undefined) {
+                            return;   // just like continue
+                        }
+                        const dateArr = p.data.paramData.curveParams[plotParam.name].split(' - ');
+                        const from = dateArr[0];
+                        const to = dateArr[1];
+                        const idref = "#" + plotParam.name + "-item";
+                        $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                        matsParamUtils.setValueTextForParamName(plotParam.name,p.data.paramData.curveParams[plotParam.name]);
+                    } else {
+                        const val =  p.data.paramData.curveParams[plotParam.name] === null ||
+                            p.data.paramData.curveParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : p.data.paramData.curveParams[plotParam.name];
+                        matsParamUtils.setInputForParamName(plotParam.name, val);
+                    }
                 });
 
                 // reset the scatter parameters
                 params = matsCollections.Scatter2dParams.find({}).fetch();
                 params.forEach(function(plotParam) {
-                    matsParamUtils.setInputForParamName(plotParam.name, p.data.paramData.scatterParams[plotParam.name]);
+                    const val =  p.data.paramData.scatterParams[plotParam.name] === null ||
+                    p.data.paramData.scatterParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : p.data.paramData.scatterParams[plotParam.name];
+                    matsParamUtils.setInputForParamName(plotParam.name, val);
                 });
+
+                // reset the dates
+                if (p.data.dates !== undefined) {
+                    const dateArr = p.data.dates.split(' - ');
+                    const from = dateArr[0];
+                    const to = dateArr[1];
+                    $('#dates-item').data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+                    $('#dates-item').data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                    matsParamUtils.setValueTextForParamName('dates',p.data.dates);
+                }
 
                 // reset the plotParams
                 Session.set("PlotParams", p);
