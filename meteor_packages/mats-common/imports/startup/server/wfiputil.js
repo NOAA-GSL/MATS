@@ -259,16 +259,22 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
+
+                // keep track of the minimum interval for the data set
+                // it is necessary later when we fill in missing times
                 var avinterval = time - lastavTime;
                 if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
                     minInterval = avinterval;
                 }
-                const thisdiff = utctime - time;
-                if ( thisdiff > prevdiff ) {
-                    continue;
-                } else {
-                    prevdiff = thisdiff;
-                }
+
+                // const thisdiff = utctime - time;
+                // if ( thisdiff > prevdiff ) {
+                //     continue;
+                // } else {
+                //     prevdiff = thisdiff;
+                // }
+
+
                 lastavTime = time;
                 var siteid = rows[rowIndex].sites_siteid;
                 allSitesSet.add(siteid);

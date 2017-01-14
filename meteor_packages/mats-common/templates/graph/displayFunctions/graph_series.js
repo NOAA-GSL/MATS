@@ -1,8 +1,10 @@
+
 graphSeries = function(result) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
     var dataset = result.data;
+
     for (var i  =0; i < dataset.length; i++){
         var o = dataset[i];
         if (min < 400) {
@@ -117,24 +119,30 @@ graphSeries = function(result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
     });
-    var normalizeYAxis = function (ranges) {
+    var normalizeYAxis = function (ranges,options) {
         /*
          The way the axis work, if there is only one yaxis the yaxis must be an object
          but if there are multiple yaxis the yaxis must be an array.
          */
-        var axis = {};
-        var axisKeys = _.keys(ranges);
-        for (var i = 0; i < axisKeys.length; i++) {
-            var axisKey = axisKeys[i];
-            axis[axisKey] = {};
-            axis[axisKey].min = ranges[axisKey].from;
-            axis[axisKey].max = ranges[axisKey].to;
+         for (var i = 0; i < options.xaxes.length; i++) {
+             options.xaxes[i].min = ranges.xaxis.from;
+             options.xaxes[i].max = ranges.xaxis.to;
         }
-        return axis;
+        var rangeIndex = 0;
+        var yaxisRangesKeys = _.difference(Object.keys(ranges), ["xaxis","yaxis"]); // get just the axis ranges
+        for (var i = 0; i < options.yaxes.length; i++) {
+             if (options.yaxes[i].show !== undefined && options.yaxes[i].show === false) {
+                 continue;
+             } // skip axis that are shared
+            options.yaxes[i].min = ranges[yaxisRangesKeys[rangeIndex]].from;
+            options.yaxes[i].max = ranges[yaxisRangesKeys[rangeIndex]].to;
+             rangeIndex++;
+        }
+        return options;
     };
 
-    var drawGraph = function(ranges) {
-        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
+    var drawGraph = function(ranges, options) {
+        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges,options));
         plot = $.plot(placeholder, dataset, zOptions);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     };
@@ -144,7 +152,7 @@ graphSeries = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges);
+        drawGraph(ranges, plot.getOptions());
     });
 
     // draw initial plot - we do this a little funky,

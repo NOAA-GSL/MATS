@@ -4,6 +4,9 @@ import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { moment } from 'meteor/momentjs:moment';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 
+var curveIndexes = [];
+var levels = [];
+
 Template.textProfileOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
@@ -19,7 +22,7 @@ Template.textProfileOutput.helpers({
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
          made that unworkable.
          */
-        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
         }
@@ -27,7 +30,7 @@ Template.textProfileOutput.helpers({
     },
     curveText: function () {
         this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
-        var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
+        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
         return text;
     },
     curveLabel: function (curve) {
@@ -44,7 +47,8 @@ Template.textProfileOutput.helpers({
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
          made that unworkable.
          */
-        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        const plotResultsUpDated = Session.get('PlotResultsUpDated');
+        const curves = Session.get('Curves');
         if (plotResultsUpDated === undefined) {
             return [];
         }
@@ -55,20 +59,25 @@ Template.textProfileOutput.helpers({
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return [];
         }
-
-        var maxl = 0;
-        var maxi =0;
+        var levelSet = new Set();
+        var di = 0;
         for (var i = 0; i < matsCurveUtils.PlotResult.data.length; i++) {
-            if (matsCurveUtils.PlotResult.data[i].length > maxl) {
-                maxl = matsCurveUtils.PlotResult.data[i].length;
-                maxi = i;
+            for (di = 0; di < matsCurveUtils.PlotResult.data[i].data.length; di++) {
+                matsCurveUtils.PlotResult.data[i] && matsCurveUtils.PlotResult.data[i].data[di] && levelSet.add(matsCurveUtils.PlotResult.data[i].data[di][1]);
             }
         }
-        var levelIndexes = _.range(matsCurveUtils.PlotResult.data[maxi].data.length);
-        return levelIndexes;
+        levels = Array.from (levelSet);
+        levels.sort((a, b) => (a - b));
 
+        // curveIndexes are used to index each curve of the dataset - they all start with 0
+        curveIndexes = [];
+        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
+            curveIndexes.push(0);
+        }
+        return levels;
     },
-    points: function(levelIndex) {
+
+    points: function(level) {
         /*
          This (plotResultsUpDated) is very important.
          The page is rendered whe the graph page comes up, but the data from the data processing callback
@@ -79,45 +88,47 @@ Template.textProfileOutput.helpers({
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
          made that unworkable.
          */
-        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
-            return;
+        if (matsCurveUtils.PlotResult.data === undefined ||
+            matsCurveUtils.PlotResult.length == 0) {
+            return false;
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
-            return;
+            return false;
         }
 
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
-            return;
+            return false;
         }
-        var maxl = 0;
-        var maxi =0;
-        for (var i = 0; i < matsCurveUtils.PlotResult.data.length; i++) {
-            if (matsCurveUtils.PlotResult.data[i].length > maxl) {
-                maxl = matsCurveUtils.PlotResult.data[i].length;
-                maxi = i;
-            }
-        }
-        // i is the one that has the most levels
-        if (matsCurveUtils.PlotResult.data[maxi].data[levelIndex][1] === undefined) {
-            return "";
-        }
-        var line = "<td>" + matsCurveUtils.PlotResult.data[maxi].data[levelIndex][1] + "</td>";
-        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+
+        var line = "<td>" + level + "</td>";
+        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
-        var fillStr = settings.NullFillString;
-        var curveNums = curves.length;
-        for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-            if (matsCurveUtils.PlotResult.data[curveIndex].data[levelIndex]) {
-                var val = matsCurveUtils.PlotResult.data[curveIndex].data[levelIndex][1] !== undefined ? (Number(matsCurveUtils.PlotResult.data[curveIndex].data[levelIndex][0])).toPrecision(4) : fillStr;
-                line += "<td>" + val + "</td>";
+        const fillStr = settings.NullFillString;
+        var pdata = fillStr;
+        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
+            pdata = fillStr;
+            try {
+                // if there isn't any data in this curve for this level, catch the exception, ignore it and use fillStr
+                // otherwise save the data in the line
+                // do NOT increment the data pointer unless there is a match (curveIndexes[curveIndex]++ comes after any Exception would be thrown)
+                if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]] && matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][1] == level) {
+                    if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0] !== null) {
+                        pdata = Number(matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0]).toPrecision(4);
+                    }
+                    curveIndexes[curveIndex]++;
+                }
+            } catch (no_data_this_level_this_curve) {
+                curveIndexes[curveIndex]++;
             }
+            // pdata is either real value or fillStr
+            line += "<td>" + pdata + "</td>";
         }
         return line;
     }
@@ -125,13 +136,13 @@ Template.textProfileOutput.helpers({
 
 Template.textProfileOutput.events({
     'click .export': function() {
-        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
-        var fillStr = settings.NullFillString;
+        const fillStr = settings.NullFillString;
         var data = [];
-        var curves = Session.get('Curves');
+        const curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return data;
         }
@@ -141,18 +152,18 @@ Template.textProfileOutput.events({
         }
         data.push(clabels);
         //var dataSet = Session.get('dataset');
-        var curveNums = matsCurveUtils.PlotResult.data.length;
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
+        const curveNums = matsCurveUtils.PlotResult.data.length;
+        const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
             var line = moment.utc(Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][0])).format('YYYY-MM-DD:HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);
         }
-        var csvString = data.join("%0A");
-        var a         = document.createElement('a');
+        const csvString = data.join("%0A");
+        const a         = document.createElement('a');
         a.href        = 'data:attachment/csv,' + csvString;
         a.target      = '_blank';
         a.download    = 'data.csv';
