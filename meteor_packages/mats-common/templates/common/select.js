@@ -85,7 +85,7 @@ Template.select.helpers({
 
 Template.select.events({
     'change .data-input': function (event) {
-        if (event.currentTarget.options == []) {
+        if (event.currentTarget.options == [] || event.currentTarget.selectedIndex == -1) {
             matsParamUtils.setValueTextForParamName(this.name, matsTypes.InputTypes.unused);
         } else {
             event.currentTarget.options &&

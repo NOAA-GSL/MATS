@@ -206,7 +206,7 @@ Template.select.events({
         try {
             var text = event.currentTarget.value;
             if (this.type === matsTypes.InputTypes.select && (text === "" || text === undefined || text === null) &&
-                (this.default === -1 || this.default === undefined || this.default === null)) {
+                (this.default === -1 || this.default === undefined || this.default === null || event.currentTarget.selectedIndex == -1)) {
                 text = matsTypes.InputTypes.unused;
             }
             matsParamUtils.setValueTextForParamName(event.target.name, text);

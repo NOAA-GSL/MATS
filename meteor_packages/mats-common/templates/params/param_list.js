@@ -30,6 +30,8 @@ Template.paramList.events({
         var labelId = 'label-' + matsTypes.InputTypes.textInput;
         var label = document.getElementById(labelId);
         label.disabled = false;
+        // reset parameters to match edited curve.....
+        matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
     },
     'click .reset': function(event,template) {
         //location.reload();
@@ -207,6 +209,7 @@ Template.paramList.events({
             Session.set('Curves', curves);
             matsCurveUtils.setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
             matsCurveUtils.checkDiffs();
+            matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
             return false;
     }
 });

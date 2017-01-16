@@ -149,8 +149,10 @@ const refresh = function (paramName) {
     if (superiorNames !== undefined) {
         for (var sn = 0; sn < superiorNames.length; sn++) {
             var superiorElement = matsParamUtils.getInputElementForParamName(superiorNames[sn]);
-            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-            superiors.push({element: superiorElement, value: selectedSuperiorValue});
+            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? undefined : superiorElement.options[superiorElement.selectedIndex].text;
+            if (selectedSuperiorValue) {
+                superiors.push({element: superiorElement, value: selectedSuperiorValue});
+            }
         }
     }
     /*
