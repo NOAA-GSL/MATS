@@ -103,7 +103,11 @@ dataSeries = function (plotParams, plotFunction) {
     var curvesLength = curves.length;
     var dataset = [];
     var variableStatSet = Object.create(null);
+    var yAxisMaxes = [];
+    var yAxisMins = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        yAxisMaxes[curveIndex] = Number.MIN_VALUE;
+        yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
@@ -272,6 +276,8 @@ dataSeries = function (plotParams, plotFunction) {
         // We have to make them start and end at the same point (the xmin value and fill missing data with nulls).
 
         var numCurves = dataset.length;
+        yAxisMins[curveIndex] = ymin;
+        yAxisMaxes[curveIndex] = ymax;
     }
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
@@ -299,11 +305,13 @@ dataSeries = function (plotParams, plotFunction) {
         }
     }
 
-    var yPad = (ymax -ymin) * 0.2;
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
+        ymin = yAxisMins[dsi];
+        ymax = yAxisMaxes[dsi];
+        var yPad = (ymax -ymin) * 0.2;
         var variableStat = curves[dsi].variableStat;
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
