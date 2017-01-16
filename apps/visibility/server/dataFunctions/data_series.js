@@ -120,7 +120,11 @@ dataSeries = function (plotParams, plotFunction) {
     var curvesLength = curves.length;
     var dataset = [];
     var variableStatSet = Object.create(null);
+    var yAxisMaxes = [];
+    var yAxisMins = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        yAxisMaxes[curveIndex] = Number.MIN_VALUE;
+        yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
@@ -148,10 +152,10 @@ dataSeries = function (plotParams, plotFunction) {
         // The axis number is assigned to the variableStatSet value, which is the variableStat.
         var variableStat = thresholdStr + ":" + statisticSelect;
         curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
-        var xmax;
-        var ymax;
-        var xmin;
-        var ymin;
+        var xmax = Number.MIN_VALUE;
+        var ymax = Number.MIN_VALUE;
+        var xmin = Number.MAX_VALUE;
+        var ymin = Number.MAX_VALUE;
         var interval;
 
         var d = [];
@@ -262,6 +266,10 @@ dataSeries = function (plotParams, plotFunction) {
 
         for (var i = 0; i < d.length; i++) {
             mean = mean + d[i][1];
+            if (d[i][1] !== null) {
+                ymin = ymin < d[i][1] ? ymin : d[i][1];
+                ymax = ymax > d[i][1] ? ymax : d[i][1];
+            }
         }
         mean = mean / d.length;
 
@@ -280,6 +288,9 @@ dataSeries = function (plotParams, plotFunction) {
 
         };
         dataset.push(options);
+        //var numCurves = dataset.length;
+        yAxisMins[curveIndex] = ymin;
+        yAxisMaxes[curveIndex] = ymax;
     }
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
@@ -408,6 +419,9 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxes = [];
     var yaxis = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
+        ymin = yAxisMins[dsi];
+        ymax = yAxisMaxes[dsi];
+        var yPad = (ymax -ymin) * 0.2;
         var variableStat = curves[dsi].variableStat;
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
@@ -420,7 +434,9 @@ dataSeries = function (plotParams, plotFunction) {
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 3
+            tickDecimals: 1,
+            min: ymin - yPad,
+            max: ymax + yPad
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
