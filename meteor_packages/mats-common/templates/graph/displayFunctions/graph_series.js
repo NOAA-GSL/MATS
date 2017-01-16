@@ -3,7 +3,8 @@ graphSeries = function(result) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
-    var dataset = result.data;
+    var dataset = {};
+    dataset = result.data;
 
     for (var i  =0; i < dataset.length; i++){
         var o = dataset[i];
@@ -13,7 +14,8 @@ graphSeries = function(result) {
             o.points && (o.points.radius = 2);
         }
     }
-    var options = result.options;
+    var options = {};
+    options = result.options;
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
@@ -128,21 +130,29 @@ graphSeries = function(result) {
              options.xaxes[i].min = ranges.xaxis.from;
              options.xaxes[i].max = ranges.xaxis.to;
         }
-        var rangeIndex = 0;
-        var yaxisRangesKeys = _.difference(Object.keys(ranges), ["xaxis","yaxis"]); // get just the axis ranges
-        for (var i = 0; i < options.yaxes.length; i++) {
-             if (options.yaxes[i].show !== undefined && options.yaxes[i].show === false) {
-                 continue;
-             } // skip axis that are shared
-            options.yaxes[i].min = ranges[yaxisRangesKeys[rangeIndex]].from;
-            options.yaxes[i].max = ranges[yaxisRangesKeys[rangeIndex]].to;
-             rangeIndex++;
+        var yaxisRangesKeys = _.difference(Object.keys(ranges), ["xaxis"]); // get just the yaxis ranges
+        yaxisRangesKeys.sort().reverse();   // I want the yaxis first then the y1axis y2axis etc...
+        var yaxisFrom = ranges['yaxis'].from;
+        var yaxisTo = ranges['yaxis'].to;
+        for (var i =0; i < yaxisRangesKeys.length; i++) {
+            // [yaxis,y2axis,y3axis ....]
+            if (i !== 0) {
+                // might have to skip a duplicated axis... but never yaxis
+                if (yaxisFrom == ranges[yaxisRangesKeys[i]].from && yaxisTo == ranges[yaxisRangesKeys[i]].to) {
+                    continue; // this is duplicated with yaxis
+                }
+            }
+            if (ranges[yaxisRangesKeys[i]] && options.yaxes[i]) {
+                options.yaxes[i].min = ranges[yaxisRangesKeys[i]].from;
+                options.yaxes[i].max = ranges[yaxisRangesKeys[i]].to;
+            }
         }
         return options;
     };
 
     var drawGraph = function(ranges, options) {
-        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges,options));
+        var zOptions = {};
+        zOptions = $.extend(true, {}, options, normalizeYAxis(ranges,options));
         plot = $.plot(placeholder, dataset, zOptions);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     };
