@@ -509,6 +509,7 @@ var doCurveTextPatterns = function () {
                 [' region:', 'regionName', ', '],
                 [' sites:', 'sites', ', '],
                 ['', 'variable', ', '],
+                ['units', 'units', ', '],
                 ['', 'statistic', ':'],
                 [' top:', 'top', 'm, '],
                 [' bottom:', 'bottom', 'm, '],

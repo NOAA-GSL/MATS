@@ -6,6 +6,14 @@ setError = function(error){
     } else {
         myError = error;
     }
+
+    if ( myError.toLocaleString().indexOf( "INFO:" ) ) {
+
+        const strinfo = myError.error.replace( "INFO:", "" );
+        setInfo( strinfo );
+        return;
+    }
+
     Session.set('errorMessage', myError.message);
     if (myError.stack) {
         myStackTrace = myError.stack;

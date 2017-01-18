@@ -2,6 +2,7 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
+import { Info } from 'meteor/randyp:mats-common';
 
 /*
  global dataset variable - container for graph dataset.
@@ -188,7 +189,7 @@ const addDiffs = function () {
     // diffs is checked -- have to add diff curves
     var curvesLength = curves.length;
     if (curvesLength <= 1) {
-        setInfo("You cannot difference less than two curves!");
+        setInfo( "You cannot difference less than two curves!" );
         return false;
     }
 

@@ -60,8 +60,8 @@ Package.onUse(function(api) {
   api.export("matsDataUtils",['server']);
   api.export("regression",['client','server']);
   api.export("matsWfipUtils",['server']);
-  
-  // add imports
+
+    // add imports
   //both
   api.addFiles('imports/startup/both/index.js');
   api.addFiles('imports/startup/both/mats-types.js');

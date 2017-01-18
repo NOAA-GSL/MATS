@@ -127,11 +127,13 @@ data2dScatter = function (plotParams, plotFunction) {
                 statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                    " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                    " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
-            dataRequests[curve.label] = statement;
+            dataRequests[axis + '-' + curve.label] = statement;
+
+
             try {
                 rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             } catch (e) {
@@ -169,11 +171,11 @@ data2dScatter = function (plotParams, plotFunction) {
                     truthStatement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(toDate);
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
-                dataRequests[curve.label] = truthStatement;
+                dataRequests[axis + '-truth-' + curve.label] = truthStatement;
                 try {
                     rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
                 } catch (e) {
@@ -185,7 +187,6 @@ data2dScatter = function (plotParams, plotFunction) {
                     throw ( new Error(rawAxisData[axis + '-truth'].error) );
                 }
             }
-            dataRequests[curve.label] = {statement: statement, truthStatement: truthStatement}
         }   // for axis loop
 
         /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
@@ -257,6 +258,8 @@ data2dScatter = function (plotParams, plotFunction) {
         var yaxisTimes = rawAxisData['yaxis']['allTimes'];
         var xaxisLength = xaxisTimes.length;
         var yaxisLength = yaxisTimes.length;
+
+
         // synchronize datasets:
         // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
         var yaxisTime;
@@ -358,6 +361,9 @@ data2dScatter = function (plotParams, plotFunction) {
             }
             xaxisIndex++;
             yaxisIndex++;
+        }
+        if ( normalizedAxisData.length == 0 ) {
+            throw new Error( "INFO:No coincident data found" );
         }
         normalizedAxisData.sort(matsDataUtils.sortFunction);
 

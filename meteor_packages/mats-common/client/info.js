@@ -1,9 +1,9 @@
-setInfo = function(message){
-    Session.set('infoMessage', message);
+setInfo = function(info){
+    Session.set('infoMessage', info );
     $("#info").modal('show');
 };
 
-clearInfo = function(message){
+clearInfo = function(info){
     Session.set('infoMessage', '');
     $("#info").modal('hide');
 };

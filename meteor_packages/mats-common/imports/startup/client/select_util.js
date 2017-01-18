@@ -266,7 +266,7 @@ const refresh = function (paramName) {
                     sviText += selectedSuperiorValues[svi]
                 }
             }
-            setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
+            setInfo( "I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText );
         }
         selectedOptionIndex = selectedOptionIndex == -1 ? 0 : selectedOptionIndex;
         elem.selectedIndex = selectedOptionIndex;

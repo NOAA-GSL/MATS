@@ -122,8 +122,8 @@ dataProfile = function (plotParams, plotFunction) {
                 statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                    " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                    " and cycle_utc >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                    " and cycle_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
             }
 
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
@@ -163,8 +163,8 @@ dataProfile = function (plotParams, plotFunction) {
                     truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and (cycle_utc + fcst_utc_offset) >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and (cycle_utc + fcst_utc_offset) <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 //console.log("statement: " + truthStatement);
