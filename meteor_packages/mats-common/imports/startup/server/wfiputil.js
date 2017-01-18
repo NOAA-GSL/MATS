@@ -203,6 +203,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
         // Levels are rounded to the nearest integer and bin'd.
         // Missing levels are added and corresponding missing values are set to null.
         // values are set to precision(4).
+        console.log('statement: ' + statement );
 
         if (err != undefined) {
             error = err.message;
@@ -210,7 +211,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
         } else if (rows === undefined || rows.length === 0) {
             error = 'rows undefined error';
             if (rows.length === 0) {
-                error = '0 data records found';
+                error = 'INFO:0 data records found';
             }
             // done waiting - error condition
             dFuture['return']();

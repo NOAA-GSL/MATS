@@ -324,13 +324,16 @@ Template.plotList.events({
                 }
 
                 var graphFunction = pgf.graphFunction;
-                matsMethods.getGraphData.call( {plotParams:p, plotType:pt}, function (error, result) {
+                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, result) {
                     if (error !== undefined) {
-                        setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error.toLocaleString()));
+                        //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
+                        setError(error);
+
                         Session.set("spinner_img", "spinner.gif");
-                        document.getElementById("spinner").style.display="none";
+                        document.getElementById("spinner").style.display = "none";
                         return false;
                     }
+
                     if (result.error !== undefined && result.error !== "") {
                         setError(new Error(result.error));
                         Session.set("spinner_img", "spinner.gif");
