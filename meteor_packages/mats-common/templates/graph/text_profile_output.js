@@ -3,10 +3,15 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { moment } from 'meteor/momentjs:moment';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
-
-var curveIndexes = [];
 var levels = [];
-
+const getDataForTime = function(curveIndex, level) {
+    for (var i =0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
+        if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]) === Number(level) ) {
+            return matsCurveUtils.PlotResult.data[curveIndex].data[i][0] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]);
+        }
+    }
+    return undefined;
+};
 Template.textProfileOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
@@ -68,12 +73,6 @@ Template.textProfileOutput.helpers({
         }
         levels = Array.from (levelSet);
         levels.sort((a, b) => (a - b));
-
-        // curveIndexes are used to index each curve of the dataset - they all start with 0
-        curveIndexes = [];
-        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
-            curveIndexes.push(0);
-        }
         return levels;
     },
 
@@ -115,19 +114,15 @@ Template.textProfileOutput.helpers({
         for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
             pdata = fillStr;
             try {
-                // if there isn't any data in this curve for this level, catch the exception, ignore it and use fillStr
-                // otherwise save the data in the line
-                // do NOT increment the data pointer unless there is a match (curveIndexes[curveIndex]++ comes after any Exception would be thrown)
-                if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]] && matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][1] == level) {
-                    if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0] !== null) {
-                        pdata = Number(matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0]).toPrecision(4);
-                    }
-                    curveIndexes[curveIndex]++;
+                // see if I have a valid data object for this curve and this time....
+                const dataPointVal = getDataForTime(curveIndex, level);
+                if (dataPointVal !== undefined) {
+                    pdata = dataPointVal.toPrecision(4);
                 }
-            } catch (no_data_this_level_this_curve) {
-                curveIndexes[curveIndex]++;
+            } catch (problem) {
+                console.log("Problem in deriving curve text: " + problem);
             }
-            // pdata is either real value or fillStr
+            // pdata is now either data value or fillStr
             line += "<td>" + pdata + "</td>";
         }
         return line;
