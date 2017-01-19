@@ -590,7 +590,9 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             try {
                 global[dataFunction](params.plotParams, function (results) {
-                    results.basis['dataLink'] = saveResultData(results);
+                    if (process.env.NODE_ENV === "development") {
+                        results.basis['dataLink'] = saveResultData(results);
+                    }
                     future["return"](results);
                 });
             } catch(dataFunctionError) {
