@@ -56,6 +56,7 @@ Template.dateRange.onRendered(function() {
     const name = this.data.name;
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
+    const superiorNames = this.data.superiorNames;
     $(function() {
             $('#' + idref).daterangepicker({
             "autoApply": true,
@@ -97,21 +98,31 @@ Template.dateRange.onRendered(function() {
         elem.style.display = "none";
     });
 
-    const refresh = function(selectedSuperiorValue) {
-        //var selectedText = selectedSuperiorValue;
-        /* date refresh stuff goes here*/
-        //$('#dates-item').data('daterangepicker').setStartDate(moment ('2014-03-01'))
-        //$('#dates-item').data('daterangepicker').setEndDate(moment ('2014-05-01 00:00'))
-        //matsParamUtils.setValueTextForParamName('dates','2014-03-01 00:00 - 2014-03-5 00:00')
+    const refresh = function() {
+        var minmoment = moment( "01/01/1970 0:0");
+        var maxmoment = moment( "01/18/2038 0:0");
+        for (var si = 0; si < superiorNames.length; si++) {
+            var superiorName = superiorNames[si];
+            datesMap = matsCollections.CurveParams.findOne({name: " + superiorName + "}).dates;
+            const supmin = moment(datesMap.mindate);
+            if ( supmin.isAfter(minmoment) ) {
+                minmoment = supmin;
+            }
+            const supmax = moment(datesMap.maxdate);
+            if ( supmax.isBefore(maxmoment) ) {
+                maxmoment = supmax;
+            }
+
+        }
+        var jqIdRef = "#" + idref;
+        $(jqIdRef).data('daterangepicker').setStartDate(minmoment);
+        $(jqIdRef).data('daterangepicker').setStartDate(maxmoment);
+
     };
 
-    // register refresh event for y superior to use to enforce a refresh of the options list
+// register refresh event for y superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
-        if (superiorName) {
-            const superiorElement = matsParamUtils.getInputElementForParamName(superiorName);
-            const selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex].text;
-            refresh(selectedSuperiorValue);
-        }
+        refresh();
     });
 
 });

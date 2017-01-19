@@ -48,7 +48,7 @@ Template.numberSpinner.helpers({
     }
 });
 
-Template.numberSpinner.rendered = function () {
+Template.numberSpinner.onRendered(function () {
 // register an event listener so that the select.js can ask the map div to refresh after a selection
     const ref = this.data.name + '-' + this.data.type;
     const elem = document.getElementById(ref);
@@ -59,4 +59,4 @@ Template.numberSpinner.rendered = function () {
     elem.addEventListener('refresh', function (e) {
         refresh(this.name);
     });
-};
+});

@@ -4,7 +4,8 @@ import { matsParamUtils } from 'meteor/randyp:mats-common';
 import { matsSelectUtils } from 'meteor/randyp:mats-common';
 
 
-Template.select.rendered = function () {
+Template.select.onRendered( function () {
+    console.log( "in select.js" )
     const ref = this.data.name + '-' + this.data.type;
     const elem = document.getElementById(ref);
     try {
@@ -49,7 +50,7 @@ Template.select.rendered = function () {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
         setError(e)
     }
-};
+    });
 
 Template.select.helpers({
     isSelectedByDefault: function (p) {
