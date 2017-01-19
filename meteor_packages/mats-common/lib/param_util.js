@@ -89,6 +89,22 @@ const getInputIdForParamName = function(paramName) {
     return (param.name + "-" + param.type).replace(/ /g,'-');
 };
 
+
+// get the parameter for the element that corresponds to the param name
+const getParameterForName = function(paramName) {
+    var param = matsCollections.CurveParams.findOne({name: paramName});
+    if (param === undefined) {
+        param = matsCollections.PlotParams.findOne({name: paramName});
+    }
+    if (param === undefined) {
+        param = matsCollections.Scatter2dParams.findOne({name: paramName});
+        if (param === undefined) {
+            return undefined;
+        }
+    }
+    return (param);
+};
+
 // get the document element that corresponds to the param name
 const getInputElementForParamName = function(paramName) {
     const id = getInputIdForParamName(paramName);
@@ -283,4 +299,5 @@ export default matsParamUtils = {
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
     collapseParams:collapseParams,
+    getParameterForName:getParameterForName,
     typeSort:typeSort};

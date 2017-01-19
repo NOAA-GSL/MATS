@@ -101,6 +101,7 @@ var doPlotParams = function () {
                 options: [''],
                 startDate: dstrOneMonthPrior,
                 stopDate: dstrToday,
+                superiorNames: ['data-source','truth-data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -184,7 +185,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable"],
+                dependentNames: ["sites","forecast-length","variable","dates","curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -289,7 +290,7 @@ var doCurveParams = function () {
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
                 optionsQuery:"call get_data_sources()",
-                dependentNames: ["sites","forecast-length","variable"],
+                dependentNames: ["sites","forecast-length","variable","dates","curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -475,6 +476,7 @@ var doCurveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 startDate: dstrOneMonthPrior,
                 stopDate: dstrToday,
+                superiorNames: ['data-source','truth-data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,

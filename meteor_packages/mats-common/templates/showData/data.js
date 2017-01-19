@@ -20,7 +20,7 @@ var setModalMaxHeight = function(element) {
     });
 };
 
-Template.data.rendered = function() {
+Template.data.onRendered(function() {
     $('.modal').on('show.bs.modal', function () {
         $(this).show();
         setModalMaxHeight(this);
@@ -31,7 +31,7 @@ Template.data.rendered = function() {
             setModalMaxHeight($('.modal.in'));
         }
     });
-};
+});
 
 Template.data.helpers({
     data:function() {

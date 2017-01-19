@@ -2,7 +2,7 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsMethods} from 'meteor/randyp:mats-common';
 
 
-Template.export.rendered = function() {
+Template.export.onRendered( function() {
        matsMethods.getDataFunctionFileList.call( function (error, result) {
            //    //console.log ('result is : ' + JSON.stringify(result, null, '\t'));
            if (error !== undefined) {
@@ -20,7 +20,7 @@ Template.export.rendered = function() {
            Session.set('graphFunctionFileList',result);
        });
 
-    };
+    });
 
     Template.export.helpers({
         dataFiles: function() {

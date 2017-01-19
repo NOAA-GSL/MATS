@@ -7,7 +7,7 @@ var mapHeight = function () {
     return h + "px";
 };
 
-Template.map.rendered = function () {
+Template.map.onRendered(function () {
     var defaultPoint = this.data.defaultMapView.point;
     var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
     var minZoomLevel = this.data.defaultMapView.minZoomLevel;
@@ -193,4 +193,4 @@ Template.map.rendered = function () {
         refresh(e.detail.refElement);
     });
     refresh(targetElement);
-};
+});

@@ -4,14 +4,14 @@ import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
-Template.curveItem.rendered = function() {
+Template.curveItem.onRendered(function() {
     // the value used for the colorpicker (l) MUST match the returned value in the colorpick helper
     var label = this.data.label;
     $(function () {
         var l = '.' + label + '-colorpick';
         $(l).colorpicker({format: "rgb", align:"left"});
     });
-};
+});
 
 Template.curveItem.helpers({
     colorpick: function() {

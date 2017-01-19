@@ -252,8 +252,8 @@ Template.plotList.events({
                         const from = dateArr[0];
                         const to = dateArr[1];
                         const idref = "#" + plotParam.name + "-item";
-                        $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                        $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setStartDate(moment.utc (from, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setEndDate(moment.utc (to, 'MM-DD-YYYY HH:mm'));
                         matsParamUtils.setValueTextForParamName(plotParam.name,p.data.paramData.curveParams[plotParam.name]);
                     } else {
                         const val =  p.data.paramData.curveParams[plotParam.name] === null ||
@@ -273,8 +273,8 @@ Template.plotList.events({
                         const from = dateArr[0];
                         const to = dateArr[1];
                         const idref = "#" + plotParam.name + "-item";
-                        $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                        $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setStartDate(moment.utc (from, 'MM-DD-YYYY HH:mm'));
+                        $(idref).data('daterangepicker').setEndDate(moment.utc (to, 'MM-DD-YYYY HH:mm'));
                         matsParamUtils.setValueTextForParamName(plotParam.name,p.data.paramData.curveParams[plotParam.name]);
                     } else {
                         const val =  p.data.paramData.curveParams[plotParam.name] === null ||
@@ -296,8 +296,8 @@ Template.plotList.events({
                     const dateArr = p.data.dates.split(' - ');
                     const from = dateArr[0];
                     const to = dateArr[1];
-                    $('#dates-item').data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
-                    $('#dates-item').data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                    $('#dates-item').data('daterangepicker').setStartDate(moment.utc (from, 'MM-DD-YYYY HH:mm'));
+                    $('#dates-item').data('daterangepicker').setEndDate(moment.utc (to, 'MM-DD-YYYY HH:mm'));
                     matsParamUtils.setValueTextForParamName('dates',p.data.dates);
                 }
 
