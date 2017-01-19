@@ -5,8 +5,16 @@ import { moment } from 'meteor/momentjs:moment';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsMathUtils } from 'meteor/randyp:mats-common';
 
-var curveIndexes = [];
 var times = [];
+
+const getDataForTime = function(curveIndex, time) {
+     for (var i =0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
+         if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time) ) {
+             return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
+         }
+     }
+     return undefined;
+};
 
 Template.textSeriesOutput.helpers({
     plotName: function() {
@@ -81,14 +89,9 @@ Template.textSeriesOutput.helpers({
         }
         times = Array.from (timeSet);
         times.sort((a, b) => (a - b));
-
-        // curveIndexes are used to index each curve of the dataset - they all start with 0
-        curveIndexes = [];
-        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
-            curveIndexes.push(0);
-        }
         return times;
     },
+
     points: function(time) {
         const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
@@ -111,26 +114,20 @@ Template.textSeriesOutput.helpers({
             return false;
         }
         const fillStr = settings.NullFillString;
-        // have to keep a collection of curve indexes because a row does not necessarily have the same time for each curve entry.
         // We must only set data when the times match on a curve.
-        // The technique is to find what the minimum time (minTime) for all the curves at this rowIndex is, and then add data for each curve that matches that time.
-        // increment the data pointer (curveIndexes[curveIndex]) ONLY for each curve when its time matches the minTime.
-        // The pointers are initialized in the dataRows helper.
         var pdata = fillStr;
         for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
             pdata = fillStr;
             try {
-                // if there isn't any data in this curve for this time, catch the exception, ignore it and use fillStr
-                // otherwise save the data in the line
-                // do NOT increment the data pointer unless there is a match (curveIndexes[curveIndex]++ comes after any Exception would be thrown)
-                if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][0] == time) {
-                    if (matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][1] !== null) {
-                        pdata = Number(matsCurveUtils.PlotResult.data[curveIndex].data[curveIndexes[curveIndex]][1]).toPrecision(4);
-                    }
-                    curveIndexes[curveIndex]++;
+                // see if I have a valid data object for this curve and this time....
+                const dataPointVal = getDataForTime(curveIndex, time);
+                if (dataPointVal !== undefined) {
+                    pdata = dataPointVal.toPrecision(4);
                 }
-            } catch (no_data_this_time_this_curve) {}
-            // pdata is either real value or fillStr
+            } catch (problem) {
+                console.log("Problem in deriving curve text: " + problem);
+            }
+            // pdata is now either data value or fillStr
             line += "<td>" + pdata + "</td>";
         }
         return line;
@@ -138,9 +135,9 @@ Template.textSeriesOutput.helpers({
     stats: function(curve) {
         /*
          This (plotResultsUpDated) is very important.
-         The page is rendered whe the graph page comes up, but the data from the data processing callback
-         in plotList.js or curveList.js may not have set the global variable
-         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         The page is rendered when the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable PlotResult.
+         The callback sets the variable then sets the session variable plotResultsUpDated.
          Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
          (which is in the PlotResults global). This didn't used to be necessary because the plot data
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
