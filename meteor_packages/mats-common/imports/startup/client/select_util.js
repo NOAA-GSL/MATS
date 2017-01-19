@@ -8,7 +8,6 @@ const refreshPeer = function (peerName) {
     try {
         if (peerName) {
             // refresh the peer
-            //const targetParam = matsCollections.CurveParams.findOne({name: peerName});
             const targetParam = matsParamUtils.getParameterForName( peerName );
             const targetId = targetParam.name + '-' + targetParam.type;
             const targetElem = document.getElementById(targetId);
@@ -32,10 +31,9 @@ const refreshDependents = function (dependentNames) {
             var selectAllbool = false;
             for (var i = 0; i < dependentNames.length; i++) {
                 const name = dependentNames[i];
-                //const targetParam = matsCollections.CurveParams.findOne({name: name});
                 const targetParam = matsParamUtils.getParameterForName(name);
                 var targetId;
-                if (targetParams.type === matsTypes.InputTypes.dateRange) {
+                if (targetParam.type === matsTypes.InputTypes.dateRange) {
                     targetId = "element-" + targetParam.name;
                 } else {
                    targetId = targetParam.name + '-' + targetParam.type;
@@ -148,8 +146,7 @@ const refresh = function (paramName) {
         // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
         return;
     }
-    //const param = matsCollections.CurveParams.findOne({name: paramName});
-    const targetParam = matsParamUtils.getParameterForName( paramName );
+    const param = matsParamUtils.getParameterForName( paramName );
     const elem = matsParamUtils.getInputElementForParamName(paramName);
     const plotTypeDependent = param.plotTypeDependent;
     const optionsMap = param.optionsMap;

@@ -5,7 +5,6 @@ import { matsSelectUtils } from 'meteor/randyp:mats-common';
 
 
 Template.select.onRendered( function () {
-    console.log( "in select.js" )
     const ref = this.data.name + '-' + this.data.type;
     const elem = document.getElementById(ref);
     try {

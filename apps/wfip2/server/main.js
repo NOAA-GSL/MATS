@@ -798,7 +798,11 @@ Meteor.startup(function () {
                     var valueList = [];
                     valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color );
                     modelOptionsMap[model] = valueList;
-                    datesMap[model] = "{ \"mindate\":\"" + mindate + "\", \"maxdate\":\"" + maxdate + "\", \"minutc\":\"" + minutc + "\", \"maxutc\":\"" + maxutc + "\"}}";
+                    datesMap[model] = {};
+                    datesMap[model]["mindate"] = mindate;
+                    datesMap[model]["maxdate"] = maxdate;
+                    datesMap[model]["minutc"] =  minutc;
+                    datesMap[model]["maxutc"] = maxutc;
 
                     var labels = [];
                     for (var j = 0; j < variable_names.length; j++) {

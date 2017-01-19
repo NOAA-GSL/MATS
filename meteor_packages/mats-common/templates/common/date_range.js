@@ -99,25 +99,29 @@ Template.dateRange.onRendered(function() {
     });
 
     const refresh = function() {
-        var minmoment = moment( "01/01/1970 0:0");
-        var maxmoment = moment( "01/18/2038 0:0");
-        for (var si = 0; si < superiorNames.length; si++) {
-            var superiorName = superiorNames[si];
-            datesMap = matsCollections.CurveParams.findOne({name: " + superiorName + "}).dates;
-            const supmin = moment(datesMap.mindate);
-            if ( supmin.isAfter(minmoment) ) {
-                minmoment = supmin;
+        var minmoment = moment( "1970-01-01");
+        var maxmoment = moment( "2038-01-18");
+        try {
+            for (var si = 0; si < superiorNames.length; si++) {
+                var superiorName = superiorNames[si];
+                const datesMap = matsCollections.CurveParams.findOne({name: superiorName}).dates;
+                const supmin = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].mindate);
+                if (supmin.isAfter(minmoment)) {
+                    minmoment = supmin;
+                }
+                const supmax = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxdate);
+                if (supmax.isBefore(maxmoment)) {
+                    maxmoment = supmax;
+                }
             }
-            const supmax = moment(datesMap.maxdate);
-            if ( supmax.isBefore(maxmoment) ) {
-                maxmoment = supmax;
-            }
-
+            const jqIdRef = "#" + idref;
+            $(jqIdRef).data('daterangepicker').setStartDate(minmoment);
+            $(jqIdRef).data('daterangepicker').setStartDate(maxmoment);
+            const newDateStr = minmoment.format('MM/DD/YYYY H:mm') + ' - ' + maxmoment.format('MM/DD/YYYY H:mm');
+            matsParamUtils.setValueTextForParamName(name,newDateStr);
+        } catch (error) {
+            console.log("Error in date_range.js.refresh : " + error.message);
         }
-        var jqIdRef = "#" + idref;
-        $(jqIdRef).data('daterangepicker').setStartDate(minmoment);
-        $(jqIdRef).data('daterangepicker').setStartDate(maxmoment);
-
     };
 
 // register refresh event for y superior to use to enforce a refresh of the options list
