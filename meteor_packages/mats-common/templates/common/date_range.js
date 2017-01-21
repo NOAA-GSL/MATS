@@ -1,10 +1,10 @@
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsParamUtils } from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 
-var startInit = function() {
+var startInit = function () {
     var today = new Date();
-    var thenDate = new Date(today.getTime() - 30*24*60*60*1000);
+    var thenDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
     var yr = thenDate.getFullYear();
     var day = thenDate.getDate();
     var month = thenDate.getMonth() + 1;
@@ -13,9 +13,9 @@ var startInit = function() {
     //var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates;
     //var mindate = JSON.parse(datesMap).mindate;
     //return( mindate );
-    return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
+    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
 };
-var stopInit = function() {
+var stopInit = function () {
     var today = new Date();
     var yr = today.getFullYear();
     var day = today.getDate();
@@ -25,10 +25,10 @@ var stopInit = function() {
     //var datesMap = matsCollections.CurveParams.findOne({name: 'data-source'}).dates;
     //var maxdate = JSON.parse(datesMap).maxdate;
     //return( maxdate );
-    return month + '/' + day + "/" + yr+ " " + hour + ":" + minute;
+    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
 };
 
-Template.dateRange.onRendered(function() {
+Template.dateRange.onRendered(function () {
     //NOTE: Date fields are special in that they are qualified by plotType.
     //TimeSeries and Scatter plots have a common date range
     // but profile plots have a date range for each curve.
@@ -42,7 +42,7 @@ Template.dateRange.onRendered(function() {
             document.getElementById('curve-dates-item').style.display = "none";
         }
         if (document.getElementById('dates-item')) {
-                document.getElementById('dates-item').style.display = "block";
+            document.getElementById('dates-item').style.display = "block";
         }
     } else {
         if (document.getElementById('curve-dates-item')) {
@@ -57,16 +57,16 @@ Template.dateRange.onRendered(function() {
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
     const superiorNames = this.data.superiorNames;
-    $(function() {
-            $('#' + idref).daterangepicker({
+    $(function () {
+        $('#' + idref).daterangepicker({
             "autoApply": true,
-            "parentEL":$('#' + idref),
+            "parentEL": $('#' + idref),
             "timePicker": true,
             "timePicker24Hour": true,
             "timePickerIncrement": 15,
             "startDate": startInit(),
             "endDate": stopInit(),
-            "showDropdowns":true,
+            "showDropdowns": true,
             "drops": "up",
             locale: {
                 format: 'MM/DD/YYYY H:mm'
@@ -80,45 +80,54 @@ Template.dateRange.onRendered(function() {
                 'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
                 'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
             },
-            "alwaysShowCalendars":true
+            "alwaysShowCalendars": true
         });
-        matsParamUtils.setValueTextForParamName(name,startInit() + ' - ' + stopInit());
+        matsParamUtils.setValueTextForParamName(name, startInit() + ' - ' + stopInit());
     });
 
-    $('#' + idref).on('apply.daterangepicker', function(ev, picker) {
+    $('#' + idref).on('apply.daterangepicker', function (ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
             setError(new Error("Your start and end dates coincide, you must select a range!"));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
-        matsParamUtils.setValueTextForParamName(name,valStr);
+        matsParamUtils.setValueTextForParamName(name, valStr);
         elem.style.display = "none";
     });
-    $('#' + idref).on('cancel.daterangepicker', function() {
+    $('#' + idref).on('cancel.daterangepicker', function () {
         elem.style.display = "none";
     });
 
-    const refresh = function() {
-        var minmoment = moment( "1970-01-01");
-        var maxmoment = moment( "2038-01-18");
+    const refresh = function () {
         try {
+            // get the current values from the element
+            const curVals = matsParamUtils.getValueForParamName(name).split(" - "); // it is a date object values are "someFromDate - someToDate"
+            var minmoment = moment(curVals[0], "MM/DD/YYYY HH:mm");
+            var maxmoment = moment(curVals[1], "MM/DD/YYYY HH:mm");
             for (var si = 0; si < superiorNames.length; si++) {
                 var superiorName = superiorNames[si];
                 const datesMap = matsCollections.CurveParams.findOne({name: superiorName}).dates;
-                const supmin = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].mindate);
+                const supmin = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].mindate, "MM/DD/YYYY HH:mm");
                 if (supmin.isAfter(minmoment)) {
-                    minmoment = supmin;
+                    if (supmin.isAfter(maxmoment)){
+                        minmoment = maxmoment;
+                    } else {
+                        minmoment = supmin;
+                    }
                 }
-                const supmax = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxdate);
-                if (supmax.isBefore(maxmoment)) {
-                    maxmoment = supmax;
+                const supmax = moment(datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxdate, "MM/DD/YYYY HH:mm");
+                if (supmax.isBefore(maxmoment) ) {
+                        maxmoment = supmax;
                 }
+            }
+            if (minmoment.isAfter(maxmoment)) {
+                minmoment = moment(maxmoment.toString());
             }
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(minmoment);
             $(jqIdRef).data('daterangepicker').setStartDate(maxmoment);
-            const newDateStr = minmoment.format('MM/DD/YYYY H:mm') + ' - ' + maxmoment.format('MM/DD/YYYY H:mm');
-            matsParamUtils.setValueTextForParamName(name,newDateStr);
+            const newDateStr = minmoment.format('MM/DD/YYYY HH:mm') + ' - ' + maxmoment.format('MM/DD/YYYY HH:mm');
+            matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);
         }
