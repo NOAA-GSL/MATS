@@ -92,6 +92,7 @@ const checkDisableOther = function (param) {
                 if ((param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.disableOtherFor[controlledSelectors[i]]) !== -1) {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
+                    matsParamUtils.setValueTextForParamName(controlledSelectors[i],matsTypes.InputTypes.unused);
                 } else {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = false;
                 }
@@ -126,6 +127,7 @@ const checkHideOther = function (param) {
                     otherControlElem.style.display = 'none';
                     otherInputElement.style.display = 'none';
                     otherValueElement.style.display = 'none';
+                    matsParamUtils.setValueTextForParamName(controlledSelectors[i],matsTypes.InputTypes.unused);
                 } else {
                     otherControlElem.style.display = 'block';
                     otherInputElement.style.display = 'block';
