@@ -34,7 +34,7 @@ const dateConvert = function (dStr) {
         return month + "/" + day + '/' + yr + ' ' + hour + ":" + minute;
     }
     var dateParts = dStr.split(' ');
-    var dateArray = dateParts[0].split('/');
+    var dateArray = dateParts[0].split(/[\-\/]/);  // split on - or /    01-01-2017 OR 01/01/2017
     var month = dateArray[0];
     var day = dateArray[1];
     var yr = dateArray[2];
@@ -55,7 +55,7 @@ const secsConvert = function (dStr) {
     }
     else {
         var dateParts = dStr.split(' ');
-        var dateArray = dateParts[0].split('/');
+        var dateArray = dateParts[0].split(/[\-\/]/);  // split on - or /    01-01-2017 OR 01/01/2017
         var month = dateArray[0];
         var day = dateArray[1];
         var yr = dateArray[2];
