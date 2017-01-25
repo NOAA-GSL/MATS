@@ -2,9 +2,39 @@ import { matsTypes } from 'meteor/randyp:mats-common'; 
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 
+const isEditing = function() {
+    const mode = Session.get('editMode');
+    return !( mode === "" || mode === undefined || mode === null);
+};
+const setAxisText = function(axis) {
+    Session.set(axis + 'CurveText', axis + " " + matsPlotUtils.getAxisText(matsPlotUtils.getPlotType()));
+    Session.set(axis + 'CurveColor', 'green');
+    Session.set('axisCurveIcon', "fa-check");
+};
+
 Template.scatter2d.helpers({
+    modeText: function() {
+        return isEditing() ? "Editing the curve " + Session.get('editMode') : "Creating a new curve";
+    },
+    creating: function() {
+        if (isEditing()) {
+            return "none";
+        } else {
+            return "block";
+        }
+    },
+    editing: function() {
+        if (isEditing()) {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
     xaxisCurveText: function() {
-        var t = Session.get('xaxisCurveText');
+        if (isEditing()) {
+            setAxisText("xaxis");
+        }
+        const t = Session.get('xaxisCurveText');
         if (t){
             return t;
         } else {
@@ -13,16 +43,28 @@ Template.scatter2d.helpers({
         }
     },
     yaxisCurveText: function() {
-        var t = Session.get('yaxisCurveText');
-        if (t){
+        if (isEditing()) {
+            setAxisText("yaxis");
+        }
+        const t = Session.get('yaxisCurveText');
+        if (t || isEditing()){
             return t;
         } else {
             Session.set('yaxisCurveText', 'YAXIS NOT YET APPLIED');
             return 'YAXIS NOT YET APPLIED';
         }
     },
+    yApplyEnabled: function() {
+        const c = Session.get('xaxisCurveColor');
+        if (c === 'red' && !isEditing()){
+            return "disabled";
+        } else {
+            return"";
+        }
+    },
+
     xaxisCurveColor: function() {
-        var t = Session.get('xaxisCurveColor');
+        const t = Session.get('xaxisCurveColor');
         if (t){
             return t;
         } else {
@@ -31,7 +73,7 @@ Template.scatter2d.helpers({
         }
     },
     yaxisCurveColor: function() {
-        var t = Session.get('yaxisCurveColor');
+        const t = Session.get('yaxisCurveColor');
         if (t){
             return t;
         } else {
@@ -40,7 +82,7 @@ Template.scatter2d.helpers({
         }
     },
     curveIcon: function() {
-        var t = Session.get('axisCurveIcon');
+        const t = Session.get('axisCurveIcon');
         if (t){
             return t;
         } else {
@@ -52,21 +94,21 @@ Template.scatter2d.helpers({
         return "Scatter Plot parameters"
     },
     scatter2dParams: function () {
-        var params = matsCollections.Scatter2dParams.find({}).fetch();
+        const params = matsCollections.Scatter2dParams.find({}).fetch();
         return params;
     },
     scatter2dOptions: function() {
-        var options = this.options;
+        const options = this.options;
         return options;
     },
     name: function(param) {
         //console.log("name: " + param.name);
-        var name = param.name.replace(/ /g,'-');
+        const name = param.name.replace(/ /g,'-');
         return name;
     },
     className: function(param) {
         //console.log("name: " + param.name);
-        var cname = param.name.replace(/ /g,'-') + "-" + param.type;
+        const cname = param.name.replace(/ /g,'-') + "-" + param.type;
         return cname;
     },
     
@@ -105,15 +147,12 @@ Template.scatter2d.helpers({
       return matsTypes.PlotTypes.scatter2d;  
     },
     isDefault: function (param) {
-        var def = param.default;
+        const def = param.default;
         if (def == this) {
             return "checked";
         } else {
             return "";
         }
-    },
-    isAxis: function(param) {
-      return param.name === 'axis-selector';
     },
     displayScatter2d: function() {
         if (matsPlotUtils.getPlotType() == matsTypes.PlotTypes.scatter2d) {
@@ -154,53 +193,47 @@ Template.scatter2d.helpers({
     }
 });
 
-Template.scatter2d.events({
-    'click .apply-params-to-axis': function(event) {
-        var axis = document.querySelector('input[name="axis-selector"]:checked').value;
-        var elems = document.getElementsByClassName("data-input");
-        var curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
-        var curveNames = _.pluck(curveParams, "name");
-        var param_elems = _.filter(elems, function (elem) {
-            return _.contains(curveNames, elem.name);
-        });
-        var l = param_elems.length;
-        for (var i = 0; i < l; i++) {
-            var pelem = param_elems[i];
-            var elem_id = pelem.id;
-            var target_id = axis + "-" + elem_id;
-            var telem = document.getElementById(target_id);
-            if (pelem.type === "select-multiple") {
-                var selectedOptions = $(pelem.selectedOptions).map(function(){return(this.value)}).get();
-                for (var x =0; x < telem.options.length; x++) {
-                    if ($.inArray(telem.options[x].value, selectedOptions) !== -1) {
-                        telem.options[x].selected = true;
-                    } else {
-                        telem.options[x].selected = false;
-                    }
+const apply = function(axis) {
+    const elems = document.getElementsByClassName("data-input");
+    const curveParams = matsCollections.CurveParams.find({}, {fields: {name: 1}}).fetch();
+    const curveNames = _.pluck(curveParams, "name");
+    const param_elems = _.filter(elems, function (elem) {
+        return _.contains(curveNames, elem.name);
+    });
+    var l = param_elems.length;
+    for (var i = 0; i < l; i++) {
+        var pelem = param_elems[i];
+        var elem_id = pelem.id;
+        var target_id = axis + "-" + elem_id;
+        var telem = document.getElementById(target_id);
+        if (pelem.type === "select-multiple") {
+            var selectedOptions = $(pelem.selectedOptions).map(function(){return(this.value)}).get();
+            for (var x =0; x < telem.options.length; x++) {
+                if ($.inArray(telem.options[x].value, selectedOptions) !== -1) {
+                    telem.options[x].selected = true;
+                } else {
+                    telem.options[x].selected = false;
                 }
-            } else if (pelem.type === "radio") {
-                // NOT SURE THIS IS RIGHT
-                //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());
-                $('input[name="' + telem.name + '"]:checked');
-            } else if (pelem.type === "button") {
-                telem.value = pelem.value;
-            } else {
-                telem.value = pelem.value;
             }
-        }
-        var axisCurveId = axis + "-curve";
-        var span = document.getElementById(axisCurveId);
-        Session.set(axis + 'CurveText', axis + " " + matsPlotUtils.getAxisText(matsPlotUtils.getPlotType()));
-        Session.set(axis + 'CurveColor', 'green');
-        Session.set('axisCurveIcon', "fa-check");
-        // select the other radio button
-        if (axis === "xaxis") {
-            $("#axis-selector-radioGroup-yaxis").prop("checked",true);
-            Session.set('axis','yaxis');
+        } else if (pelem.type === "radio") {
+            // NOT SURE THIS IS RIGHT
+            //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());
+            $('input[name="' + telem.name + '"]:checked');
+        } else if (pelem.type === "button") {
+            telem.value = pelem.value;
         } else {
-            $("#axis-selector-radioGroup-xaxis").prop("checked",true);
-            Session.set('axis','xaxis');
+            telem.value = pelem.value;
         }
+    }
+    setAxisText(axis);
+};
+
+Template.scatter2d.events({
+    'click .apply-params-to-xaxis': function(event) {
+        apply('xaxis');
+    },
+    'click .apply-params-to-yaxis': function(event) {
+        apply('yaxis');
     },
     'change .axis-selector-radioGroup' : function(event) {
         var newAxis = event.currentTarget.value;

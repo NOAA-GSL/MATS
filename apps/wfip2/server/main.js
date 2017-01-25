@@ -49,20 +49,6 @@ var doScatter2dParams = function () {
     // with 'Fit-Type' the parameter will get added to the parameter object
     // that gets passed to the back end. See param_list.js submit form event.
     if (matsCollections.Scatter2dParams.find().count() == 0) {
-        matsCollections.Scatter2dParams.insert(
-            {
-                name: 'axis-selector',
-                type: matsTypes.InputTypes.radioGroup,
-                options: ['xaxis', 'yaxis'],
-                controlButtonCovered: true,
-                default: 'xaxis',
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 1,
-                help: "axis-selector.html"
-            });
-
         var bestFits = {};
         bestFits[matsTypes.BestFits.none] = "None";
         bestFits[matsTypes.BestFits.linear] = "Linear regression";
