@@ -1,6 +1,10 @@
 <template name="scatter2d">
     <div class="container well well-sm pull-left" id={{plotType}}  style="display:{{displayScatter2d}};">
         <div style="font-size:large; font-weight: bold;">{{title}}</div>
+        <div>
+            <span class="btn-success" style="font-size: large;display:{{creating}};">{{modeText}}</span>
+            <span class="btn-info" style="font-size: large;display:{{editing}};">{{modeText}}</span>
+        </div>
         {{#each scatter2dParams}}
             <div class="well well-sm pull-left">
                 {{#if isNumberSpinner this}}
@@ -17,16 +21,19 @@
                         <label for="{{idParam ..}}">{{label this ..}}</label>
                     {{/each}}
                 {{/if}}
-                {{#if isAxis this}}
+                <div>
                     <div class="btn-toolbar btn-group btn-xs" role="toolbar">
-                        <button type="submit" name="apply-params-to-axis" id="apply-params-to-axis" class="btn btn-success apply-params-to-axis fa fa-line-chart">&nbsp;&nbsp;Apply to {{axis}}</button>
+                        <button type="submit" name="apply-params-to-X-axis" id="apply-params-to-xaxis" class="btn btn-success apply-params-to-xaxis fa fa-line-chart" ><span style="font-size: large">Apply params to X axis</span></button>
+                    </div>
+                    <div class="btn-toolbar btn-group btn-xs" role="toolbar">
+                        <button type="submit" name="apply-params-to-Y-axis" id="apply-params-to-yaxis" class="btn btn-success apply-params-to-yaxis fa fa-line-chart" {{yApplyEnabled}}><span style="font-size: large">Apply params to Y axis</span></button>
                     </div>
                     <div>
                         <span id="xaxis-curve" style="color:{{xaxisCurveColor}}" class="fa {{curveIcon}}">{{xaxisCurveText}}</span>
                         <span>&nbsp;</span>
                         <span id="yaxis-curve" style="color:{{yaxisCurveColor}}" class="fa {{curveIcon}}">{{yaxisCurveText}}</span>
                     </div>
-                {{/if}}
+                </div>
             </div>
         {{/each}}
     </div>
