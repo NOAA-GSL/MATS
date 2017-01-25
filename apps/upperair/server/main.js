@@ -343,6 +343,8 @@ var doCurveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
+                ['level ', 'top', ' '],
+                ['to', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
@@ -356,6 +358,8 @@ var doCurveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
+                ['level ', 'top', ' '],
+                ['to', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
