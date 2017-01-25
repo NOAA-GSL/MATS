@@ -296,8 +296,8 @@ const refresh = function (paramName) {
             }).get();
             if (belemSelectedOptions === undefined || belemSelectedOptions.length === 0) {
                 belem.options = [];
-                for (var i = 0; i < options.length; i++) {
-                    belem.options[belem.options.length] = new Option(options[i], options[i], i == 0, i == 0);
+                for (var i1 = 0; i1 < options.length; i1++) {
+                    belem.options[belem.options.length] = new Option(options[i1], options[i1], i1 == 0, i1 == 0);
                 }
             }
         }
