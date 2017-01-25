@@ -30,9 +30,9 @@ dataSeries = function (plotParams, plotFunction) {
     var yAxisMaxes = [];
     var yAxisMins = [];
     var maxValidInterval = Number.MIN_VALUE;    //used for differencing and matching
-    var matchTime = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1;
-    var matchLevel = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1;
-    var matchSite = plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1;
+    var matchTime = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1);
+    var matchLevel = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1);
+    var matchSite = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1);
     var options;
     var max_verificationRunInterval = Number.MIN_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -44,6 +44,9 @@ dataSeries = function (plotParams, plotFunction) {
         curve.dataSource_is_json = parseInt(tmp[5]);
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
         if (curve['statistic'] != "mean") {
+            if ((curve['truth-data-source'] === matsTypes.InputTypes.unused || curve['truth-data-source'] === undefined)) {
+                throw new Error("INFO: You are trying to calculate a statistic that requires a truth data source while setting the truth data source to " + matsTypes.InputTypes.unused + ". This is not going to work.");
+            }
             // need a truth data source for statistic
             const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
             curve.truthDataSource_is_instrument = parseInt(tmp[1]);
@@ -63,9 +66,6 @@ dataSeries = function (plotParams, plotFunction) {
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
         var verificationRunInterval = curve.verificationRunInterval;
-        if (matchTime) {
-            verificationRunInterval = max_verificationRunInterval;
-        }
         var dataSource_is_json = curve.dataSource_is_json;
         var statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
@@ -521,16 +521,6 @@ dataSeries = function (plotParams, plotFunction) {
                 throw( new Error("caught " + err.message));
             }
         }
-        if (yAxisBoundaries[variableStr] === undefined) {
-            yAxisBoundaries[variableStr] = {
-                min: Number.MAX_VALUE,
-                max: Number.MIN_VALUE
-            }
-        }
-        yAxisBoundaries[variableStr] = {
-            min: yAxisBoundaries[variableStr].min < yAxisMins[curveIndex] ? yAxisBoundaries[variableStr].min : yAxisMins[curveIndex],
-            max: yAxisBoundaries[variableStr].max > yAxisMaxes[curveIndex] ? yAxisBoundaries[variableStr].max : yAxisMaxes[curveIndex]
-        };
 
         var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
         //var mean = queryResult.mean;
@@ -555,12 +545,16 @@ dataSeries = function (plotParams, plotFunction) {
          and setting to null all the y-values for which
          any curve has a y-value that is null,
          or fails to meet the other matching criteria.
+         Have to recalculate the axis max and mins.
          */
         var dataIndexes = {};
         var ci;
         var sci;
         for (ci = 0; ci < curvesLength; ci++) {
             dataIndexes[ci] = 0;
+            yAxisMins[ci] = Number.MAX_VALUE;
+            yAxisMaxes[ci] = Number.MIN_VALUE;
+
         }
         // for matching - the begin time must be the first coinciding time for all the curves.
         // Once we know at which index the curves coincide we can increment by the maxValidInterval.
@@ -601,6 +595,7 @@ dataSeries = function (plotParams, plotFunction) {
         var mySites;
         var myLevels;
         var newDataSet = [];
+
         while (time < xAxisMax) {
             timeMatches = true;
             levelsMatches = true;
@@ -659,7 +654,13 @@ dataSeries = function (plotParams, plotFunction) {
                             }
                         }
                     }
-                    newDataSet[sci].data.push(dataset[sci].data[dataIndexes[sci]]);
+                    const valueObject = dataset[sci].data[dataIndexes[sci]];
+                    const valData = valueObject[1];
+                    // have to recalculate mins and maxes - might be throwing away outlier data
+                    yAxisMins[sci] = (valData < yAxisMins[sci]) ? valData : yAxisMins[sci];
+                    yAxisMaxes[sci] = (valData > yAxisMaxes[sci]) ? valData : yAxisMaxes[sci];
+                    // push the data
+                    newDataSet[sci].data.push(valueObject);
                 }
             } else {
                 for (sci = 0; sci < curvesLength; sci++) {
@@ -677,8 +678,19 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxis = [];
     var yLabels = {};
     for (dsi = 0; dsi < dataset.length; dsi++) {
+
         var position = dsi === 0 ? "left" : "right";
         var vStr = curves[dsi].variable;
+        if (yAxisBoundaries[vStr] === undefined) {
+            yAxisBoundaries[vStr] = {
+                min: Number.MAX_VALUE,
+                max: Number.MIN_VALUE
+            }
+        }
+        yAxisBoundaries[variableStr] = {
+            min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
+            max: yAxisBoundaries[vStr].max > yAxisMaxes[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
+        };
         var yAxisPad = (yAxisBoundaries[vStr].max - yAxisBoundaries[vStr].min) * .05;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
