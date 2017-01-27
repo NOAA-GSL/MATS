@@ -1,8 +1,8 @@
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { mysql } from 'meteor/pcel:mysql';
-import { moment } from 'meteor/momentjs:moment'
-import { matsDataUtils } from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
+import {moment} from 'meteor/momentjs:moment'
+import {matsDataUtils} from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 // use future to wait for the query callback to complete
 
@@ -12,7 +12,6 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
     var error = "";
     var N0 = [];
     var N_times = [];
-    var ctime = [];
     var ymin;
     var ymax;
     sumPool.query(statement, function (err, rows) {
@@ -28,15 +27,19 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
             var curveTime = [];
             var curveStat = [];
             var N0_max = 0;
-            var N_times_max =0;
+            var N_times_max = 0;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
 
-                if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) N_times_max = N_times_loop;
+                if (N0_loop > N0) {
+                    N0_max = N0_loop;
+                }
+                if (N_times_loop > N_times) {
+                    N_times_max = N_times_loop;
+                }
 
                 curveTime.push(avSeconds * 1000);
                 curveStat.push(stat);
@@ -44,7 +47,7 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
                 N_times.push(N_times_loop);
             }
 
-            if (averageStr != "None") {
+            if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
                 xmin = Number(rows[0].avtime) * 1000;
             }
             var loopTime = xmin;
@@ -57,7 +60,6 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
                     var this_N_times = N_times[d_idx];
                     if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
                         d.push([loopTime, null]);
-
                     } else {
                         d.push([loopTime, curveStat[d_idx]]);
                     }
@@ -83,7 +85,7 @@ var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageSt
 };
 
 dataSeries = function (plotParams, plotFunction) {
-    console.log(JSON.stringify(plotParams,null,2));
+    console.log(JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
@@ -182,7 +184,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             // build the query
             //statement = statement.replace('{{model}}', model + '_Areg' + region);
-            statement = statement.replace('{{model}}', model + '_'+tableRegion + region);
+            statement = statement.replace('{{model}}', model + '_' + tableRegion + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);
@@ -193,15 +195,22 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{average}}', average);
             console.log("query=" + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
-            d = queryResult.data;
+            var queryResult;
+            try {
+                queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
+                d = queryResult.data;
+            } catch (e) {
+                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+                throw e;
+            }
+            if (queryResult.error !== undefined && queryResult.error !== "") {
+                throw ( new Error(queryResult.error) );
+            }
             if (d[0] === undefined) {
-                error = "no data returned for curve " + curves[curveIndex].label;
-                d[0] = [];
+                throw new error("no data returned for curve " + curves[curveIndex].label);
             } else {
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
                 xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
-                error = queryResult.error;
             }
         } else {
             // this is a difference curve
@@ -217,6 +226,9 @@ dataSeries = function (plotParams, plotFunction) {
                 d[i][0] = subtrahendData[i][0];
                 if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
                     d[i][1] = minuendData[i][1] - subtrahendData[i][1];
+                    ymin = d[i][1] < ymin ? d[i][1] : ymin;
+                    ymax = d[i][1] > ymax ? d[i][1] : ymax;
+
                 } else {
                     d[i][1] = null;
                 }
@@ -250,12 +262,12 @@ dataSeries = function (plotParams, plotFunction) {
             variableStatSet[variableStat] = {index: curveIndex + 1, label: label};
         }
 
-        var sum =0 ;
+        var sum = 0;
         for (var i = 0; i < d.length; i++) {
-            sum =   sum + d[i][1];
+            sum = sum + d[i][1];
             if (d[i][1] !== null) {
-                 ymin = ymin < d[i][1] ? ymin : d[i][1];
-                 ymax = ymax > d[i][1] ? ymax : d[i][1];
+                ymin = ymin < d[i][1] ? ymin : d[i][1];
+                ymax = ymax > d[i][1] ? ymax : d[i][1];
             }
         }
         var mean = sum / d.length;
@@ -263,47 +275,115 @@ dataSeries = function (plotParams, plotFunction) {
             yaxis: variableStatSet[variableStat].index,
             label: label,
             // mean: "<div style='color:"+ color+"'"+ label + "- mean = " + mean.toPrecision(4)+"</div>",
-            annotation:  label + "- mean = " + mean.toPrecision(4),
+            annotation: label + "- mean = " + mean.toPrecision(4),
             color: color,
             data: d,
             points: {symbol: pointSymbol, fillColor: color, show: true},
             lines: {show: true, fill: false}
         };
-
         dataset.push(pOptions);
         // now we have a dense array as opposed to a sparse one with nulls being the fill value, except that they may not
         // start at the same xaxis point and they may not end at the same xaxis point.
         // We have to make them start and end at the same point (the xmin value and fill missing data with nulls).
-
-        var numCurves = dataset.length;
         yAxisMins[curveIndex] = ymin;
         yAxisMaxes[curveIndex] = ymax;
     }
 
     // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
     // not have data in each curve.
-    if (matching) {
-        var dataLength = dataset[0].data.length;
-        var matchNullIndexes = [];
+    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
+        var dataIndexes = {};
+        var ci;
+        var sci;
+        for (ci = 0; ci < curvesLength; ci++) {
+            dataIndexes[ci] = 0;
+            yAxisMins[ci] = Number.MAX_VALUE;
+            yAxisMaxes[ci] = Number.MIN_VALUE;
 
-        for (var di = 0; di < dataLength; di++) {
-            for (var ci = 0; ci < numCurves; ci++) {
-                /* it is possible to have a curve that does not have any data at the front */
-                if ((dataset[ci].data[di] === undefined) || (dataset[ci].data[di][0] === null) || (dataset[ci].data[di][1] === null)) {
-                    matchNullIndexes.push(di);
+        }
+        // for matching - the begin time must be the first coinciding time for all the curves.
+        // Once we know at which index the curves coincide we can increment by the interval.
+        //xin and xmax are the earliest and latest times, interval is the maximum valid time interval
+        var time = xmin; // start at the minimum time
+        var done = false;
+        while (!done) {
+            var same = true;
+            for (ci = 0; ci < curvesLength; ci++) {
+                if (dataIndexes[ci] >= dataset[ci].data.length) {
+                    same = false;
+                    done = true; // I went past the end - no coinciding points
                     break;
                 }
-            }
-        }
-        for (var mi = 0; mi < matchNullIndexes.length; mi++) {
-            var index = matchNullIndexes[mi];
-            for (var ci = 0; ci < numCurves; ci++) {
-                if (dataset[ci].data[index] !== undefined) {
-                    dataset[ci].data[index][1] = null;
+                if (ci == curvesLength - 1) {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
+                        dataIndexes[0]++;
+                        same = false;
+                    }
+                } else {
+                    if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
+                        dataIndexes[ci + 1]++;
+                        same = false;
+                    }
                 }
             }
+            if (same) {
+                done = true;
+                time = dataset[0].data[dataIndexes[0]][0];
+            }
         }
-    }
+        var timeMatches;
+        var newDataSet = [];
+        while (time < xmax) {
+            timeMatches = true;
+            for (ci = 0; ci < curvesLength; ci++) {
+                // move this curves index to equal or exceed the new time
+                while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < time) {
+                    dataIndexes[ci]++;
+                }
+                // if the time isn't right or the data is null it doesn't match
+                if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != time) {
+                    timeMatches = false;
+                    break;
+                } else {
+                    // if there is no data entry here at this time it doesn't match
+                    if (!(dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] && dataset[ci].data[dataIndexes[ci]][1])) {
+                        timeMatches = false;
+                    }
+                }
+            }   // for all the curves
+            if (timeMatches) {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    if (!newDataSet[sci]) {
+                        newDataSet[sci] = {};
+                        var keys = Object.keys(dataset[sci]);
+                        for (var k = 0; k < keys.length; k++) {
+                            var key = keys[k];
+                            if (key == "data") {
+                                newDataSet[sci][key] = [];
+                            } else {
+                                newDataSet[sci][key] = dataset[sci][key];
+                            }
+                        }
+                    }
+                    const valueObject = dataset[sci].data[dataIndexes[sci]];
+                    const valData = valueObject[1];
+                    // have to recalculate mins and maxes - might be throwing away outlier data
+                    yAxisMins[sci] = (valData < yAxisMins[sci]) ? valData : yAxisMins[sci];
+                    yAxisMaxes[sci] = (valData > yAxisMaxes[sci]) ? valData : yAxisMaxes[sci];
+                    // push the data
+                    newDataSet[sci].data.push(valueObject);
+                }
+            } else {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
+                    newDataSet[sci].data.push([time, null]);
+                }
+            }
+            time = Number(time) + Number(interval);
+        } // while time
+        dataset = newDataSet;
+    } // if matching
 
     // generate y-axis
     var yaxes = [];
@@ -311,7 +391,7 @@ dataSeries = function (plotParams, plotFunction) {
     for (var dsi = 0; dsi < dataset.length; dsi++) {
         ymin = yAxisMins[dsi];
         ymax = yAxisMaxes[dsi];
-        var yPad = (ymax -ymin) * 0.2;
+        var yPad = (ymax - ymin) * 0.2;
         var variableStat = curves[dsi].variableStat;
         var position = dsi === 0 ? "left" : "right";
         var yaxesOptions = {
@@ -395,9 +475,9 @@ dataSeries = function (plotParams, plotFunction) {
         error: error,
         data: dataset,
         options: options,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);

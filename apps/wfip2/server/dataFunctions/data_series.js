@@ -133,8 +133,9 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
+            var queryResult;
             try {
-                var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
