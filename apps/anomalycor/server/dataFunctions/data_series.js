@@ -103,8 +103,8 @@ dataSeries = function (plotParams, plotFunction) {
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
     // convert dates for sql
-    fromDate = moment(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
+    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
 
     var weitemp = fromDate.split("-");
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);

@@ -367,7 +367,7 @@ data2dScatter = function (plotParams, plotFunction) {
         }
         normalizedAxisData.sort(matsDataUtils.sortFunction);
 
-        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
+        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         var options;
 
         // sort these by x axis

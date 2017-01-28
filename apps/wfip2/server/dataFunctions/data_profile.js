@@ -460,7 +460,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
         }
 
-        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
+        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         var options = {
             //yaxis:curveIndex,
             label: label,

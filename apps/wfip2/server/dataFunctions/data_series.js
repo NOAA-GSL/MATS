@@ -130,7 +130,7 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
             }
 
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             var queryResult;
@@ -175,7 +175,7 @@ dataSeries = function (plotParams, plotFunction) {
                         " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
                         " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
@@ -523,7 +523,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         }
 
-        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
+        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         //var mean = queryResult.mean;
         options = {
             yaxis: curveIndex + 1,  // the y axis position to the right of the graph
@@ -688,7 +688,7 @@ dataSeries = function (plotParams, plotFunction) {
                 max: Number.MIN_VALUE
             }
         }
-        yAxisBoundaries[variableStr] = {
+        yAxisBoundaries[vStr] = {
             min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
             max: yAxisBoundaries[vStr].max > yAxisMaxes[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
         };
