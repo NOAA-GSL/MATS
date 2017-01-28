@@ -62,7 +62,7 @@ var doPlotParams = function () {
                 optionsMap: plotFormats,
                 options: Object.keys(plotFormats),
                 default: matsTypes.PlotFormats.none,
-                controlButtonCovered: true,
+                controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,

@@ -130,11 +130,12 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
             }
 
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
+            var queryResult;
             try {
-                var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
@@ -174,7 +175,7 @@ dataSeries = function (plotParams, plotFunction) {
                         " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
                         " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
@@ -522,7 +523,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         }
 
-        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
+        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         //var mean = queryResult.mean;
         options = {
             yaxis: curveIndex + 1,  // the y axis position to the right of the graph
@@ -687,7 +688,7 @@ dataSeries = function (plotParams, plotFunction) {
                 max: Number.MIN_VALUE
             }
         }
-        yAxisBoundaries[variableStr] = {
+        yAxisBoundaries[vStr] = {
             min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
             max: yAxisBoundaries[vStr].max > yAxisMaxes[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
         };

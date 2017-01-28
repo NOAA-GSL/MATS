@@ -263,7 +263,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 
                 // keep track of the minimum interval for the data set
                 // it is necessary later when we fill in missing times
-                var avinterval = time - lastavTime;
+                var avinterval = Math.abs(time - lastavTime);
                 if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
                     minInterval = avinterval;
                 }
@@ -458,30 +458,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     };
 };
 
-var getPointSymbol = function (curveIndex) {
-    var pointSymbol = "circle";
-    switch (curveIndex % 5) {
-        case 0:
-            pointSymbol = "circle";
-            break;
-        case 1:
-            pointSymbol = "square";
-            break;
-        case 2:
-            pointSymbol = "diamond";
-            break;
-        case 3:
-            pointSymbol = "triangle";
-            break;
-        case 4:
-            pointSymbol = "cross";
-            break;
-    }
-    return pointSymbol;
-};
+
 
 export default matsWfipUtils = {
     getDatum: getDatum,
-    queryWFIP2DB: queryWFIP2DB,
-    getPointSymbol: getPointSymbol
+    queryWFIP2DB: queryWFIP2DB
+
 }
