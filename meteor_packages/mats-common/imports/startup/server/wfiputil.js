@@ -263,7 +263,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 
                 // keep track of the minimum interval for the data set
                 // it is necessary later when we fill in missing times
-                var avinterval = time - lastavTime;
+                var avinterval = Math.abs(time - lastavTime);
                 if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
                     minInterval = avinterval;
                 }

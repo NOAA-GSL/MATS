@@ -130,7 +130,9 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
             }
 
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            // statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
+
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             try {
@@ -174,7 +176,8 @@ dataSeries = function (plotParams, plotFunction) {
                         " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
                         " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                //truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
