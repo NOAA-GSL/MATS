@@ -1,94 +1,10 @@
-import {matsCollections, matsTypes, matsDataUtils} from "meteor/randyp:mats-common";
-import {mysql} from "meteor/pcel:mysql";
-import {moment} from "meteor/momentjs:moment";
-const Future = require('fibers/future');
-
-// use future to wait for the query callback to complete
-var queryDB = function (statement, validTimeStr, xmin, xmax, interval, averageStr) {
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var N0 = [];
-    var N_times = [];
-    var ctime = [];
-    var ymin;
-    var ymax;
-    sumPool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'No data to plot: ' + err;
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            ymin = Number(rows[0].avtime);
-            ymax = Number(rows[0].avtime);
-            var curveTime = [];
-            var curveStat = [];
-            var N0_max=0;
-            var N_times_max;
-//            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
-            var time_interval = Number(rows[1].avtime) - Number(rows[0].avtime);
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-                if (rowIndex < rows.length - 1) {
-                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
-                    if (time_diff < time_interval) {
-                        time_interval = time_diff;
-                    }
-                }
-
-
-                if (N0_loop > N0) N0_max = N0_loop;
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
-                }
-
-                curveTime.push(avSeconds * 1000);
-                curveStat.push(stat);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
-            }
-            interval = time_interval * 1000;
-            xmin = Number(rows[0].avtime) * 1000;
-
-            var loopTime = xmin;
-            while (loopTime < xmax + 1) {
-                if (curveTime.indexOf(loopTime) < 0) {
-                    d.push([loopTime, null]);
-                    ctime.push(loopTime);
-                } else {
-                    // bill didn't any filter for ceiling
-                    var d_idx = curveTime.indexOf(loopTime);
-                    d.push([loopTime, curveStat[d_idx]]);
-                    ctime.push(loopTime);
-               }
-                loopTime = loopTime + interval;
-            }
-            // done waiting - have results
-            dFuture['return']();
-        }
-    });
-    // wait for future to finish
-    dFuture.wait();
-    return {data:d,
-        error:error,
-        ymin:ymin,
-        ymax:ymax,
-        N0:N0,
-        N_times:N_times,
-        averageStr:averageStr,
-        interval:interval,
-        ctime:ctime};
-};
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
+import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
-    console.log(JSON.stringify(plotParams,null,2));
     var dataRequests = {}; // used to store data queries
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
@@ -103,20 +19,17 @@ dataSeries = function (plotParams, plotFunction) {
     var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     weitemp = toDate.split("-");
     var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    var mxmax = qxmax;// used to draw zero line
-    var mxmin = qxmin; // used to draw zero line
-
-    var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
+    var axisMap = Object.create(null);
+    var xmax = Number.MIN_VALUE;
+    var ymax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    var ymin = Number.MAX_VALUE;
 
-    var yAxisMaxes = [];
-    var yAxisMins = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        yAxisMaxes[curveIndex] = Number.MIN_VALUE;
-        yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
@@ -140,16 +53,12 @@ dataSeries = function (plotParams, plotFunction) {
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
         var forecastLength = curve['forecast-length'];
-        // variableStat is used to determine which axis a curve should use.
-        // This variableStatSet object is used like a set and if a curve has the same
-        // variable and statistic (variableStat) it will use the same axis,
-        // The axis number is assigned to the variableStatSet value, which is the variableStat.
-        // var variableStat = variableStr + ":" + statisticSelect;
-        //curves[curveIndex].variableStat = variableStat; // stash the variableStat to use it later for axis options
-        var xmax = Number.MIN_VALUE;
-        var ymax = Number.MIN_VALUE;
-        var xmin = Number.MAX_VALUE;
-        var ymin = Number.MAX_VALUE;
+        // axisKey is used to determine which axis a curve should use.
+        // This axisMap object is used like a set and if a curve has the same
+        // variable and statistic (axisKey) it will use the same axis,
+        // The axis number is assigned to the axisMap value, which is the axisKey.
+        var axisKey = statisticSelect;
+        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         interval = 1 * 3600 * 1000;
         if (averageStr == "None") {
@@ -202,336 +111,66 @@ dataSeries = function (plotParams, plotFunction) {
                 validTime = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimeStr + ")"
             }
             statement = statement.replace('{{validTime}}', validTime);
-
-            console.log("query=" + statement);
             dataRequests[curve.label] = statement;
-            var queryResult = queryDB(statement, validTimeStr, qxmin, qxmax, interval, averageStr);
+            var queryResult;
+            try {
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, qxmin, qxmax, interval, averageStr);
             d = queryResult.data;
-            ctime = queryResult.ctime;
-
+            } catch (e) {
+                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+                throw new Error(e.message);
+            }
+            if (queryResult.error !== undefined && queryResult.error !== "") {
+                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                throw (new Error(error));
+            }
             if (d[0] === undefined) {
-                error = "no data returned for curve " + curves[curveIndex].label;
-                d[0] = [];
+                throw new error("no data returned for curve " + curves[curveIndex].label);
             } else {
-                xmin = d[0][0];
-                xmax = d[d.length - 1][0];
-                mxmax = mxmax > xmax ? xmax : mxmax;
-                mxmin = mxmin < xmin ? mxmin : xmin;
-                error = queryResult.error;
+                xmin = xmin < d[0][0] ? xmin : d[0][0];
+                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
             }
-        } else {
-            // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
-            // time values of whichever has the largest interval
-            // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
-            var maxInterval = dataset[diffFrom[0]].interval;
-            var largeIntervalCurveData = dataset[diffFrom[0]].data;
-            if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
-                maxInterval = dataset[diffFrom[1]].interval;
-                largeIntervalCurveData = dataset[diffFrom[1]].data;
-            }
-            var minuendData = dataset[diffFrom[0]].data;
-            var subtrahendData = dataset[diffFrom[1]].data;
-            var subtrahendIndex = 0;
-            var minuendIndex = 0;
-            for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
-                var subtrahendTime = subtrahendData[subtrahendIndex][0];
-                var minuendTime = minuendData[minuendIndex][0];
-                var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
-                while (largeIntervalTime > minuendTime) {
-                    minuendTime = minuendData[++minuendIndex][0];
-                }
-                while (largeIntervalTime > subtrahendTime) {
-                    subtrahendTime = subtrahendData[++subtrahendIndex][0];
-                }
-                var diffValue = null;
-                if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
-                    if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
-                        diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
-                        d.push([largeIntervalTime, diffValue]);
-                    }
-                }
-            }
-        }
-
-        var pointSymbol = "circle";
-        switch (curveIndex % 5) {
-            case 0:
-                pointSymbol = "circle";
-                break;
-            case 1:
-                pointSymbol = "square";
-                break;
-            case 2:
-                pointSymbol = "diamond";
-                break;
-            case 3:
-                pointSymbol = "triangle";
-                break;
-            case 4:
-                pointSymbol = "cross";
-                break;
-        }
-        var yAxisIndex = 1;
-
-        /*if (variableStat in variableStatSet) {
-         yAxisIndex = variableStatSet[variableStat].index;
-         variableStatSet[variableStat].label =  variableStatSet[variableStat].label + " | " + label;
-         } else {
-         variableStatSet[variableStat] = {index:curveIndex + 1, label:label};
-         }*/
-
-        var mean = 0;
-
-
+            var sum = 0;
+            var count = 0;
         for (var i = 0; i < d.length; i++) {
-            mean = mean + d[i][1];
             if (d[i][1] !== null) {
-                ymin = ymin < d[i][1] ? ymin : d[i][1];
-                ymax = ymax > d[i][1] ? ymax : d[i][1];
+                    sum = sum + d[i][1];
+                    count++;
+                    ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
+                    ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
             }
         }
-        mean = mean / d.length;
-
-        var options = {
-            // yaxis: variableStatSet[variableStat].index,
-            label: label,
-            color: color,
-            data: d,
-            ctime: ctime,
-            annotation: label + "- mean = " + mean.toPrecision(4),
-            points: {symbol: pointSymbol, fillColor: color, show: true},
-            lines: {show: true, fill: false},
-            interval: interval,
-            xmin: xmin,
-            xmax: xmax
-
-        };
-        dataset.push(options);
-        var numCurves = dataset.length;
-        yAxisMins[curveIndex] = ymin;
-        yAxisMaxes[curveIndex] = ymax;
-    }
-
-    // if matching is true we need to iterate through the entire dataset by the x axis and null all entries that do
-    // not have data in each curve.
-
-    if (matching) {
-
-
-        if (diffFrom == null) {
-            var numCurves = dataset.length;
-
         } else {
-            var numCurves = diffFrom.length;
-
+            // this is a difference curve
+            const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
+            d = diffResult.dataset;
+            ymin = diffResult.ymin;
+            ymax = diffResult.ymax;
         }
 
+        const mean = sum / count;
+        const annotation = label + "- mean = " + mean.toPrecision(4);
+        curve['annotation'] = annotation;
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
+        curve['axisKey'] = axisKey;
+        const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        dataset.push(cOptions);
+    }  // end for curves
 
-        var matchInterval = 0;
-        for (var ci = 0; ci < numCurves; ci++) {
-            var this_interval = dataset[ci].interval;
-            if (this_interval > matchInterval) matchInterval = this_interval;
+    //if matching
+    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
+        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
         }
-
-        var timeIntersection = dataset[0].ctime;
-        //console.log("timeIntersection=" + timeIntersection);
-        for (var ci = 1; ci < numCurves; ci++) {
-            var this_time = dataset[ci].ctime;
-            timeIntersection = _.intersection(this_time, timeIntersection);
-        }
-
-        //console.log("timeIntersection=" + timeIntersection);
-        var new_curve_dd = {};
-        for (var ci = 0; ci < numCurves; ci++) {
-            new_curve_dd[ci] = [];
-        }
-
-        var new_timeIntersection = [];
-        var tlength = timeIntersection.length;
-        for (var si = 0; si < tlength; si++) {
-            var this_secs = timeIntersection[si];
-            for (var ci = 0; ci < numCurves; ci++) {
-                var ctime = dataset[ci].ctime;
-                var myIndex = ctime.indexOf(this_secs);
-                var this_data = dataset[ci].data[myIndex][1];
-                if (this_data == null) {
-                    delete timeIntersection[si];
-                }
-            }
-        }
-
-        for (var si = 0; si < tlength; si++) {
-            if (timeIntersection[si] != undefined) {
-                new_timeIntersection.push(timeIntersection[si]);
-            }
-        }
-
-        var n_length = new_timeIntersection.length;
-        var tmin = new_timeIntersection[0];
-        var tmax = new_timeIntersection[n_length - 1];
-        var tt = tmin;
-        while (tt <= tmax) {
-            for (var ci = 0; ci < numCurves; ci++) {
-                if (new_timeIntersection.indexOf(tt) > 0) {
-                    var ctime = dataset[ci].ctime;
-                    var myIndex = ctime.indexOf(tt);
-                    this_data = dataset[ci].data[myIndex][1];
-                    new_curve_dd[ci].push([tt, this_data]);
-                } else {
-                    new_curve_dd[ci].push([tt, null]);
-                }
-            }
-            tt = tt + matchInterval;
-        }
-
-        for (var ci = 0; ci < numCurves; ci++) {
-            dataset[ci].data = [];
-            dataset[ci].data = new_curve_dd[ci];
-            //console.log("ci=" + ci + " data=" + JSON.stringify(dataset[ci].data));
-        }
-
-        for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-            var curve = curves[curveIndex];
-            var diffFrom = curve.diffFrom;
-            if (diffFrom != null) {
-                var minuendIndex = diffFrom[0];
-                var subtrahendIndex = diffFrom[1];
-                var minuendData = dataset[minuendIndex].data;
-                var subtrahendData = dataset[subtrahendIndex].data;
-
-                //console.log("d1=" + minuendData);
-                //console.log("d2=" + subtrahendData);
-
-
-                // add dataset copied from minuend
-                var d = [];
-                // do the differencing of the data
-                for (var i = 0; i < minuendData.length; i++) {
-                    d[i] = [];
-                    d[i][0] = subtrahendData[i][0];
-                    if (minuendData[i][1] != null && subtrahendData[i][1] != null) {
-                        d[i][1] = minuendData[i][1] - subtrahendData[i][1];
-                    } else {
-                        d[i][1] = null;
-                    }
-                    // ymin and ymax will change with diff
-                    ymin = ymin < d[i][1] ? ymin : d[i][1];
-                    ymax = ymax > d[i][1] ? ymax : d[i][1];
-                }
-
-
-                var mean = 0;
-                for (var i = 0; i < d.length; i++) {
-                    mean = mean + d[i][1];
-                }
-                mean = mean / d.length;
-
-                dataset[curveIndex].data = d;
-                dataset[curveIndex].mean = label + "- mean = " + mean.toPrecision(4);
-
-            }
-        }
-
-    }//end of matching
-
-    // generate y-axis
-    var yaxes = [];
-    var yaxis = [];
-    for (var dsi = 0; dsi < dataset.length; dsi++) {
-        ymin = yAxisMins[dsi];
-        ymax = yAxisMaxes[dsi];
-        var yPad = (ymax -ymin) * 0.2;
-        var variableStat = curves[dsi].variableStat;
-        var position = dsi === 0 ? "left" : "right";
-        var yaxesOptions = {
-            position: position,
-            color: 'grey',
-            axisLabel: curve.label,
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
-            tickDecimals: 1,
-            min: ymin - yPad,
-            max: ymax + yPad
-        };
-        var yaxisOptions = {
-            zoomRange: [0.1, 10]
-        };
-        yaxes.push(yaxesOptions);
-        yaxis.push(yaxisOptions);
-    }
-    var options = {
-        axisLabels: {
-            show: true
-        },
-        xaxes: [{
-            axisLabel: 'time',
-            color: 'grey'
-        }],
-        xaxis: {
-            zoomRange: [0.1, 3600000000],
-            mode: 'time'
-        },
-        yaxes: yaxes,
-        yaxis: yaxis,
-
-        legend: {
-            show: false,
-            container: "#legendContainer",
-            noColumns: 0
-        },
-        series: {
-            lines: {
-                show: true,
-                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
-            },
-            points: {
-                show: true
-            },
-            shadowSize: 0
-        },
-        zoom: {
-            interactive: true
-        },
-        pan: {
-            interactive: false
-        },
-        selection: {
-            mode: "xy"
-        },
-        grid: {
-            hoverable: true,
-            borderWidth: 3,
-            mouseActiveRadius: 50,
-            backgroundColor: "white",
-            axisMargin: 20
-        },
-        tooltip: true,
-        tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
-            onHover: function (flotItem, $tooltipEl) {
-            }
-        }
-    };
 
     // add black 0 line curve
-    // need to find the minimum and maximum x value for making the zero curve
-    dataset.push({
-        color: 'black',
-        points: {show: false},
-        annotation: "",
-        data: [[mxmin, 0, "zero"], [mxmax, 0, "zero"]]
-    });
-
-    // console.log("data="+JSON.stringify(dataset));
+    // need to define the minimum and maximum x value for making the zero curve
+    dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
+    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
     var result = {
         error: error,
         data: dataset,
-        options: options,
+        options: resultOptions,
         basis:{
             plotParams:plotParams,
             queries:dataRequests

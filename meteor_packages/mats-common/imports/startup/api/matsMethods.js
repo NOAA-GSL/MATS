@@ -584,7 +584,7 @@ const getGraphData = new ValidatedMethod({
     }).validator(),
     run(params){
         if (Meteor.isServer) {
-            const Future = Npm.require('fibers/future');
+            var Future = require('fibers/future');
             var future = new Future();
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
@@ -602,9 +602,7 @@ const getGraphData = new ValidatedMethod({
                 } else {
                     throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
                 }
-
             }
-
             return future.wait();
         }
     }

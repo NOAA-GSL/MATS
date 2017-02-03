@@ -286,6 +286,13 @@ const typeSort = function (arr) {
     return arr;
 };
 
+const setDefaultForParamName = function(paramName) {
+    const  defaultValue = getParameterForName(paramName).default;
+    if (defaultValue != "undefined") {
+        setInputForParamName(defaultValue);
+    }
+};
+
 export default matsParamUtils = {
     getControlButtonIdForParamName:getControlButtonIdForParamName,
     getControlElementForParamName:getControlElementForParamName,
@@ -300,4 +307,5 @@ export default matsParamUtils = {
     expandParams:expandParams,
     collapseParams:collapseParams,
     getParameterForName:getParameterForName,
+    setDefaultForParamName:setDefaultForParamName,
     typeSort:typeSort};
