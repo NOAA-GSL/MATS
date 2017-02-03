@@ -194,7 +194,7 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
         // we can't get an interval, give up
         return dataset;
     }
-
+    var done = false;
     // find the first common start point (by time).
     // if the is none then there is no matched data
     while (!done) {
