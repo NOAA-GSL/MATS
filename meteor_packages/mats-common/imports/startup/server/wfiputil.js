@@ -299,6 +299,13 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         // no data found in this record
                         continue;
                     } else {
+                        const missing_value = JSON.parse(rows[rowIndex].data)['missing_value'];
+                        if ( !(missing_value === undefined) ){
+                            if ( values === missing_value ) {
+                                values = undefined;
+                                continue;
+                            }
+                        }
                         levels = JSON.parse(rows[rowIndex].data)['z'];
                         if ( !(Array.isArray(levels))) {
                             levels = [Number(levels)];
