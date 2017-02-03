@@ -102,6 +102,7 @@ Template.item.events({
         if (elem !== null && elem.style.display === "block") {
             elem.style.display = "none";
         } else {
+            matsParamUtils.collapseParams();
             if (elem !== null) {
                 elem.style.display = "block";
                 if (this.type == matsTypes.InputTypes.select) {
@@ -144,32 +145,16 @@ Template.item.events({
             if (elem === undefined) {
                 return false;
             }
-            if (elem !== null && elem.style.display === "block" && this.multiple == false) {
+            if (elem !== null && elem.style.display === "block" && this.multiple !== true) {
                 elem.style.display = "none";
             } else {
                 if (elem !== null) {
                     elem.style.display = "block";
                 }
             }
-        }
+         }
     },
 
-    'blur .data-input': function (event) {
-        if (this.type === matsTypes.InputTypes.numberSpinner) {
-            event.target.checkValidity();
-            var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
-            if (elem === undefined) {
-                return false;
-            }
-            if (elem !== null && elem.style.display === "block") {
-                elem.style.display = "none";
-            } else {
-                if (elem !== null) {
-                    elem.style.display = "block";
-                }
-            }
-        }
-    },
     'click .help' : function() {
         var helpref = Session.get("app").helpref;
         $("#matshelp").load(helpref + "/" + this.help + " #matshelp");
