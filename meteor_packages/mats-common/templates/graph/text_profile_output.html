@@ -5,22 +5,53 @@
         {{#each curves}}
             <h5>{{curveText}}</h5>
         {{/each}}
-        <table class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                <th>level</th>
-                {{#each curves}}
-                    <th>{{curveLabel this}}</th>
-                {{/each}}
-            </tr>
-            </thead>
-            <tbody>
-            {{#each pressureLevels}}
-                <tr>
-                    {{{points this}}}
-                </tr>
+        <div>
+            {{#each curves}}
+                <div>
+                    <table class="table table-condensed table-bordered">
+                        <thead>
+                            <tr>
+                                <th>mean</th>
+                                <th>std err</th>
+                                <th>n</th>
+                                <th>stde_betsy</th>
+                                <th>lag1</th>
+                                <th>min</th>
+                                <th>max</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{mean this}}</td>
+                                <td>{{stderr this}}</td>
+                                <td>{{numberOf this}}</td>
+                                <td>{{stde_betsy this}}</td>
+                                <td>{{lag1 this}}</td>
+                                <td>{{min this}}</td>
+                                <td>{{max this}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <table class="table table-condensed table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{{curveLabel this}} level</th>
+                                <th>stat</th>
+                                <th>std error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {{#each pressureLevels this}}
+                            <tr>
+                                {{{points this}}}
+                            </tr>
+                        {{/each}}
+                        </tbody>
+                    </table>
+                </div>
             {{/each}}
-            </tbody>
-        </table>
+        </div>
     </div>
 </template>

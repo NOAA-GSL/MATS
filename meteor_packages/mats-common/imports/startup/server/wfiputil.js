@@ -203,7 +203,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
         // Levels are rounded to the nearest integer and bin'd.
         // Missing levels are added and corresponding missing values are set to null.
         // values are set to precision(4).
-        console.log('statement: ' + statement );
+        //console.log('statement: ' + statement );
 
         if (err != undefined) {
             error = err.message;
@@ -328,21 +328,13 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     } else {
                         levels = [Number(levels[0])];
                     }
-                    values = [Number(values)];
+                    values = [Number(values).toPrecision(4)];
                 } else {
                     values = values.map(function (a) {
-                        return Number(a);
+                        return Number(a).toPrecision(4);
                     });
                 }
 
-                // set value precision
-                try {
-                    for (var valIndex = 0; valIndex < values.length; valIndex++) {
-                        values[valIndex] = Number(values[valIndex].toPrecision(4));
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
                 for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
                     levels[lvlIndex] = Math.round(levels[lvlIndex]);
                 }

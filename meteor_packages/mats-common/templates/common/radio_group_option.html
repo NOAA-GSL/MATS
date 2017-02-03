@@ -1,4 +1,5 @@
 <template name="radioGroup">
-    &nbsp;&nbsp;<input class="data-input radio-group" type=radio name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{value ../..}}" {{isDefault ../../default}} />
-    &nbsp;<label for="{{../../name}}-{{../../type}}-{{this}}">{{value ../..}}</label>
+    &nbsp;<label class="radio-inline" for="{{../../name}}-{{../../type}}-{{this}}">
+    &nbsp;  <input class="data-input" type="radio" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{value ../..}}" {{isDefault ../../default}} />{{value ../..}}
+    &nbsp;</label>
 </template>

@@ -1,7 +1,7 @@
 <template name="item">
     <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}}">
         <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}"> {{name}}</button>
-        <div id="{{element}}" style="display:{{elementHidden}}" >
+        <div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: 5;" >
             {{#if isSelect}}
                 {{> select this}}
             {{else}} {{#if isSpinner}}
@@ -16,10 +16,12 @@
                     {{> checkboxGroup this}}
                 {{/each}}
             {{else}} {{#if isRadioGroup}}
-                {{name}}:
-                {{#each options}}
-                    {{> radioGroup this}}
-                {{/each}}
+                <div class="container">
+                    {{name}}:
+                    {{#each options}}
+                        {{> radioGroup this}}
+                    {{/each}}
+                </div>
             {{else}} {{#if isSelectMap}}
                 {{> map this}}
             {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}

@@ -45,7 +45,9 @@ Template.paramList.events({
         Blaze.remove(Blaze.getView(plotView));
         Blaze.render(Template.paramList,document.getElementById('paramView'));
         Blaze.render(Template.plotList,document.getElementById('plotView'));
-
+        // reset the plotType to timeseries
+        matsCurveUtils.showTimeseriesFace();
+        document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked = true;
     },
     'click .expand': function() {
         matsParamUtils.expandParams();

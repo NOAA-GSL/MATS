@@ -5,8 +5,6 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 
-const Future = require('fibers/future');
-
 dataSeries = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
@@ -781,6 +779,7 @@ dataSeries = function (plotParams, plotFunction) {
         },
         tooltip: true,
         tooltipOpts: {
+            // the tooltip is the last element of each data point in the data series. It is an html formatted string.
             content: "<span style='font-size:150%'><strong>%ct</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {
