@@ -28,7 +28,7 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-
+    var maxRunInterval = Number.MIN_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -156,11 +156,12 @@ dataSeries = function (plotParams, plotFunction) {
         curve['axisKey'] = axisKey;
         const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
+        maxRunInterval = interval > maxRunInterval ? interval : maxRunInterval;
     }  // end for curves
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getMatchedDataSet(dataset, maxRunInterval);
         }
 
     // add black 0 line curve
