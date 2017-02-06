@@ -178,8 +178,13 @@ Template.item.events({
 Template.textInput.events({
     'change, blur': function (event) {
         try {
-            var text = event.currentTarget.value;
-            matsParamUtils.setValueTextForParamName(event.target.name,text);
+            // label is handled differently - special case because of NextCurveLabel stored in Session
+            const text = event.currentTarget.value;
+            if (event.target.name == "label" && Session.get('NextCurveLabel') == text) {
+
+            } else {
+                matsParamUtils.setValueTextForParamName(event.target.name, text);
+            }
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }

@@ -1,7 +1,14 @@
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common'
 Template.textInput.helpers({
     defaultLabel: function() {
-        return Session.get('NextCurveLabel');
+        if (this.name == 'label') {
+            //var label = matsCurveUtils.getNextCurveLabel();
+            var label = Session.get('NextCurveLabel');
+            return label;
+        } else {
+            return this.default;
+        }
     }
 });
 

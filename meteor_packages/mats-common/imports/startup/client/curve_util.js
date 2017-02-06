@@ -36,22 +36,26 @@ const getNextCurveLabel = function () {
 //determine the next curve Label and set it in the session
 // private, not exported
 const setNextCurveLabel = function () {
-    var usedLabels = Session.get('UsedLabels');
-    var settings = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}});
+    const usedLabels = Session.get('UsedLabels');
+    const settings = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}});
     if (settings === undefined) {
         return false;
     }
-    var labelPrefix = settings.LabelPrefix;
+    const labelPrefix = settings.LabelPrefix;
     // find all the labels that start with our prefix (some could be custom)
-    var prefixLabels = _.filter(usedLabels, function (l) {
+    const prefixLabels = _.filter(usedLabels, function (l) {
         return ((l.lastIndexOf(labelPrefix, 0) === 0) && (l.match(new RegExp(labelPrefix, 'g')).length) == 1);
     });
-    var lastUsedLabel = _.last(prefixLabels);
+    const lastUsedLabel = _.last(prefixLabels);
     var lastLabelNumber = -1;
-    if (lastUsedLabel !== undefined) {
-        lastLabelNumber = Number(lastUsedLabel.replace(labelPrefix, ''));
-    }
 
+    if (lastUsedLabel !== undefined) {
+        const minusPrefix = lastUsedLabel.replace(labelPrefix, '');
+        const tryNum = parseInt(minusPrefix, 10);
+        if (!isNaN(tryNum)) {
+            lastLabelNumber = tryNum;
+        }
+    }
     var newLabelNumber = lastLabelNumber + 1;
     var nextCurveLabel = labelPrefix + newLabelNumber;
     // the label might be one from a removed curve so the next ones might be used
@@ -99,7 +103,6 @@ const getNextCurveColor = function () {
     return Session.get('NextCurveColor');
 };
 
-//clearUsedDefaultByLabel = function(label) {
 // clear a used label and set the nextCurveLabel to the one just cleared
 const clearUsedLabel = function (label) {
     var usedLabels = Session.get('UsedLabels');
@@ -131,8 +134,6 @@ const clearAllUsed = function () {
     var labelPrefix = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}}).LabelPrefix;
     Session.set('NextCurveLabel', labelPrefix + 0);
     Session.set('Curves', []);
-    //matsParamUtils.setValueTextForParamName('label',Session.get('NextCurveLabel'));
-    matsParamUtils.setValueTextForParamName('label','');
 };
 
 // use curves in session to determine which defaults are already used
@@ -164,7 +165,7 @@ const setUsedLabels = function () {
 };
 
 const setUsedColorsAndLabels = function () {
-    matsParamUtils.setValueTextForParamName('label','');  // necessary to prevent duplicates in the label
+    //matsParamUtils.setValueTextForParamName('label','');  // necessary to prevent duplicates in the label
     setUsedColors();
     setUsedLabels();
 };
