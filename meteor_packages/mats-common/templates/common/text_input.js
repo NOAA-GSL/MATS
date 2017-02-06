@@ -3,7 +3,6 @@ import { matsParamUtils } from 'meteor/randyp:mats-common'
 Template.textInput.helpers({
     defaultLabel: function() {
         if (this.name == 'label') {
-            //var label = matsCurveUtils.getNextCurveLabel();
             var label = Session.get('NextCurveLabel');
             return label;
         } else {

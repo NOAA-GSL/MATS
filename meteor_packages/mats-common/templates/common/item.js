@@ -181,7 +181,6 @@ Template.textInput.events({
             // label is handled differently - special case because of NextCurveLabel stored in Session
             const text = event.currentTarget.value;
             if (event.target.name == "label" && Session.get('NextCurveLabel') == text) {
-
             } else {
                 matsParamUtils.setValueTextForParamName(event.target.name, text);
             }
