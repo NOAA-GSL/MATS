@@ -28,14 +28,7 @@ Template.textProfileOutput.helpers({
     },
     mean: function(curve) {
         try {
-            return getDataForCurve(curve).stats.d_mean;
-        } catch(e) {
-            return NaN;
-        }
-    },
-    stderr: function(curve) {
-        try {
-            return getDataForCurve(curve).stats.stderr;
+            return getDataForCurve(curve).stats.d_mean.toPrecision(4);
         } catch(e) {
             return NaN;
         }
@@ -47,30 +40,30 @@ Template.textProfileOutput.helpers({
             return NaN;
         }
     },
-    stde_betsy: function(curve) {
+    stderr: function(curve) {
         try {
-            return getDataForCurve(curve).stats.stde_betsy;
+            return getDataForCurve(curve).stats.stde_betsy.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
     lag1: function(curve) {
         try {
-            return getDataForCurve(curve).stats.lag1;
+            return getDataForCurve(curve).stats.lag1.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
     min: function(curve) {
         try {
-            return getDataForCurve(curve).stats.min;
+            return getDataForCurve(curve).stats.minx.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
     max: function(curve) {
         try {
-            return getDataForCurve(curve).stats.max;
+            return getDataForCurve(curve).stats.maxx.toPrecision(4);
         } catch (e) {
             return NaN;
         }

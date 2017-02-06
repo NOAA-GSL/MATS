@@ -194,6 +194,10 @@ dataProfile = function(plotParams, plotFunction) {
         }
         // get the overall stats for the text output
         const stats = matsDataUtils.get_err(values.reverse(),levels.reverse()); // have to reverse because of data inversion
+        const minx = Math.min.apply(null,values);
+        const maxx = Math.max.apply(null,values);
+        stats.minx = minx;
+        stats.maxx = maxx;
         dataset[curveIndex]['stats'] = stats;
     }
 
