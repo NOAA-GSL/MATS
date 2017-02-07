@@ -494,7 +494,8 @@ const get_err = function (sub_val_array, sub_secs_array) {
     } else {
         stde_betsy = null;
     }
-    return {d_mean:d_mean,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1], min:min_secs,max:max_secs, sum:sum_d};
+    // stde_betsy is standard error with auto correlation
+    return {d_mean:d_mean,sd:sd,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1], min:min_secs,max:max_secs, sum:sum_d};
 };
 
 const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, label) {

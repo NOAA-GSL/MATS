@@ -166,18 +166,26 @@ Template.textProfileOutput.helpers({
         const fillStr = settings.NullFillString;
         var pdata = fillStr;
         var perror = fillStr;
+        var mean = fillStr;
+        var lag1 = fillStr;
+        var n = fillStr;
+        var stddev = fillStr;
         try {
             // see if I have a valid data object for this dataIndex and this level....
             const dataPointVal = getDataForLevel(data, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[0].toPrecision(4);
                 perror = dataPointVal[2].toPrecision(4);
+                stddev = dataPointVal[5].sd.toPrecision(4);
+                mean = dataPointVal[5].d_mean.toPrecision(4);
+                lag1 = dataPointVal[5].lag1.toPrecision(4);
+                n = dataPointVal[5].n_good;
             }
         } catch (problem) {
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + pdata + "</td>" + "<td>" + perror + "</td>";
+        line += "<td>" + pdata + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + mean + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     }
 });

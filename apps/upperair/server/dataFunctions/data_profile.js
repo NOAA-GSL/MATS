@@ -170,10 +170,12 @@ dataProfile = function(plotParams, plotFunction) {
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
 
-            data[di][2] = errorResult.stde_betsy;
+            // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
+            // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
+            data[di][2] = errorResult.stde_betsy * 1.96;
             data[di][5] = {
                 d_mean: errorResult.d_mean,
-                stde_betsy: errorResult.stde_betsy,
+                sd: errorResult.sd,
                 n_good: errorResult.n_good,
                 lag1: errorResult.lag1
             };
@@ -181,10 +183,11 @@ dataProfile = function(plotParams, plotFunction) {
             data[di][6] = label +
                 "<br>" + -data[di][1] + "mb" +
                 "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
-                "<br>  stde:" + (errorResult.stde_betsy === null ? null : errorResult.stde_betsy.toPrecision(4)) +
+                "<br>  sd:" + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean:" + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4));
+                "<br>  lag1:" + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
+                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
         }
         var values = [];
         var levels = [];

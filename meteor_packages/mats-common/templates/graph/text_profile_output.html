@@ -9,7 +9,7 @@
             {{#each curves}}
                 <div>
                     <table class="table table-condensed table-bordered">
-                        <thead>
+                        <thead class="thead-inverse">
                             <tr>
                                 <th>mean</th>
                                 <th>std err</th>
@@ -32,12 +32,16 @@
                     </table>
                 </div>
                 <div>
-                    <table class="table table-condensed table-bordered">
-                        <thead>
+                    <table class="table table-condensed table-bordered table-striped table-hover table-sm">
+                        <thead class="thead-inverse">
                             <tr>
                                 <th>{{curveLabel this}} level</th>
                                 <th>stat</th>
                                 <th>std error</th>
+                                <th>std dev</th>
+                                <th>mean</th>
+                                <th>lag1</th>
+                                <th>n</th>
                             </tr>
                         </thead>
                         <tbody>
