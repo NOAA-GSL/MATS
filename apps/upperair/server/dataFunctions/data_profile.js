@@ -177,7 +177,8 @@ dataProfile = function(plotParams, plotFunction) {
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
                 n_good: errorResult.n_good,
-                lag1: errorResult.lag1
+                lag1: errorResult.lag1,
+                stde: errorResult.stde_betsy
             };
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
@@ -187,6 +188,7 @@ dataProfile = function(plotParams, plotFunction) {
                 "<br>  mean:" + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n:" + errorResult.n_good +
                 "<br>  lag1:" + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
+                "<br>  stde" + errorResult.stde_betsy  +
                 "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
         }
         var values = [];
