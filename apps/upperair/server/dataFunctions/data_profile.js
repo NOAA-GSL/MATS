@@ -184,11 +184,11 @@ dataProfile = function(plotParams, plotFunction) {
             data[di][6] = label +
                 "<br>" + -data[di][1] + "mb" +
                 "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
-                "<br>  sd:" + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
-                "<br>  mean:" + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
-                "<br>  n:" + errorResult.n_good +
-                "<br>  lag1:" + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde" + errorResult.stde_betsy  +
+                "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                "<br>  n: " + errorResult.n_good +
+                "<br>  lag1: " + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
+                "<br>  stde: " + errorResult.stde_betsy  +
                 "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
         }
         var values = [];
