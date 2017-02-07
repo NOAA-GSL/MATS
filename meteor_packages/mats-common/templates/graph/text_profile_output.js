@@ -175,7 +175,7 @@ Template.textProfileOutput.helpers({
             const dataPointVal = getDataForLevel(data, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[0].toPrecision(4);
-                perror = (dataPointVal[2] / 1.96).toPrecision(4);
+                perror = dataPointVal[5].stde.toPrecision(4);
                 stddev = dataPointVal[5].sd.toPrecision(4);
                 mean = dataPointVal[5].d_mean.toPrecision(4);
                 lag1 = dataPointVal[5].lag1.toPrecision(4);
