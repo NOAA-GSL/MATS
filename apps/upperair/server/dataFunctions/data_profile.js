@@ -73,7 +73,7 @@ dataProfile = function(plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{validTime}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10. " +
+                "and m0.mb10 > {{top}}/10. " +
                 "and m0.mb10 <= {{bottom}}/10. " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
