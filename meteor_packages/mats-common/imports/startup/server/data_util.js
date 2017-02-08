@@ -430,6 +430,7 @@ const get_err = function (sub_val_array, sub_secs_array) {
     var d_mean = sum_d/n_good;
     var sd2 = sum2_d/n_good - d_mean *d_mean;
     var sd = Math.sqrt(sd2);
+    var sdlimit = 3*sd;
     // find minimum delta_time, if any value missing, set null
     var last_secs = -1e30;
     var min_delta = 1e30;
@@ -456,7 +457,6 @@ const get_err = function (sub_val_array, sub_secs_array) {
     var loopTime =min_secs;
 
     while (loopTime < max_secs+1) {
-
         if(sub_secs_array.indexOf(loopTime)<0){
             data_wg.push(null);
             n_gaps = n_gaps+1;

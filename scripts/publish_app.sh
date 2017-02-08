@@ -42,9 +42,22 @@ rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scr
 rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:/web
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
 npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
+servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`
+servernpmpath=`ssh ${server} readlink -e /usr/local/bin/npm`
 
 echo "do not forget to restart nginx on ${server}."
-echo "and check the links for node and npm that are in /usr/local/bin on ${server} are correct. If the meteor install has changed (due to meteor upgrade), fix these links"
-echo "ln -sf ${nodepath} /usr/local/bin/node"
-echo "ln -sf ${npmpath} /usr/local/bin/npm"
+if [ "$servernodepath" != "$servernodepath"  ];
+then
+    echo "Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
+    echo "server node path is : $servernodepath"
+    echo " should be : $nodepath"
+    echo "ln -sf ${nodepath} /usr/local/bin/node"
+fi
+if [ "$npmpath" != "$servernpmpath"  ];
+then
+    echo "Check the link for npm that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
+    echo "server node path is : $servernpmpath"
+    echo " should be : $npmpath"
+    echo "ln -sf ${npmpath} /usr/local/bin/npm"
+fi
 exit 0
