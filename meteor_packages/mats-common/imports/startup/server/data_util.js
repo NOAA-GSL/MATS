@@ -281,6 +281,7 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
         if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
             continue;   // don't do it if there isn't an annotation
         }
+
         var sum = 0;
         var count = 0;
         d = newDataSet[ci].data;
@@ -307,7 +308,7 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
             optionsKeys.splice(index, 1);
         }
         optionsKeys.forEach(function(item){
-            newDataSet[ci][item] = dataset[item];
+            newDataSet[ci][item] = dataset[ci][item];
         });
         newDataSet[ci]['annotation'] = annotation;
     }
@@ -439,7 +440,7 @@ const get_err = function (sub_val_array, sub_secs_array) {
 
     for(i=0; i< sub_secs_array.length; i++){
         var secs = (sub_secs_array[i]);
-        var delta = secs - last_secs;
+        var delta = Math.abs(secs - last_secs);
         if(delta < min_delta) {
             min_delta = delta;
         }
@@ -462,7 +463,12 @@ const get_err = function (sub_val_array, sub_secs_array) {
             n_gaps = n_gaps+1;
         } else{
             var d_idx = sub_secs_array.indexOf(loopTime);
-            data_wg.push(sub_val_array[d_idx]);
+                if (Math.abs(sub_val_array[d_idx] - d_mean) > sdlimit) {
+                 console.log("throwing away " + sub_val_array[d_idx] + " because it exceeds 3 standard deviations from the mean");
+                 data_wg.push(null);
+             } else {
+                data_wg.push(sub_val_array[d_idx]);
+            }
         }
         loopTime = loopTime + min_delta;
     }

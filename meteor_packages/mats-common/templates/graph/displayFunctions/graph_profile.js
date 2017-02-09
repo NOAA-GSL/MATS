@@ -137,35 +137,59 @@ graphProfile = function(result) {
         }
         plot = $.plot(placeholder, dataset, options);
     });
-
-    var normalizeYAxis = function (ranges) {
+    var normalizeYAxis = function (ranges,options) {
         /*
-         The way the axis work, if there is only one yaxis the yaxis must be an object
-         but if there are multiple yaxis the yaxis must be an array.
+        The range object will have one or more yaxis values.
+        For 1 curve it will have ranges.yaxis
+        for n curves it will have yaxis - which is the leftmost curve - and yaxis2, yaxis3, .... yaxisn which are in order left to right.
+        For some reason the yaxis will duplicate one of the others so the duplicated one must be skipped.
+
+        The options object will have a yaxes array of n objects. The 0th yaxes[0] is the leftmost curve.
+        The other axis are in order left to right.
+
+        First we sort the ranges axis to get yaxis, yaxis2, yaxis3 .... skipping the duplicated one
+        Then we assign the ranges from and to values to each of the options yaxes min and max values in order.
          */
-        var axis = {};
-        var axisKeys = _.keys(ranges);
-        for (var i = 0; i < axisKeys.length; i++) {
-            var axisKey = axisKeys[i];
-            axis[axisKey] = {};
-            axis[axisKey].min = ranges[axisKey].from;
-            axis[axisKey].max = ranges[axisKey].to;
+        var yaxisRangesKeys = _.difference(Object.keys(ranges), ["xaxis"]); // get just the yaxis from the ranges... yaxis, yaxis2, yaxis3...., yaxisn
+        // I want the yaxis first then the y1axis y2axis etc...
+        yaxisRangesKeys = ["yaxis"].concat(_.difference(Object.keys(ranges),["xaxis","yaxis"]).sort());
+        var yaxisFrom = ranges['yaxis'].from;
+        var yaxisTo = ranges['yaxis'].to;
+        for (var i =0; i < yaxisRangesKeys.length; i++) {
+            // [yaxis,y2axis,y3axis ....]
+            if (i !== 0) {
+                // might have to skip a duplicated axis... but never yaxis
+                if (yaxisFrom == ranges[yaxisRangesKeys[i]].from && yaxisTo == ranges[yaxisRangesKeys[i]].to) {
+                    continue; // this is duplicated with yaxis
         }
-        return axis;
+            }
+            if (ranges[yaxisRangesKeys[i]] && options.yaxes[i]) {
+                options.yaxes[i].min = ranges[yaxisRangesKeys[i]].from;
+                options.yaxes[i].max = ranges[yaxisRangesKeys[i]].to;
+            }
+        }
+        options.xaxes[0].min = ranges.xaxis.from;
+        options.xaxes[0].max = ranges.xaxis.to;
+
+        return options;
     };
 
-    var drawGraph = function(ranges) {
-        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
+    var drawGraph = function(ranges, options) {
+        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges,options));
         plot = $.plot(placeholder, dataset, zOptions);
     };
 
+    var zooming = false;
     // selection zooming
     placeholder.bind("plotselected", function (event, ranges) {
+        zooming = true;
+        event.preventDefault();
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges);
+        drawGraph(ranges, plot.getOptions());
     });
+
 
     var plot = $.plot(placeholder, dataset, options);
     // hide the spinner

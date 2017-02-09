@@ -3,9 +3,7 @@ graphSeries = function(result) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
-    var dataset = {};
-    dataset = result.data;
-
+    var dataset = result.data;
     for (var i  =0; i < dataset.length; i++){
         var o = dataset[i];
         if (min < 400) {
@@ -14,8 +12,8 @@ graphSeries = function(result) {
             o.points && (o.points.radius = 2);
         }
     }
-    var options = {};
-    options = result.options;
+
+    var options = result.options;
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
