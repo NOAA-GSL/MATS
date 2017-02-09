@@ -158,7 +158,7 @@ dataProfile = function(plotParams, plotFunction) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
                     var newVal = subValues[secsIndex];
                     if (newVal === undefined || newVal == 0) {
-                        console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
                     } else {
                         newSubValues.push(newVal);
                     }
