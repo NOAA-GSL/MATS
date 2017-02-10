@@ -1,8 +1,4 @@
 <template name="checkboxGroup">
-    <span>
-        &nbsp;&nbsp;<input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}" {{checkedByDefault ../../default}} />
-    </span>
-    <span>
-        &nbsp;<label for="{{../../name}}-{{../../type}}-{{this}}">{{this}}</label>
-    </span>
+    &nbsp;<label class="checkbox-inline" for="{{../../name}}-{{../../type}}-{{this}}">{{labelValue ../../optionsMap}}</label>
+    &nbsp;<input type=checkbox class="data-input" name="{{../../name}}" id="{{../../name}}-{{../../type}}-{{this}}" value="{{this}}" {{checkedByDefault ../../default}} />
 </template>

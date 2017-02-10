@@ -154,7 +154,13 @@ Template.item.events({
             }
          }
     },
-
+    'focus .data-input':function (event){
+        var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
+        if (elem === undefined) {
+            return false;
+        }
+        matsParamUtils.lowerParams();
+    },
     'click .help' : function() {
         var helpref = Session.get("app").helpref;
         $("#matshelp").load(helpref + "/" + this.help + " #matshelp");
