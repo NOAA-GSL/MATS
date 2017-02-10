@@ -61,7 +61,6 @@ var getPlotFormat = function() {
     var optionsMap = matsCollections.PlotParams.findOne({name:'plotFormat'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
-            //return _.invert(optionsMap)[buttons[i].value];
             return buttons[i].value;
         }
     }
@@ -74,7 +73,7 @@ var getBestFit = function() {
     var optionsMap = matsCollections.PlotParams.findOne({name:'bestFit'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
-            return _.invert(optionsMap)[buttons[i].value];
+            return buttons[i].value;
         }
     }
     return "";  // error condition actually - shouldn't ever happen
