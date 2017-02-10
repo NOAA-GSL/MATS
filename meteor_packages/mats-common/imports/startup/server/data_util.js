@@ -456,7 +456,10 @@ const get_err = function (sub_val_array, sub_secs_array) {
     var data_wg =[];
     var n_gaps =0;
     var loopTime =min_secs;
-
+    if (min_delta < 0) {
+        error = ("Invalid time interval - min_delta: " + min_delta);
+        dFuture['return']();
+    }
     while (loopTime < max_secs+1) {
         if(sub_secs_array.indexOf(loopTime)<0){
             data_wg.push(null);
@@ -464,7 +467,7 @@ const get_err = function (sub_val_array, sub_secs_array) {
         } else{
             var d_idx = sub_secs_array.indexOf(loopTime);
                 if (Math.abs(sub_val_array[d_idx] - d_mean) > sdlimit) {
-                 console.log("throwing away " + sub_val_array[d_idx] + " because it exceeds 3 standard deviations from the mean");
+                 //console.log("throwing away " + sub_val_array[d_idx] + " because it exceeds 3 standard deviations from the mean");
                  data_wg.push(null);
              } else {
                 data_wg.push(sub_val_array[d_idx]);
@@ -599,6 +602,10 @@ const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interv
             interval = time_interval !== undefined ? time_interval * 1000 : undefined;
             if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
                 xmin = Number(rows[0].avtime) * 1000;
+            }
+            if (interval < 0) {
+                error = ("Invalid time interval: " + interval);
+                dFuture['return']();
             }
             var loopTime = xmin;
             while (loopTime < xmax + 1) {

@@ -1,3 +1,4 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
 Template.checkboxGroup.helpers({
     checkedByDefault: function (def) {
         if (def == this) {
@@ -5,5 +6,8 @@ Template.checkboxGroup.helpers({
         } else {
            return "";
         }
+    },
+    labelValue: function (optionsMap) {
+        return optionsMap[this];
     }
 });

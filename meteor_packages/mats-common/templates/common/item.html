@@ -1,7 +1,8 @@
 <template name="item">
-    <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}}">
+    <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}};">
         <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}"> {{name}}</button>
-        <span style="display:inline-block;">&nbsp;</span><div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: 5;float:right;" >
+        <span style="display:inline-block;">&nbsp;</span>
+        <div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: 5;float:right;background-color: white;" >
             {{#if isSelect}}
                 {{> select this}}
             {{else}} {{#if isSpinner}}
@@ -11,12 +12,14 @@
             {{else}} {{#if isDateRange}}
                 {{> dateRange this}}
             {{else}} {{#if isCheckBoxGroup}}
-                {{name}}:
-                {{#each options}}
-                    {{> checkboxGroup this}}
-                {{/each}}
+                <div class="container" style="background-color:lightcyan;width:100%">
+                    {{name}}:
+                    {{#each options}}
+                        {{> checkboxGroup this}}
+                    {{/each}}
+                </div>
             {{else}} {{#if isRadioGroup}}
-                <div class="container">
+                <div class="container" style="background-color:lightcyan;width:100%">
                     {{name}}:
                     {{#each options}}
                         {{> radioGroup this}}

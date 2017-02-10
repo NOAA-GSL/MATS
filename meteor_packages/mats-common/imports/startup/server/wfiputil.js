@@ -335,10 +335,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     } else {
                         levels = [Number(levels[0])];
                     }
-                    values = [Number(values).toPrecision(4)];
+                    values = [Number(values)];
                 } else {
                     values = values.map(function (a) {
-                        return Number(a).toPrecision(4);
+                        return Number(a);
                     });
                 }
 

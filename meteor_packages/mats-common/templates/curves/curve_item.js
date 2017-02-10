@@ -128,7 +128,7 @@ Template.curveItem.events({
             currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
             matsParamUtils.setInputForParamName(plotParam.name, val);
         });
-
+        matsParamUtils.collapseParams();
         return false;
     },
     'hidePicker': function() {

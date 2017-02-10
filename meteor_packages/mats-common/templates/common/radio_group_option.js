@@ -1,12 +1,13 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
 Template.radioGroup.helpers({
-    isDefault: function (def) {
+    checkedByDefault: function (def) {
         if (def == this) {
             return "checked";
         } else {
             return "";
         }
     },
-    value: function(p) {
-        return p.optionsMap[this];
+    labelValue: function (optionsMap) {
+        return optionsMap[this];
     }
 });

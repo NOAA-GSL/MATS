@@ -1,6 +1,6 @@
 <template name="plotParamGroup">
-        <div id="plotParamGroup"  style="display:{{displayGroup}}">
-        <div class = "btn-toolbar btn-group" role="toolbar" style="color: blue">
+        <div class="container " id="plotParamGroup"  style="float:left;display:{{displayGroup}}">
+        <div style="display:inline-block;width:100%;">
             {{#each PlotParams this}}
                 {{> item}}
             {{/each}}
