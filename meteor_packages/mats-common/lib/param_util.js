@@ -266,19 +266,6 @@ const collapseParams = function() {
     });
 };
 
-const lowerParams = function() {
-    const params = matsCollections.CurveParams.find({}).fetch();
-    params.forEach(function(param) {
-        if (param.type !== matsTypes.InputTypes.selectMap) {
-            const selector = "element" + "-" + param.name;
-            if (document.getElementById(selector)) {
-                document.getElementById(selector).style.zIndex=5;
-            }
-        }
-    });
-};
-
-
 const typeSort = function (arr) {
     var i;
     var type = "numerical";

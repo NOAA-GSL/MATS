@@ -440,7 +440,6 @@ const get_err = function (sub_val_array, sub_secs_array) {
 
     for(i=0; i< sub_secs_array.length; i++){
         var secs = (sub_secs_array[i]);
-        //var delta = Math.abs(secs - last_secs);
         var delta = Math.abs(secs - last_secs);
         if(delta < min_delta) {
             min_delta = delta;
