@@ -2,32 +2,32 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <div id='main'  class="main container row">
+    <div id='main'  class=" main row">
         {{>topNav}}
         {{>administration}}
         {{>spinner}}
         {{>help}}
         {{>data}}
-        <div class="container pull-left">
+        <div class="container row pull-left col-lg-8">
             {{>error}}
-            <div class="container row pull-left" id="plotTypeContainer">
+            <div class=" row pull-left col-lg-8" id="plotTypeContainer">
                 {{>plotType}}
             </div>
             {{#if Template.subscriptionsReady}}
-                <div class="container-fluid row pull-left"  style="float:left;">
+                <div class="row pull-left col-lg-12">
                     {{>curveList}}
                 </div>
-                <div class="container row pull-left">
+                <div class=" row pull-left">
                     {{>error}}
                     {{>info}}
                 </div>
-                <div id="scatterView" class="container row pull-left">
+                <div id="scatterView" class=" row pull-left col-lg-10">
                     {{>scatter2d}}
                 </div>
-                <div id="paramView" class="container row pull-left">
+                <div id="paramView" class=" row pull-left col-lg-10">
                     {{>paramList}}
                 </div>
-                <div id="plotView" class="container row pull-left">
+                <div id="plotView" class=" row pull-left col-lg-10">
                     {{>plotList}}
                 </div>
             {{else}}

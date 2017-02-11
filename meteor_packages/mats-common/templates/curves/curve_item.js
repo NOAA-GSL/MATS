@@ -56,10 +56,19 @@ Template.curveItem.helpers({
     },
     DBcurve: function() {
         return (this.diffFrom === undefined);
+    },
+    editingThis: function() {
+        return (Session.get('editMode') === this.label);
     }
 });
 
 Template.curveItem.events({
+    'click .save-changes' : function() {
+        document.getElementById('cancel').click();
+    },
+    'click .cancel' : function() {
+        document.getElementById('save').click();
+    },
     'click .remove-curve': function (event) {
         var label = this.label;
         var color = this.color;

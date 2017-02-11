@@ -1,9 +1,7 @@
 <template name="plotParamGroup">
-        <div class="container " id="plotParamGroup"  style="float:left;display:{{displayGroup}}">
-        <div style="display:inline-block;width:100%;">
-            {{#each PlotParams this}}
-                {{> item}}
-            {{/each}}
-        </div>
+    <div id="plotParamGroup"  class="container" style="display:{{displayGroup}};">
+        {{#each PlotParams this}}
+            {{> item}}
+        {{/each}}
     </div>
 </template>

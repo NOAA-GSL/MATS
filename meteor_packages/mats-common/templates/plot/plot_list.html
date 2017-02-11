@@ -1,8 +1,7 @@
 <template name="plotList">
-    <div id="plotList" class=" row container pull-left" style="display:inline-block;">
-        <div class = "well well-sm pull-left container-fluid" style="display:inline-block;width:100%;">
+    <div id="plotList" class="well pull-left" style="width:60%;">
         <form id="plotForm">
-            <div class="container" style="display:inline-block;width:100%;">
+            <div style="display:inline-block;width:100%;">
                 {{#each PlotParamGroups}}
                     {{> plotParamGroup}}
                 {{/each}}
@@ -78,6 +77,5 @@
                 <button type="submit" name="restore" id="restore-settings" class="submit-params btn btn-success  btn-xs fa fa-cloud-download" style="display:none"></button>
             </div>
         </form>
-        </div>
     </div>
 </template>
