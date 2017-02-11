@@ -204,6 +204,7 @@ Template.graph.events({
         document.getElementById('curve-text-buttons-grp').style.display = 'block';
     },
     'click .print': function () {
+        alert ("Use the 'ESC' key to exit print preview mode");
         Session.set("printMode", true);
         document.getElementById('graph-control').style.display = 'none';
         document.getElementById('showAdministration').style.display = 'none';
