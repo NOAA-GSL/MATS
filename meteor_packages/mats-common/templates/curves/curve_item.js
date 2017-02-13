@@ -64,10 +64,10 @@ Template.curveItem.helpers({
 
 Template.curveItem.events({
     'click .save-changes' : function() {
-        document.getElementById('cancel').click();
+        document.getElementById('save').click();
     },
     'click .cancel' : function() {
-        document.getElementById('save').click();
+        document.getElementById('cancel').click();
     },
     'click .remove-curve': function (event) {
         var label = this.label;
