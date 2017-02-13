@@ -538,6 +538,7 @@ Meteor.startup(function () {
     doPlotParams();
     doCurveTextPatterns();
     console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
+    console.log ("process.env", JSON.stringify(process.env,null,2));
 });
 
 
