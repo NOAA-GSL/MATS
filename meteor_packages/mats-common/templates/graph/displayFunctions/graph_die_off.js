@@ -60,7 +60,7 @@ graphDieOff = function(result) {
             var id = event.target.id;
             var label = id.replace('-curve-errorbars','');
             for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label == label) {
+                if (dataset[c].label && (dataset[c].label) == label) {
                     // save the errorbars
                     if (errorbars === undefined) {
                         errorbars = [];
@@ -98,7 +98,7 @@ graphDieOff = function(result) {
                 //     errorbars[c] = dataset[c].points.errorbars;
                 //     Session.set('errorbars', errorbars);
                 // }
-                if (dataset[c].label == label) {
+                if (dataset[c].label && (dataset[c].label) == label) {
                     if (dataset[c].lines.show == dataset[c].points.show) {
                         dataset[c].points.show = !dataset[c].points.show;
                     }
@@ -126,7 +126,7 @@ graphDieOff = function(result) {
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-points','');
         for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label == label) {
+            if (dataset[c].label && (dataset[c].label) == label) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');

@@ -76,7 +76,7 @@ graph2dScatter = function(result) {
             var label = curveLabel +'-best fit';
             for (var c = 0; c < dataset.length; c++) {
                 // find the bestfit line - if it exists
-                if (dataset[c].label.search(label) > -1) {
+                if (dataset[c].label && (dataset[c].label).search(label) > -1) {
                     dataset[c].lines.show = !dataset[c].lines.show;
                     if (dataset[c].lines.show == true) {
                         Session.set(curveLabel + "hideButtonText", 'hide curve');
@@ -97,7 +97,7 @@ graph2dScatter = function(result) {
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-points','');
         for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label == label) {
+            if (dataset[c].label && (dataset[c].label) == label) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
