@@ -57,10 +57,11 @@ graphProfile = function(result) {
         // add errorbar buttons
         $( "input[id$='-curve-errorbars']" ).click(function (event) {
             event.preventDefault();
-            var id = event.target.id;
-            var label = id.replace('-curve-errorbars','');
+            const id = event.target.id;
+            const label = id.replace('-curve-errorbars','');
+            const color = event.target.style.backgroundColor;
             for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label == label) {
+                if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
                     // save the errorbars
                     if (errorbars === undefined) {
                         errorbars = [];
@@ -98,7 +99,7 @@ graphProfile = function(result) {
                 //     errorbars[c] = dataset[c].points.errorbars;
                 //     Session.set('errorbars', errorbars);
                 // }
-                if (dataset[c].label == label) {
+                if (dataset[c].label && (dataset[c].label).indexOf(label >= 0)) {
                     if (dataset[c].lines.show == dataset[c].points.show) {
                         dataset[c].points.show = !dataset[c].points.show;
                     }
@@ -123,10 +124,11 @@ graphProfile = function(result) {
     // add show/hide points buttons
     $( "input[id$='-curve-show-hide-points']" ).click(function (event) {
         event.preventDefault();
-        var id = event.target.id;
-        var label = id.replace('-curve-show-hide-points','');
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-points','');
+        const color = event.target.style.backgroundColor;
         for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label == label) {
+            if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
