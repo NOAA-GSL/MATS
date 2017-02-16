@@ -75,10 +75,11 @@ graphSeries = function(result) {
         // add show/hide buttons
         $( "input[id$='-curve-show-hide']" ).click(function (event) {
             event.preventDefault();
-            var id = event.target.id;
-            var label = id.replace('-curve-show-hide','');
+            const id = event.target.id;
+            const label = id.replace('-curve-show-hide','');
+            const color = event.target.style.backgroundColor;
             for (var c = 0; c < dataset.length; c++) {
-                if (dataset[c].label && (dataset[c].label).indexOf(label) >= 0 ) {
+                if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
                     if (dataset[c].lines.show == dataset[c].points.show) {
                         dataset[c].points.show = !dataset[c].points.show;
                     }
@@ -102,10 +103,11 @@ graphSeries = function(result) {
     // add show/hide points buttons
     $( "input[id$='-curve-show-hide-points']" ).click(function (event) {
         event.preventDefault();
-        var id = event.target.id;
-        var label = id.replace('-curve-show-hide-points','');
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-points','');
+        const color = event.target.style.backgroundColor;
         for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label && (dataset[c].label).indexOf(label) >= 0) {
+            if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
