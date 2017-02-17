@@ -273,7 +273,7 @@ var doCurveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 min: '1',
                 max: '1000',
-                step: '10',
+                step: 'any',
                 controlButtonCovered: true,
                 unique: false,
                 default: '1',
@@ -291,7 +291,7 @@ var doCurveParams = function () {
                 options:Object.keys(optionsMap),   // convenience
                 min: '100',
                 max: '1050',
-                step: '10',
+                step: 'any',
                 controlButtonCovered: true,
                 unique: false,
                 default: '1050',

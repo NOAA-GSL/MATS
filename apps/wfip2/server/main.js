@@ -993,13 +993,16 @@ Meteor.startup(function () {
                     var description = rows[0][i].description;
                     var is_instrument = modelOptionsMap[description][0].split(',')[1];
                     var forecastLengths = [];
-                    forecastLengths.push.apply(forecastLengths, rows[0][i].fcst_lens.split(',').sort());
+                    forecastLengths.push.apply(forecastLengths,rows[0][i].fcst_lens.split(',').sort(function(a,b){return Number(a) > Number(b);}));
                     forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
                     if (is_instrument == 1) {
                         forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
                     } else {
                         forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description], forecastLengths);
+                        forecastLengthOptionsMap[description].push('forecasts single cycle');
+                        forecastLengthOptionsMap[description].push('forecasts multi cycle');
                     }
+
                     statement = "select has_discriminator('" + description.toString() + "') as hd";
                     //console.log("statement: " + statement);
                     var dFuture = new Future();
