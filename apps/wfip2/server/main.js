@@ -999,8 +999,8 @@ Meteor.startup(function () {
                         forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
                     } else {
                         forecastLengthOptionsMap[description].push.apply(forecastLengthOptionsMap[description], forecastLengths);
-                        forecastLengthOptionsMap[description].push('forecasts single cycle');
-                        forecastLengthOptionsMap[description].push('forecasts multi cycle');
+                        //forecastLengthOptionsMap[description].push('forecasts single cycle');
+                        //forecastLengthOptionsMap[description].push('forecasts multi cycle');
                     }
 
                     statement = "select has_discriminator('" + description.toString() + "') as hd";
