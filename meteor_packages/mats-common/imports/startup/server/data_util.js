@@ -1,3 +1,7 @@
+
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
 const Future = require('fibers/future');
 
 const getDateRange = function (dateRange) {
@@ -937,6 +941,118 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
     return options;
 };
 
+const simplePoolQueryWrapSynchronous = function(pool,statement) {
+    /*
+     simple synchronous query of statement to the specified pool.
+     params :
+     pool - a predefined db pool (usually defined in main.js). i.e. wfip2Pool = mysql.createPool(wfip2Settings);
+     statement - String - a valid sql statement
+     actions - queries database and will wait until query returns.
+     return: rowset - an array of rows
+     throws: error
+     */
+    const queryWrap = Future.wrap(function(pool,statement,callback) {
+        pool.query(statement,function (err, rows) {
+            return callback(err, rows);
+        });
+    });
+    return queryWrap(pool,statement).wait();
+};
+
+const doColorScheme = function () {
+    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.ColorScheme.remove({});
+    }
+    if (matsCollections.ColorScheme.find().count() == 0) {
+        matsCollections.ColorScheme.insert({
+            colors: [
+                "rgb(255,102,102)",
+                "rgb(102,102,255)",
+                "rgb(255,153,102)",
+                "rgb(153,153,153)",
+                "rgb(210,130,130)",
+
+                "rgb(245,92,92)",
+                "rgb(92,92,245)",
+                "rgb(245,143,92)",
+                "rgb(143,143,143)",
+                "rgb(200,120,120)",
+
+                "rgb(235,92,92)",
+                "rgb(82,92,245)",
+                "rgb(235,143,92)",
+                "rgb(133,143,143)",
+                "rgb(190,120,120)",
+
+                "rgb(225,82,92)",
+                "rgb(72,82,245)",
+                "rgb(225,133,92)",
+                "rgb(123,133,143)",
+                "rgb(180,120,120)"
+            ]
+        });
+    }
+};
+
+const doSettings = function (title, version) {
+     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+         matsCollections.Settings.remove({});
+     }
+     if (matsCollections.Settings.find().count() == 0) {
+         matsCollections.Settings.insert({
+             LabelPrefix: "Curve",
+             Title: title,
+             LineWidth: 3.5,
+             NullFillString: "---",
+             resetFromCode: true
+         });
+     }
+     // always do the version...
+     var settings = matsCollections.Settings.findOne();
+     var settingsId = settings._id;
+     //settings['version'] = Assets.getText('version');
+     settings['version'] = version;
+     matsCollections.Settings.update(settingsId, {$set: settings});
+};
+
+const doCredentials = function () {
+// the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
+    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.Credentials.remove({});
+    }
+    if (matsCollections.Credentials.find().count() == 0) {
+        matsCollections.Credentials.insert({
+            name: "oauth_google",
+            clientId: "499180266722-aai2tddo8s9edv4km1pst88vebpf9hec.apps.googleusercontent.com",
+            clientSecret: "xdU0sc7SbdOOEzSyID_PTIRE",
+            refresh_token: "1/3bhWyvCMMfwwDdd4F3ftlJs3-vksgg7G8POtiOBwYnhIgOrJDtdun6zK6XiATCKT"
+        });
+    }
+};
+
+const doAuthorization = function () {
+    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.Authorization.remove({});
+    }
+    if (matsCollections.Authorization.find().count() == 0) {
+        matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
+    }
+};
+
+const doRoles = function () {
+    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.Roles.remove({});
+    }
+    if (matsCollections.Roles.find().count() == 0) {
+        matsCollections.Roles.insert({name: "administrator", description: "administrator privileges"});
+    }
+};
+
+
 export default matsDataUtils = {
     getDateRange: getDateRange,
     sortFunction: sortFunction,
@@ -953,5 +1069,11 @@ export default matsDataUtils = {
     queryProfileDB:queryProfileDB,
     get_err:get_err,
     generateProfileCurveOptions:generateProfileCurveOptions,
-    generateProfilePlotOptions:generateProfilePlotOptions
+    generateProfilePlotOptions:generateProfilePlotOptions,
+    simplePoolQueryWrapSynchronous:simplePoolQueryWrapSynchronous,
+    doColorScheme:doColorScheme,
+    doSettings:doSettings,
+    doCredentials:doCredentials,
+    doAuthorization:doAuthorization,
+    doRoles:doRoles
 }

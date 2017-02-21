@@ -105,6 +105,9 @@ data2dScatter = function (plotParams, plotFunction) {
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];
+            if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
+                throw (new Error("INFO: cannot use this forecast length here: " + forecastLength));
+            }
             forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
             // verificationRunInterval is in milliseconds
             var statement = "";

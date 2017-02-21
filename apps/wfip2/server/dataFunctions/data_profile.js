@@ -4,7 +4,6 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
-const Future = require('fibers/future');
 
 
 dataProfile = function (plotParams, plotFunction) {
@@ -91,6 +90,9 @@ dataProfile = function (plotParams, plotFunction) {
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
+        if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
+            throw (new Error("INFO: You cannot use this forecast length here: " + forecastLength));
+        }
         forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = matsDataUtils.dateConvert(curveDates.split(' - ')[0]); // get the from part

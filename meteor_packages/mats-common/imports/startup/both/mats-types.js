@@ -14,7 +14,9 @@ var  InputTypes = {
     element: 'element',
     selectMap: 'selectMap',
     custom: 'custom',
-    unused:"unused"
+    unused:"unused",
+    forecastSingleCycle: 'forecasts single cycle',
+    forecastMultiCycle: 'forecasts multi cycle'
     };
 
 var  PlotTypes = {
