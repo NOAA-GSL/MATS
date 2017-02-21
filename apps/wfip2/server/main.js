@@ -647,9 +647,8 @@ Meteor.startup(function () {
     wfip2Pool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-
+    var rows;
     try {
-        var rows;
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "call get_data_sources();");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows[0].length; i++) {
