@@ -966,17 +966,17 @@ const doColorScheme = function () {
     if (matsCollections.ColorScheme.find().count() == 0) {
         matsCollections.ColorScheme.insert({
             colors: [
-                "rgb(255,102,102)",
-                "rgb(102,102,255)",
-                "rgb(255,153,102)",
-                "rgb(153,153,153)",
-                "rgb(210,130,130)",
+                "Red",
+                "Blue",
+                "Grey",
+                "Orange",
+                "Violet",
 
-                "rgb(245,92,92)",
-                "rgb(92,92,245)",
-                "rgb(245,143,92)",
-                "rgb(143,143,143)",
-                "rgb(200,120,120)",
+                "DarkRed",
+                "DarkBlue",
+                "DarkGrey",
+                "DarkOrange",
+                "DarkViolet",
 
                 "rgb(235,92,92)",
                 "rgb(82,92,245)",

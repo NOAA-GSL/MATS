@@ -16,11 +16,11 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var yAxisBoundaries = {};
+    //var yAxisBoundaries = {};
     /* axis boundaries is an object keyed by variable.
      Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
      each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
-     the yaxisoptions can derive the ymax and ymin from this object.
+     the yaxisoptions can derive the ymax and ymin from this object, as well as the actual axis that a curve is using (yaxis in options)
      */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
@@ -555,7 +555,7 @@ dataSeries = function (plotParams, plotFunction) {
         var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         //var mean = queryResult.mean;
         options = {
-            yaxis: curveIndex + 1,  // the y axis position to the right of the graph
+            yaxis: curveIndex + 1,  // the y axis position to the right of the graph (placeholder)
             label: label,
             color: color,
             data: normalizedData,
@@ -707,26 +707,33 @@ dataSeries = function (plotParams, plotFunction) {
     var yaxes = [];
     var yaxis = [];
     var yLabels = {};
+    var minMin = Math.min.apply(null, yAxisMins);
+    var maxMax = Math.max.apply(null, yAxisMaxes);
+    var yAxisPad = (maxMax - minMin) * .05;
+    var ymin = minMin - yAxisPad;
+    var ymax = maxMax + yAxisPad;
     for (dsi = 0; dsi < dataset.length; dsi++) {
-
         var position = dsi === 0 ? "left" : "right";
         var vStr = curves[dsi].variable;
-        if (yAxisBoundaries[vStr] === undefined) {
-            yAxisBoundaries[vStr] = {
-                min: Number.MAX_VALUE,
-                max: Number.MIN_VALUE
-            }
-        }
-        yAxisBoundaries[vStr] = {
-            min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
-            max: yAxisBoundaries[vStr].max > yAxisMaxes[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
-        };
-        var yAxisPad = (yAxisBoundaries[vStr].max - yAxisBoundaries[vStr].min) * .05;
+        // if (yAxisBoundaries[vStr] === undefined) {
+        //     yAxisBoundaries[vStr] = {
+        //         min: Number.MAX_VALUE,
+        //         max: Number.MIN_VALUE
+        //     }
+        // }
+        // yAxisBoundaries[vStr] = {
+        //     // min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
+        //     // max: yAxisBoundaries[vStr].max > yAxisMins[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
+        //     min: minMin,
+        //     max: maxMax
+        // };
+        var yaxesOptions;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
                 label: curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'],
                 curveNumber: dsi
             };
+
             yaxesOptions = {
                 position: position,
                 color: 'grey',
@@ -737,8 +744,8 @@ dataSeries = function (plotParams, plotFunction) {
                 axisLabelFontFamily: 'Verdana, Arial',
                 axisLabelPadding: 3,
                 alignTicksWithAxis: 1,
-                min: yAxisBoundaries[vStr].min - yAxisPad,
-                max: yAxisBoundaries[vStr].max + yAxisPad
+                min: ymin,
+                max: ymax
             };
         } else {
             yLabels[vStr].label = curves[dsi]['label'] + " | " + yLabels[vStr].label;
@@ -746,13 +753,15 @@ dataSeries = function (plotParams, plotFunction) {
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
             yaxes[curveNum].axisLabel = yLabels[vStr].label;
-            var yaxesOptions = {
+             yaxesOptions = {
                 show: false,
-                min: yAxisBoundaries[vStr].min - yAxisPad,
-                max: yAxisBoundaries[vStr].max + yAxisPad,
+                min: ymin,
+                max: ymax,
                 grid: {show: false}
             };
         }
+        // set the y axis for the curve (they are shared depending on variable)
+        dataset[dsi]['yaxis'] = yLabels[vStr].curveNumber + 1;
         var yaxisOptions = {
             zoomRange: [0.1, 10]
         };

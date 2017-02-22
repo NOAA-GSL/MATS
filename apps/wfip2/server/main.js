@@ -704,6 +704,7 @@ Meteor.startup(function () {
 
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
+        matsCollections.Instruments.remove({});
         for (var i = 0; i < rows.length; i++) {
             var instrid = rows[i].instrid;
             var instrument = rows[i].description;
@@ -800,7 +801,7 @@ Meteor.startup(function () {
             }
         }
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
     try {
@@ -816,7 +817,7 @@ Meteor.startup(function () {
             lowerOptionsMap[label] = {min: min_value, max: max_value, step: step, default: min_value};
         }
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
     try {
@@ -848,7 +849,7 @@ Meteor.startup(function () {
                 forecastLengthOptionsMap[description].push(matsTypes.InputTypes.forecastMultiCycle);
             }
             statement = "select has_discriminator('" + description.toString() + "') as hd";
-            var model_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, statement)[0]['hd'];
+            var model_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + description.toString() + "') as hd;")[0]['hd'];
             if (model_has_discriminator == 1) {
                 var discriminators = Object.keys(discriminatorOptionsMap);
                 var labels = [];
@@ -869,7 +870,7 @@ Meteor.startup(function () {
             }
         }
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
 
     try {
