@@ -91,7 +91,7 @@ dataProfile = function (plotParams, plotFunction) {
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
         if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
-            throw (new Error("INFO: You cannot use this forecast length here: " + forecastLength));
+            throw (new Error("INFO: You cannot use this forecast length for a profile: " + forecastLength));
         }
         forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var curveDates = curve['curve-dates'];
@@ -317,6 +317,7 @@ dataProfile = function (plotParams, plotFunction) {
             var statNum;
             var values;
             var vIndex;
+            const windVar = myVariable.startsWith('wd');
             switch (statistic) {
                 case "bias":
                 case "mae":
@@ -329,10 +330,16 @@ dataProfile = function (plotParams, plotFunction) {
                             values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
                             for (vIndex = 0; vIndex < values.length; vIndex++) {
+                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
+                                if (windVar) {
+                                    if (statValue > 180) {
+                                        statValue = statValue - 360;
+                                    } else if (statValue < -180) {
+                                        statValue = statValue + 360;
+                                    }
+                                }
                                 if (statistic == "mae") {
                                     statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                                } else {
-                                    statValue = values[vIndex] - truthValues[vIndex];
                                 }
                                 statSum += statValue;
                                 statNum++;
@@ -355,8 +362,15 @@ dataProfile = function (plotParams, plotFunction) {
                             values = verificationLevelValues[qualifiedLevels[l]];
                             truthValues = truthLevelValues[qualifiedLevels[l]];
                             for (vIndex = 0; vIndex < values.length; vIndex++) {
-                                statValue = values[vIndex] - truthValues[vIndex];
-                                statValue = Math.pow((values[vIndex] - truthValues[vIndex]), 2);  // square the difference
+                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
+                                if (windVar) {
+                                    if (statValue > 180) {
+                                        statValue = statValue - 360;
+                                    } else if (statValue < -180) {
+                                        statValue = statValue + 360;
+                                    }
+                                }
+                                statValue = Math.pow(statValue, 2);  // square the difference
                                 statSum += statValue;
                                 statNum++;
                             }
