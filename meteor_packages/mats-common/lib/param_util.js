@@ -267,23 +267,27 @@ const collapseParams = function() {
 };
 
 const typeSort = function (arr) {
-    var i;
-    var type = "numerical";
-    if (arr === undefined) {
-        return arr;
-    }
-    for (i=0;i<arr.length;i++) {
-        if (isNaN(Number(arr[i]))) {
-            type = "canonical";
-            break;
+    return arr.sort(function(a,b) {
+        if (isNaN(Number(a) && isNaN(Number(b)))) { // string compare
+            const A = a.toLowerCase();
+            const B = b.toLowerCase();
+            if (A < B){
+                return -1;
+            }else if (A > B){
+                return  1;
+            }else{
+                return 0;
+            }
+        } else if (isNaN(Number(a) || isNaN(Number(b)))) {   // number always precedes
+            if (isNaN(Number(a))) {
+                return 1;
+            } else {
+                return -1
+            }
+        } else {
+            return a - b;  // numerical compare
         }
-    }
-    if (type === "numerical") {
-        arr.sort(function(a,b){return a - b;});
-    } else {
-        arr.sort();
-    }
-    return arr;
+    });
 };
 
 const setDefaultForParamName = function(paramName) {

@@ -310,6 +310,7 @@ Template.plotList.events({
                 $("#restoreModal").modal('hide');
                 Session.set("spinner_img", "spinner.gif");
                 document.getElementById("spinner").style.display="none";
+                matsParamUtils.collapseParams();
                 return false;
                 break;
             case "plot":

@@ -9,8 +9,8 @@ var startInit = function () {
     var day = thenDate.getDate();
     var month = thenDate.getMonth() + 1;
     var hour = thenDate.getHours();
-    var minute = thenDate.getMinutes();
-    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
+    var minute = (((thenDate.getMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
+    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
 };
 var stopInit = function () {
     var today = new Date();
@@ -18,8 +18,8 @@ var stopInit = function () {
     var day = today.getDate();
     var month = today.getMonth() + 1;
     var hour = today.getHours();
-    var minute = today.getMinutes();
-    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
+    var minute = (((today.getMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
+    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
 };
 
 Template.dateRange.onRendered(function () {

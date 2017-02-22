@@ -130,25 +130,38 @@ dataProfile = function(plotParams, plotFunction) {
     // match the data by subseconds
     // build an array of sub_second arrays
     // data is [stat,avVal,[sub_values],[sub_secs]]
+    // be sure to match the pressure levels as well
+    var matchingLevels = [];
     if (matching) {
         var subSecs = new Set();
+        var levelGroups = [];
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            levelGroups[curveIndex] = [];
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every pressure level
                 var sub_secs = data[di][4];
+                levelGroups[curveIndex].push(data[di][1]);
                 for (var sec of sub_secs) {
                         subSecs.add(sec);
                 }
             }
         }
+        matchingLevels = _.intersection.apply(_, levelGroups);
         var subSecIntersection = Array.from(subSecs);
     }
 
     // calculate stats for each dataset matching to subsec_intersection if matching is specified
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         data = dataset[curveIndex].data;
+        const dataLength = data.length;
         const label = dataset[curveIndex].label;
-        for (di = 0; di < data.length; di++) { // every pressure level
+        //for (di = 0; di < dataLength; di++) { // every pressure level
+        di = 0;
+        while (di < data.length) {
+            if (matching && matchingLevels.indexOf(data[di][1]) === -1) {
+                dataset[curveIndex].data.splice(di,1);
+                continue;   // not a matching level - skip it
+            }
             sub_secs = data[di][4];
             var subValues = data[di][3];
             var errorResult = {};
@@ -190,6 +203,7 @@ dataProfile = function(plotParams, plotFunction) {
                 "<br>  lag1: " + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
                 "<br>  stde: " + errorResult.stde_betsy  +
                 "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+            di++;
         }
         var values = [];
         var levels = [];

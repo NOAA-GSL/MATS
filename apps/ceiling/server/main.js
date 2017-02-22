@@ -1,9 +1,9 @@
-import { Meteor } from 'meteor/meteor';
-import { mysql } from 'meteor/pcel:mysql';
-//import { Future } from 'fibers/future';  // this is broken somehow in meteor 1.4.1 - shouldn't be - might be fixed in later release
-const Future = Npm.require('fibers/future');
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsCollections } from 'meteor/randyp:mats-common';
+import {Meteor} from 'meteor/meteor';
+import {mysql} from 'meteor/pcel:mysql';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap ={};
 var regionOptionsMap ={};
@@ -27,7 +27,7 @@ minute = dateOneMonthPrior.getMinutes();
 var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
 var dstr = dstrOneMonthPrior + " - " + dstrToday;
 
-var doPlotParams = function () {
+const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -67,7 +67,7 @@ var doPlotParams = function () {
     }
 };
 
-var doCurveParams = function () {
+const doCurveParams = function () {
     if (process.env.NODE_ENV === "development" ||matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
@@ -231,17 +231,11 @@ var doCurveParams = function () {
                 displayGroup: 3
             });
 
-
-
-        // optionsMap = {'All':[""],0:[' and floor((m0.time)%(24*3600)/3600) in (0)'],6:[6],12:[12],18:[18]};
-        //  optionsMap = {'All':[""],0:[0],6:[6],12:[12],18:[18]};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                //  optionsMap:optionsMap,
-                //   options:Object.keys(optionsMap),   // convenience
-                options:['All',0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+                options: ['All', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: 'All',
                 controlButtonCovered: true,
                 unique: false,
@@ -264,7 +258,7 @@ var doCurveParams = function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and graph.js.
  */
-var doCurveTextPatterns = function () {
+const doCurveTextPatterns = function () {
     if (process.env.NODE_ENV === "development" ||matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveTextPatterns.remove({});
     }
@@ -299,7 +293,7 @@ var doCurveTextPatterns = function () {
     }
 };
 
-var doSavedCurveParams = function () {
+const doSavedCurveParams = function () {
     if (process.env.NODE_ENV === "development" ||matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.SavedCurveParams.remove({});
     }
@@ -308,65 +302,7 @@ var doSavedCurveParams = function () {
     }
 };
 
-var doSettings = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Settings.remove({});
-    }
-    if (matsCollections.Settings.find().count() == 0) {
-        matsCollections.Settings.insert({
-            LabelPrefix: "C-",
-            Title: "Ceiling",
-            LineWidth: 3.5,
-            NullFillString: "---",
-            resetFromCode: true
-        });
-    }
-    // always do the version...
-    var settings = matsCollections.Settings.findOne();
-    var settingsId = settings._id;
-    settings.version = Assets.getText('version');
-    matsCollections.Settings.update(settingsId,{$set:settings});
-};
-
-
-
-
-var doColorScheme = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.ColorScheme.remove({});
-    }
-    if (matsCollections.ColorScheme.find().count() == 0) {
-        matsCollections.ColorScheme.insert({
-            colors: [
-                "rgb(255,102,102)",
-                "rgb(102,102,255)",
-                "rgb(255,153,102)",
-                "rgb(153,153,153)",
-                "rgb(210,130,130)",
-
-                "rgb(245,92,92)",
-                "rgb(92,92,245)",
-                "rgb(245,143,92)",
-                "rgb(143,143,143)",
-                "rgb(200,120,120)",
-
-                "rgb(235,92,92)",
-                "rgb(82,92,245)",
-                "rgb(235,143,92)",
-                "rgb(133,143,143)",
-                "rgb(190,120,120)",
-
-                "rgb(225,82,92)",
-                "rgb(72,82,245)",
-                "rgb(225,133,92)",
-                "rgb(123,133,143)",
-                "rgb(180,120,120)"
-            ]
-        });
-    }
-};
-
-var doPlotGraph = function () {
+const doPlotGraph = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotGraphFunctions.remove({});
     }
@@ -380,42 +316,6 @@ var doPlotGraph = function () {
     }
 };
 
-var doCredentials = function () {
-// the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Credentials.remove({});
-    }
-    if (matsCollections.Credentials.find().count() == 0) {
-        matsCollections.Credentials.insert({
-            name: "oauth_google",
-            clientId: "499180266722-aai2tddo8s9edv4km1pst88vebpf9hec.apps.googleusercontent.com",
-            clientSecret: "xdU0sc7SbdOOEzSyID_PTIRE",
-            refresh_token: "1/3bhWyvCMMfwwDdd4F3ftlJs3-vksgg7G8POtiOBwYnhIgOrJDtdun6zK6XiATCKT"
-        });
-    }
-};
-
-var doAuthorization = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Authorization.remove({});
-    }
-    if (matsCollections.Authorization.find().count() == 0) {
-        matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
-    }
-};
-
-var doRoles = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Roles.remove({});
-    }
-    if (matsCollections.Roles.find().count() == 0) {
-        matsCollections.Roles.insert({name: "administrator", description: "administrator privileges"});
-    }
-};
 
 Meteor.startup(function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -446,9 +346,6 @@ Meteor.startup(function () {
         });
     }
     var modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var statement;
-    var qFuture;
-
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
     modelPool.on('connection', function (connection) {
@@ -461,105 +358,102 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
+    var rows;
     try {
         //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
         var statement = "select model,model_value,regions_name from regions_per_model";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings + "! query:" + statement);
-            } else {
-
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model.trim();
-                    var regions_name = rows[i].regions_name;
-                    var model_value = rows[i].model_value.trim();
-                    var valueList = [];
-                    valueList.push(model_value);
-                    modelOptionsMap[model] = valueList;
-                    var regionsArr = regions_name.split(',');
-                    regionModelOptionsMap[model] = regionsArr;
-
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
+        // var qFuture = new Future();
+        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+        //     if (err != undefined) {
+        //         console.log(err.message);
+        //     }
+        //     if (rows === undefined || rows.length === 0) {
+        //         console.log('No data in database ' + modelSettings + "! query:" + statement);
+        //     } else {
+        //
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select model,model_value,regions_name from regions_per_model;");
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model.trim();
+            var regions_name = rows[i].regions_name;
+            var model_value = rows[i].model_value.trim();
+            var valueList = [];
+            valueList.push(model_value);
+            modelOptionsMap[model] = valueList;
+            var regionsArr = regions_name.split(',');
+            regionModelOptionsMap[model] = regionsArr;
+        }
+        //     }
+        //     qFuture['return']();
+        // }));
+        // qFuture.wait();
     } catch (err) {
         console.log(err.message);
     }
 
-
-
     try {
-        statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
-        qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                //console.log('No data in database ' + uamatsCollections.Settings.database + "! query:" + statement);
-                console.log('No data in database ' + modelSettings + "! query:" + statement);
-            } else {
-
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model;
-                    var forecastLengths = rows[i].fcst_lens;
-                    var forecastLengthArr = forecastLengths.split(',');
-                    forecastLengthOptionsMap[model] = forecastLengthArr;
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
+        // statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
+        // qFuture = new Future();
+        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+        //     if (err != undefined) {
+        //         console.log(err.message);
+        //     }
+        //     if (rows === undefined || rows.length === 0) {
+        //         //console.log('No data in database ' + uamatsCollections.Settings.database + "! query:" + statement);
+        //         console.log('No data in database ' + modelSettings + "! query:" + statement);
+        //     } else {
+        //
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"SELECT model, fcst_lens FROM fcst_lens_per_model;");
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model;
+            var forecastLengths = rows[i].fcst_lens;
+            var forecastLengthArr = forecastLengths.split(',');
+            forecastLengthOptionsMap[model] = forecastLengthArr;
+        }
+        //     }
+        //     qFuture['return']();
+        // }));
+        // qFuture.wait();
     } catch (err) {
         console.log(err.message);
     }
 
-
-
     try {
-        statement = "select id,description,short_name from region_descriptions;";
-        qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                matsCollections.RegionDescriptions.remove({});
-                for  (var i = 0; i < rows.length; i++) {
-                    var regionNumber = rows[i].id;
-                    var description = rows[i].description;
-                    var shortName = rows[i].short_name;
-
-                    var valueList = [];
-                    valueList.push(shortName);
-
-
-                    regionOptionsMap[description] = valueList;
-
-                    matsCollections.RegionDescriptions.insert({ regionNumber: regionNumber,shortName: shortName, description: description});
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
+        // statement = "select id,description,short_name from region_descriptions;";
+        // qFuture = new Future();
+        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
+        //     if (err != undefined) {
+        //         console.log(err.message);
+        //     }
+        //     if (rows === undefined || rows.length === 0) {
+        //         console.log('No data in database ' + modelSettings.database + "! query:" + statement);
+        //     } else {
+        matsCollections.RegionDescriptions.remove({});
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select id,description,short_name from region_descriptions;");
+        for  (var i = 0; i < rows.length; i++) {
+            var regionNumber = rows[i].id;
+            var description = rows[i].description;
+            var shortName = rows[i].short_name;
+            var valueList = [];
+            valueList.push(shortName);
+            regionOptionsMap[description] = valueList;
+            matsCollections.RegionDescriptions.insert({ regionNumber: regionNumber,shortName: shortName, description: description});
+        }
+        //     }
+        //     qFuture['return']();
+        // }));
+        // qFuture.wait();
     } catch (err) {
-        Console.log(err.message);
+        console.log(err.message);
     }
-    
-    doRoles();
-    doAuthorization();
-    doCredentials();
+    // common settings
+    matsDataUtils.doRoles();
+    matsDataUtils.doAuthorization();
+    matsDataUtils.doCredentials();
+    matsDataUtils.doColorScheme();
+    matsDataUtils.doSettings('Ceiling', Assets.getText('version'));
+    // app specific settings    doRoles();
+
     doPlotGraph();
-    doColorScheme();
-    doSettings();
     doCurveParams();
     doSavedCurveParams();
     doPlotParams();
