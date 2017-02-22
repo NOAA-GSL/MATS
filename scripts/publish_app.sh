@@ -38,8 +38,8 @@ the node part of phusion passenger.
 xxxxxENDxxxx
 exit 0
 fi
-rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/.meteor  ${server}:/web
-rsync -ral --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:/web
+rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/.meteor  ${server}:/web
+rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:/web
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
 npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
 servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`

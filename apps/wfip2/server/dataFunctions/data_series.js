@@ -119,7 +119,7 @@ dataSeries = function (plotParams, plotFunction) {
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
                 var utcOffsets = forecastLengths.map(function (item) {
-                    return (parseInt(item, 10) * 3600);
+                    return (parseFloat(item) * 3600);
                 });
                 // get the first valid cycle_utc for the time/date range specified
                 const validFirstCycleUtc = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool,
@@ -171,6 +171,15 @@ dataSeries = function (plotParams, plotFunction) {
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                // if (error.indexOf('0 data records found') !== -1) {
+                //     dataset.push({
+                //         annotation: "No Data Found",
+                //         color: 'red',
+                //         points: {show: true},
+                //         data: [[xAxisMin, 0, "zero"], [xAxisMax, 0, "zero"]]
+                //     });
+                //     continue;
+                // }
                 throw (new Error(error));
             }
             var truthQueryResult = queryResult;
@@ -381,6 +390,9 @@ dataSeries = function (plotParams, plotFunction) {
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
                             // here we make the various calculations
+                            // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
+                            // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
+                            const windVar = myVariable.startsWith('wd');
                             for (var li = 0; li < sLevels.length; li++) {
                                 var siteLevelValue = sValues[li];
                                 var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
@@ -392,10 +404,20 @@ dataSeries = function (plotParams, plotFunction) {
                                         // find siteLevelBias and sum it in
                                         biasValue = null;
                                         try {
-                                            if (statistic == "mae") {
-                                                biasValue = Math.abs(siteLevelValue - truthSiteLevelValue);
+                                            biasValue = siteLevelValue - truthSiteLevelValue;
+                                            if (windVar) {
+                                                if (biasValue > 180) {
+                                                    biasValue = biasValue - 360;
+                                                } else if (biasValue < -180) {
+                                                    biasValue = biasValue + 360;
+                                                }
+                                                if (statistic == "mae") {
+                                                    biasValue = Math.abs(biasValue);
+                                                }
                                             } else {
-                                                biasValue = siteLevelValue - truthSiteLevelValue;
+                                                if (statistic == "mae") {
+                                                    biasValue = Math.abs(biasValue);
+                                                }
                                             }
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
@@ -407,7 +429,14 @@ dataSeries = function (plotParams, plotFunction) {
                                     case "rmse":
                                         biasValue = null;
                                         try {
-                                            biasValue = siteLevelValue - truthSiteLevelValue;
+                                            biasValue = Number(siteLevelValue - truthSiteLevelValue);
+                                            if (windVar) {
+                                                if (biasValue > 180) {
+                                                    biasValue = biasValue - 360;
+                                                } else if (biasValue < -180) {
+                                                    biasValue = biasValue + 360;
+                                                }
+                                            }
                                             biasValue = Math.pow(biasValue, 2);  // square the difference
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
