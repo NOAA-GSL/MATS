@@ -371,6 +371,8 @@ const getDataForSeriesDiffCurve = function(params) {
     var subtrahendIndex = 0;
     var minuendIndex = 0;
     var d = [];
+    var count = 0;
+    var sum = 0;
     for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
         var subtrahendTime = subtrahendData[subtrahendIndex][0];
         var minuendTime = minuendData[minuendIndex][0];
@@ -388,12 +390,16 @@ const getDataForSeriesDiffCurve = function(params) {
                 d.push([largeIntervalTime, diffValue]);
                 ymin = diffValue < ymin ? diffValue : ymin;
                 ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count ++;
             } else {
                 d.push([largeIntervalTime, null])
             }
         }
     }
     return {
+        sum: sum,
+        count: count,
         dataset: d,
         ymin: ymin,
         ymax: ymax

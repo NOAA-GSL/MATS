@@ -6,6 +6,12 @@ import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 Template.curveList.helpers({
+    displayUnMatched: function() {
+        if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
+            return "none";
+        }
+        return "block";
+    },
     curves: function () {
         return Session.get('Curves');
     },

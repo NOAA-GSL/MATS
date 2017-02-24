@@ -6,14 +6,16 @@
               <button class="btn btn-xs" style="white-space: normal;"> {{text}}</button>
             {{#if DBcurve }}
                 {{#if editingThis}}
-                    <div id="editMode">
-                        <button name="save" id="curve-list-save" class="save-changes btn-success btn fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
-                        <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
+                    <div id="editMode" class="btn-toolbar btn-group-xs" role="group">
+                        <button name="save" id="curve-list-save" class="save-changes btn-success btn btn-xs fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
+                        <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn btn-xs fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
                     </div>
                 {{else}}
-                    <div id="nonEditMode">
-                        <button class="remove-curve btn-danger btn fa fa-times "> &nbsp;Remove</button>
-                        <button class="edit-curve btn-info btn fa fa-pencil-square-o">&nbsp;&nbsp;Edit</button>
+                    <div id="nonEditMode" class="btn-toolbar btn-group-xs" role="group">
+                        <button class="remove-curve btn-danger btn btn-xs fa fa-times "> &nbsp;Remove</button>
+                        <button class="edit-curve btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEdit}}">&nbsp;&nbsp;Edit</button>
+                        <button class="edit-curve-xaxis btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEditXaxis}}">&nbsp;&nbsp;Edit X Axis</button>
+                        <button class="edit-curve-yaxis btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEditYaxis}}">&nbsp;&nbsp;Edit Y Axis</button>
                     </div>
                 {{/if}}
             {{/if}}

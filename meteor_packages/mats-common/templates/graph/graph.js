@@ -30,17 +30,73 @@ var height = function () {
 //$(window).on('resize orientationChange', function(event) {
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        //console.log($(window).height());
-        document.getElementById('placeholder').style.width = width();
-        document.getElementById('placeholder').style.heigth = height();
-        document.getElementById("plotButton").style.display = "none";
-        document.getElementById("textButton").style.display = "block";
-        document.getElementById("plot-buttons-grp").style.display = "block";
-        document.getElementById("curves").style.display = "block";
-        document.getElementById("graphView").style.display = "block";
-        document.getElementById("textSeriesView").style.display = "none";
-        document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
+        switch (Session.get('graphViewMode')) {
+            case matsTypes.PlotView.graph:
+                //console.log($(window).height());
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "none";
+                document.getElementById("textButton").style.display = "block";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "block";
+                document.getElementById("graphView").style.display = "block";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById('graph-touch-controls').style.display = "block";
+                break;
+            case matsTypes.PlotView.textSeries:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "block";
+                document.getElementById("textButton").style.display = "none";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "none";
+                document.getElementById("graphView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "block";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById('graph-touch-controls').style.display = "none";
+            break;
+            case matsTypes.PlotView.textProfile:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "block";
+                document.getElementById("textButton").style.display = "none";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "none";
+                document.getElementById("graphView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "block";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById('graph-touch-controls').style.display = "none";
+                break;
+            case matsTypes.PlotView.textScatter:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "block";
+                document.getElementById("textButton").style.display = "none";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "none";
+                document.getElementById("graphView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "block";
+                document.getElementById('graph-touch-controls').style.display = "none";
+                break;
+            default:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "none";
+                document.getElementById("textButton").style.display = "block";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "block";
+                document.getElementById("graphView").style.display = "block";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById('graph-touch-controls').style.display = "block";
+        }
     });
 
     $(document).keyup(function(event) {
@@ -79,7 +135,7 @@ Template.graph.helpers({
         return Session.get('Curves');
     },
     plotName: function () {
-        return '';
+        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) ? "" :  Session.get('PlotParams').plotAction.toUpperCase();
     },
     curveText: function () {
         if (this.diffFrom === undefined) {
@@ -228,8 +284,10 @@ Template.graph.events({
         document.getElementById("textSeriesView").style.display = "none";
         document.getElementById("textProfileView").style.display = "none";
         document.getElementById("textScatter2dView").style.display = "none";
+        document.getElementById('graph-touch-controls').style.display = "block";
 
         var graphView = document.getElementById('graphView');
+        Session.set('graphViewMode',matsTypes.PlotView.graph);
         Blaze.render(Template.graph, graphView);
     },
     'click .textButton': function () {
@@ -238,24 +296,29 @@ Template.graph.events({
         document.getElementById("textButton").style.display = "none";
         document.getElementById("curves").style.display = "none";
         document.getElementById("graphView").style.display = "none";
+        document.getElementById('graph-touch-controls').style.display = "none";
         switch (matsPlotUtils.getPlotType()) {
             case matsTypes.PlotTypes.timeSeries:
+                Session.set('graphViewMode',matsTypes.PlotView.textSeries);
                 document.getElementById("textSeriesView").style.display = "block";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.profile:
+                Session.set('graphViewMode',matsTypes.PlotView.textProfile);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "block";
                 document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.scatter2d:
+                Session.set('graphViewMode',matsTypes.PlotView.textScatter);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "block";
                 break;
             default:
                 console.log("Error: no plot type detected");
+                Session.set('graphViewMode',matsTypes.PlotView.graph);
         }
     },
     'click .export': function () {

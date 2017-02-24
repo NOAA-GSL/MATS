@@ -140,6 +140,8 @@ dataSeries = function (plotParams, plotFunction) {
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
+            sum = diffResult.sum;
+            count = diffResult.count;
         }
 
         const mean = sum / count;

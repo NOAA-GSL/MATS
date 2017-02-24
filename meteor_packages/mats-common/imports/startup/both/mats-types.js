@@ -60,6 +60,13 @@ var  PlotAxisFilters = {
     site: "site"
 };
 
+var PlotView = {
+    graph: "graph",
+    textSeries: "textSeries",
+    textProfile: "textProfile",
+    textScatter: "textScatter"
+};
+
 export default matsTypes = {
     InputTypes:InputTypes,
     PlotTypes:PlotTypes,
@@ -67,5 +74,6 @@ export default matsTypes = {
     PlotActions:PlotActions,
     BestFits:BestFits,
     MatchFormats:MatchFormats,
-    PlotAxisFilters:PlotAxisFilters
+    PlotAxisFilters:PlotAxisFilters,
+    PlotView:PlotView
 }

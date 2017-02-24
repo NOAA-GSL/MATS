@@ -323,6 +323,7 @@ Template.plotList.events({
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
+                Session.set('graphViewMode',matsTypes.PlotView.graph);
 
                 var graphFunction = pgf.graphFunction;
                 matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, result) {

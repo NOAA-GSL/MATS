@@ -61,7 +61,7 @@ graphProfile = function(result) {
             const label = id.replace('-curve-errorbars','');
             const color = event.target.style.backgroundColor;
             for (var c = 0; c < dataset.length; c++) {
-                if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
+                if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '').toLowerCase()) {
                     // save the errorbars
                     if (errorbars === undefined) {
                         errorbars = [];

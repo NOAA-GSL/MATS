@@ -2,7 +2,7 @@
     <div id="graph-container" class="container" style="display:none;">
         <div id="header" class="row container">
             <h3>{{Title}}  :  {{plotText}}</h3>
-            <h5>{{plotName}}</h5>
+            <h4>{{plotName}}</h4>
         </div>
         <div id="graph-control" class="row container-fluid">
             <div id="plot-buttons-grp" class="btn-group">
@@ -15,13 +15,15 @@
                 <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
-                <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
-                <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
-                <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                <span id="graph-touch-controls">
+                    <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
+                    <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
+                    <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
+                    <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                </span>
             </div>
             <div id="sendModal" class="modal" role="dialog">
                 <div class="modal-dialog">
