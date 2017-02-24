@@ -29,7 +29,6 @@ var refresh = function(name) {
     elem.setAttribute("min", min);
     elem.setAttribute("max",max);
     elem.setAttribute("step",step);
-    matsParamUtils.setValueTextForParamName(dispElem, dispDefault);
     elem.value = dispDefault;
 };
 

@@ -1,6 +1,6 @@
 <template name="plotList">
     <div id="plotList" class="clearfix well span12">
-        <form id="plotForm">
+        <form id="plotForm" name="plotForm" novalidate>
             <div style="display:inline-block;width:100%;">
                 {{#each PlotParamGroups}}
                     {{> plotParamGroup}}

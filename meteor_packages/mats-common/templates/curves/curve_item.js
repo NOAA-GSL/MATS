@@ -80,48 +80,70 @@ Template.curveItem.helpers({
     }
 });
 
-const setParamsToAxis = function(newAxis) {
-    var elems = document.getElementsByClassName("data-input");
-    var axis_elems = _.filter(elems, function (elem) {
-        return elem.name.indexOf(newAxis) > -1;
-    });
-    var l = axis_elems.length;
-    // first do the superiors
-    const superiorParams = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
-    var superiorParamNames = [];
-    for (var si = 0; si < superiorParams.length;si++) {
-        superiorParamNames.push(superiorParams[si].name);
-    }
-    for (var i = 0; i < l; i++) {
-        var aelem = axis_elems[i];
-        var aelem_id = aelem.id;
-        // remove the axis part at the front
-        var target_id = aelem_id.substring(newAxis.length+1,aelem_id.length);
-        var telem = document.getElementById(target_id);
-        if (superiorParamNames.indexOf(telem.name) === -1) {
-            continue;  // only do the superiors here.
+const setParamsToAxis = function(newAxis, currentParams) {
+    // reset scatter plot apply stuff
+    matsCurveUtils.resetScatterApply();
+    // set param values to this curve
+    // reset the form parameters for the superiors first
+    var currentParamName;
+    var params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
+    for (var p  = 0; p < params.length; p++) {
+        var plotParam = params[p];
+        // do any date parameters - there are no axis date params in a scatter plot
+        if (plotParam.type === matsTypes.InputTypes.dateRange) {
+            if (currentParams[plotParam.name] === undefined) {
+                continue;   // just like continue
+            }
+            const dateArr = currentParams[plotParam.name].split(' - ');
+            const from = dateArr[0];
+            const to = dateArr[1];
+            const idref = "#" + plotParam.name + "-item";
+            $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+            matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
+        } else {
+            currentParamName = currentParams[newAxis + "-" + plotParam.name] === undefined ?  plotParam.name : newAxis + "-" + plotParam.name;
+            const val =  currentParams[currentParamName] === null ||
+            currentParams[currentParamName] === undefined ? matsTypes.InputTypes.unused : currentParams[currentParamName];
+            matsParamUtils.setInputForParamName(plotParam.name, val);
         }
-        // first superiors
-        matsParamUtils.setInputForParamName(telem.name, aelem.value);
     }
-    // now do the dependents
-    const dependentParams = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
-    var dependentParamNames = [];
-    for (var si = 0; si < dependentParams.length;si++) {
-        dependentParamNames.push(dependentParams[si].name);
-    }
-    for (var i = 0; i < l; i++) {
-        var aelem = axis_elems[i];
-        var aelem_id = aelem.id;
-        // remove the axis part at the front
-        var target_id = aelem_id.substring(newAxis.length+1,aelem_id.length);
-        var telem = document.getElementById(target_id);
-        if (dependentParamNames.indexOf(telem.name) === -1) {
-            continue;  // only do the superiors here.
+    // now reset the form parameters for the dependents
+    params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
+    for (var p  = 0; p < params.length; p++) {
+        var plotParam = params[p];
+        // do any plot date parameters
+        currentParamName = currentParams[newAxis + "-" + plotParam.name] === undefined ?  plotParam.name : newAxis + "-" + plotParam.name;
+        if (plotParam.type === matsTypes.InputTypes.dateRange) {
+            if (currentParams[currentParamName] === undefined) {
+                continue;   // just like continue
+            }
+            const dateArr = currentParams[currentParamName].split(' - ');
+            const from = dateArr[0];
+            const to = dateArr[1];
+            const idref = "#" + plotParam.name + "-item";
+            $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+            $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+            matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[currentParamName]);
+        } else {
+            const val =  currentParams[currentParamName] === null ||
+            currentParams[currentParamName] === undefined ? matsTypes.InputTypes.unused : currentParams[currentParamName];
+            matsParamUtils.setInputForParamName(plotParam.name, val);
         }
-        matsParamUtils.setInputForParamName(telem.name, aelem.value);
+    }
+    // reset the scatter parameters
+    params = matsCollections.Scatter2dParams.find({}).fetch();
+    for (var p  = 0; p < params.length; p++) {
+        var plotParam = params[p];
+        currentParamName = currentParams[newAxis + "-" + plotParam.name] === undefined ?  plotParam.name : newAxis + "-" + plotParam.name;
+        const val =  currentParams[currentParamName] === null ||
+        currentParams[currentParamName] === undefined ? matsTypes.InputTypes.unused : currentParams[currentParamName];
+        matsParamUtils.setInputForParamName(plotParam.name, val);
     }
     matsParamUtils.collapseParams();
+    return false;
+
+
 };
 
 Template.curveItem.events({
@@ -143,11 +165,15 @@ Template.curveItem.events({
     },
     'click .edit-curve-xaxis': function(event) {
         Session.set('axis','xaxis');
-        setParamsToAxis('xaxis');
+        Session.set('editMode', this.label);
+        var currentParams = jQuery.extend({}, this);
+        setParamsToAxis('xaxis', currentParams);
     },
     'click .edit-curve-yaxis': function(event) {
         Session.set('axis','yaxis');
-        setParamsToAxis('yaxis');
+        Session.set('editMode', this.label);
+        var currentParams = jQuery.extend({}, this);
+        setParamsToAxis('yaxis',currentParams);
     },
     'click .edit-curve': function (event) {
         Session.set('editMode', this.label);
@@ -158,11 +184,12 @@ Template.curveItem.events({
         // set param values to this curve
         // reset the form parameters for the superiors first
         var params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
-        params.forEach(function(plotParam) {
+        for (var p  = 0; p < params.length; p++) {
+            var plotParam = params[p];
             // do any curve date parameters
             if (plotParam.type === matsTypes.InputTypes.dateRange) {
                 if (currentParams[plotParam.name] === undefined) {
-                    return;   // just like continue
+                    continue;   // just like continue
                 }
                 const dateArr = currentParams[plotParam.name].split(' - ');
                 const from = dateArr[0];
@@ -176,15 +203,15 @@ Template.curveItem.events({
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
             }
-        });
-
+        }
         // now reset the form parameters for the dependents
         params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
-        params.forEach(function(plotParam) {
+        for (var p  = 0; p < params.length; p++) {
+            var plotParam = params[p];
             // do any plot date parameters
             if (plotParam.type === matsTypes.InputTypes.dateRange) {
                 if (currentParams[plotParam.name] === undefined) {
-                    return;   // just like continue
+                    continue;   // just like continue
                 }
                 const dateArr = currentParams[plotParam.name].split(' - ');
                 const from = dateArr[0];
@@ -198,15 +225,15 @@ Template.curveItem.events({
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
             }
-        });
-
+        }
         // reset the scatter parameters
         params = matsCollections.Scatter2dParams.find({}).fetch();
-        params.forEach(function(plotParam) {
+        for (var p  = 0; p < params.length; p++) {
+            var plotParam = params[p];
             const val =  currentParams[plotParam.name] === null ||
             currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
             matsParamUtils.setInputForParamName(plotParam.name, val);
-        });
+        }
         matsParamUtils.collapseParams();
         return false;
     },
