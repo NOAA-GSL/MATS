@@ -502,7 +502,7 @@ var doCurveTextPatterns = function () {
                 [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast-length', 'h ']
+                ['fcst_len:', 'forecast-length', ' ,']
             ]
         });
         matsCollections.CurveTextPatterns.insert({
@@ -520,7 +520,7 @@ var doCurveTextPatterns = function () {
                 [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast-length', 'h '],
+                ['fcst_len:', 'forecast-length', ' ,'],
                 ['', 'curve-dates', '']
             ]
         });
@@ -534,7 +534,7 @@ var doCurveTextPatterns = function () {
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
                 ['', 'xaxis-statistic', ':'],
-                ['fcst_len:', 'xaxis-forecast-length', 'h, '],
+                ['fcst_len:', 'xaxis-forecast-length', ', '],
                 ['', 'xaxis-discriminator', ', '],
                 ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-truth-data-source', ':'],
@@ -542,7 +542,7 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
                 ['', 'yaxis-statistic', ':'],
-                ['fcst_len:', 'yaxis-forecast-length', 'h, '],
+                ['fcst_len:', 'yaxis-forecast-length', ', '],
                 ['', 'yaxis-discriminator', ', '],
                 ['lc', 'level-completeness', ' '],
                 ['sc', 'site-completeness', '']

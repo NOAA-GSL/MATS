@@ -14,6 +14,24 @@ Template.curveItem.onRendered(function() {
 });
 
 Template.curveItem.helpers({
+    displayEditXaxis: function() {
+        if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
+            return "block";
+        }
+        return "none";
+    },
+    displayEditYaxis: function() {
+        if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
+            return "block";
+        }
+        return "none";
+    },
+    displayEdit: function() {
+        if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
+            return "none";
+        }
+        return "block";
+    },
     colorpick: function() {
         var l = this.label + '-colorpick';
         return l;
@@ -62,6 +80,50 @@ Template.curveItem.helpers({
     }
 });
 
+const setParamsToAxis = function(newAxis) {
+    var elems = document.getElementsByClassName("data-input");
+    var axis_elems = _.filter(elems, function (elem) {
+        return elem.name.indexOf(newAxis) > -1;
+    });
+    var l = axis_elems.length;
+    // first do the superiors
+    const superiorParams = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
+    var superiorParamNames = [];
+    for (var si = 0; si < superiorParams.length;si++) {
+        superiorParamNames.push(superiorParams[si].name);
+    }
+    for (var i = 0; i < l; i++) {
+        var aelem = axis_elems[i];
+        var aelem_id = aelem.id;
+        // remove the axis part at the front
+        var target_id = aelem_id.substring(newAxis.length+1,aelem_id.length);
+        var telem = document.getElementById(target_id);
+        if (superiorParamNames.indexOf(telem.name) === -1) {
+            continue;  // only do the superiors here.
+        }
+        // first superiors
+        matsParamUtils.setInputForParamName(telem.name, aelem.value);
+    }
+    // now do the dependents
+    const dependentParams = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
+    var dependentParamNames = [];
+    for (var si = 0; si < dependentParams.length;si++) {
+        dependentParamNames.push(dependentParams[si].name);
+    }
+    for (var i = 0; i < l; i++) {
+        var aelem = axis_elems[i];
+        var aelem_id = aelem.id;
+        // remove the axis part at the front
+        var target_id = aelem_id.substring(newAxis.length+1,aelem_id.length);
+        var telem = document.getElementById(target_id);
+        if (dependentParamNames.indexOf(telem.name) === -1) {
+            continue;  // only do the superiors here.
+        }
+        matsParamUtils.setInputForParamName(telem.name, aelem.value);
+    }
+    matsParamUtils.collapseParams();
+};
+
 Template.curveItem.events({
     'click .save-changes' : function() {
         document.getElementById('save').click();
@@ -78,6 +140,14 @@ Template.curveItem.events({
         matsCurveUtils.clearUsedColor(color);
         matsCurveUtils.checkDiffs();
         return false;
+    },
+    'click .edit-curve-xaxis': function(event) {
+        Session.set('axis','xaxis');
+        setParamsToAxis('xaxis');
+    },
+    'click .edit-curve-yaxis': function(event) {
+        Session.set('axis','yaxis');
+        setParamsToAxis('yaxis');
     },
     'click .edit-curve': function (event) {
         Session.set('editMode', this.label);

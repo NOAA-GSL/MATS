@@ -178,7 +178,6 @@ const resetScatterApply = function() {
         Session.set('xaxisCurveColor', 'red');
         Session.set('yaxisCurveColor', 'red');
         document.getElementById('Fit-Type-radioGroup-none').checked = true;
-        document.getElementById('axis-selector-radioGroup-xaxis').checked = true
     }
 };
 

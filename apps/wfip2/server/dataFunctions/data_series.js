@@ -730,6 +730,43 @@ dataSeries = function (plotParams, plotFunction) {
             }
             time = Number(time) + Number(maxValidInterval);
         } // while time
+        // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
+        for (ci = 0; ci < curvesLength; ci ++) {
+            if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
+                continue;   // don't do it if there isn't an annotation
+            }
+
+            var sum = 0;
+            var count = 0;
+            d = newDataSet[ci].data;
+            var mean = d[0][1];
+            for (var i = 0; i < d.length; i++) {
+                if (d[i][1] !== null) {
+                    sum = sum + d[i][1];
+                    count++
+                }
+            }
+            if (count > 1) {
+                mean = sum / count;
+            }
+            const annotationParts = dataset[ci].annotation.split(" = ");
+            annotationParts[1] = mean === null ? null : mean.toPrecision(4);
+            const annotation = annotationParts.join(" = ");
+            var optionsKeys = Object.keys(dataset[ci]);
+            var index = optionsKeys.indexOf('data');
+            if (index > -1) {
+                optionsKeys.splice(index, 1);
+            }
+            index = optionsKeys.indexOf('annotation');
+            if (index > -1) {
+                optionsKeys.splice(index, 1);
+            }
+            optionsKeys.forEach(function(item){
+                newDataSet[ci][item] = dataset[ci][item];
+            });
+            newDataSet[ci]['annotation'] = annotation;
+        }
+
         dataset = newDataSet;
     } // end of if matching
     // generate y-axis
