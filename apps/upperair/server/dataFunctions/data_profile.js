@@ -186,7 +186,7 @@ dataProfile = function(plotParams, plotFunction) {
             if (data[di][3].length < maxValuesPerLevel * 0.75) {
                 // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
                 errorResult = {d_mean:0,stde_betsy:0,sd:0,n_good:0,lag1:0, min:0,max:0, sum:0};
-                data[di][1] = null; //null out the value
+                data[di][0] = null; //null out the value
             } else {
                 //console.log('Getting errors for level ' + data[di][1]);
                 errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
