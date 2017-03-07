@@ -35,7 +35,23 @@ Template.data.onRendered(function() {
 
 Template.data.helpers({
     data:function() {
-        return Session.get("data");
+        var dataObj = Session.get("data") === undefined ? {} : Session.get("data");
+        if (dataObj === undefined || dataObj['dataLink'] === undefined) {
+            return dataObj;
+        }
+        const fName = dataObj['dataLink'].replace('file://', '');
+        const data = matsMethods.readDataFile.call({path: fName}, function (error, result) {
+            if(error !== undefined) {
+                dataObj['data'] = error;
+            } else {
+                if (result !== undefined) {
+                    dataObj['data'] = JSON.parse(result.toString());
+                }
+            }
+
+            Session.set('data',dataObj);
+        });
+        return Session.get('data');
     },
     options:function() {
         return {collapsed:true,nl2br:true,recursive_collapser:true};

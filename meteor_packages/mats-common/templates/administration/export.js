@@ -68,7 +68,7 @@ Template.export.onRendered( function() {
 
         if (dataFiles.length > 0) {
             dataFiles.forEach(function(file){
-                methods.readFunctionFile('data',file, function (error, result) {
+                matsMethods.readFunctionFile('data',file, function (error, result) {
                     if (error !== undefined) {
                         setError(new Error(error.toLocaleString()));
                         return false;
@@ -89,7 +89,7 @@ Template.export.onRendered( function() {
 
         if (graphFiles.length > 0) {
             graphFiles.forEach(function(file){
-                methods.readFunctionFile('graph', file, function (error, result) {
+                matsMethods.readFunctionFile('graph', file, function (error, result) {
                     if (error !== undefined) {
                         setError(new Error(error.toLocaleString()));
                         return false;

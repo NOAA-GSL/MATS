@@ -155,6 +155,12 @@ Template.graph.helpers({
             return this.label + ":  Difference";
         }
     },
+    confidenceDisplay: function() {
+        if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
+            return "block";
+        }
+
+    },
     plotText: function () {
         var p = Session.get('PlotParams');
         if (p !== undefined) {

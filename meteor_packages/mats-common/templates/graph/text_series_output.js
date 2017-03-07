@@ -8,12 +8,18 @@ import { matsMathUtils } from 'meteor/randyp:mats-common';
 var times = [];
 
 const getDataForTime = function(curveIndex, time) {
-     for (var i =0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
-         if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time) ) {
-             return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
-         }
-     }
-     return undefined;
+    try {
+        for (var i = 0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
+            if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time)) {
+                return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
+            }
+        }
+        return undefined;
+    } catch (e)
+        {
+            console.log ("getDataForTime error: " + e);
+            return undefined;
+        }
 };
 
 Template.textSeriesOutput.helpers({

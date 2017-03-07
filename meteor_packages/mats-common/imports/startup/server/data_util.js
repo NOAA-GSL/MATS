@@ -428,34 +428,43 @@ const getPointSymbol = function (curveIndex) {
     return pointSymbol;
 };
 
-const get_err = function (sub_val_array, sub_secs_array) {
-    var n = sub_val_array.length;
+const get_err = function (sVals, sSecs) {
+    /* refer to perl error_library.pl sub  get_stats
+      to see the perl implementation of these statics calculations.
+      These should match exactly those, except that they are processed in reverse order.
+     */
+    var subVals = sVals;
+    var subSecs = sSecs;
+    var n = subVals.length;
     var n_good =0;
     var sum_d=0;
     var sum2_d =0;
-    for(var i=0; i< n; i++ ){
+    var error = "";
+    var i;
+    for(i=0; i< n; i++ ){
         n_good = n_good +1;
-        sum_d = sum_d + sub_val_array[i];
-        sum2_d = sum2_d + sub_val_array[i] * sub_val_array[i];
+        sum_d = sum_d + subVals[i];
+        sum2_d = sum2_d + subVals[i] * subVals[i];
     }
     var d_mean = sum_d/n_good;
     var sd2 = sum2_d/n_good - d_mean *d_mean;
-    var sd = Math.sqrt(sd2);
-    var sdlimit = 3*sd;
+    var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
+    var sd_limit = 3*sd;
+    //console.log("get_err");
+    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
-    var last_secs = -1e30;
-    var min_delta = 1e30;
-    var min_secs = 1e30;
-    var max_secs = -1e30;
-
-    for(i=0; i< sub_secs_array.length; i++){
-        var secs = (sub_secs_array[i]);
+    var last_secs = Number.MIN_VALUE;
+    var minDelta = Number.MAX_VALUE;
+    var minSecs = Number.MAX_VALUE;
+    var max_secs = Number.MIN_VALUE;
+    for(i=0; i< subSecs.length; i++){
+        var secs = (subSecs[i]);
         var delta = Math.abs(secs - last_secs);
-        if(delta < min_delta) {
-            min_delta = delta;
+        if(delta < minDelta) {
+            minDelta = delta;
         }
-        if(secs < min_secs) {
-            min_secs = secs;
+        if(secs < minSecs) {
+            minSecs = secs;
         }
         if(secs >max_secs) {
             max_secs = secs;
@@ -465,56 +474,87 @@ const get_err = function (sub_val_array, sub_secs_array) {
 
     var data_wg =[];
     var n_gaps =0;
-    var loopTime =min_secs;
-    if (min_delta < 0) {
-        error = ("Invalid time interval - min_delta: " + min_delta);
-        dFuture['return']();
+    n_good = 0;
+    var sum = 0;
+    var sum2 = 0;
+    var loopTime =minSecs;
+    if (minDelta < 0) {
+        error = ("Invalid time interval - minDelta: " + minDelta);
     }
-    while (loopTime < max_secs+1) {
-        if(sub_secs_array.indexOf(loopTime)<0){
-            data_wg.push(null);
-            n_gaps = n_gaps+1;
-        } else{
-            var d_idx = sub_secs_array.indexOf(loopTime);
-                if (Math.abs(sub_val_array[d_idx] - d_mean) > sdlimit) {
-                 //console.log("throwing away " + sub_val_array[d_idx] + " because it exceeds 3 standard deviations from the mean");
-                 data_wg.push(null);
-             } else {
-                data_wg.push(sub_val_array[d_idx]);
-            }
+    // remove data more than $sd_limit from mean
+    for (i=0; i < subVals.length; i++) {
+            if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+             //console.log("removing datum " + i + "with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean");
+             subVals[i] = null;
+         } else {
+            n_good++;
+            sum += subVals[i];
+            sum2 += subVals[i] * subVals[i];
         }
-        loopTime = loopTime + min_delta;
+    }
+    if (n_good < 1) {
+        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
     }
 
+    // recalculate if we threw anything away.
+    d_mean = sum / n_good;
+    sd2 = sum2 / n_good - d_mean * d_mean;
+    sd = 0;
+    if (sd2 > 0) {
+        sd = Math.sqrt(sd2);
+    }
+    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // look for gaps.... per Bill, we only need one gap per series of gaps...
+    var lastSecond = Number.MIN_VALUE;
+
+    for(i=0; i< subSecs.length; i++){
+        var sec = subSecs[i];
+        if(lastSecond >= 0) {
+            if(sec - lastSecond > minDelta) {
+            // insert a gap
+                data_wg.push(null);
+                n_gaps++;
+            }
+        }
+        lastSecond = sec;
+        data_wg.push(subVals[i]);
+    }
+    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
+
+    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
     var r =[];
     for(var lag=0;lag<=1; lag++) {
         r[lag] = 0;
         var n_in_lag = 0;
-        for (var t = 0; t < n - lag; t++) {
+        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
             if (data_wg[t] != null && data_wg[t + lag] != null) {
-                r[lag] = r[lag] + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                r[lag] +=  + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
                 n_in_lag++;
             }
         }
         if (n_in_lag > 0 && sd > 0) {
-            r[lag] = r[lag] / (n_in_lag * sd * sd);
+            r[lag] /= (n_in_lag * sd * sd);
         } else {
             r[lag] = null;
         }
+        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
     }
     // Betsy Weatherhead's correction, based on lag 1
     if(r[1] >= 1) {
         r[1] = .99999;
     }
-    var betsy = Math.sqrt((n_good-1)*(1. - r[1]));
+    const betsy = Math.sqrt((n_good-1)*(1 - r[1]));
     var stde_betsy;
     if(betsy != 0) {
         stde_betsy = sd/betsy;
     } else {
         stde_betsy = null;
     }
+    const stats = {d_mean:d_mean,stde_betsy:stde_betsy,sd:sd,n_good:n_good,lag1:r[1], min:minSecs,max:max_secs, sum:sum_d};
+    //console.log("stats are " + JSON.stringify(stats));
     // stde_betsy is standard error with auto correlation
-    return {d_mean:d_mean,sd:sd,stde_betsy:stde_betsy,n_good:n_good,lag1:r[1], min:min_secs,max:max_secs, sum:sum_d};
+    //console.log("---------\n\n");
+    return stats;
 };
 
 const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, label) {
@@ -693,7 +733,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             color: 'grey'
         }],
         xaxis: {
-            zoomRange: [0.1, 3600000000],
+            zoomRange: [0.1, null],
             mode: 'time'
         },
         yaxes: yaxes,
@@ -715,7 +755,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             shadowSize: 0
         },
         zoom: {
-            interactive: true
+            interactive: false
         },
         pan: {
             interactive: false
@@ -769,7 +809,12 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     const xmax = curve['xmax'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
+            axisMap[axisKey].axisLabel = label;
+        } else
+        {
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+        }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
         axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
@@ -833,7 +878,12 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
+            axisMap[axisKey].axisLabel = label;
+        } else
+        {
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+        }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -852,7 +902,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
-const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
+const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax) {
 // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -864,7 +914,11 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
             continue;
         }
         const axisKey = curves[dsi].axisKey;
-        xAxislabel =  xAxislabel + " | " + axisKey;
+        if (xAxislabel === undefined || xAxislabel == "") {
+            xAxislabel = axisKey;
+        } else {
+            xAxislabel = xAxislabel + " | " + axisKey;
+        }
         xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
         xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
         const position = dsi === 0 ? "left" : "right";
@@ -873,8 +927,17 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
             color: 'grey',
             axisLabel: ' Pressure (hPa)',
             axisLabelColour: "black",
+            font: {
+                size: 20,
+                lineHeight: 23,
+                style: "italic",
+                weight: "bold",
+                family: "sans-serif",
+                variant: "small-caps",
+                color: "#545454"
+            },
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 26,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -883,25 +946,43 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
             max: 0
         };
         var yaxisOptions = {
-            zoomRange: [0.1, 10]
+            zoomRange: [0.1, null]
         };
         yaxes.push(yaxesOptions);
         yaxis.push(yaxisOptions);
     }
 
-    const xpad = (xmax - xmin) * 0.2;
+    // account for error bars on xaxis
+    xmax = xmax + errorMax;
+    xmin = xmin - errorMax;
+    const xpad = (xmax - xmin) * 0.05;
     const options = {
         axisLabels: {
             show: true
         },
         xaxes: [{
             axisLabel: xAxislabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+            alignTicksWithAxis: 1,
             color: 'grey',
             min:xmin - xpad,
-            max:xmax + xpad
+            max:xmax + xpad,
+            font: {
+                size: 20,
+                lineHeight: 23,
+                style: "italic",
+                weight: "bold",
+                family: "sans-serif",
+                variant: "small-caps",
+                color: "#545454"
+            }
         }],
         xaxis: {
-            zoomRange: [0.1, 10],
+            zoomRange: [0.1, null]
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -923,7 +1004,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap ) {
             shadowSize: 0
         },
         zoom: {
-            interactive: true
+            interactive: false
         },
         pan: {
             interactive: false
@@ -972,17 +1053,17 @@ const doColorScheme = function () {
     if (matsCollections.ColorScheme.find().count() == 0) {
         matsCollections.ColorScheme.insert({
             colors: [
-                "Red",
-                "Blue",
-                "Grey",
-                "Orange",
-                "Violet",
+                "rgb(0,0,255)",
+                "rgb(0,0,255)",
+                "rgb(128,128,128)",
+                "rgb(255,165,0)",
+                "rgb(238,130,238)",
 
-                "DarkRed",
-                "DarkBlue",
-                "DarkGrey",
-                "DarkOrange",
-                "DarkViolet",
+                "rgb(238,130,238)",
+                "rgb(0,0,139)",
+                "rgb(105,105,105)",
+                "rgb(255,140,0)",
+                "rgb(148,0,211)",
 
                 "rgb(235,92,92)",
                 "rgb(82,92,245)",

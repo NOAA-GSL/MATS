@@ -37,7 +37,7 @@ Template.select.onRendered( function () {
         });
     } catch (e) {
         e.message = "Error in select.js rendered: " + e.message;
-        setError(e)
+        setError(e);
     }
     try {
         matsSelectUtils.checkDisableOther(this.data);
@@ -47,7 +47,7 @@ Template.select.onRendered( function () {
 
     } catch (e) {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
-        setError(e)
+        setError(e);
     }
     });
 

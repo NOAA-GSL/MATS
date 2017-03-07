@@ -63,6 +63,8 @@ Template.curveList.helpers({
 Template.curveList.events({
     'click .remove-all': function () {
         matsCurveUtils.clearAllUsed();
+        Session.set("editMode", "");
+        Session.set("paramWellColor","#f5f5f5");  // default grey
         return false;
     },
     'click .plot-curves-unmatched': function (event) {

@@ -5,10 +5,11 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
+var myModels = [];
 var regionModelOptionsMap = {};
 var modelTableMap = {};
 var forecastLengthOptionsMap = {};
-
+var forecastLengthModels = [];
 var date = new Date();
 var dateOneMonthPrior = new Date();
 dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
@@ -56,7 +57,7 @@ var doPlotParams = function () {
                 name: 'plotFormat',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
-                options: Object.keys(plotFormats),
+                options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -83,8 +84,8 @@ var doCurveParams = function () {
             {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],   // convenience
                 controlButtonCovered: true,
                 default: '',
                 unique: true,
@@ -101,11 +102,11 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 tableMap: modelTableMap,
-                options: Object.keys(modelOptionsMap),   // convenience
+                options: myModels,   // convenience
                 optionsQuery: "select model from regions_per_model_mats",
                 dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
+                default: myModels[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -117,11 +118,11 @@ var doCurveParams = function () {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                options: regionModelOptionsMap[myModels[0]],   // convenience
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+                default: regionModelOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -155,7 +156,7 @@ var doCurveParams = function () {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: ['RMS','Bias (Model - RAOB)','N','model average','RAOB average'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 default: 'RMS',
@@ -178,7 +179,7 @@ var doCurveParams = function () {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: ['temperature','RH','RHobT','winds','height'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 default: 'winds',
@@ -194,7 +195,7 @@ var doCurveParams = function () {
                 name: 'cloud-coverage',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: ['All','Clear','Cloudy'],
                 controlButtonCovered: true,
                 unique: false,
                 default: 'All',
@@ -210,7 +211,7 @@ var doCurveParams = function () {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: ['BOTH','0-UTC','12-UTC',],
                 controlButtonCovered: true,
                 selected: 'BOTH',
                 unique: false,
@@ -236,7 +237,7 @@ var doCurveParams = function () {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: ['None','1D','3D','7D','30D','60D','90D','180D'],
                 controlButtonCovered: true,
                 unique: false,
                 selected: 'None',
@@ -253,12 +254,12 @@ var doCurveParams = function () {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                options: forecastLengthOptionsMap[forecastLengthModels[0]],
                 superiorNames: ['model'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][2],
+                default: forecastLengthOptionsMap[forecastLengthModels[0]][2],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -268,8 +269,8 @@ var doCurveParams = function () {
             {
                 name: 'top',
                 type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],
                 min: '1',
                 max: '1000',
                 step: 'any',
@@ -286,8 +287,8 @@ var doCurveParams = function () {
             {
                 name: 'bottom',
                 type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],
                 min: '100',
                 max: '1050',
                 step: 'any',
@@ -314,7 +315,7 @@ var doCurveParams = function () {
                 name: 'curve-dates',
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: Object.keys(optionsMap).sort(),
                 startDate: dstrOneMonthPrior,
                 stopDate: dstrToday,
                 controlButtonCovered: true,
@@ -439,7 +440,6 @@ Meteor.startup(function () {
         database: 1,
         connectionLimit: 1
     });
-    var myModels = [];
     var rows;
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
@@ -460,7 +460,7 @@ Meteor.startup(function () {
     });
     var modelRegionNumberMap = {};
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions from regions_per_model_mats;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions, display_category from regions_per_model_mats order by display_category, model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions;
@@ -490,6 +490,7 @@ Meteor.startup(function () {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model;
+            forecastLengthModels.push(model);
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',');
             forecastLengthOptionsMap[model] = forecastLengthArr;

@@ -47,6 +47,13 @@ Template.textProfileOutput.helpers({
             return NaN;
         }
     },
+    sd: function(curve) {
+        try {
+            return getDataForCurve(curve).stats.sd.toPrecision(4);
+        } catch (e) {
+            return NaN;
+        }
+    },
     lag1: function(curve) {
         try {
             return getDataForCurve(curve).stats.lag1.toPrecision(4);
@@ -115,7 +122,7 @@ Template.textProfileOutput.helpers({
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return [];
         }
-        data = getDataForCurve(curve).data;
+        data = getDataForCurve(curve) && getDataForCurve(curve).data;
         if (data === undefined || data.length == 0) {
             return [];
         }
@@ -175,9 +182,9 @@ Template.textProfileOutput.helpers({
             const dataPointVal = getDataForLevel(data, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[0].toPrecision(4);
+                mean = dataPointVal[5].d_mean.toPrecision(4);
                 perror = dataPointVal[5].stde.toPrecision(4);
                 stddev = dataPointVal[5].sd.toPrecision(4);
-                mean = dataPointVal[5].d_mean.toPrecision(4);
                 lag1 = dataPointVal[5].lag1.toPrecision(4);
                 n = dataPointVal[5].n_good;
             }
@@ -185,7 +192,7 @@ Template.textProfileOutput.helpers({
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + pdata + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + mean + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        line += "<td>" + mean + "</td>" + "<td>" + pdata + "</td>" +  "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     }
 });
