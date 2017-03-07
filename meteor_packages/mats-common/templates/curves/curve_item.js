@@ -149,9 +149,11 @@ const setParamsToAxis = function(newAxis, currentParams) {
 Template.curveItem.events({
     'click .save-changes' : function() {
         document.getElementById('save').click();
+        Session.set("paramWellColor","#f5f5f5");
     },
     'click .cancel' : function() {
         document.getElementById('cancel').click();
+        Session.set("paramWellColor","#f5f5f5");
     },
     'click .remove-curve': function (event) {
         var label = this.label;

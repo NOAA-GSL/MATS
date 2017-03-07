@@ -20,7 +20,7 @@ dataProfile = function(plotParams, plotFunction) {
     // so just draw the axis negative and change the ticks to positive numbers.
     var ymax = 0;
     var ymin = -1100;
-
+    var maxValuesPerLevel = 0;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
@@ -73,8 +73,8 @@ dataProfile = function(plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{validTime}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 > {{top}}/10. " +
-                "and m0.mb10 <= {{bottom}}/10. " +
+                "and m0.mb10 > {{top}}/10 " +
+                "and m0.mb10 <= {{bottom}}/10 " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
                 "group by avVal " +
@@ -115,6 +115,7 @@ dataProfile = function(plotParams, plotFunction) {
         for (var di = 0; di < d.length; di++) {
             xmax = xmax > d[di][0] ? xmax : d[di][0];
             xmin = xmin < d[di][0] ? xmin : d[di][0];
+            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
         }
         // specify these so that the curve options generator has them available
         // profile plots always go from 0 to 1000 initially
@@ -149,14 +150,17 @@ dataProfile = function(plotParams, plotFunction) {
         matchingLevels = _.intersection.apply(_, levelGroups);
         var subSecIntersection = Array.from(subSecs);
     }
-
     // calculate stats for each dataset matching to subsec_intersection if matching is specified
+    var errorMax = Number.MIN_VALUE;
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
         //for (di = 0; di < dataLength; di++) { // every pressure level
         di = 0;
+        var values = [];
+        var levels = [];
+        var means = [];
         while (di < data.length) {
             if (matching && matchingLevels.indexOf(data[di][1]) === -1) {
                 dataset[curveIndex].data.splice(di,1);
@@ -179,13 +183,24 @@ dataProfile = function(plotParams, plotFunction) {
                 data[di][3] = newSubValues;
                 data[di][4] = subSecIntersection;
             }
-            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            if (data[di][3].length < maxValuesPerLevel * 0.75) {
+                // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
+                errorResult = {d_mean:0,stde_betsy:0,sd:0,n_good:0,lag1:0, min:0,max:0, sum:0};
+                data[di][1] = null; //null out the value
+            } else {
+                //console.log('Getting errors for level ' + data[di][1]);
+                errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+                values.push(data[di][0]);
+                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+                means.push(errorResult.d_mean);
+            }
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-
             // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
             // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
-            data[di][2] = errorResult.stde_betsy * 1.96;
+            const errorBar = errorResult.stde_betsy * 1.96;
+            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            data[di][2] = errorBar;
             data[di][5] = {
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
@@ -194,35 +209,45 @@ dataProfile = function(plotParams, plotFunction) {
                 stde: errorResult.stde_betsy
             };
             // this is the tooltip, it is the last element of each dataseries element
-            data[di][6] = label +
-                "<br>" + -data[di][1] + "mb" +
-                "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
-                "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
-                "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
-                "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy  +
-                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+            if (data[di][3].length < maxValuesPerLevel * 0.75){
+                // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
+                data[di][6] = label +
+                    "<br>" + -data[di][1] + "mb" +
+                    "<br> " + "values array is less than 75% complete - disregraded";
+            } else {
+                data[di][6] = label +
+                    "<br>" + -data[di][1] + "mb" +
+                    "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
+                    "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                    "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                    "<br>  n: " + errorResult.n_good +
+                    "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                    "<br>  stde: " + errorResult.stde_betsy +
+                    "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+            }
             di++;
         }
-        var values = [];
-        var levels = [];
-        for (var li = 0; li < data.length; li++) {
-            values.push(data[li][0]);
-            levels.push(data[li][1] * -1);  // inverted data for graphing - remember?
-        }
-        // get the overall stats for the text output
-        const stats = matsDataUtils.get_err(values.reverse(),levels.reverse()); // have to reverse because of data inversion
-        const minx = Math.min.apply(null,values);
-        const maxx = Math.max.apply(null,values);
+        // get the overall stats for the text output - this uses the means not the stats. refer to
+
+        const stats = matsDataUtils.get_err(means.reverse(),levels.reverse()); // have to reverse because of data inversion
+        const minx = Math.min.apply(null,means);
+        const maxx = Math.max.apply(null,means);
         stats.minx = minx;
         stats.maxx = maxx;
         dataset[curveIndex]['stats'] = stats;
     }
 
     // add black 0 line curve
-//    dataset.push( {color:'black',points:{show:false},data:[[0,-1000,"zero"],[0,-100,"zero"]]});
-    const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap );
+    dataset.push({
+        color:'black',
+        points:{show:false},
+        lines:{show:true, fill:false},
+        stats:{d_mean:0,stde_betsy:0,sd:0,n_good:0,lag1:0, min:0,max:0, sum:0},
+        data:[[0,top,"zero"],[0,bottom,"zero"],
+        {d_mean:0,sd:0,n_good:0,lag1:0,stde:0},
+        "zero line"]
+    });
+    const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
     const result = {
         error: error,
         data: dataset,

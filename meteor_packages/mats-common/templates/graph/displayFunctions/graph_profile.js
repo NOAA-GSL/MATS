@@ -104,6 +104,24 @@ graphProfile = function(result) {
                         Session.set(label + "hideButtonText", 'show curve');
                         Session.set(label + "pointsButtonText", 'show points');
                     }
+                    // save the errorbars
+                    if (errorbars === undefined) {
+                        errorbars = [];
+                    }
+                    if (errorbars[c] === undefined) {
+                        errorbars[c] = dataset[c].points.errorbars;
+                        Session.set('errorbars', errorbars);
+                    }
+                    if (dataset[c].points.errorbars == undefined) {
+                        dataset[c].points.errorbars = errorbars[c];
+                    } else {
+                        dataset[c].points.errorbars = undefined;
+                    }
+                    if (dataset[c].points.errorbars !== undefined) {
+                        Session.set(label + "errorBarButtonText", 'no error bars');
+                    } else {
+                        Session.set(label + "errorBarButtonText", 'error bars');
+                    }
                 }
             }
             plot = $.plot(placeholder, dataset, options);
@@ -127,6 +145,26 @@ graphProfile = function(result) {
         }
         plot = $.plot(placeholder, dataset, options);
     });
+
+    // add show/hide grid buttons
+    $( "input[id$='-curve-show-hide-grid']" ).click(function (event) {
+        event.preventDefault();
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-grid','');
+        const color = event.target.style.backgroundColor.toLowerCase();
+        for (var c = 0; c < dataset.length; c++) {
+            if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '')) {
+                dataset[c].grid.show = !dataset[c].grid.show;
+                if (dataset[c].grid.show == true) {
+                    Session.set(label + "gridButtonText", 'hide grid');
+                } else {
+                    Session.set(label + "gridButtonText", 'show grid');
+                }
+            }
+        }
+        plot = $.plot(placeholder, dataset, options);
+    });
+
     var normalizeYAxis = function (ranges,options) {
         /*
         The range object will have one or more yaxis values.

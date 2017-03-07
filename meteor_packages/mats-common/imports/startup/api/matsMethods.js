@@ -21,7 +21,7 @@ const saveResultData = function(result){
     var tStamp = moment(new Date()).utc().format();
     var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
-    var link = Meteor.absoluteUrl.defaultOptions.rootUrl + graphDataDir + datFileName;
+    var link = "file:///web/static/" + graphDataDir + datFileName;
     var files = fs.readdirSync(publicGraphDir);
     files.sort(function(a, b) {
         return fs.statSync(publicGraphDir + a).mtime.getTime() -
@@ -67,17 +67,17 @@ const getDataFunctionFileList = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run() {
         if (Meteor.isServer) {
-            var future = require('fibers/future');
-            var fs = require('fs');
-            fs.readdir("../web.browser/app/lib/dataFunctions/", function (err, files) {
-                if (err) {
-                    console.log("getDataFunctionFileList error: " + err);
-                    return (err);
-                }
-                console.log("getDataFunctionFileList files are " + files);
-                future["return"](files);
-            });
-            return future.wait();
+            // var future = require('fibers/future');
+            // var fs = require('fs');
+            // fs.readdir("/web/static/dataFunctions/", function (err, files) {
+            //     if (err) {
+            //         console.log("getDataFunctionFileList error: " + err);
+            //         return (err);
+            //     }
+            //     console.log("getDataFunctionFileList files are " + files);
+            //     future["return"](files);
+            // });
+            // return future.wait();
         }
     }
 });
@@ -87,17 +87,17 @@ const getGraphFunctionFileList = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run() {
         if (Meteor.isServer) {
-            var future = require('fibers/future');
-            var fs = require('fs');
-            fs.readdir("../web.browser/app/lib/displayFunctions/", function (err, files) {
-                if (err) {
-                    console.log("getDataFunctionFileList error: " + err);
-                    return (err);
-                }
-                console.log("getGraphFunctionFileList files are " + files);
-                future["return"](files);
-            });
-            return future.wait();
+            // var future = require('fibers/future');
+            // var fs = require('fs');
+            // fs.readdir("/web/static/displayFunctions/", function (err, files) {
+            //     if (err) {
+            //         console.log("getDataFunctionFileList error: " + err);
+            //         return (err);
+            //     }
+            //     console.log("getGraphFunctionFileList files are " + files);
+            //     future["return"](files);
+            // });
+            // return future.wait();
         }
     }
 });
@@ -110,20 +110,38 @@ const readFunctionFile = new ValidatedMethod({
             var future = require('fibers/future');
             var fs = require('fs');
             var path = "";
+            var fData;
             if (type == "data") {
-                path = "../web.browser/app/lib/dataFunctions/" + file;
+                path = "/web/static/dataFunctions/" + file;
                 console.log('exporting data file: ' + path);
             } else if (type == "graph") {
-                path = "../web.browser/app/lib/displayFunctions/" + file;
+                path = "/web/static/displayFunctions/" + file;
                 console.log('exporting graph file: ' + path);
             } else {
-                return ("error - wrong tyoe");
+                return ("error - wrong type");
             }
             fs.readFile(path, function (err, data) {
                 if (err) throw err;
-                future["return"](data.toString());
+                fData = data.toString();
             });
-            return future.wait();
+            future.wait();
+            return fData;
+        }
+    }
+});
+
+const readDataFile = new ValidatedMethod({
+    name:'matsMethods.readDataFile',
+    validate: new SimpleSchema({
+        path: {type: String},
+    }).validator(),
+
+    run(params){
+        if (Meteor.isServer) {
+            var fs = require('fs');
+            readSyncFunc = Meteor.wrapAsync(fs.readFile);
+            var fData = readSyncFunc(params.path);
+            return fData.toString();
         }
     }
 });
@@ -141,9 +159,9 @@ const restoreFromFile = new ValidatedMethod({
                 console.log("restoring " + params.type + " file " + params.name);
                 var path = "";
                 if (params.type == "data") {
-                    path = "../web.browser/app/lib/dataFunctions/" + params.name;
+                    path = "/web/static/dataFunctions/" + params.name;
                 } else if (params.ype == "graph") {
-                    path = "../web.browser/app/lib/displayFunctions/" + params.name;
+                    path = "/web/static/displayFunctions/" + params.name;
                 } else {
                     return ("error - wrong tyoe");
                 }
@@ -250,7 +268,7 @@ const restoreFromParameterFile = new ValidatedMethod({
                     matsCollections.Credentials.insert(o);
                 });
             }
-        }
+         }
     }
 });
 
@@ -270,21 +288,23 @@ const reset = new ValidatedMethod({
     run (){
         if (Meteor.isServer) {
             matsCollections.Roles.remove({});
-            roles();
+            matsDataUtils.doRoles();
             matsCollections.Authorization.remove({});
-            authorization();
+            matsDataUtils.doAuthorization();
             matsCollections.Credentials.remove({});
-            credentials();
+            matsDataUtils.doCredentials();
             matsCollections.PlotGraphFunctions.remove({});
-            plotGraph();
+            doPlotGraph();
             matsCollections.ColorScheme.remove({});
-            colorScheme();
+            matsDataUtils.doColorScheme();
             matsCollections.Settings.remove({});
-            settings();
+            matsDataUtils.doSettings('Upper Air', Assets.getText('version'));
             matsCollections.CurveParams.remove({});
-            curveParams();
+            doCurveParams();
             matsCollections.PlotParams.remove({});
-            plotParams();
+            doPlotParams();
+            matsCollections.CurveTextPatterns.remove({});
+            doCurveTextPatterns();
         }
     }
 });
@@ -745,6 +765,7 @@ const emailImage = new ValidatedMethod({
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
     getGraphFunctionFileList:getGraphFunctionFileList,
+    readDataFile:readDataFile,
     readFunctionFile:readFunctionFile,
     restoreFromFile:restoreFromFile,
     restoreFromParameterFile:restoreFromParameterFile,
