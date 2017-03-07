@@ -239,14 +239,42 @@ dataProfile = function(plotParams, plotFunction) {
 
     // add black 0 line curve
     dataset.push({
-        color:'black',
-        points:{show:false},
-        lines:{show:true, fill:false},
-        stats:{d_mean:0,stde_betsy:0,sd:0,n_good:0,lag1:0, min:0,max:0, sum:0},
-        data:[[0,top,"zero"],[0,bottom,"zero"],
-        {d_mean:0,sd:0,n_good:0,lag1:0,stde:0},
-        "zero line"]
-    });
+            "yaxis": 1,
+            "label": "zero",
+            "color": "rgb(0,0,0)",
+            "data": [
+                [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+                [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+            ],
+            "points": {
+                "show": false,
+                "errorbars": "x",
+                "xerr": {
+                    "show": false,
+                    "asymmetric": false,
+                    "upperCap": "-",
+                    "lowerCap": "-",
+                    "color": "rgb(0,0,255)",
+                    "radius": 5
+                }
+            },
+            "lines": {
+                "show": true,
+                "fill": false
+            },
+            "stats": {
+                "d_mean": 0,
+                "stde_betsy": 0,
+                "sd": 0,
+                "n_good": 0,
+                "lag1": 0,
+                "min": 50,
+                "max": 1000,
+                "sum": 0,
+                "minx": 0,
+                "maxx": 0
+            }
+        });
     const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
     const result = {
         error: error,
