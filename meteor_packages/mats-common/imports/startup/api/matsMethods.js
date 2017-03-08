@@ -287,6 +287,7 @@ const reset = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run (){
         if (Meteor.isServer) {
+            // if the metadata has changed ----
             matsCollections.Roles.remove({});
             matsDataUtils.doRoles();
             matsCollections.Authorization.remove({});

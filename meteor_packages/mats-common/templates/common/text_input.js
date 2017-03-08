@@ -20,7 +20,7 @@ Template.textInput.helpers({
             } else {
                 // must be initialization
                 label = matsCurveUtils.getNextCurveLabel();
-            return label;
+                return label;
             }
         } else {
             return this.default;

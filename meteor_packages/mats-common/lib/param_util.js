@@ -28,7 +28,7 @@ const getValueForParamName = function(paramName){
     try {
         return getValueElementForParamName(paramName).textContent.trim();
     } catch (error) {
-        return "";
+        return undefined;
     }
 };
 
@@ -39,11 +39,9 @@ const getValueIdForParamName = function(paramName) {
 };
 
 // set the VALUE BOX text for the element that corresponds to the param name
-
-const setValueTextForParamName = function(paramName, text, callback) {
+const setValueTextForParamName = function(paramName, text) {
     try {
         var text = text;
-        var value = text;
         var param = matsCollections.CurveParams.findOne({name: paramName});
         if (param === undefined) {
             param = matsCollections.PlotParams.findOne({name: paramName});
@@ -51,6 +49,7 @@ const setValueTextForParamName = function(paramName, text, callback) {
         if (param === undefined) {
             return;
         }
+        if (text === undefined) {
         if (param.multiple) {
             // .... if multi selected  get the first .. last
             const selection = getInputElementForParamName(paramName).selectedOptions;
@@ -61,14 +60,12 @@ const setValueTextForParamName = function(paramName, text, callback) {
             } else {
                 text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
             }
-            value = [];
-            for(var i = 0; i < selection.length; i++) {
-                value.push(selection[i].textContent);
             }
         }
-        getValueElementForParamName(paramName).textContent = text;
-        var elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-        elem.setAttribute("data-mats-currentValue", value);
+        const elem = getValueElementForParamName(paramName);
+        if (elem.textContent !== text) {
+            elem.textContent = text;
+        }
     } catch(error){
         console.log ("Error: could not find param: " + paramName);
     }
@@ -122,8 +119,7 @@ const setInputForParamName = function(paramName,value) {
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
     idSelector.val(value);
-    idSelector.attr("data-mats-currentValue", value);
-    idSelector.trigger("change");
+    setValueTextForParamName(paramName,value);
 };
 
 const getElementValues = function() {
@@ -301,7 +297,7 @@ const typeSort = function (arr) {
 const setDefaultForParamName = function(paramName) {
     const  defaultValue = getParameterForName(paramName).default;
     if (defaultValue != "undefined") {
-        setInputForParamName(defaultValue);
+        setInputForParamName(paramName,defaultValue);
     }
 };
 
