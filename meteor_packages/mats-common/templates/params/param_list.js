@@ -35,8 +35,8 @@ Template.paramList.helpers({
                 Session.set("paramWellColor","rgb(245,245,245)");
                 return  "rgb(245,245,245)";
             }
-            var color = curveBeingEdited[0].color;
-            var lighterShadeOfColor = shadeRGBColor(color,0.2);
+            const color = curveBeingEdited[0].color;
+            const lighterShadeOfColor = shadeRGBColor(color,0.2);
             Session.set("paramWellColor",lighterShadeOfColor);
         }
 
@@ -93,6 +93,10 @@ Template.paramList.events({
      */
     'submit form': function (event, template) {
         event.preventDefault();
+            if(!matsParamUtils.getValueForParamName('label')) {
+                setError ('Label cannot be blank');
+                return;
+            }
             var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
             var curves = Session.get('Curves');
             var p = {};
@@ -236,8 +240,9 @@ Template.paramList.events({
             Session.set('Curves', curves);
             matsCurveUtils.setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
             matsCurveUtils.checkDiffs();
-            matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
             matsParamUtils.collapseParams();
+            matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
+            //Session.set('lastUpdate', Date.now().toString());
             return false;
     }
 });

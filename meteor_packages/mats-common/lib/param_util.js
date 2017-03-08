@@ -28,7 +28,7 @@ const getValueForParamName = function(paramName){
     try {
         return getValueElementForParamName(paramName).textContent.trim();
     } catch (error) {
-        return "";
+        return undefined;
     }
 };
 
@@ -39,11 +39,9 @@ const getValueIdForParamName = function(paramName) {
 };
 
 // set the VALUE BOX text for the element that corresponds to the param name
-
-const setValueTextForParamName = function(paramName, text, callback) {
+const setValueTextForParamName = function(paramName, text) {
     try {
         var text = text;
-        var value = text;
         var param = matsCollections.CurveParams.findOne({name: paramName});
         if (param === undefined) {
             param = matsCollections.PlotParams.findOne({name: paramName});
@@ -51,24 +49,23 @@ const setValueTextForParamName = function(paramName, text, callback) {
         if (param === undefined) {
             return;
         }
-        if (param.multiple) {
-            // .... if multi selected  get the first .. last
-            const selection = getInputElementForParamName(paramName).selectedOptions;
-            if (selection.length == 0) {
-                text = "";
-            } else if (selection.length == 1) {
-                text = selection[0].textContent;
-            } else {
-                text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
-            }
-            value = [];
-            for(var i = 0; i < selection.length; i++) {
-                value.push(selection[i].textContent);
+        if (text === undefined) {
+            if (param.multiple) {
+                // .... if multi selected  get the first .. last
+                const selection = getInputElementForParamName(paramName).selectedOptions;
+                if (selection.length == 0) {
+                    text = "";
+                } else if (selection.length == 1) {
+                    text = selection[0].textContent;
+                } else {
+                    text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
+                }
             }
         }
-        getValueElementForParamName(paramName).textContent = text;
-        var elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-        elem.setAttribute("data-mats-currentValue", value);
+        const elem = getValueElementForParamName(paramName);
+        if (elem.textContent !== text) {
+            elem.textContent = text;
+        }
     } catch(error){
         console.log ("Error: could not find param: " + paramName);
     }
@@ -122,13 +119,8 @@ const setInputForParamName = function(paramName,value) {
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
     idSelector.val(value);
-    idSelector.attr("data-mats-currentValue", value);
-    idSelector.trigger("change");
-};
-
-const getElementDataForParamName = function(paramName) {
-    const elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-    return elem.getAttribute("data-mats-currentValue");
+    //idSelector.trigger("change");
+    setValueTextForParamName(paramName,value);
 };
 
 const getElementValues = function() {
@@ -266,6 +258,19 @@ const collapseParams = function() {
     });
 };
 
+const collapseParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    if (param === undefined || param === null) {
+        return;
+    }
+    if (param.type !== matsTypes.InputTypes.selectMap) {
+        const selector = "element" + "-" + param.name;
+        if (document.getElementById(selector)) {
+            document.getElementById(selector).style.display = "none";
+        }
+    }
+};
+
 const typeSort = function (arr) {
     return arr.sort(function(a,b) {
         if (isNaN(Number(a) && isNaN(Number(b)))) { // string compare
@@ -293,7 +298,7 @@ const typeSort = function (arr) {
 const setDefaultForParamName = function(paramName) {
     const  defaultValue = getParameterForName(paramName).default;
     if (defaultValue != "undefined") {
-        setInputForParamName(defaultValue);
+        setInputForParamName(paramName,defaultValue);
     }
 };
 
@@ -305,11 +310,11 @@ export default matsParamUtils = {
     setValueTextForParamName:setValueTextForParamName,
     getInputIdForParamName:getInputIdForParamName,
     getInputElementForParamName:getInputElementForParamName,
-    getElementDataForParamName:getElementDataForParamName,
     getElementValues:getElementValues,
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
     collapseParams:collapseParams,
+    collapseParam:collapseParam,
     getParameterForName:getParameterForName,
     setDefaultForParamName:setDefaultForParamName,
     typeSort:typeSort};
