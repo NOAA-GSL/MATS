@@ -28,16 +28,13 @@ Template.plotType.events({
     'click .plot-type-Profile': function(event) {
         matsCurveUtils.removeAllCurves();
         matsCurveUtils.showProfileFace();
-        matsCurveUtils.refreshDependents(this.dependents);
     },
     'click .plot-type-TimeSeries': function() {
         matsCurveUtils.removeAllCurves();
         matsCurveUtils.showTimeseriesFace();
-        matsCurveUtils.refreshDependents(this.dependents);
     },
     'click .plot-type-Scatter2d': function() {
         matsCurveUtils.removeAllCurves();
         matsCurveUtils.showScatterFace();
-        matsCurveUtils.refreshDependents(this.dependents);
     }
 });

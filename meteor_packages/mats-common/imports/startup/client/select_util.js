@@ -4,9 +4,10 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
-const refreshPeer = function (peerName) {
+const refreshPeer = function (param) {
     try {
-        if (peerName) {
+        const peerName = this.peerName;
+        if (peerName !== undefined) {
             // refresh the peer
             const targetParam = matsParamUtils.getParameterForName( peerName );
             const targetId = targetParam.name + '-' + targetParam.type;
@@ -18,14 +19,16 @@ const refreshPeer = function (peerName) {
             });
             targetElem.dispatchEvent(refreshMapEvent);
         }
+        refreshDependents(param);
     } catch (e) {
-        e.message = "Error in select.js refreshPeer: " + e.message;
-        setError(e)
+        e.message = "INFO: Error in select.js refreshPeer: " + e.message;
+        setInfo(e.message);
     }
 };
 
-const refreshDependents = function (dependentNames) {
+const refreshDependents = function (param) {
     try {
+        const dependentNames = param.dependentNames;
         if (dependentNames && Object.prototype.toString.call(dependentNames) === '[object Array]' && dependentNames.length > 0) {
             // refresh the dependents
             var selectAllbool = false;
@@ -70,8 +73,8 @@ const refreshDependents = function (dependentNames) {
             }
         }
     } catch (e) {
-        e.message = "Error in select.js refreshDependents: " + e.message;
-        setError(e)
+        e.message = "INFO: Error in select.js refreshDependents: " + e.message;
+        setInfo(e.message);
     }
 };
 
@@ -99,8 +102,8 @@ const checkDisableOther = function (param) {
             }
         }
     } catch (e) {
-        e.message = "Error in select.js checkDisableOther: " + e.message;
-        setError(e)
+        e.message = "INFO: Error in select.js checkDisableOther: " + e.message;
+        setInfo(e.message);
     }
 };
 
@@ -136,10 +139,11 @@ const checkHideOther = function (param) {
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
+            matsSelectUtils.checkDisableOther(param);
         }
     } catch (e) {
-        e.message = "Error in select.js checkHideOther: " + e.message;
-        setError(e)
+        e.message = "INFO: Error in select.js checkHideOther: " + e.message;
+        setInfo(e.message);
     }
 };
 
@@ -247,8 +251,8 @@ const refresh = function (paramName) {
                 }
             }
         } catch (e) {
-            e.message = "Error in select.js refresh: determining options from superiors: " + e.message;
-            setError(e)
+            e.message = "INFO: Error in select.js refresh: determining options from superiors: " + e.message;
+            setInfo(e.message);
         }
     }
     try {
@@ -302,11 +306,10 @@ const refresh = function (paramName) {
             }
         }
     } catch (e) {
-        e.message = "Error in select.js refresh: resetting selected options: " + e.message;
-        setError(e)
+        e.message = "INFO: Error in select.js refresh: resetting selected options: " + e.message;
+        setInfo(e.message);
     }
-    refreshPeer(param.peerName);
-    refreshDependents(param.dependentNames);
+    refreshPeer(param);
 };  // refresh function
 
 export default matsSelectUtils = {

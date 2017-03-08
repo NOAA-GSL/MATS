@@ -276,23 +276,6 @@ const checkDiffs = function () {
         }
     }
 };
-const refreshDependents = function(dependentNames) {
-    if (dependentNames) {
-        // refresh the dependents
-        for (var i = 0; i < dependentNames.length; i++) {
-            const name = dependentNames[i];
-            const targetParam = matsCollections.CurveParams.findOne({name: name});
-            const targetId = targetParam.name + '-' + targetParam.type;
-            const targetElem = document.getElementById(targetId);
-            const refreshEvent = new CustomEvent("refresh", {
-                detail: {
-                    refElement: event.target
-                }
-            });
-            targetElem.dispatchEvent(refreshEvent);
-        }
-    }
-};
 
 const showProfileFace = function() {
     // move dates selector to curve parameters - one date range for each curve
@@ -375,7 +358,6 @@ export default matsCurveUtils = {
     showScatterFace:showScatterFace,
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
-    refreshDependents:refreshDependents,
     removeAllCurves:removeAllCurves,
     PlotResult:PlotResult
 };

@@ -13,18 +13,7 @@ Template.select.onRendered( function () {
         elem && elem.addEventListener('axisRefresh', function () {
             // Don't know why I have to do this, I expected the parameter data to be in the context....
             const paramData = matsCollections.CurveParams.findOne({name: this.name}, {dependentNames: 1, peerName: 1});
-            const peerName = paramData.peerName;
-            const dependentNames = paramData.dependentNames;
-            if (peerName) {
-                if (matsSelectUtils.refreshPeer) {
-                    matsSelectUtils.refreshPeer(peerName);
-                }
-            }
-            if (dependentNames && dependentNames.length > 0) {
-                if (matsSelectUtils.refreshDependents) {
-                    matsSelectUtils.refreshDependents(dependentNames);
-                }
-            }
+            matsSelectUtils.refreshPeer(paramData);
         });
 
         // register refresh event for any superior to use to enforce a refresh of the options list
@@ -97,8 +86,8 @@ Template.select.events({
         // always check to see if an "other" needs to be hidden or disabled before refreshing
         matsSelectUtils.checkHideOther(this);
         matsSelectUtils.checkDisableOther(this);
-        matsSelectUtils.refreshPeer(this.peerName);
-        matsSelectUtils.refreshDependents(this.dependentNames);
+        matsSelectUtils.refreshPeer(this);
+        return false;
     },
     'change .selectAll': function (event) {
         const selectorId = (event.currentTarget).attributes['data-selectid'].value;
@@ -114,6 +103,7 @@ Template.select.events({
             }
         }
         matsParamUtils.setValueTextForParamName(event.target.dataset.name, "");  // will override text if values are selected
+        return false;
     },
     'click .selectClear': function (event) {
         const selectorId = "#" + (event.currentTarget).attributes['data-selectid'].value;
@@ -122,5 +112,6 @@ Template.select.events({
         $('#' + matsTypes.InputTypes.controlButton + '-' + this.name).click();  // click the control button to clean up the display (hide the selector)
         matsSelectUtils.checkHideOther(this);
         matsSelectUtils.checkDisableOther(this);
+        return false;
     }
 });
