@@ -50,16 +50,16 @@ const setValueTextForParamName = function(paramName, text) {
             return;
         }
         if (text === undefined) {
-            if (param.multiple) {
-                // .... if multi selected  get the first .. last
-                const selection = getInputElementForParamName(paramName).selectedOptions;
-                if (selection.length == 0) {
-                    text = "";
-                } else if (selection.length == 1) {
-                    text = selection[0].textContent;
-                } else {
-                    text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
-                }
+        if (param.multiple) {
+            // .... if multi selected  get the first .. last
+            const selection = getInputElementForParamName(paramName).selectedOptions;
+            if (selection.length == 0) {
+                text = "";
+            } else if (selection.length == 1) {
+                text = selection[0].textContent;
+            } else {
+                text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
+            }
             }
         }
         const elem = getValueElementForParamName(paramName);
@@ -119,7 +119,6 @@ const setInputForParamName = function(paramName,value) {
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
     idSelector.val(value);
-    setValueTextForParamName(paramName,value);
     setValueTextForParamName(paramName,value);
 };
 
