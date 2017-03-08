@@ -126,11 +126,6 @@ const setInputForParamName = function(paramName,value) {
     idSelector.trigger("change");
 };
 
-const getElementDataForParamName = function(paramName) {
-    const elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-    return elem.getAttribute("data-mats-currentValue");
-};
-
 const getElementValues = function() {
     const data = {
         curveParams:{},
@@ -266,6 +261,19 @@ const collapseParams = function() {
     });
 };
 
+const collapseParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    if (param === undefined || param === null) {
+        return;
+    }
+    if (param.type !== matsTypes.InputTypes.selectMap) {
+        const selector = "element" + "-" + param.name;
+        if (document.getElementById(selector)) {
+            document.getElementById(selector).style.display = "none";
+        }
+    }
+};
+
 const typeSort = function (arr) {
     return arr.sort(function(a,b) {
         if (isNaN(Number(a) && isNaN(Number(b)))) { // string compare
@@ -305,11 +313,11 @@ export default matsParamUtils = {
     setValueTextForParamName:setValueTextForParamName,
     getInputIdForParamName:getInputIdForParamName,
     getInputElementForParamName:getInputElementForParamName,
-    getElementDataForParamName:getElementDataForParamName,
     getElementValues:getElementValues,
     setInputForParamName:setInputForParamName,
     expandParams:expandParams,
     collapseParams:collapseParams,
+    collapseParam:collapseParam,
     getParameterForName:getParameterForName,
     setDefaultForParamName:setDefaultForParamName,
     typeSort:typeSort};
