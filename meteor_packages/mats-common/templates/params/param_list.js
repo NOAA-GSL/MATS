@@ -242,7 +242,6 @@ Template.paramList.events({
             matsCurveUtils.checkDiffs();
             matsParamUtils.collapseParams();
             matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
-            //Session.set('lastUpdate', Date.now().toString());
             return false;
     }
 });

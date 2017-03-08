@@ -119,7 +119,7 @@ const setInputForParamName = function(paramName,value) {
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
     idSelector.val(value);
-    //idSelector.trigger("change");
+    setValueTextForParamName(paramName,value);
     setValueTextForParamName(paramName,value);
 };
 
