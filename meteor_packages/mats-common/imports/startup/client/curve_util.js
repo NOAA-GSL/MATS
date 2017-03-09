@@ -165,7 +165,6 @@ const setUsedLabels = function () {
 };
 
 const setUsedColorsAndLabels = function () {
-    //matsParamUtils.setValueTextForParamName('label','');  // necessary to prevent duplicates in the label
     setUsedColors();
     setUsedLabels();
 };
@@ -297,7 +296,7 @@ const showProfileFace = function() {
             elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.profile);
-        Session.set('lastUpdate', Date.now());
+        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
     }
 };
 
@@ -321,7 +320,7 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
-        Session.set('lastUpdate', Date.now());
+        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
     }
 };
 
@@ -332,7 +331,7 @@ const showScatterFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
-        Session.set('lastUpdate', Date.now());
+        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
     }
 };
 
@@ -340,6 +339,7 @@ const showScatterFace = function() {
 const removeAllCurves = function() {
     // remove all curves
     document.getElementById('remove-all') && document.getElementById('remove-all').click();
+    clearAllUsed();
 };
 
 export default matsCurveUtils = {

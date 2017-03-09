@@ -41,7 +41,6 @@ var matsRef = protocol + "//" + hostport;
 var helpRef = ref.endsWith('/') ? ref + "help" : ref + "/help";
 Session.set ("app",{appName:app,matsref:matsRef, appref:ref, helpref:helpRef});
 var collections = Object.keys(matsCollections).map(key => matsCollections[key]);
-
 Session.set("Mongol", {
     'collections': collections,
     'display': false,

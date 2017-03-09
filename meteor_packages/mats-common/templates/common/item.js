@@ -4,11 +4,10 @@ import {matsParamUtils } from 'meteor/randyp:mats-common';
 import {matsCollections } from 'meteor/randyp:mats-common';
 
 Template.item.helpers({
-    value: function() {
+    textValue: function() {
         if (this.name === "label") {  // label is handled specially
             return;
         }
-        //if (matsParamUtils.getValueForParamName(this.name)) {
         if (matsParamUtils.getInputElementForParamName(this.name)) {
             // This helper is for initialization. If I already have an element just return "" and let the event handling take care of the value
             return '';
@@ -132,7 +131,6 @@ Template.item.events({
                 }
             }
         }
-        return false;
     },
     'click .data-input': function (event) {
         if (this.displayPriority !== undefined) {
@@ -143,7 +141,6 @@ Template.item.events({
             Session.set('diffStatus',this);
         }
         matsParamUtils.collapseParam(this.name);
-        return false;
     },
     'change .data-input': function (event) {
         event.target.checkValidity();
@@ -161,7 +158,6 @@ Template.item.events({
                 }
             }
          }
-        return false;
     },
 
     'click .help' : function() {
@@ -181,7 +177,6 @@ Template.item.events({
         } else {
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name ) );
         }
-        return false;
     }
 });
 
@@ -197,7 +192,6 @@ Template.textInput.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        return false;
     }
 });
 
@@ -213,7 +207,6 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        return false;
     }
 });
 
@@ -226,7 +219,6 @@ Template.numberSpinner.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        return false;
     }
 });
 
@@ -240,7 +232,6 @@ Template.radioGroup.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        return false;
     }
 });
 
@@ -253,7 +244,6 @@ Template.checkboxGroup.events({
         } catch (error) {
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        return false;
     }
 });
 

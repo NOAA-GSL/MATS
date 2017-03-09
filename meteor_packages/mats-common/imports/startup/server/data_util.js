@@ -1053,7 +1053,7 @@ const doColorScheme = function () {
     if (matsCollections.ColorScheme.find().count() == 0) {
         matsCollections.ColorScheme.insert({
             colors: [
-                "rgb(0,0,255)",
+                "rgb(255,0,0)",
                 "rgb(0,0,255)",
                 "rgb(128,128,128)",
                 "rgb(255,165,0)",

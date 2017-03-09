@@ -307,6 +307,7 @@ export default matsParamUtils = {
     getValueElementForParamName:getValueElementForParamName,
     getValueForParamName:getValueForParamName,
     setValueTextForParamName:setValueTextForParamName,
+    getValueIdForParamName:getValueIdForParamName,
     getInputIdForParamName:getInputIdForParamName,
     getInputElementForParamName:getInputElementForParamName,
     getElementValues:getElementValues,

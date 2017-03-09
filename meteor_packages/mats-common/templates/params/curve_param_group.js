@@ -44,7 +44,6 @@ for each axis. The double set of parameters will get sent back to the backend.
 Template.curveParamGroup.helpers({
     CurveParams: function (num) {
         var restoreSettingsTime = Session.get("restoreSettingsTime"); // used to force re-render
-        var lastUpdate = Session.get('lastUpdate');
             var params = matsCollections.CurveParams.find({displayGroup:num},{sort:["displayOrder", "asc"]}).fetch();
             params = filterParams(params);
             return params;
