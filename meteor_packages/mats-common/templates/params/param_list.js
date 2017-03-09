@@ -56,21 +56,14 @@ Template.paramList.events({
         matsParamUtils.collapseParams();
     },
     'click .reset': function(event,template) {
-        //location.reload();
+        const plotType = Session.get('plotType');
         event.preventDefault();
         Session.set("paramWellColor","rgb(245,245,245)");
+        matsCurveUtils.removeAllCurves();
         matsCurveUtils.resetScatterApply();
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
-
-        // DO THIS DIFFERENTLY!!!!! USE A SESSION VARIABLE!!!
-        Blaze.remove(Blaze.getView(paramView));
-        Blaze.remove(Blaze.getView(plotView));
-        Blaze.render(Template.paramList,document.getElementById('paramView'));
-        Blaze.render(Template.plotList,document.getElementById('plotView'));
-        // reset the plotType to timeseries
-        matsCurveUtils.showTimeseriesFace();
-        document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked = true;
+        document.getElementById('plot-type-' + plotType).checked = true;
     },
     'click .expand': function() {
         matsParamUtils.expandParams();

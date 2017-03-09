@@ -1,8 +1,6 @@
 <template name="select">
         <select class="data-input {{name}}" size="5" name="{{name}}" id="{{name}}-{{type}}" {{multiple}}>
-                {{#each options}}
-                    <option {{isSelectedByDefault ..}}>{{this}}</option>
-                {{/each}}
+            <option initial>initial</option>
         </select>
         {{#if isMultiple}}
             <div>

@@ -5,20 +5,20 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 var startInit = function () {
     var today = new Date();
     var thenDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-    var yr = thenDate.getFullYear();
-    var day = thenDate.getDate();
-    var month = thenDate.getMonth() + 1;
-    var hour = thenDate.getHours();
-    var minute = (((thenDate.getMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
+    var yr = thenDate.getUTCFullYear();
+    var day = thenDate.getUTCDate();
+    var month = thenDate.getUTCMonth() + 1;
+    var hour = thenDate.getUTCHours();
+    var minute = (((thenDate.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
     return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
 };
 var stopInit = function () {
     var today = new Date();
-    var yr = today.getFullYear();
-    var day = today.getDate();
-    var month = today.getMonth() + 1;
-    var hour = today.getHours();
-    var minute = (((today.getMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
+    var yr = today.getUTCFullYear();
+    var day = today.getUTCDate();
+    var month = today.getUTCMonth() + 1;
+    var hour = today.getUTCHours();
+    var minute = (((today.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
     return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
 };
 

@@ -4,7 +4,7 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 
-const refreshPeer = function (param) {
+const refreshPeer = function (event, param) {
     try {
         const peerName = this.peerName;
         if (peerName !== undefined) {
@@ -14,19 +14,19 @@ const refreshPeer = function (param) {
             const targetElem = document.getElementById(targetId);
             const refreshMapEvent = new CustomEvent("refresh", {
                 detail: {
-                    refElement: event.target
+                    refElement: (event !== null) ? event.target : null
                 }
             });
             targetElem.dispatchEvent(refreshMapEvent);
         }
-        refreshDependents(param);
+        refreshDependents(event, param);
     } catch (e) {
         e.message = "INFO: Error in select.js refreshPeer: " + e.message;
         setInfo(e.message);
     }
 };
 
-const refreshDependents = function (param) {
+const refreshDependents = function (event, param) {
     try {
         const dependentNames = param.dependentNames;
         if (dependentNames && Object.prototype.toString.call(dependentNames) === '[object Array]' && dependentNames.length > 0) {
@@ -48,7 +48,7 @@ const refreshDependents = function (param) {
                 }
                 const refreshEvent = new CustomEvent("refresh", {
                     detail: {
-                        refElement: event.target
+                        refElement: (event !== null) ? event.target : null
                     }
                 });
                 targetElem.dispatchEvent(refreshEvent);
@@ -147,7 +147,7 @@ const checkHideOther = function (param) {
     }
 };
 
-const refresh = function (paramName) {
+const refresh = function (event, paramName) {
     if (paramName.search('axis') === 1) {
         // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
         return;
@@ -257,6 +257,12 @@ const refresh = function (paramName) {
     }
     try {
         // reset the options of the select
+        // if the options are null it might be that this is the initial setup.
+        // so use the optionsmap and the default options for the map
+        if (options == null) {
+            // get the default options
+            options = param.options;
+        }
         var optionsAsString = "";
         if (options === undefined || options == null) {
             return;
@@ -309,7 +315,7 @@ const refresh = function (paramName) {
         e.message = "INFO: Error in select.js refresh: resetting selected options: " + e.message;
         setInfo(e.message);
     }
-    refreshPeer(param);
+    refreshPeer(event, param);
 };  // refresh function
 
 export default matsSelectUtils = {

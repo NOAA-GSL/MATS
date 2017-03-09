@@ -10,10 +10,10 @@ Template.select.onRendered( function () {
     try {
         // register refresh event for axis change to use to enforce a refresh
 
-        elem && elem.addEventListener('axisRefresh', function () {
+        elem && elem.addEventListener('axisRefresh', function (event) {
             // Don't know why I have to do this, I expected the parameter data to be in the context....
             const paramData = matsCollections.CurveParams.findOne({name: this.name}, {dependentNames: 1, peerName: 1});
-            matsSelectUtils.refreshPeer(paramData);
+            matsSelectUtils.refreshPeer(event,paramData);
         });
 
         // register refresh event for any superior to use to enforce a refresh of the options list
@@ -21,8 +21,8 @@ Template.select.onRendered( function () {
             // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
             return;
         }
-        elem && elem.addEventListener('refresh', function (e) {
-            matsSelectUtils.refresh(this.name);
+        elem && elem.addEventListener('refresh', function (event) {
+            matsSelectUtils.refresh(event,this.name);
         });
     } catch (e) {
         e.message = "Error in select.js rendered: " + e.message;
@@ -31,7 +31,7 @@ Template.select.onRendered( function () {
     try {
         matsSelectUtils.checkDisableOther(this.data);
         matsSelectUtils.checkHideOther(this.data);
-        matsSelectUtils.refresh(this.data.name);
+        matsSelectUtils.refresh(null,this.data.name);
         elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
 
     } catch (e) {
@@ -86,7 +86,7 @@ Template.select.events({
         // always check to see if an "other" needs to be hidden or disabled before refreshing
         matsSelectUtils.checkHideOther(this);
         matsSelectUtils.checkDisableOther(this);
-        matsSelectUtils.refreshPeer(this);
+        matsSelectUtils.refreshPeer(event, this);
         return false;
     },
     'change .selectAll': function (event) {
