@@ -296,7 +296,8 @@ const showProfileFace = function() {
             elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.profile);
-        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
     }
 };
 
@@ -320,7 +321,8 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
-        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
     }
 };
 
@@ -332,6 +334,8 @@ const showScatterFace = function() {
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
         Session.set('lastUpdate', Date.now());   // force curveParams to re-render
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
     }
 };
 
@@ -340,6 +344,7 @@ const removeAllCurves = function() {
     // remove all curves
     document.getElementById('remove-all') && document.getElementById('remove-all').click();
     clearAllUsed();
+    matsParamUtils.setAllParamsToDefault();
 };
 
 export default matsCurveUtils = {

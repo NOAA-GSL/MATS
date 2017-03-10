@@ -461,6 +461,12 @@ Meteor.startup(function () {
     var modelRegionNumberMap = {};
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions, display_category from regions_per_model_mats order by display_category, model;");
+        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,
+        //     "SELECT model, regions, display_text, RPM.display_order, RPM.id " +
+        //     "FROM regions_per_model_mats_all_sorted " +
+        //     "AS RPM, display_categories " +
+        //     "AS DC WHERE RPM.display_category = DC.id " +
+        //     "ORDER BY RPM.display_order;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions;

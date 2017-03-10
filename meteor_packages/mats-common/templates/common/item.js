@@ -5,6 +5,7 @@ import {matsCollections } from 'meteor/randyp:mats-common';
 
 Template.item.helpers({
     textValue: function() {
+        Session.get('lastUpdate');
         if (this.name === "label") {  // label is handled specially
             return;
         }

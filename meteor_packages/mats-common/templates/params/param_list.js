@@ -56,7 +56,7 @@ Template.paramList.events({
         matsParamUtils.collapseParams();
     },
     'click .reset': function(event,template) {
-        const plotType = Session.get('plotType');
+        const plotType = $('input[name=plot-type]:checked').val();
         event.preventDefault();
         Session.set("paramWellColor","rgb(245,245,245)");
         matsCurveUtils.removeAllCurves();
@@ -64,6 +64,7 @@ Template.paramList.events({
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
         document.getElementById('plot-type-' + plotType).checked = true;
+        matsParamUtils.setAllParamsToDefault();
     },
     'click .expand': function() {
         matsParamUtils.expandParams();

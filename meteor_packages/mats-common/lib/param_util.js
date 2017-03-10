@@ -296,9 +296,20 @@ const typeSort = function (arr) {
 
 const setDefaultForParamName = function(paramName) {
     const  defaultValue = getParameterForName(paramName).default;
-    if (defaultValue != "undefined") {
-        setInputForParamName(paramName,defaultValue);
+    if (paramName == 'label') {
+        setInputForParamName(paramName,Session.get('NextCurveLabel'));
+    } else {
+        if (defaultValue != "undefined") {
+            setInputForParamName(paramName, defaultValue);
+        }
     }
+};
+
+const setAllParamsToDefault = function() {
+    const params = matsCollections.CurveParams.find({}).fetch();
+    params.forEach(function(param) {
+        setDefaultForParamName(param.name);
+    });
 };
 
 export default matsParamUtils = {
@@ -317,4 +328,5 @@ export default matsParamUtils = {
     collapseParam:collapseParam,
     getParameterForName:getParameterForName,
     setDefaultForParamName:setDefaultForParamName,
+    setAllParamsToDefault:setAllParamsToDefault,
     typeSort:typeSort};

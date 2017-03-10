@@ -694,6 +694,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
+    var axisLabel;
     for (var dsi = 0; dsi < dataset.length; dsi++) {
        if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
             continue;
@@ -701,7 +702,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
         const axisKey = curves[dsi].axisKey;
         const ymin = axisMap[axisKey].ymin;
         const ymax = axisMap[axisKey].ymax;
-        const axisLabel = axisMap[axisKey].axisLabel;
+        axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.2;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -710,7 +711,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -730,7 +731,11 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
         },
         xaxes: [{
             axisLabel: 'time',
-            color: 'grey'
+            color: 'grey',
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
         }],
         xaxis: {
             zoomRange: [0.1, null],
@@ -823,7 +828,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         axisMap[axisKey] = {index: curveIndex + 1, label: label, xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax, axisLabel:axisKey + " - " + label};
     }
     const curveOptions = {
-        yaxis: axisMap[axisKey].index,
+        yaxis: 1,   // for profiles there is only one xaxis and one yaxis
         label: label,
         color: color,
         data: dataSeries,
@@ -904,26 +909,68 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
 
 const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax) {
 // generate y-axis
-    var yaxes = [];
-    var yaxis = [];
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
     var xAxislabel = "";
+    var axisVariables = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
         if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
             continue;
         }
         const axisKey = curves[dsi].axisKey;
-        if (xAxislabel === undefined || xAxislabel == "") {
-            xAxislabel = axisKey;
-        } else {
-            xAxislabel = xAxislabel + " | " + axisKey;
+        // only need one xaxisLable (they should all be the same anyway for profiles)
+        const thisVar = axisKey.split(':')[0];
+        if (xAxislabel == "") {
+            axisVariables.push(thisVar);
+            xAxislabel = axisMap[axisKey].axisLabel;
+        }
+        else {
+            if (axisVariables.indexOf(thisVar) === -1) {
+                axisVariables.push(thisVar);
+                if (xAxislabel.length > 30) {
+                    xAxislabel += "\n";  // wrap long labels
+                }
+                xAxislabel = xAxislabel + '|' + axisMap[axisKey].axisLabel;
+            }
         }
         xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
         xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
-        const position = dsi === 0 ? "left" : "right";
-        const yaxesOptions = {
-            position: position,
+    }
+
+    // account for error bars on xaxis
+    xmax = xmax + errorMax;
+    xmin = xmin - errorMax;
+    const xpad = (xmax - xmin) * 0.05;
+    const options = {
+        axisLabels: {
+            show: true
+        },
+        xaxes: [{
+            axisLabel: xAxislabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: xAxislabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+            alignTicksWithAxis: 1,
+            color: 'grey',
+            min:xmin - xpad,
+            max:xmax + xpad,
+            font: {
+                size: 20,
+                lineHeight: 23,
+                style: "italic",
+                weight: "bold",
+                family: "sans-serif",
+                variant: "small-caps",
+                color: "#545454"
+            }
+        }],
+        xaxis: {
+            zoomRange: [0.1, null]
+        },
+        yaxes: [{
+            position:"left",
             color: 'grey',
             axisLabel: ' Pressure (hPa)',
             axisLabelColour: "black",
@@ -944,49 +991,10 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             ticks: [[-1000, 1000], [-900, 900], [-800, 800], [-700, 700], [-600, 600], [-500, 500], [-400, 400], [-300, 300], [-200, 200], [-100, 100], [0, 0]],
             min: -1100,
             max: 0
-        };
-        var yaxisOptions = {
-            zoomRange: [0.1, null]
-        };
-        yaxes.push(yaxesOptions);
-        yaxis.push(yaxisOptions);
-    }
-
-    // account for error bars on xaxis
-    xmax = xmax + errorMax;
-    xmin = xmin - errorMax;
-    const xpad = (xmax - xmin) * 0.05;
-    const options = {
-        axisLabels: {
-            show: true
-        },
-        xaxes: [{
-            axisLabel: xAxislabel,
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 26,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 20,
-            alignTicksWithAxis: 1,
-            color: 'grey',
-            min:xmin - xpad,
-            max:xmax + xpad,
-            font: {
-                size: 20,
-                lineHeight: 23,
-                style: "italic",
-                weight: "bold",
-                family: "sans-serif",
-                variant: "small-caps",
-                color: "#545454"
-            }
         }],
-        xaxis: {
+        yaxis: [{
             zoomRange: [0.1, null]
-        },
-        yaxes: yaxes,
-        yaxis: yaxis,
-
+        }],
         legend: {
             show: false,
             container: "#legendContainer",
