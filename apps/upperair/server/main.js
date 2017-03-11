@@ -10,24 +10,13 @@ var regionModelOptionsMap = {};
 var modelTableMap = {};
 var forecastLengthOptionsMap = {};
 var forecastLengthModels = [];
-var date = new Date();
-var dateOneMonthPrior = new Date();
-dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
-var yr = date.getFullYear();
-var day = date.getDate();
-var month = date.getMonth();
-var hour = date.getHours();
-var minute = date.getMinutes();
-var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-yr = dateOneMonthPrior.getFullYear();
-day = dateOneMonthPrior.getDate();
-month = dateOneMonthPrior.getMonth();
-hour = dateOneMonthPrior.getHours();
-minute = dateOneMonthPrior.getMinutes();
-var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-var dstr = dstrOneMonthPrior + " - " + dstrToday;
+const dateInitStr = matsCollections.dateInitStr();
+const dateInitStrParts = dateInitStr.split(' - ');
+const startInit = dateInitStrParts[0];
+const stopInit = dateInitStrParts[1];
+const dstr = startInit + ' - ' + stopInit;
 
-var doPlotParams = function () {
+const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -37,8 +26,8 @@ var doPlotParams = function () {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -66,20 +55,13 @@ var doPlotParams = function () {
                 displayGroup: 2
             });
     }
-    return dstr;
 };
 
-var doCurveParams = function () {
+const doCurveParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
     if (matsCollections.CurveParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-        var optionsMap = {};
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
@@ -122,7 +104,8 @@ var doCurveParams = function () {
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[myModels[0]][0],
+                //default: regionModelOptionsMap[myModels[0]][0],
+                default: "HRRR domain",
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -316,8 +299,8 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap).sort(),
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -338,7 +321,7 @@ var doCurveParams = function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and graph.js.
  */
-var doCurveTextPatterns = function () {
+const doCurveTextPatterns = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveTextPatterns.remove({});
     }
@@ -377,7 +360,7 @@ var doCurveTextPatterns = function () {
     }
 };
 
-var doSavedCurveParams = function () {
+const doSavedCurveParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.SavedCurveParams.remove({});
     }
@@ -386,7 +369,7 @@ var doSavedCurveParams = function () {
     }
 };
 
-var doPlotGraph = function () {
+const doPlotGraph = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotGraphFunctions.remove({});
     }

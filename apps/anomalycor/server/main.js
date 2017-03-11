@@ -8,38 +8,25 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 var modelOptionsMap = {};
 var regionModelOptionsMap = {};
 var forecastLengthOptionsMap = {};
-
-var date = new Date();
-var dateOneMonthPrior = new Date();
-dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
-var yr = date.getFullYear();
-var day = date.getDate();
-var month = date.getMonth();
-var hour = date.getHours();
-var minute = date.getMinutes();
-var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-yr = dateOneMonthPrior.getFullYear();
-day = dateOneMonthPrior.getDate();
-month = dateOneMonthPrior.getMonth();
-hour = dateOneMonthPrior.getHours();
-minute = dateOneMonthPrior.getMinutes();
-var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-var dstr = dstrOneMonthPrior + " - " + dstrToday;
+var forecastLengthModels = [];
+const dateInitStr = matsCollections.dateInitStr();
+const dateInitStrParts = dateInitStr.split(' - ');
+const startInit = dateInitStrParts[0];
+const stopInit = dateInitStrParts[1];
+const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
-// remove for production
-    matsCollections.PlotParams.remove({});
     if (matsCollections.PlotParams.find().count() == 0) {
         matsCollections.PlotParams.insert(
             {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -58,7 +45,7 @@ const doPlotParams = function () {
                 name: 'plotFormat',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
-                options: Object.keys(plotFormats),
+                options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: true,
                 controlButtonVisibility: 'block',
@@ -67,29 +54,19 @@ const doPlotParams = function () {
                 displayGroup: 2
             });
     }
-    return dstr;
 };
 
 const doCurveParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-
-//remove for production
-    matsCollections.CurveParams.remove({});
     if (matsCollections.CurveParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-        var optionsMap = {};
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],   // convenience
                 controlButtonCovered: true,
                 default: '',
                 unique: true,
@@ -131,7 +108,6 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
-
 
         optionsMap = {
             'TSS (True Skill Score)': ['(sum(m0.yy)+0.00) / sum(m0.yy+m0.ny) + (sum(m0.nn)+0.00) / sum(m0.nn+m0.yn) - 1 as stat'],

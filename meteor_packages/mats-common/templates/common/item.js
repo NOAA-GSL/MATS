@@ -141,7 +141,10 @@ Template.item.events({
         if ($.inArray(this,formats) !== -1){
             Session.set('diffStatus',this);
         }
-        matsParamUtils.collapseParam(this.name);
+        if (this.multiple !== true) {
+            // not too cool to collapse when trying to do a multi-select
+            matsParamUtils.collapseParam(this.name);
+        }
     },
     'change .data-input': function (event) {
         event.target.checkValidity();

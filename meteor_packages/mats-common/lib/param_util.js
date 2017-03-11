@@ -115,7 +115,6 @@ const getInputElementForParamName = function(paramName) {
 // also sets a data-mats-currentValue attribute
 const setInputForParamName = function(paramName,value) {
     const id = getInputIdForParamName(paramName);
-
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
     idSelector.val(value);
@@ -271,6 +270,9 @@ const collapseParam = function(paramName) {
 };
 
 const typeSort = function (arr) {
+    if (arr === undefined) {
+        return undefined;
+    }
     return arr.sort(function(a,b) {
         if (isNaN(Number(a) && isNaN(Number(b)))) { // string compare
             const A = a.toLowerCase();
@@ -294,21 +296,51 @@ const typeSort = function (arr) {
     });
 };
 
-const setDefaultForParamName = function(paramName) {
-    const  defaultValue = getParameterForName(paramName).default;
+const setDefaultForParamName = function (param) {
+    const paramName = param.name;
+    const type = param.type;
+    const defaultValue = param.default;
     if (paramName == 'label') {
-        setInputForParamName(paramName,Session.get('NextCurveLabel'));
+        setInputForParamName(paramName, Session.get('NextCurveLabel'));
     } else {
         if (defaultValue != "undefined") {
-            setInputForParamName(paramName, defaultValue);
+            if (type === matsTypes.InputTypes.select && (defaultValue === -1 || defaultValue === undefined || defaultValue === matsTypes.InputTypes.unused)) {
+                setInputForParamName(paramName, matsTypes.InputTypes.unused);
+            }
+            else {
+                setInputForParamName(paramName, defaultValue);
+            }
         }
     }
 };
 
 const setAllParamsToDefault = function() {
-    const params = matsCollections.CurveParams.find({}).fetch();
+    // default the superiors and refresh them so that they cause the dependent options to refresh
+    var params = matsCollections.CurveParams.find({}).fetch();
+
+    const superiors = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
+    superiors.forEach(function(param) {
+        setDefaultForParamName(param);
+        // actually call the refresh directly - don't use an event, because we want this all to be synchronous
+        matsSelectUtils.refresh(null,param.name);
+        // remove from params list - actually rewrite params list NOT with this param
+        params = params.filter(function( obj ) {
+            return obj.name !== param.name;
+        });
+    });
+    // refresh all the non superiors to their default values
+    const nonDependents = matsCollections.CurveParams.find({"superiorNames" : { "$exists" : true }}).fetch();
+    nonDependents.forEach(function(param) {
+        setDefaultForParamName(param);
+        matsSelectUtils.refresh(null,param.name);
+        // remove from params list - actually rewrite params list NOT with this param
+        params = params.filter(function( obj ) {
+            return obj.name !== param.name;
+        });
+    });
+    // reset everything else
     params.forEach(function(param) {
-        setDefaultForParamName(param.name);
+        setDefaultForParamName(param);
     });
 };
 
