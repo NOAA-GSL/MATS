@@ -76,9 +76,9 @@ graphProfile = function(result) {
                         dataset[c].points.errorbars = undefined;
                     }
                     if (dataset[c].points.errorbars !== undefined) {
-                        Session.set(label + "errorBarButtonText", 'no error bars');
+                        Session.set(label + "errorBarButtonText", 'hide error bars');
                     } else {
-                        Session.set(label + "errorBarButtonText", 'error bars');
+                        Session.set(label + "errorBarButtonText", 'show error bars');
                     }
                 }
             }
@@ -118,9 +118,9 @@ graphProfile = function(result) {
                         dataset[c].points.errorbars = undefined;
                     }
                     if (dataset[c].points.errorbars !== undefined) {
-                        Session.set(label + "errorBarButtonText", 'no error bars');
+                        Session.set(label + "errorBarButtonText", 'hide error bars');
                     } else {
-                        Session.set(label + "errorBarButtonText", 'error bars');
+                        Session.set(label + "errorBarButtonText", 'show error bars');
                     }
                 }
             }
