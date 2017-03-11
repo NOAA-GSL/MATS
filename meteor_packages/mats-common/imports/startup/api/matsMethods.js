@@ -406,28 +406,6 @@ const setSettings = new ValidatedMethod({
         }
     });
 
-
-const setSelectParamOptions = new ValidatedMethod({
-        name: 'matsMethods.setSelectParamOptions',
-        validate: new SimpleSchema({
-            name: {type: String},
-            options: {type: [String]},
-            optionIndex: {type: Number, optional:true}
-        }).validator( { clean: true, filter: false } ),
-        run(params){
-            var param = matsCollections.CurveParams.findOne({name: params.name});
-            if (params.optionIndex === undefined) {
-                params.optionIndex = 0;
-            }
-            if (param) {
-                param.options = params.options;
-                var param_id = param._id;
-                matsCollections.CurveParams.update(param_id, {$set: {options: params.options, default:params.options[params.optionIndex]}});
-            }
-            return false;
-        }
-    });
-
 const setCredentials = new ValidatedMethod({
     name: 'matsMethods.setCredentials',
     validate: new SimpleSchema({
@@ -777,7 +755,6 @@ export default matsMethods = {
     insertColor:insertColor,
     removeColor:removeColor,
     setSettings:setSettings,
-    setSelectParamOptions:setSelectParamOptions,
     setCredentials:setCredentials,
     removeAuthorization:removeAuthorization,
     getAuthorizations:getAuthorizations,

@@ -1,26 +1,7 @@
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
-
-var startInit = function () {
-    var today = new Date();
-    var thenDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-    var yr = thenDate.getUTCFullYear();
-    var day = thenDate.getUTCDate();
-    var month = thenDate.getUTCMonth() + 1;
-    var hour = thenDate.getUTCHours();
-    var minute = (((thenDate.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
-};
-var stopInit = function () {
-    var today = new Date();
-    var yr = today.getUTCFullYear();
-    var day = today.getUTCDate();
-    var month = today.getUTCMonth() + 1;
-    var hour = today.getUTCHours();
-    var minute = (((today.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
-};
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
 
 Template.dateRange.onRendered(function () {
     //NOTE: Date fields are special in that they are qualified by plotType.
@@ -51,6 +32,11 @@ Template.dateRange.onRendered(function () {
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
     const superiorNames = this.data.superiorNames;
+    const dateInitStr = matsCollections.dateInitStr();
+    const dateInitStrParts = dateInitStr.split(' - ');
+    const startInit = dateInitStrParts[0];
+    const stopInit = dateInitStrParts[1];
+    const dstr = startInit + ' - ' + stopInit;
     $(function () {
         $('#' + idref).daterangepicker({
             "autoApply": true,
@@ -58,8 +44,8 @@ Template.dateRange.onRendered(function () {
             "timePicker": true,
             "timePicker24Hour": true,
             "timePickerIncrement": 15,
-            "startDate": startInit(),
-            "endDate": stopInit(),
+            "startDate": startInit,
+            "endDate": stopInit,
             "showDropdowns": true,
             "drops": "up",
             locale: {
@@ -76,7 +62,7 @@ Template.dateRange.onRendered(function () {
             },
             "alwaysShowCalendars": true
         });
-        matsParamUtils.setValueTextForParamName(name, startInit() + ' - ' + stopInit());
+        matsParamUtils.setValueTextForParamName(name, dstr);
     });
 
     $('#' + idref).on('apply.daterangepicker', function (ev, picker) {

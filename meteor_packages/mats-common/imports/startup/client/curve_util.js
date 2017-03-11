@@ -338,8 +338,6 @@ const showScatterFace = function() {
         Session.set('lastUpdate', Date.now());
     }
 };
-
-
 const removeAllCurves = function() {
     // remove all curves
     document.getElementById('remove-all') && document.getElementById('remove-all').click();
