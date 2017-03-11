@@ -219,7 +219,7 @@ Template.graph.helpers({
     errorBarButtonText: function () {
         var sval = this.label + "errorBarButtonText";
         if (Session.get(sval) === undefined) {
-            Session.set(sval, 'no error bars');
+            Session.set(sval, 'hide error bars');
         }
         return Session.get(sval);
     },

@@ -141,8 +141,8 @@ Template.item.events({
         if ($.inArray(this,formats) !== -1){
             Session.set('diffStatus',this);
         }
-        if (this.multiple !== true) {
-            // not too cool to collapse when trying to do a multi-select
+        if (this.multiple !== true && this.type !== matsTypes.InputTypes.numberSpinner) {
+            // not too cool to collapse when trying to do a multi-select or a numberspinner
             matsParamUtils.collapseParam(this.name);
         }
     },
