@@ -345,6 +345,123 @@ const removeAllCurves = function() {
     matsParamUtils.setAllParamsToDefault();
 };
 
+const get_err = function (sVals, sSecs) {
+    /* THIS IS DIFFERENT FROM THE ONE IN DATA_UTILS,
+       This one does not throw away outliers and it captures minVal and maxVal
+       refer to perl error_library.pl sub  get_stats
+        to see the perl implementation of these statics calculations.
+        These should match exactly those, except that they are processed in reverse order.
+     */
+    var subVals = sVals;
+    var subSecs = sSecs;
+    var n = subVals.length;
+    var n_good =0;
+    var sum_d=0;
+    var sum2_d =0;
+    var error = "";
+    var i;
+    for(i=0; i< n; i++ ){
+        n_good = n_good +1;
+        sum_d = sum_d + subVals[i];
+        sum2_d = sum2_d + subVals[i] * subVals[i];
+    }
+    var d_mean = sum_d/n_good;
+    var sd2 = sum2_d/n_good - d_mean *d_mean;
+    var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
+    var sd_limit = 3*sd;
+    //console.log("get_err");
+    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
+    // find minimum delta_time, if any value missing, set null
+    var last_secs = Number.MIN_VALUE;
+    var minDelta = Number.MAX_VALUE;
+    var minSecs = Number.MAX_VALUE;
+    var max_secs = Number.MIN_VALUE;
+    var minVal = Number.MAX_VALUE;
+    var maxVal = Number.MIN_VALUE;
+    for(i=0; i< subSecs.length; i++){
+        var secs = (subSecs[i]);
+        var delta = Math.abs(secs - last_secs);
+        if(delta < minDelta) {
+            minDelta = delta;
+        }
+        if(secs < minSecs) {
+            minSecs = secs;
+        }
+        if(secs >max_secs) {
+            max_secs = secs;
+        }
+        last_secs = secs;
+    }
+
+    var data_wg =[];
+    var n_gaps =0;
+    n_good = 0;
+    var sum = 0;
+    var sum2 = 0;
+    var loopTime =minSecs;
+    if (minDelta < 0) {
+        error = ("Invalid time interval - minDelta: " + minDelta);
+    }
+    // remove data more than $sd_limit from mean
+     for (i=0; i < subVals.length; i++) {
+         minVal = minVal < subVals[i] ? minVal : subVals[i];
+         maxVal = maxVal > subVals[i] ? maxVal : subVals[i];
+             n_good++;
+     }
+    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // look for gaps.... per Bill, we only need one gap per series of gaps...
+    var lastSecond = Number.MIN_VALUE;
+
+    for(i=0; i< subSecs.length; i++){
+        var sec = subSecs[i];
+        if(lastSecond >= 0) {
+            if(sec - lastSecond > minDelta) {
+                // insert a gap
+                data_wg.push(null);
+                n_gaps++;
+            }
+        }
+        lastSecond = sec;
+        data_wg.push(subVals[i]);
+    }
+    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
+
+    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+    var r =[];
+    for(var lag=0;lag<=1; lag++) {
+        r[lag] = 0;
+        var n_in_lag = 0;
+        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
+            if (data_wg[t] != null && data_wg[t + lag] != null) {
+                r[lag] +=  + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                n_in_lag++;
+            }
+        }
+        if (n_in_lag > 0 && sd > 0) {
+            r[lag] /= (n_in_lag * sd * sd);
+        } else {
+            r[lag] = null;
+        }
+        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
+    }
+    // Betsy Weatherhead's correction, based on lag 1
+    if(r[1] >= 1) {
+        r[1] = .99999;
+    }
+    const betsy = Math.sqrt((n_good-1)*(1 - r[1]));
+    var stde_betsy;
+    if(betsy != 0) {
+        stde_betsy = sd/betsy;
+    } else {
+        stde_betsy = null;
+    }
+    const stats = {d_mean:d_mean, stde_betsy:stde_betsy, sd:sd, n_good:n_good, lag1:r[1], min:minSecs, max:max_secs, minVal: minVal, maxVal: maxVal, sum:sum_d};
+    //console.log("stats are " + JSON.stringify(stats));
+    // stde_betsy is standard error with auto correlation
+    //console.log("---------\n\n");
+    return stats;
+};
+
 export default matsCurveUtils = {
     resetScatterApply:resetScatterApply,
     getUsedLabels:getUsedLabels,
@@ -362,6 +479,7 @@ export default matsCurveUtils = {
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
     removeAllCurves:removeAllCurves,
+    get_err:get_err,
     PlotResult:PlotResult
 };
 

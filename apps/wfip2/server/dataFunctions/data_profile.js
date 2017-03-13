@@ -248,16 +248,26 @@ dataProfile = function (plotParams, plotFunction) {
             var verificationLevelValues = {};
             var truthLevelValues = {};
             var allTimes;
+            var valueTimes = []; // used for calculating errorbars
             if (statistic == "mean") {
                 allTimes = queryResult.allTimes;
             } else {
                 allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
+            var sumsAndSquares = [];// retain the sums and the squares of the qualified sites and levels for each valid time
+            var partialSum = 0;   // SUM([(Data1 - truth1), (data2 - truth2), .... (datan - truthn)))])
+            var partialSquare = 0; // SUM([sqr(Data1 - truth1), sqr(Data2 - truth2), .... (sqrDatan - truthn)]
+            var partialMean = 0; // (SUM ([data1, data2, .... datan]) / n)
+            var n = 0;  // COUNT([data1,data2, ..... datan])
             for (var t = 0; t < allTimes.length; t++) {
                 /*
                  If statistic is not "mean" then we need a set of truth values to diff from the verification values.
                  The sites and levels have to match for the truth to make any sense.
                  */
+                partialSum = 0;
+                partialSquare = 0;
+                partialMean = 0;
+                n = 0;
                 var time = allTimes[t];
                 var timeObj = queryResult.data[time];
                 var verificationSites = Object.keys(timeObj.sites).map(Number);
@@ -271,6 +281,7 @@ dataProfile = function (plotParams, plotFunction) {
                 var sitesLength = sites.length;
                 var includedSites = _.intersection(sites, siteBasis);
                 var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+
                 if (sitesQuality > siteCompleteness) {
                     // time is qualified for sites, count the qualified levels
                     for (var si = 0; si < sitesLength; si++) {
@@ -300,9 +311,17 @@ dataProfile = function (plotParams, plotFunction) {
                             }
                         } // else don't count it in - skip over it, it isn't complete enough
                     }
+
                 }
+                n = verificationLevelValues.length;
+                for (var i = 0; i < n; i++) {
+                    partialSum = 0;   // SUM([(Data1 - truth1), (data2 - truth2), .... (datan - truthn)))])
+                    partialSquare = MATH.sqr();
+                }
+                partialMean = MATH.sum(verificationLevelValues) / n;
+
             }
-            // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
+            // now we have verificationLevelValues, truthLevelValues, and valueTimes that are qualified by site and level completeness
             // now get levelStats
 
             var levelStats = {};
@@ -474,7 +493,7 @@ dataProfile = function (plotParams, plotFunction) {
                     levelStats: {minuend: minuendStatistic, subtrahend: subtrahendStatistic}
                 }, tooltip]);
             }
-        }
+        } // difference curve
 
         var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         var options = {
