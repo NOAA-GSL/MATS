@@ -41,7 +41,7 @@ const startInit = function () {
     const month = thenDate.getUTCMonth() + 1;
     const hour = 0;
     const minute = 0;
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
 };
 const stopInit = function () {
     const today = new Date();
@@ -50,7 +50,7 @@ const stopInit = function () {
     const month = today.getUTCMonth() + 1;
     const hour = 0;
     const minute = 0;
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
 };
 
 const dateInitStr = function() {
