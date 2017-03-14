@@ -20,23 +20,11 @@ var variableInfoMap = {};
 variableOptionsMap[matsTypes.PlotTypes.profile] = {};
 variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
 variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
-
-var date = new Date();
-var dateOneMonthPrior = new Date();
-dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
-var yr = date.getFullYear();
-var day = date.getDate();
-var month = date.getMonth();
-var hour = date.getHours();
-var minute = date.getMinutes();
-var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-yr = dateOneMonthPrior.getFullYear();
-day = dateOneMonthPrior.getDate();
-month = dateOneMonthPrior.getMonth();
-hour = dateOneMonthPrior.getHours();
-minute = dateOneMonthPrior.getMinutes();
-var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-var dstr = dstrOneMonthPrior + " - " + dstrToday;
+const dateInitStr = matsCollections.dateInitStr();
+const dateInitStrParts = dateInitStr.split(' - ');
+const startInit = dateInitStrParts[0];
+const stopInit = dateInitStrParts[1];
+const dstr = startInit + ' - ' + stopInit;
 
 var doScatter2dParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -83,8 +71,8 @@ var doPlotParams = function () {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
                 superiorNames: ['data-source', 'truth-data-source'],
                 controlButtonCovered: true,
                 default: dstr,
@@ -140,11 +128,6 @@ var doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
     if (matsCollections.CurveParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
         var optionsMap = {};
         matsCollections.CurveParams.insert(
             {
@@ -458,8 +441,8 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap),   // convenience
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
                 superiorNames: ['data-source', 'truth-data-source'],
                 controlButtonCovered: true,
                 unique: false,

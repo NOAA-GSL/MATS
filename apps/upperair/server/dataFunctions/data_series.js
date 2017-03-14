@@ -108,7 +108,7 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, qxmin, qxmax, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

@@ -174,24 +174,17 @@ Template.textSeriesOutput.helpers({
         }
         const resultData = matsCurveUtils.PlotResult.data[cindex].data;
         var data = resultData.map(function(value){return value[1];});
-        for (var i = 0; i < data.length; i++){
-            if (data[i] == null){
-                data.splice(i, 1);
-                i--;
-            }
-        }
-
-        const weimean = matsMathUtils.mean(data).toPrecision(4);
-        const min =  Math.min.apply(Math, data).toPrecision(4);
-        const max =  Math.max.apply(Math, data).toPrecision(4);
-        const sd = Math.sqrt(matsMathUtils.variance(data)).toPrecision(4);
-        const se = Math.sqrt(matsMathUtils.variance(data)/(data.length-1)).toPrecision(4);
+        var times = resultData.map(function(value){return value[0];});
+        const stats = matsCurveUtils.get_err(data,times);
+        const n = data.length;
         const line = "<td>" + curve.label + "</td>" +
-            "<td>" + weimean + "</td>" +
-            "<td>" + min + "</td>" +
-            "<td>" + max + "</td>" +
-            "<td>" + sd + "</td>" +
-            "<td>" + se + "</td>";
+            "<td>" + stats.d_mean.toPrecision(4) + "</td>" +
+            "<td> +/- " + stats.stde_betsy.toPrecision(4) + "</td>" +
+            "<td>" + stats.n_good + "</td>" +
+            "<td>" + stats.sd.toPrecision(4) + "</td>" +
+            "<td>" + stats.lag1.toPrecision(4) + "</td>" +
+            "<td>" + stats.minVal.toPrecision(4) + "</td>" +
+            "<td>" + stats.maxVal.toPrecision(4) + "</td>";
         return line;
     }
 });

@@ -85,7 +85,7 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, qxmin, qxmax, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
                 d = queryResult.data;
                 ctime = queryResult.ctime;
                 xmin = xmin < d[0][0] ? xmin : d[0][0];

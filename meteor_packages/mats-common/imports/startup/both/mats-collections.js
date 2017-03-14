@@ -39,18 +39,18 @@ const startInit = function () {
     const yr = thenDate.getUTCFullYear();
     const day = thenDate.getUTCDate();
     const month = thenDate.getUTCMonth() + 1;
-    const hour = thenDate.getUTCHours();
-    const minute = (((thenDate.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
+    const hour = 0;
+    const minute = 0;
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
 };
 const stopInit = function () {
     const today = new Date();
     const yr = today.getUTCFullYear();
     const day = today.getUTCDate();
     const month = today.getUTCMonth() + 1;
-    const hour = today.getUTCHours();
-    const minute = (((today.getUTCMinutes() + 7.5)/15 | 0) * 15) % 60;  // round to nearest 15
-    return month + '/' + day + "/" + yr + " " + hour + ":" + ("0" + minute).slice(-2);
+    const hour = 0;
+    const minute = 0;
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
 };
 
 const dateInitStr = function() {
