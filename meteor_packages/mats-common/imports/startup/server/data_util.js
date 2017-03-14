@@ -594,7 +594,7 @@ const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, 
     };
 };
 
-const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interval, averageStr) {
+const querySeriesDB = function (pool,statement, validTimeStr, interval, averageStr) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -603,7 +603,8 @@ const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interv
     //var ctime = [];
     var ymin;
     var ymax;
-
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -626,6 +627,9 @@ const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interv
             var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
+                var avTime = avSeconds * 1000;
+                xmin = avTime < xmin ? avTime : xmin;
+                xmax = avTime > xmax ? avTime : xmax;
                 var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
@@ -644,7 +648,7 @@ const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interv
                     N_times_max = N_times_loop;
                 }
 
-                curveTime.push(avSeconds * 1000);
+                curveTime.push(avTime);
                 curveStat.push(stat);
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
@@ -658,7 +662,7 @@ const querySeriesDB = function (pool,statement, validTimeStr, xmin, xmax, interv
                 dFuture['return']();
             }
             var loopTime = xmin;
-            while (loopTime < xmax + 1) {
+            while (loopTime <= xmax) {
                 if (curveTime.indexOf(loopTime) < 0) {
                     d.push([loopTime, null]);
                 } else {

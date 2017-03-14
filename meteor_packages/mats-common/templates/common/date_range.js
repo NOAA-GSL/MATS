@@ -49,7 +49,7 @@ Template.dateRange.onRendered(function () {
             "showDropdowns": true,
             "drops": "up",
             locale: {
-                format: 'MM/DD/YYYY H:mm'
+                format: 'MM/DD/YYYY HH:mm'
             },
             ranges: {
                 'Today': [moment().startOf('day'), moment().endOf('day')],
