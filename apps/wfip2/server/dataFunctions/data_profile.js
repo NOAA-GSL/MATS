@@ -190,6 +190,8 @@ dataProfile = function (plotParams, plotFunction) {
 
              We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
 
+             For each valid time, and each valid level for that time we also need partial sums for all of the valid sites.
+
              We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
              the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
              criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
@@ -206,24 +208,24 @@ dataProfile = function (plotParams, plotFunction) {
              where ....
              resultData = {
              time0: {
-             sites: {
-             site0: {
-             levels:[],
-             values:[],
-             sum: Number,
-             mean: Number,
-             numLevels: Number,
-             max: Number,
-             min: Number
-             },
-             site1: {...},
-             .
-             .
-             siten:{...},
-             }
-             timeMean: Number   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
+                 sites: {
+                     site0: {
+                         levels:[],
+                         values:[],
+                         sum: Number,
+                         mean: Number,
+                         numLevels: Number,
+                         max: Number,
+                         min: Number
+                     },
+                     site1: {...},
+                     .
+                     .
+                     siten:{...},
+                 }
+                 timeMean: Number   // cumulativeMovingMean for this time
+                 timeLevels: [],
+                 timeSites:[]
              },
              time1:{....},
              .
@@ -245,36 +247,51 @@ dataProfile = function (plotParams, plotFunction) {
                 levelBasis = _.union(levelBasis, truthLevelBasis);
                 siteBasis = _.union(siteBasis, truthSiteBasis);
             }
-            var verificationLevelValues = {};
-            var truthLevelValues = {};
             var allTimes;
             if (statistic == "mean") {
                 allTimes = queryResult.allTimes;
             } else {
                 allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
-            var sumsAndSquares = [];// retain the sums and the squares of the qualified sites and levels for each valid time
-            var partialSum = [];   // SUM([(Data1 - truth1), (data2 - truth2), .... (datan - truthn)))])
-            var partialSquare = 0; // SUM([sqr(Data1 - truth1), sqr(Data2 - truth2), .... (sqrDatan - truthn)]
-            var partialSquareSum = 0;
-            var partialMean = 0; // (SUM ([data1, data2, .... datan]) / n)
-            var partialMeanSum = 0;
-            var n = 0;  // COUNT([data1,data2, ..... datan])
+
+            var n = 0;
             const windVar = myVariable.startsWith('wd');
+            /*
+            sums and squares holds the partial sums. values is a list of stats i.e. mean, bias, mae, rmse
+            sumsAndSquares = [
+                { time: time,
+                  sumsByLevel: {
+                    lvl1 : [values],
+                    lvl2 : [values],
+                    .
+                    .
+                    .
+                    lvln : [values]
+                  }
+                }
+            ]
+             */
+            var validLevels = new Set();
+            var sumByTimeLevel = {};  // will hold all the valid values and times in time order by level
+            var timesByLevel = {}; // will hold all the valid times by level
             for (var t = 0; t < allTimes.length; t++) {
                 /*
+                 The sums array will retain the means, sums, bias, mae, or the squares of the qualified sites and
+                 levels for each valid time and level depending on the statistic
+                 mean - [d1, d2, ... dn]
+                 bias - [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
+                 mae - [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
+                 mse - [sqr(Data1 - truth1), sqr(Data2 - truth2), .... (sqrDatan - truthn)]
+
                  If statistic is not "mean" then we need a set of truth values to diff from the verification values.
                  The sites and levels have to match for the truth to make any sense.
                  */
-                partialSum = [];
-                partialSquare = 0;
-                partialMeanSum = 0;
-                partialMean = 0;
                 n = 0;
                 var time = allTimes[t];
                 var timeObj = queryResult.data[time];
                 var verificationSites = Object.keys(timeObj.sites).map(Number);
                 var truthSites = [];
+                sumByTimeLevel[time] = sumByTimeLevel[time] === undefined ? [] : sumByTimeLevel[time];
                 var truthTimeObj;
                 if (statistic != "mean") {
                     truthTimeObj = truthQueryResult.data[time];
@@ -284,9 +301,8 @@ dataProfile = function (plotParams, plotFunction) {
                 var sitesLength = sites.length;
                 var includedSites = _.intersection(sites, siteBasis);
                 var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-
                 if (sitesQuality > siteCompleteness) {
-                    // time is qualified for sites, count the qualified levels
+                    // this time is qualified for sites, count the qualified levels
                     for (var si = 0; si < sitesLength; si++) {
                         var sLevels;
                         var verificationValues = timeObj.sites[[sites[si]]].values;
@@ -300,205 +316,123 @@ dataProfile = function (plotParams, plotFunction) {
                         var includedLevels = _.intersection(sLevels, levelBasis);
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
+                            // this site has enough levels to qualify so process and capture its sums
+                            // and add the time to the timesByLevel array if it isn't there already
                             for (var l = 0; l < sLevels.length; l++) {
-                                if (verificationLevelValues[sLevels[l]] === undefined) {
-                                    verificationLevelValues[sLevels[l]] = [];
+                                var level = sLevels[l];
+                                timesByLevel[level] = timesByLevel[level] === undefined ? [] : timesByLevel[level];
+                                if (timesByLevel[level].indexOf(time) === -1) {
+                                    timesByLevel[level].push(time)
                                 }
-                                verificationLevelValues[sLevels[l]].push(verificationValues[l]);
-                                if (statistic != "mean") {
-                                    if (truthLevelValues[sLevels[l]] === undefined) {
-                                        truthLevelValues[sLevels[l]] = [];
+                                var dataVal = verificationValues[l];
+                                validLevels.add(level);
+                                // wind has to be adjusted for direction
+                                if (windVar) {
+                                    if (dataVal > 180) {
+                                        dataVal = dataVal - 360;
+                                    } else if (dataVal < -180) {
+                                        dataVal = dataVal + 360;
                                     }
-                                    truthLevelValues[sLevels[l]].push(truthValues[l]);
+                                    if (statistic !== "mean") {
+                                        var truthVal = truthValues[l];
+                                        if (truthVal > 180) {
+                                            truthVal = truthVal - 360;
+                                        } else if (truthVal < -180) {
+                                            truthVal = truthVal + 360;
+                                        }
+                                    }
                                 }
-                            }
-                        } // else don't count it in - skip over it, it isn't complete enough
-                    }
-                }
-                n += verificationLevelValues.length;
-                for (i = 0; i < n; i++) {
-                    // squares can be summed up here but partialSum must be a list because we might need to derive bias (which can have
-                    // a negative sum at a given time),
-                    // or we may need to derive mean absolute error which could be a different sum (no negatives)
-                    var dataVal = verificationLevelValues[i];
-                    var truthVal = truthLevelValues[i];
-                    if (windVar) {
-                        if (dataVal > 180) {
-                            dataVal = dataVal - 360;
-                        } else if (dataVal < -180) {
-                            dataVal = dataVal + 360;
-                        }
-                    }
-                    if (statistic !== "mean") {
-                        if (truthVal > 180) {
-                            truthVal = truthVal - 360;
-                        } else if (truthVal < -180) {
-                            truthVal = truthVal + 360;
-                        }
-                        if (statistic === "maeSum") {
-                            partialSum += (Math.abs(verificationLevelValues[i] - truthLevelValues[i]));   // SUM([(Data1 - truth1), (data2 - truth2), .... (datan - truthn)))])
-                        } else if (statistic === "bias") {
-                            partialSum += (verificationLevelValues[i] - truthLevelValues[i]);   // SUM([(Data1 - truth1), (data2 - truth2), .... (datan - truthn)))])
-                        } else if (statistic === "rmse")
-                        partialSquareSum += Math.pow((verificationLevelValues[i] - truthLevelValues[i]), 2); //SUM([sqr(Data1 - truth1), sqr(Data2 - truth2), .... (sqrDatan - truthn)]
-                    } else {  // this is mean
-                        partialMeanSum += dataVal;
-                    }
-                }
-                sumsAndSquares.push ({time:time, partialMean:partialMean,  partialSum: partialSum, partialSquare:partialSquare, n:n});
-            }
-            partialMean = partialMeanSum / n;
-            partialSum = partialSum / n;
-            partialSuare = Math.sqrt(partialSquareSum / n);
-            // now we have verificationLevelValues, truthLevelValues, and valueTimes that are qualified by site and level completeness
-            // and that are calculated into partial sums
-            // now get levelStats
+                                // sums for level
+                                sumByTimeLevel[time][level] = sumByTimeLevel[time][level] === undefined ? [] : sumByTimeLevel[time][level];
+                                switch (statistic) {
+                                    case "mae":
+                                        sumByTimeLevel[time][level].push(Math.abs(dataVal - truthVal));  // [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
+                                    case "bias":
+                                        sumByTimeLevel[time][level].push (dataVal - truthVal);   // [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
+                                        break;
+                                    case "rmse":
+                                        sumByTimeLevel[time][level].push(Math.pow((dataVal - truthVal), 2)); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
+                                        break;
+                                    case "mean":
+                                    default:
+                                        sumByTimeLevel[time][level].push(dataVal);
+                                }
+                            }   // end for levels
+                        } // end if level qualifies
+                    } 
+                    // end for sites
+                } //  end if site qualifies
+            } // for all times
 
             var levelStats = {};
-            // var qualifiedLevels;
-            // if (statistic == "mean") {
-            //     qualifiedLevels = Object.keys(verificationLevelValues);
-            // } else {
-            //     qualifiedLevels = _.intersection(Object.keys(verificationLevelValues), Object.keys(truthLevelValues));
-            // }
             var statValue;
-            var statSum;
-            var statNum;
-            var values;
-            var vIndex;
-            switch (statistic) {
-                case "bias":
-                    var biasSum = 0;
-                    var tp;
-                    n = 0;
-                    for (t=0; t < sumsAndSquares.length; t++) {
-                        n += sumsAndSquares[t].n;
-                        biasSum += sumsAndSquares[t].partialMean;
-                    }
-                    statValue = biasSum / n;
-                    break;
-                case "mae":
-                    // bias and mae are almost the same.... mae just absolutes the difference
-                    // find siteLevelBias and sum it in
-                    try {
-                        var maeSum = 0;
-                        var tp;
-                        n = 0;
-                        for (t=0; t < sumsAndSquares.length; t++) {
-                            const partialSums = sumsAndSquares[t].partialSum;
-                            n += sumsAndSquares[t].n;
-                            for (tp = 0; tp < partialSums.length; tp++) {
-                                maeSum += Math.abs(sumsAndSquares[t]);
-                            }
-                        }
-                        statValue = biasSum / n;
-                        // for (l = 0; l < qualifiedLevels.length; l++) {
-                        //     statNum = 0;
-                        //     statSum = 0;
-                        //     values = verificationLevelValues[qualifiedLevels[l]];
-                        //     truthValues = truthLevelValues[qualifiedLevels[l]];
-                        //     for (vIndex = 0; vIndex < values.length; vIndex++) {
-                        //         statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                        //         if (windVar) {
-                        //             if (statValue > 180) {
-                        //                 statValue = statValue - 360;
-                        //             } else if (statValue < -180) {
-                        //                 statValue = statValue + 360;
-                        //             }
-                        //         }
-                        //         if (statistic == "mae") {
-                        //             statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                        //         }
-                        //         statSum += statValue;
-                        //         statNum++;
-                        //     }
-                        //     if (levelStats[qualifiedLevels[l]] === undefined) {
-                        //         levelStats[qualifiedLevels[l]] = {};
-                        //     }
-                        //     levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
-                        //}
-                    } catch (ignore) {
-                        // apparently there is no data in the truth curve that matches this time
-                        statValue = null;
-                    }
-                    break;
-                case "rmse":
-                    try {
-                        var rmseSum = 0;
-                        var tp;
-                        n = 0;
-                        for (t=0; t < sumsAndSquares.length; t++) {
-                            const squareSums = Math.sum(sumsAndSquares[t].partialSquare);
-                            n += sumsAndSquares[t].n;
-                        }
-                        statValue = Math.sqrt(squareSums / n);
+            var s;
+            var statsByLevel = {};
+            var statValues = [];
+            var statTimesSet = new Set();
+            var statTimes = [];
+            var sumsForLevel = [];
+            var d = [];  // holds the flot dataset
+            /*
+             DATASET ELEMENTS:
+             series: [data,data,data ...... ]   each data is itself an array
+             data[0] - statValue (ploted against the x axis)
+             data[1] - level (plotted against the y axis)
+             data[2] - errorBar - stde_betsy * 1.96
+             data[3] - level values
+             data[4] - level times
+             data[5] - level stats
+             data[6] - tooltip
+             */
 
-                    //     for (l = 0; l < qualifiedLevels.length; l++) {
-                    //         statNum = 0;
-                    //         statSum = 0;
-                    //         values = verificationLevelValues[qualifiedLevels[l]];
-                    //         truthValues = truthLevelValues[qualifiedLevels[l]];
-                    //         for (vIndex = 0; vIndex < values.length; vIndex++) {
-                    //             statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                    //             if (windVar) {
-                    //                 if (statValue > 180) {
-                    //                     statValue = statValue - 360;
-                    //                 } else if (statValue < -180) {
-                    //                     statValue = statValue + 360;
-                    //                 }
-                    //             }
-                    //             statValue = Math.pow(statValue, 2);  // square the difference
-                    //             statSum += statValue;
-                    //             statNum++;
-                    //         }
-                    //         if (levelStats[qualifiedLevels[l]] === undefined) {
-                    //             levelStats[qualifiedLevels[l]] = {};
-                    //         }
-                    //         levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum / statNum);
-                    //     }
-                    } catch (ignore) {
-                        statValue = null;
+            var levels = Array.from(validLevels).reverse();
+            for (l=0; l < levels.length; l++) {  // over all the levels
+                level = levels[l];
+                var times = timesByLevel[level];
+                for (t=0;t<times.length;t++ ) {
+                    var time = times[t];
+                    var values = sumByTimeLevel[time][level];
+                    n = values.length;
+                    var sum = values.reduce((a, b) => a + b, 0);
+                    sumsForLevel.push(sum);
+                    if (statistic === "rmse") {
+                        // for rmse the values are sqr(data - truth) - must be square rooted
+                        statValue = Math.sqrt(sum / n);
+                    } else {
+                        statValue = sum / n;
                     }
-                    break;
-                case "mean":
-                default:
-                    try {
-                        statNum = 0;
-                        statSum = 0;
-                        for (l = 0; l < qualifiedLevels.length; l++) {
-                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function (a, b) {
-                                return a + b;
-                            }, 0);
-                            statNum = verificationLevelValues[qualifiedLevels[l]].length;
-                            if (levelStats[qualifiedLevels[l]] === undefined) {
-                                levelStats[qualifiedLevels[l]] = {};
-                            }
-                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
-                        }
-                    } catch (ignore) {
-                    }
-                    break;
-            }
-            var d = [];
-            var levels = Object.keys(levelStats);
-            for (l = 0; l < levels.length; l++) {
-                var level = levels[l];
-                var value = levelStats[level][statistic];
-                xAxisMin = xAxisMin < value ? xAxisMin : value;
-                xAxisMax = xAxisMax > value ? xAxisMax : value;
+                    statValues.push(statValue);
+                    statTimesSet.add(time);
+                }
+                statTimes = Array.from(statTimesSet);
+                var stats = matsDataUtils.get_err(statValues,statTimes);
+                var statForLevel;
+                n = sumsForLevel.length;
+                if (statistic === "rmse") {
+                    // for rmse the values are sqr(data - truth) - must be square rooted
+                    statForLevel = Math.sqrt(sumsForLevel / n);
+                } else {
+                    statValue = sumsForLevel / n;
+                }
+                statsByLevel[level] = statsByLevel[level] === undefined ? [] : statsByLevel[level];
+                statsByLevel[level].push({statValue:statValue,stats:stats});
+
+                xAxisMin = xAxisMin < statForLevel ? xAxisMin : statForLevel;
+                xAxisMax = xAxisMax > statForLevel ? xAxisMax : statForLevel;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
                 var tooltip = label +
                     "<br>level: " + level +
-                    "<br>statistic: " + statistic +
-                    "<br> value: " + value;
-                d.push([value, level, -1, {
-                    level: level,
-                    statistic: statistic,
-                    values: {verification: verificationLevelValues[level], truth: truthLevelValues[level]},
-                    levelStats: levelStats[level]
-                }, tooltip]);
-            } // end  if diffFrom == null
+                    "<br>statistic: " + statValue +
+                    "<br> value: " + statForLevel +
+                    "<br> sd: "  + stats.sd +
+                    "<br> stde: "  + stats.stde_betsy +
+                    "<br> lag1:" + stats.lag1 +
+                    "<br> mean:" + stats.d_mean +
+                    "<br> max:" + stats.maxVal +
+                    "<br> min:" + stats.minVal;
+                d.push([statForLevel, level, stats.stde_betsy * 1.96, statValues, statTimes, {d_mean: stats.d_mean, sd: stats.sd, n_good: stats.n_good, lag1: stats.lag1, stde: stats.stde_betsy}, tooltip]);
+            }
         } else { // difference curve
             var minuendIndex = diffFrom[0];
             var subtrahendIndex = diffFrom[1]; // base curve

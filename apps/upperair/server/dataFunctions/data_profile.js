@@ -188,6 +188,17 @@ dataProfile = function(plotParams, plotFunction) {
                 errorResult = {d_mean:0,stde_betsy:0,sd:0,n_good:0,lag1:0, min:0,max:0, sum:0};
                 data[di][0] = null; //null out the value
             } else {
+                /*
+                DATASET ELEMENTS:
+                series: [data,data,data ...... ]   each data is itself an array
+                data[0] - statValue (ploted against the x axis)
+                data[1] - level (plotted against the y axis)
+                data[2] - errorBar - stde_betsy * 1.96
+                data[3] - level values
+                data[4] - level times
+                data[5] - level stats
+                data[6] - tooltip
+                 */
                 //console.log('Getting errors for level ' + data[di][1]);
                 errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
                 values.push(data[di][0]);
