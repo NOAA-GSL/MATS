@@ -43,6 +43,7 @@ dataProfile = function (plotParams, plotFunction) {
     }
     var xAxisLabel = "";
     var xAxisLabels = [];
+    var errorMax = Number.MIN_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -51,7 +52,7 @@ dataProfile = function (plotParams, plotFunction) {
         var dataSource_tablename = curve.dataSource_tablename;
         var verificationRunInterval = curve.verificationRunInterval;
         var dataSource_is_json = curve.dataSource_is_json;
-
+        var curveStatValues = [];
         var myVariable;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
@@ -367,7 +368,6 @@ dataProfile = function (plotParams, plotFunction) {
             var levelStats = {};
             var statValue;
             var s;
-            var statsByLevel = {};
             var statValues = [];
             var statTimesSet = new Set();
             var statTimes = [];
@@ -384,8 +384,8 @@ dataProfile = function (plotParams, plotFunction) {
              data[5] - level stats
              data[6] - tooltip
              */
-
-            var levels = Array.from(validLevels).reverse();
+            var means = [];
+            var levels = Array.from(validLevels);
             for (l=0; l < levels.length; l++) {  // over all the levels
                 level = levels[l];
                 var times = timesByLevel[level];
@@ -404,34 +404,33 @@ dataProfile = function (plotParams, plotFunction) {
                     statValues.push(statValue);
                     statTimesSet.add(time);
                 }
+                // get the stats for a given level
                 statTimes = Array.from(statTimesSet);
                 var stats = matsDataUtils.get_err(statValues,statTimes);
-                var statForLevel;
+                means.push(stats.d_mean);
                 n = sumsForLevel.length;
+                sum = sumsForLevel.reduce((a, b) => a + b, 0);
                 if (statistic === "rmse") {
                     // for rmse the values are sqr(data - truth) - must be square rooted
-                    statForLevel = Math.sqrt(sumsForLevel / n);
+                    statValue = Math.sqrt(sum / n);
                 } else {
-                    statValue = sumsForLevel / n;
+                    statValue = sum / n;
                 }
-                statsByLevel[level] = statsByLevel[level] === undefined ? [] : statsByLevel[level];
-                statsByLevel[level].push({statValue:statValue,stats:stats});
-
-                xAxisMin = xAxisMin < statForLevel ? xAxisMin : statForLevel;
-                xAxisMax = xAxisMax > statForLevel ? xAxisMax : statForLevel;
+                xAxisMin = xAxisMin < statValue ? xAxisMin : statValue;
+                xAxisMax = xAxisMax > statValue ? xAxisMax : statValue;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
                 var tooltip = label +
                     "<br>level: " + level +
-                    "<br>statistic: " + statValue +
-                    "<br> value: " + statForLevel +
+                    "<br>statistic: " + statistic +
+                    "<br> value: " + statValue +
                     "<br> sd: "  + stats.sd +
                     "<br> stde: "  + stats.stde_betsy +
                     "<br> lag1:" + stats.lag1 +
-                    "<br> mean:" + stats.d_mean +
-                    "<br> max:" + stats.maxVal +
-                    "<br> min:" + stats.minVal;
-                d.push([statForLevel, level, stats.stde_betsy * 1.96, statValues, statTimes, {d_mean: stats.d_mean, sd: stats.sd, n_good: stats.n_good, lag1: stats.lag1, stde: stats.stde_betsy}, tooltip]);
+                    "<br> mean:" + stats.d_mean;
+                var errorBar =  1.96 * stats.stde_betsy
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
+                d.push([statValue, level, errorBar, statValues, statTimes, stats, tooltip]);
             }
         } else { // difference curve
             var minuendIndex = diffFrom[0];
@@ -513,9 +512,21 @@ dataProfile = function (plotParams, plotFunction) {
             }
         };
         dataset.push(options);
+        const stats = matsDataUtils.get_err(means,levels); // have to reverse because of data inversion
+        const minx = Math.min.apply(null,means);
+        const maxx = Math.max.apply(null,means);
+        stats.minx = minx;
+        stats.maxx = maxx;
+        dataset[curveIndex]['stats'] = stats;
     }   // for curves
 
-
+    // account for error bars on xaxis
+    var xmax = xAxisMax + errorMax;
+    var xmin = xAxisMin - errorMax;
+    const xpad = (xmax - xmin) * 0.05;
+    var ypad = (yAxisMax - yAxisMin) * 0.2;
+    var maxy = yAxisMax + ypad;
+    var miny = yAxisMin - ypad;
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -527,10 +538,12 @@ dataProfile = function (plotParams, plotFunction) {
             axisLabel: 'level above ground in meters',
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 26,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
-            alignTicksWithAxis: 1
+            alignTicksWithAxis: 1,
+            min: miny,
+            max: maxy
         };
         var yaxisOptions = {
             zoomRange: [0.1, 10]
@@ -544,7 +557,13 @@ dataProfile = function (plotParams, plotFunction) {
         },
         xaxes: [{
             axisLabel: xAxisLabel,
-            color: 'grey'
+            color: 'grey',
+            min: xmin,
+            max: xmax,
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: xAxisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
         }],
         xaxis: {
             zoomRange: [0.1, 10],
@@ -571,7 +590,7 @@ dataProfile = function (plotParams, plotFunction) {
             shadowSize: 0
         },
         zoom: {
-            interactive: true
+            interactive: false
         },
         pan: {
             interactive: false
@@ -607,7 +626,7 @@ dataProfile = function (plotParams, plotFunction) {
         }
     };
     // add black 0 line curve
-    dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
+    //dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
     var result = {
         error: error,
         data: dataset,
