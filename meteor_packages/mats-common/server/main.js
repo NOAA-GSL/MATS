@@ -35,7 +35,7 @@ var setGoogleCred = function () {
                 gSecret = "FrIhQ0kZWei2z5RPLAq-84BI";
                 break;
             case "mats-dev":
-            case "mats-dev1":
+            case "mats-dev":
                 gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
                 gSecret = "Ra1xCSDnr-ZZX1wgyAHHSbIU";
                 break;
