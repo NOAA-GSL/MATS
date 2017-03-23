@@ -26,6 +26,10 @@ Template.curveList.helpers({
         console.log(this);
     },
     averagesdisabled: function () {
+        // temporary disable plot match for profiles on wfip2
+        if (Session.get("plotType") === matsTypes.PlotTypes.profile && Session.get("app").appName === "wfip2") {
+            return "disabled";
+        }
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return "";
