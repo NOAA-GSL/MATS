@@ -203,10 +203,14 @@ const apply = function(axis) {
     var l = param_elems.length;
     for (var i = 0; i < l; i++) {
         var pelem = param_elems[i];
+        //console.log("pelem.type is " + pelem.type);
         var elem_id = pelem.id;
         var target_id = axis + "-" + elem_id;
         var telem = document.getElementById(target_id);
+        // Notice that these types are not matsTypes these are javascript types
         if (pelem.type === "select-multiple") {
+            var $options = $("#" + elem_id + " > option").clone();
+            $("#" + target_id).empty().append($options);
             var selectedOptions = $(pelem.selectedOptions).map(function(){return(this.value)}).get();
             for (var x =0; x < telem.options.length; x++) {
                 if ($.inArray(telem.options[x].value, selectedOptions) !== -1) {
@@ -215,6 +219,10 @@ const apply = function(axis) {
                     telem.options[x].selected = false;
                 }
             }
+        } else if (pelem.type === "select-one") {
+            var $options = $("#" + elem_id + " > option").clone();
+            $("#" + target_id).empty().append($options);
+            telem.selectedIndex = pelem.selectedIndex;
         } else if (pelem.type === "radio") {
             // NOT SURE THIS IS RIGHT
             //console.log(pelem.name + " is " + $('input[name="' + pelem.name + '"]:checked').val());
