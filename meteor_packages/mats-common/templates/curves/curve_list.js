@@ -60,6 +60,18 @@ Template.curveList.helpers({
         } else {
             return "Changing " + Session.get('editMode');
         }
+    },
+    matchedLabel: function() {
+        if (Session.get('matchName'  === undefined)) {
+            if (setMatchName) {
+                setMatchName();
+            } else {
+                Session.set('matchName','plot matched');
+            }
+        } else {
+            Session.set('matchName','plot matched');
+        }
+        return Session.get('matchName');
     }
 });
 

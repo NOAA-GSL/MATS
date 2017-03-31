@@ -301,6 +301,8 @@ Template.plotList.events({
                     matsParamUtils.setValueTextForParamName('dates',p.data.dates);
                 }
 
+                // reset the plotFormat
+
                 // reset the plotParams
                 Session.set("PlotParams", p);
                 //set the used defaults so that subsequent adds get a core default

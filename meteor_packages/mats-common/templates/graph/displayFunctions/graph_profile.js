@@ -1,17 +1,56 @@
 graphProfile = function(result) {
+    var upperx;
+    var lowerx;
+    var drawErrorCaps = function (ctx, lowerx, upperx, y, radius) {
+        // ctx is CanvasRenferingContext2d
+        ctx.beginPath();
+        var r2 = radius / 2;
+        var minWidth = 20;  // sort of arbitrary, really
+        var width = ((upperx - lowerx) <= minWidth) ? 1 :  ((upperx - lowerx) - minWidth) / 2;
+        ctx.fillStyle = 'white';
+        ctx.rect(lowerx, y - r2, width, radius);
+        ctx.stroke();
+        ctx.fill();
+        ctx.rect(upperx - width, y - r2, width, radius);
+        ctx.stroke();
+        ctx.fill();
+
+    };
+
+    var lSquareCap = function (ctx, x, y, radius) {
+        lowerx = x;
+        // this is where you would make the xradius vary by the size of the error
+        var xradius = radius;
+        var yradius = radius;
+        drawErrorCaps(ctx,lowerx,upperx,y, radius);
+    };
+    var uSquareCap = function (ctx, x, y, radius) {
+        // upper gets called first -- see drawError in flot
+        upperx = x;
+    };
+
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);
     var dataset = result.data;
     for (var i  =0; i < dataset.length; i++){
         var o = dataset[i];
+        var capRadius = 10;
         if (min < 400) {
             o.points && (o.points.radius = 1);
+            capRadius = 5;
         } else {
             o.points && (o.points.radius = 2);
+            capRadius = 10;
+        }
+        if (o.points.xerr.lowerCap === "squareCap") {
+            o.points.xerr.lowerCap = lSquareCap;
+        }
+        if (o.points.xerr.upperCap === "squareCap") {
+            o.points.xerr.upperCap = uSquareCap;
         }
     }
-    
+
     var options = result.options;
     var placeholder = $("#placeholder");
 

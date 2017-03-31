@@ -144,7 +144,7 @@ replace_custom () {
             echo "your app $new may have problems. Better check it"
         fi
 
-        replace_appname_reference "."
+        #replace_appname_reference "."
         replace_custom ".idea/modules.xml" ".idea/$existingApp" ".idea/$new"
         replace_appname_reference ".idea/.name"
 } || {

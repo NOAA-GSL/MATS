@@ -599,7 +599,7 @@ const getGraphData = new ValidatedMethod({
                 if ( dataFunctionError.toLocaleString().indexOf( "INFO:" ) !== -1) {
                     throw new Meteor.Error(dataFunctionError.message);
                 } else {
-                    throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
+                    throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
                 }
             }
             return future.wait();

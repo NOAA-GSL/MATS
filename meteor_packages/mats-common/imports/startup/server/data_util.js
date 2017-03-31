@@ -319,18 +319,19 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
     return  newDataSet;
 };
 
-const getDataForProfileDiffCurve = function(params) {
+const getDataForProfileMatchingDiffCurve = function(params) {
+    // derive the subset data for the difference
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     var d = [];
-    var minuendIndex = diffFrom[0];
-    var subtrahendIndex = diffFrom[1];
-    var minuendData = dataset[minuendIndex].data;
-    var subtrahendData = dataset[subtrahendIndex].data;
+    const minuendIndex = diffFrom[1];
+    const subtrahendIndex = diffFrom[0];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
 
     // do the differencing
     //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
-    var l = minuendData.length < subtrahendData.length?minuendData.length:subtrahendData.length;
+    const l = minuendData.length < subtrahendData.length?minuendData.length:subtrahendData.length;
     for (var i = 0; i < l; i++) { // each pressure level
         d[i] = [];
         d[i][3] = [];
@@ -345,11 +346,78 @@ const getDataForProfileDiffCurve = function(params) {
         var subtrahendDataSubValues =   subtrahendData[i][3];
         var subtrahendDataSubSeconds =   subtrahendData[i][4];
         // find the intersection of the subSeconds
-        var secondsIntersection = _.intersection(minuendDataSubSeconds,subtrahendDataSubSeconds);
+//        var secondsIntersection = _.intersection(minuendDataSubSeconds,subtrahendDataSubSeconds);
+        const secondsIntersection = minuendDataSubSeconds.filter(function(n) {
+            return subtrahendDataSubSeconds.indexOf(n) !== -1;
+        });
+
         for (var siIndex=0; siIndex<secondsIntersection.length-1;siIndex++) {
             d[i][4].push(secondsIntersection[siIndex]);
             d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
         }
+    }
+    return {dataset:d};
+};
+
+const getDataForProfileUnMatchedDiffCurve = function(params) {
+    // just get the level values - not the subset data
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - statValue (ploted against the x axis)
+     data[1] - level (plotted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - level values
+     data[4] - level times
+     data[5] - level stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    const minuendIndex = diffFrom[1];
+    const subtrahendIndex = diffFrom[0];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+    // do the differencing
+    //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+
+    // get the list of pressure levels for the minuendData
+    const mLevels = minuendData.map(function(a) {
+        return a[1];
+    });
+
+    // get the list of pressure levels for the subtrahendData
+    const sLevels = subtrahendData.map(function(a) {
+        return a[1];
+    });
+
+    // get the intersection of the levels
+    const cLevels = mLevels.filter(function(n) {
+            return sLevels.indexOf(n) !== -1;
+        });
+    // itterate all the common levels
+    for (var i = 0; i < cLevels.length; i++) { // each pressure level
+        var cl = cLevels[i];
+        // find the minuend stat for this level
+        const minuendStat = minuendData.filter(function(elem) {
+           return elem[1] == cl;
+        })[0];
+        // find the subtrhend stat for this level
+        const subtrahendStat = subtrahendData.filter(function(elem){
+            return elem[1] == cl;
+        })[0];
+        d[i] = [];
+        // do the difference
+        d[i][0] =  minuendStat[0]- subtrahendStat[0];
+        // pressure level
+        d[i][1] = cl;
+        d[i][2] = -1;
+        d[i][3] = [];
+        d[i][4] = [];
+        d[i][5] = {}; // level stats
+        d[i][6] = "<br>" + cl * -1 + "mb <br> value:" + (d[i][0] === null ? null : d[i][0].toPrecision(4)); //tooltip
     }
     return {dataset:d};
 };
@@ -844,8 +912,8 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
             xerr: {
                 show: true,
                 asymmetric: false,
-                upperCap: "-",
-                lowerCap: "-",
+                upperCap: "squareCap",
+                lowerCap: "squareCap",
                 color: color,
                 radius: 5
             }
@@ -1160,7 +1228,8 @@ export default matsDataUtils = {
     arraysEqual: arraysEqual,
     getMatchedDataSet: getMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
-    getDataForProfileDiffCurve:getDataForProfileDiffCurve,
+    getDataForProfileMatchingDiffCurve:getDataForProfileMatchingDiffCurve,
+    getDataForProfileUnMatchedDiffCurve:getDataForProfileUnMatchedDiffCurve,
     getPointSymbol: getPointSymbol,
     querySeriesDB:querySeriesDB,
     generateSeriesPlotOptions:generateSeriesPlotOptions,
