@@ -26,7 +26,9 @@ Template.textScatter2dOutput.helpers({
         return Session.get('Curves');
     },
     curveText: function () {
-        this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
+        if (this.regionName) {
+            this.regionName = this.region.split(' ')[0];
+        }  // regionName might be needed in getCurveText but only region is defined
         var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
         return text;
     },
