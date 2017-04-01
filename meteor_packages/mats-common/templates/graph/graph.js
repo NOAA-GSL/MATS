@@ -149,7 +149,9 @@ Template.graph.helpers({
                 }
                 plotType = Session.get('plotType');
             }
-            this.regionName = this.region.split(' ')[0];
+            if (this.region) {
+                this.regionName = this.region.split(' ')[0];
+            }
             return matsPlotUtils.getCurveText(plotType, this);
         } else {
             return this.label + ":  Difference";

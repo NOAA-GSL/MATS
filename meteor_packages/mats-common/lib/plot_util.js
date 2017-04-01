@@ -58,7 +58,14 @@ var getPlotType = function () {
 // determine which plotFormat radio button is checked
 var getPlotFormat = function() {
     var buttons = document.getElementsByName('plotFormat');
-    var optionsMap = matsCollections.PlotParams.findOne({name:'plotFormat'}).optionsMap;
+    if (buttons === undefined) {
+        return ""; // app may not have plotFormat?
+    }
+    var plotFormatParam = matsCollections.PlotParams.findOne({name:'plotFormat'});
+    if (plotFormatParam === undefined) {
+        return ""; // app may not have plotFormat?
+    }
+    var optionsMap = plotFormatParam.optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
             return buttons[i].value;
