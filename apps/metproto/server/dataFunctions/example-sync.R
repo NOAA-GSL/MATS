@@ -1,4 +1,5 @@
 # ex-sync.R
+
 needs(magrittr)
 set.seed(512)
 do.call(rep, input) %>%
