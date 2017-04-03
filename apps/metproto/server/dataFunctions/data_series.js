@@ -8,6 +8,15 @@ import { Random } from 'meteor/random'
 
 dataSeries = function (plotParams, plotFunction) {
 console.log ("plotParams", JSON.stringify(plotParams,null,2));
+    // test example R script
+    //test path working dir
+    var fs = require('fs');
+    console.log("path is " + __dirname);
+    var out = R("private/example-sync.R")
+        .data("hello world", 20)
+        .callSync();
+
+    console.log(out);
     var dataRequests = [];
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
