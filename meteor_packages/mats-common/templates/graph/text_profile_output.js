@@ -185,7 +185,7 @@ Template.textProfileOutput.helpers({
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[0] && dataPointVal[0].toPrecision(4);
                 mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
-                perror = dataPointVal[5].stde && dataPointVal[5].stde.toPrecision(4);
+                perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
                 stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
                 lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
                 n = dataPointVal[5].n_good;

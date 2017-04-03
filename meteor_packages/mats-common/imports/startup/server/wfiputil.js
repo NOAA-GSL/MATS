@@ -450,10 +450,258 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     };
 };
 
+const sumsSquaresByTimeLevel = function (params) {
+/*
+    // a dataVal is a value for non WindVars mean
+    // a dataVal is data - truth for non windvars !mean
+    // a dataVal is [u,v] for windVars mean
+    // a dataVal is [du-tu,dv-tv] for windVars !mean
 
+ sumsSquaresByTimeLevel = {
+    time0:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
+    time1:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
+    .
+    .
+    .
+    timet:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] }
+ }
+ */
+    const allTimes = params.allTimes;
+    const statType = params.statType;
+    const queryResult = params.queryResult;
+    const truthQueryResult = params.truthQueryResult;
+    const windDirVar = params.windDirVar;
+    const levelBasis = params.levelBasis;
+    const siteBasis = params.siteBasis;
+    const truthSiteBasis = params.truthSiteBasis;
+    const siteCompleteness = params.siteCompleteness;
+    const levelCompleteness = params.levelCompleteness;
+    var validLevels = new Set();
+    var sumsSquaresByTimeLevel = {};  // will hold all the valid values and times in time order by level
+    var timesByLevel = {}; // will hold all the valid times by level
+    var t;
+    for (t = 0; t < allTimes.length; t++) {
+        /*
+         The sums array will retain the means, sums, bias, mae, or the squares of the qualified sites and
+         levels for each valid time and level depending on the statType
+         mean - [d1, d2, ... dn]
+         bias - [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
+         mae - [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
+         mse - [sqr(Data1 - truth1), sqr(Data2 - truth2), .... (sqrDatan - truthn)]
+
+         If statType is not "mean" then we need a set of truth values to diff from the verification values.
+         The sites and levels have to match for the truth to make any sense.
+         */
+        var n = 0;
+        var l = 0;
+        var si = 0;
+        var time = allTimes[t];
+        var timeObj = queryResult.data[time];
+        var verificationSites = Object.keys(timeObj.sites).map(Number);
+        var truthSites = [];
+        sumsSquaresByTimeLevel[time] = sumsSquaresByTimeLevel[time] === undefined ? [] : sumsSquaresByTimeLevel[time];
+        var truthTimeObj;
+        if (statType !== "mean") {
+            truthTimeObj = truthQueryResult.data[time];
+            truthSites = Object.keys(truthTimeObj.sites).map(Number);
+        }
+        var sites = statType !== "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
+        var sitesLength = sites.length;
+        var includedSites = _.intersection(sites, siteBasis);
+        var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+        if (
+            sitesQuality > siteCompleteness) {
+            // this time is qualified for sites, count the qualified levels
+            for (si = 0; si < sitesLength; si++) {
+                var sLevels;
+                var verificationValues = timeObj.sites[[sites[si]]].values;
+                var truthValues;
+                if (statType !== "mean") {
+                    sLevels = _.intersection(timeObj.sites[[sites[si]]].levels, truthTimeObj.sites[[sites[si]]].levels);
+                    truthValues = truthTimeObj.sites[[sites[si]]].values;
+                } else {
+                    sLevels = timeObj.sites[[sites[si]]].levels;
+                }
+                var includedLevels = _.intersection(sLevels, levelBasis);
+                var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                if (levelsQuality > levelCompleteness) {
+                    // this site has enough levels to qualify so process and capture its sums
+                    // and add the time to the timesByLevel array if it isn't there already
+                    for (l = 0; l < sLevels.length; l++) {
+                        level = sLevels[l];
+                        timesByLevel[level] = timesByLevel[level] === undefined ? [] : timesByLevel[level];
+                        if (timesByLevel[level].indexOf(time) === -1)
+                        {
+                            timesByLevel[level].push(time)
+                        }
+                        var dataVal = verificationValues[l];
+                        var truthVal;
+                        if (statType !== "mean") {
+                            truthVal = truthValues[l];
+                        }
+                        var windU;
+                        var windV;
+                        var tWindV;
+                        var tWindU;
+                        validLevels.add(level);
+                        // wind has to be adjusted for direction (rose graph) and use vectors
+                        if (windDirVar) {
+                            if
+                            (dataVal > 180) {
+                                dataVal = dataVal - 360;
+                            } else if (dataVal < -180) {
+                                dataVal = dataVal + 360;
+                            }
+                            windV = Math.sin(dataVal);
+                            windU = Math.cos(dataVal);
+                            if (statType !== "mean") {
+                                if (truthVal > 180) {
+                                    truthVal = truthVal - 360;
+                                } else if (
+                                    truthVal < -180) {
+                                    truthVal = truthVal + 360;
+                                }
+                                tWindV =
+                                    Math.sin(truthVal);
+                                tWindU = Math.cos(truthVal);
+                            }
+                        }
+                        // sums for level
+                        sumsSquaresByTimeLevel[time][level] = sumsSquaresByTimeLevel[time][level] === undefined ? [] : sumsSquaresByTimeLevel[time][level];
+                        switch (statType) {
+                            case "mae":
+                                if (windDirVar) {
+                                    const uVal = Math.abs(windU - tWindU);
+                                    const vVal = Math.abs(windV - tWindV);
+                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal});
+                                    // [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
+                                } else {
+                                    sumsSquaresByTimeLevel[time][level].push(Math.abs(dataVal - truthVal));  // [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
+                                }
+                                break;
+                            case "bias":
+                                if (windDirVar) {
+                                    const uVal = windU - tWindU;
+                                    const vVal = windV - tWindV;
+                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal});
+                                    // [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
+                                } else {
+                                    sumsSquaresByTimeLevel[time][level].push(dataVal - truthVal);
+                                    // [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
+                                }
+                                break;
+                            case "rmse":
+                                if (windDirVar) {
+                                    const uVal = Math.pow((windU - tWindU),2);
+                                    const vVal = Math.pow((windV - tWindV),2);
+                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal}); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
+                                } else {
+                                    sumsSquaresByTimeLevel[time][level].push(Math.pow((dataVal - truthVal), 2)); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
+                                }
+                                break;
+                            case "mean":
+                            default:
+                                if (windDirVar) {
+                                    sumsSquaresByTimeLevel[time][level].push({uVal:windU,vVal:windV});
+                                } else {
+                                    sumsSquaresByTimeLevel[time][level].push(dataVal);
+                                }
+                        }
+                    }   // end for levels
+                } // end if level qualifies
+            }
+            // end for sites
+        } //  end if site qualifies
+    } // for all times
+    return {
+        validLevels:validLevels,
+        sumsSquaresByTimeLevel:sumsSquaresByTimeLevel
+    };
+};
+
+const getStatValuesByLevel = function (params) {
+    const sumsSquaresByTimeLevel = params.sumsSquaresByTimeLevel;
+    const validLevels = params.validLevels;
+    var statValuesByLevel = {};
+    // now we have to calculate the sums and squares (depending on the statistic type)
+    // for each level use the data in sumsSquaresByTimeLevel to do the math on the partialSums. i.e. for mean add them and divide by n
+    // for rmse add the squares then divide by n then take sqrt  etc.
+    var statValue;
+    var uStatValue;
+    var vStatValue;
+    var s;
+    var statValues = [];
+    var statTimesSet = new Set();
+    var sumsForLevel = [];
+    d = [];  // holds the flot dataset
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - statValue (ploted against the x axis)
+     data[1] - level (plotted against the y axis)
+     data[2] - errorBar - stde_betsy * 1.96
+     data[3] - level values
+     data[4] - level times
+     data[5] - level stats
+     data[6] - tooltip
+     */
+    var means = [];
+    var levels = Array.from(validLevels);
+    var values;
+    var uSum;
+    var vSum;
+    var v;
+    var time;
+    for (l = 0; l < levels.length; l++) {  // over all the levels
+        var level = levels[l];
+        var times = timesByLevel[level];
+        for (t = 0; t < times.length; t++) {
+            time = times[t];
+            if (windDirVar) {
+                values = sumsSquaresByTimeLevel[time][level];
+                // for windDirVar this is an array of u,v vectors
+                n = values.length;
+                uSum = 0;
+                vSum = 0;
+                for (v = 0; v < n; v++) {
+                    uSum += values[v].uVal;
+                    vSum += values[v].vVal;
+                }
+                sumsForLevel.push({uSum: uSum, vSum: vSum});
+                if (statistic === "rmse") {
+                    // for rmse the values are sqr(data - truth) - must be square rooted
+                    uStatValue = Math.sqrt(uSum / n);
+                    vStatValue = Math.sqrt(vSum / n);
+                } else {
+                    uStatValue = uSum / n;
+                    vStatValue = vSum / n;
+                }
+                // convert it back to direction
+                statValue = Math.atan2(vStatValue, uStatValue) * 180 / Math.PI;
+                //console.log ('statValue is ' + statValue);
+            } else {
+                values = sumsSquaresByTimeLevel[time][level];
+                n = values.length;
+                var sum = values.reduce((a, b) => a + b, 0);
+                sumsForLevel.push(sum);
+                if (statistic === "rmse") {
+                    // for rmse the values are sqr(data - truth) - must be square rooted
+                    statValue = Math.sqrt(sum / n);
+                } else {
+                    statValue = sum / n;
+                }
+            }
+            statValues.push(statValue);
+            statTimesSet.add(time);
+        }
+        statValuesByLevel[level] = {statTimes: Array.from(statTimes), statValues: statValues, sumsForLevel: sumsForLevel};
+    }
+    return statValuesByLevel;
+};
 
 export default matsWfipUtils = {
     getDatum: getDatum,
-    queryWFIP2DB: queryWFIP2DB
-
+    queryWFIP2DB: queryWFIP2DB,
+    sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
+    getStatValuesByLevel:getStatValuesByLevel
 }

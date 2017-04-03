@@ -11,11 +11,16 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
     // test example R script
     //test path working dir
     // var fs = require('fs');
-    // console.log("path is " + __dirname);
-    // var out = R("private/example-sync.R")
-    //     .data("hello world", 20)
-    //     .callSync();
-    //
+    // var R = require("r-script");
+    // var path = require('path').basename(__dirname);
+    // console.log (path);
+    // try {
+    //     var out = R("/Users/pierce/WebstormProjects/MATS_DEV/apps/metproto/server/dataFunctions/example-sync.R")
+    //         .data("hello world", 20)
+    //         .callSync();
+    // } catch (e) {
+    //     console.log (e);
+    // }
     // console.log(out);
     var dataRequests = [];
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);

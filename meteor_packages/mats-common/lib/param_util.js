@@ -114,11 +114,18 @@ const getInputElementForParamName = function(paramName) {
 // set the input for the element that corresponds to the param name
 // also sets a data-mats-currentValue attribute
 const setInputForParamName = function(paramName,value) {
+    const param = getParameterForName(paramName);
     const id = getInputIdForParamName(paramName);
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
-    idSelector.val(value);
-    setValueTextForParamName(paramName,value);
+
+    // SHOULD DEAL WITH CHECKBOXES HERE
+    if (param.type === matsTypes.InputTypes.radioGroup ) {
+        $("#" + id + "-" + value).prop("checked",true);
+    } else {
+        idSelector.val(value);
+        setValueTextForParamName(paramName, value);
+    }
 };
 
 const getElementValues = function() {
