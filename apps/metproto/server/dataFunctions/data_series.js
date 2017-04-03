@@ -10,18 +10,29 @@ dataSeries = function (plotParams, plotFunction) {
 console.log ("plotParams", JSON.stringify(plotParams,null,2));
     // test example R script
     //test path working dir
-    // var fs = require('fs');
-    // var R = require("r-script");
-    // var path = require('path').basename(__dirname);
-    // console.log (path);
-    // try {
-    //     var out = R("/Users/pierce/WebstormProjects/MATS_DEV/apps/metproto/server/dataFunctions/example-sync.R")
-    //         .data("hello world", 20)
-    //         .callSync();
-    // } catch (e) {
-    //     console.log (e);
-    // }
-    // console.log(out);
+    var fs = require('fs');
+    var R = require("r-script");
+    try {
+        var rpath;
+        if (process.env.NODE_ENV === "development") {
+            rpath = process.env.PWD + "/private/R_";
+            // something like /Users/pierce/WebstormProjects/MATS_DEV/apps/metproto/server/R_
+        } else {
+            //rpath = process.env.PWD + "/R_";
+            rpath = process.env.PWD + "/programs/server/assets/app/R_";
+            // something like  /web/metproto/bundle/programs/server/assets/app/R_
+        }
+        console.log ("rpath",rpath);
+        console.log ("example r path",rpath + "/R_work/example-sync.R");
+        var exampleFile = fs.readFileSync(rpath + "/R_work/example-sync.R", 'utf8');
+        console.log("example file is " + exampleFile);
+        var out = R(rpath + "/R_work/example-sync.R")
+            .data("hello world", 20)
+            .callSync();
+    } catch (e) {
+        console.log ("error in rscript: ",e);
+    }
+    console.log("output from rscript: ",out);
     var dataRequests = [];
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
