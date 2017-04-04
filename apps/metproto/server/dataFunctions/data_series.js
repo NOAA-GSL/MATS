@@ -118,6 +118,14 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
 
         // // call R to process that data
         try {
+            var rpath;
+            if (process.env.NODE_ENV === "development") {
+                rpath = process.env.PWD + "/private/R_";
+                // something like /Users/pierce/WebstormProjects/MATS_DEV/apps/metproto/server/R_
+            } else {
+                rpath = process.env.PWD + "/programs/server/assets/app/R_";
+                // something like  /web/metproto/bundle/programs/server/assets/app/R_
+            }
             var out = R(rpath + "/R_work/example-sync.R")
                 .data({listIndy:dates, listDep1Plot:[statistic], listFixedValEx:forecastLeads,model:data_source, labels:dates})
                 .callSync();
