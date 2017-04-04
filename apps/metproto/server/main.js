@@ -121,7 +121,6 @@ const doCurveParams = function () {
             });
 
         var forecastLeadOptionsMap = {
-            0:0,
             3:30000,
             6:60000,
             9:90000,

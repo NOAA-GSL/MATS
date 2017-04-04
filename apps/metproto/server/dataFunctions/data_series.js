@@ -18,17 +18,9 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
             rpath = process.env.PWD + "/private/R_";
             // something like /Users/pierce/WebstormProjects/MATS_DEV/apps/metproto/server/R_
         } else {
-            //rpath = process.env.PWD + "/R_";
             rpath = process.env.PWD + "/programs/server/assets/app/R_";
             // something like  /web/metproto/bundle/programs/server/assets/app/R_
         }
-        console.log ("rpath",rpath);
-        console.log ("example r path",rpath + "/R_work/example-sync.R");
-        var exampleFile = fs.readFileSync(rpath + "/R_work/example-sync.R", 'utf8');
-        console.log("example file is " + exampleFile);
-        var out = R(rpath + "/R_work/example-sync.R")
-            .data("hello world", 20)
-            .callSync();
     } catch (e) {
         console.log ("error in rscript: ",e);
     }
@@ -38,8 +30,11 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
     // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+    var fromDateMoment = moment.utc(fromDate, "MM-DD-YYYY");
+    fromDate = fromDateMoment.format('YYYY-M-D');
+    var toDateMoment = moment.utc(toDate, "MM-DD-YYYY");
+    toDate = toDateMoment.format('YYYY-M-D');
+
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -51,7 +46,7 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
     var ymin = Number.MAX_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
-        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']];
         var label = curve['label'];
         var color = curve['color'];
         var statisticOption = curve['statistic'];
@@ -63,6 +58,16 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
         var variable = variableOptionsMap[variableOption];
 
         var forecastLeads = curve['forecast-lead'];
+
+        var flMin = forecastLeads.reduce(function(a,b){
+            return Math.min(Number(a),Number(b))
+        });
+        // use the mininum forecast lead to produce a list of all the dates seperated by the minimum forecast lead between the begin and end
+        var dateInstance = fromDateMoment;
+        var dates = [dateInstance.format('YYYY-MM-DD HH:mm:SS')];
+        while (dateInstance.isBefore(toDateMoment)) {
+            dates.push(dateInstance.add(flMin,'h').format('YYYY-MM-DD HH:mm:SS'));
+        }
 
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -97,15 +102,31 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
         statement = statement.replace('{{DATA_ID}}',data_id);
         dataRequests.push(statement);
         var rows;
+        var listIndy = [];
+
         try {
-//            rows = matsDataUtils.simplePoolQueryWrapSynchronous(connectionPool, statement);
+            //rows = matsDataUtils.simplePoolQueryWrapSynchronous(connectionPool, statement);
+            //for (var i = 0; i < rows.length; i++) {
+            for (var i = 0; i < 18; i++) {
+                //listIndy.push(rows[0]);
+                listIndy.push(i);
+            }
         } catch (e) {
             e.message = "Error in database access: " + e.message + " for statement: " + statement;
             throw new Error(e.message);
         }
 
-        // call R to process that data
-        //
+        // // call R to process that data
+        try {
+            var out = R(rpath + "/R_work/example-sync.R")
+                .data({listIndy:dates, listDep1Plot:[statistic], listFixedValEx:forecastLeads,model:data_source, labels:dates})
+                .callSync();
+        } catch (e) {
+            console.log ("error in rscript: ",e);
+        }
+        console.log("output from rscript: ",out);
+
+
         var fs = require('fs');
         // read R result
         var fName = "/tmp/tmp_data";
