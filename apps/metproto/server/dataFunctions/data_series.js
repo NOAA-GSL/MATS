@@ -57,16 +57,23 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableOption];
 
-        var forecastLeads = curve['forecast-lead'];
-
+        var forecastLeadOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-lead'}, {optionsMap: 1})['optionsMap'];
+        var forecastLeads = [];
+        var forecastLeadOptions = curve['forecast-lead'];
+        // leave forecastLeads as Numbers to do min
+        for (var i = 0; i < forecastLeadOptions.length; i++) {
+            forecastLeads.push(forecastLeadOptionsMap[forecastLeadOptions[i]]);
+        }
         var flMin = forecastLeads.reduce(function(a,b){
-            return Math.min(Number(a),Number(b))
+            return Math.min(Number(a),Number(b));
         });
+        // convert forecastLeads to Strings now
+        forecastLeads.map(String);
         // use the mininum forecast lead to produce a list of all the dates seperated by the minimum forecast lead between the begin and end
         var dateInstance = fromDateMoment;
         var dates = [dateInstance.format('YYYY-MM-DD HH:mm:SS')];
         while (dateInstance.isBefore(toDateMoment)) {
-            dates.push(dateInstance.add(flMin,'h').format('YYYY-MM-DD HH:mm:SS'));
+            dates.push(dateInstance.add(flMin / 1000,'h').format('YYYY-MM-DD HH:mm:SS'));
         }
 
         // axisKey is used to determine which axis a curve should use.
@@ -126,9 +133,9 @@ console.log ("plotParams", JSON.stringify(plotParams,null,2));
                 rpath = process.env.PWD + "/programs/server/assets/app/R_";
                 // something like  /web/metproto/bundle/programs/server/assets/app/R_
             }
-            var out = R(rpath + "/R_work/example-sync.R")
-                .data({listIndy:dates, listDep1Plot:[statistic], listFixedValEx:forecastLeads,model:data_source, labels:dates})
-                .callSync();
+            var rParams = {title:"test plot", rpath:rpath, listIndy:dates, statisticList:[statistic], forecastLeads:forecastLeads, dataSource:data_source, labels:dates, xAxisLabel:label, yAxisLabel:variable};
+            //console.log("rParams", rParams);
+            var out = R(rpath + "/R_work/tmp_rsme.R").data(rParams).callSync();
         } catch (e) {
             console.log ("error in rscript: ",e);
         }

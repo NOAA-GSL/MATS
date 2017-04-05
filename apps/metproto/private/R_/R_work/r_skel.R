@@ -60,7 +60,7 @@ listAggVal = list(
 );
 
 listSeries1Val = list(
-`model` = c("MODELNAME")
+`model` = modelList
 );
 
 listSeries2Val = list(
@@ -540,6 +540,40 @@ listLegendNotOrdered[intLegendIndex] = derivedCurveName;
 intLegendIndex = intLegendIndex + 1;
 }
 }
+
+
+# sort and dump the y1 axis series data points into a file suffixed .points1
+if( TRUE == boolDumpPoints1 ){
+listSeriesOrdered=list();
+oldInd=1;
+for(index in 1:length(listPlotOrderSeries1Part)){
+newInd = (3 * listPlotOrderSeries1Part[index]) -2;
+for(i in 0:2){
+listSeriesOrdered[newInd+i]=listSeries1[oldInd+i];
+}
+oldInd = oldInd +3;
+}
+
+strPointsFile = sub("\\.data$", ".points1", strDataFile, perl=TRUE);
+write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
+}
+
+# sort and dump the y2 axis series data points into a file suffixed .points2
+if( TRUE == boolDumpPoints2 && intNumSeries2){
+listSeriesOrdered=list();
+oldInd=1;
+for(index in 1:length(listPlotOrderSeries2Part)){
+newInd = (3 * listPlotOrderSeries2Part[index]) -2;
+for(i in 0:2){
+listSeriesOrdered[newInd+i]=listSeries2[oldInd+i];
+}
+oldInd = oldInd +3;
+}
+
+strPointsFile = sub("\\.data$", ".points2", strDataFile, perl=TRUE);
+write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
+}
+
 
 #replace with user's legends
 if( 0 < length(listLegendUsr) ){

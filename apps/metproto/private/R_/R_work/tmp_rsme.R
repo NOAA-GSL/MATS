@@ -1,10 +1,19 @@
+attach(input[[1]])
+
 setwd(rpath);
 
-source(rpath + "/R_work/include/Compute_STDerr.R");
-source(rpath + "/R_work/include/util_plot.R");
+compFileSource = rpath;
+paste  (compFileSource,"/R_work/include/Compute_STDerr.R");
+source(compFileSource);
 
-#strDataFile = "/Users/pierce/R_work/v1_9/metviewer_output/data/tmp_rmse.txt";
-#strPlotFile = "/Users/pierce/R_work/v1_9/metviewer_output/plots/new_plot_20170331_120406.png";
+plotSource = rpath;
+paste  (plotSource,"/R_work/include/util_plot.R");
+source(plotSource);
+
+strDataFile = rpath
+paste  (strDataFile,"/metviewer_output/data/tmp_rmse.txt");
+strPlotFile = rpath
+paste (strPlotFile,"/metviewer_output/plots/new_plot_20170331_120406.png");
 
 #
 # Plot Control Variables
@@ -16,10 +25,10 @@ boolXReverse	= FALSE;
 boolShowNStats	= FALSE;
 boolIndy1Stagger= FALSE;
 boolIndy2Stagger= FALSE;
-boolGridOn	= TRUE;
+boolGridOn	    = TRUE;
 boolSyncAxes	= FALSE;
 boolDumpPoints1	= TRUE;
-boolDumpPoints2	= TRUE;
+boolDumpPoints2	= FALSE;
 boolLogY1	= FALSE;
 boolLogY2	= FALSE;
 boolVarianceInflationFactor = TRUE;
@@ -40,35 +49,35 @@ dblAlpha	= 0.05;
 
 strIndyVar	= "fcst_valid_beg";
 
-#listIndy = c("2013-06-28 12:00:00", "2013-06-28 15:00:00", "2013-06-28 18:00:00", "2013-06-28 21:00:00", "2013-06-29 00:00:00", "2013-06-29 03:00:00", "2013-06-29 06:00:00", "2013-06-29 09:00:00", "2013-06-29 12:00:00", "2013-07-05 12:00:00", "2013-07-05 15:00:00", "2013-07-05 18:00:00", "2013-07-05 21:00:00", "2013-07-06 00:00:00", "2013-07-06 03:00:00", "2013-07-06 06:00:00", "2013-07-06 09:00:00", "2013-07-06 12:00:00");
+#listIndy attached
 
 listIndyPlotVal = c();
 
-#listDep1Plot = list(
-#`TMP` = c("RMSE")
-#);
+listDep1Plot = list(
+    LISTDEP1PLOT = statisticList
+);
 
-#listDep2Plot = list(
-#
-#);
+listDep2Plot = list(
+
+);
 
 listAggVal = list(
 
 );
 
-#listSeries1Val = list(
-#`model` = c("rapstoch0_7_spptens")
-#);
+listSeries1Val = list(
+    model = dataSource
+);
 
 listSeries2Val = list(
 
 );
 
-#listFixedValEx = list(
-#`fcst_lead` = list(
-#`fcst_lead_0` = c("0", "30000", "60000", "90000", "120000", "150000", "180000", "210000", "240000")
-#)
-#);
+listFixedValEx = list(
+        fcst_lead = list(
+        fcst_lead_0 = forecastLeads
+    )
+);
 
 listDep1Scale = list(
 
@@ -551,8 +560,8 @@ listSeriesOrdered[newInd+i]=listSeries1[oldInd+i];
 oldInd = oldInd +3;
 }
 
-strPointsFile = sub("\\.data$", ".points1", strDataFile, perl=TRUE);
-write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
+#strPointsFile = sub("\\.data$", ".points1", strDataFile, perl=TRUE);
+#write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
 }
 
 # sort and dump the y2 axis series data points into a file suffixed .points2
@@ -567,8 +576,8 @@ listSeriesOrdered[newInd+i]=listSeries2[oldInd+i];
 oldInd = oldInd +3;
 }
 
-strPointsFile = sub("\\.data$", ".points2", strDataFile, perl=TRUE);
-write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
+#strPointsFile = sub("\\.data$", ".points2", strDataFile, perl=TRUE);
+#write.table(listSeriesOrdered, file=strPointsFile, quote=FALSE, row.names=FALSE, col.names=FALSE);
 }
 
 
@@ -698,7 +707,7 @@ else { par(usr=c(dblY1Min - dblY1Bufr, dblY1Max + dblY1Bufr, par()$usr[3:4])); }
 
 # plot title
 mtext(
-"title",	# label
+title,	# label
 font=2,	# 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
 las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
 side=3,	# axis of interest, 1: below, 2: left, 3: above and 4: right
@@ -712,7 +721,7 @@ line=1	# margin line, starting at 0 counting outwards
 axis(
 intXAxis,	# axis of interest, 1: below, 2: left, 3: above and 4: right
 at=listX,	# locations of tick marks
-labels=c("2013-06-28 12:00:00", "2013-06-28 15:00:00", "2013-06-28 18:00:00", "2013-06-28 21:00:00", "2013-06-29 00:00:00", "2013-06-29 03:00:00", "2013-06-29 06:00:00", "2013-06-29 09:00:00", "2013-06-29 12:00:00", "2013-07-05 12:00:00", "2013-07-05 15:00:00", "2013-07-05 18:00:00", "2013-07-05 21:00:00", "2013-07-06 00:00:00", "2013-07-06 03:00:00", "2013-07-06 06:00:00", "2013-07-06 09:00:00", "2013-07-06 12:00:00"),	# axis labels
+labels=listIndy,
 tick=TRUE,	# tick marks on/off
 tck=.01, # length of tick marks as a fraction of plot window
 las=1,	# axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
@@ -724,7 +733,7 @@ col="gray"	# axis color
 
 # x-axis label
 mtext(
-"test x_label",	# label
+xAxisLabel,	# label
 font=1,	# 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
 las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
 side=intXAxis,	# axis of interest, 1: below, 2: left, 3: above and 4: right
@@ -750,7 +759,7 @@ col="gray"	# axis color
 
 # y-axis label
 mtext(
-"test y_label",	# label
+yAxisLabel,	# label
 font=1,	# 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
 las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
 side=intY1Axis,	# axis of interest, 1: below, 2: left, 3: above and 4: right
@@ -1195,6 +1204,6 @@ adj=0,	# axis parallel location adjustment
 line=1	# margin line, starting at 0 counting outwards
 );
 
-
+print(listSeriesOrdered);
 
 dev.off();
