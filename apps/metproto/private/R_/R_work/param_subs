@@ -1,0 +1,18 @@
+RWORKDIR = "home/fab/holub/metviewer/v1_9/R_work/";
+STRDATAFILE = "/home/fab/holub/metviewer/v1_9/metviewer_output/data/tmp_rmse.txt";
+STRPLOTFILE = "/home/fab/holub/metviewer/v1_9/metviewer_output/plots/plot_20170331_120406.png";
+
+# NOTE single quotes
+LISTINDY = '"2013-06-28 12:00:00", "2013-06-28 15:00:00", "2013-06-28 18:00:00", "2013-06-28 21:00:00", "2013-06-29 00:00:00", "2013-06-29 03:00:00", "2013-06-29 06:00:00", "2013-06-29 09:00:00", "2013-06-29 12:00:00", "2013-07-05 12:00:00", "2013-07-05 15:00:00", "2013-07-05 18:00:00", "2013-07-05 21:00:00", "2013-07-06 00:00:00", "2013-07-06 03:00:00", "2013-07-06 06:00:00", "2013-07-06 09:00:00", "2013-07-06 12:00:00"';
+
+LISTDEP1PLOT = "TMP";
+CLISTDEP1PLOT = "RMSE";
+
+MODELNAME = "rapstoch0_7_spptens";
+
+# NOTE single quotes
+LISTFIXEDVALEX = '"0", "30000", "60000", "90000", "120000", "150000", "180000", "210000", "240000"';
+
+PLOTTITLE = "Plot Title";
+XAXISLABEL = "Xaxis Label"
+YAXISLABEL = "Yaxis Label"

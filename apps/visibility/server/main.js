@@ -64,8 +64,8 @@ const doCurveParams = function () {
             {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],   // convenience
                 controlButtonCovered: true,
                 default: '',
                 unique: true,

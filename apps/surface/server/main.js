@@ -7,6 +7,11 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 var modelOptionsMap ={};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
+const dateInitStr = matsCollections.dateInitStr();
+const dateInitStrParts = dateInitStr.split(' - ');
+const startInit = dateInitStrParts[0];
+const stopInit = dateInitStrParts[1];
+const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {

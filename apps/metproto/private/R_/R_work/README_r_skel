@@ -1,0 +1,135 @@
+Define needed substitution strings
+see param_subs for examples
+
+Based on http://stackoverflow.com/questions/14177087/replace-a-string-in-a-file-with-nodejs
+the npm package 'replace' can be used to insert these sub strings into a copy of r_skel.R
+
+#setwd( "home/fab/holub/metviewer/v1_9/R_work/");
+setwd("RWORKDIR");
+
+#strDataFile = "/home/fab/holub/metviewer/v1_9/metviewer_output/data/tmp_rmse.txt";
+strDataFile = "STRDATAFILE";
+
+#strPlotFile = "/home/fab/holub/metviewer/v1_9/metviewer_output/plots/plot_20170331_120406.png";
+strPlotFile = "STRPLOTFILE";
+
+#listIndy = c("2013-06-28 12:00:00", "2013-06-28 15:00:00", "2013-06-28 18:00:00", "2013-06-28 21:00:00", "2013-06-29 00:00:00", "2013-06-29 03:00:00", "2013-06-29 06:00:00", "2013-06-29 09:00:00", "2013-06-29 12:00:00", "2013-07-05 12:00:00", "2013-07-05 15:00:00", "2013-07-05 18:00:00", "2013-07-05 21:00:00", "2013-07-06 00:00:00", "2013-07-06 03:00:00", "2013-07-06 06:00:00", "2013-07-06 09:00:00", "2013-07-06 12:00:00");
+listIndy = c("LISTINDY");
+
+#listDep1Plot = list( `TMP` = c("RMSE") );
+listDep1Plot = list( `LISTDEP1PLOT` = c("CLISTDEP1PLOT") );
+
+#listSeries1Val = list( `model` = c("rapstoch0_7_spptens") );
+listSeries1Val = list( `model` = c("MODELNAME") );
+
+#listFixedValEx = list(
+`fcst_lead` = list(
+`fcst_lead_0` = c("0", "30000", "60000", "90000", "120000", "150000", "180000", "210000", "240000")
+)
+);
+listFixedValEx = list(
+`fcst_lead` = list(
+`fcst_lead_0` = c(LISTFIXEDVALEX)
+)
+);
+
+# plot title
+#mtext(
+#"test title",   # label
+#font=2, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+#las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+#side=3, # axis of interest, 1: below, 2: left, 3: above and 4: right
+#cex=1.4,        # relative magnification
+#padj=-2,        # axis label perpendicular location adjustment
+#adj=0.5,        # axis label parallel location adjustment
+#line=1  # margin line, starting at 0 counting outwards
+);
+
+# plot title
+mtext(
+"PLOTTITLE",   # label
+font=2, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+side=3, # axis of interest, 1: below, 2: left, 3: above and 4: right
+cex=1.4,        # relative magnification
+padj=-2,        # axis label perpendicular location adjustment
+adj=0.5,        # axis label parallel location adjustment
+line=1  # margin line, starting at 0 counting outwards
+);
+
+# specify the x-axis
+#axis(
+#intXAxis,       # axis of interest, 1: below, 2: left, 3: above and 4: right
+#at=listX,       # locations of tick marks
+#labels=c("2013-06-28 12:00:00", "2013-06-28 15:00:00", "2013-06-28 18:00:00", "2013-06-28 21:00:00", "2013-06-29 00:00:00", "2013-06-29 03:00:00", "2013-06-29 06:00:00", "2013-06-29 09:00:00", "2013-06-29 12:00:00", "2013-07-05 12:00:00", "2013-07-05 15:00:00", "2013-07-05 18:00:00", "2013-07-05 21:00:00", "2013-07-06 00:00:00", "2013-07-06 03:00:00", "2013-07-06 06:00:00", "2013-07-06 09:00:00", "2013-07-06 12:00:00"), # axis labels
+#tick=TRUE,      # tick marks on/off
+#tck=.01, # length of tick marks as a fraction of plot window
+#las=1,  # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+#padj=-0.75,     # axis label perpendicular location adjustment
+#hadj=0.5,       # axis label parallel location adjustment
+#cex.axis=1, # relative axis label magnification
+#col="gray"      # axis color
+#);
+
+# specify the x-axis
+axis(
+intXAxis,       # axis of interest, 1: below, 2: left, 3: above and 4: right
+at=listX,       # locations of tick marks
+labels=c(LISTINDY), # axis labels
+tick=TRUE,      # tick marks on/off
+tck=.01, # length of tick marks as a fraction of plot window
+las=1,  # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+padj=-0.75,     # axis label perpendicular location adjustment
+hadj=0.5,       # axis label parallel location adjustment
+cex.axis=1, # relative axis label magnification
+col="gray"      # axis color
+);
+
+
+# x-axis label
+#mtext(
+#"test x_label", # label
+#font=1, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+#las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+#side=intXAxis,  # axis of interest, 1: below, 2: left, 3: above and 4: right
+#cex=1,  # relative axis label magnification
+#padj=2, # axis label perpendicular location adjustment
+#adj=0.5,        # axis label parallel location adjustment
+#line=1  # margin line, starting at 0 counting outwards
+#);
+
+# x-axis label
+mtext(
+"XAXISLABEL", # label
+font=1, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+side=intXAxis,  # axis of interest, 1: below, 2: left, 3: above and 4: right
+cex=1,  # relative axis label magnification
+padj=2, # axis label perpendicular location adjustment
+adj=0.5,        # axis label parallel location adjustment
+line=1  # margin line, starting at 0 counting outwards
+);
+
+# y-axis label
+#mtext(
+#"test y_label", # label
+#font=1, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+#las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+#side=intY1Axis, # axis of interest, 1: below, 2: left, 3: above and 4: right
+#cex=1,  # relative axis label magnification
+#padj=-2,        # axis label perpendicular location adjustment
+#adj=0.5,        # axis label parallel location adjustment
+#line=1  # margin line, starting at 0 counting outwards
+#);
+
+# y-axis label
+mtext(
+"YAXISLABEL", # label
+font=1, # 1: plain text, 2: bold, 3: italic, 4: bold italic and 5: symbol
+las=0, # axis label orientation - 0: parallel to axis, 1: horiz, 2: perp to axis, 3: vert
+side=intY1Axis, # axis of interest, 1: below, 2: left, 3: above and 4: right
+cex=1,  # relative axis label magnification
+padj=-2,        # axis label perpendicular location adjustment
+adj=0.5,        # axis label parallel location adjustment
+line=1  # margin line, starting at 0 counting outwards
+);

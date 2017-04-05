@@ -47,7 +47,9 @@ Template.textSeriesOutput.helpers({
       return curve.label;
     },
     curveText: function () {
-        this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
+        if (this.regionName) {
+            this.regionName = this.region.split(' ')[0];
+        }  // regionName might be needed in getCurveText but only region is defined
         const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
         return text;
     },
