@@ -537,21 +537,7 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            forecastLengthModels.push(model);
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-
     var regionNumberDescriptionMapping = [];
-
     try {
         matsCollections.RegionDescriptions.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
@@ -564,7 +550,7 @@ Meteor.startup(function () {
             matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber, description: description});
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("RegionDescriptions error: ", err.message);
     }
 
     // common settings
