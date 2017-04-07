@@ -537,71 +537,20 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            forecastLengthModels.push(model);
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-
     var regionNumberDescriptionMapping = [];
     try {
         matsCollections.RegionDescriptions.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
         for (var i = 0; i < rows.length; i++) {
-            regionNumberDescriptionMapping[rows[i].regionMapTable] = rows[i].description;
-            matsCollections.RegionDescriptions.insert({regionMapTable: rows[i].regionMapTable, description: rows[i].description});
+            var regionNumber = (rows[i].regionMapTable);
+            var description = rows[i].description;
+            var valueList = [];
+            valueList.push(regionNumber);
+            regionNumberDescriptionMapping[regionNumber] = description;
+            matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber, description: description});
         }
     } catch (err) {
-        console.log("regionNumberDescriptionMapping:" + err.message);
-    }
-
-    var modelRegionNumberMap = {};
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT " +
-            "model, regions, category, fcst_lens, RPM.id " +
-            "FROM " +
-            "regions_per_model_mats_all_categories AS RPM, " +
-            "all_display_categories AS DC " +
-            "WHERE " +
-            "RPM.display_category = DC.id " +
-            "ORDER BY RPM.id;");
-        var label = "";
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
-            var regions = rows[i].regions;
-            var category = "--" + rows[i].category + "--";
-            if (label === "" || label !== category) {
-                label = category;
-                // the models param has option groups so we have to create a list of disabled options that act as the group labels
-                modelDisabledOptions.push(label);
-                modelOptionsGoups[label] = [label];
-            }
-            myModels.push(model);
-            // modelOptionsGroups
-            modelOptionsGoups[label].push(model);
-            //modelOptionsMap
-            modelOptionsMap[model] = [model];
-            // myModels - modelTableMap
-            modelTableMap[model] = [(model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") ? "Areg": "reg"];
-            var regionNumbers = JSON.parse(regions.split(','));
-            regionModelOptionsMap[model] = [];
-            for (var i1 = 0; i1 < regionNumbers.length; i1++) {
-                regionModelOptionsMap[model].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
-            }
-            // forecastLengthOptionsMap
-            var forecastLengths = JSON.parse(rows[i].fcst_lens);
-            //forecastLengthOptionsMap[model] = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengths;
-        }
-    } catch (err) {
-        console.log("modelRegionNumberMap: " + err.message);
+        console.log("RegionDescriptions error: ", err.message);
     }
 
     // common settings
