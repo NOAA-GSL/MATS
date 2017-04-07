@@ -54,7 +54,7 @@ strIndyVar	= "fcst_valid_beg";
 listIndyPlotVal = c();
 
 listDep1Plot = list(
-    LISTDEP1PLOT = statisticList
+    "LISTDEP1PLOT" = statisticList
 );
 
 listDep2Plot = list(
@@ -66,7 +66,7 @@ listAggVal = list(
 );
 
 listSeries1Val = list(
-    model = dataSource
+    "model" = dataSource
 );
 
 listSeries2Val = list(
@@ -74,8 +74,8 @@ listSeries2Val = list(
 );
 
 listFixedValEx = list(
-        fcst_lead = list(
-        fcst_lead_0 = forecastLeads
+        "fcst_lead" = list(
+        "fcst_lead_0" = forecastLeads
     )
 );
 

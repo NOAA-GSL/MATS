@@ -151,7 +151,6 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                optionsQuery: "call get_data_sources()",
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
@@ -256,7 +255,6 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                optionsQuery: "call get_data_sources()",
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],

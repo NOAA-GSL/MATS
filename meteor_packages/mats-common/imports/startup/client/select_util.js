@@ -281,7 +281,7 @@ const refresh = function (event, paramName) {
                         options = options === null ? optionsGroups[optionsGroupsKeys[k]] : options.concat(optionsGroups[optionsGroupsKeys[k]].sort());
                     }
                 } else {
-                    options = param.options;
+                options = param.options;
                 }
             }
             var optionsAsString = "";
@@ -292,7 +292,7 @@ const refresh = function (event, paramName) {
             for (var i = 0; i < options.length; i++) {
                 if (disabledOptions === undefined || disabledOptions.indexOf(options[i]) === -1) {
                     //regular option
-                    optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
+                optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
                 } else {
                     // disabled option
                     if (firstGroup === true) {
