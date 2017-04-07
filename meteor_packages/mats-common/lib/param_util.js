@@ -111,6 +111,19 @@ const getInputElementForParamName = function(paramName) {
     return document.getElementById(id);
 };
 
+// get a param disabledOptions list - if any.
+const getDisabledOptionsForParamName = function(paramName) {
+    const id = getInputIdForParamName(paramName);
+    if (id === undefined) {
+        return undefined;
+    }
+    const param = getParameterForName(paramName);
+    if (!param) {
+        return undefined;
+    }
+    return param.disabledOptions;
+};
+
 // set the input for the element that corresponds to the param name
 // also sets a data-mats-currentValue attribute
 const setInputForParamName = function(paramName,value) {
@@ -345,6 +358,7 @@ const setAllParamsToDefault = function() {
 };
 
 export default matsParamUtils = {
+    getDisabledOptionsForParamName:getDisabledOptionsForParamName,
     getControlButtonIdForParamName:getControlButtonIdForParamName,
     getControlElementForParamName:getControlElementForParamName,
     getValueElementForParamName:getValueElementForParamName,

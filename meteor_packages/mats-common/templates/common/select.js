@@ -3,9 +3,15 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 import { matsSelectUtils } from 'meteor/randyp:mats-common';
 
-
+/*
+    Much of the work for select widgets happens in mats-common->imports->client->select_util.js. Especially the refresh
+    routine which sets all the options. Don't forget to look there for much of the handling.
+ */
 Template.select.onRendered( function () {
     const ref = this.data.name + '-' + this.data.type;
+    if (this.data.optionsGroups) {
+        $("#" + ref).select2({minimumResultsForSearch: 20});
+    }
     const elem = document.getElementById(ref);
     try {
         // register refresh event for axis change to use to enforce a refresh
@@ -41,6 +47,13 @@ Template.select.onRendered( function () {
     });
 
 Template.select.helpers({
+    optionMaxLength: function() {
+        var sOptions = [];
+        const longest = (this.options).reduce(function (a, b) { return a.length > b.length ? a : b; });
+        const ret = longest.length < 8 ? 8 : Math.round(longest.length * 0.6);
+        return ret;
+    },
+
     isSelectedByDefault: function (p) {
         if (p.default == this) {
             return "selected";   // the selected option
@@ -50,7 +63,15 @@ Template.select.helpers({
     },
     options: function () {
         var sOptions = [];
-        if (this.options !== matsTypes.InputTypes.unused) {
+        //process options as an option list
+        if (this.options === matsTypes.InputTypes.unused) {
+            return [];
+        } else if (this.optionsGroups) {
+            // options have optionGroups
+            this.optionsGroups.foreach(function(value) {
+                Soptions.concat(value);
+            });
+        } else {
             sOptions = matsParamUtils.typeSort(this.options);
         }
         return sOptions;

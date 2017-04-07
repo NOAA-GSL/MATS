@@ -37,7 +37,6 @@ Examples:
                  type: matsTypes.InputTypes.select,
                  optionsMap:modelOptionsMap,
                  options:Object.keys(modelOptionsMap),   // convenience
-                 optionsQuery:"call get_data_sources()",
                  dependentNames: ["sites","forecast-length","variable"],
                  controlButtonCovered: true,
                  default: 'HRRR ESRL',
@@ -76,8 +75,6 @@ options: Array of Strings (optional: usually the keys of the optionsMap) - Selec
               returns the enumerable properties of the object it is given (in this example optionsMap) as a string. In this
               case it returns the names of all the properties given to the optionsMap, which will appear on the website as
               the different options which the user may select.
-optionsQuery: String (optional) - In some cases the optionsMap needs to be generated from an SQL database. The query for the
-              database is written here as a string.
 min: integer (optional) - The minimum value that the selector may be set to. Only for number spinner types.
 max: integer (optional) - The maximum value that the selector may be set to. Only for number spinner types.
 step: integer (optional) - The value by which the selector changes whenever an arrow (up or down) is clicked on. Only for number spinner types.

@@ -5,11 +5,13 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
+// models have option groups so we use a Map() because it maintains order.
+var modelOptionsGoups = {};
+var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
 var myModels = [];
 var regionModelOptionsMap = {};
 var modelTableMap = {};
 var forecastLengthOptionsMap = {};
-var forecastLengthModels = [];
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -83,9 +85,10 @@ const doCurveParams = function () {
                 name: 'model',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
+                optionsGroups: modelOptionsGoups,
+                disabledOptions:modelDisabledOptions,
                 tableMap: modelTableMap,
                 options: myModels,   // convenience
-                optionsQuery: "select model from regions_per_model_mats",
                 dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: myModels[0],
@@ -237,12 +240,12 @@ const doCurveParams = function () {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[forecastLengthModels[0]],
+                options: forecastLengthOptionsMap[myModels[0]],
                 superiorNames: ['model'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[forecastLengthModels[0]][2],
+                default: forecastLengthOptionsMap[myModels[0]][2],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -421,7 +424,7 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 1
+        connectionLimit: 10
     });
     var rows;
     // the pool is intended to be global
@@ -434,84 +437,105 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 1
+        connectionLimit: 10
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    var modelRegionNumberMap = {};
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions, display_category from regions_per_model_mats order by display_category, model;");
-        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,
-        //     "SELECT model, regions, display_text, RPM.display_order, RPM.id " +
-        //     "FROM regions_per_model_mats_all_sorted " +
-        //     "AS RPM, display_categories " +
-        //     "AS DC WHERE RPM.display_category = DC.id " +
-        //     "ORDER BY RPM.display_order;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
-            var regions = rows[i].regions;
-            var regionMapping = "Areg";
-            if (model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") {
-                regionMapping = "reg";
-            }
 
-            var valueList = [];
-            valueList.push(model);
-            modelOptionsMap[model] = valueList;
 
-            var tablevalueList = [];
-            tablevalueList.push(regionMapping);
-            modelTableMap[model] = tablevalueList;
-            myModels.push(model);
-
-            var regionArr = regions.split(',');
-
-            modelRegionNumberMap[model] = regionArr;
+    // build regionDescriptions, myModels, modelOptionsMap, modelTableMap, RegionModelOptionsMap, forecastLengthOptionsMap
+    /*
+         regionDescriptions = {
+             region1Number : regionDescriotionText,
+             regionN2umber : region2DescriotionText,
+             .
+             .
+         }
+         myModels =["model1", "model2" ... "modeln"]
+         modelOptionsMap = {
+            "model1" : ["model1"],
+            "model2" : ["model2"],
+            .
+            .
+            "modeln" : ["modeln"]
         }
-    } catch (err) {
-        console.log(err.message);
-    }
-
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            forecastLengthModels.push(model);
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
+        modelTableMap = {
+            "model1" : "Areg" OR "reg",
+            "model2" : "Areg" OR "reg",
+            .
+            .
+            "modeln" : "Areg" OR "reg"
         }
-    } catch (err) {
-        console.log(err.message);
-    }
-
+        RegionModelOptionsMap = {
+            "model1" : ["region1"],
+            "model2" : ["region2"],
+            .
+            .
+            "modeln" : ["regionn"]
+        }
+        forecastLengthOptionsMap = {
+            "model1" : ["0","1", .....],
+            "model2" : ["0","1", .....],
+            .
+            .
+            "modeln" : ["0","1", .....]
+        }
+     */
     var regionNumberDescriptionMapping = [];
-
     try {
         matsCollections.RegionDescriptions.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
         for (var i = 0; i < rows.length; i++) {
-            var regionNumber = (rows[i].regionMapTable);
-            var description = rows[i].description;
-            var valueList = [];
-            valueList.push(regionNumber);
-            regionNumberDescriptionMapping[regionNumber] = description;
-            matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber, description: description});
+            regionNumberDescriptionMapping[rows[i].regionMapTable] = rows[i].description;
+            matsCollections.RegionDescriptions.insert({regionMapTable: rows[i].regionMapTable, description: rows[i].description});
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("regionNumberDescriptionMapping:" + err.message);
     }
 
-    // build RegionModelOptionsMap
-    for (var i = 0; i < myModels.length; i++) {
-        var regionNumbers = modelRegionNumberMap[myModels[i]];
-        regionModelOptionsMap[myModels[i]] = [];
-        for (var i1 = 0; i1 < regionNumbers.length; i1++) {
-            regionModelOptionsMap[myModels[i]].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+    var modelRegionNumberMap = {};
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT " +
+            "model, regions, category, fcst_lens, RPM.id " +
+            "FROM " +
+            "regions_per_model_mats_all_categories AS RPM, " +
+            "all_display_categories AS DC " +
+            "WHERE " +
+            "RPM.display_category = DC.id " +
+            "ORDER BY RPM.id;");
+        var label = "";
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model.trim();
+            var regions = rows[i].regions;
+            var category = "--" + rows[i].category + "--";
+            if (label === "" || label !== category) {
+                label = category;
+                // the models param has option groups so we have to create a list of disabled options that act as the group labels
+                modelDisabledOptions.push(label);
+                modelOptionsGoups[label] = [label];
+            }
+            myModels.push(model);
+            // modelOptionsGroups
+            modelOptionsGoups[label].push(model);
+            //modelOptionsMap
+            modelOptionsMap[model] = [model];
+            // myModels - modelTableMap
+            modelTableMap[model] = [(model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") ? "Areg": "reg"];
+            var regionNumbers = JSON.parse(regions.split(','));
+            regionModelOptionsMap[model] = [];
+            for (var i1 = 0; i1 < regionNumbers.length; i1++) {
+                regionModelOptionsMap[model].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+            }
+            // forecastLengthOptionsMap
+            var forecastLengths = JSON.parse(rows[i].fcst_lens);
+            //forecastLengthOptionsMap[model] = forecastLengths.split(',');
+            forecastLengthOptionsMap[model] = forecastLengths;
         }
+    } catch (err) {
+        console.log("modelRegionNumberMap: " + err.message);
     }
 
     // common settings

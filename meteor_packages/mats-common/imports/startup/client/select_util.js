@@ -155,8 +155,15 @@ const refresh = function (event, paramName) {
     }
     const param = matsParamUtils.getParameterForName(paramName);
     const elem = matsParamUtils.getInputElementForParamName(paramName);
+    // disabledOptions are the indicator that the options are to be grouped
+    // if there are disabledOptions they are the keys in the optionsGroups
+    // and they are the sort order of those keys.
+    // also they are to be disabled options
+    const disabledOptions = matsParamUtils.getDisabledOptionsForParamName(paramName);
+    const optionsGroups = param.optionsGroups;
     const plotTypeDependent = param.plotTypeDependent;
     const optionsMap = param.optionsMap;
+
     const superiorNames = param.superiorNames;
     var superiors = [];
     if (superiorNames !== undefined) {
@@ -230,6 +237,8 @@ const refresh = function (event, paramName) {
                  unused and used -> use the used
                  used and used -> use the intersection
                  unused and unused - set the options to []
+
+                 A select may have a list of disabledOptions. These are used as optionGroup markers.
                  */
                 var superiorOptionsUsed = (superiorOptions !== null) && (superiorOptions !== matsTypes.InputTypes.unused) && superiorOptions !== [];
                 var myOptionsUsed = (options !== undefined) && (options !== null) && (options !== matsTypes.InputTypes.unused) && options !== [];
@@ -261,16 +270,43 @@ const refresh = function (event, paramName) {
             // reset the options of the select
             // if the options are null it might be that this is the initial setup.
             // so use the optionsmap and the default options for the map
+            // it might also mean that there are no superiors for this param
             if (options == null) {
                 // get the default options
-                options = param.options;
+                if (optionsGroups) {
+                    // optionGroups are an ordered map. It probably has options that are in the disabledOption list
+                    // which are used as markers in the select options pulldown. This is typical for models
+                    const optionsGroupsKeys = Object.keys(optionsGroups);
+                    for (var k = 0; k < optionsGroupsKeys.length; k++) {
+                        options = options === null ? optionsGroups[optionsGroupsKeys[k]] : options.concat(optionsGroups[optionsGroupsKeys[k]].sort());
+                    }
+                } else {
+                    options = param.options;
+                }
             }
             var optionsAsString = "";
             if (options === undefined || options == null) {
                 return;
             }
+            var firstGroup = true;
             for (var i = 0; i < options.length; i++) {
-                optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
+                if (disabledOptions === undefined || disabledOptions.indexOf(options[i]) === -1) {
+                    //regular option
+                    optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
+                } else {
+                    // disabled option
+                    if (firstGroup === true) {
+                        // first in group
+                        optionsAsString += "<optgroup label='──────" + options[i] + "──────'>";
+                        firstGroup = false;
+                    } else {
+                        optionsAsString += "</optgroup>";
+                        optionsAsString += "<optgroup label='──────" + options[i] + "──────'>";
+                    }
+                }
+            }
+            if (disabledOptions !== undefined) {
+                optionsAsString += "</optgroup>";
             }
             $('select[name="' + name + '"]').empty().append(optionsAsString);
             //reset the selected index if it had been set prior (the list may have changed so the index may have changed)
