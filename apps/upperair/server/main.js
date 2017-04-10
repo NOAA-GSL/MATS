@@ -522,7 +522,7 @@ Meteor.startup(function () {
             //modelOptionsMap
             modelOptionsMap[model] = [model];
             // myModels - modelTableMap
-            modelTableMap[model] = [(model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") ? "Areg": "reg"];
+            modelTableMap[model] = [(model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") ? "reg": "Areg"];
             var regionNumbers = JSON.parse(regions.split(','));
             regionModelOptionsMap[model] = [];
             for (var i1 = 0; i1 < regionNumbers.length; i1++) {
