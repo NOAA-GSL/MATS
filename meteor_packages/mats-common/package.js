@@ -19,6 +19,7 @@ Package.onUse(function(api) {
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");
+  api.use('natestrauser:select2','client');
   api.use('aldeed:simple-schema@1.5.3');
   api.imply('aldeed:simple-schema@1.5.3');
   api.use('mdg:validated-method');

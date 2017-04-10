@@ -85,7 +85,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model",
                 dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: 'HRRR',
