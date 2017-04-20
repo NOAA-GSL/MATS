@@ -223,6 +223,7 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
+        document.getElementById("curveItem-" + Session.get("editMode")).scrollIntoView(false);
     }
 });
 

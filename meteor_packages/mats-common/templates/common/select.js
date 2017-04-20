@@ -111,6 +111,7 @@ Template.select.events({
         matsSelectUtils.checkDisableOther(this);
         matsSelectUtils.refreshPeer(event, this);
         document.getElementById("element-" + this.name).style.display = "none"; // be sure to hide the element div
+        document.getElementById("curveItem-" + Session.get("editMode")).scrollIntoView(false);
         return false;
     },
     'change .selectAll': function (event) {
