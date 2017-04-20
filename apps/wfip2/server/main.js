@@ -484,7 +484,11 @@ var doCurveTextPatterns = function () {
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,']
-            ]
+            ],
+            displayParams: [
+                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness"
+                ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -503,7 +507,11 @@ var doCurveTextPatterns = function () {
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,'],
                 ['', 'curve-dates', '']
-            ]
+            ],
+            displayParams: [
+                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates"
+            ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.scatter2d,
@@ -527,7 +535,18 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-discriminator', ', '],
                 ['lc', 'level-completeness', ' '],
                 ['sc', 'site-completeness', '']
-            ]
+            ],
+            displayParams: [
+                "label",
+                "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
+                "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
+                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness",
+
+                "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
+                "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
+                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","xaxis-level-completeness"
+            ],
+            groupSize:6
         });
 
     }

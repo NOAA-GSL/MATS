@@ -11,6 +11,7 @@ var modelDisabledOptions = [];  // model select has optionGroups (disabled optio
 var myModels = [];
 var regionModelOptionsMap = {};
 var modelTableMap = {};
+var modelDateRangeMap = {};
 var forecastLengthOptionsMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
@@ -30,6 +31,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -88,8 +90,9 @@ const doCurveParams = function () {
                 optionsGroups: modelOptionsGoups,
                 disabledOptions:modelDisabledOptions,
                 tableMap: modelTableMap,
+                dates: modelDateRangeMap,
                 options: myModels,   // convenience
-                dependentNames: ["region", "forecast-length"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: myModels[0],
                 unique: false,
@@ -191,17 +194,17 @@ const doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+        optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['BOTH','0-UTC','12-UTC',],
+                options: ['both','0-UTC','12-UTC',],
                 controlButtonCovered: true,
-                selected: 'BOTH',
+                selected: 'both',
                 unique: false,
-                default: 'BOTH',
+                default: 'both',
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
@@ -304,6 +307,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -342,7 +346,11 @@ const doCurveTextPatterns = function () {
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","average","forecast-length","top","bottom"
+            ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -358,7 +366,11 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['', 'curve-dates', '']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","forecast-length","top","bottom","curve-dates"
+            ],
+            groupSize: 6
         });
     }
 };
@@ -463,8 +475,8 @@ Meteor.startup(function () {
             "modeln" : ["modeln"]
         }
         modelTableMap = {
-            "model1" : "Areg" OR "reg",
-            "model2" : "Areg" OR "reg",
+            "model1" : "tableNamePrefix",   // something like LAPS_HWT_Areg
+            "model2" : "tableNamePrefix",
             .
             .
             "modeln" : "Areg" OR "reg"
@@ -484,6 +496,7 @@ Meteor.startup(function () {
             "modeln" : ["0","1", .....]
         }
      */
+    //regionNumberDescriptionMapping - gives us a region description for a region number
     var regionNumberDescriptionMapping = [];
     try {
         matsCollections.RegionDescriptions.remove({});
@@ -495,21 +508,38 @@ Meteor.startup(function () {
     } catch (err) {
         console.log("regionNumberDescriptionMapping:" + err.message);
     }
-
+    // all the rest
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT " +
-            "model, regions, category, fcst_lens, RPM.id " +
-            "FROM " +
-            "regions_per_model_mats_all_categories AS RPM, " +
-            "all_display_categories AS DC " +
-            "WHERE " +
+        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, table_name_prefix, display_text, regions, fcst_lens, category," +
+        //     "display_order, RPM.id, mindate, minhour, maxdate, maxhour, numrecs " +
+        // "FROM " +
+        // "regions_per_model_mats_all_categories AS RPM, " +
+        //     "all_display_categories AS DC " +
+        // "WHERE " +
+        // "RPM.display_category = DC.id " +
+        // "ORDER BY display_order;"
+        // );
+
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select RPM.id, " +
+            "display_order, model, table_name_prefix," +
+            " display_text, regions, fcst_lens, category, DC.id," +
+            " mindate, minhour, maxdate, maxhour, numrecs " +
+            "from " +
+            "regions_per_model_mats_all_categories as RPM, " +
+            "all_display_categories as DC " +
+            "where " +
             "RPM.display_category = DC.id " +
-            "ORDER BY RPM.id;");
+            "order by display_order;");
+
         var label = "";
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions;
-            var category = "--" + rows[i].category + "--";
+            var tableNamePrefix = rows[i].table_name_prefix.trim();
+            var category = "──" + rows[i].category + "──";
+            // needs to look like 02/10/2016 12:10
+            var minDate = moment(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var maxDate = moment(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
             if (label === "" || label !== category) {
                 label = category;
                 // the models param has option groups so we have to create a list of disabled options that act as the group labels
@@ -521,8 +551,9 @@ Meteor.startup(function () {
             modelOptionsGoups[label].push(model);
             //modelOptionsMap
             modelOptionsMap[model] = [model];
-            // myModels - modelTableMap
-            modelTableMap[model] = [(model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") ? "reg": "Areg"];
+            // modelDates - holds the valid data date range for a model
+            modelDateRangeMap[model] = {minDate:minDate, maxDate:maxDate};
+            modelTableMap[model] = tableNamePrefix;
             var regionNumbers = JSON.parse(regions.split(','));
             regionModelOptionsMap[model] = [];
             for (var i1 = 0; i1 < regionNumbers.length; i1++) {
@@ -531,8 +562,9 @@ Meteor.startup(function () {
             // forecastLengthOptionsMap
             var forecastLengths = JSON.parse(rows[i].fcst_lens);
             //forecastLengthOptionsMap[model] = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengths;
+            forecastLengthOptionsMap[model] = forecastLengths.map(String);
         }
+
     } catch (err) {
         console.log(err.message);
     }

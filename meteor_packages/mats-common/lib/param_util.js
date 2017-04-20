@@ -73,6 +73,13 @@ const setValueTextForParamName = function(paramName, text) {
 
 // get the document id for the element that corresponds to the param name
 const getInputIdForParamName = function(paramName) {
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    if (paramName.startsWith("xaxis") || paramName.startsWith("yaxis")) {
+        var pname = paramName.replace(/^.axis-/, '');
+        var param = matsCollections.CurveParams.findOne({name: pname});
+        return (paramName + "-" + param.type).replace(/ /g,'-');
+    }
+
     var param = matsCollections.CurveParams.findOne({name: paramName});
     if (param === undefined) {
         param = matsCollections.PlotParams.findOne({name: paramName});
@@ -83,7 +90,11 @@ const getInputIdForParamName = function(paramName) {
             return undefined;
         }
     }
-    return (param.name + "-" + param.type).replace(/ /g,'-');
+    if (param.type === matsTypes.InputTypes.dateRange) {
+        return  ("element-" + param.name).replace(/ /g, '-');
+    } else {
+        return (param.name + "-" + param.type).replace(/ /g, '-');
+    }
 };
 
 
@@ -356,6 +367,11 @@ const setAllParamsToDefault = function() {
         setDefaultForParamName(param);
     });
 };
+// is the input element displaying? used by curve_param_item_group
+const isInputElementVisible = function(paramName) {
+    const inputElement = getInputElementForParamName(paramName);
+    return $(inputElement).is(':visible');
+};
 
 export default matsParamUtils = {
     getDisabledOptionsForParamName:getDisabledOptionsForParamName,
@@ -375,4 +391,5 @@ export default matsParamUtils = {
     getParameterForName:getParameterForName,
     setDefaultForParamName:setDefaultForParamName,
     setAllParamsToDefault:setAllParamsToDefault,
-    typeSort:typeSort};
+    typeSort:typeSort,
+    isInputElementVisible:isInputElementVisible};

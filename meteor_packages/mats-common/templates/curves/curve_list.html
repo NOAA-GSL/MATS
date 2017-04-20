@@ -1,11 +1,11 @@
 <template name="curveList">
     <div id="curveList"  class="well-sm clearfix col-lg-12" style="display:{{displayCurves}}">
         {{#each curves}}
-            {{> curveItem}}
+            {{> curveItem this}}
         {{/each}}
         <div class="clearfix btn-toolbar well well-sm pull-left" role="toolbar">
-            <button type="button" name="plotUnMatched" id="plot"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style= "display:{{displayUnMatched}};">&nbsp;&nbsp;Plot Unmatched</button>
-            <button type="button" name="plotMatched" id="plot"  class="plot-curves-matched btn btn-success  fa fa-area-chart" {{averagesdisabled}}>&nbsp;&nbsp;Plot Matched</button>
+            <button type="button" name="plotUnMatched" id="plot"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style="display:{{displayPlotUnMatched}};">&nbsp;&nbsp;Plot Unmatched</button>
+            <button type="button" name="plotMatched" id="plot"  class="plot-curves-matched btn btn-success  fa fa-area-chart" style="display:{{displayPlotMatched}};" {{averagesdisabled}}>  Plot Matched</button>
             <button type="button" class="btn spacebutton" id="spacer"></button>
             <button type="button" name="save" id="save " class="save-settings btn btn-success   fa fa-cloud-upload">&nbsp;&nbsp;Save Settings</button>
             <button id='remove-all' class="remove-all btn btn-danger btn-xs"><i class="fa fa-times remove-all btn btn-warning "></i>&nbsp;&nbsp;Remove All </button>

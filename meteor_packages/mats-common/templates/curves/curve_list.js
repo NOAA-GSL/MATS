@@ -6,11 +6,27 @@ import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 Template.curveList.helpers({
-    displayUnMatched: function() {
+    displayPlotUnMatched: function() {
+        // scatter plots can't match
         if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
             return "none";
         }
-        return "block";
+        // don't allow plotting when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    displayPlotMatched: function() {
+        // don't allow plotting when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
     },
     curves: function () {
         return Session.get('Curves');
@@ -26,7 +42,7 @@ Template.curveList.helpers({
         console.log(this);
     },
     averagesdisabled: function () {
-        // temporary disable plot match for profiles on wfip2
+        // temporary disable plot match for profiles on wfip2 untill profiles are correctly implemented
         if (Session.get("plotType") === matsTypes.PlotTypes.profile && Session.get("app").appName === "wfip2") {
             return "disabled";
         }

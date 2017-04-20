@@ -32,7 +32,8 @@ dataSeries = function (plotParams, plotFunction) {
         const diffFrom = curve.diffFrom;
         const model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         const region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
-        const tableRegion = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
+//        const tableRegion = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
+        const tablePrefix = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']];
         const label = curve['label'];
         const top = curve['top'];
         const bottom = curve['bottom'];
@@ -65,7 +66,7 @@ dataSeries = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         if (averageStr == "None") {
-            if (validTimeStr === 'BOTH') {
+            if (validTimeStr === 'both') {
                 interval = 12 * 3600 * 1000;
             } else {
                 interval = 24 * 3600 * 1000;
@@ -96,7 +97,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             // build the query
             //statement = statement.replace('{{model}}', model + '_Areg' + region);
-            statement = statement.replace('{{model}}', model + '_' + tableRegion + region);
+            statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);

@@ -3,10 +3,10 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
-
+label;
 Template.curveItem.onRendered(function() {
     // the value used for the colorpicker (l) MUST match the returned value in the colorpick helper
-    var label = this.data.label;
+    label = this.data.label;
     $(function () {
         var l = '.' + label + '-colorpick';
         $(l).colorpicker({format: "rgb", align:"left"});
@@ -79,6 +79,12 @@ Template.curveItem.helpers({
     },
     editingThis: function() {
         return (Session.get('editMode') === this.label);
+    },
+    editCurve: function() {
+        return Session.get('editMode');
+    },
+    editTarget: function() {
+        return Session.get("eventTargetCurve");
     }
 });
 
@@ -148,12 +154,15 @@ const setParamsToAxis = function(newAxis, currentParams) {
 
 };
 
+var curveListEditNode;  // used to pass the edit button to the modal continue
 Template.curveItem.events({
     'click .save-changes' : function() {
+        $(".displayBtn").css({border:""}); // clear any borders from any display buttons
         document.getElementById('save').click();
         Session.set("paramWellColor","#f5f5f5");
     },
     'click .cancel' : function() {
+        $(".displayBtn").css({border: ""}); // clear any borders from any display buttons
         document.getElementById('cancel').click();
         Session.set("paramWellColor","#f5f5f5");
     },
@@ -251,5 +260,49 @@ Template.curveItem.events({
         }
         Session.set('Curves',Curves);
         return false;
+    },
+    'click .displayBtn': function (event) {
+        const srcDisplayButton = event.currentTarget;
+        const name = srcDisplayButton.name;
+        const inputElem = matsParamUtils.getInputElementForParamName(name);
+        const controlElem = matsParamUtils.getControlElementForParamName(name);
+        const editingCurve = Session.get('editMode');
+        curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+        const eventTargetCurve = $($(event.currentTarget.parentNode.parentNode).find("#label")[0]).text().trim().split(':')[1].trim();
+        Session.set("eventTargetCurve",eventTargetCurve);
+        Session.set("intendedActiveDisplayButton",name);
+        Session.set("activeDisplayButton",name);
+        if(editingCurve !== undefined && editingCurve !== "" && editingCurve !== eventTargetCurve) {
+            // editing a different curve // have to do the modal for confirmation
+            $("#confirm-lost-edits").modal();
+            return;
+        }
+        inputElem && inputElem.focus();
+        document.getElementById("curveParamGroup").scrollIntoView(true);
+        curveListEditNode.click();
+        controlElem && controlElem.click();
+        Session.set("elementChanged", Date.now());
+    },
+    'click .continue-lose-edits': function() {
+        const intendedName = Session.get("intendedActiveDisplayButton");
+        var activeDisplayButton = Session.set("activeDisplayButton", intendedName);
+        document.getElementById('cancel').click();
+        Session.set("paramWellColor", "#f5f5f5");
+        const controlElem = matsParamUtils.getControlElementForParamName(intendedName);
+        const inputElem = matsParamUtils.getInputElementForParamName(intendedName);
+        inputElem && inputElem.focus();
+        document.getElementById("curveParamGroup").scrollIntoView(true);
+        curveListEditNode.click();
+        controlElem && controlElem.click();
+        Session.set("elementChanged", Date.now());
+    },
+    'click .cancle-lose-edits': function() {
+        // don't change the active button
+        const name = Session.get("activeDisplayButton");
+        const controlElem = matsParamUtils.getControlElementForParamName(name);
+        const inputElem = matsParamUtils.getInputElementForParamName(name);
+        inputElem && inputElem.focus();
+        controlElem && controlElem.click();
+        Session.set("elementChanged", Date.now());
     }
 });

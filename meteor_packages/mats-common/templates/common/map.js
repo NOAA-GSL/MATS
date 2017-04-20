@@ -144,6 +144,9 @@ Template.map.onRendered(function () {
     };
 
     var refresh = function (peerElement) {
+        if (!peerElement) {
+            return;
+        }
         var peerId = peerElement.id;
         refreshMarkersForPeer(peerElement);
         var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];

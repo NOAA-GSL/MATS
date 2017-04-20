@@ -48,6 +48,7 @@ Template.dateRange.onRendered(function () {
             "endDate": stopInit,
             "showDropdowns": true,
             "drops": "up",
+
             locale: {
                 format: 'MM/DD/YYYY HH:mm'
             },
@@ -59,8 +60,7 @@ Template.dateRange.onRendered(function () {
                 'Last 60 Full Days': [moment().subtract(60, 'days').startOf('day'), moment().startOf('day')],
                 'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
                 'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
-            },
-            "alwaysShowCalendars": true
+            },"alwaysShowCalendars": true,
         });
         matsParamUtils.setValueTextForParamName(name, dstr);
     });
@@ -114,7 +114,7 @@ Template.dateRange.onRendered(function () {
                     // skip this superior - it isn't being used right now
                     continue;
                 }
-                const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].mindate;
+                const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].minDate;
                 const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM-DD-YYYY HH:mm");
                 if (superiorMinimumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
@@ -123,7 +123,7 @@ Template.dateRange.onRendered(function () {
                     setError ("The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
                     return false;
                 }
-                const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxdate;
+                const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
                 const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM-DD-YYYY HH:mm");
                 if (superiorMaximumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
@@ -196,7 +196,7 @@ Template.dateRange.onRendered(function () {
         }
     };
 
-// register refresh event for y superior to use to enforce a refresh of the options list
+// register refresh event for superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
         refresh();
     });

@@ -177,6 +177,9 @@ Package.onUse(function(api) {
   api.addFiles("templates/curves/curve_item.html", "client");
   api.addFiles("templates/curves/curve_item.js", "client");
 
+  api.addFiles("templates/curves/curve_param_item_group.html", "client");
+  api.addFiles("templates/curves/curve_param_item_group.js", "client");
+
   api.addFiles("templates/curves/curve_list.html", "client");
   api.addFiles("templates/curves/curve_list.js", "client");
 
