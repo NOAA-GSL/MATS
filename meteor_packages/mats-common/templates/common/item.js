@@ -173,7 +173,8 @@ Template.item.events({
                 }
             }
          }
-        document.getElementById("curveItem-" + Session.get("editMode")).scrollIntoView(false);
+        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
+        curveItem && curveItem.scrollIntoView(false);
     },
 
     'click .help' : function() {
@@ -223,7 +224,8 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        document.getElementById("curveItem-" + Session.get("editMode")).scrollIntoView(false);
+        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
+        curveItem && curveItem.scrollIntoView(false);
     }
 });
 
