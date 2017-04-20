@@ -1,7 +1,10 @@
 <template name="curveItem">
     <div id="curveItem-{{label}}">
-        <button id="{{label}}-color-value" class="fa fa-paint-brush fa-lg input-group-addon btn btn-sm colorpicker-component {{colorpick}}"
-                value="{{defaultColor}}" style="color:{{defaultColor}};background:transparent;border:none;"></button>
+        <span class="input-group">
+            <i class="fa fa-paint-brush fa-lg input-group-addon" style="color:{{defaultColor}};background:transparent;border:none;"></i>
+            <input id="{{label}}-color-value" class="fa fa-paint-brush fa-lg input-group-addon btn btn-sm colorpicker-component {{colorpick}}"
+                value="{{defaultColor}}" style="color:{{defaultColor}};background:transparent;border:none;"/>
+        </span>
         <div class="btn-sm pull-left clearfix col-lg-12" role="toolbar">
                 <div style = "display:inline-block;background-color: {{defaultColor}}; border:solid;border-color: {{defaultColor}};border-radius: 10px;">
                     {{> curveParamItemGroup this}}
