@@ -67,7 +67,7 @@ Template.dateRange.onRendered(function () {
 
     $('#' + idref).on('apply.daterangepicker', function (ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
-            setError(new Error("Your start and end dates coincide, you must select a range!"));
+            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range!"));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
@@ -86,17 +86,17 @@ Template.dateRange.onRendered(function () {
             var endDsr = moment(curVals[1], "MM-DD-YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
-                setError ("Your date range selector has an invalid start date-time: " + curVals[0]);
+                setError ("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
                 return false;
             }
             if (!endDsr.isValid()) {
                 // error
-                setError ("Your date range selector has an invalid end date-time:" + curVals[1]);
+                setError ("date_range refresh error: Your date range selector has an invalid end date-time:" + curVals[1]);
                 return false;
             }
             if (startDsr.isAfter(endDsr)) {
                 // error
-                setError ("Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
+                setError ("date_range refresh error: Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
                 return false;
             }
             // get superior values and check for errors
@@ -120,7 +120,7 @@ Template.dateRange.onRendered(function () {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].min = superiorMinimumMoment;
                 } else {
-                    setError ("The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
+                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
                     return false;
                 }
                 const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
@@ -129,12 +129,12 @@ Template.dateRange.onRendered(function () {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].max = superiorMaximumMoment;
                 } else {
-                    setError ("The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMaximumDateStr);
+                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMaximumDateStr);
                     return false;
                 }
                 if ((superiorVals[si].min).isAfter(superiorVals[si].max)) {
                     // error
-                    setError ("The date range for the superiorName: " + superiorName + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
+                    setError ("date_range refresh error: The date range for the superiorName: " + superiorName + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
                     return false;
                 }
             }

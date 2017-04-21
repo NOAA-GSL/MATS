@@ -373,23 +373,38 @@ const isInputElementVisible = function(paramName) {
     return $(inputElement).is(':visible');
 };
 
+// is the input element displaying? used by curve_param_item_group
+const isParamVisible = function(paramName) {
+    const paramRef = "#" + paramName + "-item";
+    return $(paramRef).is(':visible');
+};
+
+// is the input element displaying? used by curve_param_item_group
+const isControlButtonVisible = function(paramName) {
+    const paramRef = "#controlButton-" + paramName;
+    return $(paramRef).is(':visible');
+};
+
 export default matsParamUtils = {
-    getDisabledOptionsForParamName:getDisabledOptionsForParamName,
-    getControlButtonIdForParamName:getControlButtonIdForParamName,
-    getControlElementForParamName:getControlElementForParamName,
-    getValueElementForParamName:getValueElementForParamName,
-    getValueForParamName:getValueForParamName,
-    setValueTextForParamName:setValueTextForParamName,
-    getValueIdForParamName:getValueIdForParamName,
-    getInputIdForParamName:getInputIdForParamName,
-    getInputElementForParamName:getInputElementForParamName,
-    getElementValues:getElementValues,
-    setInputForParamName:setInputForParamName,
-    expandParams:expandParams,
-    collapseParams:collapseParams,
-    collapseParam:collapseParam,
-    getParameterForName:getParameterForName,
-    setDefaultForParamName:setDefaultForParamName,
-    setAllParamsToDefault:setAllParamsToDefault,
-    typeSort:typeSort,
-    isInputElementVisible:isInputElementVisible};
+    getDisabledOptionsForParamName: getDisabledOptionsForParamName,
+    getControlButtonIdForParamName: getControlButtonIdForParamName,
+    getControlElementForParamName: getControlElementForParamName,
+    getValueElementForParamName: getValueElementForParamName,
+    getValueForParamName: getValueForParamName,
+    setValueTextForParamName: setValueTextForParamName,
+    getValueIdForParamName: getValueIdForParamName,
+    getInputIdForParamName: getInputIdForParamName,
+    getInputElementForParamName: getInputElementForParamName,
+    getElementValues: getElementValues,
+    setInputForParamName: setInputForParamName,
+    expandParams: expandParams,
+    collapseParams: collapseParams,
+    collapseParam: collapseParam,
+    getParameterForName: getParameterForName,
+    setDefaultForParamName: setDefaultForParamName,
+    setAllParamsToDefault: setAllParamsToDefault,
+    typeSort: typeSort,
+    isInputElementVisible: isInputElementVisible,
+    isParamVisible: isParamVisible,
+    isControlButtonVisible:isControlButtonVisible
+};

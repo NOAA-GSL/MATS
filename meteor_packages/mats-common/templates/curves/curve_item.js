@@ -278,7 +278,6 @@ Template.curveItem.events({
             return;
         }
         inputElem && inputElem.focus();
-        document.getElementById("curveParamGroup").scrollIntoView(true);
         curveListEditNode.click();
         controlElem && controlElem.click();
         Session.set("elementChanged", Date.now());
@@ -291,7 +290,6 @@ Template.curveItem.events({
         const controlElem = matsParamUtils.getControlElementForParamName(intendedName);
         const inputElem = matsParamUtils.getInputElementForParamName(intendedName);
         inputElem && inputElem.focus();
-        document.getElementById("curveParamGroup").scrollIntoView(true);
         curveListEditNode.click();
         controlElem && controlElem.click();
         Session.set("elementChanged", Date.now());

@@ -88,6 +88,13 @@ Template.curveParamItemGroup.helpers({
     },
     editTarget: function() {
         return Session.get("eventTargetCurve");
+    },
+    displayParam: function(elem) {
+         if (matsParamUtils.isControlButtonVisible(elem.name)) {
+             return "block";
+         } else {
+             return "none";
+         }
     }
 });
 

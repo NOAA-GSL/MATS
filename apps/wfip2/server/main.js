@@ -662,8 +662,8 @@ Meteor.startup(function () {
             var color = rows[0][i].color;
 
 
-            var mindate = rows[0][i].mindate;
-            var maxdate = rows[0][i].maxdate;
+            var minDate = rows[0][i].mindate;
+            var maxDate = rows[0][i].maxdate;
             var minutc = rows[0][i].minutc;
             var maxutc = rows[0][i].maxutc;
             var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + model.toString() + "') as hd")[0]['hd'];
@@ -671,8 +671,8 @@ Meteor.startup(function () {
             valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
             modelOptionsMap[model] = valueList;
             datesMap[model] = {};
-            datesMap[model]["mindate"] = mindate;
-            datesMap[model]["maxdate"] = maxdate;
+            datesMap[model]["minDate"] = minDate;
+            datesMap[model]["maxDate"] = maxDate;
             datesMap[model]["minutc"] = minutc;
             datesMap[model]["maxutc"] = maxutc;
 

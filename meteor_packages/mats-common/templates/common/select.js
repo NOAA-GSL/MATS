@@ -36,8 +36,6 @@ Template.select.onRendered( function () {
         matsSelectUtils.checkDisableOther(this.data);
         matsSelectUtils.checkHideOther(this.data);
         matsSelectUtils.refresh(null,this.data.name);
-        elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
-
     } catch (e) {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
         setError(e);
