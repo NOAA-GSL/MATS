@@ -15,14 +15,22 @@ dataProfile = function (plotParams, plotFunction) {
     var dataset = [];
     // used to find the max and minimum for the y axis
     // used in yaxisOptions for scaling the graph
-    var xAxisMax = Number.MIN_VALUE;
+    var xAxisMax = -1 * Number.MAX_VALUE;
     var xAxisMin = Number.MAX_VALUE;
     var yAxisMax = Number.MIN_VALUE;
     var yAxisMin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
     var maxValidInterval = Number.MIN_VALUE;
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        var curve = curves[curveIndex];
+    var curveIndex;
+    var curve;
+    var time;
+    var tooltip;
+    var level;
+    var t;
+    var i;
+    var n;
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        curve = curves[curveIndex];
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         curve.dataSource_is_instrument = parseInt(tmp[1]);
         curve.dataSource_tablename = tmp[2];
@@ -31,6 +39,9 @@ dataProfile = function (plotParams, plotFunction) {
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
         if (curve['statistic'] != "mean") {
             // need a truth data source for statistic
+            if (curve['truth-data-source'] === matsTypes.InputTypes.unused || curve['truth-data-source'] === undefined) {
+                throw (new Error("INFO: You must define a truth data source"));
+            }
             const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
             curve.truthDataSource_is_instrument = parseInt(tmp[1]);
             curve.truthDataSource_tablename = tmp[2];
@@ -43,15 +54,20 @@ dataProfile = function (plotParams, plotFunction) {
     }
     var xAxisLabel = "";
     var xAxisLabels = [];
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        var curve = curves[curveIndex];
+    var errorMax = Number.MIN_VALUE;
+    var d = [];
+
+
+
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var dataSource = curve['data-source'];
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
         var verificationRunInterval = curve.verificationRunInterval;
         var dataSource_is_json = curve.dataSource_is_json;
-
+        var curveStatValues = [];
         var myVariable;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
@@ -64,7 +80,7 @@ dataProfile = function (plotParams, plotFunction) {
             xAxisLabel += variableStr;
             xAxisLabels.push(variableStr);
         } else {
-            if ( xAxisLabels.indexOf(variableStr) == -1) {
+            if (xAxisLabels.indexOf(variableStr) == -1) {
                 xAxisLabels.push(variableStr);
                 xAxisLabel += " | " + variableStr;
             }
@@ -76,7 +92,7 @@ dataProfile = function (plotParams, plotFunction) {
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
-        for (var i = 0; i < siteNames.length; i++) {
+        for (i = 0; i < siteNames.length; i++) {
             var siteId = matsCollections.SiteMap.findOne({siteName: siteNames[i]}).siteId;
             siteIds.push(siteId);
         }
@@ -97,14 +113,12 @@ dataProfile = function (plotParams, plotFunction) {
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = matsDataUtils.dateConvert(curveDates.split(' - ')[0]); // get the from part
         var curveDatesDateRangeTo = matsDataUtils.dateConvert(curveDates.split(' - ')[1]); // get the to part
-
-
         var statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         var statement;
-        if (diffFrom == null) {
+        if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if (dataSource_is_instrument) {
                 const utcOffset = Number(forecastLength * 3600);
@@ -181,7 +195,7 @@ dataProfile = function (plotParams, plotFunction) {
                     //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
                     throw ( new Error(truthQueryResult.error) );
                 }
-            }
+            }  // if statistic is not mean
             /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
              data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
              and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
@@ -189,6 +203,8 @@ dataProfile = function (plotParams, plotFunction) {
              based on the minimum interval for the data set, and fill in missing times with null values.
 
              We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+
+             For each valid time, and each valid level for that time we also need partial sums for all of the valid sites.
 
              We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
              the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
@@ -206,24 +222,24 @@ dataProfile = function (plotParams, plotFunction) {
              where ....
              resultData = {
              time0: {
-             sites: {
-             site0: {
-             levels:[],
-             values:[],
-             sum: Number,
-             mean: Number,
-             numLevels: Number,
-             max: Number,
-             min: Number
-             },
-             site1: {...},
-             .
-             .
-             siten:{...},
-             }
-             timeMean: Number   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
+                 sites: {
+                     site0: {
+                         levels:[],
+                         values:[],
+                         sum: Number,
+                         mean: Number,
+                         numLevels: Number,
+                         max: Number,
+                         min: Number
+                     },
+                     site1: {...},
+                     .
+                     .
+                     siten:{...},
+                 }
+                 timeMean: Number   // cumulativeMovingMean for this time
+                 timeLevels: [],
+                 timeSites:[]
              },
              time1:{....},
              .
@@ -253,12 +269,12 @@ dataProfile = function (plotParams, plotFunction) {
             } else {
                 allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
-            for (var t = 0; t < allTimes.length; t++) {
+            for (t = 0; t < allTimes.length; t++) {
                 /*
                  If statistic is not "mean" then we need a set of truth values to diff from the verification values.
                  The sites and levels have to match for the truth to make any sense.
                  */
-                var time = allTimes[t];
+                time = allTimes[t];
                 var timeObj = queryResult.data[time];
                 var verificationSites = Object.keys(timeObj.sites).map(Number);
                 var truthSites = [];
@@ -405,13 +421,13 @@ dataProfile = function (plotParams, plotFunction) {
             var d = [];
             var levels = Object.keys(levelStats);
             for (l = 0; l < levels.length; l++) {
-                var level = levels[l];
+                level = levels[l];
                 var value = levelStats[level][statistic];
                 xAxisMin = xAxisMin < value ? xAxisMin : value;
                 xAxisMax = xAxisMax > value ? xAxisMax : value;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
-                var tooltip = label +
+                tooltip = label +
                     "<br>level: " + level +
                     "<br>statistic: " + statistic +
                     "<br> value: " + value;
@@ -431,8 +447,7 @@ dataProfile = function (plotParams, plotFunction) {
             var minuendLevels = [];
             var minuendStatistic = null;
             var subtrahendStatistic = null;
-            var i;
-            var level;
+            level;
             var value;
             for (i = 0; i < minuendData.length; i++) {
                 level = minuendData[i][1];
@@ -463,7 +478,7 @@ dataProfile = function (plotParams, plotFunction) {
                 xAxisMax = xAxisMax > value ? xAxisMax : value;
                 yAxisMin = yAxisMin < level ? yAxisMin : level;
                 yAxisMax = yAxisMax > level ? yAxisMax : level;
-                var tooltip = label +
+                tooltip = label +
                     "<br>level: " + level +
                     "<br>minuend statistic: " + minuendStatistic +
                     "<br>subtrahend statistic: " + subtrahendStatistic +
@@ -490,10 +505,10 @@ dataProfile = function (plotParams, plotFunction) {
                 xerr: {
                     show: true,
                     asymmetric: false,
-                    upperCap: "-",
-                    lowerCap: "-",
+                    upperCap: "squareCap",
+                    lowerCap: "squareCap",
                     color: color,
-                    radius: 1
+                    radius: 10
                 }
             },
             lines: {
@@ -560,7 +575,7 @@ dataProfile = function (plotParams, plotFunction) {
             shadowSize: 0
         },
         zoom: {
-            interactive: true
+            interactive: false
         },
         pan: {
             interactive: false
@@ -595,12 +610,15 @@ dataProfile = function (plotParams, plotFunction) {
             content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
+    //const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
+
     // add black 0 line curve
-    dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
+    //dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
     var result = {
         error: error,
         data: dataset,
         options: pOptions,
+        //options: resultOptions,
         basis: {
             plotParams: plotParams,
             queries: dataRequests
