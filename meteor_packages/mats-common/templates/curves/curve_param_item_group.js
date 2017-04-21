@@ -73,7 +73,7 @@ Template.curveParamItemGroup.helpers({
     },
     border: function(elem) {
         var elementChanged = Session.get("elementChanged");
-        const name = elem.name;
+        const name = elem.name; // for xaxis params
         const curve = elem.curve;
         const adb = (name === Session.get("activeDisplayButton"));
         const isEditMode = (curve === Session.get("editMode"));
