@@ -181,14 +181,16 @@ Template.textProfileOutput.helpers({
         var stddev = fillStr;
         try {
             // see if I have a valid data object for this dataIndex and this level....
-            const dataPointVal = getDataForLevel(data, level);
-            if (dataPointVal !== undefined) {
+            const dataPointVal = getDataForLevel(data, level).toString();
+            if (dataPointVal !== undefined && Array.isArray(dataPointVal)) {
                 pdata = dataPointVal[0] && dataPointVal[0].toPrecision(4);
-                mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
-                perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
-                stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
-                lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
-                n = dataPointVal[5].n_good;
+                if (dataPointVal[5] !== undefined) {
+                    mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
+                    perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
+                    stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
+                    lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
+                    n = dataPointVal[5].n_good;
+                }
             }
         } catch (problem) {
             console.log("Problem in deriving curve text: " + problem);

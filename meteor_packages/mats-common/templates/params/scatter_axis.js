@@ -31,9 +31,9 @@ Template.scatter2d.helpers({
         }
     },
     xaxisCurveText: function() {
-        if (isEditing()) {
-            setAxisText("xaxis");
-        }
+        // if (isEditing()) {
+        //     setAxisText("xaxis");
+        // }
         const t = Session.get('xaxisCurveText');
         if (t){
             return t;
@@ -43,9 +43,9 @@ Template.scatter2d.helpers({
         }
     },
     yaxisCurveText: function() {
-        if (isEditing()) {
-            setAxisText("yaxis");
-        }
+        // if (isEditing()) {
+        //     setAxisText("yaxis");
+        // }
         const t = Session.get('yaxisCurveText');
         if (t || isEditing()){
             return t;
