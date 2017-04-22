@@ -1,25 +1,31 @@
 <template name="curveItem">
-    <div id="curveItem">
-        <div class="btn-toolbar btn-group  btn-xs pull-left clearfix col-lg-12" role="toolbar">
-              <input  id="{{label}}-color-value" class="input-group-addon btn btn-xs colorpicker-component {{colorpick}}" value="{{defaultColor}}"
-                      style="height:1em;background:transparent;background-color:{{defaultColor}};"/>
-              <button class="btn btn-xs" style="white-space: normal;"> {{text}}</button>
+    <div id="curveItem-{{label}}">
+        <span class="input-group">
+            <i class="fa fa-paint-brush fa-lg input-group-addon" style="color:{{defaultColor}};background:transparent;border:none;"></i>
+            <input id="{{label}}-color-value" class="fa fa-paint-brush fa-lg input-group-addon btn btn-sm colorpicker-component {{colorpick}}"
+                value="{{defaultColor}}" style="color:{{defaultColor}};background:transparent;border:none;"/>
+        </span>
+        <div class="btn-sm pull-left clearfix col-lg-12" role="toolbar">
+                <div style = "display:inline-block;background-color: {{defaultColor}}; border:solid;border-color: {{defaultColor}};border-radius: 10px;">
+                    {{> curveParamItemGroup this}}
+                </div>
             {{#if DBcurve }}
                 {{#if editingThis}}
-                    <div id="editMode" class="btn-toolbar btn-group-xs" role="group">
-                        <button name="save" id="curve-list-save" class="save-changes btn-success btn btn-xs fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
-                        <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn btn-xs fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
+                    <div id="editMode" class="btn-toolbar btn-group-sm" role="group">
+                        <button name="save" id="curve-list-save" class="save-changes btn-success btn btn-sm fa fa-line-chart">&nbsp;&nbsp;Save Changes</button>
+                        <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn btn-sm fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
                     </div>
                 {{else}}
-                    <div id="nonEditMode" class="btn-toolbar btn-group-xs" role="group">
-                        <button class="remove-curve btn-danger btn btn-xs fa fa-times "> &nbsp;Remove</button>
-                        <button class="edit-curve btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEdit}}">&nbsp;&nbsp;Edit</button>
-                        <button class="edit-curve-xaxis btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEditXaxis}}">&nbsp;&nbsp;Edit X Axis</button>
-                        <button class="edit-curve-yaxis btn-sm btn-info btn btn-xs fa fa-pencil-square-o" style="display:{{displayEditYaxis}}">&nbsp;&nbsp;Edit Y Axis</button>
+                    <div id="nonEditMode" class="btn-toolbar btn-group-sm" role="group">
+                        <button id="curve-list-remove" class="remove-curve btn-danger btn btn-sm fa fa-times "> &nbsp;Remove</button>
+                        <button id="curve-list-edit" class="edit-curve edit-curve-{{label}} btn-sm btn-info btn btn-sm fa fa-pencil-square-o" style="display:{{displayEdit}}">&nbsp;&nbsp;Edit</button>
+                        <button id="curve-list-edit-xaxis" class="edit-curve-xaxis edit-curve-xaxis-{{label}} btn-sm btn-info btn btn-sm fa fa-pencil-square-o" style="display:{{displayEditXaxis}}">&nbsp;&nbsp;Edit X Axis</button>
+                        <button id="curve-list-edit-yaxis" class="edit-curve-yaxis edit-curve-yaxis-{{label}}  btn-sm btn-info btn btn-sm fa fa-pencil-square-o" style="display:{{displayEditYaxis}}">&nbsp;&nbsp;Edit Y Axis</button>
                     </div>
                 {{/if}}
             {{/if}}
           </div>
     </div>
 </template>
+
 

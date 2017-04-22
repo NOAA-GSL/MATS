@@ -7,8 +7,7 @@ setError = function(error){
         myError = error;
     }
 
-    if ( myError.toLocaleString().indexOf( "INFO:" ) ) {
-
+    if ( myError.toLocaleString().indexOf( "INFO:" ) !== -1) {
         const strinfo = myError && myError.error && myError.error.replace( "INFO:", "" );
         setInfo( strinfo );
         return;

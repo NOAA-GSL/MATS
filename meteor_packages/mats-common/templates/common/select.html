@@ -1,15 +1,21 @@
 <template name="select">
+    <div>
+        {{#if selectionIsOptional}}
+            <div>
+                <button type="button" class="selectClear btn btn-warning  btn" id="clearAll" data-name="{{name}}" data-selectId="{{name}}-{{type}}" name="clearall" >do not use {{name}}</button>
+            </div>
+        {{/if}}
+    </div>
+    <div>
         <select style="width:{{optionMaxLength}}em;" class="data-input {{name}}" size="10" name="{{name}}" id="{{name}}-{{type}}" {{multiple}}>
             <option initial>initial</option>
         </select>
+    </div>
+    <div>
         {{#if isMultiple}}
             <div>
                 <input class="selectAll" id="selectAll" data-name="{{name}}" data-selectId="{{name}}-{{type}}" name="selectall" type="checkbox"/>all/none
             </div>
         {{/if}}
-        {{#if selectionIsOptional}}
-            <div>
-                <button type="button" class="selectClear btn btn-default  btn-xs" id="clearAll" data-name="{{name}}" data-selectId="{{name}}-{{type}}" name="clearall" >do not use {{name}}</button>
-            </div>
-        {{/if}}
+    </div>
 </template>

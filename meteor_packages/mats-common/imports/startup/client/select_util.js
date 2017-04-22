@@ -47,8 +47,13 @@ const refreshDependents = function (event, param) {
                     selectAllbool = document.getElementById('selectAll').checked;
                 }
                 try {
-                    // refresh explicitly instead of with event
-                    matsSelectUtils.refresh(null, targetParam.name);
+                    if (targetParam.type === matsTypes.InputTypes.dateRange) {
+                        // dispatch the refresh event
+                        targetElem.dispatchEvent(new CustomEvent("refresh"))
+                    } else {
+                        // refresh explicitly instead of with event
+                        matsSelectUtils.refresh(null, targetParam.name);
+                    }
                 } catch(re) {
                     re.message = "INFO: refreshDependents of: " + param.name + " dependent: " + targetParam.name + " - error: " + re.message;
                     setInfo(re.message);
@@ -290,19 +295,20 @@ const refresh = function (event, paramName) {
             }
             var firstGroup = true;
             for (var i = 0; i < options.length; i++) {
-                if (disabledOptions === undefined || disabledOptions.indexOf(options[i]) === -1) {
-                    //regular option
-                optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
-                } else {
+                var dIndex = disabledOptions === undefined ? -1 : disabledOptions.indexOf(options[i]);
+                if (dIndex >= 0) {   // the option was found in the disabled options so it needs to be an optgroup label
                     // disabled option
                     if (firstGroup === true) {
                         // first in group
-                        optionsAsString += "<optgroup label='──────" + options[i] + "──────'>";
+                        optionsAsString += "<optgroup label=" + options[i] +">";
                         firstGroup = false;
                     } else {
                         optionsAsString += "</optgroup>";
-                        optionsAsString += "<optgroup label='──────" + options[i] + "──────'>";
+                        optionsAsString += "<optgroup label=" + options[i] + ">";
                     }
+                } else {
+                    //regular option - the option was not found in the disabled options
+                    optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
                 }
             }
             if (disabledOptions !== undefined) {
