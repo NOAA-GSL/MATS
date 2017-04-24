@@ -151,7 +151,6 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                optionsQuery: "call get_data_sources()",
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
@@ -256,7 +255,6 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                optionsQuery: "call get_data_sources()",
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
@@ -486,7 +484,11 @@ var doCurveTextPatterns = function () {
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,']
-            ]
+            ],
+            displayParams: [
+                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness"
+                ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -505,7 +507,11 @@ var doCurveTextPatterns = function () {
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,'],
                 ['', 'curve-dates', '']
-            ]
+            ],
+            displayParams: [
+                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates"
+            ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.scatter2d,
@@ -529,7 +535,18 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-discriminator', ', '],
                 ['lc', 'level-completeness', ' '],
                 ['sc', 'site-completeness', '']
-            ]
+            ],
+            displayParams: [
+                "label",
+                "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
+                "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
+                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness",
+
+                "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
+                "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
+                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","xaxis-level-completeness"
+            ],
+            groupSize:6
         });
 
     }
@@ -645,8 +662,8 @@ Meteor.startup(function () {
             var color = rows[0][i].color;
 
 
-            var mindate = rows[0][i].mindate;
-            var maxdate = rows[0][i].maxdate;
+            var minDate = rows[0][i].mindate;
+            var maxDate = rows[0][i].maxdate;
             var minutc = rows[0][i].minutc;
             var maxutc = rows[0][i].maxutc;
             var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + model.toString() + "') as hd")[0]['hd'];
@@ -654,8 +671,8 @@ Meteor.startup(function () {
             valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
             modelOptionsMap[model] = valueList;
             datesMap[model] = {};
-            datesMap[model]["mindate"] = mindate;
-            datesMap[model]["maxdate"] = maxdate;
+            datesMap[model]["minDate"] = minDate;
+            datesMap[model]["maxDate"] = maxDate;
             datesMap[model]["minutc"] = minutc;
             datesMap[model]["maxutc"] = maxutc;
 
