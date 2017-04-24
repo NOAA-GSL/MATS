@@ -5,11 +5,14 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
+// models have option groups so we use a Map() because it maintains order.
+var modelOptionsGoups = {};
+var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
 var myModels = [];
 var regionModelOptionsMap = {};
 var modelTableMap = {};
+var modelDateRangeMap = {};
 var forecastLengthOptionsMap = {};
-var forecastLengthModels = [];
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -28,6 +31,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -83,10 +87,12 @@ const doCurveParams = function () {
                 name: 'model',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
+                optionsGroups: modelOptionsGoups,
+                disabledOptions:modelDisabledOptions,
                 tableMap: modelTableMap,
+                dates: modelDateRangeMap,
                 options: myModels,   // convenience
-                optionsQuery: "select model from regions_per_model_mats",
-                dependentNames: ["region", "forecast-length"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: myModels[0],
                 unique: false,
@@ -188,17 +194,17 @@ const doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+        optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['BOTH','0-UTC','12-UTC',],
+                options: ['both','0-UTC','12-UTC',],
                 controlButtonCovered: true,
-                selected: 'BOTH',
+                selected: 'both',
                 unique: false,
-                default: 'BOTH',
+                default: 'both',
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
@@ -237,12 +243,12 @@ const doCurveParams = function () {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[forecastLengthModels[0]],
+                options: forecastLengthOptionsMap[myModels[0]],
                 superiorNames: ['model'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[forecastLengthModels[0]][2],
+                default: forecastLengthOptionsMap[myModels[0]][2],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -301,6 +307,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -339,7 +346,11 @@ const doCurveTextPatterns = function () {
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","average","forecast-length","top","bottom"
+            ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -355,7 +366,11 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['', 'curve-dates', '']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","forecast-length","top","bottom","curve-dates"
+            ],
+            groupSize: 6
         });
     }
 };
@@ -421,7 +436,7 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 1
+        connectionLimit: 10
     });
     var rows;
     // the pool is intended to be global
@@ -434,62 +449,127 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
-        connectionLimit: 1
+        connectionLimit: 10
     });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    var modelRegionNumberMap = {};
+
+
+    // build regionDescriptions, myModels, modelOptionsMap, modelTableMap, RegionModelOptionsMap, forecastLengthOptionsMap
+    /*
+         regionDescriptions = {
+             region1Number : regionDescriotionText,
+             regionN2umber : region2DescriotionText,
+             .
+             .
+         }
+         myModels =["model1", "model2" ... "modeln"]
+         modelOptionsMap = {
+            "model1" : ["model1"],
+            "model2" : ["model2"],
+            .
+            .
+            "modeln" : ["modeln"]
+        }
+        modelTableMap = {
+            "model1" : "tableNamePrefix",   // something like LAPS_HWT_Areg
+            "model2" : "tableNamePrefix",
+            .
+            .
+            "modeln" : "Areg" OR "reg"
+        }
+        RegionModelOptionsMap = {
+            "model1" : ["region1"],
+            "model2" : ["region2"],
+            .
+            .
+            "modeln" : ["regionn"]
+        }
+        forecastLengthOptionsMap = {
+            "model1" : ["0","1", .....],
+            "model2" : ["0","1", .....],
+            .
+            .
+            "modeln" : ["0","1", .....]
+        }
+     */
+    //regionNumberDescriptionMapping - gives us a region description for a region number
+    var regionNumberDescriptionMapping = [];
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions, display_category from regions_per_model_mats order by display_category, model;");
-        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,
-        //     "SELECT model, regions, display_text, RPM.display_order, RPM.id " +
-        //     "FROM regions_per_model_mats_all_sorted " +
-        //     "AS RPM, display_categories " +
-        //     "AS DC WHERE RPM.display_category = DC.id " +
-        //     "ORDER BY RPM.display_order;");
+        matsCollections.RegionDescriptions.remove({});
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
+        for (var i = 0; i < rows.length; i++) {
+            regionNumberDescriptionMapping[rows[i].regionMapTable] = rows[i].description;
+            matsCollections.RegionDescriptions.insert({regionMapTable: rows[i].regionMapTable, description: rows[i].description});
+        }
+    } catch (err) {
+        console.log("regionNumberDescriptionMapping:" + err.message);
+    }
+    // all the rest
+    try {
+        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, table_name_prefix, display_text, regions, fcst_lens, category," +
+        //     "display_order, RPM.id, mindate, minhour, maxdate, maxhour, numrecs " +
+        // "FROM " +
+        // "regions_per_model_mats_all_categories AS RPM, " +
+        //     "all_display_categories AS DC " +
+        // "WHERE " +
+        // "RPM.display_category = DC.id " +
+        // "ORDER BY display_order;"
+        // );
+
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select RPM.id, " +
+            "display_order, model, table_name_prefix," +
+            " display_text, regions, fcst_lens, category, DC.id," +
+            " mindate, minhour, maxdate, maxhour, numrecs " +
+            "from " +
+            "regions_per_model_mats_all_categories as RPM, " +
+            "all_display_categories as DC " +
+            "where " +
+            "RPM.display_category = DC.id " +
+            "order by display_order;");
+
+        var label = "";
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions;
-            var regionMapping = "Areg";
-            if (model == "NAM" || model == "isoRR1h" || model == "isoRRrapx" || model == "isoBak13") {
-                regionMapping = "reg";
+            var tableNamePrefix = rows[i].table_name_prefix.trim();
+            var category = "──" + rows[i].category + "──";
+            // needs to look like 02/10/2016 12:10
+            var minDate = moment(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var maxDate = moment(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
+            if (label === "" || label !== category) {
+                label = category;
+                // the models param has option groups so we have to create a list of disabled options that act as the group labels
+                modelDisabledOptions.push(label);
+                modelOptionsGoups[label] = [label];
             }
-
-            var valueList = [];
-            valueList.push(model);
-            modelOptionsMap[model] = valueList;
-
-            var tablevalueList = [];
-            tablevalueList.push(regionMapping);
-            modelTableMap[model] = tablevalueList;
             myModels.push(model);
-
-            var regionArr = regions.split(',');
-
-            modelRegionNumberMap[model] = regionArr;
+            // modelOptionsGroups
+            modelOptionsGoups[label].push(model);
+            //modelOptionsMap
+            modelOptionsMap[model] = [model];
+            // modelDates - holds the valid data date range for a model
+            modelDateRangeMap[model] = {minDate:minDate, maxDate:maxDate};
+            modelTableMap[model] = tableNamePrefix;
+            var regionNumbers = JSON.parse(regions.split(','));
+            regionModelOptionsMap[model] = [];
+            for (var i1 = 0; i1 < regionNumbers.length; i1++) {
+                regionModelOptionsMap[model].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+            }
+            // forecastLengthOptionsMap
+            var forecastLengths = JSON.parse(rows[i].fcst_lens);
+            //forecastLengthOptionsMap[model] = forecastLengths.split(',');
+            forecastLengthOptionsMap[model] = forecastLengths.map(String);
         }
-    } catch (err) {
-        console.log(err.message);
-    }
 
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            forecastLengthModels.push(model);
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-        }
     } catch (err) {
         console.log(err.message);
     }
 
     var regionNumberDescriptionMapping = [];
-
     try {
         matsCollections.RegionDescriptions.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
@@ -502,16 +582,7 @@ Meteor.startup(function () {
             matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber, description: description});
         }
     } catch (err) {
-        console.log(err.message);
-    }
-
-    // build RegionModelOptionsMap
-    for (var i = 0; i < myModels.length; i++) {
-        var regionNumbers = modelRegionNumberMap[myModels[i]];
-        regionModelOptionsMap[myModels[i]] = [];
-        for (var i1 = 0; i1 < regionNumbers.length; i1++) {
-            regionModelOptionsMap[myModels[i]].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
-        }
+        console.log("RegionDescriptions error: ", err.message);
     }
 
     // common settings

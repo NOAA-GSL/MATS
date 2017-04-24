@@ -83,7 +83,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                optionsQuery: "select model from regions_per_model",
                 dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: 'Bak13',
@@ -259,8 +258,13 @@ const doCurveTextPatterns = function () {
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
-            ]
-        });
+            ],
+            displayParams: [
+                "label","data-source","region","statistic","threshold","average","forecast-length","valid-time"
+            ],
+            groupSize: 6
+
+    });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
@@ -273,7 +277,12 @@ const doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
                 ['', 'curve-dates', '']
-            ]
+            ],
+            displayParams: [
+                "label","model","data-source","region","statistic","threshHold","average","forecast-length","valid-time"
+            ],
+            groupSize: 6
+
         });
     }
 };

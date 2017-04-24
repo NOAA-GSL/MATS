@@ -170,7 +170,12 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ':'],
                 ['', 'statistic', ':'],
                 ['fcst_lead:', 'forecast-lead',''],
-            ]
+            ],
+            displayParams: [
+                "label","data-source","statistic","variable","forecast-lead"
+            ],
+            groupSize: 6
+
         });
     }
 };

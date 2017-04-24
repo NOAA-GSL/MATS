@@ -99,7 +99,14 @@ Template.item.helpers({
 });
 
 Template.item.events({
+    // 'blur .control-button': function (event) {
+    //     if (this.type == matsTypes.InputTypes.select) {
+    //         $('#' + matsTypes.InputTypes.controlButton + '-' + this.name).click();
+    //     }
+    //     Session.set("elementChanged", Date.now());
+    // },
     'click .control-button': function (event) {
+        Session.set("elementChanged", Date.now());
         var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
         if (elem === undefined) {
             return false;
@@ -112,9 +119,8 @@ Template.item.events({
                 elem.style.display = "block";
                 if (this.type == matsTypes.InputTypes.select) {
                     var s = document.getElementById(this.name + '-' + this.type);
-                    if (s.options && s.selectedIndex >= 0) {
-                        s.options[s.selectedIndex].scrollIntoView();
-                    }
+                    const ref = "#" + this.name + "-" + this.type;
+                    $(ref).select2("open");   // need to foricibly open the selector for the select2
                 }
                 if (this.type == matsTypes.InputTypes.selectMap) {
                     var ref = this.name + '-' + this.type;
@@ -134,6 +140,7 @@ Template.item.events({
         }
     },
     'click .data-input': function (event) {
+        Session.set("elementChanged", Date.now());
         if (this.displayPriority !== undefined) {
             Session.set('displayPriority', this.displayPriority + 1);
         }
@@ -147,6 +154,7 @@ Template.item.events({
         }
     },
     'change .data-input': function (event) {
+        Session.set("elementChanged", Date.now());
         event.target.checkValidity();
         if (this.type !== matsTypes.InputTypes.numberSpinner) {
             event.target.checkValidity();
@@ -162,6 +170,7 @@ Template.item.events({
                 }
             }
          }
+        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
     },
 
     'click .help' : function() {
@@ -211,6 +220,7 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
+        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
     }
 });
 

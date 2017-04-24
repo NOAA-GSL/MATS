@@ -81,7 +81,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:modelOptionsMap,
                 options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model",
                 dependentNames: ["region", "forecast-length"],
                 controlButtonCovered: true,
                 default: 'RAP',
@@ -257,21 +256,11 @@ var doCurveTextPatterns = function () {
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
-            ]
-        });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'model', ':'],
-                ['', 'regionName', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' '],
-                ['','curve-dates','']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","average","forecast-length","valid-time"
+            ],
+            groupSize: 4
         });
     }
 };

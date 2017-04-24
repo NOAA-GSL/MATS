@@ -19,6 +19,7 @@ Package.onUse(function(api) {
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");
+  api.use('natestrauser:select2','client');
   api.use('aldeed:simple-schema@1.5.3');
   api.imply('aldeed:simple-schema@1.5.3');
   api.use('mdg:validated-method');
@@ -175,6 +176,9 @@ Package.onUse(function(api) {
 
   api.addFiles("templates/curves/curve_item.html", "client");
   api.addFiles("templates/curves/curve_item.js", "client");
+
+  api.addFiles("templates/curves/curve_param_item_group.html", "client");
+  api.addFiles("templates/curves/curve_param_item_group.js", "client");
 
   api.addFiles("templates/curves/curve_list.html", "client");
   api.addFiles("templates/curves/curve_list.js", "client");

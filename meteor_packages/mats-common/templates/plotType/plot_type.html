@@ -1,7 +1,12 @@
 <template name="plotType">
     <div id="plotType" class="container pull-left" style="display:block;">
         <div class="row text-center">
-            <H1 style="font-size:xx-large; font-weight: bold;">{{title}}&nbsp;&nbsp;</H1>
+            <span style="align-content:center;font-size:xx-large; font-weight: bold;">{{title}}&nbsp;&nbsp;
+                <button class="btn btn-xs btn-success newapp">New App Window</button>
+                {{#if isNewWindow}}
+                    <button class="btn btn-xs btn-danger closeapp">Close App Window</button>
+                {{/if}}
+            </span>
         </div>
         <div class="row well well-sm pull-left">
             {{#each plotTypes}}
