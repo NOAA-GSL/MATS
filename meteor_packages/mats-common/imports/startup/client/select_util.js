@@ -283,7 +283,15 @@ const refresh = function (event, paramName) {
                     // which are used as markers in the select options pulldown. This is typical for models
                     const optionsGroupsKeys = Object.keys(optionsGroups);
                     for (var k = 0; k < optionsGroupsKeys.length; k++) {
-                        options = options === null ? optionsGroups[optionsGroupsKeys[k]] : options.concat(optionsGroups[optionsGroupsKeys[k]].sort());
+                        //options = options === null ? optionsGroups[optionsGroupsKeys[k]] : options.concat(optionsGroups[optionsGroupsKeys[k]].sort());
+                        if (options === null) {
+                            options = [];
+                            options.push(optionsGroupsKeys[k]);
+                            options = options.concat(optionsGroups[optionsGroupsKeys[k]]); // the primary group does not get sorted
+                        } else {
+                            options.push(optionsGroupsKeys[k]);
+                            options = options.concat(optionsGroups[optionsGroupsKeys[k]].sort()); // non primary  groups get sorted
+                        }
                     }
                 } else {
                 options = param.options;
