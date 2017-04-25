@@ -544,7 +544,6 @@ Meteor.startup(function () {
                 label = category;
                 // the models param has option groups so we have to create a list of disabled options that act as the group labels
                 modelDisabledOptions.push(label);
-                //modelOptionsGoups[label] = [label];
                 modelOptionsGoups[label] = [];
             }
             myModels.push(model);
