@@ -4,6 +4,9 @@ import {matsParamUtils } from 'meteor/randyp:mats-common';
 import {matsCollections } from 'meteor/randyp:mats-common';
 
 Template.item.helpers({
+    cbname: function() {
+        return this.name.toUpperCase();
+    },
     textValue: function() {
         Session.get('lastUpdate');
         if (this.name === "label") {  // label is handled specially

@@ -1,6 +1,6 @@
 <template name="item">
     <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}};">
-        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}"> {{name}}</button>
+        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}">{{cbname}}</button>
         <span style="display:inline-block;">&nbsp;</span>
         <div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: 5;float:right;background-color: white;" >
             {{#if isSelect}}
