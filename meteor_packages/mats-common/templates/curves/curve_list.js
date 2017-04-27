@@ -28,6 +28,15 @@ Template.curveList.helpers({
             return "none";
         }
     },
+    displaySaveSettings: function() {
+        // don't allow saving settings when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
     curves: function () {
         return Session.get('Curves');
     },

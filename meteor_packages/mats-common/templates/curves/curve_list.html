@@ -3,12 +3,12 @@
         {{#each curves}}
             {{> curveItem this}}
         {{/each}}
-        <div class="clearfix btn-toolbar well well-sm pull-left" role="toolbar">
+        <div class="clearfix btn-toolbar  btn-lg well well-sm pull-left" role="toolbar">
+            <button id='remove-all' class="remove-all btn btn-danger btn-lg"><i class="fa fa-times remove-all btn btn-sm btn-warning "></i>&nbsp;&nbsp;Remove All </button>
+            <button type="button" name="save" id="save " class="save-settings btn btn-success   fa fa-cloud-upload" style="display:{{displaySaveSettings}};">&nbsp;&nbsp;Save All Curve Settings</button>
+            <button type="button" class="btn spacebutton" id="spacer"></button>
             <button type="button" name="plotUnMatched" id="plot"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style="display:{{displayPlotUnMatched}};">&nbsp;&nbsp;Plot Unmatched</button>
             <button type="button" name="plotMatched" id="plot"  class="plot-curves-matched btn btn-success  fa fa-area-chart" style="display:{{displayPlotMatched}};" {{averagesdisabled}}>  Plot Matched</button>
-            <button type="button" class="btn spacebutton" id="spacer"></button>
-            <button type="button" name="save" id="save " class="save-settings btn btn-success   fa fa-cloud-upload">&nbsp;&nbsp;Save Settings</button>
-            <button id='remove-all' class="remove-all btn btn-danger btn-xs"><i class="fa fa-times remove-all btn btn-warning "></i>&nbsp;&nbsp;Remove All </button>
             <div id="disabledPlots" style="display:{{disabledPlotsHidden}}"><span style="color: red;">Matched plotting is disabled because curve averages are disparate</span></div>
         </div>
     </div>

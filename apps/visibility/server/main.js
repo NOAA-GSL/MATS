@@ -371,21 +371,22 @@ Meteor.startup(function () {
     } catch (err) {
         console.log(err.message);
     }
-
-    // common settings
-    matsDataUtils.doRoles();
-    matsDataUtils.doAuthorization();
-    matsDataUtils.doCredentials();
-    matsDataUtils.doColorScheme();
-    matsDataUtils.doSettings('Visibility', Assets.getText('version'));
-    // app specific settings
-    doPlotGraph();
-    doCurveParams();
-    doSavedCurveParams();
-    doPlotParams();
-    doCurveTextPatterns();
+    // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
+    const appVersion = Assets.getText('version').trim();
+    matsMethods.resetApp({appName:'Visibility', appVersion:appVersion});
     console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
     console.log("process.env", JSON.stringify(process.env, null, 2));
 });
+
+// this object is global so that the reset code can get to it
+// These are application specific mongo data - like curve params
+appSpecificResetRoutines = {
+    doPlotGraph:doPlotGraph,
+    doCurveParams:doCurveParams,
+    doSavedCurveParams:doSavedCurveParams,
+    doPlotParams:doPlotParams,
+    doCurveTextPatterns:doCurveTextPatterns
+};
+
 
 

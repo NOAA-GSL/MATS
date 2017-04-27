@@ -1169,15 +1169,15 @@ const doSettings = function (title, version) {
          matsCollections.Settings.insert({
              LabelPrefix: "Curve",
              Title: title,
+             appVersion: version,
              LineWidth: 3.5,
              NullFillString: "---",
              resetFromCode: true
          });
      }
-     // always do the version...
+     // always update the version, not just if it doesn't exist...
      var settings = matsCollections.Settings.findOne();
      var settingsId = settings._id;
-     //settings['version'] = Assets.getText('version');
      settings['version'] = version;
      matsCollections.Settings.update(settingsId, {$set: settings});
 };
@@ -1218,7 +1218,6 @@ const doRoles = function () {
         matsCollections.Roles.insert({name: "administrator", description: "administrator privileges"});
     }
 };
-
 
 export default matsDataUtils = {
     getDateRange: getDateRange,

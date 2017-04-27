@@ -23,7 +23,7 @@
         {{#each curveParamGroups this}}
                 <div class="btn-toolbar btn-toolbar-xs" role="toolbar">
                     {{#each curveParams this}}
-                        <button type="button" class="displayBtn btn btn-sm btn-info" name="{{name this}}" id="{{id this}}" style="margin:2px 2px 2px 2px;border:{{border this}};border-radius:10px;display:{{displayParam this}}">
+                        <button type="button" class="displayBtn btn btn-sm btn-default" name="{{name this}}" id="{{id this}}" style="margin:2px 2px 2px 2px;border:{{border this}};border-radius:10px;display:{{displayParam this}}">
                             <span style="font-size:medium;">{{label this}}: {{value this}}</span>
                         </button>
                     {{/each}}
