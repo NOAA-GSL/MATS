@@ -301,11 +301,10 @@ const resetApp = function(params) {
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
 // app specific routines
-
-    appSpecificResetRoutines.doPlotGraph();
-    appSpecificResetRoutines.doCurveParams();
-    appSpecificResetRoutines.doPlotParams();
-    appSpecificResetRoutines.doCurveTextPatterns();
+    const asrKeys = Object.keys(appSpecificResetRoutines);
+    for (var ai = 0; ai < asrKeys.length; ai++) {
+        global.appSpecificResetRoutines[asrKeys[ai]]();
+    }
 };
 
 const reset = new ValidatedMethod({
