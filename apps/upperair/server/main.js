@@ -588,14 +588,16 @@ Meteor.startup(function () {
     // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
     const appVersion = Assets.getText('version').trim();
     matsMethods.resetApp({appName:'Upper Air', appVersion:appVersion});
+    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
+    console.log("process.env", JSON.stringify(process.env, null, 2));
 });
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
-export default appSpecificResetRoutines = {
+appSpecificResetRoutines = {
     doPlotGraph:doPlotGraph,
     doCurveParams:doCurveParams,
     doSavedCurveParams:doSavedCurveParams,
     doPlotParams:doPlotParams,
     doCurveTextPatterns:doCurveTextPatterns
-}
+};
