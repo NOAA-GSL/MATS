@@ -29,23 +29,23 @@ Template.settings.helpers({
 });
 Template.settings.events({
     'click .apply_settings': function () {
-        var labelPrefix = document.getElementById("LabelPrefix").value;
-        var title = document.getElementById("Title").value;
-        var lineWidth = document.getElementById("LineWidth").value;
-        var nullFillString = document.getElementById("NullFillString").value;
-        var resetFromCode = document.getElementById("ResetFromCode").checked;
+        // var labelPrefix = document.getElementById("LabelPrefix").value;
+        // var title = document.getElementById("Title").value;
+        // var lineWidth = document.getElementById("LineWidth").value;
+        // var nullFillString = document.getElementById("NullFillString").value;
+        // var resetFromCode = document.getElementById("ResetFromCode").checked;
 
-        var settings = {};
-        settings.labelPrefix = labelPrefix;
-        settings.title = title;
-        settings.lineWidth = lineWidth;
-        settings.nullFillString = nullFillString;
-        settings.resetFromCode = resetFromCode;
-        matsMethods.setSettings.call({'settings':settings}, function (error) {
-            if (error) {
-                setError(new Error(error.message));
-            }
-        });
+        // var settings = {};
+        // settings.labelPrefix = labelPrefix;
+        // settings.title = title;
+        // settings.lineWidth = lineWidth;
+        // settings.nullFillString = nullFillString;
+        // settings.resetFromCode = resetFromCode;
+        // matsMethods.setSettings.call({'settings':settings}, function (error) {
+        //     if (error) {
+        //         setError(new Error(error.message));
+        //     }
+        // });
         //// reset modal
         //document.getElementById("LabelPrefix").value = "";
         //document.getElementById("Title").value = "";

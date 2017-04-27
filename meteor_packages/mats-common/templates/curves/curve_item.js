@@ -14,6 +14,9 @@ Template.curveItem.onRendered(function() {
 });
 
 Template.curveItem.helpers({
+    editCurve: function() {
+        return (Session.get("editMode"));
+    },
     displayEditXaxis: function() {
         if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
             return "block";
