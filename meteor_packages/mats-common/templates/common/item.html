@@ -19,8 +19,8 @@
                     {{/each}}
                 </div>
             {{else}} {{#if isRadioGroup}}
-                <div class="container" style="background-color:lightcyan;width:100%;display:inline-block;">
-                    {{name}}:
+                <div class="container btn-group" style="font-size:large;background-color:lightcyan;width:100%;display:inline-block;">
+                    <span style="vertical-align: bottom;">{{name}}:</span>
                     {{#each options}}
                         {{> radioGroup this}}
                     {{/each}}

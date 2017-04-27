@@ -282,30 +282,41 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
+const resetApp = function(params) {
+    const appName = params.appName;
+    const appVersion = params.appVersion;
+// if the metadata has changed ----
+    matsCollections.Roles.remove({});
+    matsDataUtils.doRoles();
+    matsCollections.Authorization.remove({});
+    matsDataUtils.doAuthorization();
+    matsCollections.Credentials.remove({});
+    matsDataUtils.doCredentials();
+    matsCollections.PlotGraphFunctions.remove({});
+    matsCollections.ColorScheme.remove({});
+    matsDataUtils.doColorScheme();
+    matsCollections.Settings.remove({});
+    matsDataUtils.doSettings(appName, appVersion);
+    matsCollections.CurveParams.remove({});
+    matsCollections.PlotParams.remove({});
+    matsCollections.CurveTextPatterns.remove({});
+// app specific routines
+
+    appSpecificResetRoutines.doPlotGraph();
+    appSpecificResetRoutines.doCurveParams();
+    appSpecificResetRoutines.doPlotParams();
+    appSpecificResetRoutines.doCurveTextPatterns();
+};
+
 const reset = new ValidatedMethod({
     name: 'matsMethods.reset',
-    validate: new SimpleSchema({}).validator(),
-    run (){
+    validate: new SimpleSchema({
+        appName: {type: String},
+        appVersion: {type: String}
+    }).validator(),
+    run (params){
         if (Meteor.isServer) {
-            // if the metadata has changed ----
-            matsCollections.Roles.remove({});
-            matsDataUtils.doRoles();
-            matsCollections.Authorization.remove({});
-            matsDataUtils.doAuthorization();
-            matsCollections.Credentials.remove({});
-            matsDataUtils.doCredentials();
-            matsCollections.PlotGraphFunctions.remove({});
-            doPlotGraph();
-            matsCollections.ColorScheme.remove({});
-            matsDataUtils.doColorScheme();
-            matsCollections.Settings.remove({});
-            matsDataUtils.doSettings('Upper Air', Assets.getText('version'));
-            matsCollections.CurveParams.remove({});
-            doCurveParams();
-            matsCollections.PlotParams.remove({});
-            doPlotParams();
-            matsCollections.CurveTextPatterns.remove({});
-            doCurveTextPatterns();
+            resetApp(params);
         }
     }
 });
@@ -763,5 +774,6 @@ export default matsMethods = {
     saveSettings:saveSettings,
     deleteSettings:deleteSettings,
     addSentAddress:addSentAddress,
-    emailImage:emailImage
+    emailImage:emailImage,
+    resetApp:resetApp
 };
