@@ -151,9 +151,9 @@ Template.item.events({
         if ($.inArray(this,formats) !== -1){
             Session.set('diffStatus',this);
         }
-        if (this.multiple !== true && this.type !== matsTypes.InputTypes.numberSpinner) {
-            // not too cool to collapse when trying to do a multi-select or a numberspinner
-            matsParamUtils.collapseParam(this.name);
+        if (this.multiple !== true && this.type !== matsTypes.InputTypes.numberSpinner && this.type !== matsTypes.InputTypes.textInput) {
+            // not too cool to collapse when trying to do a multi-select, a textInput, or a numberspinner
+                matsParamUtils.collapseParam(this.name);
         }
     },
     'change .data-input': function (event) {
