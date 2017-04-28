@@ -24,3 +24,4 @@ accounts-google@1.1.2
 accounts-base@1.2.16
 accounts-ui@1.1.9
 google-config-ui@1.0.0
+practicalmeteor:mocha
