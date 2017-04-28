@@ -27,6 +27,9 @@ Template.curveParamItemGroup.helpers({
         const groupSize = pattern.groupSize;
         const displayParams = pattern.displayParams;
         for (var di=0; di < displayParams.length;di++) {
+            if (displayParams[di] === "label") {
+                continue;
+            }
             pValues.push({name: displayParams[di], value: c[displayParams[di]], color:c.color, curve:c.label});
         }
         // create array of parameter value display groups each of groupSize

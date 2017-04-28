@@ -3,6 +3,7 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
@@ -750,6 +751,26 @@ const emailImage = new ValidatedMethod({
     }
 });
 
+/* test methods */
+
+const testGetTables = new ValidatedMethod({
+    name: 'matsMethods.testGetTables',
+    validate: new SimpleSchema({host:{type: String}, user:{type: String}, password:{type: String}, database:{type: String}}).validator(),
+    run (params){
+        if (Meteor.isTest) {
+            var connection = mysql.createConnection({
+                host: params.host,
+                user: params.user,
+                password: params.password,
+                databse: params.database
+            });
+            connection.query('SHOW TABLES;', function (error, results, fields) {
+                if (error) throw error;
+                return results;
+            });
+        }
+    }
+});
 
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
@@ -774,5 +795,6 @@ export default matsMethods = {
     deleteSettings:deleteSettings,
     addSentAddress:addSentAddress,
     emailImage:emailImage,
-    resetApp:resetApp
+    resetApp:resetApp,
+    testGetTables:testGetTables
 };
