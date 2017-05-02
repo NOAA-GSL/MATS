@@ -8,45 +8,110 @@ import {expect} from 'meteor/practicalmeteor:chai';
 
 describe('test mapping of tables wrt models, regions, and forecast lengths - server app test', () => {
     if (Meteor.isServer) {
-        describe('mapping models regions forecastlens tables test', () => {
+        describe('mapping models regions forecastlens tables test', function(){
             try {
-                it('models exist', () => {
-                    const models = matsCollections.CurveParams.findOne({name: "model"});
-                    expect(models).to.exist;
-                    expect(models.name).to.be.a('string');
-                    expect(models.type).to.equal(matsTypes.InputTypes.select);
-                    expect(models.optionsMap).to.be.a('object');
-                    expect(models.optionsGroups).to.be.a('object');
-                    expect(models.disabledOptions).to.be.a('array');
-                    expect(models.tableMap).to.be.a('object');
-                });
-                it('regions exist', () => {
-                    const regions = matsCollections.CurveParams.findOne({name: "region"});
-                    expect(regions).to.exist;
-                });
-                it('forecastLen exist', () => {
-                    const forecastLen = matsCollections.CurveParams.findOne({name: "forecast-length"});
-                    expect(forecastLen).to.exist;
-                });
-                it('tables exist', () => {
+                var models = undefined;
+                var optionsMap = undefined;
+                var optionsGroups = undefined;
+                var disabledOptions = undefined;
+                var tableMap = undefined;
+                var dates = undefined;
+                var modelNames = undefined;
+                var regions = undefined;
+                var regionOptions = undefined;
+                var regionOptionsMap = undefined;
+                var regionDescriptions = undefined;
+                var forecastLen = undefined;
+                var tables = undefined;
+
+                before(function(done) {
+                    this.timeout(15000);
+                // runs before all tests in this block
+                    models = matsCollections.CurveParams.findOne({name: "model"});
+                    optionsMap = models.optionsMap;
+                    optionsGroups = models.optionsGroups;
+                    disabledOptions = models.disabledOptions;
+                    tableMap = models.tableMap;
+                    dates = models.dates;
+                    modelNames = models.options;
+                    //console.log('modelNames length is ', modelNames.length);
+                    expect(modelNames).to.be.a('array');
+                    regions = matsCollections.CurveParams.findOne({name: "region"});
+                    regionOptionsMap = regions.optionsMap;
+                    regionOptions = regions.options;
+                    regionDescriptions = matsCollections.RegionDescriptions.find({}).fetch();
+                    forecastLen = matsCollections.CurveParams.findOne({name: "forecast-length"});
                     matsMethods.testGetTables.call({
                         host: 'wolphin.fsl.noaa.gov',
                         user: 'writer',
                         password: 'amt1234',
-                        database: 'ruc_ua'
+                        database: 'ruc_ua_sums2'
                     },function (error, result) {
                         if (error !== undefined) {
                             assert.fail("error: ", error);
+                            done();
                         } else {
-                            console.log(results);
-                            expect (results).to.exist;
+                            tables = result;
+                            expect(tables).to.exist;
+                            expect(tables).to.be.a('array');
+                            done();
                         }
                     });
                 });
-                it('mapped tables exist', () => {
-                    assert.equal(5, 5);
+
+                it('models should exist', function(){
+                    //console.log ("models:", models);
+                    //expect(modelNames).to.be.a('array');
+                    //console.log ("options:", options);
+                    //console.log ("optionsMap:", optionsMap);
+                    //console.log ("optionsGroups:", optionsGroups);
+                    //console.log ("tableMap:", tableMap);
+                    expect(models).to.exist;
+                    expect(models).to.be.a('object');
+                    expect(models.name).to.be.a('string');
+                    expect(models.name).to.be.a('string');
+                    expect(models.type).to.equal(matsTypes.InputTypes.select);
+                    expect(optionsMap).to.be.a('object');
+                    expect(optionsGroups).to.be.a('object');
+                    expect(disabledOptions).to.be.a('array');
+                    expect(tableMap).to.be.a('object');
+                    expect(dates).to.be.a('object');
+                });
+                it('regions should exist', function(){
+                    //console.log(regions);
+                    //console.log(regionOptions);
+                    //console.log(regionOptionsMap);
+                    expect(regions).to.exist;
+                    expect(regions).to.be.a('object');
+                    expect(regionOptions).to.exist;
+                    expect(regionOptionsMap).to.exist;
+                    expect(regionOptionsMap).to.be.a('object');
+                    expect(regionDescriptions).to.be.a('array');
+                });
+                it('forecastLenghts should exist', () => {
+                    //console.log(forecastLen);
+                    expect(forecastLen).to.exist;
+                });
+                it('tableNames should exist in tables', function(done){
+                    //console.log("tables exist", tables.slice(1,20));
+                    this.timeout(30000);
+                    for (var mi = 0; mi < modelNames.length; mi++) {
+                        const model = modelNames[mi];
+                        const modelTablePrefix = tableMap[model];
+                        for (var ri = 0; ri < regionOptionsMap[model].length; ri++) {
+                            const region = regionOptionsMap[model][ri];
+                            const regionMap = matsCollections.RegionDescriptions.findOne({description: region});
+                            const regionNumber = regionMap.regionMapTable;
+                            const table = modelTablePrefix + regionNumber;
+                            //console.log("modelTablePrefix:" + modelTablePrefix + " regionNumber:" + regionNumber + " table: " + table);
+                            expect(tables).to.include(table);
+                        }
+                    }
+                    done();
                 });
             } catch (error) {
+                console.log("error", error);
+                done();
                 assert.fail(error);
             }
         });

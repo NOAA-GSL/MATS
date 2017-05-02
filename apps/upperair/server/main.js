@@ -94,7 +94,8 @@ const doCurveParams = function () {
                 options: myModels,   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: myModels[0],
+                //default: myModels[0],
+                default: "RAP",
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -561,7 +562,6 @@ Meteor.startup(function () {
             }
             // forecastLengthOptionsMap
             var forecastLengths = JSON.parse(rows[i].fcst_lens);
-            //forecastLengthOptionsMap[model] = forecastLengths.split(',');
             forecastLengthOptionsMap[model] = forecastLengths.map(String);
         }
 
