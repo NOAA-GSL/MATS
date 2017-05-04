@@ -44,7 +44,7 @@ const setNextCurveLabel = function () {
     const labelPrefix = settings.LabelPrefix;
     // find all the labels that start with our prefix (some could be custom)
     const prefixLabels = _.filter(usedLabels, function (l) {
-        return ((l.lastIndexOf(labelPrefix, 0) === 0) && (l.match(new RegExp(labelPrefix, 'g')).length) == 1);
+        return (l && (l.lastIndexOf(labelPrefix, 0) === 0) && (l.match(new RegExp(labelPrefix, 'g')).length) == 1);
     });
     const lastUsedLabel = _.last(prefixLabels);
     var lastLabelNumber = -1;

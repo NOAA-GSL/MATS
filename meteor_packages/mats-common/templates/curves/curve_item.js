@@ -74,6 +74,16 @@ Template.curveItem.helpers({
             }
         }
     },
+    curveNumber: function() {
+        const label = this.label;
+        const curves = Session.get("Curves");
+        const index = curves.findIndex(
+            function(obj){
+                return obj.label === label;
+            }
+        );
+        return index;
+    },
     log: function() {
         console.log(this);
     },
@@ -271,7 +281,7 @@ Template.curveItem.events({
         const controlElem = matsParamUtils.getControlElementForParamName(name);
         const editingCurve = Session.get('editMode');
         curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
-        const eventTargetCurve = $($(event.currentTarget.parentNode.parentNode).find("#label")[0]).text().trim().split(':')[1].trim();
+        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text();
         Session.set("eventTargetCurve",eventTargetCurve);
         Session.set("intendedActiveDisplayButton",name);
         Session.set("activeDisplayButton",name);

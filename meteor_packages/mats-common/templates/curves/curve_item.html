@@ -7,7 +7,7 @@
         </span>
         <div class="btn-lg pull-left clearfix col-lg-12" role="toolbar">
                 <div style = "display:inline-block;background-color: {{defaultColor}}; border:solid;border-color: {{defaultColor}};border-radius: 10px;">
-                    <h2><span class="label label-default">{{label}}</span></h2>
+                    <h2><span class="displayItemLabelSpan label label-default" id="LABEL-curve-{{curveNumber}}-Item">{{label}}</span></h2>
                     {{> curveParamItemGroup this}}
                 </div>
             {{#if DBcurve }}

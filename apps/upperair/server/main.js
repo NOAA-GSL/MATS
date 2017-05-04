@@ -111,8 +111,7 @@ const doCurveParams = function () {
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
-                //default: regionModelOptionsMap[myModels[0]][0],
-                default: "HRRR domain",
+                default: regionModelOptionsMap[myModels[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,

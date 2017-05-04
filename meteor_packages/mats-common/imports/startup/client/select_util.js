@@ -338,7 +338,12 @@ const refresh = function (event, paramName) {
                 }
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
-            selectedOptionIndex = (selectedOptionIndex == -1 && param.default !== -1) ? 0 : selectedOptionIndex;
+            const defaultOptionIndex = options.indexOf(param.default);
+            if (param.default !== undefined && defaultOptionIndex !== -1 ) {
+                selectedOptionIndex = defaultOptionIndex -1;
+            } else {
+                selectedOptionIndex = selectedOptionIndex;
+            }
             elem.selectedIndex = selectedOptionIndex;
             elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
             if (elem.selectedIndex === -1) {
