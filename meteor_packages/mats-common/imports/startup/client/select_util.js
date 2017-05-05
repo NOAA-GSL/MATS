@@ -128,6 +128,7 @@ const checkHideOther = function (param) {
                 const selectedText = selectedOptions && selectedOptions.length > 0 ? selectedOptions[0].text : "";
 
                 var otherControlElem = matsParamUtils.getControlElementForParamName(controlledSelectors[i]);
+                var otherControlElemParent = otherControlElem.parentNode;
                 var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
                 var otherValueElement = matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
 
@@ -136,11 +137,19 @@ const checkHideOther = function (param) {
                     otherControlElem.style.display = 'none';
                     otherInputElement.style.display = 'none';
                     otherValueElement.style.display = 'none';
+                    if (otherControlElemParent)
+                    {
+                        otherControlElemParent.style.display = "none;";
+                    }
                     matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
                 } else {
                     otherControlElem.style.display = 'block';
                     otherInputElement.style.display = 'block';
                     otherValueElement.style.display = 'block';
+                    if (otherControlElemParent)
+                    {
+                        otherControlElemParent.style.display = "block";
+                    }
                     otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
@@ -198,7 +207,7 @@ const refresh = function (event, paramName) {
     Session.set('selected', $(elem).val());
 
     if (elem && elem.options) {
-        if (!elem.selectedIndex) {
+        if (elem.selectedIndex === undefined || elem.selectedIndex === -1) {
             elem.selectedIndex = 0;
         }
         const selectedText = elem.selectedIndex >= 0 ? elem.options[elem.selectedIndex].text : "";
@@ -339,7 +348,7 @@ const refresh = function (event, paramName) {
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
             const defaultOptionIndex = options.indexOf(param.default);
-            if (param.default !== undefined && defaultOptionIndex !== -1 ) {
+            if (param.default !== undefined && defaultOptionIndex > 0 ) {
                 selectedOptionIndex = defaultOptionIndex -1;
             } else {
                 selectedOptionIndex = selectedOptionIndex;

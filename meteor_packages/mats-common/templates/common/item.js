@@ -76,10 +76,10 @@ Template.item.helpers({
     },
     display: function() {
         if (this.hidden) {
-            return "none";
+            return "none;margin-top: 1.5em;";
         }
         if (this.displayPriority !== undefined && this.displayPriority > Session.get('displayPriority')){
-            return "none";
+            return "none;margin-top: 1.5em;";
         }
         else {
             return "block;margin-top: 1.5em;";

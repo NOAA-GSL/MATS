@@ -1,4 +1,21 @@
 <template name="curveList">
+    <div class="modal modal-dialog fade" id="modal-confirm-remove-all" tabindex="-1" role="dialog" aria-labelledby="confirmRemoveAll" aria-hidden="true" style="background-color: cornflowerblue">
+        <div class="modal-dialog">
+            <div class="modal-content"><i class="fa fa-4x fa-question" style="color:cornflowerblue"></i>
+                <h2 class="modal-title" style="text-align: center; color: red;">Remove All Curves?</h2>
+                <div class="modal-body">
+                    <h3 style="color:cornflowerblue">
+                        Are you sure you want to remove all the curves?
+                    </h3>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancle-remove-all" class="cancle-remove-all btn btn-success" data-dismiss="modal">Cancel the Remove</button>
+                    <button id="confirm-remove-all" class="btn btn-danger confirm-remove-all" data-dismiss="modal">Remove all the curves</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="curveList"  class="well-sm clearfix col-lg-12" style="display:{{displayCurves}};">
         {{#each curves}}
             {{> curveItem this}}

@@ -17,6 +17,10 @@ Template.curveItem.helpers({
     editCurve: function() {
         return (Session.get("editMode"));
     },
+    removeCurve: function() {
+      var confirmRemoveCurve = Session.get("confirmRemoveCurve");
+      return confirmRemoveCurve.label;
+    },
     displayEditXaxis: function() {
         if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
             return "block";
@@ -180,14 +184,28 @@ Template.curveItem.events({
         Session.set("paramWellColor","#f5f5f5");
     },
     'click .remove-curve': function (event) {
-        var label = this.label;
-        var color = this.color;
-        var Curves = _.reject(Session.get('Curves'),function(item){return item.label === label});
-        Session.set('Curves',Curves);
-        matsCurveUtils.clearUsedLabel(label);
-        matsCurveUtils.clearUsedColor(color);
-        matsCurveUtils.checkDiffs();
-        return false;
+        var removeCurve = Session.get("confirmRemoveCurve");
+        if (removeCurve && removeCurve.confirm) {
+            var label = removeCurve.label;
+            var color = this.color;
+            var Curves = _.reject(Session.get('Curves'), function (item) {
+                return item.label === label
+            });
+            Session.set('Curves', Curves);
+            matsCurveUtils.clearUsedLabel(label);
+            matsCurveUtils.clearUsedColor(color);
+            matsCurveUtils.checkDiffs();
+            Session.set("confirmRemoveCurve","");
+            return false;
+        } else{
+            Session.set("confirmRemoveCurve",{label:this.label});
+            $("#modal-confirm-remove-curve").modal();
+        }
+    },
+    'click .confirm-remove-curve': function () {
+        var confirmCurve = Session.get("confirmRemoveCurve");
+        Session.set("confirmRemoveCurve", {label:confirmCurve.label,confirm:true});
+        $("#curve-list-remove").trigger('click');
     },
     'click .edit-curve-xaxis': function(event) {
         Session.set('axis','xaxis');

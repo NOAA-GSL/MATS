@@ -1,4 +1,19 @@
 <template name="curveItem">
+    <div class="modal modal-dialog fade" id="modal-confirm-remove-curve" tabindex="-1" role="dialog" aria-labelledby="confirmRemoveCurve" aria-hidden="true" style="background-color: cornflowerblue">
+        <div class="modal-dialog">
+            <div class="modal-content"><i class="fa fa-4x fa-question" style="color:cornflowerblue"></i>
+                <h2 class="modal-title" style="text-align: center; color: red;">Remove {{removeCurve}}?</h2>
+                <div class="modal-body">
+                    <h3 style="color:cornflowerblue">Are you sure you want to remove curve {{removeCurve}}?</h3>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancle-remove-curve" class="cancle-remove-curve btn btn-success" data-dismiss="modal">Cancel the Remove</button>
+                    <button id="confirm-remove-curve" class="btn btn-danger confirm-remove-curve" data-dismiss="modal">Remove curve {{removeCurve}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="curveItem-{{label}}">
         <div class="pull-left clearfix col-lg-12" role="toolbar">
                 <div style="padding:0.5%;margin-bottom:0.5%;display:inline-block;background-color: #f5f5f5;border:solid;border-color: {{defaultColor}};border-radius: 10px;">
