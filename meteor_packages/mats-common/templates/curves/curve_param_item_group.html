@@ -13,8 +13,8 @@
                         </h3>
                     </div>
                     <div class="modal-footer">
-                        <button id="cancle-lose-edits" class="cancle-lose-edits btn btn-info" data-dismiss="modal">Cancel and keep editing {{editCurve}}</button>
-                        <button id="continue-lose-edits" class="btn btn-warning continue-lose-edits" data-dismiss="modal">Edit {{editTarget}} and lose changes to {{editCurve}}</button>
+                        <button id="cancle-lose-edits" class="cancle-lose-edits btn btn-success" data-dismiss="modal">Cancel and keep editing {{editCurve}}</button>
+                        <button id="continue-lose-edits" class="btn btn-danger continue-lose-edits" data-dismiss="modal">Edit {{editTarget}} and lose changes to {{editCurve}}</button>
                     </div>
                 </div>
             </div>
@@ -23,7 +23,7 @@
         {{#each curveParamGroups this}}
                 <div class="btn-toolbar btn-toolbar-xs" role="toolbar">
                     {{#each curveParams this}}
-                        <button type="button" class="displayBtn btn btn-sm btn-default" name="{{name this}}" id="{{buttonId this}}" style="margin:2px 2px 2px 2px;border:{{border this}};border-radius:10px;display:{{displayParam this}}">
+                        <button type="button" class="displayBtn btn btn-sm btn-default" name="{{name this}}" id="{{buttonId this}}" style="margin:3px 3px 3px 3px;border:{{border this}};border-radius:10px;display:{{displayParam this}}">
                             <span class="displayItemSpan"  id="{{spanId this}}">{{label this}}: {{value this}}</span>
                         </button>
                     {{/each}}

@@ -202,6 +202,19 @@ Template.curveItem.events({
         setParamsToAxis('yaxis',currentParams);
     },
     'click .edit-curve': function (event) {
+        const srcEditButton = event.currentTarget;
+        const name = srcEditButton.name;
+        const editingCurve = Session.get('editMode');
+        curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
+        Session.set("eventTargetCurve",eventTargetCurve);
+        Session.set("intendedActiveDisplayButton",name);
+        Session.set("activeDisplayButton",name);
+        if(editingCurve !== undefined && editingCurve !== "" && editingCurve !== eventTargetCurve) {
+            // editing a different curve // have to do the modal for confirmation
+            $("#confirm-lost-edits").modal();
+            return;
+        }
         Session.set('editMode', this.label);
         // reset scatter plot apply stuff
         matsCurveUtils.resetScatterApply();
@@ -281,7 +294,7 @@ Template.curveItem.events({
         const controlElem = matsParamUtils.getControlElementForParamName(name);
         const editingCurve = Session.get('editMode');
         curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
-        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text();
+        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
         Session.set("eventTargetCurve",eventTargetCurve);
         Session.set("intendedActiveDisplayButton",name);
         Session.set("activeDisplayButton",name);
@@ -315,5 +328,8 @@ Template.curveItem.events({
         inputElem && inputElem.focus();
         controlElem && controlElem.click();
         Session.set("elementChanged", Date.now());
+    },
+    'click .fa-paint-brush': function() {
+        $("#" + this.label + "-color-value").trigger('click');
     }
 });
