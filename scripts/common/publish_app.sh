@@ -33,13 +33,13 @@ server=$1
 if [ "$1" == "help" ]; then
         cat <<xxxxxENDxxxx
 This program will rsync the current /web directory to the production server named in the first parameter. It copies a selected list of apps that are found in
-MATS_for_EMB/scripts/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
+MATS_for_EMB/scripts/common/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
 the node part of phusion passenger.
 xxxxxENDxxxx
 exit 0
 fi
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/meteor_includes /web/.meteor  ${server}:/web
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/project_includes /web/*  ${server}:/web
+rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/meteor_includes /web/.meteor  ${server}:/web
+rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
 npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
 servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`

@@ -1,2 +1,2 @@
 # this is the root crontab entry for the MATS nightly build....
-02 6 * * * /bin/sh /builds/buildArea/MATS_for_EMB/scripts/nightly_build.sh 2>&1 >> /builds/cron.out
+02 6 * * * /bin/sh /builds/buildArea/MATS_for_EMB/scripts/common/nightly_build.sh 2>&1 >> /builds/cron.out
