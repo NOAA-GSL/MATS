@@ -755,20 +755,33 @@ const emailImage = new ValidatedMethod({
 
 const testGetTables = new ValidatedMethod({
     name: 'matsMethods.testGetTables',
-    validate: new SimpleSchema({host:{type: String}, user:{type: String}, password:{type: String}, database:{type: String}}).validator(),
+    validate: new SimpleSchema(
+        {
+            host:{type: String},
+            user:{type: String},
+            password:{type: String},
+            database:{type: String}
+        }).validator(),
     run (params){
-        if (Meteor.isTest) {
-            var connection = mysql.createConnection({
+        var Future = require('fibers/future');
+        const queryWrap = Future.wrap(function(callback) {
+            const connection = mysql.createConnection({
                 host: params.host,
                 user: params.user,
                 password: params.password,
-                databse: params.database
+                database: params.database
             });
-            connection.query('SHOW TABLES;', function (error, results, fields) {
-                if (error) throw error;
-                return results;
+            connection.query("show tables;", function (err, result) {
+                const tables = result.map(function(a) {return a.Tables_in_ruc_ua_sums2;});
+                return callback(err, tables);
             });
-        }
+            connection.end(function (err) {
+                if (err) {
+                    console.log("testGetTables cannot end connection");
+                }
+            });
+        });
+        return queryWrap().wait();
     }
 });
 

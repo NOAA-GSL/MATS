@@ -211,11 +211,11 @@ Template.paramList.events({
                                 }
                                 p[paramElems[i].name].push(paramElems[i].value);
                             }
-                        }
-                     else if (paramElems[i].type === "button") {
+                        } else if (paramElems[i].type === "button") {
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
-                            p[paramElems[i].name] = (paramElems[i]).value;
+//                            p[paramElems[i].name] = (paramElems[i]).value;
+                            p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
                         }
                     }
                     if (paramElems[i].name && paramElems[i].name === 'label') {

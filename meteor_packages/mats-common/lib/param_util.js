@@ -406,6 +406,34 @@ const isControlButtonVisible = function(paramName) {
     return $(paramRef).is(':visible');
 };
 
+const setInputValueForParamAndtriggerChange = function (paramName, value) {
+    const elem = getInputElementForParamName(paramName);
+    elem.value = value;
+    setValueTextForParamName(paramName,elem.value);
+    $(elem).trigger('change');
+};
+
+const getOptionsMapForParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    return param.optionsMap;
+};
+
+const getOptionsForParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    return param.options;
+};
+
+const getCurveItemValueForParamName = function(curveNumber, paramName) {
+    //MODEL-curve-0-Item
+//    const id = paramName.toString().toUpperCase() + "-curve-" + curveNumber + "-Item"; // the id of the text span for a curveItem
+//    return text = ‌‌document.getElementById(id).innerText;
+    // const elem = $("#" + id);
+    // var text = undefined;
+    // if (elem) {
+    //     text = elem.text();
+    // }
+};
+
 export default matsParamUtils = {
     getDisabledOptionsForParamName: getDisabledOptionsForParamName,
     getControlButtonIdForParamName: getControlButtonIdForParamName,
@@ -427,5 +455,9 @@ export default matsParamUtils = {
     typeSort: typeSort,
     isInputElementVisible: isInputElementVisible,
     isParamVisible: isParamVisible,
-    isControlButtonVisible:isControlButtonVisible
+    isControlButtonVisible:isControlButtonVisible,
+    setInputValueForParamAndtriggerChange:setInputValueForParamAndtriggerChange,
+    getOptionsForParam:getOptionsForParam,
+    getOptionsMapForParam:getOptionsMapForParam,
+    getCurveItemValueForParamName:getCurveItemValueForParamName
 };

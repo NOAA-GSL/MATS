@@ -94,7 +94,8 @@ const doCurveParams = function () {
                 options: myModels,   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: myModels[0],
+                //default: myModels[0],
+                default: "RAP",
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -110,8 +111,7 @@ const doCurveParams = function () {
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
-                //default: regionModelOptionsMap[myModels[0]][0],
-                default: "HRRR domain",
+                default: regionModelOptionsMap[myModels[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -561,7 +561,6 @@ Meteor.startup(function () {
             }
             // forecastLengthOptionsMap
             var forecastLengths = JSON.parse(rows[i].fcst_lens);
-            //forecastLengthOptionsMap[model] = forecastLengths.split(',');
             forecastLengthOptionsMap[model] = forecastLengths.map(String);
         }
 

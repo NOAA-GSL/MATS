@@ -1,30 +1,44 @@
 <template name="curveItem">
+    <div class="modal modal-dialog fade" id="modal-confirm-remove-curve" tabindex="-1" role="dialog" aria-labelledby="confirmRemoveCurve" aria-hidden="true" style="background-color: cornflowerblue">
+        <div class="modal-dialog">
+            <div class="modal-content"><i class="fa fa-4x fa-question" style="color:cornflowerblue"></i>
+                <h2 class="modal-title" style="text-align: center; color: red;">Remove {{removeCurve}}?</h2>
+                <div class="modal-body">
+                    <h3 style="color:cornflowerblue">Are you sure you want to remove curve {{removeCurve}}?</h3>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancle-remove-curve" class="cancle-remove-curve btn btn-success" data-dismiss="modal">Cancel the Remove</button>
+                    <button id="confirm-remove-curve" class="btn btn-danger confirm-remove-curve" data-dismiss="modal">Remove curve {{removeCurve}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="curveItem-{{label}}">
-        <span class="input-group">
-            <i class="fa fa-paint-brush fa-lg input-group-addon" style="color:{{defaultColor}};background:transparent;border:none;"></i>
-            <input id="{{label}}-color-value" class="fa fa-paint-brush fa-lg input-group-addon btn btn-lg colorpicker-component {{colorpick}}"
-                value="{{defaultColor}}" style="color:{{defaultColor}};background:transparent;border:none;"/>
-        </span>
-        <div class="btn-lg pull-left clearfix col-lg-12" role="toolbar">
-                <div style = "display:inline-block;background-color: {{defaultColor}}; border:solid;border-color: {{defaultColor}};border-radius: 10px;">
-                    <h2><span class="label label-default">{{label}}</span></h2>
+        <div class="pull-left clearfix col-lg-12" role="toolbar">
+                <div style="padding:0.5%;margin-bottom:0.5%;display:inline-block;background-color: #f5f5f5;border:solid;border-color: {{defaultColor}};border-radius: 10px;">
+                    <span class="rounded input-group displayItemLabelSpan label label-default " style="vertical-align: middle; align-content: center; font-size:large;margin:5px;" id="LABEL-curve-{{curveNumber}}-Item">{{label}}
+                        <i class="input-group-addon  fa fa-paint-brush fa-lg" style="border:none; color:{{defaultColor}};background-color: transparent;"></i>
+                        <input id="{{label}}-color-value" class="input-group-addon colorpicker-component {{colorpick}}"
+                           value="{{defaultColor}}" style="background-color:transparent; color:{{defaultColor}};border:none;"/>
+                    </span>
+                    {{#if DBcurve }}
+                        {{#if editingThis}}
+                            <div id="editMode" class="btn-toolbar-sm btn-group" role="group">
+                                <button name="save" id="curve-list-save" class="save-changes btn-success btn fa fa-line-chart">&nbsp;&nbsp;Save {{editCurve}} Changes</button>
+                                <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
+                            </div>
+                        {{else}}
+                            <div id="nonEditMode" class="btn-toolbar-sm btn-group" role="group">
+                                <button id="curve-list-remove" class="remove-curve btn-danger btn fa fa-times "> &nbsp;Remove  {{label}} </button>
+                                <button id="curve-list-edit" class="edit-curve edit-curve-{{label}} btn-info btn fa fa-pencil-square-o" style="display:{{displayEdit}}">&nbsp;&nbsp;Edit  {{label}}</button>
+                                <button id="curve-list-edit-xaxis" class="edit-curve-xaxis edit-curve-xaxis-{{label}} btn-info btn fa fa-pencil-square-o" style="display:{{displayEditXaxis}}">&nbsp;&nbsp;Edit {{label}}  X Axis</button>
+                                <button id="curve-list-edit-yaxis" class="edit-curve-yaxis edit-curve-yaxis-{{label}}  btn btn-info fa fa-pencil-square-o" style="display:{{displayEditYaxis}}">&nbsp;&nbsp;Edit {{label}}  Y Axis</button>
+                            </div>
+                        {{/if}}
+                    {{/if}}
                     {{> curveParamItemGroup this}}
                 </div>
-            {{#if DBcurve }}
-                {{#if editingThis}}
-                    <div id="editMode" class="btn-toolbar btn-group-lg" role="group">
-                        <button name="save" id="curve-list-save" class="save-changes btn-success btn btn-lg fa fa-line-chart">&nbsp;&nbsp;Save {{editCurve}} Changes</button>
-                        <button name="cancel" id="curve-list-cancel" class="cancel btn-info btn btn-lg fa icon-remove-sign">&nbsp;&nbsp;Cancel</button>
-                    </div>
-                {{else}}
-                    <div id="nonEditMode" class="btn-toolbar btn-group-lg" role="group">
-                        <button id="curve-list-remove" class="remove-curve btn-danger btn btn-lg fa fa-times "> &nbsp;Remove  {{label}} </button>
-                        <button id="curve-list-edit" class="edit-curve edit-curve-{{label}} btn-lg btn-info btn btn-lg fa fa-pencil-square-o" style="display:{{displayEdit}}">&nbsp;&nbsp;Edit  {{label}}</button>
-                        <button id="curve-list-edit-xaxis" class="edit-curve-xaxis edit-curve-xaxis-{{label}} btn-lg btn-info btn btn-lg fa fa-pencil-square-o" style="display:{{displayEditXaxis}}">&nbsp;&nbsp;Edit {{label}}  X Axis</button>
-                        <button id="curve-list-edit-yaxis" class="edit-curve-yaxis edit-curve-yaxis-{{label}}  btn-lg btn-info btn btn-lg fa fa-pencil-square-o" style="display:{{displayEditYaxis}}">&nbsp;&nbsp;Edit {{label}}  Y Axis</button>
-                    </div>
-                {{/if}}
-            {{/if}}
           </div>
     </div>
 </template>
