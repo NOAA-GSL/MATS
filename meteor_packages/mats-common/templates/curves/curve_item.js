@@ -196,6 +196,10 @@ Template.curveItem.events({
             matsCurveUtils.clearUsedColor(color);
             matsCurveUtils.checkDiffs();
             Session.set("confirmRemoveCurve","");
+            Session.set("lastUpdate", Date.now());
+            if (Curves.length === 0) {
+                location.reload(true);
+            }
             return false;
         } else{
             Session.set("confirmRemoveCurve",{label:this.label});
