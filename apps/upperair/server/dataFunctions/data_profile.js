@@ -22,6 +22,7 @@ dataProfile = function(plotParams, plotFunction) {
     var ymin = -1100;
     var maxValuesPerLevel = 0;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        maxValuesPerLevel = 0;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
