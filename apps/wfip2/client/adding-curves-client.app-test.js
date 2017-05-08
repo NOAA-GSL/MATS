@@ -53,6 +53,7 @@ import {expect} from 'meteor/practicalmeteor:chai';
         });
         it('click remove all curve and check curve label and buttons"', function(){
             $("#remove-all").trigger('click');  // remove all
+            $('#confirm-remove-all').trigger('click')  // confirm
             var curves = Session.get("Curves");
             var curvesLength = curves.length;
             expect (curvesLength).to.equal(0);
