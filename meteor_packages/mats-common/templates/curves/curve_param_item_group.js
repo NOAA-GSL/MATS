@@ -5,6 +5,14 @@ import { matsParamUtils } from 'meteor/randyp:mats-common';
 var allGroups = {};
 Template.curveParamItemGroup.helpers({
     curveParamGroups: function (c) {
+        const label = c.label;
+        const curves = Session.get("Curves");
+        const index = curves.findIndex(
+           function(obj){
+               return obj.label === label;
+           }
+        );
+
         // create a set of groups each with an array of 6 params for display
         const lastUpdate = Session.get('lastUpdate');
         const plotType = matsPlotUtils.getPlotType();
@@ -27,7 +35,7 @@ Template.curveParamItemGroup.helpers({
         const groupSize = pattern.groupSize;
         const displayParams = pattern.displayParams;
         for (var di=0; di < displayParams.length;di++) {
-            pValues.push({name: displayParams[di], value: c[displayParams[di]], color:c.color, curve:c.label});
+            pValues.push({name: displayParams[di], value: c[displayParams[di]], color:c.color, curve:c.label, index:index});
         }
         // create array of parameter value display groups each of groupSize
         var pGroups = [];
@@ -51,6 +59,9 @@ Template.curveParamItemGroup.helpers({
         allGroups[c.label] = pGroups;
         return pGroups;
     },
+    curveNumber: function(elem) {
+        return elem.index;
+    },
     curveParams: function(paramGroup) {
       return paramGroup;
     },
@@ -63,10 +74,24 @@ Template.curveParamItemGroup.helpers({
     id: function(elem){
         return elem.name;
     },
+    buttonId: function(elem) {
+        const name = new String(elem.name);
+        const upperName = name.toUpperCase();
+        const curveNumber = elem.index;
+        const spanId = upperName + "-curve-" + curveNumber + "-Button";
+        return spanId;
+    },
+    spanId: function(elem) {
+        const name = new String(elem.name);
+        const upperName = name.toUpperCase();
+        const curveNumber = elem.index;
+        const spanId = upperName + "-curve-" + curveNumber + "-Item";
+        return spanId;
+    },
     value: function(elem){
         // have to get this from the session
-        // what is my curve?
-        return elem.value;
+        const curve = Session.get("Curves")[elem.index];
+        return (curve === undefined ? undefined : curve[elem.name]);
     },
     defaultColor: function(elem){
         return elem.color;

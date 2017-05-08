@@ -17,6 +17,10 @@ Template.curveItem.helpers({
     editCurve: function() {
         return (Session.get("editMode"));
     },
+    removeCurve: function() {
+      var confirmRemoveCurve = Session.get("confirmRemoveCurve");
+      return confirmRemoveCurve.label;
+    },
     displayEditXaxis: function() {
         if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
             return "block";
@@ -73,6 +77,16 @@ Template.curveItem.helpers({
                 return curves[i].color;
             }
         }
+    },
+    curveNumber: function() {
+        const label = this.label;
+        const curves = Session.get("Curves");
+        const index = curves.findIndex(
+            function(obj){
+                return obj.label === label;
+            }
+        );
+        return index;
     },
     log: function() {
         console.log(this);
@@ -170,14 +184,32 @@ Template.curveItem.events({
         Session.set("paramWellColor","#f5f5f5");
     },
     'click .remove-curve': function (event) {
-        var label = this.label;
-        var color = this.color;
-        var Curves = _.reject(Session.get('Curves'),function(item){return item.label === label});
-        Session.set('Curves',Curves);
-        matsCurveUtils.clearUsedLabel(label);
-        matsCurveUtils.clearUsedColor(color);
-        matsCurveUtils.checkDiffs();
-        return false;
+        var removeCurve = Session.get("confirmRemoveCurve");
+        if (removeCurve && removeCurve.confirm) {
+            var label = removeCurve.label;
+            var color = this.color;
+            var Curves = _.reject(Session.get('Curves'), function (item) {
+                return item.label === label
+            });
+            Session.set('Curves', Curves);
+            matsCurveUtils.clearUsedLabel(label);
+            matsCurveUtils.clearUsedColor(color);
+            matsCurveUtils.checkDiffs();
+            Session.set("confirmRemoveCurve","");
+            Session.set("lastUpdate", Date.now());
+            if (Curves.length === 0) {
+                location.reload(true);
+            }
+            return false;
+        } else{
+            Session.set("confirmRemoveCurve",{label:this.label});
+            $("#modal-confirm-remove-curve").modal();
+        }
+    },
+    'click .confirm-remove-curve': function () {
+        var confirmCurve = Session.get("confirmRemoveCurve");
+        Session.set("confirmRemoveCurve", {label:confirmCurve.label,confirm:true});
+        $("#curve-list-remove").trigger('click');
     },
     'click .edit-curve-xaxis': function(event) {
         Session.set('axis','xaxis');
@@ -192,6 +224,19 @@ Template.curveItem.events({
         setParamsToAxis('yaxis',currentParams);
     },
     'click .edit-curve': function (event) {
+        const srcEditButton = event.currentTarget;
+        const name = srcEditButton.name;
+        const editingCurve = Session.get('editMode');
+        curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
+        Session.set("eventTargetCurve",eventTargetCurve);
+        Session.set("intendedActiveDisplayButton",name);
+        Session.set("activeDisplayButton",name);
+        if(editingCurve !== undefined && editingCurve !== "" && editingCurve !== eventTargetCurve) {
+            // editing a different curve // have to do the modal for confirmation
+            $("#confirm-lost-edits").modal();
+            return;
+        }
         Session.set('editMode', this.label);
         // reset scatter plot apply stuff
         matsCurveUtils.resetScatterApply();
@@ -271,7 +316,7 @@ Template.curveItem.events({
         const controlElem = matsParamUtils.getControlElementForParamName(name);
         const editingCurve = Session.get('editMode');
         curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
-        const eventTargetCurve = $($(event.currentTarget.parentNode.parentNode).find("#label")[0]).text().trim().split(':')[1].trim();
+        const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
         Session.set("eventTargetCurve",eventTargetCurve);
         Session.set("intendedActiveDisplayButton",name);
         Session.set("activeDisplayButton",name);
@@ -305,5 +350,8 @@ Template.curveItem.events({
         inputElem && inputElem.focus();
         controlElem && controlElem.click();
         Session.set("elementChanged", Date.now());
+    },
+    'click .fa-paint-brush': function() {
+        $("#" + this.label + "-color-value").trigger('click');
     }
 });

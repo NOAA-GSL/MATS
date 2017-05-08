@@ -100,13 +100,24 @@ Template.curveList.helpers({
     }
 });
 
-
 Template.curveList.events({
     'click .remove-all': function () {
-        matsCurveUtils.removeAllCurves();
-        Session.set("editMode", "");
-        Session.set("paramWellColor","#f5f5f5");  // default grey
-        return false;
+        if (Session.get("confirmRemoveAll")) {
+            matsCurveUtils.removeAllCurves();
+            Session.set("editMode", "");
+            Session.set("paramWellColor", "#f5f5f5");  // default grey
+            Session.set("lastUpdate", Date.now());
+            Session.set("confirmRemoveAll","");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0 ) {
+                $("#modal-confirm-remove-all").modal();
+            }
+        }
+    },
+    'click .confirm-remove-all': function () {
+        Session.set("confirmRemoveAll", Date.now());
+        $("#remove-all").trigger('click');
     },
     'click .plot-curves-unmatched': function (event) {
         document.getElementById("spinner").style.display = "block";
