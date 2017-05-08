@@ -110,7 +110,9 @@ Template.curveList.events({
             Session.set("confirmRemoveAll","");
             return false;
         } else {
-            $("#modal-confirm-remove-all").modal();
+            if (Session.get("Curves").length > 0 ) {
+                $("#modal-confirm-remove-all").modal();
+            }
         }
     },
     'click .confirm-remove-all': function () {
