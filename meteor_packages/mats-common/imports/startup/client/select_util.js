@@ -347,11 +347,17 @@ const refresh = function (event, paramName) {
                 }
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
+            // choose a default value for the select.
+            // check to see if a default is defined, however
+            // I may just have to choose the 0th element in the options list.
+            // if the selected default happens to be a disabled option, increment to the next one
             const defaultOptionIndex = options.indexOf(param.default);
-            if (param.default !== undefined && defaultOptionIndex > 0 ) {
-                selectedOptionIndex = defaultOptionIndex -1;
-            } else {
-                selectedOptionIndex = selectedOptionIndex;
+            if (param.default === undefined || defaultOptionIndex === -1) {  // can't find the default
+                // set the default to the first valid thing in the current options list That is not a disabledOption
+                selectedOptionIndex = 0;
+                while (disabledOptions && disabledOptions.indexOf(options[selectedOptionIndex]) !== -1) {
+                    selectedOptionIndex++;
+                }
             }
             elem.selectedIndex = selectedOptionIndex;
             elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
