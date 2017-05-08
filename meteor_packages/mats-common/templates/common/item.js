@@ -223,7 +223,10 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
+        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
     }
 });
 
