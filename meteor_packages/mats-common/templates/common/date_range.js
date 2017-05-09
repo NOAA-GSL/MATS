@@ -73,6 +73,10 @@ Template.dateRange.onRendered(function () {
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
         matsParamUtils.setValueTextForParamName(name, valStr);
         elem.style.display = "none";
+        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
     });
     $('#' + idref).on('cancel.daterangepicker', function () {
         elem.style.display = "none";

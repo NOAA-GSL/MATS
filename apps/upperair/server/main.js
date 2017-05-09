@@ -115,7 +115,8 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: 'region.html'
             });
 
         optionsMap = {
