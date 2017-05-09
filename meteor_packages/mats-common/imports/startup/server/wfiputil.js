@@ -615,7 +615,8 @@ const sumsSquaresByTimeLevel = function (params) {
     } // for all times
     return {
         validLevels:validLevels,
-        sumsSquaresByTimeLevel:sumsSquaresByTimeLevel
+        sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
+        timesByLevel: timesByLevel
     };
 };
 

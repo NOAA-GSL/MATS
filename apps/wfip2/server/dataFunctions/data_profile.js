@@ -270,7 +270,8 @@ dataProfile = function (plotParams, plotFunction) {
             const sumObject = matsWfipUtils.sumsSquaresByTimeLevel({levelCompleteness:levelCompleteness,siteCompleteness:siteCompleteness,siteBasis:siteBasis,truthSiteBasis:truthSiteBasis,levelBasis:levelBasis,allTimes:allTimes,windDirVar:windDirVar,statistic:statistic,queryResult:queryResult,truthQueryResult:truthQueryResult});
             const validLevels = sumObject.validLevels;
             const sumsSquaresByTimeLevel = sumObject.sumsSquaresByTimeLevel;
-            const statsByLevel = matsWfipUtils.getStatValuesByLevel({sumsSquaresByTimeLevel:sumsSquaresByTimeLevel, validLevels:validLevels});
+            const timesByLevel = sumObject.timesByLevel;
+            const statsByLevel = matsWfipUtils.getStatValuesByLevel({sumsSquaresByTimeLevel:sumsSquaresByTimeLevel, validLevels:validLevels, timesByLevel:timesByLevel});
 
             // calculate the whole curve stats from all the levelStats
             var uSum;
