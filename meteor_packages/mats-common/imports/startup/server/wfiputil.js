@@ -623,6 +623,8 @@ const sumsSquaresByTimeLevel = function (params) {
 const getStatValuesByLevel = function (params) {
     const sumsSquaresByTimeLevel = params.sumsSquaresByTimeLevel;
     const validLevels = params.validLevels;
+    const timesByLevel = params.timesByLevel;
+    const windDirVar = params.windDirVar;
     var statValuesByLevel = {};
     // now we have to calculate the sums and squares (depending on the statistic type)
     // for each level use the data in sumsSquaresByTimeLevel to do the math on the partialSums. i.e. for mean add them and divide by n

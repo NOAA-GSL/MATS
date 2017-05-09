@@ -271,7 +271,7 @@ dataProfile = function (plotParams, plotFunction) {
             const validLevels = sumObject.validLevels;
             const sumsSquaresByTimeLevel = sumObject.sumsSquaresByTimeLevel;
             const timesByLevel = sumObject.timesByLevel;
-            const statsByLevel = matsWfipUtils.getStatValuesByLevel({sumsSquaresByTimeLevel:sumsSquaresByTimeLevel, validLevels:validLevels, timesByLevel:timesByLevel});
+            const statsByLevel = matsWfipUtils.getStatValuesByLevel({sumsSquaresByTimeLevel:sumsSquaresByTimeLevel, validLevels:validLevels, timesByLevel:timesByLevel, windDirVar:windDirVar});
 
             // calculate the whole curve stats from all the levelStats
             var uSum;
