@@ -173,7 +173,11 @@ Template.item.events({
                 }
             }
          }
-        const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
+        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
+
     },
 
     'click .help' : function() {
