@@ -267,25 +267,15 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
                     minInterval = avinterval;
                 }
-
-                // const thisdiff = utctime - time;
-                // if ( thisdiff > prevdiff ) {
-                //     continue;
-                // } else {
-                //     prevdiff = thisdiff;
-                // }
-
-
                 lastavTime = time;
                 var siteid = rows[rowIndex].sites_siteid;
                 allSitesSet.add(siteid);
                 if (timeSites.indexOf(siteid) === -1) {
                     timeSites.push(siteid);
                 }
-
                 var values = [];
                 var levels = [];
-
+                var windSpeeds = []; // used for ws quality control toss wd when ws < 3ms
                 if (isJSON) {
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
@@ -293,6 +283,14 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         if (discriminator < disc_lower || discriminator > disc_upper) {
                             continue;
                         }
+                    }
+                    // if wind direction have to filter for ws < 3ms
+                    if (myVariable === "wd") {
+                        // have to capture wind speed to filter for ws < 3 mps
+                        windSpeeds = JSON.parse(rows[rowIndex].data)['ws'];
+                        // if ((JSON.parse(rows[rowIndex].data)['ws']) < 3.0) {
+                        //     continue;
+                        // }
                     }
                     values = JSON.parse(rows[rowIndex].data)[myVariable];
                     if (values === undefined) {
@@ -314,10 +312,13 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 } else {
                     // conventional variable -- stored as text in the DB
                     values = JSON.parse(rows[rowIndex][myVariable]);
+                    if (myVariable === "wd") {
+                        windSpeeds = JSON.parse(rows[rowIndex]['ws']);
+                    }
                     if (values === undefined) {
                         // no data found in this record
                         continue;
-                    } else {
+                    }  else {
                         levels = JSON.parse(rows[rowIndex].z);
                     }
                 }
@@ -336,12 +337,24 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         levels = [Number(levels[0])];
                     }
                     values = [Number(values)];
+                    windSpeeds = [Number(windSpeeds)];
                 } else {
                     values = values.map(function (a) {
                         return Number(a);
                     });
+                    windSpeeds = windSpeeds.map(function (a) {
+                        return Number(a);
+                    });
                 }
-
+                // quality control for windDir
+                // if corresponding windSpeed < 3ms null the windDir
+                if (myVariable === "wd") {
+                    for (var i = 0; i < values.length; i++) {
+                        if (windSpeeds[i] < 3.0) {
+                            values[i] = null;
+                        }
+                    }
+                }
                 for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
                     levels[lvlIndex] = Math.round(levels[lvlIndex]);
                 }
@@ -788,10 +801,143 @@ const getDataForProfileDiffCurve = function(params) {
     return {dataset:d};
 }
 
+const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax) {
+// generate y-axis
+    var xmin = Number.MAX_VALUE;
+    var xmax = Number.MIN_VALUE;
+    var ymin = Number.MAX_VALUE;
+    var ymax = Number.MIN_VALUE;
+    var xAxislabel = "";
+    var axisVariables = [];
+    for (var dsi = 0; dsi < dataset.length; dsi++) {
+        if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
+            continue;
+        }
+        const axisKey = curves[dsi].axisKey;
+        // only need one xaxisLable (they should all be the same anyway for profiles)
+        const thisVar = axisKey.split(':')[0];
+        if (xAxislabel == "") {
+            axisVariables.push(thisVar);
+            xAxislabel = axisMap[axisKey].axisLabel;
+        }
+        else {
+            if (axisVariables.indexOf(thisVar) === -1) {
+                axisVariables.push(thisVar);
+                if (xAxislabel.length > 30) {
+                    xAxislabel += "\n";  // wrap long labels
+                }
+                xAxislabel = xAxislabel + '|' + axisMap[axisKey].axisLabel;
+            }
+        }
+        xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
+        ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        ymax = ymax > axisMap[axisKey].xmax ? ymax : axisMap[axisKey].ymax;
+    }
+
+    // account for error bars on xaxis
+    xmax = xmax + errorMax;
+    xmin = xmin - errorMax;
+    const xpad = (xmax - xmin) * 0.05;
+    const options = {
+        axisLabels: {
+            show: true
+        },
+        xaxes: [{
+            axisLabel: xAxislabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: xAxislabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+            alignTicksWithAxis: 1,
+            color: 'grey',
+            min:xmin - xpad,
+            max:xmax + xpad,
+            font: {
+                size: 20,
+                lineHeight: 23,
+                style: "italic",
+                weight: "bold",
+                family: "sans-serif",
+                variant: "small-caps",
+                color: "#545454"
+            }
+        }],
+        xaxis: {
+            zoomRange: [0.1, null]
+        },
+        yaxes: [{
+            position:"left",
+            color: 'grey',
+            axisLabel: ' Pressure (hPa)',
+            axisLabelColour: "black",
+            font: {
+                size: 20,
+                lineHeight: 23,
+                style: "italic",
+                weight: "bold",
+                family: "sans-serif",
+                variant: "small-caps",
+                color: "#545454"
+            },
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 3,
+            alignTicksWithAxis: 1,
+            min: 40,
+            max: 180
+        }],
+        yaxis: [{
+            zoomRange: [0.1, null]
+        }],
+        legend: {
+            show: false,
+            container: "#legendContainer",
+            noColumns: 0,
+            position: 'ne'
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
+            },
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+        }
+    };
+    return options;
+};
+
 export default matsWfipUtils = {
     getDatum: getDatum,
     queryWFIP2DB: queryWFIP2DB,
     sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
     getStatValuesByLevel:getStatValuesByLevel,
-    getDataForProfileDiffCurve:getDataForProfileDiffCurve
+    getDataForProfileDiffCurve:getDataForProfileDiffCurve,
+    generateProfilePlotOptions:generateProfilePlotOptions
 }

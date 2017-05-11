@@ -19,12 +19,6 @@ dataProfile = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymax = Number.MIN_VALUE;
     var ymin = Number.MAX_VALUE;
-    // used to find the max and minimum for the y axis
-    // used in yaxisOptions for scaling the graph
-    // var xAxisMax = -1 * Number.MAX_VALUE;
-    // var xAxisMin = Number.MAX_VALUE;
-    // var yAxisMax = Number.MIN_VALUE;
-    // var yAxisMin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
     var maxValidInterval = Number.MIN_VALUE;
     var curveIndex;
@@ -83,19 +77,13 @@ dataProfile = function (plotParams, plotFunction) {
         var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
-        if (curveIndex == 0) {
-            xAxisLabel += variableStr;
-            xAxisLabels.push(variableStr);
-        } else {
-            if (xAxisLabels.indexOf(variableStr) == -1) {
-                xAxisLabels.push(variableStr);
-                xAxisLabel += " | " + variableStr;
-            }
-        }
         if (myVariable === undefined) {
             myVariable = curve['variable'];
             myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
+        // need to know if it is a wind direction variable because we need to retrieve wind speed
+        // and filter out any values that are coinciding with a wind speed less than 3mps
+        const windVar = myVariable.startsWith('wd');
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -143,7 +131,11 @@ dataProfile = function (plotParams, plotFunction) {
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                 } else {
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    var qVariable = myVariable;
+                    if (windVar) {
+                        qVariable = myVariable + ",ws";
+                    }
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
@@ -184,7 +176,11 @@ dataProfile = function (plotParams, plotFunction) {
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                     } else {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
@@ -348,7 +344,6 @@ dataProfile = function (plotParams, plotFunction) {
             var statNum;
             var values;
             var vIndex;
-            const windVar = myVariable.startsWith('wd');
             switch (statistic) {
                 case "bias":
                 case "mae":
@@ -438,10 +433,6 @@ dataProfile = function (plotParams, plotFunction) {
             for (l = 0; l < levels.length; l++) {
                 level = levels[l];
                 var value = levelStats[level][statistic];
-                // xAxisMin = xAxisMin < value ? xAxisMin : value;
-                // xAxisMax = xAxisMax > value ? xAxisMax : value;
-                // yAxisMin = yAxisMin < level ? yAxisMin : level;
-                // yAxisMax = yAxisMax > level ? yAxisMax : level;
                 var value = levelStats[level][statistic];
                 xmin = xmin < value ? xmin : value;
                 xmax = xmax > value ? xmax : value;
@@ -484,143 +475,11 @@ dataProfile = function (plotParams, plotFunction) {
         dataset.push(cOptions);
     }  // end for curves
 
-
-
-    // generate y-axis
-    var yaxes = [];
-    var yaxis = [];
-    for (var dsi = 0; dsi < dataset.length; dsi++) {
-        var position = dsi === 0 ? "left" : "right";
-        var yaxesOptions = {
-            position: position,
-            color: 'grey',
-            axisLabel: 'level above ground in meters',
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1
-        };
-        var yaxisOptions = {
-            zoomRange: [0.1, 10]
-        };
-        yaxes.push(yaxesOptions);
-        yaxis.push(yaxisOptions);
-    }
-    var pOptions = {
-        axisLabels: {
-            show: true
-        },
-        xaxes: [{
-            axisLabel: xAxisLabel,
-            color: 'grey'
-        }],
-        xaxis: {
-            zoomRange: [0.1, 10],
-            max: xAxisMax > 0 ? xAxisMax * 1.6 : xAxisMax * 0.6,
-            min: xAxisMin < 0 ? xAxisMin * 1.6 : xAxisMin * 0.6
-        },
-        yaxes: yaxes,
-        yaxis: yaxis,
-
-        legend: {
-            show: false,
-            container: "#legendContainer",
-            noColumns: 0
-        },
-        series: {
-            lines: {
-                show: true,
-                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
-            },
-            points: {
-                show: true,
-                radius: 1
-            },
-            shadowSize: 0
-        },
-        zoom: {
-            interactive: false
-        },
-        pan: {
-            interactive: false
-        },
-        selection: {
-            mode: "xy"
-        },
-        grid: {
-            hoverable: true,
-            clickable: true,
-            borderWidth: 3,
-            mouseActiveRadius: 50,
-            backgroundColor: "white",
-            axisMargin: 20
-        },
-        /* tooltips NOTE:
-         There are two kinds of tooltips...
-         1) content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-         xDateFormat: "%Y-%m-%d:%H",
-         onHover: function (flotItem, $tooltipEl) {
-         which will cause the y value to be presented with the text "<br>%x:<br>value %y where %y is the y value"
-         and ...
-         content: "<span style='font-size:150%'><strong>%ct</strong></span>"
-         which will present the text defined by a string in the last data position of the dataset array i.e.
-         [[x1,y1,"tooltiptext1"],[x2,y3,"tooltiptext2"]....[xn,yn,"tooltiptextn"]]
-         The tooltip text is expected to be an html snippet.
-         */
-
-        tooltip: true,
-        tooltipOpts: {
-            // the ct value is the third [2] element of the data series. This is the tooltip content.
-            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
-        }
-    };
-    //const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
-
-    // add black 0 line curve
-    dataset.push({
-        "yaxis": 1,
-        "label": "zero",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-            [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "x",
-            "xerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 50,
-            "max": 1000,
-            "sum": 0,
-            "minx": 0,
-            "maxx": 0
-        }
-    });
+    const resultOptions = matsWfipUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
     var result = {
         error: error,
         data: dataset,
-        options: pOptions,
-        //options: resultOptions,
+        options: resultOptions,
         basis: {
             plotParams: plotParams,
             queries: dataRequests
