@@ -22,6 +22,7 @@ dataProfile = function(plotParams, plotFunction) {
     var ymin = -1100;
     var maxValuesPerLevel = 0;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
@@ -63,6 +64,7 @@ dataProfile = function(plotParams, plotFunction) {
         var axisKey = variableStr + ":" + statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var d = [];
+        // create database query statements
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve
             // create the database queries and retrieve the data
@@ -82,7 +84,6 @@ dataProfile = function(plotParams, plotFunction) {
                 "group by avVal " +
                 "order by avVal" +
                 ";";
-
             // build the query
             statement = statement.replace('{{model}}', model + '_Areg' + region);
             statement = statement.replace('{{top}}', top);
@@ -92,6 +93,7 @@ dataProfile = function(plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTime}}', validTime);
             statement = statement.replace('{{forecastLength}}', forecastLength);
+            // save the query for the data lineage
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
@@ -113,22 +115,21 @@ dataProfile = function(plotParams, plotFunction) {
             // calculate the data based on matching or unmatched
             var diffResult;
             if (matching) {
-                console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
+                //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
                 diffResult = matsDataUtils.getDataForProfileMatchingDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
             } else {
                 // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
-                console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
+                //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
                 diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset:dataset,
                     diffFrom:diffFrom
                 });
             }
             d = diffResult.dataset;
-        }
-        // process statistics and options for all curves (unmatched diff curves don't get statistics)
+        }  // end difference curve
         // get the x min and max
         for (var di = 0; di < d.length; di++) {
             xmax = xmax > d[di][0] ? xmax : d[di][0];

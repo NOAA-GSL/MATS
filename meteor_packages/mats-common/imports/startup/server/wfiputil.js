@@ -699,9 +699,99 @@ const getStatValuesByLevel = function (params) {
     return statValuesByLevel;
 };
 
+const getDataForProfileDiffCurve = function(params) {
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - statValue (ploted against the x axis)
+     data[1] - level (plotted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - level values
+     data[4] - level times
+     data[5] - level stats
+     data[6] - tooltip
+
+     This is returning a differenced curve dataset that is derived from two
+     existing curve datasets. By virtue of being a difference profile curve we
+     have to match levels.
+
+     It is interesting to note that for wfip2 any profile matching has already
+     been done prior to doing any differencing.
+     A profile point value is a statistical deriviation of a collection of data. In
+     the case of wfip2 that subset collection of data at any given level may
+     have been collected from different time ranges, and different sites.
+     The job of matching had to happen before differencing. That job was to filter away
+     any and all data that did NOT match by either, time, site, or level. In the case
+     of wfip2 we have level and site completeness as well. This means matching data
+     may be filtered away because one curve did not have the 'complete enough'
+     levels, and or sites to meet the completeness criteria and so get included.
+     Matching would cause all the data in all the subsets to be tossed if it is
+     tossed from any subset.
+     */
+
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    var minuendIndex = diffFrom[1];
+    var subtrahendIndex = diffFrom[0]; // base curve
+    var minuendData = dataset[minuendIndex].data;
+    var subtrahendData = dataset[subtrahendIndex].data;
+    var minuendLevelValues = {};
+    var minuendLevels = [];
+    var minuendStatistic = null;
+    var subtrahendStatistic = null;
+    var level;
+    var value;
+    for (i = 0; i < minuendData.length; i++) {
+        level = minuendData[i][1];
+        value = minuendData[i][0];
+        if (!minuendStatistic) {
+            minuendStatistic = minuendData[i][3].statistic;
+        }
+        minuendLevels.push(level);
+        minuendLevelValues[level] = value;
+    }
+    var subtrahendLevels = [];
+    var subtrahendLevelValues = {};
+    for (i = 0; i < subtrahendData.length; i++) {
+        level = subtrahendData[i][1];
+        value = subtrahendData[i][0];
+        if (!subtrahendStatistic) {
+            subtrahendStatistic = subtrahendData[i][3].statistic;
+        }
+        subtrahendLevels.push(level);
+        subtrahendLevelValues[level] = value;
+    }
+    var d = [];
+    // get the intersection of the levels
+    const commonLevels = minuendLevels.filter(function(n) {
+        return subtrahendLevels.indexOf(n) !== -1;
+    });
+    // itterate all the common levels
+    for (i = 0; i < commonLevels.length; i++) {
+        level = commonLevels[i];
+        value = minuendLevelValues[level] - subtrahendLevelValues[level];
+        tooltip = "<br>" + label +
+            "<br>level: " + level +
+            "<br>minuend statistic: " + minuendStatistic +
+            "<br>subtrahend statistic: " + subtrahendStatistic +
+            "<br> diff value: " + (value === null ? null : value.toPrecision(4));
+        d[i] = [];
+        d[i][0] = value;
+        d[i][1] = level;
+        d[i][2] = -1;
+        d[i][3] = [];
+        d[i][4] = [];
+        d[i][5] = [];
+        d[i][6] = tooltip;
+    }
+    return {dataset:d};
+}
+
 export default matsWfipUtils = {
     getDatum: getDatum,
     queryWFIP2DB: queryWFIP2DB,
     sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
-    getStatValuesByLevel:getStatValuesByLevel
+    getStatValuesByLevel:getStatValuesByLevel,
+    getDataForProfileDiffCurve:getDataForProfileDiffCurve
 }
