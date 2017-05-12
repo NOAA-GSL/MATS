@@ -15,10 +15,10 @@ if [ ! -d MATS_for_EMB ]; then
 fi
 
 cd MATS_for_EMB/apps
-export METEOR_PACKAGE_DIRS=`/Users/pierce/WebstormProjects/MATS_DEV/apps/../meteor_packages/`
+export METEOR_PACKAGE_DIRS=`ls -rt -d -1 "$PWD"/../meteor_packages/`
 
 # update all the apps
-find . -type d -maxdepth 1 | grep -v '^\.$' | while read app
+find . -maxdepth 1 -type d -not -path "." | while read app
     do
         cd $app;
         pwd;
@@ -41,14 +41,21 @@ do
 	done
 	if [[ "$contained" = "false" ]]
 	then
-		echo removing $mt
-		rm -rf "$mt"
-		echo removing .$mt.*/
-		rm -rf ".$mt.*/"
+		echo removing "~/.meteor/packages/meteor-tool/$mt"
+		rm -rf ~/.meteor/packages/meteor-tool/$mt
+		echo removing "~/.meteor/packages/meteor-tool/.$mt.*/"
+		rm -rf ~/.meteor/packages/meteor-tool/.$mt.*/
 	else
 		echo leaving $mt
 	fi
 done
+nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
+npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
+
+rm -rf ~/.meteor/node
+rm -rf ~/.meteor/npm
+ln -sf $nodepath ~/.meteor/node
+ln -sf $npmpath ~/.meteor/npm
 
 cd ..
 

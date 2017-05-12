@@ -1,11 +1,10 @@
 <template name="graph">
     <div id="graph-container" class="container" style="display:none;">
         <div id="header" class="row container">
-            <h2>{{Title}}  :  {{plotText}}</h2>
-            <h3>{{plotName}}</h3>
+            <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
         </div>
         <div id="graph-control" class="row container-fluid">
-            <div id="plot-buttons-grp" class="btn-group">
+            <div id="plot-buttons-grp" class="btn-group btn-group-sm">
                 <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
@@ -79,6 +78,8 @@
             <div id="legendContainer" name="legendContainer"></div>
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
         </div>
-        <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confindence</h5>
+        {{#if isProfile}}
+            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confindence</h5>
+        {{/if}}
     </div>
 </template>

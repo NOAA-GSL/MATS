@@ -8,17 +8,17 @@ import {moment} from 'meteor/momentjs:moment';
 
 dataProfile = function (plotParams, plotFunction) {
     console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
-    var dataRequests = {}; // used to store data queries 
+    var dataRequests = {}; // used to store data queries
+    var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    // used to find the max and minimum for the y axis
-    // used in yaxisOptions for scaling the graph
-    var xAxisMax = -1 * Number.MAX_VALUE;
-    var xAxisMin = Number.MAX_VALUE;
-    var yAxisMax = Number.MIN_VALUE;
-    var yAxisMin = Number.MAX_VALUE;
+    var axisMap = Object.create(null);
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    var ymax = Number.MIN_VALUE;
+    var ymin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
     var maxValidInterval = Number.MIN_VALUE;
     var curveIndex;
@@ -29,7 +29,6 @@ dataProfile = function (plotParams, plotFunction) {
     var t;
     var i;
     var n;
-    //iterate all the curves
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         curve = curves[curveIndex];
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
@@ -39,7 +38,7 @@ dataProfile = function (plotParams, plotFunction) {
         curve.dataSource_is_json = parseInt(tmp[5]);
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
         if (curve['statistic'] != "mean") {
-            // need a truth data source for statistic calculations other than mean
+            // need a truth data source for statistic
             if (curve['truth-data-source'] === matsTypes.InputTypes.unused || curve['truth-data-source'] === undefined) {
                 throw (new Error("INFO: You must define a truth data source"));
             }
@@ -53,14 +52,17 @@ dataProfile = function (plotParams, plotFunction) {
         }
 
     }
-    var xAxisLabel = "";
-    var xAxisLabels = [];
+    //var xAxisLabel = "";
+    //var xAxisLabels = [];
     var errorMax = Number.MIN_VALUE;
+    var maxValuesPerLevel = 0;
     var d = [];
-
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+      // Determine all the plot params for this curve
+        maxValuesPerLevel = 0;
         curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var label = curve['label'];
         var dataSource = curve['data-source'];
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
@@ -75,19 +77,13 @@ dataProfile = function (plotParams, plotFunction) {
         var myVariable_isDiscriminator = false;
         var variableStr = curve['variable'];
         myVariable = variableMap[variableStr];
-        if (curveIndex == 0) {
-            xAxisLabel += variableStr;
-            xAxisLabels.push(variableStr);
-        } else {
-            if (xAxisLabels.indexOf(variableStr) == -1) {
-                xAxisLabels.push(variableStr);
-                xAxisLabel += " | " + variableStr;
-            }
-        }
         if (myVariable === undefined) {
             myVariable = curve['variable'];
             myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
         }
+        // need to know if it is a wind direction variable because we need to retrieve wind speed
+        // and filter out any values that are coinciding with a wind speed less than 3mps
+        const windVar = myVariable.startsWith('wd');
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -116,9 +112,17 @@ dataProfile = function (plotParams, plotFunction) {
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+        // create database query statements - wfip2 has source AND truth data for statistics other than mean
         var statement;
-        //if (diffFrom === null || diffFrom === undefined) {
+        // axisKey is used to determine which axis a curve should use.
+        // This axisMap object is used like a set and if a curve has the same
+        // variable and statistic (axisKey) it will use the same axis,
+        // The axis number is assigned to the axisMap value, which is the axisKey.
+        var axisKey = variableStr + ":" + statistic;
+        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
+            // wfip2 also has different queries for instruments verses model data
             if (dataSource_is_instrument) {
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
@@ -127,12 +131,16 @@ dataProfile = function (plotParams, plotFunction) {
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                 } else {
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    var qVariable = myVariable;
+                    if (windVar) {
+                        qVariable = myVariable + ",ws";
+                    }
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
                 }
-                // data source is a model and its JSON
+                // data source is a model and its JSON format
             } else {
                 statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
@@ -142,6 +150,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
             //console.log("statement: " + statement);
+            // save the query for the data lineage
             dataRequests[curve.label] = statement;
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             if (queryResult.error !== undefined && queryResult.error !== "") {
@@ -167,7 +176,11 @@ dataProfile = function (plotParams, plotFunction) {
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
                     } else {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
@@ -193,8 +206,8 @@ dataProfile = function (plotParams, plotFunction) {
                     throw ( new Error(truthQueryResult.error) );
                 }
             }  // if statistic is not mean
-            /* What we really want to end up with for each curve is an array of arrays where each element has a time and an average of the corresponding values.
-             data = [ [time, value] .... [time, value] ] // where value is an average based on criterion, such as which sites have been requested?,
+            /* What we need for each curve is an array of arrays where each element has a time and an average of the corresponding values.
+             data = [ [time, value] .... [time, value] ] // where value is a statistic based on criterion, such as which sites have been requested?,
              and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
              need to be accounted for here. Also there can be missing times so we need to iterate through each set of times,
              based on the minimum interval for the data set, and fill in missing times with null values.
@@ -247,6 +260,7 @@ dataProfile = function (plotParams, plotFunction) {
              There is at least one real (non null) value for each site.
              */
 
+            // post process
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = queryResult.levelsBasis;
@@ -258,308 +272,214 @@ dataProfile = function (plotParams, plotFunction) {
                 levelBasis = _.union(levelBasis, truthLevelBasis);
                 siteBasis = _.union(siteBasis, truthSiteBasis);
             }
+            var verificationLevelValues = {};
+            var truthLevelValues = {};
             var allTimes;
             if (statistic == "mean") {
                 allTimes = queryResult.allTimes;
             } else {
                 allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
-            n = 0;
-            const windDirVar = myVariable.startsWith('wd');
-
-            const sumObject = matsWfipUtils.sumsSquaresByTimeLevel({levelCompleteness:levelCompleteness,siteCompleteness:siteCompleteness,siteBasis:siteBasis,truthSiteBasis:truthSiteBasis,levelBasis:levelBasis,allTimes:allTimes,windDirVar:windDirVar,statistic:statistic,queryResult:queryResult,truthQueryResult:truthQueryResult});
-            const validLevels = sumObject.validLevels;
-            const sumsSquaresByTimeLevel = sumObject.sumsSquaresByTimeLevel;
-            const timesByLevel = sumObject.timesByLevel;
-            const statsByLevel = matsWfipUtils.getStatValuesByLevel({sumsSquaresByTimeLevel:sumsSquaresByTimeLevel, validLevels:validLevels, timesByLevel:timesByLevel, windDirVar:windDirVar});
-
-            // calculate the whole curve stats from all the levelStats
-            var uSum;
-            var vSum;
-            var uStatValue;
-            var vStatValue;
-            var statValue;
-
-            for (l = 0; l < validLevels.length; l++) {  // over all the levels
-                const lStat = statsByLevel(validLevels[l]);
-                const statTimes = lStat.statTimes;
-                const statValues = lStat.statValues;
-                const sumsForLevel = lStat.sumsForLevel;
-                const lvlStats = matsDataUtils.get_err(statValues,statTimes);
-                means.push(lvlStats.d_mean);
-                n = sumsForLevel.length;
-                if (windDirVar) {
-                    values = sumsForLevel;
-                    // for windDirVar this is an array of u,v vectors
-                    uSum = 0;
-                    vSum = 0;
-                    for (v = 0; v < n; v++) {
-                        uSum += sumsForLevel[v].uSum;
-                        vSum += sumsForLevel[v].vSum;
-                    }
-                    if (statistic === "rmse") {
-                        // for rmse the values are sqr(data - truth) - must be square rooted
-                        uStatValue = Math.sqrt(uSum / n);
-                        vStatValue = Math.sqrt(vSum / n);
-                    } else {
-                        uStatValue = uSum / n;
-                        vStatValue = vSum / n;
-                    }
-                    // convert it back to direction
-                    statValue = Math.atan2(vStatValue, uStatValue) * 180 / Math.PI;
-                } else {
-                    sum = sumsForLevel.reduce((a, b) => a + b, 0);
-                    if (statistic === "rmse") {
-                        // for rmse the values are sqr(data - truth) - must be square rooted
-                        statValue = Math.sqrt(sum / n);
-                    } else {
-                        statValue = sum / n;
+            for (t = 0; t < allTimes.length; t++) {
+                /*
+                 If statistic is not "mean" then we need a set of truth values to diff from the verification values.
+                 The sites and levels have to match for the truth to make any sense.
+                 */
+                time = allTimes[t];
+                var timeObj = queryResult.data[time];
+                var verificationSites = Object.keys(timeObj.sites).map(Number);
+                var truthSites = [];
+                var truthTimeObj;
+                if (statistic != "mean") {
+                    truthTimeObj = truthQueryResult.data[time];
+                    truthSites = Object.keys(truthTimeObj.sites).map(Number);
+                }
+                var sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
+                var sitesLength = sites.length;
+                var includedSites = _.intersection(sites, siteBasis);
+                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                if (sitesQuality > siteCompleteness) {
+                    // time is qualified for sites, count the qualified levels
+                    for (var si = 0; si < sitesLength; si++) {
+                        var sLevels;
+                        var verificationValues = timeObj.sites[[sites[si]]].values;
+                        var truthValues;
+                        if (statistic != "mean") {
+                            sLevels = _.intersection(timeObj.sites[[sites[si]]].levels, truthTimeObj.sites[[sites[si]]].levels);
+                            truthValues = truthTimeObj.sites[[sites[si]]].values;
+                        } else {
+                            sLevels = timeObj.sites[[sites[si]]].levels;
+                        }
+                        var includedLevels = _.intersection(sLevels, levelBasis);
+                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                        if (levelsQuality > levelCompleteness) {
+                            for (var l = 0; l < sLevels.length; l++) {
+                                if (verificationLevelValues[sLevels[l]] === undefined) {
+                                    verificationLevelValues[sLevels[l]] = [];
+                                }
+                                verificationLevelValues[sLevels[l]].push(verificationValues[l]);
+                                if (statistic != "mean") {
+                                    if (truthLevelValues[sLevels[l]] === undefined) {
+                                        truthLevelValues[sLevels[l]] = [];
+                                    }
+                                    truthLevelValues[sLevels[l]].push(truthValues[l]);
+                                }
+                            }
+                        } // else don't count it in - skip over it, it isn't complete enough
                     }
                 }
+            }
+            // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
+            // now get levelStats
 
-                xAxisMin = xAxisMin < statValue ? xAxisMin : statValue;
-                xAxisMax = xAxisMax > statValue ? xAxisMax : statValue;
-                yAxisMin = yAxisMin < level ? yAxisMin : level;
-                yAxisMax = yAxisMax > level ? yAxisMax : level;
+            var levelStats = {};
+            var qualifiedLevels;
+            if (statistic == "mean") {
+                qualifiedLevels = Object.keys(verificationLevelValues);
+            } else {
+                qualifiedLevels = _.intersection(Object.keys(verificationLevelValues), Object.keys(truthLevelValues));
+            }
+            var statValue;
+            var statSum;
+            var statNum;
+            var values;
+            var vIndex;
+            switch (statistic) {
+                case "bias":
+                case "mae":
+                    // bias and mae are almost the same.... mae just absolutes the difference
+                    // find siteLevelBias and sum it in
+                    try {
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statNum = 0;
+                            statSum = 0;
+                            values = verificationLevelValues[qualifiedLevels[l]];
+                            truthValues = truthLevelValues[qualifiedLevels[l]];
+                            for (vIndex = 0; vIndex < values.length; vIndex++) {
+                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
+                                if (windVar) {
+                                    if (statValue > 180) {
+                                        statValue = statValue - 360;
+                                    } else if (statValue < -180) {
+                                        statValue = statValue + 360;
+                                    }
+                                }
+                                if (statistic == "mae") {
+                                    statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
+                                }
+                                statSum += statValue;
+                                statNum++;
+                            }
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
+                        }
+                    } catch (ignore) {
+                        // apparently there is no data in the truth curve that matches this time
+                        statValue = null;
+                    }
+                    break;
+                case "rmse":
+                    try {
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statNum = 0;
+                            statSum = 0;
+                            values = verificationLevelValues[qualifiedLevels[l]];
+                            truthValues = truthLevelValues[qualifiedLevels[l]];
+                            for (vIndex = 0; vIndex < values.length; vIndex++) {
+                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
+                                if (windVar) {
+                                    if (statValue > 180) {
+                                        statValue = statValue - 360;
+                                    } else if (statValue < -180) {
+                                        statValue = statValue + 360;
+                                    }
+                                }
+                                statValue = Math.pow(statValue, 2);  // square the difference
+                                statSum += statValue;
+                                statNum++;
+                            }
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum / statNum);
+                        }
+                    } catch (ignore) {
+                        statValue = null;
+                    }
+                    break;
+                case "mean":
+                default:
+                    try {
+                        statNum = 0;
+                        statSum = 0;
+                        for (l = 0; l < qualifiedLevels.length; l++) {
+                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function (a, b) {
+                                return a + b;
+                            }, 0);
+                            statNum = verificationLevelValues[qualifiedLevels[l]].length;
+                            if (levelStats[qualifiedLevels[l]] === undefined) {
+                                levelStats[qualifiedLevels[l]] = {};
+                            }
+                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
+                        }
+                    } catch (ignore) {
+                    }
+                    break;
+            }
+            d = [];
+            var levels = Object.keys(levelStats);
+            for (l = 0; l < levels.length; l++) {
+                level = levels[l];
+                var value = levelStats[level][statistic];
+                var value = levelStats[level][statistic];
+                xmin = xmin < value ? xmin : value;
+                xmax = xmax > value ? xmax : value;
+                ymin = ymin < level ? ymin : level;
+                ymax = ymax > level ? ymax : level;
                 tooltip = label +
                     "<br>level: " + level +
                     "<br>statistic: " + statistic +
-                    "<br> value: " + statValue +
-                    "<br> sd: " + lvlStats.sd +
-                    "<br> stde: " + lvlStats.stde_betsy +
-                    "<br> lag1:" + lvlStats.lag1 +
-                    "<br> mean:" + lvlStats.d_mean;
-                var errorBar = 1.96 * lvlStats.stde_betsy
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
-                /*
-                 DATASET ELEMENTS:
-                 series: [data,data,data ...... ]   each data is itself an array
-                 data[0] - statValue (ploted against the x axis)
-                 data[1] - level (plotted against the y axis)
-                 data[2] - errorBar  (stde_betsy * 1.96)
-                 data[3] - level values (statValues)
-                 data[4] - level times (statTimes)
-                 data[5] - level stats
-                 data[6] - tooltip
-                 */
-                d.push([statValue, level, errorBar, statValues, statTimes, lvlStats, tooltip]);
+                    "<br> value: " + value;
+                d.push([value, level, -1, {
+                    level: level,
+                    statistic: statistic,
+                    values: {verification: verificationLevelValues[level], truth: truthLevelValues[level]},
+                    levelStats: levelStats[level]
+                }, tooltip]);
             }
-        //} else { // difference curve
-            //d = matsDataUtils.getDataForProfileMatchingDiffCurve({dataset:dataset,diffFrom:diffFrom}).dataset;
-            // var minuendIndex = diffFrom[0];
-            // var subtrahendIndex = diffFrom[1]; // base curve
-            // var minuendData = dataset[minuendIndex].data;
-            // var subtrahendData = dataset[subtrahendIndex].data;
-            // var minuendLevelValues = {};
-            // var minuendLevels = [];
-            // var minuendStatistic = null;
-            // var subtrahendStatistic = null;
-            // var value;
-            // for (i = 0; i < minuendData.length; i++) {
-            //     level = minuendData[i][1];
-            //     value = minuendData[i][0];
-            //     if (!minuendStatistic) {
-            //         minuendStatistic = minuendData[i][3].statistic;
-            //     }
-            //     minuendLevels.push(level);
-            //     minuendLevelValues[level] = value;
-            // }
-            // var subtrahendLevels = [];
-            // var subtrahendLevelValues = {};
-            // for (i = 0; i < subtrahendData.length; i++) {
-            //     level = subtrahendData[i][1];
-            //     value = subtrahendData[i][0];
-            //     if (!subtrahendStatistic) {
-            //         subtrahendStatistic = subtrahendData[i][3].statistic;
-            //     }
-            //     subtrahendLevels.push(level);
-            //     subtrahendLevelValues[level] = value;
-            // }
-            // d = [];
-            // var commonLevels = _.intersection(subtrahendLevels, minuendLevels);
-            // for (i = 0; i < commonLevels.length; i++) {
-            //     level = commonLevels[i];
-            //     value = minuendLevelValues[level] - subtrahendLevelValues[level];
-            //     xAxisMin = xAxisMin < value ? xAxisMin : value;
-            //     xAxisMax = xAxisMax > value ? xAxisMax : value;
-            //     yAxisMin = yAxisMin < level ? yAxisMin : level;
-            //     yAxisMax = yAxisMax > level ? yAxisMax : level;
-            //     tooltip = label +
-            //         "<br>level: " + level +
-            //         "<br>minuend statistic: " + minuendStatistic +
-            //         "<br>subtrahend statistic: " + subtrahendStatistic +
-            //         "<br> diff value: " + value;
-            //     /*
-            //      DATASET ELEMENTS:
-            //      series: [data,data,data ...... ]   each data is itself an array
-            //      data[0] - statValue (ploted against the x axis)
-            //      data[1] - level (plotted against the y axis)
-            //      data[2] - errorBar  (stde_betsy * 1.96)
-            //      data[3] - level values (statValues)
-            //      data[4] - level times (statTimes)
-            //      data[5] - level stats
-            //      data[6] - tooltip
-            //      */
-            //     d.push([value, level * -1, -1, [], [], {
-            //          level: level,
-            //          values: {minuend: minuendLevelValues[level], subtrahend: subtrahendLevelValues[level]},
-            //          levelStats: {minuend: minuendStatistic, subtrahend: subtrahendStatistic}
-            //          }, tooltip]);
-            // }
-        //} // difference curve
-
-        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
-        var options = {
-            //yaxis:curveIndex,
-            label: label,
-            color: color,
-            data: d,
-            points: {
-                symbol: pointSymbol,
-                fillColor: color,
-                show: true,
-                errorbars: "x",
-                xerr: {
-                    show: true,
-                    asymmetric: false,
-                    upperCap: "squareCap",
-                    lowerCap: "squareCap",
-                    color: color,
-                    radius: 10
-                }
-            },
-            lines: {
-                show: true,
-                fill: false
-            }
-        };
-        dataset.push(options);
-        const crvStats = matsDataUtils.get_err(means, levels); // have to reverse because of data inversion
-        const minx = Math.min.apply(null, means);
-        const maxx = Math.max.apply(null, means);
-        crvStats.minx = minx;
-        crvStats.maxx = maxx;
-        dataset[curveIndex]['stats'] = crvStats;
-    }   // for curves
-
-    // account for error bars on xaxis
-    var xmax = xAxisMax + errorMax;
-    var xmin = xAxisMin - errorMax;
-    const xpad = (xmax - xmin) * 0.2;
-    var minx = xmin - xpad;
-    var maxx = xmax + xpad;
-    var ypad = (yAxisMax - yAxisMin) * 0.2;
-    var maxy = yAxisMax + ypad;
-    var miny = yAxisMin - ypad;
-    // generate y-axis
-    var yaxes = [];
-    var yaxis = [];
-    for (var dsi = 0; dsi < dataset.length; dsi++) {
-        var position = dsi === 0 ? "left" : "right";
-        var yaxesOptions = {
-            position: position,
-            color: 'grey',
-            axisLabel: 'level above ground in meters',
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 26,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
-            min: miny,
-            max: maxy
-        };
-        var yaxisOptions = {
-            zoomRange: [0.1, 10]
-        };
-        yaxes.push(yaxesOptions);
-        yaxis.push(yaxisOptions);
-    }
-    var pOptions = {
-        axisLabels: {
-            show: true
-        },
-        xaxes: [{
-            axisLabel: xAxisLabel,
-            color: 'grey',
-            min: minx,
-            max: maxx,
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: xAxisLabel.length > 40 ? 16 : 26,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 20,
-        }],
-        xaxis: {
-            zoomRange: [0.1, 10],
-            //max: xAxisMax > 0 ? xAxisMax * 1.6 : xAxisMax * 0.6,
-            max: maxx,
-            //min: xAxisMin < 0 ? xAxisMin * 1.6 : xAxisMin * 0.6
-            min: minx
-        },
-        yaxes: yaxes,
-        yaxis: yaxis,
-
-        legend: {
-            show: false,
-            container: "#legendContainer",
-            noColumns: 0
-        },
-        series: {
-            lines: {
-                show: true,
-                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
-            },
-            points: {
-                show: true,
-                radius: 1
-            },
-            shadowSize: 0
-        },
-        zoom: {
-            interactive: false
-        },
-        pan: {
-            interactive: false
-        },
-        selection: {
-            mode: "xy"
-        },
-        grid: {
-            hoverable: true,
-            clickable: true,
-            borderWidth: 3,
-            mouseActiveRadius: 50,
-            backgroundColor: "white",
-            axisMargin: 20
-        },
-        /* tooltips NOTE:
-         There are two kinds of tooltips...
-         1) content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-         xDateFormat: "%Y-%m-%d:%H",
-         onHover: function (flotItem, $tooltipEl) {
-         which will cause the y value to be presented with the text "<br>%x:<br>value %y where %y is the y value"
-         and ...
-         content: "<span style='font-size:150%'><strong>%ct</strong></span>"
-         which will present the text defined by a string in the last data position of the dataset array i.e.
-         [[x1,y1,"tooltiptext1"],[x2,y3,"tooltiptext2"]....[xn,yn,"tooltiptextn"]]
-         The tooltip text is expected to be an html snippet.
-         */
-
-        tooltip: true,
-        tooltipOpts: {
-            // the ct value is the third [2] element of the data series. This is the tooltip content.
-            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+            // end  if diffFrom == null
+        } else {
+            var diffResult;
+            //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
+            diffResult = matsDataUtils.getDataForProfileDiffCurve({
+                dataset:dataset,
+                diffFrom:diffFrom
+            });
+            d = diffResult.dataset;
+        } // end difference curve
+        // get the x min and max
+        for (var di = 0; di < d.length; di++) {
+            xmax = xmax > d[di][0] ? xmax : d[di][0];
+            xmin = xmin < d[di][0] ? xmin : d[di][0];
+            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
         }
-    };
-    //const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
+        // specify these so that the curve options generator has them available
+        curve['annotation'] = "";
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
+        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        dataset.push(cOptions);
+    }  // end for curves
 
-    // add black 0 line curve
-    //dataset.push({color: 'black', points: {show: false}, data: [[0, yAxisMin, "zero"], [0, yAxisMax, "zero"]]});
+    const resultOptions = matsWfipUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
     var result = {
         error: error,
         data: dataset,
-        options: pOptions,
-        //options: resultOptions,
+        options: resultOptions,
         basis: {
             plotParams: plotParams,
             queries: dataRequests

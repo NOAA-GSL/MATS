@@ -227,6 +227,9 @@ Template.graph.helpers({
     },
     errorBarsAllowed: function () {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile);
+    },
+    isProfile: function() {
+        return (Session.get('plotType') == matsTypes.PlotTypes.profile);
     }
 });
 

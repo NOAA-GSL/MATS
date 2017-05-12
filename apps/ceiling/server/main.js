@@ -156,7 +156,7 @@ const doCurveParams = function () {
 
 
         optionsMap = {
-            '60000 (any clound)': ['6000'],
+            '60000 (any cloud)': ['6000'],
             '500 (ceiling<500 feet)': ['50'],
             '3000 (ceiling <3000 feet)': ['300'],
             '1000 (ceiling <1000 feet)': ['100']

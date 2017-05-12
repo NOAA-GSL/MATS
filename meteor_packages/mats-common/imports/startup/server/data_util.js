@@ -396,7 +396,7 @@ const getDataForProfileUnMatchedDiffCurve = function(params) {
     // get the intersection of the levels
     const cLevels = mLevels.filter(function(n) {
             return sLevels.indexOf(n) !== -1;
-        });
+    });
     // itterate all the common levels
     for (var i = 0; i < cLevels.length; i++) { // each pressure level
         var cl = cLevels[i];
