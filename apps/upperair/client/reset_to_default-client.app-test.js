@@ -30,14 +30,14 @@ import {expect} from 'meteor/practicalmeteor:chai';
             done();
         });
 
-        it('Set model to middle option, expect region to be "firstRegionForMiddleModelOption"', function(){
+        it('Set model to middleModelOption  expect region to be firstRegionForMiddleModelOption', function(){
               matsParamUtils.setInputValueForParamAndtriggerChange('model',middleModelOption);
               var value = matsParamUtils.getValueForParamName('model');
               expect (value).to.equal(middleModelOption);
               var region = matsParamUtils.getValueForParamName('region');
               expect (region).to.equal(firstRegionForMiddleModelOption);
         });
-        it('click reset to default expect model to be RAP and region to be firstRegionForFirstModel', function(){
+        it('click reset to default expect model to be RAP and region to be firstRegionForFirstModelOption', function(){
               $('#reset').trigger('click'); // click the reset button
               var model = matsParamUtils.getValueForParamName('model');
               expect (model).to.equal(firstModelOption);

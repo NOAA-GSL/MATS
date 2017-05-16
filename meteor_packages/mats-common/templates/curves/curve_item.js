@@ -19,7 +19,7 @@ Template.curveItem.helpers({
     },
     removeCurve: function() {
       var confirmRemoveCurve = Session.get("confirmRemoveCurve");
-      return confirmRemoveCurve.label;
+      return confirmRemoveCurve ? confirmRemoveCurve.label : null;
     },
     displayEditXaxis: function() {
         if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {

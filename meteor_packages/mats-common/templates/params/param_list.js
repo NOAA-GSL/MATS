@@ -109,6 +109,7 @@ Template.paramList.events({
                 var isUnused = matsParamUtils.getInputElementForParamName(cname) !== undefined &&
                     matsParamUtils.getValueForParamName(cname) == matsTypes.InputTypes.unused;
                 if (isHidden || isUnused) {
+                //if (isHidden) {
                     curveNames.splice(cindex,1);
                 }
             }

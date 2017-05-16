@@ -59,3 +59,17 @@ Template.numberSpinner.onRendered(function () {
         refresh(this.name);
     });
 });
+
+
+Template.numberSpinner.events({
+    'change, blur': function (event) {
+        try {
+            event.target.checkValidity();
+            var text = event.currentTarget.value;
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
+    }
+});
+

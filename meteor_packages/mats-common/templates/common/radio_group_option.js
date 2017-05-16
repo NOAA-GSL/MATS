@@ -11,3 +11,17 @@ Template.radioGroup.helpers({
         return optionsMap[this];
     }
 });
+
+
+// Currently have no radioGroup params - this is undoubtedly broken - FIX ME
+Template.radioGroup.events({
+    'change, blur': function (event) {
+        try {
+            var text = event.currentTarget.value;
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
+    }
+});
+

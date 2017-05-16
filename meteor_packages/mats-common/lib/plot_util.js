@@ -8,7 +8,8 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 // currently selected inputs in the document.
 
 var getAxisText = function(plotType) {
-    var scatterAxisTextPattern = matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern;
+    var scatterAxisTextPattern = matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()});
+    var textPattern = scatterAxisTextPattern ? matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern : undefined;
     if (scatterAxisTextPattern === undefined) {
         return "";
     }

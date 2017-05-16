@@ -9,7 +9,8 @@ import { matsSelectUtils } from 'meteor/randyp:mats-common';
  */
 Template.select.onRendered( function () {
     const ref = this.data.name + '-' + this.data.type;
-    $("#" + ref).select2({minimumResultsForSearch: 20});
+    $("#" + ref).select2({minimumResultsForSearch: 20,closeOnSelect: false});
+
     const elem = document.getElementById(ref);
     try {
         // register refresh event for axis change to use to enforce a refresh
@@ -40,7 +41,7 @@ Template.select.onRendered( function () {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
         setError(e);
     }
-    });
+});
 
 Template.select.helpers({
     optionMaxLength: function() {
@@ -92,16 +93,34 @@ Template.select.helpers({
     }
 });
 
+const setValue = function(pName) {
+    const elem = matsParamUtils.getInputElementForParamName(pName);
+    const selectedOptions = elem.selectedOptions;
+    const options = elem.options;
+
+    if (selectedOptions === undefined || selectedOptions.length === 0 || elem.selectedIndex === -1) {
+        // set to the default - the 0th one
+        matsParamUtils.setValueTextForParamName(pName, matsTypes.InputTypes.unused);
+    } else {
+        if (selectedOptions.length === 1) {
+            matsParamUtils.setValueTextForParamName(pName, selectedOptions[0].text);
+        } else {
+            // selected options is greater than 1 - must be a multiple
+            const firstOption = selectedOptions[0];
+            const lastOption = selectedOptions[selectedOptions.length -1];
+            const text = firstOption.text + " .. " + lastOption.text;
+            matsParamUtils.setValueTextForParamName(pName, text);
+        }
+    }
+}
+
+
 Template.select.events({
     'change .data-input': function (event) {
         Session.set("elementChanged", Date.now());
-        if (event.currentTarget.options == [] || event.currentTarget.selectedIndex == -1) {
-            matsParamUtils.setValueTextForParamName(this.name, matsTypes.InputTypes.unused);
-        } else {
-            event.currentTarget.options &&
-            event.currentTarget.options.selectedIndex &&
-            event.currentTarget.options[event.currentTarget.options.selectedIndex] &&
-            matsParamUtils.setValueTextForParamName(this.name, event.currentTarget.options[event.currentTarget.options.selectedIndex].text);
+        const paramName =  event.target.name;
+        if (paramName === undefined) {
+            return false;
         }
         // These need to be done in the right order!
         // always check to see if an "other" needs to be hidden or disabled before refreshing
@@ -111,31 +130,67 @@ Template.select.events({
         document.getElementById("element-" + this.name).style.display = "none"; // be sure to hide the element div
         const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
         curveItem && curveItem.scrollIntoView(false);
+        setValue(paramName);
+        if (this.multiple) {
+            return true; // prevents the select 2 from closing on multiple selectors
+        }
+        $('#' + this.name + "-" + this.type).select2('close');
+        Session.set('lastUpdate', Date.now());
         return false;
     },
-    'change .selectAll': function (event) {
-        const selectorId = (event.currentTarget).attributes['data-selectid'].value;
-        const elem = document.getElementById(selectorId);
-        var select = false;
-        if (event.target.checked == true) {
-            select = true;
-        }
-        const elements = elem.options;
-        if (elements && elements.length !== undefined) {
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].selected = select;
+    'click .doneSelecting': function (event) {
+        Session.set("elementChanged", Date.now());
+        const controlElem = matsParamUtils.getControlElementForParamName(this.name);
+        $('#' + this.name + "-" + this.type).select2("close").trigger('change'); // apply the selection choices to the select2
+        $(controlElem).trigger('click');  // clicking the control element hides the selector
+        return false;
+    },
+    'click .selectAll': function (event) {
+        const elem = matsParamUtils.getInputElementForParamName(this.name);
+        var values = [];
+        for (var i=0; i<elem.options.length; i++) {
+             values.push(elem.options[i].text);
+         }
+        $('#' + this.name + "-" + this.type).select2().val(values).trigger('change');
+        return false;
+    },
+    'click .clearSelections': function (event) {
+        const elem = matsParamUtils.getInputElementForParamName(this.name);
+        $('#' + this.name + "-" + this.type).select2().val(null).trigger('change');
+        return false;
+    },
+    'click .doNotUse': function (event) {
+        const elem = matsParamUtils.getInputElementForParamName(this.name);
+        $('#' + this.name + "-" + this.type).select2().val(null).trigger('change');
+        return false;
+    },
+    'change, blur .item' : function (event) {
+        try {
+            var text = "";
+            if (event.target.multiple) {
+                const values = $(event.target).val();
+                if (values === null) { // happens if unused or empty
+                    text = matsTypes.InputTypes.unused;
+                } else {
+                    const firstOption = values[0];
+                    const lastOption = values[values.length - 1];
+                    text = firstOption + " .. " + lastOption;
+                }
+            } else {
+                text = $(event.target).val();
             }
+            if (this.type === matsTypes.InputTypes.select && (text === "" || text === undefined || text === null) &&
+                (this.default === -1 || this.default === undefined || this.default === null || event.currentTarget.selectedIndex == -1)) {
+                text = matsTypes.InputTypes.unused;
+                //$('#' + this.name + "-" + this.type).select2().val(null).trigger('change');
+            }
+            matsParamUtils.setValueTextForParamName(event.target.name, text);
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        matsParamUtils.setValueTextForParamName(event.target.dataset.name, "");  // will override text if values are selected
-        return false;
-    },
-    'click .selectClear': function (event) {
-        const selectorId = "#" + (event.currentTarget).attributes['data-selectid'].value;
-        $(selectorId).val([]);
-        matsParamUtils.setValueTextForParamName(this.name, "unused");
-        $('#' + matsTypes.InputTypes.controlButton + '-' + this.name).click();  // click the control button to clean up the display (hide the selector)
-        matsSelectUtils.checkHideOther(this);
-        matsSelectUtils.checkDisableOther(this);
-        return false;
+        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
     }
 });
