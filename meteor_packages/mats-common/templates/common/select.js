@@ -142,7 +142,17 @@ Template.select.events({
         Session.set("elementChanged", Date.now());
         const controlElem = matsParamUtils.getControlElementForParamName(this.name);
         $('#' + this.name + "-" + this.type).select2("close").trigger('change'); // apply the selection choices to the select2
-        $(controlElem).trigger('click');  // clicking the control element hides the selector
+        const editMode = Session.get("editMode");
+        const curveItem = (editMode === undefined && editMode === "") ? undefined : document.getElementById("curveItem-" + editMode);
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
+        if (editMode) {
+            $('#' + this.name + "-" + this.type).select2("close"); // use the close on the selector when editing
+        } else {
+            $(controlElem).trigger('click');  // clicking the control element hides the selector when not editing
+            $('#' + this.name + "-" + this.type).select2("close");
+        }
         return false;
     },
     'click .selectAll': function (event) {
@@ -188,9 +198,16 @@ Template.select.events({
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
-        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        const editMode = Session.get("editMode");
+        const curveItem = (editMode === undefined && editMode === "") ? undefined : document.getElementById("curveItem-" + editMode);
         if (curveItem) {
             $('#save').trigger('click');
         }
+        if (event.target.multiple) {
+            Session.set('editMode', editMode); // restore the editing of the curve item for muli selects
+            const controlElem = matsParamUtils.getControlElementForParamName(this.name);
+            $(controlElem).trigger('click');  // reopen the select2 - the regular open is not located properly so do it by clicking the control element button
+        }
+        return false;
     }
 });

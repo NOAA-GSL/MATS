@@ -44,7 +44,7 @@ import {expect} from 'meteor/practicalmeteor:chai';
               var region = matsParamUtils.getValueForParamName('region');
               expect (region).to.equal(firstRegionForFirstModelOption);
               var fcl = matsParamUtils.getValueForParamName('forecast-length');
-              expect (fcl).to.equal('0');
+              expect (fcl).to.equal('-99');
               var statistic = matsParamUtils.getValueForParamName('statistic');
               expect (statistic).to.equal('RMS');
               var label = matsParamUtils.getValueForParamName('label');

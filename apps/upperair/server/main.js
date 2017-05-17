@@ -94,8 +94,7 @@ const doCurveParams = function () {
                 options: myModels,   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                //default: myModels[0],
-                default: "RAP",
+                default: myModels[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -249,7 +248,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[myModels[0]][2],
+                default: forecastLengthOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -261,12 +260,12 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
                 options: [],
-                min: '1',
-                max: '1000',
+                min: 1,
+                max: 1000,
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '1',
+                default: 1,
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
@@ -279,12 +278,12 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
                 options: [],
-                min: '100',
-                max: '1050',
+                min: 100,
+                max: 1050,
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '1050',
+                default: 1050,
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
@@ -487,7 +486,7 @@ Meteor.startup(function () {
             "model2" : ["region2"],
             .
             .
-            "modeln" : ["regionn"]
+            "modeln" : ["region"]
         }
         forecastLengthOptionsMap = {
             "model1" : ["0","1", .....],

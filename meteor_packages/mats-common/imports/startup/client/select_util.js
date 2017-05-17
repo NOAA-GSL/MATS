@@ -261,14 +261,15 @@ const refresh = function (event, paramName) {
                         options = [];
                         matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
                     } else if (!myOptionsUsed && superiorOptionsUsed) { // superiors - use those
-                        options = matsParamUtils.typeSort(superiorOptions);
+                        options = superiorOptions;
                     } else if (myOptionsUsed && !superiorOptionsUsed) {  // mine - use mine
-                        options = matsParamUtils.typeSort(options);
+                        //options = options;
                     } else if (myOptionsUsed && superiorOptionsUsed) { // both - use the intersection
                         if ((options !== undefined && options.length === 0) || (superiorOptions !== undefined && superiorOptions.length === 0)) {
-                            options = matsParamUtils.typeSort(_.union(options, superiorOptions));
+                            //options = matsParamUtils.typeSort(_.union(options, superiorOptions));
+                            options = _.union(options, superiorOptions);
                         } else {
-                            options = matsParamUtils.typeSort(_.intersection(options, superiorOptions));
+                            options = _.intersection(options, superiorOptions);
                         }
                     } else {
                         options = []; // last resort - prevent an exception
@@ -292,7 +293,6 @@ const refresh = function (event, paramName) {
                     // which are used as markers in the select options pulldown. This is typical for models
                     const optionsGroupsKeys = Object.keys(optionsGroups);
                     for (var k = 0; k < optionsGroupsKeys.length; k++) {
-                        //options = options === null ? optionsGroups[optionsGroupsKeys[k]] : options.concat(optionsGroups[optionsGroupsKeys[k]].sort());
                         if (options === null) {
                             options = [];
                             options.push(optionsGroupsKeys[k]);
@@ -347,27 +347,10 @@ const refresh = function (event, paramName) {
                 }
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
-            // choose a default value for the select.
-            // check to see if a default is defined, however
-            // I may just have to choose the 0th element in the options list.
-            // if the selected default happens to be a disabled option, increment to the next one
-            const defaultOptionIndex = options.indexOf(param.default);
-            if (param.default === undefined || defaultOptionIndex === -1) {  // can't find the default
-                // set the default to the first valid thing in the current options list That is not a disabledOption
-                selectedOptionIndex = 0;
-                while (disabledOptions && disabledOptions.indexOf(options[selectedOptionIndex]) !== -1) {
-                    selectedOptionIndex++;
-                }
-            }
-            elem.selectedIndex = selectedOptionIndex;
+            // just choose the 0th element in the element options.
+            elem.selectedIndex = 0;
             elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
-            if (elem.selectedIndex === -1) {
-                elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
-                checkHideOther(param);
-                checkDisableOther(param);
-            } else {
-                elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
-            }
+            elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
             for (var i = 0; i < brothers.length; i++) {
                 const belem = brothers[i];
                 const belemSelectedOptions = $(belem.selectedOptions).map(function () {

@@ -13,8 +13,7 @@ Template.item.helpers({
             return;
         }
         if (matsParamUtils.getInputElementForParamName(this.name)) {
-            // This helper is for initialization. If I already have an element just return "" and let the event handling take care of the value
-            return '';
+            return this.default;
         }
         if (this.name === 'dates' || this.name == 'curve-dates') {
             var today = new Date();

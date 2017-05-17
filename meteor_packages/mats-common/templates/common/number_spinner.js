@@ -33,6 +33,9 @@ var refresh = function(name) {
 };
 
 Template.numberSpinner.helpers({
+    defaultValue: function() {
+        return this.default;
+    },
     min: function() {
         //default
         return this.min;
