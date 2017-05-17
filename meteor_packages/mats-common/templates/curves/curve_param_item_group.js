@@ -91,7 +91,21 @@ Template.curveParamItemGroup.helpers({
     value: function(elem){
         // have to get this from the session
         const curve = Session.get("Curves")[elem.index];
-        return (curve === undefined ? undefined : curve[elem.name]);
+        if (curve === undefined) {
+            return "";
+        }
+        var value = curve[elem.name];
+        var text = "";
+        if ( Object.prototype.toString.call( value ) === '[object Array]' ) {
+            if (value.length === 1) {
+                text = value[0];
+            } else if (value.length > 1){
+                text = value[0] + " .. " + value[value.length -1];
+            }
+        } else {
+            text = value;
+        }
+        return text;
     },
     defaultColor: function(elem){
         return elem.color;

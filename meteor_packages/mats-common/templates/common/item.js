@@ -13,8 +13,7 @@ Template.item.helpers({
             return;
         }
         if (matsParamUtils.getInputElementForParamName(this.name)) {
-            // This helper is for initialization. If I already have an element just return "" and let the event handling take care of the value
-            return '';
+            return this.default;
         }
         if (this.name === 'dates' || this.name == 'curve-dates') {
             var today = new Date();
@@ -196,77 +195,6 @@ Template.item.events({
             event.currentTarget.value = default_value;
         } else {
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name ) );
-        }
-    }
-});
-
-Template.textInput.events({
-    'click, change, blur': function (event) {
-        try {
-            // label is handled differently - special case because of NextCurveLabel stored in Session
-            const text = event.currentTarget.value;
-            if (event.target.name == "label" && Session.get('NextCurveLabel') == text) {
-            } else {
-                matsParamUtils.setValueTextForParamName(event.target.name, text);
-            }
-        } catch (error){
-            matsParamUtils.setValueTextForParamName(event.target.name, "");
-        }
-    }
-});
-
-Template.select.events({
-    'change, blur' : function (event) {
-        try {
-            var text = event.currentTarget.value;
-            if (this.type === matsTypes.InputTypes.select && (text === "" || text === undefined || text === null) &&
-                (this.default === -1 || this.default === undefined || this.default === null || event.currentTarget.selectedIndex == -1)) {
-                text = matsTypes.InputTypes.unused;
-            }
-            matsParamUtils.setValueTextForParamName(event.target.name, text);
-        } catch (error){
-            matsParamUtils.setValueTextForParamName(event.target.name, "");
-        }
-        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
-        if (curveItem) {
-            $('#save').trigger('click');
-        }
-    }
-});
-
-Template.numberSpinner.events({
-    'change, blur': function (event) {
-        try {
-            event.target.checkValidity();
-            var text = event.currentTarget.value;
-            matsParamUtils.setValueTextForParamName(event.target.name,text);
-        } catch (error){
-            matsParamUtils.setValueTextForParamName(event.target.name, "");
-        }
-    }
-});
-
-
-// Currently have no radioGroup params - this is undoubtedly broken - FIX ME
-Template.radioGroup.events({
-    'change, blur': function (event) {
-        try {
-            var text = event.currentTarget.value;
-            matsParamUtils.setValueTextForParamName(event.target.name,text);
-        } catch (error){
-            matsParamUtils.setValueTextForParamName(event.target.name, "");
-        }
-    }
-});
-
-// Currently have no checkboxGroup params - this is undoubtedly broken - FIX ME
-Template.checkboxGroup.events({
-    'change, blur': function (event) {
-        try {
-            var text = event.currentTarget.value;
-            matsParamUtils.setValueTextForParamName(event.target.name, text);
-        } catch (error) {
-            matsParamUtils.setValueTextForParamName(event.target.name, "");
         }
     }
 });
