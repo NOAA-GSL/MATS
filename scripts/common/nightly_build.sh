@@ -9,7 +9,7 @@ requestedApp="$1"
 
 cd /builds/buildArea
 
-su - www-data -c "cd /builds/buildArea && /builds/buildArea/build_deploy_apps.sh ${requestedApp}" 2>&1
+su - www-data -c "cd /builds/buildArea && /bin/bash /builds/buildArea/build_deploy_apps.sh ${requestedApp}" 2>&1
 
 /bin/systemctl restart nginx 2>&1
 
