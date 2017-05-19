@@ -14,11 +14,6 @@ dataProfile = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var axisMap = Object.create(null);
-    var xmax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
-    var ymax = Number.MIN_VALUE;
-    var ymin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
     var maxValidInterval = Number.MIN_VALUE;
     var curveIndex;
@@ -56,9 +51,9 @@ dataProfile = function (plotParams, plotFunction) {
     //var xAxisLabels = [];
     var errorMax = Number.MIN_VALUE;
     var maxValuesPerLevel = 0;
-    var d = [];
+    var partials = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-      // Determine all the plot params for this curve
+        // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
         curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -84,6 +79,8 @@ dataProfile = function (plotParams, plotFunction) {
         // need to know if it is a wind direction variable because we need to retrieve wind speed
         // and filter out any values that are coinciding with a wind speed less than 3mps
         const windVar = myVariable.startsWith('wd');
+        // stash this in the curve for post processing
+        curve['windVar'] = windVar;
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -114,12 +111,6 @@ dataProfile = function (plotParams, plotFunction) {
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // create database query statements - wfip2 has source AND truth data for statistics other than mean
         var statement;
-        // axisKey is used to determine which axis a curve should use.
-        // This axisMap object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
-        // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey = variableStr + ":" + statistic;
-        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
@@ -206,25 +197,68 @@ dataProfile = function (plotParams, plotFunction) {
                     throw ( new Error(truthQueryResult.error) );
                 }
             }  // if statistic is not mean
-            /* What we need for each curve is an array of arrays where each element has a time and an average of the corresponding values.
-             data = [ [time, value] .... [time, value] ] // where value is a statistic based on criterion, such as which sites have been requested?,
-             and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
-             need to be accounted for here. Also there can be missing times so we need to iterate through each set of times,
-             based on the minimum interval for the data set, and fill in missing times with null values.
 
-             We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+            /*
+             CONSIDER.... WHERE PS IS PARTIAL SUM i.e V(value) or V-T (value - truth) or VSQR(sqr(value-truth))
+             curve 0             t1      t2      t3  ...     tn
+             S1   S1  L1      PS111   PS112   PS113       PS11n
+             S1  L2      PS121   PS122   PS123       PS12n
+             S1  L3      PS131   PS132   PS133       PS13n
+             S1  Ln      PS1n1   PS1n2   PS1n3       PS1nn
 
-             For each valid time, and each valid level for that time we also need partial sums for all of the valid sites.
+             S2   S2  L1      PS211   PS212   PS213       PS21n
+             S2  L2      PS221   PS222   PS223       PS22n
+             S2  L3      PS231   PS232   PS233       PS23n
+             S2  Ln      PS2n1   PS2n2   PS2n3       PS2nn
 
-             We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
-             the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
-             criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+             SN   SN  L1      PSN11   PSN12   PSN13       PSN1n
+             SN  L2      PSN21   PSN22   PSN23       PSN2n
+             SN  L3      PSN31   PSN32   PSN33       PSN3n
+             SN  Ln      PSNn1   PSNn2   PSNn3       PSNnn
+
+             curve1             t1      t2      t3  ...     tn
+             S1   S1  L1      PS111   PS112   PS113       PS11n
+             S1  Ln      PS1n1   PS1n2   PS1n3       PS1nn
+
+             S2   S2  L1      PS211   PS212   PS213       PS21n
+             S2  Ln      PS2n1   PS2n2   PS2n3       PS2nn
+
+             SN   SN  L1      PSN11   PSN12   PSN13       PSN1n
+             SN  Ln      PSNn1   PSNn2   PSNn3       PSNnn
+
+             From these partials we can calculate statistics mean, bias, MAE, and RMSE
+             The first pass data that we need for each curve is an array of arrays where each element has a time and a partial of the corresponding value and truth.
+             data = [ [time, partial] .... [time, partial] ]. The value is a partial based on the requested statistic.
+             Filtering:
+             Filtering is by time boundaries, by which sites have been requested, what are the level boundaries (top/bottom),
+             and what are the level and site completeness values.
+             times are always effectively filtered. Filtering means that we exclude any data that is not within
+             the compleness value. Level completeness means that if a site does not have a minimum percentage of the possible levels it must be left out. Site
+             completeness means that if a time does not have a minimum percentage of the possible sites it must be left out.
+
+             From this data we can calculate the requested statistic i.e. mean, bias, mae, rmse by using the partial sums.
+
+             Matching:
+             For matching we need ...
+             1) match by time - requires the subset(intersection) of all the times for each curve - timesBasis
+             2) match by site - requires the subset of all the sites for each curve - sitesBasis
+             3) match by level - requires the subset of all the levels that are present for all the sites for each curve - levelsBasis
+             These subsets should be created on the fly in the query for each curve.
+             The overall subsets can be calculated by intersecting the curve subsets after the first pass and only if matching is requested.
+             Matching should occur in this order
+             if match by time requested do that first. Toss out any times that are not present in all the curves
+             if match by site requested do that second. Toss out any sites that are not present in all the curves
+             if match by level is requested do that last. Toss out any levels that are not present in each site for each curve
+
+             For example if level matching is requested we need to use intersection of all the levelsBasis (allLevelsBasis) for all the curves
+             and only include data that has levels that are in allLevelsBasis. It is the same for times and siteids.
              The data from the query is of the form
              result =  {
              error: error,
              data: resultData,
              levelsBasis: levelsBasis,
              sitesBasis: sitesBasis,
+             timesBasis: timesBasis,
              allTimes: allTimes,
              minInterval: minInterval,
              mean:cumulativeMovingAverage
@@ -232,24 +266,24 @@ dataProfile = function (plotParams, plotFunction) {
              where ....
              resultData = {
              time0: {
-                 sites: {
-                     site0: {
-                         levels:[],
-                         values:[],
-                         sum: Number,
-                         mean: Number,
-                         numLevels: Number,
-                         max: Number,
-                         min: Number
-                     },
-                     site1: {...},
-                     .
-                     .
-                     siten:{...},
-                 }
-                 timeMean: Number   // cumulativeMovingMean for this time
-                 timeLevels: [],
-                 timeSites:[]
+             sites: {
+             site0: {
+             levels:[],  // inclusive levels
+             values:[],  // partials for the inclusive levels
+             sum: Number,
+             mean: Number,
+             numLevels: Number,
+             max: Number,
+             min: Number
+             },
+             site1: {...},
+             .
+             .
+             siten:{...},
+             }
+             timeMean: Number   // cumulativeMovingMean for this time
+             timeLevels: [],
+             timeSites:[]
              },
              time1:{....},
              .
@@ -260,7 +294,6 @@ dataProfile = function (plotParams, plotFunction) {
              There is at least one real (non null) value for each site.
              */
 
-            // post process
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = queryResult.levelsBasis;
@@ -329,6 +362,34 @@ dataProfile = function (plotParams, plotFunction) {
                     }
                 }
             }
+            partials[curveIndex] = {verificationLevelValues:verificationLevelValues,truthLevelValues:truthLevelValues};
+        }
+    }
+
+
+    // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
+    // now get levelStats
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var d = [];
+        const curve = curves[curveIndex];
+        const diffFrom = curve.diffFrom;
+        const windVar = curve['windVar'];
+        // axisKey is used to determine which axis a curve should use.
+        // This axisMap object is used like a set and if a curve has the same
+        // variable and statistic (axisKey) it will use the same axis,
+        // The axis number is assigned to the axisMap value, which is the axisKey.
+        var axisKey = variableStr + ":" + statistic;
+        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var axisMap = Object.create(null);
+        var xmax = Number.MIN_VALUE;
+        var xmin = Number.MAX_VALUE;
+        var ymax = Number.MIN_VALUE;
+        var ymin = Number.MAX_VALUE;
+        var statistic = curve['statistic'];
+
+        var verificationLevelValues = partials[curveIndex].verificationLevelValues;
+        var truthLevelValues = partials[curveIndex].truthLevelValues;
+        if (diffFrom === null || diffFrom === undefined) {
             // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
             // now get levelStats
 

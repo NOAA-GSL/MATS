@@ -219,33 +219,33 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             /*
              We must map the query row result to a data structure like this...
              var resultData = {
-             time0: {
-             sites{
-             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-             levels: [],
-             values: [],
-             sum: 0;
-             mean: 0;
-             numLevels: numLevels;
-             max: max;
-             min: min
-             },
-             site1: {..},
-             .
-             .
-             site2: {...},
-             .
-             .
-             siten: {...}
-             }
-             timeMean: Number,   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
-             },
-             time1:{ .... },
-             .
-             .
-             timen:{ ... },
+                 time0: {
+                     sites{
+                         site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+                             levels: [],
+                             values: [],
+                             sum: 0;
+                             mean: 0;
+                             numLevels: numLevels;
+                             max: max;
+                             min: min
+                         },
+                         site1: {..},
+                         .
+                         .
+                         site2: {...},
+                         .
+                         .
+                         siten: {...}
+                     }
+                     timeMean: Number,   // cumulativeMovingMean for this time
+                     timeLevels: [],
+                     timeSites:[]
+                     },
+                time1:{ .... },
+                     .
+                     .
+                timen:{ ... },
              };
              */
             var utctime = 0;

@@ -15,21 +15,6 @@ Template.item.helpers({
         if (matsParamUtils.getInputElementForParamName(this.name)) {
             return this.default;
         }
-        if (this.name === 'dates' || this.name == 'curve-dates') {
-            var today = new Date();
-            var thenDate = new Date(today.getTime() - 30*24*60*60*1000);
-            var thenyr = thenDate.getFullYear();
-            var thenday = thenDate.getDate();
-            var thenmonth = thenDate.getMonth() + 1;
-            var then =  thenmonth + '/' + thenday + "/" + thenyr;
-
-            var yr = today.getFullYear();
-            var day = today.getDate();
-            var month = today.getMonth() + 1;
-            var now = month + '/' + day + "/" + yr;
-            this.default = then + " to " + now;
-            this.value = then + " to " + now;
-        }
         if (this.value) {
             return this.value;
         } else {
@@ -101,12 +86,6 @@ Template.item.helpers({
 });
 
 Template.item.events({
-    // 'blur .control-button': function (event) {
-    //     if (this.type == matsTypes.InputTypes.select) {
-    //         $('#' + matsTypes.InputTypes.controlButton + '-' + this.name).click();
-    //     }
-    //     Session.set("elementChanged", Date.now());
-    // },
     'click .control-button': function (event) {
         Session.set("elementChanged", Date.now());
         var elem = document.getElementById(matsTypes.InputTypes.element + "-" + this.name);
