@@ -375,6 +375,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         // remove this level - filter it out
                         levels.splice(l, 1);
                         values.splice(l, 1);
+                        windSpeeds.splice(l,1);
                     } else {
                         allLevelsSet.add(lvl);
                     }
@@ -405,6 +406,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 }
                 resultData[time].sites[siteid].levels = levels;
                 resultData[time].sites[siteid].values = values;
+                if (myVariable === "wd") {
+                    // have to return windSpeeds for vectors
+                    resultData[time].sites[siteid].windSpeeds = windSpeeds;
+                }
                 resultData[time].sites[siteid].sum = sum;
                 resultData[time].sites[siteid].numLevels = numLevels;
                 resultData[time].sites[siteid].mean = mean;

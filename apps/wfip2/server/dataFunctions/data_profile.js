@@ -430,26 +430,37 @@ dataProfile = function (plotParams, plotFunction) {
         var allTimeSubset = [];
         var allSiteSubset = [];
         var allLevelSubset = [];
-        var tmp = [];
-
+        var tmp;
         if (matchTime) {
             tmp =[];
             for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                tmp.push(curves[curveIndex]['timeSubset']);
+                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                // only subset real data curves - not diff curves
+                if (dataCurve) {
+                    tmp.push(curves[curveIndex]['timeSubset']);
+                }
             }
             allTimeSubset = _.intersection.apply(_, tmp);
         }
         if (matchSite) {
             tmp = [];
             for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                tmp.push(curves[curveIndex]['siteSubset']);
+                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                // only subset real data curves - not diff curves
+                if (dataCurve) {
+                    tmp.push(curves[curveIndex]['siteSubset']);
+                }
             }
             allSiteSubset = _.intersection.apply(_, tmp);
         }
         if (matchLevel) {
             tmp = [];
             for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                tmp.push(curves[curveIndex]['levelSubset']);
+                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                // only subset real data curves - not diff curves
+                if (dataCurve) {
+                    tmp.push(curves[curveIndex]['levelSubset']);
+                }
             }
             allLevelSubset = _.intersection.apply(_, tmp);
         }
@@ -494,7 +505,6 @@ dataProfile = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var ymin = Number.MAX_VALUE;
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        var d = [];
         curve = curves[curveIndex];
         var partials = curve['partials'];
         var diffFrom = curve.diffFrom;
@@ -526,7 +536,7 @@ dataProfile = function (plotParams, plotFunction) {
                     }
                 }
             }
-            d = [];
+            var d = [];
             var values = [];
             var levels = [];
             for (var level in levelSums ) {
@@ -549,9 +559,8 @@ dataProfile = function (plotParams, plotFunction) {
                 values.push(value);
                 xmin = xmin < value ? xmin : value;
                 xmax = xmax > value ? xmax : value;
-                console.log("ymin", ymin,"ymax",ymax,"level",level);
-                ymin = ymin < Number(level) ? ymin : Number(level);
-                ymax = ymax > Number(level) ? ymax : Number(level);
+                ymin = Number(ymin) < Number(level) ? Number(ymin) : Number(level);
+                ymax = Number(ymax) > Number(level) ? Number(ymax) : Number(level);
                 /*
                 DATASET ELEMENTS:
                     series: [data,data,data ...... ]   each data is itself an array
@@ -590,8 +599,12 @@ dataProfile = function (plotParams, plotFunction) {
                     "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                     "<br>  stde: " + errorResult.stde_betsy +
                     "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4);
-                d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
-                // end  if diffFrom == null
+                 if (matching) {
+                     d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
+                 } else {
+                    // no error bars if unmatched
+                    d.push([value, level, 0, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
+                }
             }
             // get the overall stats for the text output
             var curveStats = matsDataUtils.get_err(values, levels);
@@ -599,24 +612,37 @@ dataProfile = function (plotParams, plotFunction) {
             const maxx = Math.max.apply(null, values);
             curveStats.minx = minx;
             curveStats.maxx = maxx;
-
+            // end  if diffFrom == null
         } else {
-            diffResult = matsDataUtils.getDataForProfileDiffCurve({
-                    dataset:d,
+            // this is a difference curve
+            // calculate the data based on matching or unmatched
+            var diffResult;
+            if (matching) {
+                //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
+                //diffResult = matsDataUtils.getDataForProfileMatchingDiffCurve({
+                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                    dataset: dataset,
+                    diffFrom: diffFrom
+                });
+            } else {
+                // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
+                //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
+                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                    dataset:dataset,
                     diffFrom:diffFrom
                 });
-                d = diffResult.dataset;
-        } // end difference curve
-
-        if (diffResult !== null) {
+            }
+            d = diffResult.dataset;
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];
                 xmin = xmin < d[di][0] ? xmin : d[di][0];
-                ymax = ymax > d[di][1] ? ymax : d[di][1];
-                ymin = ymin < d[di][1] ? ymin : d[di][1];
+                ymax = Number(ymax) > Number(d[di][1]) ? Number(ymax) : Number(d[di][1]);
+                ymin = Number(ymin) < Number(d[di][1]) ? Number(ymin) : Number(d[di][1]);
             }
-        }
+
+        } // end difference curve
+
         // specify these so that the curve options generator has them available
         curve['annotation'] = "";
         curve['ymin'] = ymin;
