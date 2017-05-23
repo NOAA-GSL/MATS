@@ -842,6 +842,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     xmax = xmax + errorMax;
     xmin = xmin - errorMax;
     const xpad = (xmax - xmin) * 0.05;
+    const ypad = (ymax - ymin) * 0.05;
     const options = {
         axisLabels: {
             show: true
@@ -873,7 +874,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
         yaxes: [{
             position:"left",
             color: 'grey',
-            axisLabel: ' Pressure (hPa)',
+            axisLabel: ' meters',
             axisLabelColour: "black",
             font: {
                 size: 20,
@@ -889,8 +890,8 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: 40,
-            max: 180
+            min: ymin - ypad,
+            max: ymax + ypad
         }],
         yaxis: [{
             zoomRange: [0.1, null]
