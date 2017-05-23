@@ -169,6 +169,8 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
+                // queryWFIP2DB has embedded quality control for windDir
+                // if corresponding windSpeed < 3ms null the windDir
                 queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
@@ -176,15 +178,6 @@ dataSeries = function (plotParams, plotFunction) {
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                // if (error.indexOf('0 data records found') !== -1) {
-                //     dataset.push({
-                //         annotation: "No Data Found",
-                //         color: 'red',
-                //         points: {show: true},
-                //         data: [[xAxisMin, 0, "zero"], [xAxisMax, 0, "zero"]]
-                //     });
-                //     continue;
-                // }
                 throw (new Error(error));
             }
             var truthQueryResult = queryResult;
