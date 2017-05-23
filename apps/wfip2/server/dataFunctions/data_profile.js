@@ -151,6 +151,8 @@ dataProfile = function (plotParams, plotFunction) {
             //console.log("statement: " + statement);
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
+            // queryWFIP2DB has embedded quality control for windDir
+            // if corresponding windSpeed < 3ms null the windDir
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
