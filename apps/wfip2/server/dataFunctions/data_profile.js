@@ -14,11 +14,6 @@ dataProfile = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var axisMap = Object.create(null);
-    var xmax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
-    var ymax = Number.MIN_VALUE;
-    var ymin = Number.MAX_VALUE;
     var max_verificationRunInterval = Number.MIN_VALUE;
     var maxValidInterval = Number.MIN_VALUE;
     var curveIndex;
@@ -29,6 +24,16 @@ dataProfile = function (plotParams, plotFunction) {
     var t;
     var i;
     var n;
+    var diffFrom;
+    var statistic;
+    var windVar;
+    var partials;
+    var timeObj;
+    var sites;
+    var matchTime = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.time) !== -1);
+    var matchLevel = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.level) !== -1);
+    var matchSite = (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (plotParams.matchFormat.indexOf(matsTypes.MatchFormats.site) !== -1);
+
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         curve = curves[curveIndex];
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
@@ -52,16 +57,14 @@ dataProfile = function (plotParams, plotFunction) {
         }
 
     }
-    //var xAxisLabel = "";
-    //var xAxisLabels = [];
     var errorMax = Number.MIN_VALUE;
     var maxValuesPerLevel = 0;
-    var d = [];
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-      // Determine all the plot params for this curve
+        // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
         curve = curves[curveIndex];
-        var diffFrom = curve.diffFrom;
+        partials = {};   // recalculate for each curve
+        diffFrom = curve.diffFrom;
         var label = curve['label'];
         var dataSource = curve['data-source'];
         var dataSource_is_instrument = curve.dataSource_is_instrument;
@@ -83,7 +86,9 @@ dataProfile = function (plotParams, plotFunction) {
         }
         // need to know if it is a wind direction variable because we need to retrieve wind speed
         // and filter out any values that are coinciding with a wind speed less than 3mps
-        const windVar = myVariable.startsWith('wd');
+        windVar = myVariable.startsWith('wd');
+        // stash this in the curve for post processing
+        curve['windVar'] = windVar;
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -108,18 +113,12 @@ dataProfile = function (plotParams, plotFunction) {
         var curveDates = curve['curve-dates'];
         var curveDatesDateRangeFrom = matsDataUtils.dateConvert(curveDates.split(' - ')[0]); // get the from part
         var curveDatesDateRangeTo = matsDataUtils.dateConvert(curveDates.split(' - ')[1]); // get the to part
-        var statistic = curve['statistic'];
+        statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // create database query statements - wfip2 has source AND truth data for statistics other than mean
         var statement;
-        // axisKey is used to determine which axis a curve should use.
-        // This axisMap object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
-        // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey = variableStr + ":" + statistic;
-        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
@@ -206,25 +205,68 @@ dataProfile = function (plotParams, plotFunction) {
                     throw ( new Error(truthQueryResult.error) );
                 }
             }  // if statistic is not mean
-            /* What we need for each curve is an array of arrays where each element has a time and an average of the corresponding values.
-             data = [ [time, value] .... [time, value] ] // where value is a statistic based on criterion, such as which sites have been requested?,
-             and what are the level boundaries?, and what are the time boundaries?. Levels and times have been built into the query but sites still
-             need to be accounted for here. Also there can be missing times so we need to iterate through each set of times,
-             based on the minimum interval for the data set, and fill in missing times with null values.
 
-             We also have filtering... if levels or sites are filtered, each axis must have the same intersection for the filtered attribute.
+            /*
+             CONSIDER.... WHERE PS IS PARTIAL SUM i.e V(value) or V-T (value - truth) or VSQR(sqr(value-truth))
+             curve 0             t1      t2      t3  ...     tn
+             S1   S1  L1      PS111   PS112   PS113       PS11n
+             S1  L2      PS121   PS122   PS123       PS12n
+             S1  L3      PS131   PS132   PS133       PS13n
+             S1  Ln      PS1n1   PS1n2   PS1n3       PS1nn
 
-             For each valid time, and each valid level for that time we also need partial sums for all of the valid sites.
+             S2   S2  L1      PS211   PS212   PS213       PS21n
+             S2  L2      PS221   PS222   PS223       PS22n
+             S2  L3      PS231   PS232   PS233       PS23n
+             S2  Ln      PS2n1   PS2n2   PS2n3       PS2nn
 
-             We can be requested to filter by siteids or levels, times are always effectively filtered. Filtering means that we exclude any data that is not consistent with
-             the intersection of the filter values. For example if level matching is requested we need to find the intersection of all the level arrays for the given
-             criteria and only include data that has levels that are in that intersection. It is the same for times and siteids.
+             SN   SN  L1      PSN11   PSN12   PSN13       PSN1n
+             SN  L2      PSN21   PSN22   PSN23       PSN2n
+             SN  L3      PSN31   PSN32   PSN33       PSN3n
+             SN  Ln      PSNn1   PSNn2   PSNn3       PSNnn
+
+             curve1             t1      t2      t3  ...     tn
+             S1   S1  L1      PS111   PS112   PS113       PS11n
+             S1  Ln      PS1n1   PS1n2   PS1n3       PS1nn
+
+             S2   S2  L1      PS211   PS212   PS213       PS21n
+             S2  Ln      PS2n1   PS2n2   PS2n3       PS2nn
+
+             SN   SN  L1      PSN11   PSN12   PSN13       PSN1n
+             SN  Ln      PSNn1   PSNn2   PSNn3       PSNnn
+
+             From these partials we can calculate statistics mean, bias, MAE, and RMSE
+             The first pass data that we need for each curve is an array of arrays where each element has a time and a partial of the corresponding value and truth.
+             data = [ [time, partial] .... [time, partial] ]. The value is a partial based on the requested statistic.
+             Filtering:
+             Filtering is by time boundaries, by which sites have been requested, what are the level boundaries (top/bottom),
+             and what are the level and site completeness values.
+             times are always effectively filtered. Filtering means that we exclude any data that is not within
+             the compleness value. Level completeness means that if a site does not have a minimum percentage of the possible levels it must be left out. Site
+             completeness means that if a time does not have a minimum percentage of the possible sites it must be left out.
+
+             From this data we can calculate the requested statistic i.e. mean, bias, mae, rmse by using the partial sums.
+
+             Matching:
+             For matching we need ...
+             1) match by time - requires the subset(intersection) of all the times for each curve - timesBasis
+             2) match by site - requires the subset of all the sites for each curve - sitesBasis
+             3) match by level - requires the subset of all the levels that are present for all the sites for each curve - levelsBasis
+             These subsets should be created on the fly in the query for each curve.
+             The overall subsets can be calculated by intersecting the curve subsets after the first pass and only if matching is requested.
+             Matching should occur in this order
+             if match by time requested do that first. Toss out any times that are not present in all the curves
+             if match by site requested do that second. Toss out any sites that are not present in all the curves
+             if match by level is requested do that last. Toss out any levels that are not present in each site for each curve
+
+             For example if level matching is requested we need to use intersection of all the levelsBasis (allLevelsBasis) for all the curves
+             and only include data that has levels that are in allLevelsBasis. It is the same for times and siteids.
              The data from the query is of the form
              result =  {
              error: error,
              data: resultData,
              levelsBasis: levelsBasis,
              sitesBasis: sitesBasis,
+             timesBasis: timesBasis,
              allTimes: allTimes,
              minInterval: minInterval,
              mean:cumulativeMovingAverage
@@ -232,24 +274,24 @@ dataProfile = function (plotParams, plotFunction) {
              where ....
              resultData = {
              time0: {
-                 sites: {
-                     site0: {
-                         levels:[],
-                         values:[],
-                         sum: Number,
-                         mean: Number,
-                         numLevels: Number,
-                         max: Number,
-                         min: Number
-                     },
-                     site1: {...},
-                     .
-                     .
-                     siten:{...},
-                 }
-                 timeMean: Number   // cumulativeMovingMean for this time
-                 timeLevels: [],
-                 timeSites:[]
+             sites: {
+             site0: {
+             levels:[],  // inclusive levels
+             values:[],  // partials for the inclusive levels
+             sum: Number,
+             mean: Number,
+             numLevels: Number,
+             max: Number,
+             min: Number
+             },
+             site1: {...},
+             .
+             .
+             siten:{...},
+             }
+             timeMean: Number   // cumulativeMovingMean for this time
+             timeLevels: [],
+             timeSites:[]
              },
              time1:{....},
              .
@@ -260,7 +302,6 @@ dataProfile = function (plotParams, plotFunction) {
              There is at least one real (non null) value for each site.
              */
 
-            // post process
             var levelCompleteness = curve['level-completeness'];
             var siteCompleteness = curve['site-completeness'];
             var levelBasis = queryResult.levelsBasis;
@@ -275,18 +316,22 @@ dataProfile = function (plotParams, plotFunction) {
             var verificationLevelValues = {};
             var truthLevelValues = {};
             var allTimes;
+            var timeSubset = [];
+            var siteSubset = [];
+            var levelSubset = [];
             if (statistic == "mean") {
                 allTimes = queryResult.allTimes;
             } else {
                 allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
             }
+            // filter for sites and levels and calculate partial sums
             for (t = 0; t < allTimes.length; t++) {
                 /*
                  If statistic is not "mean" then we need a set of truth values to diff from the verification values.
                  The sites and levels have to match for the truth to make any sense.
                  */
                 time = allTimes[t];
-                var timeObj = queryResult.data[time];
+                timeObj = queryResult.data[time];
                 var verificationSites = Object.keys(timeObj.sites).map(Number);
                 var truthSites = [];
                 var truthTimeObj;
@@ -294,176 +339,281 @@ dataProfile = function (plotParams, plotFunction) {
                     truthTimeObj = truthQueryResult.data[time];
                     truthSites = Object.keys(truthTimeObj.sites).map(Number);
                 }
-                var sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
+                sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
                 var sitesLength = sites.length;
                 var includedSites = _.intersection(sites, siteBasis);
                 var sitesQuality = (includedSites.length / siteBasis.length) * 100;
                 if (sitesQuality > siteCompleteness) {
                     // time is qualified for sites, count the qualified levels
                     for (var si = 0; si < sitesLength; si++) {
+                        site = sites[si];
                         var sLevels;
-                        var verificationValues = timeObj.sites[[sites[si]]].values;
+                        var verificationValues = {};
+                        for (var l = 0; l < timeObj.sites[site].levels.length; l++) {
+                            verificationValues[timeObj.sites[site].levels[l]] = timeObj.sites[site].values[l];
+                        }
                         var truthValues;
                         if (statistic != "mean") {
-                            sLevels = _.intersection(timeObj.sites[[sites[si]]].levels, truthTimeObj.sites[[sites[si]]].levels);
-                            truthValues = truthTimeObj.sites[[sites[si]]].values;
+                            sLevels = _.intersection(timeObj.sites[site].levels, truthTimeObj.sites[site].levels);
+                            var truthValues = {};
+                            for (var l = 0; l < timeObj.sites[site].sLevels.length; l++) {
+                                truthValues[truthTimeObj.sites[site].sLevels[l]] = truthTimeObj.sites[site].values[l];
+                            }
                         } else {
-                            sLevels = timeObj.sites[[sites[si]]].levels;
+                            sLevels = timeObj.sites[site].levels;
                         }
                         var includedLevels = _.intersection(sLevels, levelBasis);
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
                             for (var l = 0; l < sLevels.length; l++) {
-                                if (verificationLevelValues[sLevels[l]] === undefined) {
-                                    verificationLevelValues[sLevels[l]] = [];
+                                level = sLevels[l];
+                                if (timeSubset[timeSubset.length -1] !== time) {
+                                    timeSubset.push(time);
                                 }
-                                verificationLevelValues[sLevels[l]].push(verificationValues[l]);
-                                if (statistic != "mean") {
-                                    if (truthLevelValues[sLevels[l]] === undefined) {
-                                        truthLevelValues[sLevels[l]] = [];
-                                    }
-                                    truthLevelValues[sLevels[l]].push(truthValues[l]);
+                                if (siteSubset[siteSubset.length -1] !== site) {
+                                    siteSubset.push(site);
+                                }
+                                if (levelSubset[levelSubset.length -1] !== level) {
+                                    levelSubset.push(level);
+                                }
+                                if (partials[time] === undefined) {
+                                    partials[time] = {};
+                                }
+                                if (partials[time][site] === undefined) {
+                                    partials[time][site] = {};
+                                }
+                                switch (statistic) {
+                                    case "bias":
+                                        partials[time][site][level] = truthValues[level] - verificationValues[l];
+                                        break;
+                                    case "mae":
+                                        // bias and mae are almost the same.... mae just absolutes the difference
+                                        partials[time][site][level] = Math.abs(truthValues[level] - verificationValues[level]);
+                                        break;
+                                    case "rmse":
+                                        partials[time][site][level] = Math.pow(truthValues[level] - verificationValues[level], 2);  // square the difference
+                                        break;
+                                    case "mean":
+                                        partials[time][site][level] = verificationValues[level]; // just the verification value - no truth
+                                    default:
                                 }
                             }
                         } // else don't count it in - skip over it, it isn't complete enough
                     }
                 }
             }
-            // now we have verificationLevelValues and truthLevelValues that are qualified by site and level completeness
-            // now get levelStats
+            curves[curveIndex]['partials'] = partials;
+            curves[curveIndex]['timeSubset'] = timeSubset;
+            curves[curveIndex]['siteSubset'] = siteSubset;
+            curves[curveIndex]['levelSubset'] = levelSubset;
 
-            var levelStats = {};
-            var qualifiedLevels;
-            if (statistic == "mean") {
-                qualifiedLevels = Object.keys(verificationLevelValues);
-            } else {
-                qualifiedLevels = _.intersection(Object.keys(verificationLevelValues), Object.keys(truthLevelValues));
+            // now we have partial sums that are qualified by site and level completeness
+            // we also have time subset, site subset and level subset to be used in matching
+        } else { // end if not diff curve//
+            // difference curve
+            // difference curves always come after data derived curves so we know that we are done with calculating partials after the first diff curve
+            break; // stop for curves
+        }
+    } // end for curves
+
+    // matching goes here
+    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (matchLevel || matchSite || matchTime)) {
+/*
+        For matching we need ...
+        1) match by time - requires the subset(intersection) of all the times for all curves
+        2) match by site - requires the subset of all the sites for all curves
+        3) match by level - requires the subset of all the levels that are present for all the sites for all curves
+*/
+        // intersect the subsets for all the curves depending on which matching criteria
+        var allTimeSubset = [];
+        var allSiteSubset = [];
+        var allLevelSubset = [];
+        var tmp = [];
+
+        if (matchTime) {
+            tmp =[];
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                tmp.push(curves[curveIndex]['timeSubset']);
             }
-            var statValue;
-            var statSum;
-            var statNum;
-            var values;
-            var vIndex;
-            switch (statistic) {
-                case "bias":
-                case "mae":
-                    // bias and mae are almost the same.... mae just absolutes the difference
-                    // find siteLevelBias and sum it in
-                    try {
-                        for (l = 0; l < qualifiedLevels.length; l++) {
-                            statNum = 0;
-                            statSum = 0;
-                            values = verificationLevelValues[qualifiedLevels[l]];
-                            truthValues = truthLevelValues[qualifiedLevels[l]];
-                            for (vIndex = 0; vIndex < values.length; vIndex++) {
-                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                                if (windVar) {
-                                    if (statValue > 180) {
-                                        statValue = statValue - 360;
-                                    } else if (statValue < -180) {
-                                        statValue = statValue + 360;
-                                    }
-                                }
-                                if (statistic == "mae") {
-                                    statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                                }
-                                statSum += statValue;
-                                statNum++;
-                            }
-                            if (levelStats[qualifiedLevels[l]] === undefined) {
-                                levelStats[qualifiedLevels[l]] = {};
-                            }
-                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
-                        }
-                    } catch (ignore) {
-                        // apparently there is no data in the truth curve that matches this time
-                        statValue = null;
+            allTimeSubset = _.intersection.apply(_, tmp);
+        }
+        if (matchSite) {
+            tmp = [];
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                tmp.push(curves[curveIndex]['siteSubset']);
+            }
+            allSiteSubset = _.intersection.apply(_, tmp);
+        }
+        if (matchLevel) {
+            tmp = [];
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                tmp.push(curves[curveIndex]['levelSubset']);
+            }
+            allLevelSubset = _.intersection.apply(_, tmp);
+        }
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+            curve = curves[curveIndex];
+            var partials = curve['partials'];
+            var filteredPartials = {};
+            //filter the partials by time, site, and level as requested
+            for (var time in partials) {
+                if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
+                    continue;  // skip this time, it doesn't match
+                }
+                for (var site in partials[time]) {
+                    if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
+                        continue;  // skip this site, it doesn't match
                     }
-                    break;
-                case "rmse":
-                    try {
-                        for (l = 0; l < qualifiedLevels.length; l++) {
-                            statNum = 0;
-                            statSum = 0;
-                            values = verificationLevelValues[qualifiedLevels[l]];
-                            truthValues = truthLevelValues[qualifiedLevels[l]];
-                            for (vIndex = 0; vIndex < values.length; vIndex++) {
-                                statValue = Math.abs(values[vIndex] - truthValues[vIndex]);
-                                if (windVar) {
-                                    if (statValue > 180) {
-                                        statValue = statValue - 360;
-                                    } else if (statValue < -180) {
-                                        statValue = statValue + 360;
-                                    }
-                                }
-                                statValue = Math.pow(statValue, 2);  // square the difference
-                                statSum += statValue;
-                                statNum++;
-                            }
-                            if (levelStats[qualifiedLevels[l]] === undefined) {
-                                levelStats[qualifiedLevels[l]] = {};
-                            }
-                            levelStats[qualifiedLevels[l]][statistic] = Math.sqrt(statSum / statNum);
+                    for (var level in partials[time][site]) {
+                        if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
+                            continue;  // skip this level, it doesn't match
                         }
-                    } catch (ignore) {
-                        statValue = null;
-                    }
-                    break;
-                case "mean":
-                default:
-                    try {
-                        statNum = 0;
-                        statSum = 0;
-                        for (l = 0; l < qualifiedLevels.length; l++) {
-                            statSum = _.reduce(verificationLevelValues[qualifiedLevels[l]], function (a, b) {
-                                return a + b;
-                            }, 0);
-                            statNum = verificationLevelValues[qualifiedLevels[l]].length;
-                            if (levelStats[qualifiedLevels[l]] === undefined) {
-                                levelStats[qualifiedLevels[l]] = {};
-                            }
-                            levelStats[qualifiedLevels[l]][statistic] = statSum / statNum;
+                        if (filteredPartials[time] === undefined) {
+                            filteredPartials[time] = {};
                         }
-                    } catch (ignore) {
+                        if (filteredPartials[time][site] === undefined) {
+                            filteredPartials[time][site] = {};
+                        }
+                        if (filteredPartials[time][site][level] === undefined) {
+                            filteredPartials[time][site][level] = partials[time][site][level];
+                        }
                     }
-                    break;
+                }
+            }
+            delete curve.partials;
+            curve['partials'] = filteredPartials;
+        }
+    }  // end if matching
+
+    // calculate statistic from the partial sums for each level
+    var diffResult = null;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    var ymax = Number.MIN_VALUE;
+    var ymin = Number.MAX_VALUE;
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var d = [];
+        curve = curves[curveIndex];
+        var partials = curve['partials'];
+        var diffFrom = curve.diffFrom;
+        var statistic = curve['statistic'];
+        var windVar = curve['windVar'];
+
+        // axisKey is used to determine which axis a curve should use.
+        // This axisMap object is used like a set and if a curve has the same
+        // variable and statistic (axisKey) it will use the same axis,
+        // The axis number is assigned to the axisMap value, which is the axisKey.
+        var axisKey = variableStr + ":" + statistic;
+        curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var axisMap = {};
+        var levelSums = {};
+        if (diffFrom === null || diffFrom === undefined) {  // don't calculate differences.
+            // create a summary list of the partials ordered by level
+            for (var time in partials) {
+                for (var site in partials[time]) {
+                    for (var level in partials[time][site]) {
+                        if (partials[time][site][level] !== undefined && partials[time][site][level] !== null) {
+                            if (levelSums[level] === undefined) {
+                                levelSums[level] = {sum:0,count:0,statistic:statistic,level:level,values:[],times:[]};
+                            }
+                            levelSums[level]['sum'] += partials[time][site][level];
+                            levelSums[level]['count']++;
+                            levelSums[level]['values'].push(partials[time][site][level]);
+                            levelSums[level]['times'].push(time);
+                        }
+                    }
+                }
             }
             d = [];
-            var levels = Object.keys(levelStats);
-            for (l = 0; l < levels.length; l++) {
-                level = levels[l];
-                var value = levelStats[level][statistic];
-                var value = levelStats[level][statistic];
+            var values = [];
+            var levels = [];
+            for (var level in levelSums ) {
+                var value;
+                switch (statistic) {
+                    case "bias":
+                    case "mae":
+                    case "mean":
+                        // mean, bias and mae are the same, we divide sum by n
+                        value = Number(levelSums[level].sum / levelSums[level].count);
+                        break;
+                    case "rmse":
+                        // take the square root of the sum divided by n
+                        value = Math.sqrt(levelSums[level].sum / levelSums[level].count);
+                        break;
+                    default:
+                }
+                levelSums[level]['value'] = value;
+                levels.push(level);
+                values.push(value);
                 xmin = xmin < value ? xmin : value;
                 xmax = xmax > value ? xmax : value;
-                ymin = ymin < level ? ymin : level;
-                ymax = ymax > level ? ymax : level;
+                console.log("ymin", ymin,"ymax",ymax,"level",level);
+                ymin = ymin < Number(level) ? ymin : Number(level);
+                ymax = ymax > Number(level) ? ymax : Number(level);
+                /*
+                DATASET ELEMENTS:
+                    series: [data,data,data ...... ]   each data is itself an array
+                data[0] - statValue (ploted against the x axis)
+                data[1] - level (plotted against the y axis)
+                data[2] - errorBar (stde_betsy * 1.96)
+                data[3] - level values  [v0,v1 ..., vn]
+                data[4] - level times   [t0,t1 ....,tn]
+                data[5] - level stats]
+                      like   {
+                             d_mean: errorResult.d_mean,
+                             sd: errorResult.sd,
+                             n_good: errorResult.n_good,
+                             lag1: errorResult.lag1,
+                             stde_betsy: errorResult.stde_betsy
+                             }
+                data[6] - tooltip
+                */
+                const errorResult = matsDataUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
+                const errorBar = errorResult.stde_betsy * 1.96;
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
+
+                var stats = {
+                    d_mean: errorResult.d_mean,
+                    sd: errorResult.sd,
+                    n_good: errorResult.n_good,
+                    lag1: errorResult.lag1,
+                    stde_betsy: errorResult.stde_betsy
+                }
                 tooltip = label +
-                    "<br>level: " + level +
-                    "<br>statistic: " + statistic +
-                    "<br> value: " + value;
-                d.push([value, level, -1, {
-                    level: level,
-                    statistic: statistic,
-                    values: {verification: verificationLevelValues[level], truth: truthLevelValues[level]},
-                    levelStats: levelStats[level]
-                }, tooltip]);
+                    "<br>" + level + "mb" +
+                    "<br> " + statistic + ":" + value.toPrecision(4) +
+                    "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                    "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                    "<br>  n: " + errorResult.n_good +
+                    "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                    "<br>  stde: " + errorResult.stde_betsy +
+                    "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
+                // end  if diffFrom == null
             }
-            // end  if diffFrom == null
+            // get the overall stats for the text output
+            var curveStats = matsDataUtils.get_err(values, levels);
+            const minx = Math.min.apply(null, values);
+            const maxx = Math.max.apply(null, values);
+            curveStats.minx = minx;
+            curveStats.maxx = maxx;
+
         } else {
-            var diffResult;
-            //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
             diffResult = matsDataUtils.getDataForProfileDiffCurve({
-                dataset:dataset,
-                diffFrom:diffFrom
-            });
-            d = diffResult.dataset;
+                    dataset:d,
+                    diffFrom:diffFrom
+                });
+                d = diffResult.dataset;
         } // end difference curve
-        // get the x min and max
-        for (var di = 0; di < d.length; di++) {
-            xmax = xmax > d[di][0] ? xmax : d[di][0];
-            xmin = xmin < d[di][0] ? xmin : d[di][0];
-            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+
+        if (diffResult !== null) {
+            // recalculate the x min and max after difference
+            for (var di = 0; di < d.length; di++) {
+                xmax = xmax > d[di][0] ? xmax : d[di][0];
+                xmin = xmin < d[di][0] ? xmin : d[di][0];
+                ymax = ymax > d[di][1] ? ymax : d[di][1];
+                ymin = ymin < d[di][1] ? ymin : d[di][1];
+            }
         }
         // specify these so that the curve options generator has them available
         curve['annotation'] = "";

@@ -219,33 +219,33 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             /*
              We must map the query row result to a data structure like this...
              var resultData = {
-             time0: {
-             sites{
-             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-             levels: [],
-             values: [],
-             sum: 0;
-             mean: 0;
-             numLevels: numLevels;
-             max: max;
-             min: min
-             },
-             site1: {..},
-             .
-             .
-             site2: {...},
-             .
-             .
-             siten: {...}
-             }
-             timeMean: Number,   // cumulativeMovingMean for this time
-             timeLevels: [],
-             timeSites:[]
-             },
-             time1:{ .... },
-             .
-             .
-             timen:{ ... },
+                 time0: {
+                     sites{
+                         site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+                             levels: [],
+                             values: [],
+                             sum: 0;
+                             mean: 0;
+                             numLevels: numLevels;
+                             max: max;
+                             min: min
+                         },
+                         site1: {..},
+                         .
+                         .
+                         site2: {...},
+                         .
+                         .
+                         siten: {...}
+                     }
+                     timeMean: Number,   // cumulativeMovingMean for this time
+                     timeLevels: [],
+                     timeSites:[]
+                     },
+                time1:{ .... },
+                     .
+                     .
+                timen:{ ... },
              };
              */
             var utctime = 0;
@@ -842,6 +842,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     xmax = xmax + errorMax;
     xmin = xmin - errorMax;
     const xpad = (xmax - xmin) * 0.05;
+    const ypad = (ymax - ymin) * 0.05;
     const options = {
         axisLabels: {
             show: true
@@ -873,7 +874,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
         yaxes: [{
             position:"left",
             color: 'grey',
-            axisLabel: ' Pressure (hPa)',
+            axisLabel: ' meters',
             axisLabelColour: "black",
             font: {
                 size: 20,
@@ -889,8 +890,8 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            min: 40,
-            max: 180
+            min: ymin - ypad,
+            max: ymax + ypad
         }],
         yaxis: [{
             zoomRange: [0.1, null]
