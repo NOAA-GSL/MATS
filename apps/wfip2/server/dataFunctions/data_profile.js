@@ -154,6 +154,9 @@ dataProfile = function (plotParams, plotFunction) {
             // queryWFIP2DB has embedded quality control for windDir
             // if corresponding windSpeed < 3ms null the windDir
             var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+            //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+            //    continue;
+            //}
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
@@ -198,6 +201,9 @@ dataProfile = function (plotParams, plotFunction) {
                 dataRequests[curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
+                    //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                    //    continue;
+                    //}
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
@@ -332,83 +338,82 @@ dataProfile = function (plotParams, plotFunction) {
                  If statistic is not "mean" then we need a set of truth values to diff from the verification values.
                  The sites and levels have to match for the truth to make any sense.
                  */
-                time = allTimes[t];
-                timeObj = queryResult.data[time];
-                var verificationSites = Object.keys(timeObj.sites).map(Number);
-                var truthSites = [];
-                var truthTimeObj;
-                if (statistic != "mean") {
-                    truthTimeObj = truthQueryResult.data[time];
-                    truthSites = Object.keys(truthTimeObj.sites).map(Number);
-                }
-                sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
-                var sitesLength = sites.length;
-                var includedSites = _.intersection(sites, siteBasis);
-                var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-                if (sitesQuality > siteCompleteness) {
-                    // time is qualified for sites, count the qualified levels
-                    for (var si = 0; si < sitesLength; si++) {
-                        site = sites[si];
-                        var sLevels;
-                        var verificationValues = {};
-                        for (var l = 0; l < timeObj.sites[site].levels.length; l++) {
-                            verificationValues[timeObj.sites[site].levels[l]] = timeObj.sites[site].values[l];
-                        }
-                        var truthValues;
-                        if (statistic != "mean") {
-                            sLevels = _.intersection(timeObj.sites[site].levels, truthTimeObj.sites[site].levels);
-                            var truthValues = {};
-                            for (var l = 0; l < timeObj.sites[site].sLevels.length; l++) {
-                                truthValues[truthTimeObj.sites[site].sLevels[l]] = truthTimeObj.sites[site].values[l];
+                    time = allTimes[t];
+                    timeObj = queryResult.data[time];
+                    var verificationSites = Object.keys(timeObj.sites).map(Number);
+                    var truthSites = [];
+                    var truthTimeObj;
+                    if (statistic != "mean") {
+                        truthTimeObj = truthQueryResult.data[time];
+                        truthSites = Object.keys(truthTimeObj.sites).map(Number);
+                    }
+                    sites = statistic != "mean" ? _.intersection(verificationSites, truthSites) : verificationSites;
+                    var sitesLength = sites.length;
+                    var includedSites = _.intersection(sites, siteBasis);
+                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                    if (sitesQuality > siteCompleteness) {
+                        // time is qualified for sites, count the qualified levels
+                        for (var si = 0; si < sitesLength; si++) {
+                            site = sites[si];
+                            var sLevels;
+                            var verificationValues = {};
+                            for (var l = 0; l < timeObj.sites[site].levels.length; l++) {
+                                verificationValues[timeObj.sites[site].levels[l]] = timeObj.sites[site].values[l];
                             }
-                        } else {
-                            sLevels = timeObj.sites[site].levels;
-                        }
-                        var includedLevels = _.intersection(sLevels, levelBasis);
-                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
-                        if (levelsQuality > levelCompleteness) {
-                            for (var l = 0; l < sLevels.length; l++) {
-                                level = sLevels[l];
-                                if (timeSubset[timeSubset.length -1] !== time) {
-                                    timeSubset.push(time);
+                            var truthValues;
+                            if (statistic != "mean") {
+                                sLevels = _.intersection(timeObj.sites[site].levels, truthTimeObj.sites[site].levels);
+                                var truthValues = {};
+                                for (var l = 0; l < sLevels.length; l++) {
+                                    truthValues[truthTimeObj.sites[site].levels[l]] = truthTimeObj.sites[site].values[l];
                                 }
-                                if (siteSubset[siteSubset.length -1] !== site) {
-                                    siteSubset.push(site);
-                                }
-                                if (levelSubset[levelSubset.length -1] !== level) {
-                                    levelSubset.push(level);
-                                }
-                                if (partials[time] === undefined) {
-                                    partials[time] = {};
-                                }
-                                if (partials[time][site] === undefined) {
-                                    partials[time][site] = {};
-                                }
-                                switch (statistic) {
-                                    case "bias":
-                                        partials[time][site][level] = truthValues[level] - verificationValues[l];
-                                        break;
-                                    case "mae":
-                                        // bias and mae are almost the same.... mae just absolutes the difference
-                                        partials[time][site][level] = Math.abs(truthValues[level] - verificationValues[level]);
-                                        break;
-                                    case "rmse":
-                                        partials[time][site][level] = Math.pow(truthValues[level] - verificationValues[level], 2);  // square the difference
-                                        break;
-                                    case "mean":
-                                        partials[time][site][level] = verificationValues[level]; // just the verification value - no truth
-                                    default:
-                                }
+                            } else {
+                                sLevels = timeObj.sites[site].levels;
                             }
-                        } // else don't count it in - skip over it, it isn't complete enough
+                            var includedLevels = _.intersection(sLevels, levelBasis);
+                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                            if (levelsQuality > levelCompleteness) {
+                                for (var l = 0; l < sLevels.length; l++) {
+                                    level = sLevels[l];
+                                    if (timeSubset[timeSubset.length - 1] !== time) {
+                                        timeSubset.push(time);
+                                    }
+                                    if (siteSubset[siteSubset.length - 1] !== site) {
+                                        siteSubset.push(site);
+                                    }
+                                    if (levelSubset[levelSubset.length - 1] !== level) {
+                                        levelSubset.push(level);
+                                    }
+                                    if (partials[time] === undefined) {
+                                        partials[time] = {};
+                                    }
+                                    if (partials[time][site] === undefined) {
+                                        partials[time][site] = {};
+                                    }
+                                    switch (statistic) {
+                                        case "bias":
+                                            partials[time][site][level] = truthValues[level] - verificationValues[level];
+                                            break;
+                                        case "mae":
+                                            // bias and mae are almost the same.... mae just absolutes the difference
+                                            partials[time][site][level] = Math.abs(truthValues[level] - verificationValues[level]);
+                                            break;
+                                        case "rmse":
+                                            partials[time][site][level] = Math.pow(truthValues[level] - verificationValues[level], 2);  // square the difference
+                                            break;
+                                        case "mean":
+                                            partials[time][site][level] = verificationValues[level]; // just the verification value - no truth
+                                        default:
+                                    }
+                                }
+                            } // else don't count it in - skip over it, it isn't complete enough
+                        }
                     }
                 }
-            }
-            curves[curveIndex]['partials'] = partials;
-            curves[curveIndex]['timeSubset'] = timeSubset;
-            curves[curveIndex]['siteSubset'] = siteSubset;
-            curves[curveIndex]['levelSubset'] = levelSubset;
-
+                curves[curveIndex]['partials'] = partials;
+                curves[curveIndex]['timeSubset'] = timeSubset;
+                curves[curveIndex]['siteSubset'] = siteSubset;
+                curves[curveIndex]['levelSubset'] = levelSubset;
             // now we have partial sums that are qualified by site and level completeness
             // we also have time subset, site subset and level subset to be used in matching
         } else { // end if not diff curve//
