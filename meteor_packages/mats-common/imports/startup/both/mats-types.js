@@ -67,6 +67,10 @@ var PlotView = {
     textScatter: "textScatter"
 };
 
+var Messages = {
+    NO_DATA_FOUND: "INFO:0 data records found"
+};
+
 export default matsTypes = {
     InputTypes:InputTypes,
     PlotTypes:PlotTypes,
@@ -75,5 +79,6 @@ export default matsTypes = {
     BestFits:BestFits,
     MatchFormats:MatchFormats,
     PlotAxisFilters:PlotAxisFilters,
-    PlotView:PlotView
+    PlotView:PlotView,
+    Messages:Messages
 }

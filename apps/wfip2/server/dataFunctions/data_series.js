@@ -172,6 +172,9 @@ dataSeries = function (plotParams, plotFunction) {
                 // queryWFIP2DB has embedded quality control for windDir
                 // if corresponding windSpeed < 3ms null the windDir
                 queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                //    continue;
+                //}
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
@@ -220,6 +223,9 @@ dataSeries = function (plotParams, plotFunction) {
                 dataRequests[curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper);
+                    //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                    //    continue;
+                    //}
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
