@@ -1,7 +1,45 @@
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
+import { matsParamUtils } from 'meteor/randyp:mats-common'
 Template.textInput.helpers({
-    defaultLabel: function() {
-        return Session.get('NextCurveLabel');
+    defaultTextInput: function() {
+        if (this.name == 'label') {   // labels are handled specially
+            var label;
+            var input = document.getElementById('label-textInput');
+            var value = document.getElementById('controlButton-label-value');
+            if (input && value) {
+                if (label !== input.value || label != value.textContent) {
+                    if (!Session.get('NextCurveLabel')) {
+                        label = matsCurveUtils.getNextCurveLabel();
+                    } else {
+                        label = Session.get('NextCurveLabel');
+                    }
+                    input.value = label;
+                    value.textContent = label;
+                    return label;
+                }
+            } else {
+                // must be initialization
+                label = matsCurveUtils.getNextCurveLabel();
+                return label;
+            }
+        } else {
+            return this.default;
+        }
+    }
+});
+
+Template.textInput.events({
+    'click, change, blur': function (event) {
+        try {
+            // label is handled differently - special case because of NextCurveLabel stored in Session
+            const text = event.currentTarget.value;
+            if (event.target.name == "label" && Session.get('NextCurveLabel') == text) {
+            } else {
+                matsParamUtils.setValueTextForParamName(event.target.name, text);
+            }
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
     }
 });
 

@@ -4,9 +4,6 @@ import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
-
-const Future = require('fibers/future');
-
 dataSeries = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
@@ -19,11 +16,11 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
-    var yAxisBoundaries = {};
+    //var yAxisBoundaries = {};
     /* axis boundaries is an object keyed by variable.
      Later on we might want to make the key complex i.e. 'variable + stat' or 'variable category' or something
      each curve will add its yaxisMax and yaxisMin to the object, keyed by variable
-     the yaxisoptions can derive the ymax and ymin from this object.
+     the yaxisoptions can derive the ymax and ymin from this object, as well as the actual axis that a curve is using (yaxis in options)
      */
     var xAxisMax = Number.MIN_VALUE;
     var xAxisMin = Number.MAX_VALUE;
@@ -81,6 +78,7 @@ dataSeries = function (plotParams, plotFunction) {
         if (myVariable === undefined) {
             throw new Error("variable " + variableStr + " is not in variableMap");
         }
+        const windVar = myVariable.startsWith('wd');
 
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
@@ -100,6 +98,8 @@ dataSeries = function (plotParams, plotFunction) {
         var disc_upper = Number(curve['upper']);
         var disc_lower = Number(curve['lower']);
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
+
+        var allForecast = forecastLength;
         forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         var statement = "";
         var count = 0;
@@ -107,36 +107,74 @@ dataSeries = function (plotParams, plotFunction) {
         var average = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
-            if (dataSource_is_instrument) {
-                const utcOffset = Number(forecastLength * 3600);
-                if (dataSource_is_json) {
-                    // verificationRunInterval is in milliseconds
-                    statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
-                } else {
-                    statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
-                }
-                // data source is a model and its JSON
-            } else {
+            if (allForecast === matsTypes.InputTypes.forecastMultiCycle) {
+                throw new Error("INFO: Multi cycle all-forecast series are not yet implemented");
+                // not implemented
+                forecastLength = 0;
+            }
+            if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                //throw new Error("INFO: Single cycle all-forecast series are not yet implemented");
+                forecastLength = 0;
+                var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
+                var forecastLengths = fcOptionsMap.options;
+                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
+                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
+                var utcOffsets = forecastLengths.map(function (item) {
+                    return (parseFloat(item) * 3600);
+                });
+                // get the first valid cycle_utc for the time/date range specified
+                const validFirstCycleUtc = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool,
+                    "select cycle_utc from nwp_recs as N , " +
+                    dataSource_tablename +
+                    " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
+                    matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;")[0].cycle_utc;
+
+                // / this is an all forecasts curve. It cannot be an instrument.
                 statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                    " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                    " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
+                    " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
+                    " and cycle_utc = " + validFirstCycleUtc;
+            } else {
+                if (dataSource_is_instrument) {
+                    const utcOffset = Number(forecastLength * 3600);
+                    if (dataSource_is_json) {
+                        // verificationRunInterval is in milliseconds
+                        statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
+                    } else {
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
+                    }
+                    // data source is a model and its JSON
+                } else {
+                    statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
+                }
             }
 
-            // statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
 
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")";
             //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
+            var queryResult;
             try {
-                var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                // queryWFIP2DB has embedded quality control for windDir
+                // if corresponding windSpeed < 3ms null the windDir
+                queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                //    continue;
+                //}
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
@@ -164,7 +202,11 @@ dataSeries = function (plotParams, plotFunction) {
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -176,12 +218,14 @@ dataSeries = function (plotParams, plotFunction) {
                         " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
                         " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
                 }
-                //truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")";
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper);
+                    //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                    //    continue;
+                    //}
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
@@ -354,6 +398,8 @@ dataSeries = function (plotParams, plotFunction) {
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
                             // here we make the various calculations
+                            // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
+                            // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
                             for (var li = 0; li < sLevels.length; li++) {
                                 var siteLevelValue = sValues[li];
                                 var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
@@ -365,10 +411,20 @@ dataSeries = function (plotParams, plotFunction) {
                                         // find siteLevelBias and sum it in
                                         biasValue = null;
                                         try {
-                                            if (statistic == "mae") {
-                                                biasValue = Math.abs(siteLevelValue - truthSiteLevelValue);
+                                            biasValue = siteLevelValue - truthSiteLevelValue;
+                                            if (windVar) {
+                                                if (biasValue > 180) {
+                                                    biasValue = biasValue - 360;
+                                                } else if (biasValue < -180) {
+                                                    biasValue = biasValue + 360;
+                                                }
+                                                if (statistic == "mae") {
+                                                    biasValue = Math.abs(biasValue);
+                                                }
                                             } else {
-                                                biasValue = siteLevelValue - truthSiteLevelValue;
+                                                if (statistic == "mae") {
+                                                    biasValue = Math.abs(biasValue);
+                                                }
                                             }
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
@@ -380,7 +436,14 @@ dataSeries = function (plotParams, plotFunction) {
                                     case "rmse":
                                         biasValue = null;
                                         try {
-                                            biasValue = siteLevelValue - truthSiteLevelValue;
+                                            biasValue = Number(siteLevelValue - truthSiteLevelValue);
+                                            if (windVar) {
+                                                if (biasValue > 180) {
+                                                    biasValue = biasValue - 360;
+                                                } else if (biasValue < -180) {
+                                                    biasValue = biasValue + 360;
+                                                }
+                                            }
                                             biasValue = Math.pow(biasValue, 2);  // square the difference
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
@@ -525,10 +588,10 @@ dataSeries = function (plotParams, plotFunction) {
             }
         }
 
-        var pointSymbol = matsWfipUtils.getPointSymbol(curveIndex);
+        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
         //var mean = queryResult.mean;
         options = {
-            yaxis: curveIndex + 1,  // the y axis position to the right of the graph
+            yaxis: curveIndex + 1,  // the y axis position to the right of the graph (placeholder)
             label: label,
             color: color,
             data: normalizedData,
@@ -674,32 +737,76 @@ dataSeries = function (plotParams, plotFunction) {
             }
             time = Number(time) + Number(maxValidInterval);
         } // while time
+        // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
+        for (ci = 0; ci < curvesLength; ci ++) {
+            if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
+                continue;   // don't do it if there isn't an annotation
+            }
+
+            var sum = 0;
+            var count = 0;
+            d = newDataSet[ci].data;
+            var mean = d[0][1];
+            for (var i = 0; i < d.length; i++) {
+                if (d[i][1] !== null) {
+                    sum = sum + d[i][1];
+                    count++
+                }
+            }
+            if (count > 1) {
+                mean = sum / count;
+            }
+            const annotationParts = dataset[ci].annotation.split(" = ");
+            annotationParts[1] = mean === null ? null : mean.toPrecision(4);
+            const annotation = annotationParts.join(" = ");
+            var optionsKeys = Object.keys(dataset[ci]);
+            var index = optionsKeys.indexOf('data');
+            if (index > -1) {
+                optionsKeys.splice(index, 1);
+            }
+            index = optionsKeys.indexOf('annotation');
+            if (index > -1) {
+                optionsKeys.splice(index, 1);
+            }
+            optionsKeys.forEach(function(item){
+                newDataSet[ci][item] = dataset[ci][item];
+            });
+            newDataSet[ci]['annotation'] = annotation;
+        }
+
         dataset = newDataSet;
     } // end of if matching
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
     var yLabels = {};
+    var minMin = Math.min.apply(null, yAxisMins);
+    var maxMax = Math.max.apply(null, yAxisMaxes);
+    var yAxisPad = (maxMax - minMin) * .05;
+    var ymin = minMin - yAxisPad;
+    var ymax = maxMax + yAxisPad;
     for (dsi = 0; dsi < dataset.length; dsi++) {
-
         var position = dsi === 0 ? "left" : "right";
         var vStr = curves[dsi].variable;
-        if (yAxisBoundaries[vStr] === undefined) {
-            yAxisBoundaries[vStr] = {
-                min: Number.MAX_VALUE,
-                max: Number.MIN_VALUE
-            }
-        }
-        yAxisBoundaries[variableStr] = {
-            min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
-            max: yAxisBoundaries[vStr].max > yAxisMaxes[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
-        };
-        var yAxisPad = (yAxisBoundaries[vStr].max - yAxisBoundaries[vStr].min) * .05;
+        // if (yAxisBoundaries[vStr] === undefined) {
+        //     yAxisBoundaries[vStr] = {
+        //         min: Number.MAX_VALUE,
+        //         max: Number.MIN_VALUE
+        //     }
+        // }
+        // yAxisBoundaries[vStr] = {
+        //     // min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
+        //     // max: yAxisBoundaries[vStr].max > yAxisMins[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
+        //     min: minMin,
+        //     max: maxMax
+        // };
+        var yaxesOptions;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
                 label: curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'],
                 curveNumber: dsi
             };
+
             yaxesOptions = {
                 position: position,
                 color: 'grey',
@@ -710,8 +817,8 @@ dataSeries = function (plotParams, plotFunction) {
                 axisLabelFontFamily: 'Verdana, Arial',
                 axisLabelPadding: 3,
                 alignTicksWithAxis: 1,
-                min: yAxisBoundaries[vStr].min - yAxisPad,
-                max: yAxisBoundaries[vStr].max + yAxisPad
+                min: ymin,
+                max: ymax
             };
         } else {
             yLabels[vStr].label = curves[dsi]['label'] + " | " + yLabels[vStr].label;
@@ -719,13 +826,15 @@ dataSeries = function (plotParams, plotFunction) {
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
             yaxes[curveNum].axisLabel = yLabels[vStr].label;
-            var yaxesOptions = {
+             yaxesOptions = {
                 show: false,
-                min: yAxisBoundaries[vStr].min - yAxisPad,
-                max: yAxisBoundaries[vStr].max + yAxisPad,
+                min: ymin,
+                max: ymax,
                 grid: {show: false}
             };
         }
+        // set the y axis for the curve (they are shared depending on variable)
+        dataset[dsi]['yaxis'] = yLabels[vStr].curveNumber + 1;
         var yaxisOptions = {
             zoomRange: [0.1, 10]
         };
@@ -783,6 +892,7 @@ dataSeries = function (plotParams, plotFunction) {
         },
         tooltip: true,
         tooltipOpts: {
+            // the tooltip is the last element of each data point in the data series. It is an html formatted string.
             content: "<span style='font-size:150%'><strong>%ct</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {

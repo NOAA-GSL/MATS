@@ -17,7 +17,6 @@ Template.curveParams.helpers({
         return Session.get('params');
     },
     optionRows: function() {
-        var lastUpdate = Session.get('lastUpdate');
         var rows = "";
         // find the object in the session that is associated with the currently selected name
         var params = Session.get('params');

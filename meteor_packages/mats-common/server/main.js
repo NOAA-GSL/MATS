@@ -30,18 +30,20 @@ var setGoogleCred = function () {
         }
         switch (hostname.split('.')[0]) {
             case "mats":
-            case "mats1":
                 gid = "499180266722-d4rn615s4s8tenra4tdisbl1i34uvu82.apps.googleusercontent.com";
                 gSecret = "FrIhQ0kZWei2z5RPLAq-84BI";
                 break;
             case "mats-dev":
-            case "mats-dev1":
                 gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
                 gSecret = "Ra1xCSDnr-ZZX1wgyAHHSbIU";
                 break;
+            case "localhost":
+                gid = "499180266722-b4j64bso7ncfick2cgku7iib516tkhsh.apps.googleusercontent.com";
+                gSecret = "j4EZvOdAgOrDH_Lkg82uebpu";
+                break;
             default:
-                gid = "499180266722-m8qusll2n5sc57u0hdefans35noqkt13.apps.googleusercontent.com";
-                gSecret = "Ra1xCSDnr-ZZX1wgyAHHSbIU";
+                gid = "499180266722-rto935b94kfg0lcth7um5ved42jlq416.apps.googleusercontent.com";
+                gSecret = "SPat_bFUrXhSBwFROv7PekzH";
                 break;
         }
         if (gid != cid || gSecret != cSecret) {

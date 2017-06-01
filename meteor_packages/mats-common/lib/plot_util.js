@@ -8,7 +8,8 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 // currently selected inputs in the document.
 
 var getAxisText = function(plotType) {
-    var scatterAxisTextPattern = matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern;
+    var scatterAxisTextPattern = matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()});
+    var textPattern = scatterAxisTextPattern ? matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern : undefined;
     if (scatterAxisTextPattern === undefined) {
         return "";
     }
@@ -58,10 +59,17 @@ var getPlotType = function () {
 // determine which plotFormat radio button is checked
 var getPlotFormat = function() {
     var buttons = document.getElementsByName('plotFormat');
-    var optionsMap = matsCollections.PlotParams.findOne({name:'plotFormat'}).optionsMap;
+    if (buttons === undefined) {
+        return ""; // app may not have plotFormat?
+    }
+    var plotFormatParam = matsCollections.PlotParams.findOne({name:'plotFormat'});
+    if (plotFormatParam === undefined) {
+        return ""; // app may not have plotFormat?
+    }
+    var optionsMap = plotFormatParam.optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
-            return _.invert(optionsMap)[buttons[i].value];
+            return buttons[i].value;
         }
     }
     return "";  // error condition actually - shouldn't ever happen
@@ -73,7 +81,7 @@ var getBestFit = function() {
     var optionsMap = matsCollections.PlotParams.findOne({name:'bestFit'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
-            return _.invert(optionsMap)[buttons[i].value];
+            return buttons[i].value;
         }
     }
     return "";  // error condition actually - shouldn't ever happen

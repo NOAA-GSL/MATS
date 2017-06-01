@@ -29,11 +29,13 @@ var refresh = function(name) {
     elem.setAttribute("min", min);
     elem.setAttribute("max",max);
     elem.setAttribute("step",step);
-    matsParamUtils.setValueTextForParamName(dispElem, dispDefault);
     elem.value = dispDefault;
 };
 
 Template.numberSpinner.helpers({
+    defaultValue: function() {
+        return this.default;
+    },
     min: function() {
         //default
         return this.min;
@@ -60,3 +62,17 @@ Template.numberSpinner.onRendered(function () {
         refresh(this.name);
     });
 });
+
+
+Template.numberSpinner.events({
+    'change, blur': function (event) {
+        try {
+            event.target.checkValidity();
+            var text = event.currentTarget.value;
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
+    }
+});
+

@@ -1,26 +1,7 @@
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
-
-var startInit = function () {
-    var today = new Date();
-    var thenDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-    var yr = thenDate.getFullYear();
-    var day = thenDate.getDate();
-    var month = thenDate.getMonth() + 1;
-    var hour = thenDate.getHours();
-    var minute = thenDate.getMinutes();
-    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
-};
-var stopInit = function () {
-    var today = new Date();
-    var yr = today.getFullYear();
-    var day = today.getDate();
-    var month = today.getMonth() + 1;
-    var hour = today.getHours();
-    var minute = today.getMinutes();
-    return month + '/' + day + "/" + yr + " " + hour + ":" + minute;
-};
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
 
 Template.dateRange.onRendered(function () {
     //NOTE: Date fields are special in that they are qualified by plotType.
@@ -51,6 +32,11 @@ Template.dateRange.onRendered(function () {
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
     const superiorNames = this.data.superiorNames;
+    const dateInitStr = matsCollections.dateInitStr();
+    const dateInitStrParts = dateInitStr.split(' - ');
+    const startInit = dateInitStrParts[0];
+    const stopInit = dateInitStrParts[1];
+    const dstr = startInit + ' - ' + stopInit;
     $(function () {
         $('#' + idref).daterangepicker({
             "autoApply": true,
@@ -58,12 +44,13 @@ Template.dateRange.onRendered(function () {
             "timePicker": true,
             "timePicker24Hour": true,
             "timePickerIncrement": 15,
-            "startDate": startInit(),
-            "endDate": stopInit(),
+            "startDate": startInit,
+            "endDate": stopInit,
             "showDropdowns": true,
             "drops": "up",
+
             locale: {
-                format: 'MM/DD/YYYY H:mm'
+                format: 'MM/DD/YYYY HH:mm'
             },
             ranges: {
                 'Today': [moment().startOf('day'), moment().endOf('day')],
@@ -73,20 +60,23 @@ Template.dateRange.onRendered(function () {
                 'Last 60 Full Days': [moment().subtract(60, 'days').startOf('day'), moment().startOf('day')],
                 'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
                 'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
-            },
-            "alwaysShowCalendars": true
+            },"alwaysShowCalendars": true,
         });
-        matsParamUtils.setValueTextForParamName(name, startInit() + ' - ' + stopInit());
+        matsParamUtils.setValueTextForParamName(name, dstr);
     });
 
     $('#' + idref).on('apply.daterangepicker', function (ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
-            setError(new Error("Your start and end dates coincide, you must select a range!"));
+            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range!"));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
         matsParamUtils.setValueTextForParamName(name, valStr);
         elem.style.display = "none";
+        const curveItem = (Session.get("editMode") === undefined && Session.get("editMode") === "") ? undefined : document.getElementById("curveItem-" + Session.get("editMode"));
+        if (curveItem) {
+            $('#save').trigger('click');
+        }
     });
     $('#' + idref).on('cancel.daterangepicker', function () {
         elem.style.display = "none";
@@ -100,17 +90,17 @@ Template.dateRange.onRendered(function () {
             var endDsr = moment(curVals[1], "MM-DD-YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
-                setError ("Your date range selector has an invalid start date-time: " + curVals[0]);
+                setError ("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
                 return false;
             }
             if (!endDsr.isValid()) {
                 // error
-                setError ("Your date range selector has an invalid end date-time:" + curVals[1]);
+                setError ("date_range refresh error: Your date range selector has an invalid end date-time:" + curVals[1]);
                 return false;
             }
             if (startDsr.isAfter(endDsr)) {
                 // error
-                setError ("Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
+                setError ("date_range refresh error: Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
                 return false;
             }
             // get superior values and check for errors
@@ -128,27 +118,27 @@ Template.dateRange.onRendered(function () {
                     // skip this superior - it isn't being used right now
                     continue;
                 }
-                const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].mindate;
+                const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].minDate;
                 const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM-DD-YYYY HH:mm");
                 if (superiorMinimumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].min = superiorMinimumMoment;
                 } else {
-                    setError ("The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
+                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
                     return false;
                 }
-                const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxdate;
+                const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
                 const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM-DD-YYYY HH:mm");
                 if (superiorMaximumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].max = superiorMaximumMoment;
                 } else {
-                    setError ("The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMaximumDateStr);
+                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMaximumDateStr);
                     return false;
                 }
                 if ((superiorVals[si].min).isAfter(superiorVals[si].max)) {
                     // error
-                    setError ("The date range for the superiorName: " + superiorName + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
+                    setError ("date_range refresh error: The date range for the superiorName: " + superiorName + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
                     return false;
                 }
             }
@@ -210,7 +200,7 @@ Template.dateRange.onRendered(function () {
         }
     };
 
-// register refresh event for y superior to use to enforce a refresh of the options list
+// register refresh event for superior to use to enforce a refresh of the options list
     elem.addEventListener('refresh', function (e) {
         refresh();
     });

@@ -31,7 +31,9 @@ Template.map.onRendered(function () {
         wheelPxPerZoomLevel: 5
     }).setView(defaultPoint, defaultZoomLevel);
     // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
-    L.tileLayer.provider('Thunderforest.Outdoors').addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+        maxZoom: 16}).addTo(map);
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
     if (!markerFeatures) {
         markerFeatures = {};
@@ -142,6 +144,9 @@ Template.map.onRendered(function () {
     };
 
     var refresh = function (peerElement) {
+        if (!peerElement) {
+            return;
+        }
         var peerId = peerElement.id;
         refreshMarkersForPeer(peerElement);
         var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];

@@ -36,22 +36,26 @@ const getNextCurveLabel = function () {
 //determine the next curve Label and set it in the session
 // private, not exported
 const setNextCurveLabel = function () {
-    var usedLabels = Session.get('UsedLabels');
-    var settings = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}});
+    const usedLabels = Session.get('UsedLabels');
+    const settings = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}});
     if (settings === undefined) {
         return false;
     }
-    var labelPrefix = settings.LabelPrefix;
+    const labelPrefix = settings.LabelPrefix;
     // find all the labels that start with our prefix (some could be custom)
-    var prefixLabels = _.filter(usedLabels, function (l) {
-        return ((l.lastIndexOf(labelPrefix, 0) === 0) && (l.match(new RegExp(labelPrefix, 'g')).length) == 1);
+    const prefixLabels = _.filter(usedLabels, function (l) {
+        return (l && (l.lastIndexOf(labelPrefix, 0) === 0) && (l.match(new RegExp(labelPrefix, 'g')).length) == 1);
     });
-    var lastUsedLabel = _.last(prefixLabels);
+    const lastUsedLabel = _.last(prefixLabels);
     var lastLabelNumber = -1;
-    if (lastUsedLabel !== undefined) {
-        lastLabelNumber = Number(lastUsedLabel.replace(labelPrefix, ''));
-    }
 
+    if (lastUsedLabel !== undefined) {
+        const minusPrefix = lastUsedLabel.replace(labelPrefix, '');
+        const tryNum = parseInt(minusPrefix, 10);
+        if (!isNaN(tryNum)) {
+            lastLabelNumber = tryNum;
+        }
+    }
     var newLabelNumber = lastLabelNumber + 1;
     var nextCurveLabel = labelPrefix + newLabelNumber;
     // the label might be one from a removed curve so the next ones might be used
@@ -99,7 +103,6 @@ const getNextCurveColor = function () {
     return Session.get('NextCurveColor');
 };
 
-//clearUsedDefaultByLabel = function(label) {
 // clear a used label and set the nextCurveLabel to the one just cleared
 const clearUsedLabel = function (label) {
     var usedLabels = Session.get('UsedLabels');
@@ -131,8 +134,6 @@ const clearAllUsed = function () {
     var labelPrefix = matsCollections.Settings.findOne({}, {fields: {LabelPrefix: 1}}).LabelPrefix;
     Session.set('NextCurveLabel', labelPrefix + 0);
     Session.set('Curves', []);
-    //matsParamUtils.setValueTextForParamName('label',Session.get('NextCurveLabel'));
-    matsParamUtils.setValueTextForParamName('label','');
 };
 
 // use curves in session to determine which defaults are already used
@@ -164,7 +165,6 @@ const setUsedLabels = function () {
 };
 
 const setUsedColorsAndLabels = function () {
-    matsParamUtils.setValueTextForParamName('label','');  // necessary to prevent duplicates in the label
     setUsedColors();
     setUsedLabels();
 };
@@ -177,7 +177,6 @@ const resetScatterApply = function() {
         Session.set('xaxisCurveColor', 'red');
         Session.set('yaxisCurveColor', 'red');
         document.getElementById('Fit-Type-radioGroup-none').checked = true;
-        document.getElementById('axis-selector-radioGroup-xaxis').checked = true
     }
 };
 
@@ -276,23 +275,6 @@ const checkDiffs = function () {
         }
     }
 };
-const refreshDependents = function(dependentNames) {
-    if (dependentNames) {
-        // refresh the dependents
-        for (var i = 0; i < dependentNames.length; i++) {
-            const name = dependentNames[i];
-            const targetParam = matsCollections.CurveParams.findOne({name: name});
-            const targetId = targetParam.name + '-' + targetParam.type;
-            const targetElem = document.getElementById(targetId);
-            const refreshEvent = new CustomEvent("refresh", {
-                detail: {
-                    refElement: event.target
-                }
-            });
-            targetElem.dispatchEvent(refreshEvent);
-        }
-    }
-};
 
 const showProfileFace = function() {
     // move dates selector to curve parameters - one date range for each curve
@@ -314,6 +296,7 @@ const showProfileFace = function() {
             elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.profile);
+        matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -338,6 +321,7 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
+        matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -349,14 +333,133 @@ const showScatterFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
+        Session.set('lastUpdate', Date.now());   // force curveParams to re-render
+        matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
-
-
 const removeAllCurves = function() {
     // remove all curves
     document.getElementById('remove-all') && document.getElementById('remove-all').click();
+    clearAllUsed();
+    matsParamUtils.setAllParamsToDefault();
+};
+
+const get_err = function (sVals, sSecs) {
+    /* THIS IS DIFFERENT FROM THE ONE IN DATA_UTILS,
+       This one does not throw away outliers and it captures minVal and maxVal
+       refer to perl error_library.pl sub  get_stats
+        to see the perl implementation of these statics calculations.
+        These should match exactly those, except that they are processed in reverse order.
+     */
+    var subVals = sVals;
+    var subSecs = sSecs;
+    var n = subVals.length;
+    var n_good =0;
+    var sum_d=0;
+    var sum2_d =0;
+    var error = "";
+    var i;
+    for(i=0; i< n; i++ ){
+        n_good = n_good +1;
+        sum_d = sum_d + subVals[i];
+        sum2_d = sum2_d + subVals[i] * subVals[i];
+    }
+    var d_mean = sum_d/n_good;
+    var sd2 = sum2_d/n_good - d_mean *d_mean;
+    var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
+    var sd_limit = 3*sd;
+    //console.log("get_err");
+    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
+    // find minimum delta_time, if any value missing, set null
+    var last_secs = Number.MIN_VALUE;
+    var minDelta = Number.MAX_VALUE;
+    var minSecs = Number.MAX_VALUE;
+    var max_secs = Number.MIN_VALUE;
+    var minVal = Number.MAX_VALUE;
+    var maxVal = Number.MIN_VALUE;
+    for(i=0; i< subSecs.length; i++){
+        var secs = (subSecs[i]);
+        var delta = Math.abs(secs - last_secs);
+        if(delta < minDelta) {
+            minDelta = delta;
+        }
+        if(secs < minSecs) {
+            minSecs = secs;
+        }
+        if(secs >max_secs) {
+            max_secs = secs;
+        }
+        last_secs = secs;
+    }
+
+    var data_wg =[];
+    var n_gaps =0;
+    n_good = 0;
+    var sum = 0;
+    var sum2 = 0;
+    var loopTime =minSecs;
+    if (minDelta < 0) {
+        error = ("Invalid time interval - minDelta: " + minDelta);
+    }
+    // remove data more than $sd_limit from mean
+     for (i=0; i < subVals.length; i++) {
+         minVal = minVal < subVals[i] ? minVal : subVals[i];
+         maxVal = maxVal > subVals[i] ? maxVal : subVals[i];
+             n_good++;
+     }
+    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // look for gaps.... per Bill, we only need one gap per series of gaps...
+    var lastSecond = Number.MIN_VALUE;
+
+    for(i=0; i< subSecs.length; i++){
+        var sec = subSecs[i];
+        if(lastSecond >= 0) {
+            if(sec - lastSecond > minDelta) {
+                // insert a gap
+                data_wg.push(null);
+                n_gaps++;
+            }
+        }
+        lastSecond = sec;
+        data_wg.push(subVals[i]);
+    }
+    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
+
+    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+    var r =[];
+    for(var lag=0;lag<=1; lag++) {
+        r[lag] = 0;
+        var n_in_lag = 0;
+        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
+            if (data_wg[t] != null && data_wg[t + lag] != null) {
+                r[lag] +=  + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                n_in_lag++;
+            }
+        }
+        if (n_in_lag > 0 && sd > 0) {
+            r[lag] /= (n_in_lag * sd * sd);
+        } else {
+            r[lag] = null;
+        }
+        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
+    }
+    // Betsy Weatherhead's correction, based on lag 1
+    if(r[1] >= 1) {
+        r[1] = .99999;
+    }
+    const betsy = Math.sqrt((n_good-1)*(1 - r[1]));
+    var stde_betsy;
+    if(betsy != 0) {
+        stde_betsy = sd/betsy;
+    } else {
+        stde_betsy = null;
+    }
+    const stats = {d_mean:d_mean, stde_betsy:stde_betsy, sd:sd, n_good:n_good, lag1:r[1], min:minSecs, max:max_secs, minVal: minVal, maxVal: maxVal, sum:sum_d};
+    //console.log("stats are " + JSON.stringify(stats));
+    // stde_betsy is standard error with auto correlation
+    //console.log("---------\n\n");
+    return stats;
 };
 
 export default matsCurveUtils = {
@@ -375,8 +478,8 @@ export default matsCurveUtils = {
     showScatterFace:showScatterFace,
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
-    refreshDependents:refreshDependents,
     removeAllCurves:removeAllCurves,
+    get_err:get_err,
     PlotResult:PlotResult
 };
 

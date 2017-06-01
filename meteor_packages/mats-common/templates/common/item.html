@@ -1,7 +1,8 @@
 <template name="item">
     <div id="{{name}}-item" class="item btn-group"  role="group" style="display:{{display}}">
-        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}"> {{name}}</button>
-        <div id="{{element}}" style="display:{{elementHidden}}" >
+        <button type="button" class="control-button btn btn-primary fa fa-hand-o-up" id="{{controlButton}}" style="display:{{controlButtonVisibility}}">{{cbname}}</button>
+        <span style="display:inline-block;">&nbsp;</span>
+        <div id="{{element}}" style="display:{{elementHidden}};position:absolute;z-index: 5;float:right;background-color: white;" >
             {{#if isSelect}}
                 {{> select this}}
             {{else}} {{#if isSpinner}}
@@ -11,20 +12,24 @@
             {{else}} {{#if isDateRange}}
                 {{> dateRange this}}
             {{else}} {{#if isCheckBoxGroup}}
-                {{name}}:
-                {{#each options}}
-                    {{> checkboxGroup this}}
-                {{/each}}
+                <div class="container" style="background-color:lightcyan;width:100%">
+                    {{name}}:
+                    {{#each options}}
+                        {{> checkboxGroup this}}
+                    {{/each}}
+                </div>
             {{else}} {{#if isRadioGroup}}
-                {{name}}:
-                {{#each options}}
-                    {{> radioGroup this}}
-                {{/each}}
+                <div class="container btn-group" style="font-size:large;background-color:lightcyan;width:100%;display:inline-block;">
+                    <span style="vertical-align: bottom;">{{name}}:</span>
+                    {{#each options}}
+                        {{> radioGroup this}}
+                    {{/each}}
+                </div>
             {{else}} {{#if isSelectMap}}
                 {{> map this}}
             {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}} {{/if}}
         </div>
-        <button type="button" class="control-button btn btn-info fa fa-label" name="{{controlButton}}-value" id="{{controlButton}}-value" style="display:{{controlButtonVisibility}}"> {{value}}</button>
+        <button type="button" class="control-button btn btn-info fa fa-label" name="{{controlButton}}-value" id="{{controlButton}}-value" style="display:{{controlButtonVisibility}}"> {{textValue}}</button>
         {{#if hasHelp}}
             <button style="background-color:#bbffbb" type="button"  class="btn btn-default  btn-xs  help fa fa-question"></button>
         {{/if}}

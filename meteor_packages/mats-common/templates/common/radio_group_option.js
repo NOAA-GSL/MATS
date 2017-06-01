@@ -1,12 +1,27 @@
+import { matsTypes } from 'meteor/randyp:mats-common'; 
 Template.radioGroup.helpers({
-    isDefault: function (def) {
+    checkedByDefault: function (def) {
         if (def == this) {
             return "checked";
         } else {
             return "";
         }
     },
-    value: function(p) {
-        return p.optionsMap[this];
+    labelValue: function (optionsMap) {
+        return optionsMap[this];
     }
 });
+
+
+// Currently have no radioGroup params - this is undoubtedly broken - FIX ME
+Template.radioGroup.events({
+    'change, blur': function (event) {
+        try {
+            var text = event.currentTarget.value;
+            matsParamUtils.setValueTextForParamName(event.target.name,text);
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
+    }
+});
+

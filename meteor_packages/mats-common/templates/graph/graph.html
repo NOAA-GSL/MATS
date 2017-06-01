@@ -1,11 +1,10 @@
 <template name="graph">
     <div id="graph-container" class="container" style="display:none;">
         <div id="header" class="row container">
-            <h3>{{Title}}  :  {{plotText}}</h3>
-            <h5>{{plotName}}</h5>
+            <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
         </div>
         <div id="graph-control" class="row container-fluid">
-            <div id="plot-buttons-grp" class="btn-group">
+            <div id="plot-buttons-grp" class="btn-group btn-group-sm">
                 <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
@@ -15,13 +14,15 @@
                 <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
-                <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
-                <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
-                <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
-                <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                <span id="graph-touch-controls">
+                    <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
+                    <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
+                    <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
+                    <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
+                    <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                </span>
             </div>
             <div id="sendModal" class="modal" role="dialog">
                 <div class="modal-dialog">
@@ -52,7 +53,7 @@
         </div>
         <div id="curves" class="row container-fluid">
             {{#each curves}}
-                <span style="background-color:{{color}};">--- </span>{{curveText}}
+                <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp" class="btn-group btn-xs">
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
@@ -73,11 +74,12 @@
             {{>textScatter2dOutput}}
         </div>
 
-        <div id="graphView" style="height:100%;margin:0;padding:0;" class="container-fluid">
+        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
             <div id="legendContainer" name="legendContainer"></div>
-            <div id="placeholder" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
-            <div id="overview" class="demo-placeholder" style="float:right;width:160px; height:125px;"></div>
-
+            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
         </div>
+        {{#if isProfile}}
+            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confindence</h5>
+        {{/if}}
     </div>
 </template>

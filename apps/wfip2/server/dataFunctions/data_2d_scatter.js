@@ -101,10 +101,14 @@ data2dScatter = function (plotParams, plotFunction) {
             if (myVariable === undefined) {
                 throw new Error("variable " + variableStr + " is not in variableMap");
             }
+            const windVar = myVariable.startsWith('wd');
             var discriminator = variableMap[curve[axis + '-' + 'discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve[axis + '-' + 'discriminator']];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
             var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];
+            if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
+                throw (new Error("INFO: cannot use this forecast length here: " + forecastLength));
+            }
             forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
             // verificationRunInterval is in milliseconds
             var statement = "";
@@ -117,7 +121,11 @@ data2dScatter = function (plotParams, plotFunction) {
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 } else {
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    var qVariable = myVariable;
+                    if (windVar) {
+                        qVariable = myVariable + ",ws";
+                    }
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -162,7 +170,11 @@ data2dScatter = function (plotParams, plotFunction) {
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     } else {
-                        truthStatement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + myVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        truthStatement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);

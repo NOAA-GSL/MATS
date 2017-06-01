@@ -5,7 +5,9 @@ import {matsPlotUtils } from 'meteor/randyp:mats-common';
 
 // get the document id for the control button element that corresponds to the param name
 const getControlButtonIdForParamName = function(paramName) {
-    const param = matsCollections.CurveParams.findOne({name: paramName});
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+    const param = matsCollections.CurveParams.findOne({name: pname});
     if (param !== undefined) {
         const id = "controlButton-" + param.name;
         return id;
@@ -14,36 +16,41 @@ const getControlButtonIdForParamName = function(paramName) {
 
 // get the control Button Element fthat corresponds to the param name
 const getControlElementForParamName = function(paramName) {
-    return document.getElementById(getControlButtonIdForParamName(paramName));
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+    return document.getElementById(getControlButtonIdForParamName(pname));
 };
 
 // get the document element that corresponds to the param name
 const getValueElementForParamName = function(paramName) {
-    return document.getElementById(getValueIdForParamName(paramName));
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+    return document.getElementById(getValueIdForParamName(pname));
 };
 
 // get the current selected value in the document element that corresponds to the param name
 // Note that the value should be reflected in the adjoining control button value textContent.
 const getValueForParamName = function(paramName){
     try {
+        const elem = getValueElementForParamName(paramName);
         return getValueElementForParamName(paramName).textContent.trim();
     } catch (error) {
-        return "";
+        return undefined;
     }
 };
 
 
 // get the VALUE BOX id for the element that corresponds to the param name
 const getValueIdForParamName = function(paramName) {
-    return "controlButton-" + paramName + "-value";
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+    return "controlButton-" + pname + "-value";
 };
 
 // set the VALUE BOX text for the element that corresponds to the param name
-
-const setValueTextForParamName = function(paramName, text, callback) {
+const setValueTextForParamName = function(paramName, text) {
     try {
         var text = text;
-        var value = text;
         var param = matsCollections.CurveParams.findOne({name: paramName});
         if (param === undefined) {
             param = matsCollections.PlotParams.findOne({name: paramName});
@@ -51,6 +58,7 @@ const setValueTextForParamName = function(paramName, text, callback) {
         if (param === undefined) {
             return;
         }
+        if (text === undefined) {
         if (param.multiple) {
             // .... if multi selected  get the first .. last
             const selection = getInputElementForParamName(paramName).selectedOptions;
@@ -61,14 +69,12 @@ const setValueTextForParamName = function(paramName, text, callback) {
             } else {
                 text = selection[0].textContent + " .. " + selection[selection.length - 1].textContent;
             }
-            value = [];
-            for(var i = 0; i < selection.length; i++) {
-                value.push(selection[i].textContent);
             }
         }
-        getValueElementForParamName(paramName).textContent = text;
-        var elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-        elem.setAttribute("data-mats-currentValue", value);
+        const elem = getValueElementForParamName(paramName);
+        if (elem.textContent !== text) {
+            elem.textContent = text;
+        }
     } catch(error){
         console.log ("Error: could not find param: " + paramName);
     }
@@ -76,28 +82,40 @@ const setValueTextForParamName = function(paramName, text, callback) {
 
 // get the document id for the element that corresponds to the param name
 const getInputIdForParamName = function(paramName) {
-    var param = matsCollections.CurveParams.findOne({name: paramName});
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+    var param = matsCollections.CurveParams.findOne({name: pname});
     if (param === undefined) {
-        param = matsCollections.PlotParams.findOne({name: paramName});
+        return undefined;
     }
     if (param === undefined) {
-        param = matsCollections.Scatter2dParams.findOne({name: paramName});
+        param = matsCollections.PlotParams.findOne({name: pname});
+    }
+    if (param === undefined) {
+        param = matsCollections.Scatter2dParams.findOne({name: pname});
         if (param === undefined) {
             return undefined;
         }
     }
-    return (param.name + "-" + param.type).replace(/ /g,'-');
+    if (param.type === matsTypes.InputTypes.dateRange) {
+        return  ("element-" + param.name).replace(/ /g, '-');
+    } else {
+        return (param.name + "-" + param.type).replace(/ /g, '-');
+    }
 };
 
 
 // get the parameter for the element that corresponds to the param name
 const getParameterForName = function(paramName) {
-    var param = matsCollections.CurveParams.findOne({name: paramName});
+    // scatter axis don't really exist in matsCollections.CurveParams but they are elements
+    const pname = paramName.replace(/^.axis-/, '');
+
+    var param = matsCollections.CurveParams.findOne({name: pname});
     if (param === undefined) {
-        param = matsCollections.PlotParams.findOne({name: paramName});
+        param = matsCollections.PlotParams.findOne({name: pname});
     }
     if (param === undefined) {
-        param = matsCollections.Scatter2dParams.findOne({name: paramName});
+        param = matsCollections.Scatter2dParams.findOne({name: pname});
         if (param === undefined) {
             return undefined;
         }
@@ -107,28 +125,43 @@ const getParameterForName = function(paramName) {
 
 // get the document element that corresponds to the param name
 const getInputElementForParamName = function(paramName) {
-    const id = getInputIdForParamName(paramName);
+    const name = paramName.replace(/^.axis-/, '');
+    const id = getInputIdForParamName(name);
     if (id === undefined) {
         return undefined;
     }
     return document.getElementById(id);
 };
 
+// get a param disabledOptions list - if any.
+const getDisabledOptionsForParamName = function(paramName) {
+    const name = paramName.replace(/^.axis-/, '');
+    const id = getInputIdForParamName(name);
+    if (id === undefined) {
+        return undefined;
+    }
+    const param = getParameterForName(name);
+    if (!param) {
+        return undefined;
+    }
+    return param.disabledOptions;
+};
+
 // set the input for the element that corresponds to the param name
 // also sets a data-mats-currentValue attribute
 const setInputForParamName = function(paramName,value) {
+    const param = getParameterForName(paramName);
     const id = getInputIdForParamName(paramName);
-
     const idSelectorStr = "#" + id;
     const idSelector = $(idSelectorStr);
-    idSelector.val(value);
-    idSelector.attr("data-mats-currentValue", value);
-    idSelector.trigger("change");
-};
 
-const getElementDataForParamName = function(paramName) {
-    const elem = document.getElementById(matsTypes.InputTypes.controlButton + "-" + paramName + '-value');
-    return elem.getAttribute("data-mats-currentValue");
+    // SHOULD DEAL WITH CHECKBOXES HERE
+    if (param.type === matsTypes.InputTypes.radioGroup ) {
+        $("#" + id + "-" + value).prop("checked",true);
+    } else {
+        idSelector.val(value);
+        setValueTextForParamName(paramName, value);
+    }
 };
 
 const getElementValues = function() {
@@ -266,38 +299,166 @@ const collapseParams = function() {
     });
 };
 
-const typeSort = function (arr) {
-    var i;
-    var type = "numerical";
-    if (arr === undefined) {
-        return arr;
+const collapseParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    if (param === undefined || param === null) {
+        return;
     }
-    for (i=0;i<arr.length;i++) {
-        if (isNaN(Number(arr[i]))) {
-            type = "canonical";
-            break;
+    if (param.type !== matsTypes.InputTypes.selectMap) {
+        const selector = "element" + "-" + param.name;
+        if (document.getElementById(selector)) {
+            document.getElementById(selector).style.display = "none";
         }
     }
-    if (type === "numerical") {
-        arr.sort(function(a,b){return a - b;});
-    } else {
-        arr.sort();
+};
+
+const typeSort = function (arr) {
+    if (arr === undefined) {
+        return undefined;
     }
-    return arr;
+    return arr.sort(function(a,b) {
+        if (isNaN(Number(a) && isNaN(Number(b)))) { // string compare
+            const A = a.toLowerCase();
+            const B = b.toLowerCase();
+            if (A < B){
+                return -1;
+            }else if (A > B){
+                return  1;
+            }else{
+                return 0;
+            }
+        } else if (isNaN(Number(a) || isNaN(Number(b)))) {   // number always precedes
+            if (isNaN(Number(a))) {
+                return 1;
+            } else {
+                return -1
+            }
+        } else {
+            return a - b;  // numerical compare
+        }
+    });
+};
+
+const setDefaultForParamName = function (param) {
+    const paramName = param.name;
+    const type = param.type;
+    const defaultValue = param.default;
+    if (paramName == 'label') {
+        setInputForParamName(paramName, Session.get('NextCurveLabel'));
+    } else {
+        if (defaultValue != "undefined") {
+            if (type === matsTypes.InputTypes.select && (defaultValue === -1 || defaultValue === undefined || defaultValue === matsTypes.InputTypes.unused)) {
+                setInputForParamName(paramName, matsTypes.InputTypes.unused);
+            }
+            else {
+                setInputForParamName(paramName, defaultValue);
+            }
+        }
+    }
+};
+
+const setAllParamsToDefault = function() {
+    // default the superiors and refresh them so that they cause the dependent options to refresh
+    var params = matsCollections.CurveParams.find({}).fetch();
+
+    const superiors = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : true }}).fetch();
+    superiors.forEach(function(param) {
+        setDefaultForParamName(param);
+        // actually call the refresh directly - don't use an event, because we want this all to be synchronous
+        matsSelectUtils.refresh(null,param.name);
+        // remove from params list - actually rewrite params list NOT with this param
+        params = params.filter(function( obj ) {
+            return obj.name !== param.name;
+        });
+    });
+    // refresh all the non superiors to their default values
+    const nonDependents = matsCollections.CurveParams.find({"superiorNames" : { "$exists" : true }}).fetch();
+    nonDependents.forEach(function(param) {
+        setDefaultForParamName(param);
+        matsSelectUtils.refresh(null,param.name);
+        // remove from params list - actually rewrite params list NOT with this param
+        params = params.filter(function( obj ) {
+            return obj.name !== param.name;
+        });
+    });
+    // reset everything else
+    params.forEach(function(param) {
+        setDefaultForParamName(param);
+    });
+};
+// is the input element displaying? used by curve_param_item_group
+const isInputElementVisible = function(paramName) {
+    const name = paramName.replace(/^.axis-/, ''); // need to acount for scatter plots params
+    const inputElement = getInputElementForParamName(name);
+    return $(inputElement).is(':visible');
+};
+
+// is the input element displaying? used by curve_param_item_group
+const isParamVisible = function(paramName) {
+    const name = paramName.replace(/^.axis-/, ''); // need to acount for scatter plots params
+    const paramRef = "#" + name + "-item";
+    return $(paramRef).is(':visible');
+};
+
+// is the input element displaying? used by curve_param_item_group
+const isControlButtonVisible = function(paramName) {
+    const name = paramName.replace(/^.axis-/, ''); // need to acount for scatter plots params
+    const paramRef = "#controlButton-" + name;
+    return $(paramRef).is(':visible');
+};
+
+const setInputValueForParamAndtriggerChange = function (paramName, value) {
+    const elem = getInputElementForParamName(paramName);
+    elem.value = value;
+    setValueTextForParamName(paramName,elem.value);
+    $(elem).trigger('change');
+};
+
+const getOptionsMapForParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    return param.optionsMap;
+};
+
+const getOptionsForParam = function(paramName) {
+    const param = matsCollections.CurveParams.findOne({name:paramName});
+    return param.options;
+};
+
+const getCurveItemValueForParamName = function(curveNumber, paramName) {
+    //MODEL-curve-0-Item
+//    const id = paramName.toString().toUpperCase() + "-curve-" + curveNumber + "-Item"; // the id of the text span for a curveItem
+//    return text = ‌‌document.getElementById(id).innerText;
+    // const elem = $("#" + id);
+    // var text = undefined;
+    // if (elem) {
+    //     text = elem.text();
+    // }
 };
 
 export default matsParamUtils = {
-    getControlButtonIdForParamName:getControlButtonIdForParamName,
-    getControlElementForParamName:getControlElementForParamName,
-    getValueElementForParamName:getValueElementForParamName,
-    getValueForParamName:getValueForParamName,
-    setValueTextForParamName:setValueTextForParamName,
-    getInputIdForParamName:getInputIdForParamName,
-    getInputElementForParamName:getInputElementForParamName,
-    getElementDataForParamName:getElementDataForParamName,
-    getElementValues:getElementValues,
-    setInputForParamName:setInputForParamName,
-    expandParams:expandParams,
-    collapseParams:collapseParams,
-    getParameterForName:getParameterForName,
-    typeSort:typeSort};
+    getDisabledOptionsForParamName: getDisabledOptionsForParamName,
+    getControlButtonIdForParamName: getControlButtonIdForParamName,
+    getControlElementForParamName: getControlElementForParamName,
+    getValueElementForParamName: getValueElementForParamName,
+    getValueForParamName: getValueForParamName,
+    setValueTextForParamName: setValueTextForParamName,
+    getValueIdForParamName: getValueIdForParamName,
+    getInputIdForParamName: getInputIdForParamName,
+    getInputElementForParamName: getInputElementForParamName,
+    getElementValues: getElementValues,
+    setInputForParamName: setInputForParamName,
+    expandParams: expandParams,
+    collapseParams: collapseParams,
+    collapseParam: collapseParam,
+    getParameterForName: getParameterForName,
+    setDefaultForParamName: setDefaultForParamName,
+    setAllParamsToDefault: setAllParamsToDefault,
+    typeSort: typeSort,
+    isInputElementVisible: isInputElementVisible,
+    isParamVisible: isParamVisible,
+    isControlButtonVisible:isControlButtonVisible,
+    setInputValueForParamAndtriggerChange:setInputValueForParamAndtriggerChange,
+    getOptionsForParam:getOptionsForParam,
+    getOptionsMapForParam:getOptionsMapForParam,
+    getCurveItemValueForParamName:getCurveItemValueForParamName
+};

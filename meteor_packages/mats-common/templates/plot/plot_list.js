@@ -301,6 +301,8 @@ Template.plotList.events({
                     matsParamUtils.setValueTextForParamName('dates',p.data.dates);
                 }
 
+                // reset the plotFormat
+
                 // reset the plotParams
                 Session.set("PlotParams", p);
                 //set the used defaults so that subsequent adds get a core default
@@ -310,6 +312,7 @@ Template.plotList.events({
                 $("#restoreModal").modal('hide');
                 Session.set("spinner_img", "spinner.gif");
                 document.getElementById("spinner").style.display="none";
+                matsParamUtils.collapseParams();
                 return false;
                 break;
             case "plot":
@@ -322,6 +325,7 @@ Template.plotList.events({
                     document.getElementById("spinner").style.display="none";
                     return false;
                 }
+                Session.set('graphViewMode',matsTypes.PlotView.graph);
 
                 var graphFunction = pgf.graphFunction;
                 matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, result) {

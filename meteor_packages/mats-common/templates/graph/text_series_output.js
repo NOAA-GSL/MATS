@@ -8,12 +8,18 @@ import { matsMathUtils } from 'meteor/randyp:mats-common';
 var times = [];
 
 const getDataForTime = function(curveIndex, time) {
-     for (var i =0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
-         if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time) ) {
-             return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
-         }
-     }
-     return undefined;
+    try {
+        for (var i = 0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
+            if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time)) {
+                return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
+            }
+        }
+        return undefined;
+    } catch (e)
+        {
+            console.log ("getDataForTime error: " + e);
+            return undefined;
+        }
 };
 
 Template.textSeriesOutput.helpers({
@@ -41,7 +47,9 @@ Template.textSeriesOutput.helpers({
       return curve.label;
     },
     curveText: function () {
-        this.regionName = this.region.split(' ')[0];  // regionName might be needed in getCurveText but only region is defined
+        if (this.regionName) {
+            this.regionName = this.region.split(' ')[0];
+        }  // regionName might be needed in getCurveText but only region is defined
         const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
         return text;
     },
@@ -168,24 +176,17 @@ Template.textSeriesOutput.helpers({
         }
         const resultData = matsCurveUtils.PlotResult.data[cindex].data;
         var data = resultData.map(function(value){return value[1];});
-        for (var i = 0; i < data.length; i++){
-            if (data[i] == null){
-                data.splice(i, 1);
-                i--;
-            }
-        }
-
-        const weimean = matsMathUtils.mean(data).toPrecision(4);
-        const min =  Math.min.apply(Math, data).toPrecision(4);
-        const max =  Math.max.apply(Math, data).toPrecision(4);
-        const sd = Math.sqrt(matsMathUtils.variance(data)).toPrecision(4);
-        const se = Math.sqrt(matsMathUtils.variance(data)/(data.length-1)).toPrecision(4);
+        var times = resultData.map(function(value){return value[0];});
+        const stats = matsCurveUtils.get_err(data,times);
+        const n = data.length;
         const line = "<td>" + curve.label + "</td>" +
-            "<td>" + weimean + "</td>" +
-            "<td>" + min + "</td>" +
-            "<td>" + max + "</td>" +
-            "<td>" + sd + "</td>" +
-            "<td>" + se + "</td>";
+            "<td>" + stats.d_mean.toPrecision(4) + "</td>" +
+            "<td> +/- " + stats.stde_betsy.toPrecision(4) + "</td>" +
+            "<td>" + stats.n_good + "</td>" +
+            "<td>" + stats.sd.toPrecision(4) + "</td>" +
+            "<td>" + stats.lag1.toPrecision(4) + "</td>" +
+            "<td>" + stats.minVal.toPrecision(4) + "</td>" +
+            "<td>" + stats.maxVal.toPrecision(4) + "</td>";
         return line;
     }
 });

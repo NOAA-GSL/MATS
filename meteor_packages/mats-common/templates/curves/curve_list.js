@@ -6,6 +6,37 @@ import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 Template.curveList.helpers({
+    displayPlotUnMatched: function() {
+        // scatter plots can't match
+        if (Session.get('plotType') === matsTypes.PlotTypes.scatter2d) {
+            return "none";
+        }
+        // don't allow plotting when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    displayPlotMatched: function() {
+        // don't allow plotting when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    displaySaveSettings: function() {
+        // don't allow saving settings when editing
+        const mode = Session.get("editMode");
+        if (mode === undefined || mode === "") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
     curves: function () {
         return Session.get('Curves');
     },
@@ -50,14 +81,39 @@ Template.curveList.helpers({
         } else {
             return "Changing " + Session.get('editMode');
         }
+    },
+    matchedLabel: function() {
+        if (Session.get('matchName'  === undefined)) {
+            if (setMatchName) {
+                setMatchName();
+            } else {
+                Session.set('matchName','plot matched');
+            }
+        } else {
+            Session.set('matchName','plot matched');
+        }
+        return Session.get('matchName');
     }
 });
 
-
 Template.curveList.events({
     'click .remove-all': function () {
-        matsCurveUtils.clearAllUsed();
-        return false;
+        if (Session.get("confirmRemoveAll")) {
+            matsCurveUtils.removeAllCurves();
+            Session.set("editMode", "");
+            Session.set("paramWellColor", "#f5f5f5");  // default grey
+            Session.set("lastUpdate", Date.now());
+            Session.set("confirmRemoveAll","");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0 ) {
+                $("#modal-confirm-remove-all").modal();
+            }
+        }
+    },
+    'click .confirm-remove-all': function () {
+        Session.set("confirmRemoveAll", Date.now());
+        $("#remove-all").trigger('click');
     },
     'click .plot-curves-unmatched': function (event) {
         document.getElementById("spinner").style.display = "block";

@@ -3,7 +3,10 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import {matsPlotUtils } from 'meteor/randyp:mats-common';
 import {matsParamUtils } from 'meteor/randyp:mats-common';
-
+function shadeRGBColor(color, percent) {
+    var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
+    return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
+}
 Template.paramList.helpers({
     CurveParamGroups: function() {
         var lastUpdate = Session.get('lastUpdate');
@@ -21,31 +24,47 @@ Template.paramList.helpers({
     },
     log: function() {
         console.log(this);
+    },
+     paramWellColor: function() {
+        if (Session.get("paramWellColor") === undefined) {
+            Session.set("paramWellColor","rgb(245,245,245)");
+        }
+        if (Session.get("editMode") !== "") {
+            const curveBeingEdited = $.grep(Session.get("Curves"), function(c){return c.label == Session.get("editMode");});
+            if (curveBeingEdited === undefined || curveBeingEdited[0] === undefined) {
+                Session.set("paramWellColor","rgb(245,245,245)");
+                return  "rgb(245,245,245)";
+            }
+            const color = curveBeingEdited[0].color;
+            const lighterShadeOfColor = shadeRGBColor(color,0.2);
+            Session.set("paramWellColor",lighterShadeOfColor);
+        }
+
+         return Session.get("paramWellColor");
     }
 });
 
 Template.paramList.events({
     'click .edit-cancel': function() {
         Session.set('editMode','');
+        Session.set("paramWellColor","rgb(245,245,245)");
         var labelId = 'label-' + matsTypes.InputTypes.textInput;
         var label = document.getElementById(labelId);
         label.disabled = false;
         // reset parameters to match edited curve.....
         matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
+        matsParamUtils.collapseParams();
     },
     'click .reset': function(event,template) {
-        //location.reload();
+        const plotType = $('input[name=plot-type]:checked').val();
         event.preventDefault();
+        Session.set("paramWellColor","rgb(245,245,245)");
+        matsCurveUtils.removeAllCurves();
         matsCurveUtils.resetScatterApply();
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
-
-        // DO THIS DIFFERENTLY!!!!! USE A SESSION VARIABLE!!!
-        Blaze.remove(Blaze.getView(paramView));
-        Blaze.remove(Blaze.getView(plotView));
-        Blaze.render(Template.paramList,document.getElementById('paramView'));
-        Blaze.render(Template.plotList,document.getElementById('plotView'));
-
+        document.getElementById('plot-type-' + plotType).checked = true;
+        matsParamUtils.setAllParamsToDefault();
     },
     'click .expand': function() {
         matsParamUtils.expandParams();
@@ -55,6 +74,7 @@ Template.paramList.events({
     },
     // restore settings
     'click .restore-settings': function(event) {
+        Session.set("paramWellColor","rgb(245,245,245)");
         event.preventDefault();
         document.getElementById("restore-settings").click();
         return false;
@@ -67,6 +87,10 @@ Template.paramList.events({
      */
     'submit form': function (event, template) {
         event.preventDefault();
+            if(!matsParamUtils.getValueForParamName('label')) {
+                setError ('Label cannot be blank');
+                return;
+            }
             var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
             var curves = Session.get('Curves');
             var p = {};
@@ -85,6 +109,7 @@ Template.paramList.events({
                 var isUnused = matsParamUtils.getInputElementForParamName(cname) !== undefined &&
                     matsParamUtils.getValueForParamName(cname) == matsTypes.InputTypes.unused;
                 if (isHidden || isUnused) {
+                //if (isHidden) {
                     curveNames.splice(cindex,1);
                 }
             }
@@ -125,6 +150,7 @@ Template.paramList.events({
             if (Session.get('editMode')) {
                 var changingCurveLabel = Session.get('editMode');
                 Session.set('editMode', '');
+                Session.set("paramWellColor","rgb(245,245,245)");
                 var labelId = 'label-' + matsTypes.InputTypes.textInput;
                 var label = document.getElementById(labelId);
                 label.disabled = false;
@@ -186,11 +212,11 @@ Template.paramList.events({
                                 }
                                 p[paramElems[i].name].push(paramElems[i].value);
                             }
-                        }
-                     else if (paramElems[i].type === "button") {
+                        } else if (paramElems[i].type === "button") {
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
-                            p[paramElems[i].name] = (paramElems[i]).value;
+//                            p[paramElems[i].name] = (paramElems[i]).value;
+                            p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
                         }
                     }
                     if (paramElems[i].name && paramElems[i].name === 'label') {
@@ -209,6 +235,7 @@ Template.paramList.events({
             Session.set('Curves', curves);
             matsCurveUtils.setUsedColorsAndLabels(); // we have used a color and label so we have to set the next one
             matsCurveUtils.checkDiffs();
+            matsParamUtils.collapseParams();
             matsParamUtils.setInputForParamName('label',matsCurveUtils.getNextCurveLabel());
             return false;
     }

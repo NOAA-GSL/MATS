@@ -32,16 +32,15 @@ Accounts.ui.config({
     }
 });
 
-var ref = location.href;
-var pathArray = location.href.split( '/' );
-var protocol = pathArray[0];
-var hostport = pathArray[2];
-var app = pathArray[3] == "" ? "/" : pathArray[3];
-var matsRef = protocol + "//" + hostport;
-var helpRef = ref.endsWith('/') ? ref + "help" : ref + "/help";
+const ref = location.href;
+const pathArray = location.href.split( '/' );
+const protocol = pathArray[0];
+const hostport = pathArray[2];
+const app = pathArray[3] == "" ? "/" : pathArray[3];
+const matsRef = protocol + "//" + hostport;
+const helpRef = ref.endsWith('/') ? ref + "help" : ref + "/help";
 Session.set ("app",{appName:app,matsref:matsRef, appref:ref, helpref:helpRef});
 var collections = Object.keys(matsCollections).map(key => matsCollections[key]);
-
 Session.set("Mongol", {
     'collections': collections,
     'display': false,

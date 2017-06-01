@@ -1,33 +1,25 @@
-import { Meteor } from 'meteor/meteor';
-import { mysql } from 'meteor/pcel:mysql';
-//import { Future } from 'fibers/future';  // this is broken somehow in meteor 1.4.1 - shouldn't be - might be fixed in later release
-const Future = Npm.require('fibers/future');
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsCollections } from 'meteor/randyp:mats-common';
+import {Meteor} from 'meteor/meteor';
+import {mysql} from 'meteor/pcel:mysql';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
 
-var modelOptionsMap ={};
-var regionModelOptionsMap ={};
-var modelTableMap ={};
+var modelOptionsMap = {};
+// models have option groups so we use a Map() because it maintains order.
+var modelOptionsGoups = {};
+var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
+var myModels = [];
+var regionModelOptionsMap = {};
+var modelTableMap = {};
+var modelDateRangeMap = {};
 var forecastLengthOptionsMap = {};
+const dateInitStr = matsCollections.dateInitStr();
+const dateInitStrParts = dateInitStr.split(' - ');
+const startInit = dateInitStrParts[0];
+const stopInit = dateInitStrParts[1];
+const dstr = startInit + ' - ' + stopInit;
 
-var date = new Date();
-var dateOneMonthPrior = new Date();
-dateOneMonthPrior.setMonth(dateOneMonthPrior.getMonth() - 1);
-var yr = date.getFullYear();
-var day = date.getDate();
-var month = date.getMonth();
-var hour = date.getHours();
-var minute = date.getMinutes();
-var dstrToday = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-yr = dateOneMonthPrior.getFullYear();
-day = dateOneMonthPrior.getDate();
-month = dateOneMonthPrior.getMonth();
-hour = dateOneMonthPrior.getHours();
-minute = dateOneMonthPrior.getMinutes();
-var dstrOneMonthPrior = month + '/' + day + '/' + yr + " " + hour + ":" + minute;
-var dstr = dstrOneMonthPrior + " - " + dstrToday;
- 
-var doPlotParams = function () {
+const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -37,8 +29,9 @@ var doPlotParams = function () {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -57,7 +50,7 @@ var doPlotParams = function () {
                 name: 'plotFormat',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
-                options: Object.keys(plotFormats),
+                options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -66,26 +59,19 @@ var doPlotParams = function () {
                 displayGroup: 2
             });
     }
-    return dstr;
 };
 
-var doCurveParams = function () {
+const doCurveParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
     if (matsCollections.CurveParams.find().count() == 0) {
-        var date = new Date();
-        var yr = date.getFullYear();
-        var day = date.getDate();
-        var month = date.getMonth();
-        var dstr = month + '/' + day + '/' + yr;
-        var optionsMap = {};
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
                 type: matsTypes.InputTypes.textInput,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap: {},
+                options: [],   // convenience
                 controlButtonCovered: true,
                 default: '',
                 unique: true,
@@ -100,13 +86,15 @@ var doCurveParams = function () {
             {
                 name: 'model',
                 type: matsTypes.InputTypes.select,
-                optionsMap:modelOptionsMap,
-                tableMap:modelTableMap,
-                options:Object.keys(modelOptionsMap),   // convenience
-                optionsQuery:"select model from regions_per_model_mats",
-                dependentNames: ["region", "forecast-length"],
+                optionsMap: modelOptionsMap,
+                optionsGroups: modelOptionsGoups,
+                disabledOptions:modelDisabledOptions,
+                tableMap: modelTableMap,
+                dates: modelDateRangeMap,
+                options: myModels,   // convenience
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
+                default: myModels[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -117,16 +105,17 @@ var doCurveParams = function () {
             {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
-                optionsMap:regionModelOptionsMap,
-                options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[myModels[0]],   // convenience
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+                default: regionModelOptionsMap[myModels[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 1,
+                help: 'region.html'
             });
 
         optionsMap = {
@@ -155,8 +144,8 @@ var doCurveParams = function () {
                 // time series we never append element 2. Element 3 is used to give us error values for error bars.
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap: optionsMap,
+                options: ['RMS','Bias (Model - RAOB)','N','model average','RAOB average'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 default: 'RMS',
@@ -179,7 +168,7 @@ var doCurveParams = function () {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options: ['temperature','RH','RHobT','winds','height'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 default: 'winds',
@@ -189,13 +178,13 @@ var doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {All:['All'], Clear:['Clear'], Cloudy:['Cloudy']};
+        optionsMap = {All: ['All'], Clear: ['Clear'], Cloudy: ['Cloudy']};
         matsCollections.CurveParams.insert(
             {
                 name: 'cloud-coverage',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options: ['All','Clear','Cloudy'],
                 controlButtonCovered: true,
                 unique: false,
                 default: 'All',
@@ -205,17 +194,17 @@ var doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {BOTH: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+        optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options: ['both','0-UTC','12-UTC',],
                 controlButtonCovered: true,
-                selected: 'BOTH',
+                selected: 'both',
                 unique: false,
-                default: 'BOTH',
+                default: 'both',
                 controlButtonVisibility: 'block',
                 displayOrder: 7,
                 displayPriority: 1,
@@ -237,7 +226,7 @@ var doCurveParams = function () {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options: ['None','1D','3D','7D','30D','60D','90D','180D'],
                 controlButtonCovered: true,
                 unique: false,
                 selected: 'None',
@@ -253,13 +242,13 @@ var doCurveParams = function () {
             {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap:forecastLengthOptionsMap,
-                options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                optionsMap: forecastLengthOptionsMap,
+                options: forecastLengthOptionsMap[myModels[0]],
                 superiorNames: ['model'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][2],
+                default: forecastLengthOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
@@ -269,14 +258,14 @@ var doCurveParams = function () {
             {
                 name: 'top',
                 type: matsTypes.InputTypes.numberSpinner,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                min: '0',
-                max: '1000',
-                step: '25',
+                optionsMap: {},
+                options: [],
+                min: 1,
+                max: 1000,
+                step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '100',
+                default: 1,
                 controlButtonVisibility: 'block',
                 displayOrder: 10,
                 displayPriority: 1,
@@ -287,29 +276,38 @@ var doCurveParams = function () {
             {
                 name: 'bottom',
                 type: matsTypes.InputTypes.numberSpinner,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                min: '100',
-                max: '1000',
-                step: '25',
+                optionsMap: {},
+                options: [],
+                min: 100,
+                max: 1050,
+                step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: '1000',
+                default: 1050,
                 controlButtonVisibility: 'block',
                 displayOrder: 11,
                 displayPriority: 1,
                 displayGroup: 4,
                 help: 'bottom-help.html'
             });
-        optionsMap = {'1 day':['1 day'], '3 days':['3 days'], '7 days':['7 days'],'31 days':['31 days'], '90 days':['90 days'],'180 days':['180 days'],'365 days':['365 days']};
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'curve-dates',
                 type: matsTypes.InputTypes.dateRange,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
-                startDate: dstrOneMonthPrior,
-                stopDate: dstrToday,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -330,7 +328,7 @@ var doCurveParams = function () {
  The curveTextPattern is found by its name which must match the corresponding matsCollections.PlotGraphFunctions.PlotType value.
  See curve_item.js and graph.js.
  */
-var doCurveTextPatterns = function () {
+const doCurveTextPatterns = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveTextPatterns.remove({});
     }
@@ -339,101 +337,54 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
+                ['', 'model', ' in '],
                 ['', 'regionName', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
+                ['', 'variable', ': '],
+                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
-                ['to', 'bottom', ' '],
+                ['to ', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
-            ]
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","average","forecast-length","top","bottom"
+            ],
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
+                ['', 'model', ' in '],
                 ['', 'regionName', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
+                ['', 'variable', ': '],
+                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
                 ['to', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' '],
-                ['','curve-dates','']
-            ]
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","forecast-length","top","bottom","curve-dates"
+            ],
+            groupSize: 6
         });
     }
 };
 
-var doSavedCurveParams = function () {
+const doSavedCurveParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.SavedCurveParams.remove({});
     }
     if (matsCollections.SavedCurveParams.find().count() == 0) {
-        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList:[]});
+        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
     }
 };
 
-var doSettings = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Settings.remove({});
-    }
-    if (matsCollections.Settings.find().count() == 0) {
-        matsCollections.Settings.insert({
-            LabelPrefix: "C-",
-            Title: "Upper Air",
-            LineWidth: 3.5,
-            NullFillString: "---",
-            resetFromCode: true
-        });
-    }
-    // always do the version...
-    var settings = matsCollections.Settings.findOne();
-    var settingsId = settings._id;
-    settings.version = Assets.getText('version');
-    matsCollections.Settings.update(settingsId,{$set:settings});
-};
-
-var doColorScheme = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.ColorScheme.remove({});
-    }
-    if (matsCollections.ColorScheme.find().count() == 0) {
-        matsCollections.ColorScheme.insert({
-            colors: [
-                "rgb(255,102,102)",
-                "rgb(102,102,255)",
-                "rgb(255,153,102)",
-                "rgb(153,153,153)",
-                "rgb(210,130,130)",
-
-                "rgb(245,92,92)",
-                "rgb(92,92,245)",
-                "rgb(245,143,92)",
-                "rgb(143,143,143)",
-                "rgb(200,120,120)",
-
-                "rgb(235,92,92)",
-                "rgb(82,92,245)",
-                "rgb(235,143,92)",
-                "rgb(133,143,143)",
-                "rgb(190,120,120)",
-
-                "rgb(225,82,92)",
-                "rgb(72,82,245)",
-                "rgb(225,133,92)",
-                "rgb(123,133,143)",
-                "rgb(180,120,120)"
-            ]
-        });
-    }
-};
-
-var doPlotGraph = function () {
+const doPlotGraph = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotGraphFunctions.remove({});
     }
@@ -442,7 +393,7 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphSeries",
             dataFunction: "dataSeries",
-            checked:true
+            checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -453,42 +404,6 @@ var doPlotGraph = function () {
     }
 };
 
-var doCredentials = function () {
-// the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Credentials.remove({});
-    }
-    if (matsCollections.Credentials.find().count() == 0) {
-        matsCollections.Credentials.insert({
-            name: "oauth_google",
-            clientId: "499180266722-aai2tddo8s9edv4km1pst88vebpf9hec.apps.googleusercontent.com",
-            clientSecret: "xdU0sc7SbdOOEzSyID_PTIRE",
-            refresh_token: "1/3bhWyvCMMfwwDdd4F3ftlJs3-vksgg7G8POtiOBwYnhIgOrJDtdun6zK6XiATCKT"
-        });
-    }
-};
-
-var doAuthorization = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Authorization.remove({});
-    }
-    if (matsCollections.Authorization.find().count() == 0) {
-        matsCollections.Authorization.insert({email: "randy.pierce@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
-        matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
-    }
-};
-
-var doRoles = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Roles.remove({});
-    }
-    if (matsCollections.Roles.find().count() == 0) {
-        matsCollections.Roles.insert({name: "administrator", description: "administrator privileges"});
-    }
-};
 
 Meteor.startup(function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -496,152 +411,192 @@ Meteor.startup(function () {
     }
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name:"sumSetting",
+            name: "sumSetting",
             role: "sum_data",
             status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
-            database    : 'ruc_ua_sums2',
-            connectionLimit : 10
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'writer',
+            password: 'amt1234',
+            database: 'ruc_ua_sums2',
+            connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name:"modelSetting",
+            name: "modelSetting",
             role: "model_data",
             status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'writer',
-            password    : 'amt1234',
-            database    : 'ruc_ua',
-            connectionLimit : 10
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'writer',
+            password: 'amt1234',
+            database: 'ruc_ua',
+            connectionLimit: 10
         });
     }
-    var modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    var myModels = [];
+    var modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 10
+    });
+    var rows;
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
     modelPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    var sumSettings = matsCollections.Databases.findOne({role:"sum_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+    var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 10
+    });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    var modelRegionNumberMap = {};
+
+
+    // build regionDescriptions, myModels, modelOptionsMap, modelTableMap, RegionModelOptionsMap, forecastLengthOptionsMap
+    /*
+         regionDescriptions = {
+             region1Number : regionDescriotionText,
+             regionN2umber : region2DescriotionText,
+             .
+             .
+         }
+         myModels =["model1", "model2" ... "modeln"]
+         modelOptionsMap = {
+            "model1" : ["model1"],
+            "model2" : ["model2"],
+            .
+            .
+            "modeln" : ["modeln"]
+        }
+        modelTableMap = {
+            "model1" : "tableNamePrefix",   // something like LAPS_HWT_Areg
+            "model2" : "tableNamePrefix",
+            .
+            .
+            "modeln" : "Areg" OR "reg"
+        }
+        RegionModelOptionsMap = {
+            "model1" : ["region1"],
+            "model2" : ["region2"],
+            .
+            .
+            "modeln" : ["region"]
+        }
+        forecastLengthOptionsMap = {
+            "model1" : ["0","1", .....],
+            "model2" : ["0","1", .....],
+            .
+            .
+            "modeln" : ["0","1", .....]
+        }
+     */
+    //regionNumberDescriptionMapping - gives us a region description for a region number
+    var regionNumberDescriptionMapping = [];
     try {
-        var statement = "select model,regions from regions_per_model_mats";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model.trim();
-                    var regions = rows[i].regions;
-                    var regionMapping = "Areg";
-                    if (model=="NAM" || model=="isoRR1h" || model=="isoRRrapx" || model=="isoBak13"){
-                        regionMapping = "reg";
-                    }
-
-                    var valueList = [];
-                    valueList.push(model);
-                    modelOptionsMap[model] = valueList;
-
-                    var tablevalueList = [];
-                    tablevalueList.push(regionMapping);
-                    modelTableMap[model] = tablevalueList;
-                    myModels.push(model);
-
-                    var regionArr = regions.split(',');
-
-                    modelRegionNumberMap[model] = regionArr;
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
+        matsCollections.RegionDescriptions.remove({});
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
+        for (var i = 0; i < rows.length; i++) {
+            regionNumberDescriptionMapping[rows[i].regionMapTable] = rows[i].description;
+            matsCollections.RegionDescriptions.insert({regionMapTable: rows[i].regionMapTable, description: rows[i].description});
+        }
     } catch (err) {
-        console.log(err.message);
+        console.log("regionNumberDescriptionMapping:" + err.message);
     }
-
+    // all the rest
     try {
-        var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
+        // rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, table_name_prefix, display_text, regions, fcst_lens, category," +
+        //     "display_order, RPM.id, mindate, minhour, maxdate, maxhour, numrecs " +
+        // "FROM " +
+        // "regions_per_model_mats_all_categories AS RPM, " +
+        //     "all_display_categories AS DC " +
+        // "WHERE " +
+        // "RPM.display_category = DC.id " +
+        // "ORDER BY display_order;"
+        // );
 
-                for (var i = 0; i < rows.length; i++) {
-                    var model = rows[i].model;
-                    var forecastLengths = rows[i].fcst_lens;
-                    var forecastLengthArr = forecastLengths.split(',');
-                    forecastLengthOptionsMap[model] = forecastLengthArr;
-                }
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select RPM.id, " +
+            "display_order, model, table_name_prefix," +
+            " display_text, regions, fcst_lens, category, DC.id," +
+            " mindate, minhour, maxdate, maxhour, numrecs " +
+            "from " +
+            "regions_per_model_mats_all_categories as RPM, " +
+            "all_display_categories as DC " +
+            "where " +
+            "RPM.display_category = DC.id " +
+            "order by display_order;");
+
+        var label = "";
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model.trim();
+            var regions = rows[i].regions;
+            var tableNamePrefix = rows[i].table_name_prefix.trim();
+            var category = "──" + rows[i].category + "──";
+            // needs to look like 02/10/2016 12:10
+            var minDate = moment(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var maxDate = moment(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
+            if (label === "" || label !== category) {
+                label = category;
+                // the models param has option groups so we have to create a list of disabled options that act as the group labels
+                modelDisabledOptions.push(label);
+                modelOptionsGoups[label] = [];
             }
-            qFuture['return']();
-        }));
-        qFuture.wait();
+            myModels.push(model);
+            // modelOptionsGroups
+            modelOptionsGoups[label].push(model);
+            //modelOptionsMap
+            modelOptionsMap[model] = [model];
+            // modelDates - holds the valid data date range for a model
+            modelDateRangeMap[model] = {minDate:minDate, maxDate:maxDate};
+            modelTableMap[model] = tableNamePrefix;
+            var regionNumbers = JSON.parse(regions.split(','));
+            regionModelOptionsMap[model] = [];
+            for (var i1 = 0; i1 < regionNumbers.length; i1++) {
+                regionModelOptionsMap[model].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+            }
+            // forecastLengthOptionsMap
+            var forecastLengths = JSON.parse(rows[i].fcst_lens);
+            forecastLengthOptionsMap[model] = forecastLengths.map(String);
+        }
+
     } catch (err) {
-        console.log(err.message);
+        console.log("upperair main.js",err.message);
     }
 
     var regionNumberDescriptionMapping = [];
-
     try {
-        var statement = "select regionMapTable,description from region_descriptions_mats_new;";
-        var qFuture = new Future();
-        modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-            if (err != undefined) {
-                console.log(err.message);
-            }
-            if (rows === undefined || rows.length === 0) {
-                console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-            } else {
-                matsCollections.RegionDescriptions.remove({});
-                for (var i = 0; i < rows.length; i++) {
-                    var regionNumber = (rows[i].regionMapTable);
-                    var description = rows[i].description;
-                    var valueList = [];
-                    valueList.push(regionNumber);
-                    regionNumberDescriptionMapping[regionNumber] = description;
-                    matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber,  description: description});
-                }
-            }
-            qFuture['return']();
-        }));
-        qFuture.wait();
-    } catch (err) {
-        console.log(err.message);
-    }
-
-    // build RegionModelOptionsMap
-    for (var i = 0 ; i < myModels.length; i++) {
-        var regionNumbers = modelRegionNumberMap[myModels[i]];
-        regionModelOptionsMap[myModels[i]] = [];
-        for (var i1 = 0; i1 < regionNumbers.length; i1++) {
-            regionModelOptionsMap[myModels[i]].push(regionNumberDescriptionMapping[regionNumbers[i1]]);
+        matsCollections.RegionDescriptions.remove({});
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select regionMapTable,description from region_descriptions_mats_new;");
+        for (var i = 0; i < rows.length; i++) {
+            var regionNumber = (rows[i].regionMapTable);
+            var description = rows[i].description;
+            var valueList = [];
+            valueList.push(regionNumber);
+            regionNumberDescriptionMapping[regionNumber] = description;
+            matsCollections.RegionDescriptions.insert({regionMapTable: regionNumber, description: description});
         }
+    } catch (err) {
+        console.log("RegionDescriptions error: ", err.message);
     }
 
-    doRoles();
-    doAuthorization();
-    doCredentials();
-    doPlotGraph();
-    doColorScheme();
-    doSettings();
-    doCurveParams();
-    doSavedCurveParams();
-    doPlotParams();
-    doCurveTextPatterns();
+    // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
+    const appVersion = Assets.getText('version').trim();
+    matsMethods.resetApp({appName:'Upper Air', appVersion:appVersion});
     console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
+    console.log("process.env", JSON.stringify(process.env, null, 2));
 });
+
+// this object is global so that the reset code can get to it
+// These are application specific mongo data - like curve params
+appSpecificResetRoutines = {
+    doPlotGraph:doPlotGraph,
+    doCurveParams:doCurveParams,
+    doSavedCurveParams:doSavedCurveParams,
+    doPlotParams:doPlotParams,
+    doCurveTextPatterns:doCurveTextPatterns
+};

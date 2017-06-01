@@ -131,10 +131,5 @@ Template.administration.events({
 
         var settings = matsCollections.Settings.findOne({});
         settings.resetFromCode = false;
-        matsMethods.setSettings.call({settings:settings}, function (error) {
-            if (error) {
-                setError(new error(error.message));
-            }
-        });
     }
 });

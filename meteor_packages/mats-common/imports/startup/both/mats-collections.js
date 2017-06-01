@@ -32,6 +32,31 @@ var SavedCredentials = new Mongo.Collection("SavedCredentials");
 var SiteMap = new Mongo.Collection("SiteMap");
 //var ServiceConfiguration = new Mongo.Collection("ServiceConfiguration");
 
+
+const startInit = function () {
+    const today = new Date();
+    const thenDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const yr = thenDate.getUTCFullYear();
+    const day = thenDate.getUTCDate();
+    const month = thenDate.getUTCMonth() + 1;
+    const hour = 0;
+    const minute = 0;
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
+};
+const stopInit = function () {
+    const today = new Date();
+    const yr = today.getUTCFullYear();
+    const day = today.getUTCDate();
+    const month = today.getUTCMonth() + 1;
+    const hour = 0;
+    const minute = 0;
+    return month + '/' + day + "/" + yr + " " + ("0" + hour).slice(-2) + ":" + ("0" + minute).slice(-2);
+};
+
+const dateInitStr = function() {
+    return startInit() + " - " + stopInit();
+};
+
 export default matsCollections = {
     CurveParams:CurveParams,
     Scatter2dParams:Scatter2dParams,
@@ -60,5 +85,8 @@ export default matsCollections = {
     Credentials:Credentials,
     SavedCredentials:SavedCredentials,
     SiteMap:SiteMap,
+    startInit:startInit,
+    stopInit:stopInit,
+    dateInitStr: dateInitStr
 //    ServiceConfiguration:ServiceConfiguration
 };

@@ -11,3 +11,12 @@ Template.plotParamGroup.helpers({
         console.log(this);
     }
 });
+
+Template.plotParamGroup.events({
+    'click': function(event) {
+        //console.log('plotParamGroup click on ', event.currentTarget.id);
+        if (plotParamHandler) {
+            plotParamHandler (event);  // call app specific handler with event.
+        }
+    }
+});

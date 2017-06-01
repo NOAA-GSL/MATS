@@ -14,7 +14,9 @@ var  InputTypes = {
     element: 'element',
     selectMap: 'selectMap',
     custom: 'custom',
-    unused:"unused"
+    unused:"unused",
+    forecastSingleCycle: 'forecasts single cycle',
+    forecastMultiCycle: 'forecasts multi cycle'
     };
 
 var  PlotTypes = {
@@ -58,6 +60,17 @@ var  PlotAxisFilters = {
     site: "site"
 };
 
+var PlotView = {
+    graph: "graph",
+    textSeries: "textSeries",
+    textProfile: "textProfile",
+    textScatter: "textScatter"
+};
+
+var Messages = {
+    NO_DATA_FOUND: "INFO:0 data records found"
+};
+
 export default matsTypes = {
     InputTypes:InputTypes,
     PlotTypes:PlotTypes,
@@ -65,5 +78,7 @@ export default matsTypes = {
     PlotActions:PlotActions,
     BestFits:BestFits,
     MatchFormats:MatchFormats,
-    PlotAxisFilters:PlotAxisFilters
+    PlotAxisFilters:PlotAxisFilters,
+    PlotView:PlotView,
+    Messages:Messages
 }
