@@ -304,7 +304,11 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                                 continue;
                             }
                         }
-                        levels = JSON.parse(rows[rowIndex].data)['z'];
+                        if ( (myVariable === 'allws') || (myVariable === 'allwd')){
+                            levels = JSON.parse(rows[rowIndex].data)['allz'];
+                        } else {
+                            levels = JSON.parse(rows[rowIndex].data)['z'];
+                        }
                         if ( !(Array.isArray(levels))) {
                             levels = [Number(levels)];
                         }
