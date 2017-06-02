@@ -338,12 +338,6 @@ const showScatterFace = function() {
         Session.set('lastUpdate', Date.now());
     }
 };
-const removeAllCurves = function() {
-    // remove all curves
-    document.getElementById('remove-all') && document.getElementById('remove-all').click();
-    clearAllUsed();
-    matsParamUtils.setAllParamsToDefault();
-};
 
 const get_err = function (sVals, sSecs) {
     /* THIS IS DIFFERENT FROM THE ONE IN DATA_UTILS,
@@ -478,7 +472,6 @@ export default matsCurveUtils = {
     showScatterFace:showScatterFace,
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
-    removeAllCurves:removeAllCurves,
     get_err:get_err,
     PlotResult:PlotResult
 };

@@ -136,6 +136,26 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc = " + validFirstCycleUtc;
             } else {
                 if (dataSource_is_instrument) {
+
+                    /*
+                     select O.valid_utc as valid_utc,
+                     (O.valid_utc - ((O.valid_utc - (cycle_time/2)) %  cycle_time)) as avtime,
+                     (((O.valid_utc - (cycle_time/2))  % cycle_time)) as remainder
+                     from obs_recs as O ,
+                     surfrad_radflux_recs
+                     where  obs_recs_obsrecid = O.obsrecid
+                     and valid_utc>=(1493510400 - (cycle_time/2))
+                     and valid_utc<=(1493516000 + (cycle_time/2))
+                     and sites_siteid in ( list_of_site_ids );
+
+                     select O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) %  900)) as avtime,
+                     (((O.valid_utc - 450)  %900)) as remainder
+                     from obs_recs as O , surfrad_radflux_recs
+                     where  obs_recs_obsrecid = O.obsrecid
+                     and valid_utc>=(1493510400 - 450)
+                     and valid_utc<=(1493516000 + 450)
+                     and sites_siteid in (4)
+                     */
                     const utcOffset = Number(forecastLength * 3600);
                     if (dataSource_is_json) {
                         // verificationRunInterval is in milliseconds
