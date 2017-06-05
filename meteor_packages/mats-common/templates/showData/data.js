@@ -35,7 +35,7 @@ Template.data.onRendered(function() {
 
 Template.data.helpers({
     data:function() {
-        var dataObj = Session.get("data") === undefined ? {} : Session.get("data");
+        //var dataObj = Session.get("data") === undefined ? {} : Session.get("data");
         if (dataObj === undefined || dataObj['dataLink'] === undefined) {
             return dataObj;
         }

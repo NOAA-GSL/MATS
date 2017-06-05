@@ -59,8 +59,6 @@ Template.paramList.events({
         const plotType = $('input[name=plot-type]:checked').val();
         event.preventDefault();
         Session.set("paramWellColor","rgb(245,245,245)");
-        matsCurveUtils.removeAllCurves();
-        matsCurveUtils.resetScatterApply();
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
         document.getElementById('plot-type-' + plotType).checked = true;

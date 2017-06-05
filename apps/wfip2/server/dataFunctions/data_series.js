@@ -63,6 +63,7 @@ dataSeries = function (plotParams, plotFunction) {
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
         var verificationRunInterval = curve.verificationRunInterval;
+        var halfVerificationInterval = verificationRunInterval / 2;
         var dataSource_is_json = curve.dataSource_is_json;
         var statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
@@ -136,10 +137,30 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc = " + validFirstCycleUtc;
             } else {
                 if (dataSource_is_instrument) {
+
+                    /*
+                     select O.valid_utc as valid_utc,
+                     (O.valid_utc - ((O.valid_utc - (cycle_time/2)) %  cycle_time)) as avtime,
+                     (((O.valid_utc - (cycle_time/2))  % cycle_time)) as remainder
+                     from obs_recs as O ,
+                     surfrad_radflux_recs
+                     where  obs_recs_obsrecid = O.obsrecid
+                     and valid_utc>=(1493510400 - (cycle_time/2))
+                     and valid_utc<=(1493516000 + (cycle_time/2))
+                     and sites_siteid in ( list_of_site_ids );
+
+                     select O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) %  900)) as avtime,
+                     (((O.valid_utc - 450)  %900)) as remainder
+                     from obs_recs as O , surfrad_radflux_recs
+                     where  obs_recs_obsrecid = O.obsrecid
+                     and valid_utc>=(1493510400 - 450)
+                     and valid_utc<=(1493516000 + 450)
+                     and sites_siteid in (4)
+                     */
                     const utcOffset = Number(forecastLength * 3600);
                     if (dataSource_is_json) {
                         // verificationRunInterval is in milliseconds
-                        statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -148,7 +169,7 @@ dataSeries = function (plotParams, plotFunction) {
                         if (windVar) {
                             qVariable = myVariable + ",ws";
                         }
-                        statement = "select O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -171,7 +192,7 @@ dataSeries = function (plotParams, plotFunction) {
             try {
                 // queryWFIP2DB has embedded quality control for windDir
                 // if corresponding windSpeed < 3ms null the windDir
-                queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+                queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument);
                 //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
                 //    continue;
                 //}
@@ -197,7 +218,7 @@ dataSeries = function (plotParams, plotFunction) {
                 if (truthDataSource_is_instrument) {
                     const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -206,7 +227,7 @@ dataSeries = function (plotParams, plotFunction) {
                         if (windVar) {
                             qVariable = myVariable + ",ws";
                         }
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -222,7 +243,7 @@ dataSeries = function (plotParams, plotFunction) {
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument);
                     //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
                     //    continue;
                     //}

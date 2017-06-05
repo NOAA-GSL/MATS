@@ -70,6 +70,7 @@ dataProfile = function (plotParams, plotFunction) {
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
         var verificationRunInterval = curve.verificationRunInterval;
+        var halfVerificationInterval = verificationRunInterval / 2;
         var dataSource_is_json = curve.dataSource_is_json;
         var curveStatValues = [];
         var myVariable;
@@ -123,9 +124,19 @@ dataProfile = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
             if (dataSource_is_instrument) {
+                /*
+                this is the select format for averaging instrument data
+                 select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
+                 cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
+                 where  obs_recs_obsrecid = O.obsrecid
+                 and valid_utc>=1491177600 - 450 and
+                 valid_utc<=1491436800 - 450
+                 and sites_siteid in (4)  order by avtime;
+                 */
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                        "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
@@ -134,7 +145,7 @@ dataProfile = function (plotParams, plotFunction) {
                     if (windVar) {
                         qVariable = myVariable + ",ws";
                     }
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
                         " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                         " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
@@ -153,7 +164,7 @@ dataProfile = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             // queryWFIP2DB has embedded quality control for windDir
             // if corresponding windSpeed < 3ms null the windDir
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument);
             //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
             //    continue;
             //}
@@ -175,7 +186,8 @@ dataProfile = function (plotParams, plotFunction) {
                 if (truthDataSource_is_instrument) {
                     const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                            "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
@@ -184,7 +196,7 @@ dataProfile = function (plotParams, plotFunction) {
                         if (windVar) {
                             qVariable = myVariable + ",ws";
                         }
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
@@ -200,7 +212,7 @@ dataProfile = function (plotParams, plotFunction) {
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument);
                     //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
                     //    continue;
                     //}
@@ -509,6 +521,7 @@ dataProfile = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymax = Number.MIN_VALUE;
     var ymin = Number.MAX_VALUE;
+    //var qaCorrections = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         curve = curves[curveIndex];
         var partials = curve['partials'];
@@ -524,6 +537,7 @@ dataProfile = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var axisMap = {};
         var levelSums = {};
+        var curveStats = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};
         if (diffFrom === null || diffFrom === undefined) {  // don't calculate differences.
             // create a summary list of the partials ordered by level
             for (var time in partials) {
@@ -593,14 +607,20 @@ dataProfile = function (plotParams, plotFunction) {
                     sd: errorResult.sd,
                     n_good: errorResult.n_good,
                     lag1: errorResult.lag1,
-                    stde_betsy: errorResult.stde_betsy
+                    stde_betsy: errorResult.stde_betsy,
                 }
+                // const corrected  = errorResult.qaCorrected.length > 0 ? "<font style='color: red'>: QA corrected! (see data lineage)</font>" : "";
+                // if (corrected) {
+                //     qaCorrections[curve.label] = qaCorrections[curve.label] === undefined ? {} : qaCorrections[curve.label];
+                //     qaCorrections[curve.label][level] = qaCorrections[curve.label][level] === undefined ? [] : qaCorrections[curve.label][level];
+                //     qaCorrections[curve.label][level].push(errorResult.qaCorrected);
+                // }
                 tooltip = label +
-                    "<br>" + level + "mb" +
+                    "<br>" + level + "m" +
                     "<br> " + statistic + ":" + value.toPrecision(4) +
                     "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                     "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
-                    "<br>  n: " + errorResult.n_good +
+                    "<br>  n: " + errorResult.n_good + //corrected +
                     "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                     "<br>  stde: " + errorResult.stde_betsy +
                     "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4);
@@ -612,7 +632,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
             }
             // get the overall stats for the text output
-            var curveStats = matsDataUtils.get_err(values, levels);
+            curveStats = matsWfipUtils.get_err(values, levels);
             const minx = Math.min.apply(null, values);
             const maxx = Math.max.apply(null, values);
             curveStats.minx = minx;
@@ -656,6 +676,7 @@ dataProfile = function (plotParams, plotFunction) {
         curve['xmax'] = xmax;
         const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
+        dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves
 
     const resultOptions = matsWfipUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
@@ -665,7 +686,8 @@ dataProfile = function (plotParams, plotFunction) {
         options: resultOptions,
         basis: {
             plotParams: plotParams,
-            queries: dataRequests
+            queries: dataRequests,
+            //qaCorrections: qaCorrections
         }
     };
     plotFunction(result);

@@ -179,7 +179,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument) {
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -257,10 +257,17 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             var allSitesSet = new Set();
             var allLevelsSet = new Set();
 
+            /*
+                If the source is an instrument there may be a number of times that are the same. These times have been interpolated
+                to one half the runinterval before the interpolated time to one half the run interval after the interpolated time.
+                All of the readings for a given interpolated time have to be averaged (sumed and divided by count)
+             */
+            var interpolationCount = 1;
+            var previousTime = Number.MIN_VALUE;
+            var valueSums = [];
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
-
                 // keep track of the minimum interval for the data set
                 // it is necessary later when we fill in missing times
                 var avinterval = Math.abs(time - lastavTime);
@@ -331,6 +338,24 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (values === undefined) {
                     // no data found in this record
                     continue;
+                }
+
+                // now we have to do interpolation for instruments
+                if (isInstrument && Array.isArray(values)) {
+                        //val = sum / count;
+                    if (Number(time) > Number(previousTime)) {
+                        interpolationCount = 1;
+                        for (var v = 0; v < values.length; v++) {
+                            valueSums[v] = values[v];
+                        }
+                        previousTime = time;
+                    } else {
+                        for (var v = 0; v < values.length; v++) {
+                            valueSums[v] += values[v];
+                            values[v] = valueSums[v] / interpolationCount;
+                        }
+                        interpolationCount++;
+                    }
                 }
 
                 if (!(Array.isArray(values))) {
@@ -946,11 +971,147 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     return options;
 };
 
+const get_err = function (sVals, sSecs) {
+    /* refer to perl error_library.pl sub  get_stats
+     to see the perl implementation of these statics calculations.
+     These should match exactly those, except that they are processed in reverse order.
+     */
+    var subVals = sVals;
+    var subSecs = sSecs;
+    var n = subVals.length;
+    var n_good =0;
+    var sum_d=0;
+    var sum2_d =0;
+    var error = "";
+    var i;
+    for(i=0; i< n; i++ ){
+        n_good = n_good +1;
+        sum_d = sum_d + subVals[i];
+        sum2_d = sum2_d + subVals[i] * subVals[i];
+    }
+    var d_mean = sum_d/n_good;
+    var sd2 = sum2_d/n_good - d_mean *d_mean;
+    var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
+    var sd_limit = 3*sd;
+    //console.log("get_err");
+    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
+    // find minimum delta_time, if any value missing, set null
+    var last_secs = Number.MIN_VALUE;
+    var minDelta = Number.MAX_VALUE;
+    var minSecs = Number.MAX_VALUE;
+    var max_secs = Number.MIN_VALUE;
+    for(i=0; i< subSecs.length; i++){
+        var secs = (subSecs[i]);
+        var delta = Math.abs(secs - last_secs);
+        if(delta < minDelta) {
+            minDelta = delta;
+        }
+        if(secs < minSecs) {
+            minSecs = secs;
+        }
+        if(secs >max_secs) {
+            max_secs = secs;
+        }
+        last_secs = secs;
+    }
+
+    var data_wg =[];
+    var n_gaps =0;
+    n_good = 0;
+    var sum = 0;
+    var sum2 = 0;
+    var loopTime =minSecs;
+    if (minDelta < 0) {
+        error = ("Invalid time interval - minDelta: " + minDelta);
+        console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
+    }
+/*
+We arent't doing this QA on WFIP2
+    // remove data more than $sd_limit from mean
+    var qaCorrected = [];
+    for (i=0; i < subVals.length; i++) {
+        if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+            qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
+            console.log(qaCorrected.join('\n'));
+            subVals[i] = null;
+        } else {
+            n_good++;
+            sum += subVals[i];
+            sum2 += subVals[i] * subVals[i];
+        }
+    }
+    if (n_good < 1) {
+        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
+    }
+
+    // recalculate if we threw anything away.
+    d_mean = sum / n_good;
+    sd2 = sum2 / n_good - d_mean * d_mean;
+    sd = 0;
+    if (sd2 > 0) {
+        sd = Math.sqrt(sd2);
+    }
+*/
+    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // look for gaps.... per Bill, we only need one gap per series of gaps...
+    var lastSecond = Number.MIN_VALUE;
+
+    for(i=0; i< subSecs.length; i++){
+        var sec = subSecs[i];
+        if(lastSecond >= 0) {
+            if(sec - lastSecond > minDelta) {
+                // insert a gap
+                data_wg.push(null);
+                n_gaps++;
+            }
+        }
+        lastSecond = sec;
+        data_wg.push(subVals[i]);
+    }
+    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
+
+    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+    var r =[];
+    for(var lag=0;lag<=1; lag++) {
+        r[lag] = 0;
+        var n_in_lag = 0;
+        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
+            if (data_wg[t] != null && data_wg[t + lag] != null) {
+                r[lag] +=  + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                n_in_lag++;
+            }
+        }
+        if (n_in_lag > 0 && sd > 0) {
+            r[lag] /= (n_in_lag * sd * sd);
+        } else {
+            r[lag] = null;
+        }
+        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
+    }
+    // Betsy Weatherhead's correction, based on lag 1
+    if(r[1] >= 1) {
+        r[1] = .99999;
+    }
+    const betsy = Math.sqrt((n_good-1)*(1 - r[1]));
+    var stde_betsy;
+    if(betsy != 0) {
+        stde_betsy = sd/betsy;
+    } else {
+        stde_betsy = null;
+    }
+    const stats = {d_mean:d_mean,stde_betsy:stde_betsy,sd:sd,n_good:n_good,lag1:r[1], min:minSecs,max:max_secs, sum:sum_d};
+    //console.log("stats are " + JSON.stringify(stats));
+    // stde_betsy is standard error with auto correlation
+    //console.log("---------\n\n");
+    return stats;
+};
+
 export default matsWfipUtils = {
     getDatum: getDatum,
     queryWFIP2DB: queryWFIP2DB,
     sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
     getStatValuesByLevel:getStatValuesByLevel,
     getDataForProfileDiffCurve:getDataForProfileDiffCurve,
-    generateProfilePlotOptions:generateProfilePlotOptions
+    generateProfilePlotOptions:generateProfilePlotOptions,
+    get_err:get_err
 }

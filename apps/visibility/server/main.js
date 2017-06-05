@@ -46,7 +46,7 @@ const doPlotParams = function () {
                 optionsMap: plotFormats,
                 options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
-                controlButtonCovered: true,
+                controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
