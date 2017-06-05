@@ -49,8 +49,23 @@ Template.select.helpers({
         if (!this.options) {
             return 10;
         }
-        const longest = (this.options).reduce(function (a, b) { return a.length > b.length ? a : b; });
+        const longest = (this.options).reduce(function (a, b) {
+            if (a === null && b === null) {
+                return  null;
+            }
+            if (a === null) {
+                return b;
+            }
+            if (b === null) {
+                return a;
+            }
+            return a.length > b.length ? a : b;
+        });
+        if (!longest) {
+            return 10;
+        }
         const ret = longest.length < 8 ? 8 : Math.round(longest.length * 0.6);
+
         return ret;
     },
 
