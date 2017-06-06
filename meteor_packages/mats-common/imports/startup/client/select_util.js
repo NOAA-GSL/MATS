@@ -47,7 +47,7 @@ const refreshDependents = function (event, param) {
                     selectAllbool = document.getElementById('selectAll').checked;
                 }
                 try {
-                    if (targetParam.type === matsTypes.InputTypes.dateRange) {
+                    if (targetParam.type === matsTypes.InputTypes.dateRange || targetParam.type === matsTypes.InputTypes.numberSpinner) {
                         // dispatch the refresh event
                         targetElem.dispatchEvent(new CustomEvent("refresh"))
                     } else {
