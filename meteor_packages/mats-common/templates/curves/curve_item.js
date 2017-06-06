@@ -260,9 +260,11 @@ Template.curveItem.events({
                 $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
-                const val =  currentParams[plotParam.name] === null ||
+                var val =  currentParams[plotParam.name] === null ||
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
+                // refresh its dependents
+                matsSelectUtils.refreshDependents(null,plotParam);
             }
         }
         // now reset the form parameters for the dependents
@@ -282,7 +284,7 @@ Template.curveItem.events({
                 $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
-                const val =  currentParams[plotParam.name] === null ||
+                var val =  currentParams[plotParam.name] === null ||
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
             }
