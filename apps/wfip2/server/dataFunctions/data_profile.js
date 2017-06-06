@@ -598,7 +598,7 @@ dataProfile = function (plotParams, plotFunction) {
                              }
                 data[6] - tooltip
                 */
-                const errorResult = matsDataUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
+                const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
                 const errorBar = errorResult.stde_betsy * 1.96;
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
 

@@ -1017,7 +1017,8 @@ const get_err = function (sVals, sSecs) {
 
     var data_wg =[];
     var n_gaps =0;
-    n_good = 0;
+    //n_good = 0;  //NOT doing the QA for WFIP2
+    n_good = subVals.length;
     var sum = 0;
     var sum2 = 0;
     var loopTime =minSecs;
@@ -1052,6 +1053,7 @@ We arent't doing this QA on WFIP2
         sd = Math.sqrt(sd2);
     }
 */
+
     //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
     // look for gaps.... per Bill, we only need one gap per series of gaps...
     var lastSecond = Number.MIN_VALUE;
