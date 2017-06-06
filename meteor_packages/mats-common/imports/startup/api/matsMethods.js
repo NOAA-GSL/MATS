@@ -131,6 +131,14 @@ const readFunctionFile = new ValidatedMethod({
     }
 });
 
+const getPlotResult = new ValidatedMethod({
+    // UNFINISHED - placeholder for retrieving plotresult data for data lineage button without cramming it into the session
+    name:'matsMethods.getPlotResult',
+    validate:  new SimpleSchema({}).validator(),
+    run (){
+            return "";
+    }
+});
 const readDataFile = new ValidatedMethod({
     name:'matsMethods.readDataFile',
     validate: new SimpleSchema({
@@ -809,5 +817,6 @@ export default matsMethods = {
     addSentAddress:addSentAddress,
     emailImage:emailImage,
     resetApp:resetApp,
-    testGetTables:testGetTables
+    testGetTables:testGetTables,
+    getPlotResult:getPlotResult
 };

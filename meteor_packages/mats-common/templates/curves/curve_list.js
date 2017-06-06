@@ -99,7 +99,8 @@ Template.curveList.helpers({
 Template.curveList.events({
     'click .remove-all': function () {
         if (Session.get("confirmRemoveAll")) {
-            matsCurveUtils.removeAllCurves();
+            matsCurveUtils.clearAllUsed();
+            matsParamUtils.setAllParamsToDefault();
             Session.set("editMode", "");
             Session.set("paramWellColor", "#f5f5f5");  // default grey
             Session.set("lastUpdate", Date.now());

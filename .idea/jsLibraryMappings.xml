@@ -2,5 +2,10 @@
 <project version="4">
   <component name="JavaScriptLibraryMappings">
     <includedPredefinedLibrary name="Meteor project library" />
+    <excludedPredefinedLibrary name="MATS_for_EMB/apps/anomalycor/node_modules" />
+    <excludedPredefinedLibrary name="MATS_for_EMB/apps/metproto/node_modules" />
+    <excludedPredefinedLibrary name="MATS_for_EMB/apps/surface/node_modules" />
+    <excludedPredefinedLibrary name="MATS_for_EMB/apps/visibility/node_modules" />
+    <excludedPredefinedLibrary name="MATS_for_EMB/apps/wfip2/node_modules" />
   </component>
 </project>

@@ -548,11 +548,14 @@ const get_err = function (sVals, sSecs) {
     var loopTime =minSecs;
     if (minDelta < 0) {
         error = ("Invalid time interval - minDelta: " + minDelta);
+        console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
     }
     // remove data more than $sd_limit from mean
+    var qaCorrected = [];
     for (i=0; i < subVals.length; i++) {
-            if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-             //console.log("removing datum " + i + "with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean");
+        if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+                qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
+                console.log(qaCorrected.join('\n'));
              subVals[i] = null;
          } else {
             n_good++;
@@ -618,7 +621,7 @@ const get_err = function (sVals, sSecs) {
     } else {
         stde_betsy = null;
     }
-    const stats = {d_mean:d_mean,stde_betsy:stde_betsy,sd:sd,n_good:n_good,lag1:r[1], min:minSecs,max:max_secs, sum:sum_d};
+    const stats = {d_mean:d_mean,stde_betsy:stde_betsy,sd:sd,n_good:n_good,lag1:r[1], min:minSecs,max:max_secs, sum:sum_d, qaCorrected:qaCorrected};
     //console.log("stats are " + JSON.stringify(stats));
     // stde_betsy is standard error with auto correlation
     //console.log("---------\n\n");
