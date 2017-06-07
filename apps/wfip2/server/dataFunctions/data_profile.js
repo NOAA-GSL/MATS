@@ -481,20 +481,25 @@ dataProfile = function (plotParams, plotFunction) {
             }
             allLevelSubset = _.intersection.apply(_, tmp);
         }
+        var pci = 0;
+        var time =0;
+        var site = 0;
+        var level = 0;
+        var curvePartials = null;
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             curve = curves[curveIndex];
             var partials = curve['partials'];
             var filteredPartials = {};
             //filter the partials by time, site, and level as requested
-            for (var time in partials) {
+            for (time in partials) {
                 if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
                     continue;  // skip this time, it doesn't match
                 }
-                for (var site in partials[time]) {
+                for (site in partials[time]) {
                     if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
                         continue;  // skip this site, it doesn't match
                     }
-                    for (var level in partials[time][site]) {
+                    for (level in partials[time][site]) {
                         if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
                             continue;  // skip this level, it doesn't match
                         }
@@ -505,7 +510,25 @@ dataProfile = function (plotParams, plotFunction) {
                             filteredPartials[time][site] = {};
                         }
                         if (filteredPartials[time][site][level] === undefined) {
-                            filteredPartials[time][site][level] = partials[time][site][level];
+                            /*
+                                We now have level values that have been filtered by common times for all the curves,
+                                and common sites and common levels for all the curves, however if it is an instrument
+                                there is still the possibility that a given level and site for one curve might have fewer actual
+                                times than the same level and site from another data source. Instruments can drop data at different levels and times.
+                                We have to make a pass through all the curves to filter again for this specific level, site, curve, and time.
+                                In other words, IF THIS SPECIFIC TIME SITE and LEVEL DOES NOT EXIST IN ALL THE CURVES THEN THROW IT AWAY.
+                             */
+                            var existsInAllCurves = true;
+                            for (pci = 0; pci < curvesLength; pci++) {
+                                curvePartials = curves[pci]['partials'];
+                                if (curvePartials[time][site][level] === undefined) {
+                                    existsInAllCurves = false;
+                                    break;
+                                }
+                            }
+                            if (existsInAllCurves) {
+                                filteredPartials[time][site][level] = partials[time][site][level];
+                            }
                         }
                     }
                 }

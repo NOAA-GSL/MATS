@@ -13,13 +13,12 @@ const getDataForLevel = function(data, level) {
 };
 
 const getDataForCurve = function(curve) {
-    var dataIndex = 0;
     for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
         if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
-            break;
+            return matsCurveUtils.PlotResult.data[dataIndex];
         }
     }
-    return matsCurveUtils.PlotResult.data[dataIndex];
+    return undefined;
 };
 
 Template.textProfileOutput.helpers({
