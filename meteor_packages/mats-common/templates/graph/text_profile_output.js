@@ -123,15 +123,15 @@ Template.textProfileOutput.helpers({
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return [];
         }
-        data = getDataForCurve(curve) && getDataForCurve(curve).data;
-        if (data === undefined || data.length == 0) {
+        const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+        if (curveData === undefined || curveData.length == 0) {
             return [];
         }
 
         var levelSet = new Set();
         var di;
-        for (di = 0; di < data.length; di++) {
-            data[di] && levelSet.add(data[di][1]);
+        for (di = 0; di < curveData.length; di++) {
+            curveData[di] && levelSet.add(curveData[di][1]);
         }
         var levels = Array.from (levelSet);
         levels.sort((a, b) => (b - a));
@@ -160,12 +160,7 @@ Template.textProfileOutput.helpers({
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return false;
         }
-
-        var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
-            return false;
-        }
-
+        var curve = Template.parentData();
         var line = "<td>" + (level) + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
@@ -180,7 +175,8 @@ Template.textProfileOutput.helpers({
         var stddev = fillStr;
         try {
             // see if I have a valid data object for this dataIndex and this level....
-            const dataPointVal = getDataForLevel(data, level);
+            const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+            const dataPointVal = getDataForLevel(curveData, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[0] && dataPointVal[0].toPrecision(4);
                 mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
@@ -205,16 +201,16 @@ Template.textProfileOutput.events({
             return false;
         }
         const fillStr = settings.NullFillString;
-        var data = [];
+        var lineData = [];
         const curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
-            return data;
+            return lineData;
         }
         var clabels = 'time';
         for (var c=0; c < curves.length;c++) {
             clabels += "," + curves[c].label;
         }
-        data.push(clabels);
+        lineData.push(clabels);
         //var dataSet = Session.get('dataset');
         const curveNums = matsCurveUtils.PlotResult.data.length;
         const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
@@ -224,9 +220,9 @@ Template.textProfileOutput.events({
                 const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
-            data.push(line);
+            lineData.push(line);
         }
-        const csvString = data.join("%0A");
+        const csvString = lineData.join("%0A");
         const a         = document.createElement('a');
         a.href        = 'data:attachment/csv,' + csvString;
         a.target      = '_blank';
