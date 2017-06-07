@@ -251,6 +251,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             var utctime = 0;
             var time = 0;
             var lastavTime = 0;
+            var lastSiteid = Number.MIN_VALUE;
+            var siteid = Number.MIN_VALUE;
             var prevdiff = Number.MAX_VALUE;
 
             var rowIndex;
@@ -264,6 +266,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
              */
             var interpolationCount = 1;
             var previousTime = Number.MIN_VALUE;
+            var previousSiteId = Number.MIN_VALUE;
+
             var valueSums = [];
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
@@ -275,7 +279,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     minInterval = avinterval;
                 }
                 lastavTime = time;
-                var siteid = rows[rowIndex].sites_siteid;
+                siteid = rows[rowIndex].sites_siteid;
+                lastSiteid = siteid;
                 allSitesSet.add(siteid);
                 if (timeSites.indexOf(siteid) === -1) {
                     timeSites.push(siteid);
@@ -343,12 +348,13 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 // now we have to do interpolation for instruments
                 if (isInstrument && Array.isArray(values)) {
                         //val = sum / count;
-                    if (Number(time) > Number(previousTime)) {
+                    if (Number(time) > Number(previousTime) || (Number(siteid) > Number(previousSiteId))) {
                         interpolationCount = 1;
                         for (var v = 0; v < values.length; v++) {
                             valueSums[v] = values[v];
                         }
                         previousTime = time;
+                        previousSiteId = siteid;
                     } else {
                         for (var v = 0; v < values.length; v++) {
                             valueSums[v] += values[v];
