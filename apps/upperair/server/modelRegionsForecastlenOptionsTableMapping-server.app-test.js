@@ -98,10 +98,13 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
                     const model = modelNames[mi];
                     const modelTablePrefix = tableMap[model];
                     for (var ri = 0; ri < regionOptionsMap[model].length; ri++) {
+                        //console.log("regionOptionsMap ", JSON.stringify(regionOptionsMap,null,2));
+                        //console.log("model ", model, " regionOptionsMap for model ", model, + " and ri ", ri + " is " + regionOptionsMap[model][ri] )
                         const region = regionOptionsMap[model][ri];
                         expect (region, "region for " + ri + " of model: " + model + " does not seem to exist").to.exist;
                         const regionMap = matsCollections.RegionDescriptions.findOne({description: region});
                         expect (regionMap, "options map for region: " + region + " does not exist").to.exist;
+                        //console.log ("checking " + region + " against map " + regionMap);
                         const regionNumber = regionMap.regionMapTable;
                         const table = modelTablePrefix + regionNumber;
                         //console.log("modelTablePrefix:" + modelTablePrefix + " regionNumber:" + regionNumber + " table: " + table);
