@@ -16,7 +16,7 @@ echo "remove and clone MATS_for_EMB"
 /usr/bin/rm -rf MATS_for_EMB
 git clone gerrit:MATS_for_EMB
 cd MATS_for_EMB
-git checkout development_v1.0
+git checkout master
 
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`
@@ -50,22 +50,6 @@ do
 	echo "building app $x"
 	meteor reset
 	#meteor npm cache clean
-    echo "create new build version for app (append build date)"
-    if [ ! -d "private" ]; then
-        echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
-        exit 1
-    fi
-    vdate=`date +%Y.%m.%d.%H.%M`
-    while IFS='-' read -r mversion prerelease
-    do
-        # overwrite the vdate part and then write the tmpversion file
-        echo "${mversion}-${vdate}" > private/versiontmp
-    done < private/version
-    mv private/versiontmp private/version
-
-    git commit -m"new version" private/version
-    git push gerrit:MATS_for_EMB origin:development_v1.0
-    git push
 	meteor build /builds
 	cd ..
 done
