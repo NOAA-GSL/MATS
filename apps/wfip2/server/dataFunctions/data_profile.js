@@ -450,36 +450,48 @@ dataProfile = function (plotParams, plotFunction) {
         var tmp;
         if (matchTime) {
             tmp =[];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['timeSubset']);
+            try {
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['timeSubset']);
+                    }
                 }
+                allTimeSubset = _.intersection.apply(_, tmp);
+            } catch(e) {
+                console.log("matchTime",e);
             }
-            allTimeSubset = _.intersection.apply(_, tmp);
         }
         if (matchSite) {
-            tmp = [];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['siteSubset']);
+            try {
+                tmp = [];
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['siteSubset']);
+                    }
                 }
+                allSiteSubset = _.intersection.apply(_, tmp);
+            } catch(e) {
+                console.log("matchSite",e);
             }
-            allSiteSubset = _.intersection.apply(_, tmp);
         }
         if (matchLevel) {
-            tmp = [];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['levelSubset']);
+            try {
+                tmp = [];
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['levelSubset']);
+                    }
                 }
+                allLevelSubset = _.intersection.apply(_, tmp);
+            } catch(e) {
+                console.log("matchLevel", e);
             }
-            allLevelSubset = _.intersection.apply(_, tmp);
         }
         var pci = 0;
         var time =0;
@@ -491,50 +503,54 @@ dataProfile = function (plotParams, plotFunction) {
             var partials = curve['partials'];
             var filteredPartials = {};
             //filter the partials by time, site, and level as requested
-            for (time in partials) {
-                if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
-                    continue;  // skip this time, it doesn't match
-                }
-                for (site in partials[time]) {
-                    if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
-                        continue;  // skip this site, it doesn't match
+            try {
+                for (time in partials) {
+                    if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
+                        continue;  // skip this time, it doesn't match
                     }
-                    for (level in partials[time][site]) {
-                        if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
-                            continue;  // skip this level, it doesn't match
+                    for (site in partials[time]) {
+                        if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
+                            continue;  // skip this site, it doesn't match
                         }
-                        if (filteredPartials[time] === undefined) {
-                            filteredPartials[time] = {};
-                        }
-                        if (filteredPartials[time][site] === undefined) {
-                            filteredPartials[time][site] = {};
-                        }
-                        if (filteredPartials[time][site][level] === undefined) {
-                            /*
-                                We now have level values that have been filtered by common times for all the curves,
-                                and common sites and common levels for all the curves, however if it is an instrument
-                                there is still the possibility that a given level and site for one curve might have fewer actual
-                                times than the same level and site from another data source. Instruments can drop data at different levels and times.
-                                We have to make a pass through all the curves to filter again for this specific level, site, curve, and time.
-                                In other words, IF THIS SPECIFIC TIME SITE and LEVEL DOES NOT EXIST IN ALL THE CURVES THEN THROW IT AWAY.
-                             */
-                            var existsInAllCurves = true;
-                            for (pci = 0; pci < curvesLength; pci++) {
-                                curvePartials = curves[pci]['partials'];
-                                if (curvePartials[time][site][level] === undefined) {
-                                    existsInAllCurves = false;
-                                    break;
+                        for (level in partials[time][site]) {
+                            if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
+                                continue;  // skip this level, it doesn't match
+                            }
+                            if (filteredPartials[time] === undefined) {
+                                filteredPartials[time] = {};
+                            }
+                            if (filteredPartials[time][site] === undefined) {
+                                filteredPartials[time][site] = {};
+                            }
+                            if (filteredPartials[time][site][level] === undefined) {
+                                /*
+                                    We now have level values that have been filtered by common times for all the curves,
+                                    and common sites and common levels for all the curves, however if it is an instrument
+                                    there is still the possibility that a given level and site for one curve might have fewer actual
+                                    times than the same level and site from another data source. Instruments can drop data at different levels and times.
+                                    We have to make a pass through all the curves to filter again for this specific level, site, curve, and time.
+                                    In other words, IF THIS SPECIFIC TIME SITE and LEVEL DOES NOT EXIST IN ALL THE CURVES THEN THROW IT AWAY.
+                                 */
+                                var existsInAllCurves = true;
+                                for (pci = 0; pci < curvesLength; pci++) {
+                                    curvePartials = curves[pci]['partials'];
+                                    if (curvePartials[time][site]  && curvePartials[time][site][level] === undefined) {
+                                        existsInAllCurves = false;
+                                        break;
+                                    }
+                                }
+                                if (existsInAllCurves) {
+                                    filteredPartials[time][site][level] = partials[time][site][level];
                                 }
                             }
-                            if (existsInAllCurves) {
-                                filteredPartials[time][site][level] = partials[time][site][level];
-                            }
                         }
                     }
                 }
+                delete curve.partials;
+                curve['partials'] = filteredPartials;
+            } catch(e) {
+                console.log("for time in partials", e);
             }
-            delete curve.partials;
-            curve['partials'] = filteredPartials;
         }
     }  // end if matching
 
