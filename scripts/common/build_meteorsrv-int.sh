@@ -11,16 +11,15 @@ requestedApp="$1"
 echo "$0 ----------- started"
 date
 
-cd /builds/buildArea
-echo "remove and clone MATS_for_EMB"
-/usr/bin/rm -rf MATS_for_EMB
-git clone gerrit:MATS_for_EMB
-cd MATS_for_EMB
-git checkout master
+#cd /builds/buildArea
+#echo "remove and clone MATS_for_EMB"
+#/usr/bin/rm -rf MATS_for_EMB
+#git clone gerrit:MATS_for_EMB
+#cd MATS_for_EMB
+#git checkout master
 
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`
-
 if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
 then 
 	echo "In a MATS_for_EMB clone - good - I will continue"
