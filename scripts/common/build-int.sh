@@ -21,7 +21,7 @@ else
 fi
 
 rm -rf MATS_for_EMB
-git clone gerrit::MATS_for_EMB
+git clone gerrit:MATS_for_EMB
 git checkout master
 # NEED to implement git checkout tag
 cd MATS_for_EMB
