@@ -14,8 +14,6 @@
                 <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
-                <button type="button" class="axis-adjust btn btn-default fa fa fa-arrows" id="axis-adjust"></button>
-                <button type="button" class="btn spacebutton" id="spacer"></button>
                 <span id="graph-touch-controls">
                     <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
                     <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
@@ -25,63 +23,6 @@
                     <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
                     <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
                 </span>
-            </div>
-            <div class="modal modal-dialog fade" id="modal-axis-adjust" tabindex="-1" role="dialog" aria-labelledby="adjustAxis" aria-hidden="true" style="background-color: cornflowerblue">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <h2 class="modal-title" style="text-align: center; color: red;">Adjust Axis</h2>
-                        <div class="modal-body">
-                            <div>
-                                <label for="xaxis-min">xaxis minimum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn xaxis-min-dwn">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-min-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center xaxis-min" value="{{xaxismin}}">
-                                    <span class="input-group-btn xaxis-min-up">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-min-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                                <label for="xaxis-max">xaxis maximum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn xaxis-max-dwn">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-max-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center xaxis-max" value="{{xaxismax}}">
-                                    <span class="input-group-btn xaxis-max-up">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-max-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="yaxis-min">yaxis minimum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn yaxis-min-dwn">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-min-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center yaxis-min" value="{{yaxismin}}">
-                                    <span class="input-group-btn yaxis-min-up">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-min-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                                <label for="yaxis-max">yaxis maximum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn yaxis-max-dwn">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-max-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center yaxis-max" value="{{yaxismax}}">
-                                    <span class="input-group-btn yaxis-max-up">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-max-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button id="close-axis-adjust" class="close-axis-adjust btn btn-info" data-dismiss="modal">Close</button>
-                            <button id="apply-axis-adjust" class="btn btn-success apply-axis-adjust">Apply</button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div id="sendModal" class="modal" role="dialog">
                 <div class="modal-dialog">

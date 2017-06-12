@@ -230,47 +230,11 @@ Template.graph.helpers({
     },
     isProfile: function() {
         return (Session.get('plotType') == matsTypes.PlotTypes.profile);
-    },
-    xaxismin: function() {
-        return Session.get('xaxismin');
-    },
-    xaxismax: function() {
-        return Session.get('xaxismax');
-    },
-    yaxismin: function() {
-        return Session.get('yaxismin');
-    },
-    yaxismax: function() {
-        return Session.get('yaxismax');
     }
 });
 
 
 Template.graph.events({
-    'click .xaxis-min-dwn' : function() {
-        Session.set ('xaxismin', Session.get('xaxismin') * 0.95);
-    },
-    'click .xaxis-min-up' : function() {
-        Session.set ('xaxismin', Session.get('xaxismin') * 1.05);
-    },
-    'click .xaxis-max-dwn' : function() {
-        Session.set ('xaxismax', Session.get('xaxismax') * 0.95);
-    },
-    'click .xaxis-max-up' : function() {
-        Session.set ('xaxismax', Session.get('xaxismax') * 1.05);
-    },
-    'click .yaxis-min-dwn' : function() {
-        Session.set ('yaxismin', Session.get('yaxismin') * 0.95);
-    },
-    'click .yaxis-min-up' : function() {
-        Session.set ('yaxismin', Session.get('yaxismin') * 1.05);
-    },
-    'click .yaxis-max-dwn' : function() {
-        Session.set ('yaxismax', Session.get('yaxismax') * 0.95);
-    },
-    'click .yaxis-max-up' : function() {
-        Session.set ('yaxismax', Session.get('yaxismax') * 1.05);
-    },
     'click .back': function () {
         if (document.getElementById('graph-container')) {
             document.getElementById('graph-container').style.display = 'none';
@@ -386,8 +350,5 @@ Template.graph.events({
     'click .basis': function () {
         Session.set("data",matsCurveUtils.PlotResult.basis);
         $("#dataModal").modal('show');
-    },
-    'click .axis-adjust' : function () {
-        $("#modal-axis-adjust").modal('show');
     }
 });
