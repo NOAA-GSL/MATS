@@ -27,14 +27,9 @@ do
 	echo "processing $x"
 	appname=`basename $x | cut -f1 -d"."`
 	echo "appname $appname"
-    # if existing, rm previous and move existing app to previous, be sure to change its title
+    # blow away existing app
 	if [ -d "$appname" ]; then
-		if [ -d "$appname"-previous ]; then
-			rm -rf "$appname"-previous
-		fi
-		mv $appname "$appname"-previous
-		sed 's/$/-previous/' "$appname"-previous/bundle/programs/web.browser/app/title > /tmp/title$$
-		mv /tmp/title$$ "$appname"-previous/bundle/programs/web.browser/app/title
+			rm -rf "$appname"
 	fi
 	mkdir $appname
 	cd $appname
@@ -42,6 +37,6 @@ do
 	cd bundle
 	(cd programs/server && meteor npm install)
 	cd ../..
-done	
+done
 date
 echo "$0 ----------------- finished" 

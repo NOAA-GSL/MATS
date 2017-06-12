@@ -29,6 +29,7 @@ date
 usage="$0 [server || help]"
 
 server=$1
+requestedApp=$2
 
 if [ "$1" == "help" ]; then
         cat <<xxxxxENDxxxx
@@ -39,7 +40,12 @@ xxxxxENDxxxx
 exit 0
 fi
 rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/meteor_includes /web/.meteor  ${server}:/web
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web
+if [ "X" == "X${requestedApp}" ]; then
+    # build them all
+    rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web
+else
+    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='static/applist.json' --exclude='*' /web/*  ${server}:/web
+fi
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
 npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
 servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`
