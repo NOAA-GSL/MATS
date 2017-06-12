@@ -31,9 +31,9 @@ do
 	if [ -d "$appname" ]; then
 			rm -rf "$appname"
 	fi
-	mkdir $appname
-	cd $appname
-	tar -xzf $x
+	mkdir "$appname"
+	cd "$appname"
+	tar -xzf "$x"
 	cd bundle
 	(cd programs/server && meteor npm install)
 	cd ../..
