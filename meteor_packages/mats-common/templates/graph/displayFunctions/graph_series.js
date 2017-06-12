@@ -177,10 +177,6 @@ graphSeries = function(result) {
 
 
     var plot = $.plot(placeholder, dataset, options);
-    Session.set('xaxismin', plot.getAxes().xaxis.datamin);
-    Session.set('xaxismax', plot.getAxes().xaxis.datamax);
-    Session.set('yaxismin', plot.getAxes().yaxis.datamin);
-    Session.set('yaxismax', plot.getAxes().xaxis.datamax);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
     // hide the spinner
