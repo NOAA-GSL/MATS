@@ -32,6 +32,7 @@ else
 fi
 
 #build all the apps
+
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
@@ -46,7 +47,15 @@ do
         continue
     fi
 	cd $x
-	echo "building app $x"
+    # do a pull just in case -
+    git pull
+    # build the tag
+    version=( $(cat private/version) )
+    tag=( $(cat private/version | cut -d'-' -f1) )
+    git tag -a ${tag} -m "automatic build ${x} ${version}"
+    git commit -a
+    git push --tags origin master
+	echo "building app ${x}"
 	meteor reset
 	#meteor npm cache clean
 	meteor build /builds
