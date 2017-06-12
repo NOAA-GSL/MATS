@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export iam=`/usr/bin/whoami`
-if [[ ${iam} -ne "nginx" ]]; then
+if [[ ${iam} != "nginx" ]]; then
    echo "This script must be run as nginx- exiting" 2>&1
    exit 1
 fi
