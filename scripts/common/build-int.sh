@@ -1,8 +1,8 @@
 #!/bin/sh
 
 export iam=`/usr/bin/whoami`
-if [[ ${iam} != "nginx" ]]; then
-   echo "This script must be run as nginx- exiting" 2>&1
+if [[ ${iam} != "root" ]]; then
+   echo "This script must be run as root - exiting" 2>&1
    exit 1
 fi
 
