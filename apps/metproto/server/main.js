@@ -10,7 +10,7 @@ const startInit = dateInitStrParts[0];
 const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
-const kirktest = 1;
+const kirktest = 2;
 
 const doPlotParams = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
