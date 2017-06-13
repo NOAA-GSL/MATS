@@ -21,8 +21,7 @@ else
 fi
 
 rm -rf MATS_for_EMB
-git clone gerrit:MATS_for_EMB
-git checkout master
+su - www-data -c "git clone gerrit:MATS_for_EMB"
 # NEED to implement git checkout tag
 cd MATS_for_EMB
 if [ "X" == "X${tag}" ]
