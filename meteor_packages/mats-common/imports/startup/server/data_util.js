@@ -1209,6 +1209,7 @@ const doAuthorization = function () {
         matsCollections.Authorization.insert({email: "kirk.l.holub@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "jeffrey.a.hamilton@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "bonny.strong@noaa.gov", roles: ["administrator"]});
+        matsCollections.Authorization.insert({email: "molly.b.smith@noaa.gov", roles: ["administrator"]});
         matsCollections.Authorization.insert({email: "mats.gsd@noaa.gov", roles: ["administrator"]});
     }
 };

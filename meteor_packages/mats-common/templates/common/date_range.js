@@ -86,8 +86,8 @@ Template.dateRange.onRendered(function () {
         try {
             // get the current values from the element and check for invalid
             const curVals = matsParamUtils.getValueForParamName(name).split(" - "); // it is a date object values are "someFromDate - someToDate"
-            var startDsr = moment(curVals[0], "MM-DD-YYYY HH:mm");
-            var endDsr = moment(curVals[1], "MM-DD-YYYY HH:mm");
+            var startDsr = moment(curVals[0], "MM/DD/YYYY HH:mm");
+            var endDsr = moment(curVals[1], "MM/DD/YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
                 setError ("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
@@ -119,7 +119,7 @@ Template.dateRange.onRendered(function () {
                     continue;
                 }
                 const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].minDate;
-                const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM-DD-YYYY HH:mm");
+                const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
                 if (superiorMinimumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].min = superiorMinimumMoment;
@@ -128,7 +128,7 @@ Template.dateRange.onRendered(function () {
                     return false;
                 }
                 const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
-                const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM-DD-YYYY HH:mm");
+                const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
                 if (superiorMaximumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].max = superiorMaximumMoment;
@@ -193,7 +193,7 @@ Template.dateRange.onRendered(function () {
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(startDsr);
             $(jqIdRef).data('daterangepicker').setStartDate(endDsr);
-            const newDateStr = startDsr.format('MM-DD-YYYY HH:mm') + ' - ' + endDsr.format('MM-DD-YYYY HH:mm');
+            const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);

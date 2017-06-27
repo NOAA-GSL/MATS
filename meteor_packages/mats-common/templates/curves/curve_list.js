@@ -118,6 +118,7 @@ Template.curveList.events({
     },
     'click .plot-curves-unmatched': function (event) {
         document.getElementById("spinner").style.display = "block";
+        matsPlotUtils.disableActionButtons();
         event.preventDefault();
         // trigger the submit on the plot_list plot_list.js - click .submit-params
         Session.set('plotParameter', matsTypes.PlotActions.unmatched);
@@ -126,6 +127,7 @@ Template.curveList.events({
     },
     'click .plot-curves-matched': function (event) {
         document.getElementById("spinner").style.display = "block";
+        matsPlotUtils.disableActionButtons();
         event.preventDefault();
         // trigger the submit on the plot_list plot_list.js - click .submit-params
         Session.set('plotParameter', matsTypes.PlotActions.matched);

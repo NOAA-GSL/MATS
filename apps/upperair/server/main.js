@@ -415,8 +415,8 @@ Meteor.startup(function () {
             role: "sum_data",
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
-            user: 'writer',
-            password: 'amt1234',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
             database: 'ruc_ua_sums2',
             connectionLimit: 10
         });
@@ -425,8 +425,8 @@ Meteor.startup(function () {
             role: "model_data",
             status: "active",
             host: 'wolphin.fsl.noaa.gov',
-            user: 'writer',
-            password: 'amt1234',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
             database: 'ruc_ua',
             connectionLimit: 10
         });

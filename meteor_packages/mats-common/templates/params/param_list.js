@@ -12,7 +12,6 @@ Template.paramList.helpers({
         var lastUpdate = Session.get('lastUpdate');
         var groupNums = [];
         var params = matsCollections.CurveParams.find({}).fetch();
-        params = filterParams(params);
         for (var i = 0; i < params.length; i++) {
             groupNums.push(params[i].displayGroup);
         }

@@ -236,6 +236,7 @@ Template.graph.helpers({
 
 Template.graph.events({
     'click .back': function () {
+        matsPlotUtils.enableActionButtons();
         if (document.getElementById('graph-container')) {
             document.getElementById('graph-container').style.display = 'none';
         }

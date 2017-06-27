@@ -7,7 +7,7 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 // ScatterAxisTextPatterns according to plotType - and derived from
 // currently selected inputs in the document.
 
-var getAxisText = function(plotType) {
+ const getAxisText = function(plotType) {
     var scatterAxisTextPattern = matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()});
     var textPattern = scatterAxisTextPattern ? matsCollections.ScatterAxisTextPattern.findOne({plotType:getPlotType()}).textPattern : undefined;
     if (scatterAxisTextPattern === undefined) {
@@ -25,7 +25,7 @@ var getAxisText = function(plotType) {
 
 // determine the curveText (used in curveItem for example) for a given curve (from Session.get('curves'))
 // that has already been added
-var getCurveText = function(plotType, curve){
+ const getCurveText = function(plotType, curve){
     var curveTextPattern = matsCollections.CurveTextPatterns.findOne({plotType:plotType}).textPattern;
     var text = "";
 
@@ -46,7 +46,7 @@ var getCurveText = function(plotType, curve){
 };
 
 // determine which plotType radio button is checked
-var getPlotType = function () {
+ const getPlotType = function () {
     var buttons = document.getElementsByName('plot-type');
     for (var i = 0, len = buttons.length; i < len; i++) {
         if (buttons[i].checked) {
@@ -57,7 +57,7 @@ var getPlotType = function () {
 };
 
 // determine which plotFormat radio button is checked
-var getPlotFormat = function() {
+ const getPlotFormat = function() {
     var buttons = document.getElementsByName('plotFormat');
     if (buttons === undefined) {
         return ""; // app may not have plotFormat?
@@ -76,7 +76,7 @@ var getPlotFormat = function() {
 };
 
 // Determine which BestFit radio button is checked
-var getBestFit = function() {
+ const getBestFit = function() {
     var buttons = document.getElementsByName('Fit Type');
     var optionsMap = matsCollections.PlotParams.findOne({name:'bestFit'}).optionsMap;
     for (var i = 0, len = buttons.length; i < len; i++) {
@@ -87,7 +87,7 @@ var getBestFit = function() {
     return "";  // error condition actually - shouldn't ever happen
 };
 
- var containsPoint = function(pointArray,point) {
+ const containsPoint = function(pointArray,point) {
      var lat = point[0];
      var lon = point[1];
      for (var i =0; i < pointArray.length; i++) {
@@ -100,11 +100,27 @@ var getBestFit = function() {
      return false;
  };
 
+
+ const disableActionButtons = function() {
+     document.getElementById('plotMatched').disabled = true;
+     document.getElementById('plotUnmatched').disabled = true;
+     document.getElementById('add').disabled = true;
+     document.getElementById('remove-all').disabled = true;
+ }
+ const enableActionButtons = function() {
+     document.getElementById('plotMatched').disabled = false;
+     document.getElementById('plotUnmatched').disabled = false;
+     document.getElementById('add').disabled = false;
+     document.getElementById('remove-all').disabled = false;
+ }
+
  export default matsPlotUtils = {
     getAxisText:getAxisText,
     getCurveText:getCurveText,
     getPlotType:getPlotType,
     getPlotFormat:getPlotFormat,
     getBestFit:getBestFit,
-    containsPoint:containsPoint
+    containsPoint:containsPoint,
+    disableActionButtons: disableActionButtons,
+    enableActionButtons: enableActionButtons
 };
