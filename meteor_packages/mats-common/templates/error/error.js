@@ -1,3 +1,5 @@
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
+
 Template.error.helpers({
    errorMessage: function() {
        return getError();
@@ -11,6 +13,7 @@ Template.error.events({
     'click .clear-error': function() {
         clearError();
         document.getElementById('stack').style.display = "none";
+        matsPlotUtils.enableActionButtons();
         return false;
     },
     'click .show-stack': function() {
