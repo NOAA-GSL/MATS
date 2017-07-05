@@ -50,6 +50,7 @@ do
 	echo "building app $x"
 	meteor reset
 	meteor npm cache clean
+	meteor npm install
     echo "create new build version for app (append build date)"
     if [ ! -d "private" ]; then
         echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
