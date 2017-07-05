@@ -1,8 +1,7 @@
 #!/bin/sh
 
-export iam=`/usr/bin/whoami`
-if [[ ${iam} != "root" ]]; then
-   echo "This script must be run as root - exiting" 2>&1
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root- exiting" 2>&1
    exit 1
 fi
 
@@ -29,7 +28,7 @@ su -p www-data <<%EOFS
     then
         # tag is requested so just build the app to the specified tag
         git checkout tags/${tag} -b master
-        cd /builds/buildArea && /bin/bash /builds/buildArea/build_deploy_apps-int.sh ${taggedApp} 2>&1
+        cd /builds/buildArea && /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh ${taggedApp} 2>&1
     fi
 
     if [ "X" != "X${apps}" ]
