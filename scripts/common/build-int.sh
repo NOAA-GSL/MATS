@@ -5,6 +5,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 export usage="$0 [appdir | tag appname]"
+# extra cd because the su - p preserves the PWD
+cd /builds/buildArea/MATS_for_EMB
 su -p www-data <<%EOFS
     tag="$1"
     taggedApp="$2"
