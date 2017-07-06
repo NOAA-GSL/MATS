@@ -46,11 +46,11 @@ do
     if  [[ $#  -eq 1 ]] && [[ ! $x == "./${requestedApp}" ]]; then
         continue
     fi
-	cd $x
-	echo "building app $x"
-	meteor reset
-	meteor npm cache clean
-	meteor npm install
+    cd $x
+    echo "building app $x"
+    meteor reset
+    meteor npm cache clean
+    meteor npm install
     echo "create new build version for app (append build date)"
     if [ ! -d "private" ]; then
         echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
@@ -67,7 +67,7 @@ do
     git commit -m"new version" private/version
     git push gerrit:MATS_for_EMB origin:development_v1.0
     git push
-	meteor build /builds
+	   meteor build /builds
 	cd ..
 done
 date

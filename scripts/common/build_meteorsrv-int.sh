@@ -13,6 +13,7 @@ date
 
 #test current dir is MATS_FOR_EMB
 remote_origin=`git config --get remote.origin.url`
+
 if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
 then 
 	echo "In a MATS_for_EMB clone - good - I will continue"
@@ -25,7 +26,6 @@ else
 fi
 
 #build all the apps
-
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
@@ -40,7 +40,7 @@ do
         continue
     fi
 	cd $x
-    # do a pull just in case -
+    # do a pull just in case an application was pushed by someone else while we were building the previous apps
     git pull
     # build the tag
     version=( $(cat private/version) )
@@ -50,7 +50,8 @@ do
     git push --tags origin master
 	echo "building app ${x}"
 	meteor reset
-	#meteor npm cache clean
+	meteor npm cache clean
+	meteor npm install
 	meteor build /builds
 	cd ..
 done
