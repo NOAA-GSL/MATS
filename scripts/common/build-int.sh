@@ -17,8 +17,8 @@ su -p www-data <<%EOFS
     if [ -d MATS_for_EMB ]
     then
         cd /builds/buildArea/MATS_for_EMB
-        git fetch
-        apps=( $(git --no-pager diff master origin/master --name-only | grep apps | cut -f2 -d'/') )
+        /usr/bin/git fetch
+        apps=( $(/usr/bin/git --no-pager diff master origin/master --name-only | grep apps | cut -f2 -d'/') )
     else
         # there was no local repo so there is no changed app list. All the apps should get built
         unset apps
@@ -26,7 +26,7 @@ su -p www-data <<%EOFS
 
     # blow away the local and reclone - just to be absolutely clear that we are building from the latest
     rm -rf MATS_for_EMB
-    git clone gerrit:MATS_for_EMB
+    /usr/bin/git clone gerrit:MATS_for_EMB
     cd MATS_for_EMB
 
     # Might need to implement git checkout tag
@@ -38,19 +38,19 @@ su -p www-data <<%EOFS
                 echo "If you specify a tag you MUST also specify a tagged application - you did not specify a tagged application - exiting"
                 echo $usage
                 echo "valid tags are"
-                git show-ref --tags
+                /usr/bin/git show-ref --tags
                 exit 1
             fi
-        git  rev-parse ${taggedApp} > /dev/null 2>&1
+        /usr/bin/git  rev-parse ${taggedApp} > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
             echo "your specified tag does not exist in the repo - exiting"
             echo $usage
             echo "valid tags are"
-            git show-ref --tags
+            /usr/bin/git show-ref --tags
             exit 1
         ]
-        git checkout tags/${tag} -b master
+        /usr/bin/git checkout tags/${tag} -b master
         cd /builds/buildArea
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh ${taggedApp}
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_applist-int.sh

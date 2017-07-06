@@ -12,7 +12,7 @@ echo "$0 ----------- started"
 date
 
 #test current dir is MATS_FOR_EMB
-remote_origin=`git config --get remote.origin.url`
+remote_origin=`/usr/bin/git config --get remote.origin.url`
 
 if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
 then 
@@ -41,13 +41,13 @@ do
     fi
 	cd $x
     # do a pull just in case an application was pushed by someone else while we were building the previous apps
-    git pull
+    /usr/bin/git pull
     # build the tag
     version=( $(cat private/version) )
     tag=( $(cat private/version | cut -d'-' -f1) )
-    git tag -a ${tag} -m "automatic build ${x} ${version}"
-    git commit -a
-    git push --tags origin master
+    /usr/bin/git tag -a ${tag} -m "automatic build ${x} ${version}"
+    /usr/bin/git commit -a
+    /usr/bin/git push --tags origin master
 	echo "building app ${x}"
 	meteor reset
 	meteor npm cache clean

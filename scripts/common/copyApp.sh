@@ -55,7 +55,7 @@ if [ "$#" -ne 2 ]; then
 fi
 
 #test current dir is MATS_FOR_EMB
-remote_origin=`git config --get remote.origin.url`
+remote_origin=`/usr/bin/git config --get remote.origin.url`
 if [ "$remote_origin" != "gerrit:MATS_for_EMB" ]; then
     echo "ERROR: You do not appear to be in a 'gerrit:MATS_for_EMB' clone"
     echo "try 'git clone gerrit:MATS_for_EMB MATS_for_EMB'"
@@ -65,7 +65,7 @@ if [ "$remote_origin" != "gerrit:MATS_for_EMB" ]; then
 fi
 
 currentDir=`pwd`
-topLevel=`git rev-parse --show-toplevel`
+topLevel=`/usr/bin/git rev-parse --show-toplevel`
 
 if [ "$currentDir" != "$topLevel" ]; then
     echo "ERROR: Not in the top level of the repository: usage: $usage"

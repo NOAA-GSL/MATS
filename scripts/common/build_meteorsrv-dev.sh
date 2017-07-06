@@ -14,12 +14,12 @@ date
 cd /builds/buildArea
 echo "remove and clone MATS_for_EMB"
 /usr/bin/rm -rf MATS_for_EMB
-git clone gerrit:MATS_for_EMB
+/usr/bin/git clone gerrit:MATS_for_EMB
 cd MATS_for_EMB
-git checkout development_v1.0
+/usr/bin/git checkout development_v1.0
 
 #test current dir is MATS_FOR_EMB
-remote_origin=`git config --get remote.origin.url`
+remote_origin=`/usr/bin/git config --get remote.origin.url`
 
 if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
 then 
@@ -64,9 +64,9 @@ do
     done < private/version
     mv private/versiontmp private/version
 
-    git commit -m"new version" private/version
-    git push gerrit:MATS_for_EMB origin:development_v1.0
-    git push
+    /usr/bin/git commit -m"new version" private/version
+    /usr/bin/git push gerrit:MATS_for_EMB origin:development_v1.0
+    /usr/bin/git push
 	   meteor build /builds
 	cd ..
 done
