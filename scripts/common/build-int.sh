@@ -15,7 +15,7 @@ su -p www-data <<%EOFS
     # reflecting the dependency on the new mats-common, and will therefore differ
     if [ -d MATS_for_EMB ]
     then
-        cd MATS_for_EMB
+        cd /builds/buildArea/MATS_for_EMB
         git fetch
         apps=( $(git --no-pager diff master origin/master --name-only | grep apps | cut -f2 -d'/') )
     else
