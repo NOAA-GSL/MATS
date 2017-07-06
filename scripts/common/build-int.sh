@@ -59,14 +59,15 @@ su -p www-data <<%EOFS
 
     if [ "X" != "X${apps}" ]
     then
-        cd /builds/buildArea && /bin/bash /builds/buildArea/build_deploy_apps-int.sh 2>&1
+        cd /builds/buildArea
+        /bin/bash /builds/buildArea/build_deploy_apps-int.sh 2>&1
     else
+        cd /builds/buildArea
         for app in "${apps[@]}"
         do
-            cd /builds/buildArea && /bin/bash /builds/buildArea/build_deploy_apps-int.sh ${app} 2>&1
+            /bin/bash /builds/buildArea/build_deploy_apps-int.sh ${app} 2>&1
         done
     fi
-    cd /builds/buildArea
     /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_applist-int.sh
 %EOFS
 
