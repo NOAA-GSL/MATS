@@ -36,13 +36,13 @@ su -p www-data <<%EOFS
     then
         # tag is requested so only build the tagged app to the specified tag
         if [ "X" == "X${taggedApp}" ]
-            then
-                echo "If you specify a tag you MUST also specify a tagged application - you did not specify a tagged application - exiting"
-                echo $usage
-                echo "valid tags are"
-                /usr/bin/git show-ref --tags
-                exit 1
-            fi
+        then
+            echo "If you specify a tag you MUST also specify a tagged application - you did not specify a tagged application - exiting"
+            echo $usage
+            echo "valid tags are"
+            /usr/bin/git show-ref --tags
+            exit 1
+        fi
         /usr/bin/git  rev-parse ${taggedApp} > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
@@ -51,7 +51,7 @@ su -p www-data <<%EOFS
             echo "valid tags are"
             /usr/bin/git show-ref --tags
             exit 1
-        ]
+        fi
         /usr/bin/git checkout tags/${tag} -b master
         cd /builds/buildArea
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh ${taggedApp}
@@ -62,11 +62,11 @@ su -p www-data <<%EOFS
     cd /builds/buildArea
     if [ "X" != "X${apps}" ]
     then
-        /bin/bash /builds/buildArea/build_deploy_apps-int.sh 2>&1
+        /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh 2>&1
     else
         for app in "${apps[@]}"
         do
-            /bin/bash /builds/buildArea/build_deploy_apps-int.sh ${app} 2>&1
+            /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh ${app} 2>&1
         done
     fi
     /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_applist-int.sh
