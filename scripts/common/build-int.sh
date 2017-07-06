@@ -9,6 +9,7 @@ su -p www-data <<%EOFS
     tag="$1"
     taggedApp="$2"
     export apps=""
+    cd /builds/buildArea
     # if the local repo exists find out which apps are different from the local master branch and the fetched origin
     # this gives us an app list that represents apps that need to be rebuilt. If the mats-common
     # package has changed and an app needs the new version then it will have a different package list
@@ -23,7 +24,6 @@ su -p www-data <<%EOFS
         unset apps
     fi
 
-    cd /builds/buildArea
     # blow away the local and reclone - just to be absolutely clear that we are building from the latest
     rm -rf MATS_for_EMB
     git clone gerrit:MATS_for_EMB
