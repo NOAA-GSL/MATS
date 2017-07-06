@@ -4,13 +4,13 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root- exiting" 2>&1
    exit 1
 fi
-export usage="$0 [appdir | tag appname]"
+export usage="$0 [all | tag appname]"
 # extra cd because the su - p preserves the PWD
 cd /builds/buildArea/MATS_for_EMB
 su -p www-data <<%EOFS
+    export apps=""
     tag="$1"
     taggedApp="$2"
-    export apps=""
     cd /builds/buildArea
     # if the local repo exists find out which apps are different from the local master branch and the fetched origin
     # this gives us an app list that represents apps that need to be rebuilt. If the mats-common
@@ -23,13 +23,19 @@ su -p www-data <<%EOFS
         apps=( $(/usr/bin/git --no-pager diff master origin/master --name-only | grep apps | cut -f2 -d'/') )
     else
         # there was no local repo so there is no changed app list. All the apps should get built
+        echo "no local repo - building all apps"
+        unset apps
+    fi
+    if [ "X$1" == "Xall" ]
+    then
+        echo "all apps requested - building all apps"
         unset apps
     fi
 
-    # blow away the local and reclone - just to be absolutely clear that we are building from the latest
+    # blow away the local repo and re-clone - just to be absolutely clear that we are building from the latest
     rm -rf MATS_for_EMB
     /usr/bin/git clone gerrit:MATS_for_EMB
-    cd MATS_for_EMB
+    cd /builds/buildArea/MATS_for_EMB
 
     # Might need to implement git checkout tag
     if [ "X" != "X${tag}" ]
@@ -53,13 +59,13 @@ su -p www-data <<%EOFS
             exit 1
         fi
         /usr/bin/git checkout tags/${tag} -b master
-        cd /builds/buildArea
+        cd /builds/buildArea/MATS_for_EMB
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh ${taggedApp}
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_applist-int.sh
         exit 0
     fi
 
-    cd /builds/buildArea
+    cd /builds/buildArea/MATS_for_EMB
     if [ "X" != "X${apps}" ]
     then
         /bin/bash /builds/buildArea/MATS_for_EMB/scripts/common/build_deploy_apps-int.sh 2>&1
