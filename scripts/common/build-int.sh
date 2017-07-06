@@ -57,12 +57,11 @@ su -p www-data <<%EOFS
         exit 0
     fi
 
+    cd /builds/buildArea
     if [ "X" != "X${apps}" ]
     then
-        cd /builds/buildArea
         /bin/bash /builds/buildArea/build_deploy_apps-int.sh 2>&1
     else
-        cd /builds/buildArea
         for app in "${apps[@]}"
         do
             /bin/bash /builds/buildArea/build_deploy_apps-int.sh ${app} 2>&1
