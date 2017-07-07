@@ -47,6 +47,7 @@ do
     # build the tag
     while IFS='-' read -r version prerelease
     do
+        appBaseName=`basename ${appName}`
         # overwrite the patch part of the version - roll the patch
         major=`echo "${version}" | cut -d'.' -f1`
         minor=`echo "${version}" | cut -d'.' -f2`
@@ -55,8 +56,8 @@ do
         version="$major.${minor}.${patch_new}"
         echo "${version}" > private/versiontmp
         vdate=`date +%Y.%m.%d.%H.%M`
-        tag="int-${appName}-${version}-${vdate}"
-        /usr/bin/git tag -a ${tag} -m "automatic build ${appName} ${tag}"
+        tag="int-${appBaseName}-${version}-${vdate}"
+        /usr/bin/git tag -a ${tag} -m "automatic build ${appBaseName} ${tag}"
         /usr/bin/git commit -a -m"new integration tag"
         /usr/bin/git push --follow-tags
     done < private/version
@@ -64,7 +65,7 @@ do
     mv private/versiontmp private/version
     /usr/bin/git commit -a -m"new integration version"
     /usr/bin/git push
-	echo "$0 - building app ${appName}"
+	echo "$0 - building app ${appBaseName}"
 	echo "METEOR_PACKAGE_DIRS is $METEOR_PACKAGE_DIRS"
 	meteor reset
 	meteor npm cache clean
