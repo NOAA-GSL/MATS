@@ -87,23 +87,20 @@ dataSeries = function (plotParams, plotFunction) {
             try {
                 queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
                 d = queryResult.data;
-                ctime = queryResult.ctime;
-                xmin = xmin < d[0][0] ? xmin : d[0][0];
-                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
+                if (queryResult.error !== undefined && queryResult.error !== "") {
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
+                if (d[0] === undefined) {
+                    throw new error("no data returned for curve " + curves[curveIndex].label);
+                } else {
+                    xmin = xmin < d[0][0] ? xmin : d[0][0];
+                    xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
+                }
                 interval=queryResult.interval;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
-            }
-            if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
-            }
-            if (d[0] === undefined) {
-                throw new error("no data returned for curve " + curves[curveIndex].label);
-            } else {
-                xmin = xmin < d[0][0] ? xmin : d[0][0];
-                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
             }
             var sum = 0;
             var count = 0;
