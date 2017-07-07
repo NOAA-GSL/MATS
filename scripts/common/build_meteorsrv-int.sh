@@ -48,9 +48,9 @@ do
         # overwrite the patch part of the version - roll the patch
         major=`echo "${version}" | cut -d'.' -f1`
         minor=`echo "${version}" | cut -d'.' -f2`
-        patch=`echo "${version}" | cut -d'.' -f3`
-        patch=$((patch + 1))
-        version="$major.${minor}.${patch}"
+        patch_old=`echo "${version}" | cut -d'.' -f3`
+        patch_new=$((patch_old + 1))
+        version="$major.${minor}.${patch_new}"
         echo "${version}" > private/versiontmp
     done < private/version
     version=`cat private/versiontmp`
