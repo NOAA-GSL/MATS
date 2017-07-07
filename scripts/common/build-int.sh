@@ -49,6 +49,7 @@ su - www-data <<%EOFS
     fi
 
     # blow away the local repo and re-clone - just to be absolutely clear that we are building from the latest
+    cd /builds/buildArea
     rm -rf MATS_for_EMB
     /usr/bin/git clone gerrit:MATS_for_EMB
     cd /builds/buildArea/MATS_for_EMB
