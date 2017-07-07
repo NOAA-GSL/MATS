@@ -26,7 +26,8 @@ else
 fi
 
 #build all the apps
-export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
+cd /builds/buildArea/MATS_for_EMB
+export METEOR_PACKAGE_DIRS=`find . -name meteor_packages`
 if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "$0 failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
@@ -59,6 +60,7 @@ do
     /usr/bin/git commit -a -m"new integration version"
     /usr/bin/git push --tags gerrit:MATS_for_EMB origin:master
 	echo "$0 - building app ${x}"
+	echo "METEOR_PACKAGE_DIRS is $METEOR_PACKAGE_DIRS"
 	meteor reset
 	meteor npm cache clean
 	meteor npm install
