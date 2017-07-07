@@ -55,7 +55,7 @@ do
         version="$major.${minor}.${patch_new}"
         echo "${version}" > private/versiontmp
         vdate=`date +%Y.%m.%d.%H.%M`
-        tag = "int-${appName}-${version}-${vdate}"
+        tag="int-${appName}-${version}-${vdate}"
         /usr/bin/git tag -a ${tag} -m "automatic build ${appName} ${tag}"
         /usr/bin/git commit -a -m"new integration tag"
         /usr/bin/git push --follow-tags
