@@ -8,7 +8,7 @@ exec 2>&1
 
 requestedApp="$1"
 
-echo "$0 ----------- started"
+echo "$0 ----------- started with args $*"
 date
 
 #test current dir is MATS_FOR_EMB
@@ -16,9 +16,9 @@ remote_origin=`/usr/bin/git config --get remote.origin.url`
 
 if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
 then 
-	echo "In a MATS_for_EMB clone - good - I will continue"
+	echo "$0 In a MATS_for_EMB clone - good - I will continue"
 else
-	echo "NOT in a MATS_for_EMB clone - not good"
+	echo "$0 NOT in a MATS_for_EMB clone - not good"
 	echo "try git clone gerrit:MATS_for_EMB MATS_for_EMB"
 	echo "then execute this script from inside MATS_for_EMB"
 	echo "quiting now."
@@ -28,7 +28,7 @@ fi
 #build all the apps
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
-	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
+	echo "$0 failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
 fi
 
