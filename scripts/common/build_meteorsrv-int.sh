@@ -60,5 +60,8 @@ do
 	meteor build /builds
 	cd ..
 done
+# clean up /tmp files
+echo "cleaning up /tmp/npm-* files"
+rm -rf /tmp/npm-*
 date
 echo "$0 ----------------- finished" 
