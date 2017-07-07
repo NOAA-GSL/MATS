@@ -57,9 +57,8 @@ do
     done < private/version
     version=`cat private/versiontmp`
     mv private/versiontmp private/version
-    /usr/bin/git tag -a ${version} -m "automatic build ${x} ${version}"
     /usr/bin/git commit -a -m"new integration version"
-    /usr/bin/git push --follow-tags
+    /usr/bin/git push
 	echo "$0 - building app ${x}"
 	echo "METEOR_PACKAGE_DIRS is $METEOR_PACKAGE_DIRS"
 	meteor reset
@@ -68,6 +67,12 @@ do
 	meteor build /builds
 	cd ..
 done
+vdate=`date +%Y.%m.%d.%H.%M`
+tag = "int-${vdate}"
+/usr/bin/git tag -a ${tag} -m "automatic build ${x} ${tag}"
+/usr/bin/git commit -a -m"new integration tag"
+/usr/bin/git push --follow-tags
+
 # clean up /tmp files
 echo "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
