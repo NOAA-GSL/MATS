@@ -27,7 +27,8 @@ fi
 
 #build all the apps
 cd /builds/buildArea/MATS_for_EMB
-export METEOR_PACKAGE_DIRS=`find . -name meteor_packages`
+echo "PWD is $PWD"
+export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	echo "$0 failed to find the meteor packages subdirectory - what gives here? - must exit now"
 	exit 1
