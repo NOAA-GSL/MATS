@@ -45,10 +45,12 @@ do
     # build the tag
     while IFS='-' read -r version prerelease
     do
-        # overwrite the vdate part and then write the tmpversion file
-        IFS='.' read -r major minor patch <<< "${version}"
-        patch = $((patch + 1))
-        version = "${major}.${minor}.${patch}"
+        # overwrite the patch part of the version - roll the patch
+        major=`echo "${version}" | cut -d'.' -f1`
+        minor=`echo "${version}" | cut -d'.' -f2`
+        patch=`echo "${version}" | cut -d'.' -f3`
+        patch=$((patch + 1))
+        version="$major.${minor}.${patch}"
         echo "${version}" > private/versiontmp
     done < private/version
     version=`cat private/versiontmp`
