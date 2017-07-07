@@ -46,6 +46,9 @@ do
     while IFS='-' read -r version prerelease
     do
         # overwrite the vdate part and then write the tmpversion file
+        IFS='.' read -r major minor patch <<< "${version}"
+        patch = $((patch + 1))
+        version = "${major}.${minor}.${patch}"
         echo "${version}" > private/versiontmp
     done < private/version
     version=`cat private/versiontmp`
