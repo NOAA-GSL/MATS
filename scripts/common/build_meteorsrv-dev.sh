@@ -56,6 +56,7 @@ do
         echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
         exit 1
     fi
+    /usr/bin/git pull
     vdate=`date +%Y.%m.%d.%H.%M`
     while IFS='-' read -r mversion prerelease
     do
@@ -63,7 +64,6 @@ do
         echo "${mversion}-${vdate}" > private/versiontmp
     done < private/version
     mv private/versiontmp private/version
-
     /usr/bin/git commit -m"new version" private/version
     /usr/bin/git push gerrit:MATS_for_EMB origin:development_v1.0
     /usr/bin/git push
