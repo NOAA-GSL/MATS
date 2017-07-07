@@ -10,6 +10,7 @@
     "fs": "0.0.1-security",
     "meteor-node-stubs": "^0.2.3",
     "modules": "^0.4.0",
-    "r-script": "0.0.3"
+    "r-script": "0.0.3",
+    "mats-common":"1.4.1"
   }
 }

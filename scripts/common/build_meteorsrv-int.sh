@@ -43,9 +43,14 @@ do
     # do a pull just in case an application was pushed by someone else while we were building the previous apps
     /usr/bin/git pull
     # build the tag
-    version=( $(cat private/version) )
-    tag=( $(cat private/version | cut -d'-' -f1) )
-    /usr/bin/git tag -a ${tag} -m "automatic build ${x} ${version}"
+    while IFS='-' read -r version prerelease
+    do
+        # overwrite the vdate part and then write the tmpversion file
+        echo "${version}" > private/versiontmp
+    done < private/version
+    version=`cat private/versiontmp`
+    mv private/versiontmp private/version
+    /usr/bin/git tag -a ${version} -m "automatic build ${x} ${version}"
     /usr/bin/git commit -a
     /usr/bin/git push --tags origin master
 	echo "building app ${x}"

@@ -9,6 +9,7 @@
     "fibers": "^1.0.15",
     "fs": "0.0.1-security",
     "meteor-node-stubs": "^0.2.3",
-    "modules": "^0.4.0"
+    "modules": "^0.4.0",
+    "mats-common":"1.4.1"
   }
 }
