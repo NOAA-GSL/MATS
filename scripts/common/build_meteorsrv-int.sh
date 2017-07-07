@@ -59,7 +59,7 @@ do
     mv private/versiontmp private/version
     /usr/bin/git tag -a ${version} -m "automatic build ${x} ${version}"
     /usr/bin/git commit -a -m"new integration version"
-    /usr/bin/git push --tags gerrit:MATS_for_EMB origin:master
+    /usr/bin/git push --follow-tags
 	echo "$0 - building app ${x}"
 	echo "METEOR_PACKAGE_DIRS is $METEOR_PACKAGE_DIRS"
 	meteor reset
