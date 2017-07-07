@@ -8,7 +8,7 @@ exec 2>&1
 
 requestedApp="$1"
 
-echo "$0 ----------- started"
+echo "$0 ----------- started with args $*"
 date
 
 cd /builds/buildArea
@@ -47,7 +47,7 @@ do
         continue
     fi
     cd $x
-    echo "building app $x"
+    echo "$0 - building app $x"
     meteor reset
     meteor npm cache clean
     meteor npm install
@@ -64,11 +64,11 @@ do
         echo "${mversion}-${vdate}" > private/versiontmp
     done < private/version
     mv private/versiontmp private/version
-    /usr/bin/git commit -m"new version" private/version
+    /usr/bin/git commit -m"new development version" private/version
     /usr/bin/git push gerrit:MATS_for_EMB origin:development_v1.0
-    /usr/bin/git push
+    echo "$0 - building app ${x}"
 	   meteor build /builds
-	cd ..
+	   cd ..
 done
 # clean up /tmp files
 echo "cleaning up /tmp/npm-* files"

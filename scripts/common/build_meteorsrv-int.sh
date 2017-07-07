@@ -51,9 +51,9 @@ do
     version=`cat private/versiontmp`
     mv private/versiontmp private/version
     /usr/bin/git tag -a ${version} -m "automatic build ${x} ${version}"
-    /usr/bin/git commit -a
-    /usr/bin/git push --tags origin master
-	echo "building app ${x}"
+    /usr/bin/git commit -a -m"new integration version"
+    /usr/bin/git push --tags gerrit:MATS_for_EMB origin:master
+	echo "$0 - building app ${x}"
 	meteor reset
 	meteor npm cache clean
 	meteor npm install

@@ -42,6 +42,6 @@ do
 	cd bundle
 	(cd programs/server && meteor npm install)
 	cd ../..
-done	
+done
 date
 echo "$0 ----------------- finished" 
