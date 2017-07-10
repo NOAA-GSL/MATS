@@ -65,7 +65,9 @@ do
     done < private/version
     mv private/versiontmp private/version
     /usr/bin/git commit -m"new development version" private/version
-    /usr/bin/git push gerrit:MATS_for_EMB origin:development_v1.0
+    # we just did a pull so go ahead and force this push with the new version
+    /usr/bin/git push origin development_v1.0 -f
+
     echo "$0 - building app ${x}"
 	   meteor build /builds
 	   cd ..
