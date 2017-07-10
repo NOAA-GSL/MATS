@@ -48,6 +48,7 @@ do
     fi
     cd $x
     echo "$0 - building app $x"
+    /usr/bin/git pull
     meteor reset
     meteor npm cache clean
     meteor npm install
@@ -56,7 +57,6 @@ do
         echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
         exit 1
     fi
-    /usr/bin/git pull
     vdate=`date +%Y.%m.%d.%H.%M`
     while IFS='-' read -r mversion prerelease
     do
