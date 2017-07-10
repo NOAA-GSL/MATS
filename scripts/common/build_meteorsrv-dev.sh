@@ -39,7 +39,7 @@ if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
 	exit 1
 fi
 
-#build the apps
+#build all of the apps
 cd apps
 find . -maxdepth 1 -type d -not -path "." | while read x
 do
