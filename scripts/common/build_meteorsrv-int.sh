@@ -64,7 +64,7 @@ do
     version=`cat private/versiontmp`
     mv private/versiontmp private/version
     /usr/bin/git commit -a -m"new integration version"
-    /usr/bin/git push
+    /usr/bin/git push origin master -f
 	echo "$0 - building app ${appBaseName}"
 	echo "METEOR_PACKAGE_DIRS is $METEOR_PACKAGE_DIRS"
 	meteor reset
