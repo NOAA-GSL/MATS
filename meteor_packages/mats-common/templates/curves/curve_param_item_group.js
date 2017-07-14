@@ -132,11 +132,19 @@ Template.curveParamItemGroup.helpers({
         if (elem.name === "label") {
             return "none";
         }
-         if (matsParamUtils.isControlButtonVisible(elem.name)) {
-             return "block";
-         } else {
-             return "none";
-         }
+        // it isn't good enough to just check the item control button. Need to evaluate the hideOtherFor functionality with
+        // respect to this particular curve item
+        // First - determine if my visibility is controlled by another
+        const visibilityControllingParam = matsParamUtils.visibilityControllerForParam(elem.name);
+        // Second - Check the hide/show state based on the parameter hideOtherFor map in the parameter nad the state of this particular curve
+        if (visibilityControllingParam !== undefined) {
+            const curve = Session.get("Curves")[elem.index];
+            const hideOtherFor = visibilityControllingParam.hideOtherFor[elem.name][0];
+            if (curve[visibilityControllingParam.name] === hideOtherFor) {
+                return "none";
+            }
+        }
+        return "block";
     }
 });
 
