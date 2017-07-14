@@ -1,21 +1,5 @@
 <template name="topNav">
-    <div class="modal modal-dialog fade" id="modal-display-about" tabindex="-1" role="dialog"
-         aria-labelledby="displayAboutDialog" aria-hidden="true" style="background-color: cornflowerblue">
-        <div class="modal-dialog">
-            <div class="modal-content"><i class="fa fa-4x fa-question" style="color:cornflowerblue"></i>
-                <h2 class="modal-title" style="text-align: center; color: red;">About MATS</h2>
-                <div class="modal-body">
-                    <h2 style="color:cornflowerblue">
-                        <p>Lots of fun things about MATS and GSD will go here.</p>
-                        <p>Possibly more information will also go here.</p>
-                    </h2>
-                </div>
-                <div class="modal-footer btn-group">
-                    <button class="clear-info btn btn-success btn-xs"><i class="fa fa-eraser"></i>&nbsp;&nbsp;Clear</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
     <div id="navbar" style="display:block;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
         <nav id="topnav" class="navbar navbar-default"
              style="color:white; background: #006699;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
@@ -28,9 +12,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a style="color:white" class="matshome navbar-brand" href="/">MATS&nbsp;&nbsp;<i style="color:cyan"
-                                                                                                     class="fa fa-home fa-lg"
-                                                                                                     aria-hidden="true"></i></a>
+                    <a style="color:white" class="matshome navbar-brand" href="/">MATS&nbsp;&nbsp;<i style="color:cyan" class="fa fa-home fa-lg" aria-hidden="true"></i></a>
                 </div>
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="navbar-collapse-1">
@@ -76,9 +58,9 @@
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="mailto:mats.gsd@noaa.gov?Subject=Feedback from mats" target="_top"><span
-                                style="color:white">Send Feedback</span></a></li>ß
+                                style="color:white">Send Feedback</span></a></li>
                         <li><a class="matshome" style="font-size: small" href="/"><span style="color:white">Home</span></a></li>
-                        <li><a class="about" style="font-size: small" href="/"><span style="color:white">About</span></a></li>
+                        <li><span class="about" style="font-size: small; color:white">About</span></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
