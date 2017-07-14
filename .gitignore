@@ -15,3 +15,4 @@ meteor_packages/.idea/tasks.xml
 .idea/inspectionProfiles/
 apps/metproto/private/R_/R_work/data/
 static/img/image00.png
+.DS_Store
