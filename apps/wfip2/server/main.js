@@ -169,7 +169,7 @@ var doCurveParams = function () {
                 optionsMap: discriminatorOptionsMap,
                 options: Object.keys(discriminatorOptionsMap),   // convenience
                 dependentNames: ['upper', 'lower'],
-                disableOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
+                disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': [matsTypes.InputTypes.unused]},
                 hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
                 controlButtonCovered: true,
                 unique: false,
