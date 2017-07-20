@@ -212,8 +212,8 @@ dataSeries = function (plotParams, plotFunction) {
                 var truthDataSource_tablename = curve.truthDataSource_tablename;
                 var truthRunInterval = curve.truthRunInterval;
                 var truthDataSource_is_json = curve.truthDataSource_is_json;
-                maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
-                maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
+                maxRunInterval = Number(truthRunInterval) > Number(verificationRunInterval) ? Number(truthRunInterval) : Number(verificationRunInterval);
+                maxValidInterval = Number(maxValidInterval) > Number(maxRunInterval) ? Number(maxValidInterval) : Number(maxRunInterval);
                 var truthStatement = '';
                 if (truthDataSource_is_instrument) {
                     const utcOffset = Number(forecastLength * 3600);
@@ -557,7 +557,7 @@ dataSeries = function (plotParams, plotFunction) {
             // calculate difference curve values
             // minuend - subtrahend = difference.
             // the minuend is the curve from which the base curve values will be subtracted
-            while (subtrahendData[subtrahendIndex] < minuendData[minuendIndex]) {
+            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
                 // if necessary, increment the base index until it catches up
                 subtrahendIndex++;
             }
@@ -570,7 +570,7 @@ dataSeries = function (plotParams, plotFunction) {
             sum = 0;
             try {
                 var diffTime = (minuendData[minuendIndex])[0];
-                while ((diffTime < diffEndTime) && (subtrahendIndex < subtrahendData.length - 1) && (minuendIndex < minuendData.length - 1)) {
+                while ((diffTime <= diffEndTime) && (subtrahendIndex <= subtrahendData.length - 1) && (minuendIndex <= minuendData.length - 1)) {
                     while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
                         // if necessary, increment the base index until it catches up
                         subtrahendIndex++;
