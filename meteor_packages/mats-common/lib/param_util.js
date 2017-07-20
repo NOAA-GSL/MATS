@@ -434,6 +434,25 @@ const getCurveItemValueForParamName = function(curveNumber, paramName) {
     //     text = elem.text();
     // }
 };
+const visibilityControllerForParam = function(paramName) {
+    /*
+    Need to iterate all the params looking for one that has this paramName as a key in its
+    hideOtherFor map.
+    If it exists, that param is returned. Otherwise return undefined.
+     */
+    var params = matsCollections.CurveParams.find({}).fetch();
+    var found = undefined;
+    params.some(function(param){
+        if (param.hideOtherFor){
+            const pKeys = Object.keys(param.hideOtherFor);
+            if (pKeys.indexOf(paramName) !== -1) {
+                found = param;
+                return;
+            }
+        }
+    });
+    return found;
+}
 
 export default matsParamUtils = {
     getDisabledOptionsForParamName: getDisabledOptionsForParamName,
@@ -460,5 +479,6 @@ export default matsParamUtils = {
     setInputValueForParamAndtriggerChange:setInputValueForParamAndtriggerChange,
     getOptionsForParam:getOptionsForParam,
     getOptionsMapForParam:getOptionsMapForParam,
-    getCurveItemValueForParamName:getCurveItemValueForParamName
+    getCurveItemValueForParamName:getCurveItemValueForParamName,
+    visibilityControllerForParam:visibilityControllerForParam
 };

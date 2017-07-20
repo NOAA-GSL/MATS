@@ -169,8 +169,8 @@ var doCurveParams = function () {
                 optionsMap: discriminatorOptionsMap,
                 options: Object.keys(discriminatorOptionsMap),   // convenience
                 dependentNames: ['upper', 'lower'],
-                disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': matsTypes.InputTypes.unused},
-                hideOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': matsTypes.InputTypes.unused},
+                disableOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
+                hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
                 controlButtonCovered: true,
                 unique: false,
                 default: -1,   // -1 means selection is optional - enables clear selection button
@@ -238,8 +238,8 @@ var doCurveParams = function () {
                 options: Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
                 dependentNames: ["sites", "forecast-length", "variable"],
-                disableOtherFor: {'truth-data-source': [statisticOptionsMap.mean][0]},
-                hideOtherFor: {'truth-data-source': [statisticOptionsMap.mean][0]},
+                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
                 unique: false,
                 default: Object.keys(statisticOptionsMap)[0],
                 controlButtonVisibility: 'block',

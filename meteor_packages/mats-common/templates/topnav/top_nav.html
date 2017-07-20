@@ -1,9 +1,12 @@
 <template name="topNav">
-   <div id="navbar" style="display:block;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
-       <nav id="topnav" class="navbar navbar-default"  style="color:white; background: #006699;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
+
+    <div id="navbar" style="display:block;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
+        <nav id="topnav" class="navbar navbar-default"
+             style="color:white; background: #006699;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navbar-collapse-1" aria-expanded="false">
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
@@ -13,48 +16,57 @@
                 </div>
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="navbar-collapse-1">
-                    <ul class="nav navbar-nav" >
-                        <li><a href="http://www.doc.gov/"><span style="color:white">U.S. Department of Commerce</span></a></li>
-                        <li><a href="http://www.noaa.gov/"><span style="color:white">National Oceanic and Atmospheric Administration</span></a></li>
-                        <li><a href="http://www.research.noaa.gov/"><span style="color:white">NOAA Research</span></a></li>
+                    <ul class="nav navbar-nav">
+                        <li><a href="http://www.doc.gov/"><span
+                                style="color:white">U.S. Department of Commerce</span></a></li>
+                        <li><a href="http://www.noaa.gov/"><span style="color:white">National Oceanic and Atmospheric Administration</span></a>
+                        </li>
+                        <li><a href="http://www.research.noaa.gov/"><span style="color:white">NOAA Research</span></a>
+                        </li>
                     </ul>
                     <span class="navbar-right" style="font-size: small">{{>loginButtons}}</span>
 
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-        <nav id="topnav1" class="navbar navbar-default"  style="color:white; background: #000066;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:1.5%;">
+        <nav id="topnav1" class="navbar navbar-default"
+             style="color:white; background: #000066;height:100%;margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:1.5%;">
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-2" aria-expanded="false">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navbar-collapse-2" aria-expanded="false">
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a style="margin-bottom:0;margin-top:0;padding: 0;" class="navbar-brand" href="#"><img style="height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:1em;padding-bottom:0;padding-top:0;" src="/img/noaa_transparent.gif"  alt="NOAA"></a>
+                    <a style="margin-bottom:0;margin-top:0;padding: 0;" class="navbar-brand" href="#"><img
+                            style="height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right:1em;padding-bottom:0;padding-top:0;"
+                            src="/img/noaa_transparent.gif" alt="NOAA"></a>
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="navbar-collapse-2">
-                    <ul class="nav navbar-nav" >
+                    <ul class="nav navbar-nav">
                         <li>
                             <div>
-                            <a href="http://esrl.noaa.gov/gsd/emb"><span style="color:white;font-size: large;">Earth System Research Laboratory</span></a><br>
-                            <a class="matshome" href="/"><span style="color:white;font-size: small;">Model Analysis Tool Suite (MATS)</span></a><br>
+                                <a href="http://esrl.noaa.gov/gsd/emb"><span style="color:white;font-size: large;">Earth System Research Laboratory</span></a><br>
+                                <a class="matshome" href="/"><span style="color:white;font-size: small;">Model Analysis Tool Suite (MATS)</span></a><br>
                             </div>
                         </li>
                     </ul>
-                    <ul class="nav navbar-nav navbar-right" >
-                        <li><a href="mailto:mats.gsd@noaa.gov?Subject=Feedback from mats" target="_top"><span style="color:white">Send Feedback</span></a></li>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="mailto:mats.gsd@noaa.gov?Subject=Feedback from mats" target="_top"><span
+                                style="color:white">Send Feedback</span></a></li>
                         <li><a class="matshome" style="font-size: small" href="/"><span style="color:white">Home</span></a></li>
-                        <li><a style="font-size: small" href="http://hiwpp.noaa.gov/about.html"><span style="color:white">About</span></a></li>
+                        <li><span class="about" style="font-size: small; color:white">About</span></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-        <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0" class="container-fluid">
+        <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0"
+             class="container-fluid">
             <a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/emb/">GSD Modeling</a>
         </div>
     </div>
