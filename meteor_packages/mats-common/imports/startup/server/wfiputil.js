@@ -356,11 +356,12 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         previousTime = time;
                         previousSiteId = siteid;
                     } else {
+                        interpolationCount++;
                         for (var v = 0; v < values.length; v++) {
                             valueSums[v] += values[v];
                             values[v] = valueSums[v] / interpolationCount;
                         }
-                        interpolationCount++;
+                        //interpolationCount++;
                     }
                 }
 
