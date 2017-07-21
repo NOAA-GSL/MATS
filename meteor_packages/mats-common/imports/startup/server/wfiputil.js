@@ -179,7 +179,13 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument,verificationRunInterval) {
+    // verificationRunInterval is only required for instruments.
+    // Its purpose is to enable choosing instrument readings that are within +- 1/2 of the instrument cycle time from the cycle time.
+    // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
+    // If we happen to get more than one reading within +/- 1/2 of the cyle time from the exact cycle time we average the readings.
+    // VerificationRunInterval is in milliseconds and what we actually use is the halfInterval.
+    var verificationHalfRunInterval = verificationRunInterval / 2;
     var dFuture = new Future();
     var error = "";
     var resultData = {};
@@ -268,7 +274,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             var previousTime = Number.MIN_VALUE;
             var previousSiteId = Number.MIN_VALUE;
 
-            var valueSums = [];
+            var valueSums = {};
+            var interpolatedValues = {};
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
@@ -346,22 +353,48 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 }
 
                 // now we have to do interpolation for instruments
+                // halfinterval before
                 if (isInstrument && Array.isArray(values)) {
-                        //val = sum / count;
-                    if (Number(time) > Number(previousTime) || (Number(siteid) > Number(previousSiteId))) {
-                        interpolationCount = 1;
-                        for (var v = 0; v < values.length; v++) {
-                            valueSums[v] = values[v];
+                    var halfCycleBeforeAvtime = time -  verificationHalfRunInterval;
+                    var halfCycleAfterAvtime = time +  verificationHalfRunInterval;
+                    console.log('halfCycleBeforeAvtime is ' + halfCycleBeforeAvtime + ' halfCycleAfterAvtime is ' + halfCycleAfterAvtime + ' utctime is ', utctime + ' avtime is ' + time);
+
+                    if ((Number(time) > Number(previousTime)) ||
+                        (Number(siteid) > Number(previousSiteId))) {
+                        // first encounter of a new avtime
+                        interpolationCount = 0;
+                        valueSums = {};
+                        interpolatedValues = {};
+                        if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                            //initialize the
+                            interpolationCount ++;
+                            for (var index = 0; index < values.length; index++) {
+                                valueSums[levels[index]] = values[index];
+                                interpolatedValues[levels[index]] = valueSums[levels[index]] / interpolationCount;
+                            }
                         }
                         previousTime = time;
                         previousSiteId = siteid;
                     } else {
-                        interpolationCount++;
-                        for (var v = 0; v < values.length; v++) {
-                            valueSums[v] += values[v];
-                            values[v] = valueSums[v] / interpolationCount;
+                        // subsequent encounter of the same avtime (new utctime))
+                        if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                            interpolationCount++;
+                            for (var index = 0; index < values.length; index++) {
+                                valueSums[levels[index]] += values[index];
+                                interpolatedValues[levels[index]] = valueSums[levels[index]] / interpolationCount;
+                            }
                         }
-                        //interpolationCount++;
+                    }
+                    values = [];
+                    levels = [];
+                    var interpolatedLevels = Object.keys(interpolatedValues).sort(
+                        function(a,b) {
+                            return a - b;
+                        }
+                    );
+                    for (var ivIndex = 0; ivIndex < interpolatedLevels.length; ivIndex++) {
+                        levels.push(interpolatedLevels[ivIndex]);
+                        values.push(interpolatedValues[interpolatedLevels[ivIndex]]);
                     }
                 }
 
