@@ -211,6 +211,7 @@ dataSeries = function (plotParams, plotFunction) {
                 var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
                 var truthDataSource_tablename = curve.truthDataSource_tablename;
                 var truthRunInterval = curve.truthRunInterval;
+                var halfTruthInterval = truthRunInterval / 2;
                 var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = Number(truthRunInterval) > Number(verificationRunInterval) ? Number(truthRunInterval) : Number(verificationRunInterval);
                 maxValidInterval = Number(maxValidInterval) > Number(maxRunInterval) ? Number(maxValidInterval) : Number(maxRunInterval);
@@ -218,7 +219,7 @@ dataSeries = function (plotParams, plotFunction) {
                 if (truthDataSource_is_instrument) {
                     const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -227,7 +228,7 @@ dataSeries = function (plotParams, plotFunction) {
                         if (windVar) {
                             qVariable = myVariable + ",ws";
                         }
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
@@ -243,7 +244,7 @@ dataSeries = function (plotParams, plotFunction) {
                 //console.log("statement: " + truthStatement);
                 dataRequests[curve.label] = truthStatement;
                 try {
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, verificationRunInterval);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
                     //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
                     //    continue;
                     //}
