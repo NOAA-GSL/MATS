@@ -44,16 +44,26 @@ do
 	cd ${appName}
     # do a pull just in case an application was pushed by someone else while we were building the previous apps
     /usr/bin/git pull
-    # build the tag
+    # build the tag and roll the patch number
+    IFS="-" read dversion ddate <<< `jq -r .development private/version`
+    export dversion
+    export ddate
+    # overwrite the patch part of the version - roll the patch
+    dmajor=`echo "${dversion}" | cut -d'.' -f1`
+    dminor=`echo "${dversion}" | cut -d'.' -f2`
     pversion=`jq -r .production private/version`
     # overwrite the patch part of the version - roll the patch
     major=`echo "${pversion}" | cut -d'.' -f1`
     minor=`echo "${pversion}" | cut -d'.' -f2`
     patch_old=`echo "${pversion}" | cut -d'.' -f3`
     patch_new=$((patch_old + 1))
+    #make the development patch number one higher than the integration patch number - roll the dev patch
+    dpatch_new=$((patch_new + 1))
+    export dversion="${dmajor}.${dminor}.${dpatch_new}-${ddate}"
     export pversion="$major.${minor}.${patch_new}"
-    jq -M -r ". | {development,production:env.pversion}" private/version > private/versiontmp
+    jq -M -r ". | {development:env.dversion,production:env.pversion}" private/version > private/versiontmp
     mv private/versiontmp private/version
+    # build the tag
     vdate=`date +%Y.%m.%d.%H.%M`
     appBaseName=`basename ${appName}`
     tag="int-${appBaseName}-${version}-${vdate}"
