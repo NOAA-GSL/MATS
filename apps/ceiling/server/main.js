@@ -309,7 +309,7 @@ Meteor.startup(function () {
             user        : 'readonly',
             //password    : 'amt1234',
             password    : 'ReadOnly@2016!',
-            database    : 'ceiling_sums',
+            database    : 'ceiling_sums2',
             connectionLimit : 10
         });
         matsCollections.Databases.insert({
@@ -319,7 +319,7 @@ Meteor.startup(function () {
             host        : 'wolphin.fsl.noaa.gov',
             user        : 'readonly',
             password    : 'ReadOnly@2016!',
-            database    : 'ceiling',
+            database    : 'ceiling2',
             connectionLimit : 10
         });
     }

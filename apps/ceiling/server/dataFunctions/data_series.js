@@ -89,11 +89,13 @@ dataSeries = function (plotParams, plotFunction) {
                 " ,min(m0.time) as min_secs" +
                 ",max(m0.time) as max_secs" +
                 ", {{statistic}} " +
-                "from {{model}}_{{threshHold}}_{{forecastLength}}_{{region}} as m0" +
+                "from {{model}}_{{region}} as m0" +
                 " where 1=1" +
                 "{{validTime}} " +
                 " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
                 " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                " and m0.trsh = {{threshHold}} " +
+                " and m0.fcst_len = {{forecastLength}} " +
                 " group by avtime" +
                 " order by avtime;";
 
