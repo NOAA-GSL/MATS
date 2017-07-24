@@ -45,24 +45,22 @@ do
     # do a pull just in case an application was pushed by someone else while we were building the previous apps
     /usr/bin/git pull
     # build the tag
-    while IFS='-' read -r version prerelease
-    do
-        appBaseName=`basename ${appName}`
-        # overwrite the patch part of the version - roll the patch
-        major=`echo "${version}" | cut -d'.' -f1`
-        minor=`echo "${version}" | cut -d'.' -f2`
-        patch_old=`echo "${version}" | cut -d'.' -f3`
-        patch_new=$((patch_old + 1))
-        version="$major.${minor}.${patch_new}"
-        echo "${version}" > private/versiontmp
-        vdate=`date +%Y.%m.%d.%H.%M`
-        tag="int-${appBaseName}-${version}-${vdate}"
-        /usr/bin/git tag -a ${tag} -m "automatic build ${appBaseName} ${tag}"
-        /usr/bin/git commit -a -m"new integration tag"
-        /usr/bin/git push --follow-tags
-    done < private/version
-    version=`cat private/versiontmp`
+    pversion=`jq -r .production private/version`
+    # overwrite the patch part of the version - roll the patch
+    major=`echo "${pversion}" | cut -d'.' -f1`
+    minor=`echo "${pversion}" | cut -d'.' -f2`
+    patch_old=`echo "${pversion}" | cut -d'.' -f3`
+    patch_new=$((patch_old + 1))
+    export pversion="$major.${minor}.${patch_new}"
+    jq -M -r ". | {development,production:env.pversion}" private/version > private/versiontmp
     mv private/versiontmp private/version
+    vdate=`date +%Y.%m.%d.%H.%M`
+    appBaseName=`basename ${appName}`
+    tag="int-${appBaseName}-${version}-${vdate}"
+    /usr/bin/git tag -a ${tag} -m "automatic build ${appBaseName} ${tag}"
+    /usr/bin/git commit -a -m"new integration tag"
+    /usr/bin/git push --follow-tags
+
     /usr/bin/git commit -a -m"new integration version"
     /usr/bin/git push origin master -f
 	echo "$0 - building app ${appBaseName}"

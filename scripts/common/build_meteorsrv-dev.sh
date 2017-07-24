@@ -57,12 +57,14 @@ do
         echo "failed to find the 'private' subdirectory - what gives here? Versioning depends on private/version- must exit now"
         exit 1
     fi
-    vdate=`date +%Y.%m.%d.%H.%M`
-    while IFS='-' read -r mversion prerelease
+    export vdate=`date +%Y.%m.%d.%H.%M`
+    jq -r .development private/version | while IFS="-" read dversion ddate
     do
-        # overwrite the vdate part and then write the tmpversion file
-        echo "${mversion}-${vdate}" > private/versiontmp
-    done < private/version
+        export dversion
+        export ddate
+        export developmentVersion="${dversion}-${vdate}"
+        jq -M -r ". | {development:env.developmentVersion,production}" private/version
+    done >> private/versiontmp
     mv private/versiontmp private/version
     /usr/bin/git commit -m"new development version" private/version
     # we just did a pull so go ahead and force this push with the new version
