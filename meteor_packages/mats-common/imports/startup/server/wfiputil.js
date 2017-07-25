@@ -3,7 +3,7 @@ const Future = require('fibers/future');
 
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic) {
-    // sum and average all of the means for all of the sites
+    // sum and average all of the means for all of the siteshalfCycleBeforeAvtime is
     var datum = {};
     var commonSitesBasisLengthX = siteBasisX.length;
     var commonSitesBasisLengthY = siteBasisY.length;
@@ -357,7 +357,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (isInstrument && Array.isArray(values)) {
                     var halfCycleBeforeAvtime = time -  verificationHalfRunInterval;
                     var halfCycleAfterAvtime = time +  verificationHalfRunInterval;
-                    console.log('halfCycleBeforeAvtime is ' + halfCycleBeforeAvtime + ' halfCycleAfterAvtime is ' + halfCycleAfterAvtime + ' utctime is ', utctime + ' avtime is ' + time);
+                    //console.log('halfCycleBeforeAvtime is ' + halfCycleBeforeAvtime + ' halfCycleAfterAvtime is ' + halfCycleAfterAvtime + ' utctime is ', utctime + ' avtime is ' + time);
 
                     if ((Number(time) > Number(previousTime)) ||
                         (Number(siteid) > Number(previousSiteId))) {
