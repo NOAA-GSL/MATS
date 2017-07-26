@@ -40,8 +40,12 @@ su - www-data <<%EOFS
     if [ -d MATS_for_EMB ]
     then
         cd /builds/buildArea/MATS_for_EMB
+        # make certain that we are on the master branch
+        git checkout master
         /usr/bin/git fetch
         apps=( $(/usr/bin/git --no-pager diff master origin/master --name-only | grep apps | cut -f2 -d'/') )
+        echo "building these apps - ${apps[*]}"
+
     else
         # there was no local repo so there is no changed app list. All the apps should get built
         echo "$USER $0 no local repo - building all apps"
