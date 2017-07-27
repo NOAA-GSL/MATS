@@ -92,6 +92,24 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
+const arrayContainsArray = function(superArray, subArray) {
+    superArray.sort(function(a,b){return Number(a) - Number(b);});
+    subArray.sort(function(a,b){return Number(a) - Number(b);});
+    var i, j;
+    for (i=0,j=0; i<superArray.length && j<subArray.length;) {
+        if (superArray[i] < subArray[j]) {
+            ++i;
+        } else if (superArray[i] == subArray[j]) {
+            ++i; ++j;
+        } else {
+            // sub[j] not in sup, so sub not subbag
+            return false;
+        }
+    }
+    // make sure there are no elements left in sub
+    return j == subArray.length;
+};
+
 const getMatchedDataSet = function (dataset, interval) {
     /*
      Parameters:
@@ -1229,6 +1247,7 @@ export default matsDataUtils = {
     dateConvert: dateConvert,
     secsConvert: secsConvert,
     arraysEqual: arraysEqual,
+    arrayContainsArray:arrayContainsArray,
     getMatchedDataSet: getMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForProfileMatchingDiffCurve:getDataForProfileMatchingDiffCurve,
