@@ -799,7 +799,7 @@ dataSeries = function (plotParams, plotFunction) {
                             dataElement.timeLevels = levelsToMatch;
                             dataElement.timeMean = timeSum / sitesValueNum; //RECALCULATE THE MEAN
                             dataset[sci].data[dataIndexes[sci]][1] = dataElement.timeMean;
-                            tooltip = label +
+                            tooltip = curves[sci].label +
                                 "<br>seconds:" + time / 1000 +
                                 "<br>time:" +  new Date(Number(time/1000)).toUTCString() +
                                 "<br>statistic:" + curves[sci].statistic +
@@ -817,7 +817,7 @@ dataSeries = function (plotParams, plotFunction) {
                             dataset[sci].data[dataIndexes[sci]][2].minuend = newMinuend;
                             dataset[sci].data[dataIndexes[sci]][2].subtrahend = newSubtrahend;
                             dataset[sci].data[dataIndexes[sci]][1] = newMinuend - newSubtrahend;
-                            tooltip = label +
+                            tooltip = curves[sci].label +
                                 "<br>seconds:" + time / 1000 +
                                 "<br>time:" +  new Date(Number(time/1000)).toUTCString() +
                                 "<br> matchDiffValue:" + dataset[sci].data[dataIndexes[sci]][1];
