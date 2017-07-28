@@ -18,7 +18,7 @@ echo "remove and clone MATS_for_EMB"
 cd MATS_for_EMB
 /usr/bin/git checkout development_v1.0
 # pick up any possible version number changes
-/usr/bin/git merge master
+#/usr/bin/git merge master
 #test current dir is MATS_FOR_EMB
 remote_origin=`/usr/bin/git config --get remote.origin.url`
 
