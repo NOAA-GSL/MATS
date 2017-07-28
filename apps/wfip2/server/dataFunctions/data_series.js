@@ -117,7 +117,12 @@ dataSeries = function (plotParams, plotFunction) {
                 //throw new Error("INFO: Single cycle all-forecast series are not yet implemented");
                 forecastLength = 0;
                 var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
-                var forecastLengths = fcOptionsMap.options;
+                var forecastLengths = fcOptionsMap.optionsMap[curve['data-source']];
+                if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
+                    // there must be a truth data source with forecastlen options
+                    var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
+                    forecastLengths = _.intersection(forecastLengths,truthForecastLengths);
+                }
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
                 var utcOffsets = forecastLengths.map(function (item) {
