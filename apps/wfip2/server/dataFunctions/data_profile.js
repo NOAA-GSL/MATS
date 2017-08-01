@@ -571,7 +571,7 @@ dataProfile = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var statistic = curve['statistic'];
         var windVar = curve['windVar'];
-
+        var label = curve.label;
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,

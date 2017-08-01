@@ -121,7 +121,7 @@ dataSeries = function (plotParams, plotFunction) {
                 if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
                     // there must be a truth data source with forecastlen options
                     var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
-                    forecastLengths = _.intersection(forecastLengths,truthForecastLengths);
+                    forecastLengths = _.intersection(forecastLengths, truthForecastLengths);
                 }
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
@@ -415,18 +415,27 @@ dataSeries = function (plotParams, plotFunction) {
                                               // (some experiment entries may not have had a corresponding truth entry so the  siteLevelBiasNum
                                               // might not be the same as the siteLevelNum)
 
+                    if (statistic != "mean") {
+                        timeObj.timeLevels = [];
+                    }
+
                     for (var si = 0; si < sitesLength; si++) {
-                        var valSLevels = timeObj.sites[[sites[si]]].levels;
-                        var sValues = timeObj.sites[[sites[si]]].values;
-                        var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].levels;
+                        var valSLevels = timeObj.sites[sites[si]].levels;
+                        var sValues = timeObj.sites[sites[si]].values;
+                        var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].levels;
                         var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels, truthSLevels);
-                        var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[[sites[si]]].values;
+                        var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].values;
                         var includedLevels = _.intersection(sLevels, levelBasis);
                         var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
                         if (levelsQuality > levelCompleteness) {
                             // here we make the various calculations
                             // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
                             // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
+
+                            timeObj.sites[sites[si]].levels = [];
+                            if (statistic !== "mean") {
+                                timeObj.sites[sites[si]].values = [];
+                            }
                             for (var li = 0; li < sLevels.length; li++) {
                                 var siteLevelValue = sValues[li];
                                 var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
@@ -457,6 +466,7 @@ dataSeries = function (plotParams, plotFunction) {
                                             siteLevelBiasSum += biasValue;
                                             siteLevelBiasNum++;
                                             timeObj.sites[sites[si]].values[li] = biasValue;
+
                                         } catch (nodata) {
                                             // apparently there is no data in the truth curve that matches this time
                                             biasValue = null;
@@ -493,8 +503,18 @@ dataSeries = function (plotParams, plotFunction) {
                                         }
                                         break;
                                 }
+                                timeObj.sites[sites[si]].levels[li] = sLevels[li];
                             }
                         } // else don't count it in - skip over it, it isn't complete enough
+                        // remove mean oriented statistics
+                        if (statistic != 'mean') {
+                            timeObj.sites[sites[si]].mean = null;
+                            timeObj.sites[sites[si]].min = null;
+                            timeObj.sites[sites[si]].max = null;
+                            timeObj.sites[sites[si]].sum = null;
+                            timeObj.sites[sites[si]].numLevels = sLevels.length;
+                            timeObj.timeLevels = _.union(timeObj.timeLevels,timeObj.sites[sites[si]].levels);
+                        }
                     }
                     // we set bad numbers to null
                     var value;
@@ -548,6 +568,7 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> value:" + value;
                     count++;
                     sum += value;
+                    timeObj.timeMean = sum / count;
                     normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                 }
                 if (statistic != "mean") {
@@ -711,25 +732,27 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 if (curves[ci].diffFrom == undefined || curves[ci].diffFrom === null) {
                     // not a difference curve
-                    if (levelsToMatch.length === 0) {
-                        levelsToMatch = dataset[ci].data[dataIndexes[ci]][2].timeLevels;
-                    } else {
-                        if (dataset[ci].data[dataIndexes[ci]][2].timeLevels) {
-                            levelsToMatch = _.intersection(levelsToMatch, dataset[ci].data[dataIndexes[ci]][2].timeLevels);
+                    if (dataset[ci].data[dataIndexes[ci]][2]) {
+                        if (levelsToMatch.length === 0) {
+                            levelsToMatch = dataset[ci].data[dataIndexes[ci]][2].timeLevels;
+                        } else {
+                            if (dataset[ci].data[dataIndexes[ci]][2].timeLevels) {
+                                levelsToMatch = _.intersection(levelsToMatch, dataset[ci].data[dataIndexes[ci]][2].timeLevels);
+                            }
                         }
-                    }
-                    if (sitesToMatch.length === 0) {
-                        sitesToMatch = dataset[ci].data[dataIndexes[ci]][2].timeSites;
-                    } else {
-                        if (dataset[ci].data[dataIndexes[ci]][2].timeSites) {
-                            sitesToMatch = _.intersection(sitesToMatch, dataset[ci].data[dataIndexes[ci]][2].timeSites);
+                        if (sitesToMatch.length === 0) {
+                            sitesToMatch = dataset[ci].data[dataIndexes[ci]][2].timeSites;
+                        } else {
+                            if (dataset[ci].data[dataIndexes[ci]][2].timeSites) {
+                                sitesToMatch = _.intersection(sitesToMatch, dataset[ci].data[dataIndexes[ci]][2].timeSites);
+                            }
                         }
                     }
                 }
             }
             for (ci = 0; ci < curvesLength; ci++) {
                 // if the time isn't right or the data is null it doesn't match
-                if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != time) {
+                if (dataset[ci].data[dataIndexes[ci]] === undefined || dataset[ci].data[dataIndexes[ci]] === null || dataset[ci].data[dataIndexes[ci]][1] === null || dataset[ci].data[dataIndexes[ci]][0] != time) {
                     timeMatches = false;
                     levelsMatches = false;
                     sitesMatches = false;
@@ -749,7 +772,7 @@ dataSeries = function (plotParams, plotFunction) {
                     }
                     if (matchSite) {
                         mySites = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
-                        if (matsDataUtils.arraysEqual(mySites, sitesToMatch) == false) {
+                        if (mySites !== undefined && matsDataUtils.arrayContainsArray(mySites, sitesToMatch) == false) {
                             sitesMatches = false;
                         }
                     }
@@ -769,67 +792,98 @@ dataSeries = function (plotParams, plotFunction) {
                             }
                         }
                     }
-                    if (matchLevel) {
-                        // Here we have to reset the levels for this entry and recalculate the data in sites and timeLevels
-                        if (curves[sci].diffFrom == null) {
-                            var dataElement = dataset[sci].data[dataIndexes[sci]][2];
-                            // recalculate the sites object
 
-                            // traverse all the sites in sites
+                    if (curves[sci].diffFrom == null) {
+                        // non diff curve
+                        if (matchLevel || matchSite) {
+                            var dataElement = dataset[sci].data[dataIndexes[sci]][2];
+                            var val = dataset[sci].data[dataIndexes[sci]][1];
                             var timeSum = 0;
                             var sitesValueNum = 0;
-                            Object.keys(dataElement.sites).forEach(function (siteId) {
-                                var site = dataElement.sites[siteId];
-                                var matchedSiteValues = [];
-                                for (var ltmi = 0; ltmi < levelsToMatch.length; ltmi++) {
-                                    var l = levelsToMatch[ltmi];
-                                    var li = site.levels.indexOf(l);
-                                    if (li !== -1) {
-                                        matchedSiteValues.push(Number(site.values[li]));
+                            if (matchSite) {
+                                Object.keys(dataElement.sites).forEach(function (siteId) {
+                                    if (sitesToMatch.indexOf(Number(siteId)) === -1) {
+                                        delete dataset[sci].data[dataIndexes[sci]][2].sites[siteId];
                                     }
+                                });
+                                // if level matching is required let it reprocess the statistics otherwise do it here
+                                if (!matchLevel) {
+                                    var timeLevels = [];
+                                    Object.keys(dataElement.sites).forEach(function (siteId) {
+                                        var site = dataElement.sites[siteId];
+                                        // wierd javascript exuse for Math.sum .....
+                                        timeSum = (site.values).reduce(function(a,b){return a + b; },0);
+                                        sitesValueNum += site.numLevels;
+                                        for (var li = 0; li < site.levels.length; li++) {
+                                            if (timeLevels.indexOf(site.levels[li]) === -1) {
+                                                timeLevels.push(site.levels[li]);
+                                            }
+                                        }
+                                    });
+                                    dataset[sci].data[dataIndexes[sci]][2].timeLevels = timeLevels;
                                 }
-                                site.values = matchedSiteValues;
-                                site.levels = levelsToMatch;
-                                site.numLevels = levelsToMatch.length;
-                                site.min = Math.min(...matchedSiteValues);
-                                site.max = Math.max(...matchedSiteValues);
-                                site.sum = matchedSiteValues.reduce(function (a, b) {
-                                    return a + b;
-                                }, 0);
-                                site.mean = site.sum / site.numLevels;
-                                timeSum += site.sum;
-                                sitesValueNum += site.numLevels;
-                            });
-                            // reset the timeLevels
-                            dataElement.timeLevels = levelsToMatch;
-                            dataElement.timeMean = timeSum / sitesValueNum; //RECALCULATE THE MEAN
-                            dataset[sci].data[dataIndexes[sci]][1] = dataElement.timeMean;
+                                dataset[sci].data[dataIndexes[sci]][2].timeSites = sitesToMatch;
+                            }
+                            if (matchLevel) {
+                                // if sites match happened the dataElement will have been modified to reflect site matching
+                                // Here we have to reset the (sites and/or )levels for this entry and recalculate the data in sites and timeLevels
+                                // reconcile levels
+                                // recalculate the sites object
+                                // traverse all the sites in sites
+                                Object.keys(dataElement.sites).forEach(function (siteId) {
+                                    var site = dataElement.sites[siteId];
+                                    var matchedSiteValues = [];
+                                    for (var ltmi = 0; ltmi < levelsToMatch.length; ltmi++) {
+                                        var l = levelsToMatch[ltmi];
+                                        var li = site.levels.indexOf(l);
+                                        if (li !== -1) {
+                                            matchedSiteValues.push(Number(site.values[li]));
+                                        }
+                                    }
+                                    site.values = matchedSiteValues;
+                                    site.levels = levelsToMatch;
+                                    site.numLevels = levelsToMatch.length;
+                                    site.min = Math.min(...matchedSiteValues);
+                                    site.max = Math.max(...matchedSiteValues);
+                                    site.sum = matchedSiteValues.reduce(function (a, b) {
+                                        return a + b;
+                                    }, 0);
+                                    site.mean = site.sum / site.numLevels;
+                                    timeSum += site.sum;
+                                    sitesValueNum += site.numLevels;
+                                });
+                                dataElement.timeLevels = levelsToMatch;
+                            }
+
+                            dataElement.timeMean = timeSum / sitesValueNum;
+                            dataset[sci].data[dataIndexes[sci]][2] = dataElement;
                             tooltip = curves[sci].label +
                                 "<br>seconds:" + time / 1000 +
-                                "<br>time:" +  new Date(Number(time/1000)).toUTCString() +
+                                "<br>time:" + new Date(Number(time)).toUTCString() +
                                 "<br>statistic:" + curves[sci].statistic +
                                 "<br> matchValue:" + dataElement.timeMean;
-                        } else {
-                            // difference curve
-                            // set the new minuend due to matching
-                            // set the new subtrahend due to matching
-                            // set the new difference due to matching
-                            var minuendCurveIndex = curves[sci].diffFrom[0];
-                            var subtrahendCurveIndex = curves[sci].diffFrom[1];
-                            var newMinuend = dataset[minuendCurveIndex].data[dataIndexes[minuendCurveIndex]][1];
-                            var newSubtrahend = dataset[subtrahendCurveIndex].data[dataIndexes[subtrahendCurveIndex]][1];
-                            var newDifference = newMinuend - newSubtrahend;
-                            dataset[sci].data[dataIndexes[sci]][2].minuend = newMinuend;
-                            dataset[sci].data[dataIndexes[sci]][2].subtrahend = newSubtrahend;
-                            dataset[sci].data[dataIndexes[sci]][1] = newMinuend - newSubtrahend;
-                            tooltip = curves[sci].label +
-                                "<br>seconds:" + time / 1000 +
-                                "<br>time:" +  new Date(Number(time/1000)).toUTCString() +
-                                "<br> matchDiffValue:" + dataset[sci].data[dataIndexes[sci]][1];
+                            dataset[sci].data[dataIndexes[sci]][1] = dataset[sci].data[dataIndexes[sci]][2].timeMean;
                         }
-                        // rewrite the tooltip (element[3])
-                        dataset[sci].data[dataIndexes[sci]][3] = tooltip;
+                    } else {
+                        // difference curve
+                        // set the new minuend due to matching
+                        // set the new subtrahend due to matching
+                        // set the new difference due to matching
+                        var minuendCurveIndex = curves[sci].diffFrom[0];
+                        var subtrahendCurveIndex = curves[sci].diffFrom[1];
+                        var newMinuend = dataset[minuendCurveIndex].data[dataIndexes[minuendCurveIndex]][1];
+                        var newSubtrahend = dataset[subtrahendCurveIndex].data[dataIndexes[subtrahendCurveIndex]][1];
+                        var newDifference = newMinuend - newSubtrahend;
+                        dataset[sci].data[dataIndexes[sci]][2].minuend = newMinuend;
+                        dataset[sci].data[dataIndexes[sci]][2].subtrahend = newSubtrahend;
+                        dataset[sci].data[dataIndexes[sci]][1] = newMinuend - newSubtrahend;
+                        tooltip = curves[sci].label +
+                            "<br>seconds:" + time / 1000 +
+                            "<br>time:" + new Date(Number(time)).toUTCString() +
+                            "<br> matchDiffValue:" + dataset[sci].data[dataIndexes[sci]][1];
                     }
+                    // rewrite the tooltip (element[3])
+                    dataset[sci].data[dataIndexes[sci]][3] = tooltip;
                     const valueObject = dataset[sci].data[dataIndexes[sci]];
                     const valData = valueObject[1];
                     // have to recalculate mins and maxes - might be throwing away outlier data
@@ -878,7 +932,7 @@ dataSeries = function (plotParams, plotFunction) {
             if (index > -1) {
                 optionsKeys.splice(index, 1);
             }
-            optionsKeys.forEach(function(item){
+            optionsKeys.forEach(function (item) {
                 newDataSet[ci][item] = dataset[ci][item];
             });
             newDataSet[ci]['annotation'] = annotation;
