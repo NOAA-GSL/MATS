@@ -5,6 +5,9 @@ import {matsCollections } from 'meteor/randyp:mats-common';
 
 Template.item.helpers({
     cbname: function() {
+        if (this.controlButtonText !== undefined) {
+            return this.controlButtonText.toUpperCase();
+        }
         return this.name.toUpperCase();
     },
     textValue: function() {

@@ -446,6 +446,7 @@ var doCurveParams = function () {
                 unique: false,
                 default: dstr,
                 controlButtonVisibility: 'block',
+                controlButtonText: "curve-valid-times",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 7,

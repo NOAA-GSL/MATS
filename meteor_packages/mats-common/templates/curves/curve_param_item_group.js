@@ -66,6 +66,10 @@ Template.curveParamItemGroup.helpers({
       return paramGroup;
     },
     label: function(elem) {
+        const p = matsCollections.CurveParams.findOne({name:elem.name});
+        if (p.controlButtonText) {
+            return p.controlButtonText.toUpperCase();
+        }
         return elem.name.toUpperCase();
     },
     name: function(elem){
