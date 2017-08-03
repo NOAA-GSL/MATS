@@ -214,7 +214,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 //console.log("statement: " + truthStatement);
-                dataRequests[curve.label] = truthStatement;
+                dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
                     //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
