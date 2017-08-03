@@ -56,19 +56,23 @@ Template.plotType.events({
             matsCurveUtils.showProfileFace();
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
-            if (Session.get("Curves").length > 0 ) {
+            var curves = Session.get('Curves');
+            if (curves.length > 0 ) {
                 // try to assign the curve dates
                 const tsDate = $('#controlButton-dates-value').text();
-                var curves = Session.get('Curves');
                 if (tsDate !== undefined && tsDate !== "") {
                     for (var ci = 0; ci < curves.length; ci++) {
                         curves[ci]['curve-dates'] = tsDate;
-                        console.log("setting curve ", ci, ' to ', tsDate );
+                        if (!curves[ci]['average']) {
+                            curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
+                        }
+                        if (!curves[ci]['forecast-length']) {
+                            curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
+                        }
                     }
-                    console.log('curves', curves);
-                    Session.set('Curves',curves);
-                    Session.set("lastUpdate", Date.now());
                 }
+                Session.set('Curves',curves);
+                Session.set("lastUpdate", Date.now());
             }
             return false;
         } else {
@@ -86,6 +90,17 @@ Template.plotType.events({
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
             matsCurveUtils.showDieOffFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0 ) {
+                // the average may not have been carried over from a dieoff so let it default
+                for (var ci = 0; ci < curves.length; ci ++) {
+                    if (!curves[ci]['dieoff-forecast-length']) {
+                        curves[ci]['dieoff-forecast-length'] = matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+                Session.set("lastUpdate", Date.now());
+            }
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
             return false;
@@ -102,6 +117,20 @@ Template.plotType.events({
     'click .plot-type-TimeSeries': function(event) {
         if (Session.get("confirmPlotChange")) {
             matsCurveUtils.showTimeseriesFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0 ) {
+                // the average may not have been carried over from a dieoff so let it default
+                for (var ci = 0; ci < curves.length; ci ++) {
+                    if (!curves[ci]['average']) {
+                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
+                    }
+                    if (!curves[ci]['forecast-length']) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+                Session.set("lastUpdate", Date.now());
+            }
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
             return false;

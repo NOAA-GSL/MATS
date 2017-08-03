@@ -327,21 +327,31 @@ Template.graph.events({
         switch (matsPlotUtils.getPlotType()) {
             case matsTypes.PlotTypes.timeSeries:
                 Session.set('graphViewMode',matsTypes.PlotView.textSeries);
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "block";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.profile:
                 Session.set('graphViewMode',matsTypes.PlotView.textProfile);
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "block";
                 document.getElementById("textScatter2dView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 Session.set('graphViewMode',matsTypes.PlotView.textScatter);
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "block";
+                break;
+            case matsTypes.PlotTypes.dieoff:
+                Session.set('graphViewMode',matsTypes.PlotView.textDieoff);
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "block";
                 break;
             default:
                 console.log("Error: no plot type detected");

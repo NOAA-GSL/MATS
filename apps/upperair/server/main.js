@@ -247,7 +247,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.PlotTypes.dieoff,
+                default: matsTypes.ForecastTypes.dieoff,
                 controlButtonVisibility: 'block',
                 controlButtonText: 'forecast-length',
                 displayOrder: 9,

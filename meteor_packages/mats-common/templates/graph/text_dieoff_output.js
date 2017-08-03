@@ -56,12 +56,12 @@ Template.textDieOffOutput.helpers({
     dataRows: function() {
         /*
          This (plotResultsUpDated) is very important.
-         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         The page is rendered when the graph page comes up, but the data from the data processing callback
          in plotList.js or curveList.js may not have set the global variable
          PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
          Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
          (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         was contained in the session, but some unknown ddp behavior having to do with the amount of plot data
          made that unworkable.
          */
 
@@ -79,7 +79,7 @@ Template.textDieOffOutput.helpers({
         if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
             return [];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
             return [];
         }
 
@@ -109,7 +109,7 @@ Template.textDieOffOutput.helpers({
             matsCurveUtils.PlotResult.length == 0) {
             return false;
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
             return false;
         }
         const curves = Session.get('Curves');
@@ -162,7 +162,7 @@ Template.textDieOffOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return[];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
             return[];
         }
         var cindex;
