@@ -398,8 +398,8 @@ const getDataForProfileUnMatchedDiffCurve = function (params) {
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     var d = [];
-    const minuendIndex = diffFrom[1];
-    const subtrahendIndex = diffFrom[0];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
     const minuendData = dataset[minuendIndex].data;
     const subtrahendData = dataset[subtrahendIndex].data;
     // do the differencing
