@@ -241,4 +241,23 @@ Template.paramList.events({
 Template.paramList.onRendered(function(){
     Session.set('displayPriority', 1);
     Session.set('editMode', '');
+    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== undefined) && document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+    } else {
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+    }
 });

@@ -27,6 +27,9 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.profile:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.profile});
                 break;
+            case matsTypes.PlotTypes.dieoff:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dieoff});
+                break;
             case matsTypes.PlotTypes.timeSeries:
             default:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.timeSeries});

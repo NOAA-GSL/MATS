@@ -23,7 +23,12 @@ var  PlotTypes = {
     timeSeries : "TimeSeries",
     profile : "Profile",
     scatter2d : "Scatter2d",
-    dieoff : "dieOff"
+    dieoff : "DieOff"
+};
+
+var ForecastTypes = {
+    dieoff: "dieoff",
+    singleCycle: "single cycle"
 };
 
 var  PlotFormats = {
@@ -64,7 +69,8 @@ var PlotView = {
     graph: "graph",
     textSeries: "textSeries",
     textProfile: "textProfile",
-    textScatter: "textScatter"
+    textScatter: "textScatter",
+    textDieoff: "textDieoff"
 };
 
 var Messages = {
@@ -80,5 +86,6 @@ export default matsTypes = {
     MatchFormats:MatchFormats,
     PlotAxisFilters:PlotAxisFilters,
     PlotView:PlotView,
-    Messages:Messages
+    Messages:Messages,
+    ForecastTypes:ForecastTypes
 }

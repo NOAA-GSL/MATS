@@ -58,6 +58,19 @@ Template.graph.onCreated(function () {
                 document.getElementById("textScatter2dView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
             break;
+            case matsTypes.PlotView.textDieoff:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "block";
+                document.getElementById("textButton").style.display = "none";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "none";
+                document.getElementById("graphView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "block";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById('graph-touch-controls').style.display = "none";
+                break;
             case matsTypes.PlotView.textProfile:
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
@@ -179,6 +192,8 @@ Template.graph.helpers({
                 return "TimeSeries " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
                 return "Profile: " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
+                return "DieOff: " + format;
             } else {
                 return "Scatter: " + p.dates + " : " + format;
             }

@@ -295,6 +295,14 @@ const showProfileFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.profile);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
@@ -320,7 +328,49 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+
+const showDieOffFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.dieoff);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
@@ -331,6 +381,14 @@ const showScatterFace = function() {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
         Session.set('lastUpdate', Date.now());   // force curveParams to re-render
@@ -472,6 +530,7 @@ export default matsCurveUtils = {
     showScatterFace:showScatterFace,
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
+    showDieOffFace:showDieOffFace,
     get_err:get_err,
     PlotResult:PlotResult
 };

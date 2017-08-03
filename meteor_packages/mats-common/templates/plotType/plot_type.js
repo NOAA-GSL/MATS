@@ -82,6 +82,23 @@ Template.plotType.events({
             }
         }
     },
+    'click .plot-type-DieOff': function(event) {
+        if (Session.get("confirmPlotChange")) {
+            // change has been confirmed
+            matsCurveUtils.showDieOffFace();
+            Session.set("confirmPlotChange","");
+            Session.set('plotChangeType',"");
+            return false;
+        } else {
+            // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
+            if (Session.get("Curves").length > 0 ) {
+                Session.set('plotChangeType',matsTypes.PlotTypes.dieoff);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showDieOffFace();
+            }
+        }
+    },
     'click .plot-type-TimeSeries': function(event) {
         if (Session.get("confirmPlotChange")) {
             matsCurveUtils.showTimeseriesFace();

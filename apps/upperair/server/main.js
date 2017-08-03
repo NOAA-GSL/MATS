@@ -237,6 +237,24 @@ const doCurveParams = function () {
                 displayGroup: 3
             });
 
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: {},
+                options: [matsTypes.ForecastTypes.dieoff,matsTypes.ForecastTypes.singleCycle],
+                superiorNames: [],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.PlotTypes.dieoff,
+                controlButtonVisibility: 'block',
+                controlButtonText: 'forecast-length',
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
         optionsMap = {};
         matsCollections.CurveParams.insert(
             {
@@ -372,6 +390,25 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'model', ' in '],
+                ['', 'regionName', ', '],
+                ['', 'variable', ': '],
+                ['', 'statistic', ', '],
+                ['level ', 'top', ' '],
+                ['to', 'bottom', ' '],
+                ['fcst_len:', 'dieoff-forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label","model","region","statistic","variable","cloud-coverage","valid-time","dieoff-forecast-length","top","bottom","curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -399,6 +436,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphProfile",
             dataFunction: "dataProfile",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            graphFunction: "graphDieOff",
+            dataFunction: "dataDieOff",
             checked: false
         });
     }

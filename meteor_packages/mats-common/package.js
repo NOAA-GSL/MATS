@@ -141,6 +141,7 @@ Package.onUse(function(api) {
   
   api.addFiles("templates/graph/displayFunctions/graph_series.js", "client");
   api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
+  api.addFiles("templates/graph/displayFunctions/graph_die_off.js", "client");
   api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
   
   api.addFiles("templates/graph/text_profile_output.html", "client");
@@ -151,6 +152,9 @@ Package.onUse(function(api) {
 
   api.addFiles("templates/graph/text_series_output.html", "client");
   api.addFiles("templates/graph/text_series_output.js", "client");
+
+  api.addFiles("templates/graph/text_dieoff_output.html", "client");
+  api.addFiles("templates/graph/text_dieoff_output.js", "client");
 
   api.addFiles("templates/graph/text_scatter2d_output.html", "client");
   api.addFiles("templates/graph/text_scatter2d_output.js", "client");

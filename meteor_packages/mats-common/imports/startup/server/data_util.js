@@ -1,4 +1,3 @@
-
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
@@ -92,15 +91,20 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
-const arrayContainsArray = function(superArray, subArray) {
-    superArray.sort(function(a,b){return Number(a) - Number(b);});
-    subArray.sort(function(a,b){return Number(a) - Number(b);});
+const arrayContainsArray = function (superArray, subArray) {
+    superArray.sort(function (a, b) {
+        return Number(a) - Number(b);
+    });
+    subArray.sort(function (a, b) {
+        return Number(a) - Number(b);
+    });
     var i, j;
-    for (i=0,j=0; i<superArray.length && j<subArray.length;) {
+    for (i = 0, j = 0; i < superArray.length && j < subArray.length;) {
         if (superArray[i] < subArray[j]) {
             ++i;
         } else if (superArray[i] == subArray[j]) {
-            ++i; ++j;
+            ++i;
+            ++j;
         } else {
             // sub[j] not in sup, so sub not subbag
             return false;
@@ -113,80 +117,80 @@ const arrayContainsArray = function(superArray, subArray) {
 const getMatchedDataSet = function (dataset, interval) {
     /*
      Parameters:
-    dataset - this is the current dataset. It should like the following format,
-    which is for a small two curve plot, one eith 5 points and one with 2 points.
- [
+     dataset - this is the current dataset. It should like the following format,
+     which is for a small two curve plot, one eith 5 points and one with 2 points.
+     [
      {
-         "yaxis": 1,
-         "label": "C-0",
-         "annotation": "C-0- mean = 1.541",
-         "color": "rgb(255,102,102)",
-         "data": [
-             [
-                 1483833600000,
-                 1.850409153847484
-             ],
-             [
-                 1483876800000,
-                 1.3400027011510949
-             ],
-             [
-                 1483920000000,
-                 1.4691101455839535
-             ],
-             [
-                 1483963200000,
-                 1.5483769085191452
-             ],
-             [
-                 1484006400000,
-                 1.4995425753387412
-             ]
-         ],
-         "points": {
-         "symbol": "circle",
-         "fillColor": "rgb(255,102,102)",
-         "show": true
-         },
-         "lines": {
-             "show": true,
-             "fill": false
-         }
+     "yaxis": 1,
+     "label": "C-0",
+     "annotation": "C-0- mean = 1.541",
+     "color": "rgb(255,102,102)",
+     "data": [
+     [
+     1483833600000,
+     1.850409153847484
+     ],
+     [
+     1483876800000,
+     1.3400027011510949
+     ],
+     [
+     1483920000000,
+     1.4691101455839535
+     ],
+     [
+     1483963200000,
+     1.5483769085191452
+     ],
+     [
+     1484006400000,
+     1.4995425753387412
+     ]
+     ],
+     "points": {
+     "symbol": "circle",
+     "fillColor": "rgb(255,102,102)",
+     "show": true
+     },
+     "lines": {
+     "show": true,
+     "fill": false
+     }
      },
      {
-         "yaxis": 1,
-         "label": "C-1",
-         "annotation": "C-1- mean = 1.444",
-         "color": "rgb(102,102,255)",
-         "data": [
-             [
-                 1483876800000,
-                 1.3400027011510949
-             ],
-             [
-                 1483963200000,
-                 1.5483769085191452
-             ]
-         ],
-         "points": {
-             "symbol": "square",
-             "fillColor": "rgb(102,102,255)",
-             "show": true
-         },
-         "lines": {
-             "show": true,
-             "fill": false
-         }
+     "yaxis": 1,
+     "label": "C-1",
+     "annotation": "C-1- mean = 1.444",
+     "color": "rgb(102,102,255)",
+     "data": [
+     [
+     1483876800000,
+     1.3400027011510949
+     ],
+     [
+     1483963200000,
+     1.5483769085191452
+     ]
+     ],
+     "points": {
+     "symbol": "square",
+     "fillColor": "rgb(102,102,255)",
+     "show": true
+     },
+     "lines": {
+     "show": true,
+     "fill": false
      }
- ]
+     }
+     ]
 
-interval - a number that contains the integer value of the data interval
+     interval - a number that contains the integer value of the data interval
 
-RETURN: An object that contains the new dataset and the new yAxisRanges
+     RETURN: An object that contains the new dataset and the new yAxisRanges
      {
-        dataset:newDataSet,
+     dataset:newDataSet,
      }
-*/
+     */
     //console.log(JSON.stringify(dataset,null,2))
     // for matching - the begin time must be the first coinciding time for all the curves.
     // Once we know at which index the curves coincide we can increment by the interval.
@@ -208,9 +212,9 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
         time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
         if (interval === undefined && dataset[ci].data.length > 1) {
             const diff = dataset[ci].data[1][0] - dataset[ci].data[0][0];
-            dataMaxInterval = dataMaxInterval > diff ?  dataMaxInterval : diff;
+            dataMaxInterval = dataMaxInterval > diff ? dataMaxInterval : diff;
         }
-        timeMax = timeMax > dataset[ci].data[dataset[ci].data.length-1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length-1][0];
+        timeMax = timeMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
     if (interval === undefined && dataMaxInterval === Number.MIN_VALUE) {
         // we can't get an interval, give up
@@ -299,7 +303,7 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
         time = Number(time) + Number(interval);
     }// while time
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
-    for (ci = 0; ci < curvesLength; ci ++) {
+    for (ci = 0; ci < curvesLength; ci++) {
         if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
             continue;   // don't do it if there isn't an annotation
         }
@@ -329,15 +333,15 @@ RETURN: An object that contains the new dataset and the new yAxisRanges
         if (index > -1) {
             optionsKeys.splice(index, 1);
         }
-        optionsKeys.forEach(function(item){
+        optionsKeys.forEach(function (item) {
             newDataSet[ci][item] = dataset[ci][item];
         });
         newDataSet[ci]['annotation'] = annotation;
     }
-    return  newDataSet;
+    return newDataSet;
 };
 
-const getDataForProfileMatchingDiffCurve = function(params) {
+const getDataForProfileMatchingDiffCurve = function (params) {
     // derive the subset data for the difference
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
@@ -349,7 +353,7 @@ const getDataForProfileMatchingDiffCurve = function(params) {
 
     // do the differencing
     //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
-    const l = minuendData.length < subtrahendData.length?minuendData.length:subtrahendData.length;
+    const l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
     for (var i = 0; i < l; i++) { // each pressure level
         d[i] = [];
         d[i][3] = [];
@@ -359,25 +363,25 @@ const getDataForProfileMatchingDiffCurve = function(params) {
         // values diff
         d[i][0] = minuendData[i][0] - subtrahendData[i][0];
         // do the subValues
-        var minuendDataSubValues =   minuendData[i][3];
-        var minuendDataSubSeconds =   minuendData[i][4];
-        var subtrahendDataSubValues =   subtrahendData[i][3];
-        var subtrahendDataSubSeconds =   subtrahendData[i][4];
+        var minuendDataSubValues = minuendData[i][3];
+        var minuendDataSubSeconds = minuendData[i][4];
+        var subtrahendDataSubValues = subtrahendData[i][3];
+        var subtrahendDataSubSeconds = subtrahendData[i][4];
         // find the intersection of the subSeconds
 //        var secondsIntersection = _.intersection(minuendDataSubSeconds,subtrahendDataSubSeconds);
-        const secondsIntersection = minuendDataSubSeconds.filter(function(n) {
+        const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
             return subtrahendDataSubSeconds.indexOf(n) !== -1;
         });
 
-        for (var siIndex=0; siIndex<secondsIntersection.length-1;siIndex++) {
+        for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
             d[i][4].push(secondsIntersection[siIndex]);
             d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
         }
     }
-    return {dataset:d};
+    return {dataset: d};
 };
 
-const getDataForProfileUnMatchedDiffCurve = function(params) {
+const getDataForProfileUnMatchedDiffCurve = function (params) {
     // just get the level values - not the subset data
     /*
      DATASET ELEMENTS:
@@ -402,33 +406,33 @@ const getDataForProfileUnMatchedDiffCurve = function(params) {
     //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
 
     // get the list of pressure levels for the minuendData
-    const mLevels = minuendData.map(function(a) {
+    const mLevels = minuendData.map(function (a) {
         return a[1];
     });
 
     // get the list of pressure levels for the subtrahendData
-    const sLevels = subtrahendData.map(function(a) {
+    const sLevels = subtrahendData.map(function (a) {
         return a[1];
     });
 
     // get the intersection of the levels
-    const cLevels = mLevels.filter(function(n) {
-            return sLevels.indexOf(n) !== -1;
+    const cLevels = mLevels.filter(function (n) {
+        return sLevels.indexOf(n) !== -1;
     });
     // itterate all the common levels
     for (var i = 0; i < cLevels.length; i++) { // each pressure level
         var cl = cLevels[i];
         // find the minuend stat for this level
-        const minuendStat = minuendData.filter(function(elem) {
-           return elem[1] == cl;
+        const minuendStat = minuendData.filter(function (elem) {
+            return elem[1] == cl;
         })[0];
         // find the subtrhend stat for this level
-        const subtrahendStat = subtrahendData.filter(function(elem){
+        const subtrahendStat = subtrahendData.filter(function (elem) {
             return elem[1] == cl;
         })[0];
         d[i] = [];
         // do the difference
-        d[i][0] =  minuendStat[0]- subtrahendStat[0];
+        d[i][0] = minuendStat[0] - subtrahendStat[0];
         // pressure level
         d[i][1] = cl;
         d[i][2] = -1;
@@ -437,12 +441,12 @@ const getDataForProfileUnMatchedDiffCurve = function(params) {
         d[i][5] = {}; // level stats
         d[i][6] = "<br>" + cl * -1 + "mb <br> value:" + (d[i][0] === null ? null : d[i][0].toPrecision(4)); //tooltip
     }
-    return {dataset:d};
+    return {dataset: d};
 };
 
-const getDataForSeriesDiffCurve = function(params) {
+const getDataForSeriesDiffCurve = function (params) {
     const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
-    var  ymin = params.ymin; // optional - current y axis minimum
+    var ymin = params.ymin; // optional - current y axis minimum
     var ymax = params.ymax;  // optional - current yaxis minimum
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
@@ -477,7 +481,7 @@ const getDataForSeriesDiffCurve = function(params) {
                 ymin = diffValue < ymin ? diffValue : ymin;
                 ymax = diffValue > ymax ? diffValue : ymax;
                 sum += diffValue;
-                count ++;
+                count++;
             } else {
                 d.push([largeIntervalTime, null])
             }
@@ -516,26 +520,26 @@ const getPointSymbol = function (curveIndex) {
 
 const get_err = function (sVals, sSecs) {
     /* refer to perl error_library.pl sub  get_stats
-      to see the perl implementation of these statics calculations.
-      These should match exactly those, except that they are processed in reverse order.
+     to see the perl implementation of these statics calculations.
+     These should match exactly those, except that they are processed in reverse order.
      */
     var subVals = sVals;
     var subSecs = sSecs;
     var n = subVals.length;
-    var n_good =0;
-    var sum_d=0;
-    var sum2_d =0;
+    var n_good = 0;
+    var sum_d = 0;
+    var sum2_d = 0;
     var error = "";
     var i;
-    for(i=0; i< n; i++ ){
-        n_good = n_good +1;
+    for (i = 0; i < n; i++) {
+        n_good = n_good + 1;
         sum_d = sum_d + subVals[i];
         sum2_d = sum2_d + subVals[i] * subVals[i];
     }
-    var d_mean = sum_d/n_good;
-    var sd2 = sum2_d/n_good - d_mean *d_mean;
+    var d_mean = sum_d / n_good;
+    var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = 3*sd;
+    var sd_limit = 3 * sd;
     //console.log("get_err");
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
@@ -543,46 +547,46 @@ const get_err = function (sVals, sSecs) {
     var minDelta = Number.MAX_VALUE;
     var minSecs = Number.MAX_VALUE;
     var max_secs = Number.MIN_VALUE;
-    for(i=0; i< subSecs.length; i++){
+    for (i = 0; i < subSecs.length; i++) {
         var secs = (subSecs[i]);
         var delta = Math.abs(secs - last_secs);
-        if(delta < minDelta) {
+        if (delta < minDelta) {
             minDelta = delta;
         }
-        if(secs < minSecs) {
+        if (secs < minSecs) {
             minSecs = secs;
         }
-        if(secs >max_secs) {
+        if (secs > max_secs) {
             max_secs = secs;
         }
         last_secs = secs;
     }
 
-    var data_wg =[];
-    var n_gaps =0;
+    var data_wg = [];
+    var n_gaps = 0;
     n_good = 0;
     var sum = 0;
     var sum2 = 0;
-    var loopTime =minSecs;
+    var loopTime = minSecs;
     if (minDelta < 0) {
         error = ("Invalid time interval - minDelta: " + minDelta);
         console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
     }
     // remove data more than $sd_limit from mean
     var qaCorrected = [];
-    for (i=0; i < subVals.length; i++) {
+    for (i = 0; i < subVals.length; i++) {
         if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-                qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
-                console.log(qaCorrected.join('\n'));
-             subVals[i] = null;
-         } else {
+            qaCorrected.push("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " + (subVals[i] - d_mean));
+            console.log(qaCorrected.join('\n'));
+            subVals[i] = null;
+        } else {
             n_good++;
             sum += subVals[i];
             sum2 += subVals[i] * subVals[i];
         }
     }
     if (n_good < 1) {
-        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
+        return {d_mean: null, stde_betsy: null, sd: null, n_good: n_good, lag1: null, min: null, max: null, sum: null};
     }
 
     // recalculate if we threw anything away.
@@ -596,11 +600,11 @@ const get_err = function (sVals, sSecs) {
     // look for gaps.... per Bill, we only need one gap per series of gaps...
     var lastSecond = Number.MIN_VALUE;
 
-    for(i=0; i< subSecs.length; i++){
+    for (i = 0; i < subSecs.length; i++) {
         var sec = subSecs[i];
-        if(lastSecond >= 0) {
-            if(sec - lastSecond > minDelta) {
-            // insert a gap
+        if (lastSecond >= 0) {
+            if (sec - lastSecond > minDelta) {
+                // insert a gap
                 data_wg.push(null);
                 n_gaps++;
             }
@@ -611,13 +615,13 @@ const get_err = function (sVals, sSecs) {
     //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
 
     //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
-    var r =[];
-    for(var lag=0;lag<=1; lag++) {
+    var r = [];
+    for (var lag = 0; lag <= 1; lag++) {
         r[lag] = 0;
         var n_in_lag = 0;
         for (var t = 0; t < ((n + n_gaps) - lag); t++) {
             if (data_wg[t] != null && data_wg[t + lag] != null) {
-                r[lag] +=  + (data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                r[lag] += +(data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
                 n_in_lag++;
             }
         }
@@ -629,24 +633,34 @@ const get_err = function (sVals, sSecs) {
         //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
     }
     // Betsy Weatherhead's correction, based on lag 1
-    if(r[1] >= 1) {
+    if (r[1] >= 1) {
         r[1] = .99999;
     }
-    const betsy = Math.sqrt((n_good-1)*(1 - r[1]));
+    const betsy = Math.sqrt((n_good - 1) * (1 - r[1]));
     var stde_betsy;
-    if(betsy != 0) {
-        stde_betsy = sd/betsy;
+    if (betsy != 0) {
+        stde_betsy = sd / betsy;
     } else {
         stde_betsy = null;
     }
-    const stats = {d_mean:d_mean,stde_betsy:stde_betsy,sd:sd,n_good:n_good,lag1:r[1], min:minSecs,max:max_secs, sum:sum_d, qaCorrected:qaCorrected};
+    const stats = {
+        d_mean: d_mean,
+        stde_betsy: stde_betsy,
+        sd: sd,
+        n_good: n_good,
+        lag1: r[1],
+        min: minSecs,
+        max: max_secs,
+        sum: sum_d,
+        qaCorrected: qaCorrected
+    };
     //console.log("stats are " + JSON.stringify(stats));
     // stde_betsy is standard error with auto correlation
     //console.log("---------\n\n");
     return stats;
 };
 
-const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, label) {
+const queryProfileDB = function (pool, statement, validTimeStr, statisticSelect, label) {
     var d = [];  // d will contain the curve data
     var error = "";
     var pFuture = new Future();
@@ -673,7 +687,6 @@ const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, 
                 pFuture['return']();
             }
         }
-
     );
     // wait for future to finish
     pFuture.wait();
@@ -682,8 +695,66 @@ const queryProfileDB = function (pool,statement, validTimeStr, statisticSelect, 
         error: error,
     };
 };
+const queryDieoffDB = function (pool, statement, validTimeStr, interval) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+    //var ctime = [];
+    var ymin;
+    var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = 'rows undefined error';
+            if (rows.length === 0) {
+                error = 'INFO:0 data records found';
+            }
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveTime = [];
+            var curveStat = [];
+            var N0_max = 0;
+            var N_times_max = 0;
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var fhr = Number(rows[rowIndex].avtime);
+                var stat = rows[rowIndex].stat;
+                var N0_loop = rows[rowIndex].N0;
+                var N_times_loop = rows[rowIndex].N_times;
+                if (N0_loop > N0) {
+                    N0_max = N0_loop;
+                }
+                if (N_times_loop > N_times) {
+                    N_times_max = N_times_loop;
+                }
+                d.push([fhr, stat]);
+                N0.push(N0_loop);
+                N_times.push(N_times_loop);
+            }
+            dFuture['return']();
+        }
+    });
 
-const querySeriesDB = function (pool,statement, validTimeStr, interval, averageStr) {
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        N0: N0,
+        N_times: N_times,
+    };
+};
+
+const querySeriesDB = function (pool, statement, validTimeStr, interval, averageStr) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -742,7 +813,7 @@ const querySeriesDB = function (pool,statement, validTimeStr, interval, averageS
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
-            interval = time_interval !== undefined ? time_interval * 1000 : undefined;
+            var interval = time_interval !== undefined ? time_interval * 1000 : undefined;
             if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
                 xmin = Number(rows[0].avtime) * 1000;
             }
@@ -783,13 +854,109 @@ const querySeriesDB = function (pool,statement, validTimeStr, interval, averageS
     };
 };
 
+const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
+    // generate y-axis
+    var yaxes = [];
+    var yaxis = [];
+    var axisLabel;
+    for (var dsi = 0; dsi < dataset.length; dsi++) {
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
+            continue;
+        }
+        const axisKey = curves[dsi].axisKey;
+        const ymin = axisMap[axisKey].ymin;
+        const ymax = axisMap[axisKey].ymax;
+        axisLabel = axisMap[axisKey].axisLabel;
+        const yPad = (ymax - ymin) * 0.2;
+        const position = dsi === 0 ? "left" : "right";
+        const yaxesOptions = {
+            position: position,
+            color: 'grey',
+            axisLabel: axisLabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 3,
+            alignTicksWithAxis: 1,
+            tickDecimals: 1,
+            min: ymin - yPad,
+            max: ymax + yPad
+        };
+        const yaxisOptions = {   // used for zooming
+            zoomRange: [0.1, 10]
+        };
+        yaxes.push(yaxesOptions);
+        yaxis.push(yaxisOptions);
+    }
+    const options = {
+        axisLabels: {
+            show: true
+        },
+        xaxes: [{
+            axisLabel: 'forecast hour',
+            color: 'grey',
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+        }],
+        xaxis: {
+            zoomRange: [0.1, null],
+            mode: 'xy'
+        },
+        yaxes: yaxes,
+        yaxis: yaxis,
+        legend: {
+            show: false,
+            container: "#legendContainer",
+            noColumns: 0,
+            position: 'ne'
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
+            },
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            xDateFormat: "%Y-%m-%d:%H",
+            onHover: function (flotItem, $tooltipEl) {
+            }
+        }
+    };
+    return options;
+};
+
 const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
     var axisLabel;
     for (var dsi = 0; dsi < dataset.length; dsi++) {
-       if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
             continue;
         }
         const axisKey = curves[dsi].axisKey;
@@ -909,8 +1076,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     if (axisKey in axisMap) {
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
-        } else
-        {
+        } else {
             axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -918,7 +1084,15 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
-        axisMap[axisKey] = {index: curveIndex + 1, label: label, xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax, axisLabel:axisKey + " - " + label};
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            xmin: xmin,
+            xmax: xmax,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey + " - " + label
+        };
     }
     const curveOptions = {
         yaxis: 1,   // for profiles there is only one xaxis and one yaxis
@@ -948,6 +1122,61 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     return curveOptions;
 };
 
+const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+    /*
+     some curves will share an axis based on the axis map key.
+     for example all the curves that have the same variable and statistic might share an axis.
+     The axis key might be different for different apps.
+     These axis have parameters that have been stashed in the axisMap
+     PARAMETERS:
+     curve -  the curve object
+     curveIndex : Number - the integer index of this curve
+     axisMap: object - a map of axis params ....
+     required curve params for generating an axisMap are:
+     label : String - that is the label of an axis
+     ymin : Number - the minimum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     ymax : the maximum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
+     optional params in an axisMap:
+     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
+
+     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
+     */
+    const label = curve['label'];
+    const ymin = curve['ymin'];
+    const ymax = curve['ymax'];
+    const axisKey = curve['axisKey'];
+    const annotation = curve['annotation'];
+    const pointSymbol = getPointSymbol(curveIndex);
+    if (axisKey in axisMap) {
+        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
+            axisMap[axisKey].axisLabel = label;
+        } else {
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+        }
+        axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+    } else {
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey + " - " + label
+        };
+    }
+    const curveOptions = {
+        yaxis: axisMap[axisKey].index,
+        label: axisMap[axisKey].axisLabel,
+        annotation: annotation,
+        color: curve['color'],
+        data: dataSeries,
+        points: {symbol: pointSymbol, fillColor: curve['color'], show: true},
+        lines: {show: true, fill: false}
+    };
+    return curveOptions;
+};
 
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
     /*
@@ -978,19 +1207,24 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     if (axisKey in axisMap) {
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
-        } else
-        {
+        } else {
             axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
         }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
     } else {
-        axisMap[axisKey] = {index: curveIndex + 1, label: label, ymin: ymin, ymax: ymax, axisLabel:axisKey + " - " + label};
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey + " - " + label
+        };
     }
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
-        label:axisMap[axisKey].axisLabel,
+        label: axisMap[axisKey].axisLabel,
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
@@ -1000,14 +1234,14 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
-const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax) {
+const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
 // generate y-axis
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
     var xAxislabel = "";
     var axisVariables = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
-        if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
             continue;
         }
         const axisKey = curves[dsi].axisKey;
@@ -1047,8 +1281,8 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
             color: 'grey',
-            min:xmin - xpad,
-            max:xmax + xpad,
+            min: xmin - xpad,
+            max: xmax + xpad,
             font: {
                 size: 20,
                 lineHeight: 23,
@@ -1063,7 +1297,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             zoomRange: [0.1, null]
         },
         yaxes: [{
-            position:"left",
+            position: "left",
             color: 'grey',
             axisLabel: ' Pressure (hPa)',
             axisLabelColour: "black",
@@ -1129,7 +1363,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     return options;
 };
 
-const simplePoolQueryWrapSynchronous = function(pool,statement) {
+const simplePoolQueryWrapSynchronous = function (pool, statement) {
     /*
      simple synchronous query of statement to the specified pool.
      params :
@@ -1139,12 +1373,12 @@ const simplePoolQueryWrapSynchronous = function(pool,statement) {
      return: rowset - an array of rows
      throws: error
      */
-    const queryWrap = Future.wrap(function(pool,statement,callback) {
-        pool.query(statement,function (err, rows) {
+    const queryWrap = Future.wrap(function (pool, statement, callback) {
+        pool.query(statement, function (err, rows) {
             return callback(err, rows);
         });
     });
-    return queryWrap(pool,statement).wait();
+    return queryWrap(pool, statement).wait();
 };
 
 const doColorScheme = function () {
@@ -1183,24 +1417,24 @@ const doColorScheme = function () {
 };
 
 const doSettings = function (title, version) {
-     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-         matsCollections.Settings.remove({});
-     }
-     if (matsCollections.Settings.find().count() == 0) {
-         matsCollections.Settings.insert({
-             LabelPrefix: "Curve",
-             Title: title,
-             appVersion: version,
-             LineWidth: 3.5,
-             NullFillString: "---",
-             resetFromCode: true
-         });
-     }
-     // always update the version, not just if it doesn't exist...
-     var settings = matsCollections.Settings.findOne();
-     var settingsId = settings._id;
-     settings['version'] = version;
-     matsCollections.Settings.update(settingsId, {$set: settings});
+    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+        matsCollections.Settings.remove({});
+    }
+    if (matsCollections.Settings.find().count() == 0) {
+        matsCollections.Settings.insert({
+            LabelPrefix: "Curve",
+            Title: title,
+            appVersion: version,
+            LineWidth: 3.5,
+            NullFillString: "---",
+            resetFromCode: true
+        });
+    }
+    // always update the version, not just if it doesn't exist...
+    var settings = matsCollections.Settings.findOne();
+    var settingsId = settings._id;
+    settings['version'] = version;
+    matsCollections.Settings.update(settingsId, {$set: settings});
 };
 
 const doCredentials = function () {
@@ -1247,23 +1481,25 @@ export default matsDataUtils = {
     dateConvert: dateConvert,
     secsConvert: secsConvert,
     arraysEqual: arraysEqual,
-    arrayContainsArray:arrayContainsArray,
+    arrayContainsArray: arrayContainsArray,
     getMatchedDataSet: getMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
-    getDataForProfileMatchingDiffCurve:getDataForProfileMatchingDiffCurve,
-    getDataForProfileUnMatchedDiffCurve:getDataForProfileUnMatchedDiffCurve,
+    getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
+    getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     getPointSymbol: getPointSymbol,
+    generateDieoffPlotOptions: generateDieoffPlotOptions,
+    queryDieoffDB: queryDieoffDB,
     querySeriesDB:querySeriesDB,
-    generateSeriesPlotOptions:generateSeriesPlotOptions,
-    generateSeriesCurveOptions:generateSeriesCurveOptions,
-    queryProfileDB:queryProfileDB,
-    get_err:get_err,
-    generateProfileCurveOptions:generateProfileCurveOptions,
-    generateProfilePlotOptions:generateProfilePlotOptions,
-    simplePoolQueryWrapSynchronous:simplePoolQueryWrapSynchronous,
-    doColorScheme:doColorScheme,
-    doSettings:doSettings,
-    doCredentials:doCredentials,
-    doAuthorization:doAuthorization,
-    doRoles:doRoles
+    generateSeriesPlotOptions: generateSeriesPlotOptions,
+    generateSeriesCurveOptions: generateSeriesCurveOptions,
+    queryProfileDB: queryProfileDB,
+    get_err: get_err,
+    generateProfileCurveOptions: generateProfileCurveOptions,
+    generateProfilePlotOptions: generateProfilePlotOptions,
+    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
+    doColorScheme: doColorScheme,
+    doSettings: doSettings,
+    doCredentials: doCredentials,
+    doAuthorization: doAuthorization,
+    doRoles: doRoles
 }
