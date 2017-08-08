@@ -527,21 +527,7 @@ dataProfile = function (plotParams, plotFunction) {
                                 filteredPartials[time][site] = {};
                             }
                             if (filteredPartials[time][site][level] === undefined) {
-
-
-                                // var existsInAllCurves = true;
-                                // for (pci = 0; pci < curvesLength; pci++) {
-                                //     if (curves[pci]['diffFrom'] === null || curves[pci]['diffFrom'] === undefined) {
-                                //         curvePartials = curves[pci]['partials'];
-                                //         if (curvePartials[time][site] && curvePartials[time][site][level] === undefined) {
-                                //             existsInAllCurves = false;
-                                //             break;
-                                //         }
-                                //     }
-                                // }
-                                // if (existsInAllCurves) {
-                                    filteredPartials[time][site][level] = partials[time][site][level];
-                        //         }
+                                filteredPartials[time][site][level] = partials[time][site][level];
                             }
                         }
                     }
