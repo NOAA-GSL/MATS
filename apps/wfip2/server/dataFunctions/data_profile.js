@@ -527,27 +527,21 @@ dataProfile = function (plotParams, plotFunction) {
                                 filteredPartials[time][site] = {};
                             }
                             if (filteredPartials[time][site][level] === undefined) {
-                                /*
-                                    We now have level values that have been filtered by common times for all the curves,
-                                    and common sites and common levels for all the curves, however if it is an instrument
-                                    there is still the possibility that a given level and site for one curve might have fewer actual
-                                    times than the same level and site from another data source. Instruments can drop data at different levels and times.
-                                    We have to make a pass through all the curves to filter again for this specific level, site, curve, and time.
-                                    In other words, IF THIS SPECIFIC TIME SITE and LEVEL DOES NOT EXIST IN ALL THE CURVES THEN THROW IT AWAY.
-                                 */
-                                var existsInAllCurves = true;
-                                for (pci = 0; pci < curvesLength; pci++) {
-                                    if (curves[pci]['diffFrom'] === null || curves[pci]['diffFrom'] === undefined) {
-                                        curvePartials = curves[pci]['partials'];
-                                        if (curvePartials[time][site] && curvePartials[time][site][level] === undefined) {
-                                            existsInAllCurves = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (existsInAllCurves) {
+
+
+                                // var existsInAllCurves = true;
+                                // for (pci = 0; pci < curvesLength; pci++) {
+                                //     if (curves[pci]['diffFrom'] === null || curves[pci]['diffFrom'] === undefined) {
+                                //         curvePartials = curves[pci]['partials'];
+                                //         if (curvePartials[time][site] && curvePartials[time][site][level] === undefined) {
+                                //             existsInAllCurves = false;
+                                //             break;
+                                //         }
+                                //     }
+                                // }
+                                // if (existsInAllCurves) {
                                     filteredPartials[time][site][level] = partials[time][site][level];
-                                }
+                        //         }
                             }
                         }
                     }
@@ -566,7 +560,7 @@ dataProfile = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymax = Number.MIN_VALUE;
     var ymin = Number.MAX_VALUE;
-    //var qaCorrections = {};
+    var axisMap = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         curve = curves[curveIndex];
         var partials = curve['partials'];
@@ -580,7 +574,6 @@ dataProfile = function (plotParams, plotFunction) {
         // The axis number is assigned to the axisMap value, which is the axisKey.
         var axisKey = variableStr + ":" + statistic;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var axisMap = {};
         var levelSums = {};
         var curveStats = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};
         if (diffFrom === null || diffFrom === undefined) {  // don't calculate differences.
