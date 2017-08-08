@@ -63,10 +63,10 @@ Template.plotType.events({
                 if (tsDate !== undefined && tsDate !== "") {
                     for (var ci = 0; ci < curves.length; ci++) {
                         curves[ci]['curve-dates'] = tsDate;
-                        if (!curves[ci]['average']) {
+                        if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name:'average'}) && matsCollections.CurveParams.findOne({name:'average'}).default) {
                             curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
                         }
-                        if (!curves[ci]['forecast-length']) {
+                        if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                             curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
                         }
                     }
@@ -94,7 +94,7 @@ Template.plotType.events({
             if (curves.length > 0 ) {
                 // the average may not have been carried over from a dieoff so let it default
                 for (var ci = 0; ci < curves.length; ci ++) {
-                    if (!curves[ci]['dieoff-forecast-length']) {
+                    if (!curves[ci]['dieoff-forecast-length'] && matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}) && matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}).default) {
                         curves[ci]['dieoff-forecast-length'] = matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}).default;
                     }
                 }
@@ -121,10 +121,10 @@ Template.plotType.events({
             if (curves.length > 0 ) {
                 // the average may not have been carried over from a dieoff so let it default
                 for (var ci = 0; ci < curves.length; ci ++) {
-                    if (!curves[ci]['average']) {
+                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name:'average'}) && matsCollections.CurveParams.findOne({name:'average'}).default) {
                         curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
                     }
-                    if (!curves[ci]['forecast-length']) {
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
                     }
                 }
