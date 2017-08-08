@@ -537,10 +537,12 @@ dataProfile = function (plotParams, plotFunction) {
                                  */
                                 var existsInAllCurves = true;
                                 for (pci = 0; pci < curvesLength; pci++) {
-                                    curvePartials = curves[pci]['partials'];
-                                    if (curvePartials[time][site]  && curvePartials[time][site][level] === undefined) {
-                                        existsInAllCurves = false;
-                                        break;
+                                    if (curves[pci]['diffFrom'] === null || curves[pci]['diffFrom'] === undefined) {
+                                        curvePartials = curves[pci]['partials'];
+                                        if (curvePartials[time][site] && curvePartials[time][site][level] === undefined) {
+                                            existsInAllCurves = false;
+                                            break;
+                                        }
                                     }
                                 }
                                 if (existsInAllCurves) {
