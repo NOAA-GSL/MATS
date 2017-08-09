@@ -150,6 +150,7 @@ Template.select.events({
             return true; // prevents the select 2 from closing on multiple selectors
         }
         $('#' + this.name + "-" + this.type).select2('close');
+        matsSelectUtils.refreshDependents(event, this);
         Session.set('lastUpdate', Date.now());
         return false;
     },
