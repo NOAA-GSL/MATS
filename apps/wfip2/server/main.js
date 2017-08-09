@@ -700,7 +700,7 @@ Meteor.startup(function () {
             }
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     try {
@@ -719,7 +719,7 @@ Meteor.startup(function () {
             });
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     try {
@@ -802,7 +802,7 @@ Meteor.startup(function () {
             }
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     try {
@@ -818,7 +818,7 @@ Meteor.startup(function () {
             lowerOptionsMap[label] = {min: min_value, max: max_value, step: step, default: min_value};
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     try {
@@ -871,7 +871,7 @@ Meteor.startup(function () {
             }
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     try {
@@ -884,7 +884,7 @@ Meteor.startup(function () {
             regionOptionsMap[description] = valueList;
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("Database error:", err.message);
     }
 
     // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
