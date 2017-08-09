@@ -408,14 +408,14 @@ dataProfile = function (plotParams, plotFunction) {
                                     }
                                     switch (statistic) {
                                         case "bias":
-                                            partials[time][site][level] = truthValues[level] - verificationValues[level];
+                                            partials[time][site][level] = verificationValues[level] - truthValues[level];
                                             break;
                                         case "mae":
                                             // bias and mae are almost the same.... mae just absolutes the difference
-                                            partials[time][site][level] = Math.abs(truthValues[level] - verificationValues[level]);
+                                            partials[time][site][level] = Math.abs(verificationValues[level] - truthValues[level]);
                                             break;
                                         case "rmse":
-                                            partials[time][site][level] = Math.pow(truthValues[level] - verificationValues[level], 2);  // square the difference
+                                            partials[time][site][level] = Math.pow(verificationValues[level] - truthValues[level], 2);  // square the difference
                                             break;
                                         case "mean":
                                             partials[time][site][level] = verificationValues[level]; // just the verification value - no truth
@@ -502,6 +502,9 @@ dataProfile = function (plotParams, plotFunction) {
         var site = 0;
         var level = 0;
         var curvePartials = null;
+        var matchedTimesByLevel = [];
+        var ci;
+        var timeLevelExists;
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             curve = curves[curveIndex];
             var partials = curve['partials'];
@@ -516,8 +519,17 @@ dataProfile = function (plotParams, plotFunction) {
                         if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
                             continue;  // skip this site, it doesn't match
                         }
+                        var levelTimes = {};
                         for (level in partials[time][site]) {
-                            if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
+                            // does this time exist in all the curves at this level? If not throw it away
+                            timeLevelExists = true;
+                            for (ci = 0; ci < curvesLength; ci++) {
+                                if (curves[ci].diffFrom === undefined && (!curves[ci].partials[time][site][level])) {
+                                    timeLevelExists = false;
+                                }
+                            }
+                                // timeLevelExists - throw away this time because it doesn't exist at all the levels
+                            if (!timeLevelExists || (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1))) {
                                 continue;  // skip this level, it doesn't match
                             }
                             if (filteredPartials[time] === undefined) {
