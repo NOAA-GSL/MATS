@@ -114,6 +114,133 @@ const arrayContainsArray = function (superArray, subArray) {
     return j == subArray.length;
 };
 
+// dieoff plots always have interval 1
+const getDieOffMatchedDataSet = function (dataset) {
+    var curvesLength = dataset.length;
+    var dataIndexes = {};
+    var ci;
+    var sci;
+    var hour = 0;
+    var hourMax = Number.MIN_VALUE;
+    var dataMaxInterval = Number.MIN_VALUE;
+    // set up the indexes and determine the minimum hour for the dataset
+    if (curvesLength == 1) {
+        return dataset;
+    }
+    for (ci = 0; ci < curvesLength; ci++) {
+        dataIndexes[ci] = 0;
+        hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
+    }
+    var done = false;
+    // find the first common start point (by hour).
+    // if there is none then there is no matched data
+    while (!done) {
+        var same = true;
+        for (ci = 0; ci < curvesLength; ci++) {
+            if (dataIndexes[ci] >= dataset[ci].data.length) {
+                same = false;
+                done = true; // I went past the end - no coinciding points
+                break;
+            }
+            if (ci == curvesLength - 1) {
+                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
+                    dataIndexes[0]++;
+                    same = false;
+                }
+            } else {
+                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
+                    dataIndexes[ci + 1]++;
+                    same = false;
+                }
+            }
+        }
+        if (same) {
+            done = true;
+            // since they are the same just use the hour
+            // belonging to the current dataindex of the 0th curve
+            // that will be our common start hour
+            hour = dataset[0].data[dataIndexes[0]][0];
+        }
+    }
+    var hourMatches;
+    var newDataSet = [];
+    while (hour < hourMax) {
+        hourMatches = true;
+        for (ci = 0; ci < curvesLength; ci++) {
+            // move this curves index to equal or exceed the new hour
+            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < hour) {
+                dataIndexes[ci]++;
+            }
+            // if the hour isn't right or the data is null it doesn't match
+            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != hour) {
+                hourMatches = false;
+                break;
+            } else {
+                // if there is no data entry here at this hour it doesn't match
+                if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
+                    hourMatches = false;
+                }
+            }
+        }   // for all the curves
+        if (hourMatches) {
+            for (sci = 0; sci < curvesLength; sci++) {
+                if (!newDataSet[sci]) {
+                    newDataSet[sci] = {};
+                    var keys = Object.keys(dataset[sci]);
+                    for (var k = 0; k < keys.length; k++) {
+                        var key = keys[k];
+                        if (key == "data") {
+                            newDataSet[sci][key] = [];
+                        } else {
+                            newDataSet[sci][key] = dataset[sci][key];
+                        }
+                    }
+                }
+                const valueObject = dataset[sci].data[dataIndexes[sci]];
+                // push the data
+                newDataSet[sci].data.push(valueObject);
+            }
+        }
+        hour = hour + 1;
+    }// while hour
+    // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
+    for (ci = 0; ci < curvesLength; ci++) {
+        if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
+            continue;   // don't do it if there isn't an annotation
+        }
+        var sum = 0;
+        var count = 0;
+        d = newDataSet[ci].data;
+        var mean = d[0][1];
+        for (var i = 0; i < d.length; i++) {
+            if (d[i][1] !== null) {
+                sum = sum + d[i][1];
+                count++
+            }
+        }
+        if (count > 1) {
+            mean = sum / count;
+        }
+        const annotationParts = dataset[ci].annotation.split(" = ");
+        annotationParts[1] = mean === null ? null : mean.toPrecision(4);
+        const annotation = annotationParts.join(" = ");
+        var optionsKeys = Object.keys(dataset[ci]);
+        var index = optionsKeys.indexOf('data');
+        if (index > -1) {
+            optionsKeys.splice(index, 1);
+        }
+        index = optionsKeys.indexOf('annotation');
+        if (index > -1) {
+            optionsKeys.splice(index, 1);
+        }
+        optionsKeys.forEach(function (item) {
+            newDataSet[ci][item] = dataset[ci][item];
+        });
+        newDataSet[ci]['annotation'] = annotation;
+    }
+    return newDataSet;
+};
+
 const getMatchedDataSet = function (dataset, interval) {
     /*
      Parameters:
@@ -1483,6 +1610,7 @@ export default matsDataUtils = {
     arraysEqual: arraysEqual,
     arrayContainsArray: arrayContainsArray,
     getMatchedDataSet: getMatchedDataSet,
+    getDieOffMatchedDataSet: getDieOffMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
