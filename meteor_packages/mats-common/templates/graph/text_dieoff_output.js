@@ -116,7 +116,7 @@ Template.textDieOffOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return false;
         }
-        var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD:HH:mm') + "</td>";
+        var line = "<td>" + time + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
@@ -184,7 +184,6 @@ Template.textDieOffOutput.helpers({
             "<td> +/- " + stats.stde_betsy.toPrecision(4) + "</td>" +
             "<td>" + stats.n_good + "</td>" +
             "<td>" + stats.sd.toPrecision(4) + "</td>" +
-            "<td>" + stats.lag1.toPrecision(4) + "</td>" +
             "<td>" + stats.minVal.toPrecision(4) + "</td>" +
             "<td>" + stats.maxVal.toPrecision(4) + "</td>";
         return line;

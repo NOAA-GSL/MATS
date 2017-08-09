@@ -177,9 +177,15 @@ Template.dateRange.onRendered(function () {
             // now we have a normalized date range for the selected superiors.
             // evaluate DRS
             if ((dataEnd.isBefore(startDsr) || (dataStart.isAfter(endDsr)))) {
-                // the current user setting and the valid range do not overlap so just set the DSR to the valid range
-                startDsr = dataStart;
+                // the current user setting and the valid range do not overlap so just set the DSR to the most recent 30 days of the valid range
                 endDsr = dataEnd;
+                // set startDsr to the endDsr less 30 days or less the startDsr whichever is later
+                var endDsrLess30 = moment(endDsr).subtract(30, "days");
+                if (endDsrLess30.isAfter(dataStart)) {
+                    startDsr = endDsrLess30;
+                } else {
+                    startDsr = dataStart;
+                }
             } else {
                 // the current user setting and the valid range overlap
                 if (startDsr.isBefore(dataStart)) {
@@ -204,5 +210,5 @@ Template.dateRange.onRendered(function () {
     elem.addEventListener('refresh', function (e) {
         refresh();
     });
-
+    refresh();   // initial value based on what is in the superior
 });

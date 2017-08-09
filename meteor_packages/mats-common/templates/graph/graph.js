@@ -311,6 +311,7 @@ Template.graph.events({
         document.getElementById("textSeriesView").style.display = "none";
         document.getElementById("textProfileView").style.display = "none";
         document.getElementById("textScatter2dView").style.display = "none";
+        document.getElementById("textDieOffView").style.display = "none";
         document.getElementById('graph-touch-controls').style.display = "block";
 
         var graphView = document.getElementById('graphView');

@@ -375,16 +375,47 @@ const setAllParamsToDefault = function() {
     const nonDependents = matsCollections.CurveParams.find({"superiorNames" : { "$exists" : true }}).fetch();
     nonDependents.forEach(function(param) {
         setDefaultForParamName(param);
-        matsSelectUtils.refresh(null,param.name);
-        // remove from params list - actually rewrite params list NOT with this param
-        params = params.filter(function( obj ) {
-            return obj.name !== param.name;
-        });
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            matsSelectUtils.refresh(null, param.name);
+            // remove from params list - actually rewrite params list NOT with this param
+            params = params.filter(function (obj) {
+                return obj.name !== param.name;
+            });
+        }
     });
     // reset everything else
     params.forEach(function(param) {
-        setDefaultForParamName(param);
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            setDefaultForParamName(param);
+        }
     });
+    matsCollections.PlotParams.find({}).fetch().forEach(function(param){
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            setDefaultForParamName(param);
+        }
+    });
+
 };
 // is the input element displaying? used by curve_param_item_group
 const isInputElementVisible = function(paramName) {

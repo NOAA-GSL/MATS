@@ -145,7 +145,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
     }
 
     // add black 0 line curve
