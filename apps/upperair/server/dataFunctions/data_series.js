@@ -9,14 +9,9 @@ dataSeries = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
-    // convert dates for sql
+    // // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -32,7 +27,6 @@ dataSeries = function (plotParams, plotFunction) {
         const diffFrom = curve.diffFrom;
         const model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         const region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
-//        const tableRegion = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']][0];
         const tablePrefix = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']];
         const label = curve['label'];
         const top = curve['top'];

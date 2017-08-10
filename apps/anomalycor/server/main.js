@@ -279,7 +279,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label","model","data-source","region","statistic","threshHold","average","forecast-length","valid-time"
+                "label","model","data-source","region","statistic","threshold","average","forecast-length","valid-time"
             ],
             groupSize: 6
 

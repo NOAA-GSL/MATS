@@ -11,14 +11,6 @@ dataSeries = function (plotParams, plotFunction) {
     var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -92,7 +84,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             var validTime =" ";
             if (validTimeStr != "All"){
-                validTime =" and  m0.hour IN("+validTimeStr+")"
+                validTime = " and  m0.hour IN(" + validTimeStr + ")";
             }
             statement = statement.replace('{{validTime}}', validTime);
             dataRequests[curve.label] = statement;
@@ -118,11 +110,11 @@ dataSeries = function (plotParams, plotFunction) {
             var count = 0;
             for (var i = 0; i < d.length; i++) {
                 if (d[i][1] !== null) {
-                sum = sum + d[i][1];
+                    sum = sum + d[i][1];
                     count++;
                     ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                     ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-            }
+                }
             }
         } else {
             // this is a difference curve
@@ -155,9 +147,9 @@ dataSeries = function (plotParams, plotFunction) {
         error: error,
         data: dataset,
         options: resultOptions,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);
