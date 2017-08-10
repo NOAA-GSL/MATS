@@ -187,7 +187,7 @@ Template.curveItem.events({
         var removeCurve = Session.get("confirmRemoveCurve");
         if (removeCurve && removeCurve.confirm) {
             var label = removeCurve.label;
-            var color = this.color;
+            var color = removeCurve.color;
             var Curves = _.reject(Session.get('Curves'), function (item) {
                 return item.label === label
             });
@@ -202,13 +202,13 @@ Template.curveItem.events({
             }
             return false;
         } else{
-            Session.set("confirmRemoveCurve",{label:this.label});
+            Session.set("confirmRemoveCurve",{label:this.label,color:this.color});
             $("#modal-confirm-remove-curve").modal();
         }
     },
     'click .confirm-remove-curve': function () {
         var confirmCurve = Session.get("confirmRemoveCurve");
-        Session.set("confirmRemoveCurve", {label:confirmCurve.label,confirm:true});
+        Session.set("confirmRemoveCurve", {label:confirmCurve.label,color:confirmCurve.color,confirm:true});
         $("#curve-list-remove").trigger('click');
     },
     'click .edit-curve-xaxis': function(event) {
