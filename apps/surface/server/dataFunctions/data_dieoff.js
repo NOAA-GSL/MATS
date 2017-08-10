@@ -4,7 +4,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataSeries = function (plotParams, plotFunction) {
+dataDieOff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
@@ -45,11 +45,11 @@ dataSeries = function (plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid-time'];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast-length'];
+        const validTimeStr = curve['valid-time'];
+        const forecastLength = curve['dieoff-forecast-length'];
+        if (forecastLength !== "dieoff") {
+            throw new Error("INFO:  non dieoff curves are not yet supported");
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -60,23 +60,41 @@ dataSeries = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                ",avg(m0.valid_day+3600*m0.hour) as middle_secs"+
-                ",min(m0.valid_day+3600*m0.hour) as min_secs"+
-                ",max(m0.valid_day+3600*m0.hour) as max_secs,"+
-                "count(m0.hour)/1000 as N_times, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 "+
-                "{{validTime}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
+            // SELECT
+            // m0.fcst_len                                   AS avtime,
+            //     Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times,
+            //     Min(m0.valid_day + 3600 * m0.hour)            AS min_secs,
+            //     Max(m0.valid_day + 3600 * m0.hour)            AS max_secs,
+            // Count(m0.hour) / 1000                         AS Nhrs0,
+            // Sqrt(Sum(m0.sum2_dt) / Sum(m0.n_dt)) / 1.8    AS stat0,
+            // Avg(m0.n_dt) / 1000                           AS N0
+            // FROM   hrrr_metar_v2_all_hrrr AS m0
+            // WHERE  1 = 1
+            // AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30
+            // AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30
+            // AND m0.valid_day + 3600 * m0.hour >= 1499644800
+            // AND m0.valid_day + 3600 * m0.hour < 1502323200
+            // GROUP  BY avtime
+            // ORDER  BY avtime;
 
-            statement = statement.replace('{{average}}', average);
+            var statement = "SELECT " +
+            "m0.fcst_len AS avtime, " +
+            "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
+            "    Min(m0.valid_day + 3600 * m0.hour)            AS min_secs, " +
+            "    Max(m0.valid_day + 3600 * m0.hour)            AS max_secs, " +
+            "    Count(m0.hour) / 1000                         AS Nhrs0, " +
+            "    {{statistic}} " +
+            "FROM {{model}} AS m0 " +
+            "WHERE 1 = 1 " +
+            "{{validTime}} " +
+            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30 " +
+            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30 " +
+            "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
+            "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+            "group by avtime " +
+            "order by avtime" +
+            ";";
+
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
@@ -90,7 +108,7 @@ dataSeries = function (plotParams, plotFunction) {
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, validTimeStr, interval);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -136,13 +154,13 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
-        }
+        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+    }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateDieoffPlotOptions( dataset, curves, axisMap );
     var result = {
         error: error,
         data: dataset,
