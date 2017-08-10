@@ -43,6 +43,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "block";
                 break;
             case matsTypes.PlotView.textSeries:
@@ -56,6 +57,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textSeriesView").style.display = "block";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
             break;
             case matsTypes.PlotView.textDieoff:
@@ -66,9 +68,10 @@ Template.graph.onCreated(function () {
                 document.getElementById("plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "block";
+                document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "block";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
             case matsTypes.PlotView.textProfile:
@@ -82,6 +85,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "block";
                 document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
             case matsTypes.PlotView.textScatter:
@@ -95,6 +99,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "block";
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
             default:
@@ -108,6 +113,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "block";
         }
     });

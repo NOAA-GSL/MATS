@@ -108,7 +108,7 @@ const doCurveParams = function () {
             });
 
 
-        optionsMap = {
+        var optionsMap = {
             'TSS (True Skill Score)': ['(sum(m0.yy)+0.00) / sum(m0.yy+m0.ny) + (sum(m0.nn)+0.00) / sum(m0.nn+m0.yn) - 1 as stat'],
 
             'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) / 1000 as stat'],
@@ -152,10 +152,10 @@ const doCurveParams = function () {
             });
 
         optionsMap = {
-            '5 (vis < 5 mi)': ['_500_'],
-            '3 (vis < 3 mi)': ['_300_'],
-            '1 (vis < 1 mi)': ['_100_'],
-            '1/2 (vis < 1/2 mi)': ['_50_']
+            '5 (vis < 5 mi)': ['500'],
+            '3 (vis < 3 mi)': ['300'],
+            '1 (vis < 1 mi)': ['100'],
+            '1/2 (vis < 1/2 mi)': ['50']
         };
 
         matsCollections.CurveParams.insert(
@@ -200,6 +200,24 @@ const doCurveParams = function () {
 
         matsCollections.CurveParams.insert(
             {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: {},
+                options: [matsTypes.ForecastTypes.dieoff,matsTypes.ForecastTypes.singleCycle],
+                superiorNames: [],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.ForecastTypes.dieoff,
+                controlButtonVisibility: 'block',
+                controlButtonText: 'forecast-length',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        matsCollections.CurveParams.insert(
+            {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
@@ -214,6 +232,7 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 3
             });
+
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
@@ -263,6 +282,22 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'regionName', ', '],
+                ['', 'statistic', ', '],
+                ['', 'threshold', ', '],
+                ['fcst_len:', 'dieoff-forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
+            ],
+            displayParams: [
+                "label","data-source","region","statistic","threshold","valid-time","dieoff-forecast-length"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -286,6 +321,12 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            graphFunction: "graphDieOff",
+            dataFunction: "dataDieOff",
+            checked: false
+        });
     }
 };
 
@@ -302,7 +343,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'visibility_sums',
+            database: 'visibility_sums2',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
@@ -387,6 +428,5 @@ appSpecificResetRoutines = {
     doPlotParams:doPlotParams,
     doCurveTextPatterns:doCurveTextPatterns
 };
-
 
 

@@ -34,7 +34,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = curve['region'];
-        var threshHold = matsCollections.CurveParams.findOne({name: 'threshHold'}).optionsMap[curve['threshHold']][0];
+        var threshold = matsCollections.CurveParams.findOne({name: 'threshold'}).optionsMap[curve['threshold']][0];
         var label = curve['label'];
         var top = curve['top'];
         var bottom = curve['bottom'];
@@ -76,7 +76,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 " {{validTime}}" +
                 " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
                 " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshHold}} " +
+                " and m0.trsh = {{threshold}} " +
                 " group by avtime" +
                 " order by avtime;";
 
@@ -87,7 +87,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{threshHold}}', threshHold);
+            statement = statement.replace('{{threshold}}', threshold);
             var validTime = " ";
             if (validTimeStr != "All") {
                 // validTime =" and floor((m0.time)%(24*3600)/3600) IN(0,3) "
