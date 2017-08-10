@@ -203,6 +203,24 @@ const doCurveParams = function () {
 
         matsCollections.CurveParams.insert(
             {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: {},
+                options: [matsTypes.ForecastTypes.dieoff,matsTypes.ForecastTypes.singleCycle],
+                superiorNames: [],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.ForecastTypes.dieoff,
+                controlButtonVisibility: 'block',
+                controlButtonText: 'forecast-length',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        matsCollections.CurveParams.insert(
+            {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap:forecastLengthOptionsMap,
@@ -268,6 +286,22 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'model', ' in '],
+                ['', 'regionName', ', '],
+                ['', 'statistic', ', '],
+                ['', 'threshHold', ', '],
+                ['fcst_len:', 'dieoff-forecast-length', 'h '],
+                [' valid-time:', 'valid-time', ' '],
+            ],
+            displayParams: [
+                "label","model","region","statistic","threshHold","valid-time","dieoff-forecast-length"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -290,6 +324,12 @@ const doPlotGraph = function () {
             graphFunction: "graphSeries",
             dataFunction: "dataSeries",
             checked:true
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            graphFunction: "graphDieOff",
+            dataFunction: "dataDieOff",
+            checked: false
         });
     }
 };
