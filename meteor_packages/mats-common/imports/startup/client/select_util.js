@@ -347,8 +347,13 @@ const refresh = function (event, paramName) {
                 }
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
-            // just choose the 0th element in the element options.
-            elem.selectedIndex = 0;
+            // if the selectedText existed in the new options list then the selectedOptionIndex won't be -1 and we have to choose the default option
+            if (selectedOptionIndex === -1) {
+                // just choose the 0th element in the element options. default?
+                elem.selectedIndex = 0;
+            } else {
+                elem.selectedIndex = selectedOptionIndex;
+            }
             elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
             elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
             for (var i = 0; i < brothers.length; i++) {
