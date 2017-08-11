@@ -376,3 +376,7 @@ Template.plotList.events({
         return false;
     }
 });
+Template.plotList.onRendered( function() {
+    console.log('doing client matsParamUtils.setAllParamsToDefault ');
+    matsParamUtils.setAllParamsToDefault();
+});
