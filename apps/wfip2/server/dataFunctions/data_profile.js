@@ -156,7 +156,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 // data source is a model and its JSON format
             } else {
-                statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                statement = "select  cycle_utc as valid_utc, (cycle_utc + b) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
                     " and cycle_utc >=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) - utcOffset) +
@@ -188,7 +188,6 @@ dataProfile = function (plotParams, plotFunction) {
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
                 if (truthDataSource_is_instrument) {
-                    const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
                         truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
                             "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +

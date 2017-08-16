@@ -283,6 +283,23 @@ var doCurveParams = function () {
 
         matsCollections.CurveParams.insert(
             {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'All',
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 3,
+                multiple: true
+            });
+
+        matsCollections.CurveParams.insert(
+            {
                 name: 'sites',
                 type: matsTypes.InputTypes.select,
                 optionsMap: siteOptionsMap,
@@ -372,6 +389,7 @@ var doCurveParams = function () {
                 unique: false,
                 default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 5
@@ -446,12 +464,13 @@ var doCurveParams = function () {
                 unique: false,
                 default: dstr,
                 controlButtonVisibility: 'block',
-                controlButtonText: "curve-valid-times",
+                controlButtonText: "curve-bounding-dates",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 7,
                 help: "dateHelp.html"
             });
+
     }
 };
 
@@ -484,10 +503,11 @@ var doCurveTextPatterns = function () {
                 [' discriminators:', 'discriminator', ', '],
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast-length', ' ,']
+                ['fcst_len:', 'forecast-length', ' ,'],
+                ['','valid-time','']
             ],
             displayParams: [
-                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness"
+                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","valid-time"
                 ],
             groupSize: 6
         });
@@ -507,10 +527,11 @@ var doCurveTextPatterns = function () {
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,'],
-                ['', 'curve-dates', '']
+                ['', 'curve-dates', ''],
+                ['', 'valid-time','']
             ],
             displayParams: [
-                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates"
+                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates","valid-time"
             ],
             groupSize: 6
         });
@@ -535,17 +556,18 @@ var doCurveTextPatterns = function () {
                 ['fcst_len:', 'yaxis-forecast-length', ', '],
                 ['', 'yaxis-discriminator', ', '],
                 ['lc', 'level-completeness', ' '],
-                ['sc', 'site-completeness', '']
+                ['sc', 'site-completeness', ''],
+                ['', 'valid-time','']
             ],
             displayParams: [
                 "label",
                 "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
                 "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
-                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness",
+                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","valid-time",
 
                 "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
                 "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
-                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","xaxis-level-completeness"
+                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","xaxis-level-completeness","valid-time"
             ],
             groupSize:6
         });

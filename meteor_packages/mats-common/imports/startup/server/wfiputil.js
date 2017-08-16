@@ -185,6 +185,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
     // If we happen to get more than one reading within +/- 1/2 of the cyle time from the exact cycle time we average the readings.
     // VerificationRunInterval is in milliseconds and what we actually use is the halfInterval.
+
     var verificationHalfRunInterval = verificationRunInterval / 2;
     var dFuture = new Future();
     var error = "";
@@ -277,6 +278,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
             var valueSums = {};
             var interpolatedValues = {};
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                // avtime is adjusted valid time
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
                 time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
                 // keep track of the minimum interval for the data set
@@ -357,11 +359,9 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (isInstrument && Array.isArray(values)) {
                     var halfCycleBeforeAvtime = time -  verificationHalfRunInterval;
                     var halfCycleAfterAvtime = time +  verificationHalfRunInterval;
-                    //console.log('halfCycleBeforeAvtime is ' + halfCycleBeforeAvtime + ' halfCycleAfterAvtime is ' + halfCycleAfterAvtime + ' utctime is ', utctime + ' avtime is ' + time);
-
                     if ((Number(time) > Number(previousTime)) ||
                         (Number(siteid) > Number(previousSiteId))) {
-                        // first encounter of a new avtime
+                        // first encounter of a new avtime (adjusted valid interval)
                         interpolationCount = 0;
                         valueSums = {};
                         interpolatedValues = {};
@@ -376,7 +376,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         previousTime = time;
                         previousSiteId = siteid;
                     } else {
-                        // subsequent encounter of the same avtime (new utctime))
+                        // subsequent encounter of the same avtime
                         if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
                             interpolationCount++;
                             for (var index = 0; index < values.length; index++) {
