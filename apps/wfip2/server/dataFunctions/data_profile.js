@@ -59,6 +59,7 @@ dataProfile = function (plotParams, plotFunction) {
     }
     var errorMax = Number.MIN_VALUE;
     var maxValuesPerLevel = 0;
+    var matchedValidTimes = [];
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
@@ -123,6 +124,13 @@ dataProfile = function (plotParams, plotFunction) {
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // create database query statements - wfip2 has source AND truth data for statistics other than mean
+        var validTimeClause = " ";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length > 0) {
+            validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) /3600 in (" + validTimes + ")";
+            matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+        }
+
         var statement;
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
@@ -156,13 +164,13 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 // data source is a model and its JSON format
             } else {
-                statement = "select  cycle_utc as valid_utc, (cycle_utc + b) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                statement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
                     " and cycle_utc >=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) - utcOffset) +
                     " and cycle_utc <=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) - utcOffset);
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause +  " order by avtime";
             //console.log("statement: " + statement);
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
@@ -211,7 +219,7 @@ dataProfile = function (plotParams, plotFunction) {
                         " and cycle_utc >=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) - utcOffset) +
                         " and cycle_utc <=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) - utcOffset);
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")"  + validTimeClause +  " order by avtime";
                 //console.log("statement: " + truthStatement);
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {

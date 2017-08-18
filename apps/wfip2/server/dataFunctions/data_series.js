@@ -54,7 +54,7 @@ dataSeries = function (plotParams, plotFunction) {
             max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
         }
     }
-
+    var matchedValidTimes = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         yAxisMaxes[curveIndex] = Number.MIN_VALUE;
         yAxisMins[curveIndex] = Number.MAX_VALUE;
@@ -105,12 +105,12 @@ dataSeries = function (plotParams, plotFunction) {
         var count = 0;
         var sum = 0;
         var average = 0;
-        var validTimeStr = curve['valid-time'];
-        var validTimeClause =" ";
-        if (validTimeStr != "All"){
-            validTimeClause = " and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) /3600 in (" + validTimeStr + ")";
+        var validTimeClause = " ";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        if (validTimes.length > 0) {
+            validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) /3600 in (" + validTimes + ")";
+            matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
         }
-
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             if (allForecast === matsTypes.InputTypes.forecastMultiCycle) {
@@ -169,7 +169,8 @@ dataSeries = function (plotParams, plotFunction) {
                      */
                     if (dataSource_is_json) {
                         // verificationRunInterval is in milliseconds
-                        statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                        statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                            "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
                             " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset)+
@@ -197,7 +198,7 @@ dataSeries = function (plotParams, plotFunction) {
 
 
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
-            console.log("statement: " + statement);
+            //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
@@ -215,7 +216,6 @@ dataSeries = function (plotParams, plotFunction) {
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                 throw (new Error(error));
             }
-console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0], "first data object:", queryResult.data[queryResult.allTimes[0]]);
             var truthQueryResult = queryResult;
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
@@ -255,7 +255,7 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
                         " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate)  - utcOffset) + " order by avtime";
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
-                console.log("statement: " + truthStatement);
+                //console.log("statement: " + truthStatement);
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
@@ -367,6 +367,17 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
                     //times are now equal we can calculate the value for this time
                     value = null;
                     var time = verificationData[valIndex][0];
+                    var timeValid = validTimes.length === 0;
+                    for (vt = 0; vt < validTimes.length; vt++) {
+                        //console.log((time / 3600000) % Number(validTimes[vt]));
+                        if ((time / 3600000) % Number(validTimes[vt]) === 0) {
+                             timeValid = true;
+                        };
+                    }
+                    if (!timeValid) {
+                        valIndex++;
+                        continue;
+                    }
                     var timeObj = verificationData[valIndex][1];
                     var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
                     xAxisMin = time < xAxisMin ? time : xAxisMin;
@@ -724,13 +735,14 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
         var myLevels;
         var newDataSet = [];
 
-        while (time < xAxisMax) {
+        while (time <= xAxisMax) {
             timeMatches = true;
             levelsMatches = true;
             sitesMatches = true;
             levelsToMatch = [];
             sitesToMatch = [];
             // establish matching sets for all the curves at this particular time
+
             for (ci = 0; ci < curvesLength; ci++) {
                 // move this curves index to equal or exceed the new time
                 while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < time) {
@@ -761,6 +773,7 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
             }
             for (ci = 0; ci < curvesLength; ci++) {
                 // if the time isn't right or the data is null it doesn't match
+
                 if (dataset[ci].data[dataIndexes[ci]] === undefined || dataset[ci].data[dataIndexes[ci]] === null || dataset[ci].data[dataIndexes[ci]][1] === null || dataset[ci].data[dataIndexes[ci]][0] != time) {
                     timeMatches = false;
                     levelsMatches = false;
@@ -905,7 +918,14 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
                 for (sci = 0; sci < curvesLength; sci++) {
                     newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
                     newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
-                    newDataSet[sci].data.push([time, null]);
+                    // validTimes is really an array of valid utc hours of the day.
+                    //The matchedValidTimes are the subset of validTimes (valid UTC Hours of the day) for all the curves,
+                    // any time (hour of the day equivilent) not in that subset does not match unless
+                    // the matchedValidTimes are empty (which means validTimes (hours of the day) was disregarded for all the curves)
+                    if (matchedValidTimes.indexOf((time / 3600000) % 24) !== -1) {
+                        // We will add a null if it is a time that satisfies the VALID UTC HOR (matchedValidTimes) criteria - otherwise no data entry at all
+                        newDataSet[sci].data.push([time, null]);
+                    };
                 }
             }
             time = Number(time) + Number(maxValidInterval);
@@ -961,18 +981,6 @@ console.log("curve label:", curve.label,  " first time:", queryResult.allTimes[0
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
         var vStr = curves[dsi].variable;
-        // if (yAxisBoundaries[vStr] === undefined) {
-        //     yAxisBoundaries[vStr] = {
-        //         min: Number.MAX_VALUE,
-        //         max: Number.MIN_VALUE
-        //     }
-        // }
-        // yAxisBoundaries[vStr] = {
-        //     // min: yAxisBoundaries[vStr].min < yAxisMins[dsi] ? yAxisBoundaries[vStr].min : yAxisMins[dsi],
-        //     // max: yAxisBoundaries[vStr].max > yAxisMins[dsi] ? yAxisBoundaries[vStr].max : yAxisMaxes[dsi]
-        //     min: minMin,
-        //     max: maxMax
-        // };
         var yaxesOptions;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
