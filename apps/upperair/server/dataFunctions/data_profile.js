@@ -55,7 +55,7 @@ dataProfile = function(plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var validTimeStr = curve['valid-time'];
         var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        var validTime = validTimeOptionsMap[validTimeStr][0];
+        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
@@ -75,7 +75,7 @@ dataProfile = function(plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
-                "{{validTime}} " +
+                "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 > {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
@@ -91,13 +91,13 @@ dataProfile = function(plotParams, plotFunction) {
             statement = statement.replace('{{fromDate}}', curveDatesDateRangeFrom);
             statement = statement.replace('{{toDate}}', curveDatesDateRangeTo);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.queryProfileDB(sumPool, statement, validTimeStr, statisticSelect, label);
+                queryResult = matsDataUtils.queryProfileDB(sumPool, statement, statisticSelect, label);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

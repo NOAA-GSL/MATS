@@ -7,6 +7,15 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 var modelOptionsMap = {};
 var regionModelOptionsMap = {};
 var forecastLengthOptionsMap = {};
+// this should be in the metdata someday
+var thresholdValuesMap = {
+    '10 (visibility < 10 mi)' : '1000',
+    '5 (visibility < 5 mi)': '500',
+    '3 (visibility < 3 mi)': '300',
+    '1 (visibility < 1 mi)': '100',
+    '1/2 (visibility < 1/2 mi)': '50'
+};
+var thresholdsModelOptionsMap = {};
 var forecastLengthModels = [];
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
@@ -82,7 +91,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length"],
+                dependentNames: ["region", "forecast-length", "threshold"],
                 controlButtonCovered: true,
                 default: 'Bak13',
                 unique: false,
@@ -151,22 +160,18 @@ const doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {
-            '5 (vis < 5 mi)': ['500'],
-            '3 (vis < 3 mi)': ['300'],
-            '1 (vis < 1 mi)': ['100'],
-            '1/2 (vis < 1/2 mi)': ['50']
-        };
 
         matsCollections.CurveParams.insert(
             {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: thresholdsModelOptionsMap,
+                options: thresholdsModelOptionsMap['HRRR'],   // convenience
+                valuesMap: thresholdValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: '5 (vis < 5 mi)',
+                default: thresholdsModelOptionsMap['HRRR'][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -228,6 +233,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -237,12 +243,13 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['All', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: 'All',
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
@@ -386,7 +393,7 @@ Meteor.startup(function () {
 
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions_name,model_value from visibility.regions_per_model;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions_name,model_value from regions_per_model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions_name;
@@ -402,7 +409,7 @@ Meteor.startup(function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM visibility.fcst_lens_per_model;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model;
             var forecastLengths = rows[i].fcst_lens;
@@ -412,6 +419,46 @@ Meteor.startup(function () {
     } catch (err) {
         console.log(err.message);
     }
+
+
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, thresholds FROM thresholds_per_model;");
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model;
+            var thresholds = rows[i].thresholds;
+            var thresholdsArr = thresholds.split(',');
+            var thresholdsDescriptions = [];
+
+            for (var thi = 0; thi < thresholdsArr.length; thi++) {
+                var th = thresholdsArr[thi];
+                switch (th) {
+                    case "50":
+                        thresholdsDescriptions.push("1/2 (visibility < 1/2 mi)");
+                        break;
+                    case "100":
+                        thresholdsDescriptions.push("1 (visibility < 1 mi)");
+                        break;
+                    case "300":
+                        thresholdsDescriptions.push("3 (visibility < 3 mi)");
+                        break;
+                    case "500":
+                        thresholdsDescriptions.push("5 (visibility < 5 mi)");
+                        break;
+                    case "1000":
+                        thresholdsDescriptions.push("10 (visibility < 10 mi)");
+                        break;
+                    default:
+                        thresholdsDescriptions.push(th);
+                        break;
+                }
+            }
+            thresholdsModelOptionsMap[model] = thresholdsDescriptions;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
     // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
     const appVersion = Assets.getText('version').trim();
     matsMethods.resetApp({appName:'Visibility', appVersion:appVersion});

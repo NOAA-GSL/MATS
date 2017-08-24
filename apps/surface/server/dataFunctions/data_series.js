@@ -45,7 +45,7 @@ dataSeries = function (plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid-time'];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -68,7 +68,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 " from {{model}} as m0 " +
                 "  where 1=1 "+
-                "{{validTime}} " +
+                "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
                 "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
@@ -82,15 +82,15 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTime =" ";
-            if (validTimeStr != "All"){
-                validTime = " and  m0.hour IN(" + validTimeStr + ")";
+            var validTimeClause =" ";
+            if (validTimes.length > 0){
+                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

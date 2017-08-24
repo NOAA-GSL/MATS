@@ -232,6 +232,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -241,12 +242,13 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['All', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: 'All',
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
@@ -406,7 +408,7 @@ Meteor.startup(function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM visibility.fcst_lens_per_model;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM ceiling.fcst_lens_per_model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model;
             var forecastLengths = rows[i].fcst_lens;

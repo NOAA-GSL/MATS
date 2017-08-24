@@ -45,7 +45,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        const validTimeStr = curve['valid-time'];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
             throw new Error("INFO:  non dieoff curves are not yet supported");
@@ -59,24 +59,6 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve
-            // SELECT
-            // m0.fcst_len                                   AS avtime,
-            //     Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times,
-            //     Min(m0.valid_day + 3600 * m0.hour)            AS min_secs,
-            //     Max(m0.valid_day + 3600 * m0.hour)            AS max_secs,
-            // Count(m0.hour) / 1000                         AS Nhrs0,
-            // Sqrt(Sum(m0.sum2_dt) / Sum(m0.n_dt)) / 1.8    AS stat0,
-            // Avg(m0.n_dt) / 1000                           AS N0
-            // FROM   hrrr_metar_v2_all_hrrr AS m0
-            // WHERE  1 = 1
-            // AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30
-            // AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30
-            // AND m0.valid_day + 3600 * m0.hour >= 1499644800
-            // AND m0.valid_day + 3600 * m0.hour < 1502323200
-            // GROUP  BY avtime
-            // ORDER  BY avtime;
-
             var statement = "SELECT " +
             "m0.fcst_len AS avtime, " +
             "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
@@ -86,7 +68,7 @@ dataDieOff = function (plotParams, plotFunction) {
             "    {{statistic}} " +
             "FROM {{model}} AS m0 " +
             "WHERE 1 = 1 " +
-            "{{validTime}} " +
+            "{{validTimeClause}} " +
             "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30 " +
             "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30 " +
             "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
@@ -100,15 +82,15 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTime =" ";
-            if (validTimeStr != "All"){
-                validTime = " and  m0.hour IN(" + validTimeStr + ")";
+            var validTimeClause =" ";
+            if (validTimes.length > 0){
+                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, validTimeStr, interval);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
