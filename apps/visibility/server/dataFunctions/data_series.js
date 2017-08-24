@@ -25,14 +25,15 @@ dataSeries = function (plotParams, plotFunction) {
         var region = curve['region'];
         var label = curve['label'];
         var color = curve['color'];
-        var thresholdSelect = curve['threshold'];
-        var thresholdOptionsMap = matsCollections.CurveParams.findOne({name: 'threshold'}, {optionsMap: 1})['optionsMap'];
-        var threshold = thresholdOptionsMap[thresholdSelect][0];
         var thresholdStr = curve['threshold'];
+        var thresholdParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        var thresholdValuesMap = thresholdParam['valuesMap'];
+        var threshold = thresholdValuesMap[thresholdStr];
+
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimeStr = curve['valid-time'];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
@@ -51,7 +52,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 " from {{data_source}} as m0 " +
                 "  where 1=1 " +
-                "{{validTime}} " +
+                "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
@@ -68,15 +69,15 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            var validTime =" ";
-            if (validTimeStr != "All"){
-                validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
+            var validTimeClause = " ";
+            if (validTimes.length > 0){
+                validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
             }
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, validTimeStr, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
                 d = queryResult.data;
                 if (queryResult.error !== undefined && queryResult.error !== "") {
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";

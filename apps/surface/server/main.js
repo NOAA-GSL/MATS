@@ -244,6 +244,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -254,12 +255,13 @@ const doCurveParams = function () {
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['All', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: 'All',
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
                 controlButtonCovered: true,
                 unique: false,
-                default: 'All',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
@@ -389,47 +391,22 @@ Meteor.startup(function () {
 
     var rows;
     try {
-        // var statement = "select model,regions,model_value from regions_per_model_mats";
-        // var qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-        //     } else {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select model,regions,model_value from regions_per_model_mats;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model.trim();
             var regions = rows[i].regions;
             var model_value = rows[i].model_value.trim();
-
             var valueList = [];
             valueList.push(model_value);
             modelOptionsMap[model] = valueList;
-
             var regionsArr = regions.split(',');
             regionModelOptionsMap[model] = regionsArr;
         }
-        //     }
-        //     qFuture['return']();
-        // }));
-        // qFuture.wait();
     } catch (err) {
         console.log(err.message);
     }
 
     try {
-        // var statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
-        // var qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         //console.log('No data in database ' + uaSettings.database + "! query:" + statement);
-        //         console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-        //     } else {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"SELECT model, fcst_lens FROM fcst_lens_per_model;");
         for (var i = 0; i < rows.length; i++) {
             var model = rows[i].model;

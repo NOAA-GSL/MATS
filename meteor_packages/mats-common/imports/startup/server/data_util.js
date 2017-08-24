@@ -787,7 +787,7 @@ const get_err = function (sVals, sSecs) {
     return stats;
 };
 
-const queryProfileDB = function (pool, statement, validTimeStr, statisticSelect, label) {
+const queryProfileDB = function (pool, statement, statisticSelect, label) {
     var d = [];  // d will contain the curve data
     var error = "";
     var pFuture = new Future();
@@ -822,7 +822,7 @@ const queryProfileDB = function (pool, statement, validTimeStr, statisticSelect,
         error: error,
     };
 };
-const queryDieoffDB = function (pool, statement, validTimeStr, interval) {
+const queryDieoffDB = function (pool, statement, interval) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -881,7 +881,7 @@ const queryDieoffDB = function (pool, statement, validTimeStr, interval) {
     };
 };
 
-const querySeriesDB = function (pool, statement, validTimeStr, interval, averageStr) {
+const querySeriesDB = function (pool, statement, interval, averageStr) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";

@@ -53,7 +53,7 @@ dataDieOff = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTime = validTimeOptionsMap[validTimeStr][0];
+        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
             throw new Error("INFO:  non dieoff curves are not yet supported");
@@ -76,7 +76,7 @@ dataDieOff = function (plotParams, plotFunction) {
             "    {{statistic}} " +
             "FROM {{model}} AS m0 " +
             "WHERE 1 = 1 " +
-            "{{validTime}} " +
+            "{{validTimeClause}} " +
             "AND m0.fcst_len >= 0 " +
             "AND m0.mb10 >= {{top}} / 10 " +
             "AND m0.mb10 <= {{bottom}} / 10 " +
@@ -92,12 +92,12 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, validTimeStr, interval);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

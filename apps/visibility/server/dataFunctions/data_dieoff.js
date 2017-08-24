@@ -29,14 +29,14 @@ dataDieOff = function (plotParams, plotFunction) {
         var region = curve['region'];
         var label = curve['label'];
         var color = curve['color'];
-        var thresholdSelect = curve['threshold'];
-        var thresholdOptionsMap = matsCollections.CurveParams.findOne({name: 'threshold'}, {optionsMap: 1})['optionsMap'];
-        var threshold = thresholdOptionsMap[thresholdSelect][0];
         var thresholdStr = curve['threshold'];
+        var thresholdParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        var thresholdValuesMap = thresholdParam['valuesMap'];
+        var threshold = thresholdValuesMap[thresholdStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimeStr = curve['valid-time'];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var forecastLength = curve['forecast-length'];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
@@ -52,26 +52,12 @@ dataDieOff = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            // SELECT m0.fcst_len                                                         AS
-            // avtime,
-            // ( Sum(m0.yy) + 0.00 ) / Sum(m0.yy + m0.ny) + ( Sum(m0.nn) + 0.00 ) /
-            // Sum(m0.nn + m0.yn) - 1 AS
-            // stat0
-            // FROM   bak13_ruc AS m0
-            // WHERE  1 = 1
-            // AND m0.yy + m0.ny + m0.yn + m0.nn > 0
-            // AND m0.time >= 1501804800
-            // AND m0.time < 1502409600
-            // AND m0.trsh = 1000
-            // GROUP  BY avtime
-            // ORDER  BY avtime;
-
             var statement = "SELECT " +
                 "m0.fcst_len AS avtime, " +
                 "{{statistic}} " +
                 " from {{data_source}} as m0" +
                 " where 1=1" +
-                " {{validTime}}" +
+                " {{validTimeClause}}" +
                 " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
                 " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
                 " and m0.trsh = {{threshold}} " +
@@ -83,15 +69,15 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{data_source}}', data_source + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
-            var validTime =" ";
-            if (validTimeStr != "All"){
-                validTime =" and floor((m0.time)%(24*3600)/3600) IN("+validTimeStr+")"
+            var validTimeClause = " ";
+            if (validTimes.length > 0){
+                validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimeStr + ")";
             }
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, validTimeStr, interval);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
             d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

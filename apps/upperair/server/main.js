@@ -206,6 +206,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: 'both',
                 controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -268,6 +269,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: forecastLengthOptionsMap[myModels[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 3

@@ -45,9 +45,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
         statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimeStr = curve['valid-time'];
-        // var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid time'}, {optionsMap: 1})['optionsMap'];
-        // var validTime = validTimeOptionsMap[validTimeStr][0];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
 
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
@@ -73,7 +71,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 ",avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0" +
                 " from {{model}}_{{region}} as m0" +
                 " where 1=1" +
-                " {{validTime}}" +
+                " {{validTimeClause}}" +
                 " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
                 " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
                 " and m0.trsh = {{threshold}} " +
@@ -88,16 +86,15 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{threshold}}', threshold);
-            var validTime = " ";
-            if (validTimeStr != "All") {
-                // validTime =" and floor((m0.time)%(24*3600)/3600) IN(0,3) "
-                validTime = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimeStr + ")"
+            var validTimeClause = " ";
+            if (validTimes.length != 0) {
+                validTimeClause = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")"
             }
-            statement = statement.replace('{{validTime}}', validTime);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
             var queryResult;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, validTimeStr, interval);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
             d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
