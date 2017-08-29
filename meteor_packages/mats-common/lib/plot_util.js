@@ -31,7 +31,7 @@ import { matsTypes } from 'meteor/randyp:mats-common';
 
     for (var i = 0; i < curveTextPattern.length; i++) {
         var a = curveTextPattern[i];
-        if (curve[a[1]] === undefined) {
+        if (curve[a] === undefined || curve[a[1]] === undefined) {
             continue;
         }
         text += a[0];

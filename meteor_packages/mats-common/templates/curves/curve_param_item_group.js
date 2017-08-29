@@ -40,24 +40,29 @@ Template.curveParamItemGroup.helpers({
         for (var di=0; di < displayParams.length;di++) {
             pValues.push({name: displayParams[di], value: c[displayParams[di]], color:c.color, curve:c.label, index:index});
         }
+
         // create array of parameter value display groups each of groupSize
         var pGroups = [];
-        var gi = 0;
-        const groupsLength = Math.floor(pValues.length / groupSize) + 1;
-        while (gi < groupsLength) {
-            var groupParams = [];
-            var pi = gi * groupSize;
-            const piend = pi + groupSize;
-            while (pi < piend && pi < pValues.length) {
-                if (pValues[pi]) {
-                    groupParams.push(pValues[pi]);
+        var groupParams = [];
+        var pvi = 0;
+        while (pvi < pValues.length) {
+            if (pValues[pvi] && (pValues[pvi].name == 'xaxis' || pValues[pvi].name == 'yaxis')) {
+                if (groupParams.length > 0) {
+                    // finish the old group and make a new group for 'xaxis' or 'yaxis'
+                    pGroups.push(groupParams);
                 }
-                pi++;
+                groupParams = [];
             }
-            if (groupParams.length > 0) {
+            pValues[pvi] && groupParams.push(pValues[pvi]);
+            if (groupParams.length >= groupSize) {
                 pGroups.push(groupParams);
+                groupParams = [];
             }
-            gi++;
+            pvi++;
+        }
+        // check for a partial last group
+        if (groupParams.length > 0) {
+            pGroups.push(groupParams);
         }
         allGroups[c.label] = pGroups;
         return pGroups;
@@ -69,10 +74,28 @@ Template.curveParamItemGroup.helpers({
       return paramGroup;
     },
     label: function(elem) {
-        const p = matsCollections.CurveParams.findOne({name:elem.name});
-        if (p.controlButtonText) {
-            return p.controlButtonText.toUpperCase();
+        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d) {
+            const pNameArr = elem.name.match(/([xy]axis-)(.*)/);
+            if (pNameArr === null) {
+                return elem.name.toUpperCase();
+            }
+            const prefix = pNameArr[1];
+            const pName = pNameArr[2];
+            const p = matsCollections.CurveParams.findOne({name:pName});
+            if (p.controlButtonText) {
+                return (prefix + p.controlButtonText).toUpperCase();
+            } else {
+                return elem.name.toUpperCase();
+            }
+        } else {
+            const p = matsCollections.CurveParams.findOne({name:elem.name});
+            if (p.controlButtonText) {
+                return p.controlButtonText.toUpperCase();
+            } else {
+                return elem.name.toUpperCase();
+            }
         }
+        // should never get here
         return elem.name.toUpperCase();
     },
     name: function(elem){

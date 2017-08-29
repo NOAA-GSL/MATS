@@ -317,7 +317,18 @@ Template.curveItem.events({
         const inputElem = matsParamUtils.getInputElementForParamName(name);
         const controlElem = matsParamUtils.getControlElementForParamName(name);
         const editingCurve = Session.get('editMode');
-        curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+        if (name.startsWith('xaxis')) {
+            curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-xaxis");
+        } else if (name.startsWith('yaxis')) {
+            curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-yaxis");
+        } else {
+            if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d) {
+                // for a scatter param that is not axis specific we still have to choos an axis - just choose x
+                curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-xaxis");
+            } else {
+                curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+            }
+        }
         const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
         Session.set("eventTargetCurve",eventTargetCurve);
         Session.set("intendedActiveDisplayButton",name);

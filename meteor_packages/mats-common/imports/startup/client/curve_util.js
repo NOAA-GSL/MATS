@@ -176,7 +176,9 @@ const resetScatterApply = function() {
         Session.set('yaxisCurveText', 'YAXIS NOT YET APPLIED');
         Session.set('xaxisCurveColor', 'red');
         Session.set('yaxisCurveColor', 'red');
-        document.getElementById('Fit-Type-radioGroup-none').checked = true;
+        if (document.getElementById('Fit-Type-radioGroup-none') !== null) {
+            document.getElementById('Fit-Type-radioGroup-none').checked = true;
+        }
     }
 };
 
