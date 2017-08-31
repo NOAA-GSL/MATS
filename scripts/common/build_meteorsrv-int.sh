@@ -60,8 +60,9 @@ do
     #make the development patch number one higher than the integration patch number - roll the dev patch
     dpatch_new=$((patch_new + 1))
     export dversion="${dmajor}.${dminor}.${dpatch_new}-${ddate}"
+    export intversion="${major}.${minor}.${patch_new}-${ddate}"
     export pversion="$major.${minor}.${patch_new}"
-    jq -M -r ". | {development:env.dversion,production:env.pversion}" private/version > private/versiontmp
+    jq -M -r ". | {development:env.dversion,integration:env.intversion,production:env.pversion}" private/version > private/versiontmp
     mv private/versiontmp private/version
     # build the tag
     vdate=`date +%Y.%m.%d.%H.%M`
