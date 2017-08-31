@@ -1562,13 +1562,19 @@ const doSettings = function (title, version) {
             resetFromCode: true
         });
     }
-    // always update the version and the hostname, not just if it doesn't exist...
-    var settings = matsCollections.Settings.findOne();
+    // always update the version, roles, and the hostname, not just if it doesn't exist...
+    var settings = matsCollections.Settings.findOne({});
+    const deploymentRoles = {
+        "mats-dev": "development",
+        "mats-int": "integration",
+        "mats": "production"
+    };
     var settingsId = settings._id;
     var os = Npm.require('os');
-    var hostname = os.hostname();
-    settings['version'] = version;
+    var hostname = os.hostname().split('.')[0];
+    settings['appVersion'] = version;
     settings['hostname'] = hostname;
+    settings['deploymentRoles'] = JSON.stringify(deploymentRoles);
     matsCollections.Settings.update(settingsId, {$set: settings});
 };
 
