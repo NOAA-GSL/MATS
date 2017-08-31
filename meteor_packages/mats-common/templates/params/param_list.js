@@ -227,8 +227,11 @@ Template.paramList.events({
                         } else if (paramElems[i].type === "button") {
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
-//                            p[paramElems[i].name] = (paramElems[i]).value;
-                            p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                            if (isScatter) {
+                                p[paramElems[i].name] = (paramElems[i]).value;
+                            } else {
+                                p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                            }
                         }
                     }
                     if (paramElems[i].name && paramElems[i].name === 'label') {
