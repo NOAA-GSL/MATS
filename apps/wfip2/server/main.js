@@ -547,6 +547,9 @@ var doCurveTextPatterns = function () {
                 ['', 'xaxis-statistic', ':'],
                 ['fcst_len:', 'xaxis-forecast-length', ', '],
                 ['', 'xaxis-discriminator', ', '],
+                ['', 'xaxis-valid-time', ':']
+                ['lc', 'xaxis-level-completeness', ' '],
+                ['sc', 'xaxis-site-completeness', '']
                 ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-truth-data-source', ':'],
                 ['', 'yaxis-region', ', '],
@@ -555,19 +558,21 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', ', '],
                 ['', 'yaxis-discriminator', ', '],
-                ['lc', 'level-completeness', ' '],
-                ['sc', 'site-completeness', ''],
-                ['', 'valid-time','']
+                ['', 'yaxis-valid-time', ', '],
+                ['lc', 'yaxis-level-completeness', ' '],
+                ['sc', 'yaxis-site-completeness', ''],
+                ['','Fit-Type','']
             ],
             displayParams: [
                 "label",
+                "Fit-Type",
                 "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
                 "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
-                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","valid-time",
+                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","xaxis-valid-time",
 
                 "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
                 "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
-                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","xaxis-level-completeness","valid-time"
+                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","yaxis-level-completeness","yaxis-valid-time"
             ],
             groupSize:6
         });
@@ -921,6 +926,7 @@ Meteor.startup(function () {
 appSpecificResetRoutines = {
     doPlotGraph:doPlotGraph,
     doCurveParams:doCurveParams,
+    doScatter2dParams:doScatter2dParams,
     doSavedCurveParams:doSavedCurveParams,
     doPlotParams:doPlotParams,
     doCurveTextPatterns:doCurveTextPatterns

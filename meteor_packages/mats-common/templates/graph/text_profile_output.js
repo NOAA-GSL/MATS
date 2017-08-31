@@ -161,7 +161,7 @@ Template.textProfileOutput.helpers({
             return false;
         }
         var curve = Template.parentData();
-        var line = "<td>" + (level) + "</td>";
+        var line = "<td>" +  Math.abs(level) + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;

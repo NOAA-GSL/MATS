@@ -64,7 +64,7 @@ do
         export dversion
         export ddate
         export developmentVersion="${dversion}-${vdate}"
-        jq -M -r ". | {development:env.developmentVersion,production}" private/version
+        jq -M -r ". | {development:env.developmentVersion,integration,production}" private/version
     done >> private/versiontmp
     mv private/versiontmp private/version
     /usr/bin/git commit -m"new development version" private/version

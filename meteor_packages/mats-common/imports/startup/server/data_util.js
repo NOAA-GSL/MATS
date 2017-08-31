@@ -650,24 +650,29 @@ const get_err = function (sVals, sSecs) {
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
-    var subVals = sVals;
-    var subSecs = sSecs;
-    var n = subVals.length;
+    var subVals = [];
+    var subSecs = [];
+    var sVals = sVals;
+    var sSecs = sSecs;
+    var n = sVals.length;
     var n_good = 0;
     var sum_d = 0;
     var sum2_d = 0;
     var error = "";
     var i;
     for (i = 0; i < n; i++) {
-        n_good = n_good + 1;
-        sum_d = sum_d + subVals[i];
-        sum2_d = sum2_d + subVals[i] * subVals[i];
+        if (sVals[i] !== null) {
+            n_good = n_good + 1;
+            sum_d = sum_d + sVals[i];
+            sum2_d = sum2_d + sVals[i] * sVals[i];
+            subVals.push(sVals[i]);
+            subSecs.push(sSecs[i]);
+        }
     }
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
     var sd_limit = 3 * sd;
-    //console.log("get_err");
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1557,10 +1562,19 @@ const doSettings = function (title, version) {
             resetFromCode: true
         });
     }
-    // always update the version, not just if it doesn't exist...
-    var settings = matsCollections.Settings.findOne();
+    // always update the version, roles, and the hostname, not just if it doesn't exist...
+    var settings = matsCollections.Settings.findOne({});
+    const deploymentRoles = {
+        "mats-dev": "development",
+        "mats-int": "integration",
+        "mats": "production"
+    };
     var settingsId = settings._id;
-    settings['version'] = version;
+    var os = Npm.require('os');
+    var hostname = os.hostname().split('.')[0];
+    settings['appVersion'] = version;
+    settings['hostname'] = hostname;
+    settings['deploymentRoles'] = JSON.stringify(deploymentRoles);
     matsCollections.Settings.update(settingsId, {$set: settings});
 };
 

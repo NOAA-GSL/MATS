@@ -189,7 +189,22 @@ Template.paramList.events({
                     }
                 }
                 if (index != -1) {
-                    curves[index] = p;
+                    if (isScatter) {
+                        // copy the params to the current axis paremeters
+                        var axis = Session.get('axis');
+                        var axisParams = (Object.keys(p)).filter(function (key) {
+                            return key.startsWith(axis)
+                        });
+                        for (var api = 0; api < axisParams.length; api++) {
+                            var ap = axisParams[api];
+                            var pp = ap.replace(axis + '-', '');
+                            p[ap] = p[pp];
+                            curves[index][ap] = p[pp];
+                        }
+                        curves[index]['Fit-Type'] = p['Fit-Type'];
+                    } else {
+                        curves[index] = p;
+                    }
                 }
             } else {
                 for (var i = 0; i < l; i++) {
@@ -212,8 +227,11 @@ Template.paramList.events({
                         } else if (paramElems[i].type === "button") {
                             p[paramElems[i].id] = paramElems[i].value;
                         } else {
-//                            p[paramElems[i].name] = (paramElems[i]).value;
-                            p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                            if (isScatter) {
+                                p[paramElems[i].name] = (paramElems[i]).value;
+                            } else {
+                                p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                            }
                         }
                     }
                     if (paramElems[i].name && paramElems[i].name === 'label') {
@@ -241,7 +259,9 @@ Template.paramList.events({
 Template.paramList.onRendered(function(){
     Session.set('displayPriority', 1);
     Session.set('editMode', '');
-    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== undefined) && document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
+    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== undefined) &&
+        (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== null) &&
+        document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
         elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
