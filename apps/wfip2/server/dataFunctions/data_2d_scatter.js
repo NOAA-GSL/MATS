@@ -61,7 +61,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
         }
     }
-
+    var matchedValidTimes = [];
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var rawAxisData = {};
         curve = curves[curveIndex];
@@ -106,6 +106,8 @@ data2dScatter = function (plotParams, plotFunction) {
             var discriminator = variableMap[curve[axis + '-' + 'discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve[axis + '-' + 'discriminator']];
             var disc_upper = curve[axis + '-' + 'upper'];
             var disc_lower = curve[axis + '-' + 'lower'];
+            var validTimeClause = " ";
+            var validTimes = curve[axis + '-' + 'valid-time'] === undefined ? [] : curve[axis + '-' + 'valid-time'];
             var forecastLength = curve[axis + '-' + 'forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve[axis + '-' + 'forecast-length'];
             if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
                 throw (new Error("INFO: cannot use this forecast length here: " + forecastLength));
@@ -114,6 +116,10 @@ data2dScatter = function (plotParams, plotFunction) {
             // verificationRunInterval is in milliseconds
             var statement = "";
             if (dataSource_is_instrument) {
+                if (validTimes.length > 0) {
+                    validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 )) / 3600 in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                }
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_json) {
                     // verificationRunInterval is in milliseconds
@@ -133,13 +139,17 @@ data2dScatter = function (plotParams, plotFunction) {
                 }
                 // data source is a model and its JSON
             } else {
+                if (validTimes.length > 0) {
+                    validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                }
                 statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
                     " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
                     " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")"   + validTimeClause + " order by avtime";
             dataRequests[axis + '-' + curve.label] = statement;
 
 
@@ -164,6 +174,10 @@ data2dScatter = function (plotParams, plotFunction) {
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
                 if (truthDataSource_is_instrument) {
+                    if (validTimes.length > 0) {
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 )) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                    }
                     const utcOffset = Number(forecastLength * 3600);
                     if (truthDataSource_is_json) {
                         truthStatement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
@@ -181,13 +195,17 @@ data2dScatter = function (plotParams, plotFunction) {
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
                 } else {
+                    if (validTimes.length > 0) {
+                        validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                    }
                     truthStatement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
                         " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) + utcOffset+
                         " and cycle_utc <=" + matsDataUtils.secsConvert(toDate) + utcOffset;
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
                 dataRequests[axis + '-truth-' + curve.label] = truthStatement;
                 try {
                     rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
