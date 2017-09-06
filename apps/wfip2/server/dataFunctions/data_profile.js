@@ -126,10 +126,6 @@ dataProfile = function (plotParams, plotFunction) {
         // create database query statements - wfip2 has source AND truth data for statistics other than mean
         var validTimeClause = " ";
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        if (validTimes.length > 0) {
-            validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) /3600 in (" + validTimes + ")";
-            matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
-        }
 
         var statement;
         if (diffFrom === null || diffFrom === undefined) {
@@ -146,6 +142,10 @@ dataProfile = function (plotParams, plotFunction) {
                  valid_utc<=1491436800 - 450
                  and sites_siteid in (4)  order by avtime;
                  */
+                if (validTimes.length > 0) {
+                    validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600  in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                }
                 if (dataSource_is_json) {
                     statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
                         "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
@@ -164,6 +164,10 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 // data source is a model and its JSON format
             } else {
+                if (validTimes.length > 0) {
+                    validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                }
                 statement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
@@ -196,6 +200,11 @@ dataProfile = function (plotParams, plotFunction) {
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
                 if (truthDataSource_is_instrument) {
+                    if (validTimes.length > 0) {
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                    }
+
                     if (truthDataSource_is_json) {
                         truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
                             "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
@@ -213,6 +222,10 @@ dataProfile = function (plotParams, plotFunction) {
                             " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
                     }
                 } else {
+                    if (validTimes.length > 0) {
+                        validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                    }
                     truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +

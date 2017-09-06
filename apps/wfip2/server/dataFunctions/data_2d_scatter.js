@@ -184,8 +184,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     truthStatement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) +
-                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate);
+                        " and cycle_utc >=" + matsDataUtils.secsConvert(fromDate) + utcOffset+
+                        " and cycle_utc <=" + matsDataUtils.secsConvert(toDate) + utcOffset;
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
                 dataRequests[axis + '-truth-' + curve.label] = truthStatement;
