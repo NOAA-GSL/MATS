@@ -248,7 +248,7 @@ Package.onUse(function(api) {
   api.addAssets('public/img/building_spinner.gif', "client");
   api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
-  api.addAssets('public/subtle_grunge_@2X.png', "client");
+  api.addAssets('public/img/subtle_grunge_@2X.png', "client");
 });
 
 Package.onTest(function(api) {
