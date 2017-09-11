@@ -42,7 +42,7 @@ fi
 rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/meteor_includes /web/.meteor  ${server}:/web
 if [ "X" == "X${requestedApp}" ]; then
     # build them all
-    rsync -ravlW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web/gsd/mats
+    rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web/gsd/mats
 else
     rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='static/applist.json' --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
