@@ -218,7 +218,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
         } else if (rows === undefined || rows.length === 0) {
             error = 'rows undefined error';
             if (rows.length === 0) {
-                error = 'INFO:0 data records found';
+                error = matsTypes.Messages.NO_DATA_FOUND;
             }
             // done waiting - error condition
             dFuture['return']();

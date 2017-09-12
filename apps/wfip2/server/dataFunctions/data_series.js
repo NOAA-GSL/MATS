@@ -56,6 +56,7 @@ dataSeries = function (plotParams, plotFunction) {
     }
     var matchedValidTimes = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var dataFoundForCurve = true;
         yAxisMaxes[curveIndex] = Number.MIN_VALUE;
         yAxisMins[curveIndex] = Number.MAX_VALUE;
         var curve = curves[curveIndex];
@@ -208,16 +209,19 @@ dataSeries = function (plotParams, plotFunction) {
                 // queryWFIP2DB has embedded quality control for windDir
                 // if corresponding windSpeed < 3ms null the windDir
                 queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval);
-                //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-                //    continue;
-                //}
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
+                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                    // what to do? what to do?
+                    error = "DataSource - " + matsTypes.Messages.NO_DATA_FOUND;
+                    dataFoundForCurve = false;
+                } else {
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
             var truthQueryResult = queryResult;
             // for mean calulations we do not have a truth curve.
@@ -268,16 +272,19 @@ dataSeries = function (plotParams, plotFunction) {
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
-                    //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-                    //    continue;
-                    //}
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
                 }
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
-                    throw ( new Error(truthQueryResult.error) );
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
+                        error = "TruthDataSource - " + matsTypes.Messages.NO_DATA_FOUND;
+                        dataFoundForCurve = false;
+                        // what to do? what to do?
+                    } else {
+                        //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
+                        throw ( new Error(truthQueryResult.error) );
+                    }
                 }
             }
 

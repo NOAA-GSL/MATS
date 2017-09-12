@@ -76,6 +76,7 @@ Package.onUse(function(api) {
   api.addFiles('imports/startup/client/select_util.js');
   api.addFiles('imports/startup/client/index.js');
   api.addFiles('imports/startup/client/init.js');
+  api.addFiles('imports/stylesheets/app.css');
   api.addFiles('imports/startup/client/jquery.json-viewer.css');
   api.addFiles('imports/startup/client/jquery.json-viewer.js');
 
