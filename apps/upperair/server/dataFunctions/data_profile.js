@@ -7,6 +7,7 @@ import { moment } from 'meteor/momentjs:moment';
 dataProfile = function(plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
+    var totalProecssingStart = moment();
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -22,17 +23,18 @@ dataProfile = function(plotParams, plotFunction) {
     var ymin = -1100;
     var maxValuesPerLevel = 0;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var dataFoundForCurve = true;
         // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        var region = matsCollections.RegionDescriptions.findOne({description:curve['region']}).regionMapTable;
+        var region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
         var curveDates = curve['curve-dates'];
-        var fromDateStr = curveDates.split( ' - ')[0]; // get the from part
+        var fromDateStr = curveDates.split(' - ')[0]; // get the from part
         fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
-        var toDateStr = curveDates.split( ' - ')[1]; // get the to part
+        var toDateStr = curveDates.split(' - ')[1]; // get the to part
         toDateStr = toDateStr.split(' ')[0];  // strip off time field
         var curveDatesDateRangeFrom = moment.utc(fromDateStr, "MM-DD-YYYY").format('YYYY-M-D');
         var curveDatesDateRangeTo = moment.utc(toDateStr, "MM-DD-YYYY").format('YYYY-M-D');
@@ -96,19 +98,29 @@ dataProfile = function(plotParams, plotFunction) {
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
             var queryResult;
+            var startMoment = moment();
+            var finishMoment;
             try {
                 queryResult = matsDataUtils.queryProfileDB(sumPool, statement, statisticSelect, label);
+                finishMoment = moment();
+                dataRequests["data retrieval (query) time - " + curve.label] = {
+                    begin: startMoment.format(),
+                    finsih: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                }
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
-            }
-            if (d[0] === undefined) {
-                throw new error("no data returned for curve " + curves[curveIndex].label);
+                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                    // This is NOT an error just a no data condition
+                    dataFoundForCurve = false;
+                } else {
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
         } else {
             // this is a difference curve
@@ -124,28 +136,32 @@ dataProfile = function(plotParams, plotFunction) {
                 // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
                 //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
                 diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
-                    dataset:dataset,
-                    diffFrom:diffFrom
+                    dataset: dataset,
+                    diffFrom: diffFrom
                 });
             }
             d = diffResult.dataset;
         }  // end difference curve
-        // get the x min and max
-        for (var di = 0; di < d.length; di++) {
-            xmax = xmax > d[di][0] ? xmax : d[di][0];
-            xmin = xmin < d[di][0] ? xmin : d[di][0];
-            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
-        }
-        // specify these so that the curve options generator has them available
-        // profile plots always go from 0 to 1000 initially
-        curve['annotation'] = "";
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
-        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
-        dataset.push(cOptions);
+            // get the x min and max
+            for (var di = 0; di < d.length; di++) {
+                xmax = xmax > d[di][0] ? xmax : d[di][0];
+                xmin = xmin < d[di][0] ? xmin : d[di][0];
+                maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+            }
+
+            // specify these so that the curve options generator has them available
+            // profile plots always go from 0 to 1000 initially
+            curve['annotation'] = "";
+            curve['ymin'] = ymin;
+            curve['ymax'] = ymax;
+            curve['xmin'] = xmin;
+            curve['xmax'] = xmax;
+            const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+            dataset.push(cOptions);
+
     }  // end for curves
+
+    var postQueryStartMoment = moment();
 
     // match the data by subseconds
     // build an array of sub_second arrays

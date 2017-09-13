@@ -431,6 +431,7 @@ data2dScatter = function (plotParams, plotFunction) {
             options = {
                 yaxis: curveIndex + 1,
                 label: label,
+                curveId: label,
                 color: color,
                 data: normalizedAxisData,
                 points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},

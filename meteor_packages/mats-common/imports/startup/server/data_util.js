@@ -801,10 +801,7 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
                 error = err.message;
                 pFuture['return']();
             } else if (rows === undefined || rows.length === 0) {
-                error = 'rows undefined error';
-                if (rows.length === 0) {
-                    error = 'INFO:0 data records found';
-                }
+                error = matsTypes.Messages.NO_DATA_FOUND;
                 // done waiting - error condition
                 pFuture['return']();
             } else {
@@ -844,10 +841,7 @@ const queryDieoffDB = function (pool, statement, interval) {
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
-            error = 'rows undefined error';
-            if (rows.length === 0) {
-                error = 'INFO:0 data records found';
-            }
+            error = matsTypes.Messages.NO_DATA_FOUND;
             // done waiting - error condition
             dFuture['return']();
         } else {
@@ -903,10 +897,7 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
             error = err.message;
             dFuture['return']();
         } else if (rows === undefined || rows.length === 0) {
-            error = 'rows undefined error';
-            if (rows.length === 0) {
-                error = 'INFO:0 data records found';
-            }
+                error = matsTypes.Messages.NO_DATA_FOUND;
             // done waiting - error condition
             dFuture['return']();
         } else {
@@ -1229,6 +1220,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     const curveOptions = {
         yaxis: 1,   // for profiles there is only one xaxis and one yaxis
         label: label,
+        curveId: label,
         color: color,
         data: dataSeries,
         points: {
@@ -1301,6 +1293,7 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
         label: axisMap[axisKey].axisLabel,
+        curveId: label,
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
@@ -1357,6 +1350,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
         label: axisMap[axisKey].axisLabel,
+        curveId: curve.label,
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,

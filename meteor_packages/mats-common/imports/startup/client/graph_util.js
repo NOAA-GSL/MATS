@@ -2,23 +2,42 @@ const setNoDataLabels = function (dataset) {
 // set the label for the hide show buttons (NO DATA) for the initial time here
     for (var c = 0; c < dataset.length; c++) {
         if (dataset[c].data.length === 0) {
-            Session.set(dataset[c].label + "pointsButtonText", 'NO DATA');
-            if (document.getElementById(dataset[c].label + '-curve-show-hide')) {
-                document.getElementById(dataset[c].label + '-curve-show-hide').value = 'NO DATA';
-                document.getElementById(dataset[c].label + '-curve-show-hide').disabled = true;
-                document.getElementById(dataset[c].label + '-curve-show-hide').style = "background-color:red";
+            Session.set(dataset[c].curveId + "pointsButtonText", 'NO DATA');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'NO DATA';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = true;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style = "background-color:red";
             }
-            Session.set(dataset[c].label + "hideButtonText", 'NO DATA');
-            if (document.getElementById(dataset[c].label + '-curve-show-hide-points')) {
-                document.getElementById(dataset[c].label + '-curve-show-hide-points').value = 'NO DATA';
-                document.getElementById(dataset[c].label + '-curve-show-hide-points').disabled = true;
-                document.getElementById(dataset[c].label + '-curve-show-hide-points').style = "background-color:red";
+            Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'NO DATA';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = true;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style = "background-color:red";
             }
-            Session.set(dataset[c].label + "errorBarButtonText", 'NO DATA');
-            if (document.getElementById(dataset[c].label + '-curve-errorbars')) {
-                document.getElementById(dataset[c].label + '-curve-errorbars').value = 'NO DATA';
-                document.getElementById(dataset[c].label + '-curve-errorbars').disabled = true;
-                document.getElementById(dataset[c].label + '-curve-errorbars').style = "background-color:red";
+            Session.set(dataset[c].curveId + "errorBarButtonText", 'NO DATA');
+            if (document.getElementById(dataset[c].curveId + '-curve-errorbars')) {
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').value = 'NO DATA';
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').disabled = true;
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').style = "background-color:red";
+            }
+        } else {
+            Session.set(dataset[c].curveId + "pointsButtonText", 'hide curve');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'hide curve';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide').style = "background-color:" + dataset[c].color;
+            }
+            Session.set(dataset[c].curveId + "hideButtonText", 'hide points');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'hide points';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style = "background-color:" + dataset[c].color;
+            }
+            Session.set(dataset[c].curveId + "errorBarButtonText", 'hide error bars');
+            if (document.getElementById(dataset[c].curveId + '-curve-errorbars')) {
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').value = 'hide error bars';
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-errorbars').style = "background-color:" + dataset[c].color;
             }
         }
     }

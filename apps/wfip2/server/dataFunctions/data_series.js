@@ -700,6 +700,7 @@ dataSeries = function (plotParams, plotFunction) {
         options = {
             yaxis: curveIndex + 1,  // the y axis position to the right of the graph (placeholder)
             label: label,
+            curveId: label,
             color: color,
             data: normalizedData,
             points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},

@@ -6,6 +6,8 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
+    var dataFoundForCurve = true;
+    var totalProecssingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -102,31 +104,44 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{average}}', average);
             dataRequests[curve.label] = statement;
             var queryResult;
+            var startMoment = moment();
+            var finishMoment;
             try {
                 queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
+                finishMoment = moment();
+                dataRequests["data retrieval (query) time - " + curve.label] = {
+                    begin: startMoment.format(),
+                    finsih: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                }
                 d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
+                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                    // This is NOT an error just a no data condition
+                    dataFoundForCurve = false;
+                } else {
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
-            if (d[0] === undefined) {
-                throw new error("no data returned for curve " + curves[curveIndex].label);
-            } else {
+
+            var postQueryStartMoment = moment();
+            if (dataFoundForCurve) {
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
                 xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
-            }
-            var sum = 0;
-            var count = 0;
-            for (var i = 0; i < d.length; i++) {
-                if (d[i][1] !== null) {
-                    sum = sum + d[i][1];
-                    count++;
-                    ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
-                    ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
+                var sum = 0;
+                var count = 0;
+                for (var i = 0; i < d.length; i++) {
+                    if (d[i][1] !== null) {
+                        sum = sum + d[i][1];
+                        count++;
+                        ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
+                        ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
+                    }
                 }
             }
         } else {
@@ -147,6 +162,12 @@ dataSeries = function (plotParams, plotFunction) {
         curve['axisKey'] = axisKey;
         const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
+        var postQueryFinishMoment = moment();
+        dataRequests["post data retreival (query) process time - " + curve.label] = {
+            begin: postQueryStartMoment.format(),
+            finsih: postQueryFinishMoment.format(),
+            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
+        }
     }  // end for curves
 
     //if matching
@@ -158,6 +179,12 @@ dataSeries = function (plotParams, plotFunction) {
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
     const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    var totalProecssingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProecssingStart.format(),
+        finsih: totalProecssingFinish.format(),
+        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+    }
     var result = {
         error: error,
         data: dataset,
