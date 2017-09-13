@@ -73,6 +73,7 @@ Package.onUse(function(api) {
 
   //client
   api.addFiles('imports/startup/client/curve_util.js');
+  api.addFiles('imports/startup/client/graph_util.js');
   api.addFiles('imports/startup/client/select_util.js');
   api.addFiles('imports/startup/client/index.js');
   api.addFiles('imports/startup/client/init.js');

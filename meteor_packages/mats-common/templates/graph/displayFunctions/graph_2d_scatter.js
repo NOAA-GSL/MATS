@@ -77,11 +77,15 @@ graph2dScatter = function(result) {
             for (var c = 0; c < dataset.length; c++) {
                 // find the bestfit line - if it exists
                 if (dataset[c].label && (dataset[c].label).search(label) > -1) {
-                    dataset[c].lines.show = !dataset[c].lines.show;
-                    if (dataset[c].lines.show == true) {
-                        Session.set(curveLabel + "hideButtonText", 'hide curve');
+                    if (dataset[c].data.length === 0) {
+                        Session.set(label + "hideButtonText", 'NO DATA');
                     } else {
-                        Session.set(curveLabel + "hideButtonText", 'show curve');
+                        dataset[c].lines.show = !dataset[c].lines.show;
+                        if (dataset[c].lines.show == true) {
+                            Session.set(curveLabel + "hideButtonText", 'hide curve');
+                        } else {
+                            Session.set(curveLabel + "hideButtonText", 'show curve');
+                        }
                     }
                 }
             }
@@ -154,6 +158,7 @@ graph2dScatter = function(result) {
     // draw initial plot - we do this a little funky,
     // we essentially create a range that is the size of the max data, then do what the zoom (plotSelected) would do
     // which causes the normalization of the axes.
+    matsGraphUtils.setNoDataLabels(dataset);
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     // hide the spinner

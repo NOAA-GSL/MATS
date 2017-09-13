@@ -3,6 +3,7 @@
  */
 import '../../stylesheets/app.css'
 import './curve_util.js';
+import './graph_util.js';
 import './select_util.js';
 //import '../../../lib/html2canvas.js';
 import './init.js';

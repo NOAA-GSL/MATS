@@ -22,7 +22,12 @@ const saveResultData = function(result){
     var tStamp = moment(new Date()).utc().format();
     var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
-    var link = "file:///web/static/" + graphDataDir + datFileName;
+    var link;
+    if (process.env.NODE_ENV === "development") {
+        link = "file:///web/static/" + graphDataDir + datFileName;
+    } else {
+        link =  Meteor.absoluteUrl() + "/static/" + graphDataDir + datFileName;
+    }
     var files = fs.readdirSync(publicGraphDir);
     files.sort(function(a, b) {
         return fs.statSync(publicGraphDir + a).mtime.getTime() -
@@ -608,9 +613,7 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             try {
                 global[dataFunction](params.plotParams, function (results) {
-                    if (process.env.NODE_ENV === "development") {
                         results.basis['dataLink'] = saveResultData(results);
-                    }
                     future["return"](results);
                 });
             } catch(dataFunctionError) {

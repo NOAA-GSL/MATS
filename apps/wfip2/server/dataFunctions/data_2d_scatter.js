@@ -10,6 +10,7 @@ const Future = require('fibers/future');
 data2dScatter = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {};
+    var totalProecssingStart = moment();
     var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = matsDataUtils.dateConvert(fromDateStr);
@@ -40,6 +41,7 @@ data2dScatter = function (plotParams, plotFunction) {
     var bf = [];   // used for bestFit data
 
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var dataFoundForCurve = true;
         for (axisIndex = 0; axisIndex < axisLabelList.length; axisIndex++) { // iterate the axis
             axis = axisLabelList[axisIndex].split('-')[0];
             curve = curves[curveIndex];
@@ -154,14 +156,26 @@ data2dScatter = function (plotParams, plotFunction) {
 
 
             try {
+                var startMoment = moment();
                 rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval);
+                var finishMoment = moment();
+                dataRequests["data retrieval (query) time - " +  axis + " - " + curve.label] = {
+                    begin: startMoment.format(),
+                    finsih: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                }
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
             }
             if (rawAxisData[axis].error !== undefined && rawAxisData[axis].error !== "") {
-                error += "Error from verification query: <br>" + rawAxisData[axis].error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
+                if (rawAxisData[axis].error === matsTypes.Messages.NO_DATA_FOUND) {
+                    // This is NOT an error just a no data condition
+                    dataFoundForCurve = false;
+                } else {
+                    error += "Error from verification query: <br>" + rawAxisData[axis].error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
             if (truthRequired == true) {
                 // each axis has a truth data source that is used if statistic requires it - get the right truth data source and derive the model
@@ -208,14 +222,25 @@ data2dScatter = function (plotParams, plotFunction) {
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
                 dataRequests[axis + '-truth-' + curve.label] = truthStatement;
                 try {
+                    startMoment = moment();
                     rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
+                    finishMoment = moment();
+                    dataRequests["truth data retrieveal (query) time - " + axis + " - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finsih: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds'
+                    }
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
                 }
                 if (rawAxisData[axis + '-truth'].error !== undefined && rawAxisData[axis + '-truth'].error !== "") {
-                    //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
-                    throw ( new Error(rawAxisData[axis + '-truth'].error) );
+                    if (rawAxisData[axis + '-truth'].error === matsTypes.Messages.NO_DATA_FOUND) {
+                        // This is NOT an error just a no data condition
+                        dataFoundForCurve = false;
+                    } else {
+                        throw ( new Error(rawAxisData[axis + '-truth'].error) );
+                    }
                 }
             }
         }   // for axis loop
@@ -268,95 +293,48 @@ data2dScatter = function (plotParams, plotFunction) {
          where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
          There is at least one real (non null) value for each site.
          */
+        var postQueryStartMoment = moment();
+        if (dataFoundForCurve) {
+            // used for getDatum
+            var levelCompletenessX = curve['xaxis-level-completeness'];
+            var levelCompletenessY = curve['xaxis-level-completeness'];
+            var siteCompletenessX = curve['xaxis-site-completeness'];
+            var siteCompletenessY = curve['yaxis-site-completeness'];
+            var levelBasisX = rawAxisData['xaxis'].levelsBasis;
+            var levelBasisY = rawAxisData['yaxis'].levelsBasis;
+            var siteBasisX = rawAxisData['xaxis'].sitesBasis;
+            var siteBasisY = rawAxisData['yaxis'].sitesBasis;
 
-        // used for getDatum
-        var levelCompletenessX = curve['xaxis-level-completeness'];
-        var levelCompletenessY = curve['xaxis-level-completeness'];
-        var siteCompletenessX = curve['xaxis-site-completeness'];
-        var siteCompletenessY = curve['yaxis-site-completeness'];
-        var levelBasisX = rawAxisData['xaxis'].levelsBasis;
-        var levelBasisY = rawAxisData['yaxis'].levelsBasis;
-        var siteBasisX = rawAxisData['xaxis'].sitesBasis;
-        var siteBasisY = rawAxisData['yaxis'].sitesBasis;
+            // normalize data
+            // We have to include only the entries where the times match for both x and y.
 
-        // normalize data
-        // We have to include only the entries where the times match for both x and y.
-
-        var normalizedAxisData = [];
-        var xaxisIndex = 0;
-        var yaxisIndex = 0;
-        var xaxisTimes = rawAxisData['xaxis']['allTimes'];
-        var yaxisTimes = rawAxisData['yaxis']['allTimes'];
-        var xaxisLength = xaxisTimes.length;
-        var yaxisLength = yaxisTimes.length;
+            var normalizedAxisData = [];
+            var xaxisIndex = 0;
+            var yaxisIndex = 0;
+            var xaxisTimes = rawAxisData['xaxis']['allTimes'];
+            var yaxisTimes = rawAxisData['yaxis']['allTimes'];
+            var xaxisLength = xaxisTimes.length;
+            var yaxisLength = yaxisTimes.length;
 
 
-        // synchronize datasets:
-        // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
-        var yaxisTime;
-        var xaxisTime;
-        var datum = {};
-        while (xaxisIndex < xaxisLength && yaxisIndex < yaxisLength) {
-            xaxisTime = xaxisTimes[xaxisIndex];
-            yaxisTime = yaxisTimes[yaxisIndex];
-            var tooltipText;
-            var rawXSites;
-            var filteredXSites;
-            var rawYSites;
-            var filteredYSites;
-            var time;
-            var seconds;
-            var xValue;
-            var yValue;
-            if (xaxisTime === yaxisTime) {
-                if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
-                    datum = matsWfipUtils.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
-                        levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic);
-                    xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
-                    xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
-                    yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
-                    yAxisMin = datum['yaxis-value'] < yAxisMin ? datum['yaxis-value'] : yAxisMin;
-
-                    rawXSites = datum['xaxis-sites'];
-                    filteredXSites = datum['xaxis-filteredSites'];
-                    rawYSites = datum['yaxis-sites'];
-                    filteredYSites = datum['yaxis-filteredSites'];
-                    time = new Date(Number(xaxisTime)).toUTCString();
-                    seconds = xaxisTime / 1000;
-                    xValue = datum['xaxis-value'];
-                    yValue = datum['yaxis-value'];
-                    if (xValue == null || yValue == null) {
-                        xaxisIndex++;
-                        yaxisIndex++;
-                        continue;
-                    }
-                    tooltipText = label +
-                        "<br>seconds" + seconds +
-                        "<br>time:" + time +
-                        "<br> xvalue:" + xValue.toPrecision(4) +
-                        "<br> yvalue:" + yValue.toPrecision(4);
-                    normalizedAxisData.push([xValue, yValue, {
-                        'time-utc': time,
-                        seconds: seconds,
-                        rawXSites: rawXSites,
-                        filteredXSites: filteredXSites,
-                        rawYSites: rawYSites,
-                        filteredYSites: filteredYSites
-                    }, tooltipText]);
-                }
-            } else {
-                // skip up x if necessary
-                while (xaxisTime < yaxisTime && xaxisIndex < xaxisLength) {
-                    xaxisIndex++;
-                    xaxisTime = xaxisTimes[xaxisIndex];
-                }
-                // skip up y if necessary
-                while (yaxisTime < xaxisTime && yaxisIndex < yaxisLength) {
-                    yaxisIndex++;
-                    yaxisTime = yaxisTimes[yaxisIndex];
-                }
-                // push if equal
-                if (xaxisTime === yaxisTime && xaxisTime !== null && xaxisTime != undefined) {
+            // synchronize datasets:
+            // Only push to normalized data if there exists a time for both axis. Skip up until that happens.
+            var yaxisTime;
+            var xaxisTime;
+            var datum = {};
+            while (xaxisIndex < xaxisLength && yaxisIndex < yaxisLength) {
+                xaxisTime = xaxisTimes[xaxisIndex];
+                yaxisTime = yaxisTimes[yaxisIndex];
+                var tooltipText;
+                var rawXSites;
+                var filteredXSites;
+                var rawYSites;
+                var filteredYSites;
+                var time;
+                var seconds;
+                var xValue;
+                var yValue;
+                if (xaxisTime === yaxisTime) {
                     if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
                         datum = matsWfipUtils.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                             levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic);
@@ -364,6 +342,7 @@ data2dScatter = function (plotParams, plotFunction) {
                         xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
                         yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
                         yAxisMin = datum['yaxis-value'] < yAxisMin ? datum['yaxis-value'] : yAxisMin;
+
                         rawXSites = datum['xaxis-sites'];
                         filteredXSites = datum['xaxis-filteredSites'];
                         rawYSites = datum['yaxis-sites'];
@@ -372,66 +351,120 @@ data2dScatter = function (plotParams, plotFunction) {
                         seconds = xaxisTime / 1000;
                         xValue = datum['xaxis-value'];
                         yValue = datum['yaxis-value'];
+                        if (xValue == null || yValue == null) {
+                            xaxisIndex++;
+                            yaxisIndex++;
+                            continue;
+                        }
                         tooltipText = label +
                             "<br>seconds" + seconds +
                             "<br>time:" + time +
-                            "<br> xvalue:" + xValue +
-                            "<br> yvalue:" + yValue;
+                            "<br> xvalue:" + xValue.toPrecision(4) +
+                            "<br> yvalue:" + yValue.toPrecision(4);
                         normalizedAxisData.push([xValue, yValue, {
                             'time-utc': time,
                             seconds: seconds,
-                            xValue: xValue,
-                            yValue: yValue,
                             rawXSites: rawXSites,
                             filteredXSites: filteredXSites,
                             rawYSites: rawYSites,
                             filteredYSites: filteredYSites
                         }, tooltipText]);
                     }
+                } else {
+                    // skip up x if necessary
+                    while (xaxisTime < yaxisTime && xaxisIndex < xaxisLength) {
+                        xaxisIndex++;
+                        xaxisTime = xaxisTimes[xaxisIndex];
+                    }
+                    // skip up y if necessary
+                    while (yaxisTime < xaxisTime && yaxisIndex < yaxisLength) {
+                        yaxisIndex++;
+                        yaxisTime = yaxisTimes[yaxisIndex];
+                    }
+                    // push if equal
+                    if (xaxisTime === yaxisTime && xaxisTime !== null && xaxisTime != undefined) {
+                        if (rawAxisData['xaxis']['data'][xaxisTime] !== null && rawAxisData['yaxis']['data'][yaxisTime] !== null) {
+                            datum = matsWfipUtils.getDatum(rawAxisData, xaxisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
+                                levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic);
+                            xAxisMax = datum['xaxis-value'] > xAxisMax ? datum['xaxis-value'] : xAxisMax;
+                            xAxisMin = datum['xaxis-value'] < xAxisMin ? datum['xaxis-value'] : xAxisMin;
+                            yAxisMax = datum['yaxis-value'] > yAxisMax ? datum['yaxis-value'] : yAxisMax;
+                            yAxisMin = datum['yaxis-value'] < yAxisMin ? datum['yaxis-value'] : yAxisMin;
+                            rawXSites = datum['xaxis-sites'];
+                            filteredXSites = datum['xaxis-filteredSites'];
+                            rawYSites = datum['yaxis-sites'];
+                            filteredYSites = datum['yaxis-filteredSites'];
+                            time = new Date(Number(xaxisTime)).toUTCString();
+                            seconds = xaxisTime / 1000;
+                            xValue = datum['xaxis-value'];
+                            yValue = datum['yaxis-value'];
+                            tooltipText = label +
+                                "<br>seconds" + seconds +
+                                "<br>time:" + time +
+                                "<br> xvalue:" + xValue +
+                                "<br> yvalue:" + yValue;
+                            normalizedAxisData.push([xValue, yValue, {
+                                'time-utc': time,
+                                seconds: seconds,
+                                xValue: xValue,
+                                yValue: yValue,
+                                rawXSites: rawXSites,
+                                filteredXSites: filteredXSites,
+                                rawYSites: rawYSites,
+                                filteredYSites: filteredYSites
+                            }, tooltipText]);
+                        }
+                    }
                 }
+                xaxisIndex++;
+                yaxisIndex++;
             }
-            xaxisIndex++;
-            yaxisIndex++;
-        }
-        if ( normalizedAxisData.length == 0 ) {
-            throw new Error( "INFO:No coincident data found" );
-        }
-        normalizedAxisData.sort(matsDataUtils.sortFunction);
+            if (normalizedAxisData.length == 0) {
+                throw new Error("INFO:No coincident data found");
+            }
+            normalizedAxisData.sort(matsDataUtils.sortFunction);
 
-        var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
-        var options;
+            var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
+            var options;
 
-        // sort these by x axis
-        options = {
-            yaxis: curveIndex + 1,
-            label: label,
-            color: color,
-            data: normalizedAxisData,
-            points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
-            lines: {show: false},
-            annotation: label + ": statistic: " + statistic
-        };
-        dataset.push(options);
-
-        if (curve['Fit-Type'] && curve['Fit-Type'] !== matsTypes.BestFits.none) {
-            var regressionResult = regression(curve['Fit-Type'], normalizedAxisData);
-            var regressionData = regressionResult.points;
-            regressionData.sort(matsDataUtils.sortFunction);
-
-            var regressionEquation = regressionResult.string;
-            var bfOptions = {
-                yaxis: options.yaxis,
-                label: options.label + "-best fit " + curve['Fit-Type'],
-                color: options.color,
-                data: regressionData,
-                points: {symbol: options.points.symbol, fillColor: color, show: false, radius: 1},
-                lines: {
-                    show: true,
-                    fill: false
-                },
-                annotation: options.label + " - Best Fit: " + curve['Fit-Type'] + " fn: " + regressionEquation
+            // sort these by x axis
+            options = {
+                yaxis: curveIndex + 1,
+                label: label,
+                color: color,
+                data: normalizedAxisData,
+                points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
+                lines: {show: false},
+                annotation: label + ": statistic: " + statistic
             };
-            bf.push(bfOptions);
+            dataset.push(options);
+
+            if (curve['Fit-Type'] && curve['Fit-Type'] !== matsTypes.BestFits.none) {
+                var regressionResult = regression(curve['Fit-Type'], normalizedAxisData);
+                var regressionData = regressionResult.points;
+                regressionData.sort(matsDataUtils.sortFunction);
+
+                var regressionEquation = regressionResult.string;
+                var bfOptions = {
+                    yaxis: options.yaxis,
+                    label: options.label + "-best fit " + curve['Fit-Type'],
+                    color: options.color,
+                    data: regressionData,
+                    points: {symbol: options.points.symbol, fillColor: color, show: false, radius: 1},
+                    lines: {
+                        show: true,
+                        fill: false
+                    },
+                    annotation: options.label + " - Best Fit: " + curve['Fit-Type'] + " fn: " + regressionEquation
+                };
+                bf.push(bfOptions);
+            }
+        } //dataFoundForCurve
+        var postQueryFinishMoment = moment();
+        dataRequests["post data retreival (query) process time - " + curve.label] = {
+            begin: postQueryStartMoment.format(),
+            finsih: postQueryFinishMoment.format(),
+            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
         }
     } // end for curves
 
@@ -549,6 +582,12 @@ data2dScatter = function (plotParams, plotFunction) {
     };
 
     dataset = dataset.concat(bf);
+    var totalProecssingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProecssingStart.format(),
+        finsih: totalProecssingFinish.format(),
+        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+    }
     var result = {
         error: error,
         data: dataset,

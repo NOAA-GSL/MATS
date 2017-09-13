@@ -6,7 +6,8 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 dataSeries = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
-    var dataRequests = {}; // used to store data queries
+    var dataRequests = {}; // used to store data queries and query times
+    var totalProecssingStart = moment();
     var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = matsDataUtils.dateConvert(fromDateStr);
@@ -141,7 +142,7 @@ dataSeries = function (plotParams, plotFunction) {
                 statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
-                    " and cycle_utc = " + validFirstCycleUtc ;
+                    " and cycle_utc = " + validFirstCycleUtc;
             } else {
                 const utcOffset = Number(forecastLength * 3600);
                 if (dataSource_is_instrument) {
@@ -165,8 +166,8 @@ dataSeries = function (plotParams, plotFunction) {
                      and sites_siteid in (4)
                      */
                     if (validTimes.length > 0) {
-                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 )) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 )) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                     }
 
                     if (dataSource_is_json) {
@@ -190,33 +191,41 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     if (validTimes.length > 0) {
                         validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                     }
                     statement = "select cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate)  + utcOffset) +
-                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate)  + utcOffset);
+                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                 }
             }
 
 
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
-            console.log("statement: " + statement);
+            //console.log("statement: " + statement);
             dataRequests[curve.label] = statement;
             var queryResult;
+            var startMoment;
+            var finishMoment;
             try {
                 // queryWFIP2DB has embedded quality control for windDir
                 // if corresponding windSpeed < 3ms null the windDir
+                startMoment = moment();
                 queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval);
+                finishMoment = moment();
+                dataRequests["data retrieval (query) time - " + curve.label] = {
+                    begin: startMoment.format(),
+                    finsih: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                }
             } catch (e) {
                 e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + statement;
                 throw e;
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-                    // what to do? what to do?
-                    error = "DataSource - " + matsTypes.Messages.NO_DATA_FOUND;
+                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                    // This is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
@@ -238,8 +247,8 @@ dataSeries = function (plotParams, plotFunction) {
                 const utcOffset = Number(forecastLength * 3600);
                 if (truthDataSource_is_instrument) {
                     if (validTimes.length > 0) {
-                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000  + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                     }
                     if (truthDataSource_is_json) {
                         truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
@@ -259,30 +268,35 @@ dataSeries = function (plotParams, plotFunction) {
                 } else {
                     if (validTimes.length > 0) {
                         validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes,validTimes);
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                     }
                     truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate)  + utcOffset) +
-                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate)  + utcOffset) + " order by avtime";
+                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
+                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset) + " order by avtime";
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
-                console.log("statement: " + truthStatement);
+                //console.log("statement: " + truthStatement);
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
+                    startMoment = momet();
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
+                    finishMoment = moment();
+                    dataRequests["truth data retrieveal (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finsih: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds'
+                    }
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
                 }
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-                        error = "TruthDataSource - " + matsTypes.Messages.NO_DATA_FOUND;
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                        // This is NOT an error just a no data condition
                         dataFoundForCurve = false;
-                        // what to do? what to do?
                     } else {
-                        //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
                         throw ( new Error(truthQueryResult.error) );
                     }
                 }
@@ -339,280 +353,284 @@ dataSeries = function (plotParams, plotFunction) {
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
              */
-
-            var levelCompleteness = curve['level-completeness'];
-            var siteCompleteness = curve['site-completeness'];
-            const levelBasis = queryResult.levelsBasis;
-            const siteBasis = queryResult.sitesBasis;
-            var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
-                return a[0] - b[0]
-            });
-            //var normalizedData = verificationData.map(function (timeObjPair) {
-            // we need to go through all the time objects of both the actual and the truth data series
-            // and skip any where there isn't a corresponding time.
-            // we make our calculations where there are corresponding times.
-            var valMaxIndex = verificationData.length;
-            var valIndex = 0;
-            var valTime = verificationData[0][0];
             var normalizedData = [];
-            // deal with the truth - you can't handle the truth! (if statistic is mean)
-            var truthData = [];
-            var truthMaxIndex = valMaxIndex;
-            var truthTime = valTime;
-            var truthIndex = 0; // just make the truth indexing not matter - if statistic is mean
-            if (statistic != "mean") {
-                truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+            var postQueryStartMoment = moment();
+            if (dataFoundForCurve) {
+                var levelCompleteness = curve['level-completeness'];
+                var siteCompleteness = curve['site-completeness'];
+                const levelBasis = queryResult.levelsBasis;
+                const siteBasis = queryResult.sitesBasis;
+                var verificationData = _.pairs(queryResult.data).sort(function (a, b) {
                     return a[0] - b[0]
                 });
-                truthMaxIndex = truthData.length - 1;
-                truthTime = verificationData[0][0];
-            }
-            while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
-                // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
+                //var normalizedData = verificationData.map(function (timeObjPair) {
+                // we need to go through all the time objects of both the actual and the truth data series
+                // and skip any where there isn't a corresponding time.
+                // we make our calculations where there are corresponding times.
+                var valMaxIndex = verificationData.length;
+                var valIndex = 0;
+                var valTime = verificationData[0][0];
+
+                // deal with the truth - you can't handle the truth! (if statistic is mean)
+                var truthData = [];
+                var truthMaxIndex = valMaxIndex;
+                var truthTime = valTime;
+                var truthIndex = 0; // just make the truth indexing not matter - if statistic is mean
                 if (statistic != "mean") {
-                    truthTime = truthData[truthIndex][0];
+                    truthData = _.pairs(truthQueryResult.data).sort(function (a, b) {
+                        return a[0] - b[0]
+                    });
+                    truthMaxIndex = truthData.length - 1;
+                    truthTime = verificationData[0][0];
                 }
-                valTime = verificationData[valIndex][0];
-                if (valTime < truthTime) {
-                    valIndex++;
-                    continue;
-                } else if (statistic != "mean" && truthTime < valTime) {
-                    truthIndex++;
-                    continue;
-                } else {
-                    //times are now equal we can calculate the value for this time
-                    value = null;
-                    var time = verificationData[valIndex][0];
-                    var timeValid = validTimes.length === 0;
-                    for (vt = 0; vt < validTimes.length; vt++) {
-                        //console.log((time / 3600000) % Number(validTimes[vt]));
-                        if ((time / 3600000) % Number(validTimes[vt]) === 0) {
-                             timeValid = true;
-                        };
-                    }
-                    if (!timeValid) {
-                        valIndex++;
-                        continue;
-                    }
-                    var timeObj = verificationData[valIndex][1];
-                    var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
-                    xAxisMin = time < xAxisMin ? time : xAxisMin;
-                    xAxisMax = time > xAxisMax ? time : xAxisMax;
-                    if (!timeObj) {
-                        var seconds = time / 1000;
-                        tooltip = label +
-                            "<br>seconds: " + seconds +
-                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
-                            "<br> statistic: " + statistic +
-                            "<br> value:" + null;
-                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
-                        valIndex++;
-                        continue;
-                    }
-                    if (statistic != "mean" && !truthTimeObj) {
-                        var seconds = time / 1000;
-                        tooltip = label +
-                            "<br>seconds: " + seconds +
-                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
-                            "<br> statistic: " + statistic +
-                            "<br> value:" + null;
-                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
-                        if (statistic != "mean") {
-                            truthIndex++;
-                        }
-                        continue;
-                    }
-                    var valSites = Object.keys(timeObj.sites).map(Number).sort();
-                    var truthSites = statistic == "mean" ? [] : Object.keys(truthTimeObj.sites).map(Number).sort();
-                    var sites = statistic == "mean" ? valSites : _.intersection(valSites, truthSites);
-                    var sitesLength = sites.length;
-                    var includedSites = _.intersection(sites, siteBasis);
-                    var sitesQuality = (includedSites.length / siteBasis.length) * 100;
-                    if (sitesQuality < siteCompleteness) {
-                        //throw this time away, it doesn't have enough sites
-                        var seconds = time / 1000;
-                        tooltip = label +
-                            "<br>seconds: " + seconds +
-                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
-                            "<br> statistic: " + statistic +
-                            "<br> value:" + null;
-                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
-                        valIndex++;
-                        if (statistic != "mean") {
-                            truthIndex++;
-                        }
-                        continue;
-                    }
-
-                    var siteLevelNum = 0; // the total number of entries, values for all the qualified levels, for all the qualified sites
-                    var siteLevelSum = 0; // the total sum of all the entries (values) for all the  qualified levels for all the qualified sites
-                    var siteLevelBiasSum = 0; //  the total sum of all the bias's for all the qualified levels for all the qualified sites
-                    var siteLevelBiasNum = 0; // the total number of bias values for all the qualified levels in all the qualified sites
-                                              // (some experiment entries may not have had a corresponding truth entry so the  siteLevelBiasNum
-                                              // might not be the same as the siteLevelNum)
-
+                while (truthIndex < truthMaxIndex && valIndex < valMaxIndex) {
+                    // each timeObj is of the form [time,{sites:{...},timeMean:mean,timeLevels:[],....]
                     if (statistic != "mean") {
-                        timeObj.timeLevels = [];
+                        truthTime = truthData[truthIndex][0];
                     }
-
-                    for (var si = 0; si < sitesLength; si++) {
-                        var valSLevels = timeObj.sites[sites[si]].levels;
-                        var sValues = timeObj.sites[sites[si]].values;
-                        var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].levels;
-                        var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels, truthSLevels);
-                        var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].values;
-                        var includedLevels = _.intersection(sLevels, levelBasis);
-                        var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
-                        if (levelsQuality > levelCompleteness) {
-                            // here we make the various calculations
-                            // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
-                            // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
-
-                            timeObj.sites[sites[si]].levels = [];
-                            if (statistic !== "mean") {
-                                timeObj.sites[sites[si]].values = [];
+                    valTime = verificationData[valIndex][0];
+                    if (valTime < truthTime) {
+                        valIndex++;
+                        continue;
+                    } else if (statistic != "mean" && truthTime < valTime) {
+                        truthIndex++;
+                        continue;
+                    } else {
+                        //times are now equal we can calculate the value for this time
+                        value = null;
+                        var time = verificationData[valIndex][0];
+                        var timeValid = validTimes.length === 0;
+                        for (vt = 0; vt < validTimes.length; vt++) {
+                            //console.log((time / 3600000) % Number(validTimes[vt]));
+                            if ((time / 3600000) % Number(validTimes[vt]) === 0) {
+                                timeValid = true;
                             }
-                            for (var li = 0; li < sLevels.length; li++) {
-                                var siteLevelValue = sValues[li];
-                                var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
-                                var biasValue;
-                                switch (statistic) {
-                                    case "bias":
-                                    case "mae":
-                                        // bias and mae are almost the same.... mae just absolutes the difference
-                                        // find siteLevelBias and sum it in
-                                        biasValue = null;
-                                        try {
-                                            biasValue = siteLevelValue - truthSiteLevelValue;
-                                            if (windVar) {
-                                                if (biasValue > 180) {
-                                                    biasValue = biasValue - 360;
-                                                } else if (biasValue < -180) {
-                                                    biasValue = biasValue + 360;
-                                                }
-                                                if (statistic == "mae") {
-                                                    biasValue = Math.abs(biasValue);
-                                                }
-                                            } else {
-                                                if (statistic == "mae") {
-                                                    // have to do this for all the sites and levels in underlying verif data and truth data
-                                                    biasValue = Math.abs(biasValue);
-                                                }
-                                            }
-                                            siteLevelBiasSum += biasValue;
-                                            siteLevelBiasNum++;
-                                            timeObj.sites[sites[si]].values[li] = biasValue;
-
-                                        } catch (nodata) {
-                                            // apparently there is no data in the truth curve that matches this time
-                                            biasValue = null;
-                                            timeObj.sites[sites[si]].values[li] = biasValue;
-                                        }
-                                        break;
-                                    case "rmse":
-                                        biasValue = null;
-                                        try {
-                                            biasValue = Number(siteLevelValue - truthSiteLevelValue);
-                                            if (windVar) {
-                                                if (biasValue > 180) {
-                                                    biasValue = biasValue - 360;
-                                                } else if (biasValue < -180) {
-                                                    biasValue = biasValue + 360;
-                                                }
-                                            }
-                                            biasValue = Math.pow(biasValue, 2);  // square the difference
-                                            siteLevelBiasSum += biasValue;
-                                            siteLevelBiasNum++;
-                                            timeObj.sites[sites[si]].values[li] = biasValue;
-                                        } catch (nodata) {
-                                            // apparently there is no data in the truth curve that matches this time
-                                            biasValue = null;
-                                            timeObj.sites[sites[si]].values[li] = biasValue;
-                                        }
-                                        break;
-                                    case "mean":
-                                    default:
-                                        try {
-                                            siteLevelSum += siteLevelValue;
-                                            siteLevelNum++;
-                                        } catch (ignore) {
-                                        }
-                                        break;
-                                }
-                                timeObj.sites[sites[si]].levels[li] = sLevels[li];
-                            }
-                        } // else don't count it in - skip over it, it isn't complete enough
-                        // remove mean oriented statistics
-                        if (statistic != 'mean') {
-                            timeObj.sites[sites[si]].mean = null;
-                            timeObj.sites[sites[si]].min = null;
-                            timeObj.sites[sites[si]].max = null;
-                            timeObj.sites[sites[si]].sum = null;
-                            timeObj.sites[sites[si]].numLevels = sLevels.length;
-                            timeObj.timeLevels = _.union(timeObj.timeLevels,timeObj.sites[sites[si]].levels);
+                            ;
                         }
-                    }
-                    // we set bad numbers to null
-                    var value;
-                    switch (statistic) {
-                        case "bias":
-                        case "mae":
-                            var siteBias = null;
-                            try {
-                                siteBias = siteLevelBiasSum / siteLevelBiasNum;
+                        if (!timeValid) {
+                            valIndex++;
+                            continue;
+                        }
+                        var timeObj = verificationData[valIndex][1];
+                        var truthTimeObj = statistic == "mean" ? null : truthData[truthIndex][1];
+                        xAxisMin = time < xAxisMin ? time : xAxisMin;
+                        xAxisMax = time > xAxisMax ? time : xAxisMax;
+                        if (!timeObj) {
+                            var seconds = time / 1000;
+                            tooltip = label +
+                                "<br>seconds: " + seconds +
+                                "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                                "<br> statistic: " + statistic +
+                                "<br> value:" + null;
+                            normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                            valIndex++;
+                            continue;
+                        }
+                        if (statistic != "mean" && !truthTimeObj) {
+                            var seconds = time / 1000;
+                            tooltip = label +
+                                "<br>seconds: " + seconds +
+                                "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                                "<br> statistic: " + statistic +
+                                "<br> value:" + null;
+                            normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                            if (statistic != "mean") {
+                                truthIndex++;
+                            }
+                            continue;
+                        }
+                        var valSites = Object.keys(timeObj.sites).map(Number).sort();
+                        var truthSites = statistic == "mean" ? [] : Object.keys(truthTimeObj.sites).map(Number).sort();
+                        var sites = statistic == "mean" ? valSites : _.intersection(valSites, truthSites);
+                        var sitesLength = sites.length;
+                        var includedSites = _.intersection(sites, siteBasis);
+                        var sitesQuality = (includedSites.length / siteBasis.length) * 100;
+                        if (sitesQuality < siteCompleteness) {
+                            //throw this time away, it doesn't have enough sites
+                            var seconds = time / 1000;
+                            tooltip = label +
+                                "<br>seconds: " + seconds +
+                                "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                                "<br> statistic: " + statistic +
+                                "<br> value:" + null;
+                            normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                            valIndex++;
+                            if (statistic != "mean") {
+                                truthIndex++;
+                            }
+                            continue;
+                        }
 
-                                if (isNaN(siteBias)) {
+                        var siteLevelNum = 0; // the total number of entries, values for all the qualified levels, for all the qualified sites
+                        var siteLevelSum = 0; // the total sum of all the entries (values) for all the  qualified levels for all the qualified sites
+                        var siteLevelBiasSum = 0; //  the total sum of all the bias's for all the qualified levels for all the qualified sites
+                        var siteLevelBiasNum = 0; // the total number of bias values for all the qualified levels in all the qualified sites
+                                                  // (some experiment entries may not have had a corresponding truth entry so the  siteLevelBiasNum
+                                                  // might not be the same as the siteLevelNum)
+
+                        if (statistic != "mean") {
+                            timeObj.timeLevels = [];
+                        }
+
+                        for (var si = 0; si < sitesLength; si++) {
+                            var valSLevels = timeObj.sites[sites[si]].levels;
+                            var sValues = timeObj.sites[sites[si]].values;
+                            var truthSLevels = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].levels;
+                            var sLevels = statistic == "mean" ? valSLevels : _.intersection(valSLevels, truthSLevels);
+                            var truthSValues = statistic == "mean" ? [] : truthTimeObj.sites[sites[si]].values;
+                            var includedLevels = _.intersection(sLevels, levelBasis);
+                            var levelsQuality = (includedLevels.length / levelBasis.length) * 100;
+                            if (levelsQuality > levelCompleteness) {
+                                // here we make the various calculations
+                                // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
+                                // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
+
+                                timeObj.sites[sites[si]].levels = [];
+                                if (statistic !== "mean") {
+                                    timeObj.sites[sites[si]].values = [];
+                                }
+                                for (var li = 0; li < sLevels.length; li++) {
+                                    var siteLevelValue = sValues[li];
+                                    var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
+                                    var biasValue;
+                                    switch (statistic) {
+                                        case "bias":
+                                        case "mae":
+                                            // bias and mae are almost the same.... mae just absolutes the difference
+                                            // find siteLevelBias and sum it in
+                                            biasValue = null;
+                                            try {
+                                                biasValue = siteLevelValue - truthSiteLevelValue;
+                                                if (windVar) {
+                                                    if (biasValue > 180) {
+                                                        biasValue = biasValue - 360;
+                                                    } else if (biasValue < -180) {
+                                                        biasValue = biasValue + 360;
+                                                    }
+                                                    if (statistic == "mae") {
+                                                        biasValue = Math.abs(biasValue);
+                                                    }
+                                                } else {
+                                                    if (statistic == "mae") {
+                                                        // have to do this for all the sites and levels in underlying verif data and truth data
+                                                        biasValue = Math.abs(biasValue);
+                                                    }
+                                                }
+                                                siteLevelBiasSum += biasValue;
+                                                siteLevelBiasNum++;
+                                                timeObj.sites[sites[si]].values[li] = biasValue;
+
+                                            } catch (nodata) {
+                                                // apparently there is no data in the truth curve that matches this time
+                                                biasValue = null;
+                                                timeObj.sites[sites[si]].values[li] = biasValue;
+                                            }
+                                            break;
+                                        case "rmse":
+                                            biasValue = null;
+                                            try {
+                                                biasValue = Number(siteLevelValue - truthSiteLevelValue);
+                                                if (windVar) {
+                                                    if (biasValue > 180) {
+                                                        biasValue = biasValue - 360;
+                                                    } else if (biasValue < -180) {
+                                                        biasValue = biasValue + 360;
+                                                    }
+                                                }
+                                                biasValue = Math.pow(biasValue, 2);  // square the difference
+                                                siteLevelBiasSum += biasValue;
+                                                siteLevelBiasNum++;
+                                                timeObj.sites[sites[si]].values[li] = biasValue;
+                                            } catch (nodata) {
+                                                // apparently there is no data in the truth curve that matches this time
+                                                biasValue = null;
+                                                timeObj.sites[sites[si]].values[li] = biasValue;
+                                            }
+                                            break;
+                                        case "mean":
+                                        default:
+                                            try {
+                                                siteLevelSum += siteLevelValue;
+                                                siteLevelNum++;
+                                            } catch (ignore) {
+                                            }
+                                            break;
+                                    }
+                                    timeObj.sites[sites[si]].levels[li] = sLevels[li];
+                                }
+                            } // else don't count it in - skip over it, it isn't complete enough
+                            // remove mean oriented statistics
+                            if (statistic != 'mean') {
+                                timeObj.sites[sites[si]].mean = null;
+                                timeObj.sites[sites[si]].min = null;
+                                timeObj.sites[sites[si]].max = null;
+                                timeObj.sites[sites[si]].sum = null;
+                                timeObj.sites[sites[si]].numLevels = sLevels.length;
+                                timeObj.timeLevels = _.union(timeObj.timeLevels, timeObj.sites[sites[si]].levels);
+                            }
+                        }
+                        // we set bad numbers to null
+                        var value;
+                        switch (statistic) {
+                            case "bias":
+                            case "mae":
+                                var siteBias = null;
+                                try {
+                                    siteBias = siteLevelBiasSum / siteLevelBiasNum;
+
+                                    if (isNaN(siteBias)) {
+                                        siteBias = null;
+                                    }
+                                } catch (bad) {
                                     siteBias = null;
                                 }
-                            } catch (bad) {
-                                siteBias = null;
-                            }
-                            value = siteBias;
-                            break;
-                        case "rmse":
-                            var siteMse = null;
-                            try {
-                                siteMse = Math.sqrt(siteLevelBiasSum / siteLevelBiasNum);
-                                if (isNaN(siteMse)) {
+                                value = siteBias;
+                                break;
+                            case "rmse":
+                                var siteMse = null;
+                                try {
+                                    siteMse = Math.sqrt(siteLevelBiasSum / siteLevelBiasNum);
+                                    if (isNaN(siteMse)) {
+                                        siteMse = null;
+                                    }
+                                } catch (bad) {
                                     siteMse = null;
                                 }
-                            } catch (bad) {
-                                siteMse = null;
-                            }
-                            value = siteMse;
-                            break;
-                        case "mean":
-                        default:
-                            try {
-                                var siteMean = siteLevelSum / siteLevelNum;
-                                if (isNaN(siteMean)) {
+                                value = siteMse;
+                                break;
+                            case "mean":
+                            default:
+                                try {
+                                    var siteMean = siteLevelSum / siteLevelNum;
+                                    if (isNaN(siteMean)) {
+                                        siteMean = null;
+                                    }
+                                } catch (bad) {
                                     siteMean = null;
                                 }
-                            } catch (bad) {
-                                siteMean = null;
-                            }
-                            value = siteMean;
-                            break;
+                                value = siteMean;
+                                break;
+                        }
+                        yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
+                        yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
+                        var seconds = time / 1000;
+                        tooltip = label +
+                            "<br>seconds: " + seconds +
+                            "<br>time: " + new Date(Number(valTime)).toUTCString() +
+                            "<br> statistic: " + statistic +
+                            "<br> value:" + value;
+                        count++;
+                        sum += value;
+                        timeObj.timeMean = sum / count;
+                        normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
                     }
-                    yAxisMins[curveIndex] = value < yAxisMins[curveIndex] ? value : yAxisMins[curveIndex];
-                    yAxisMaxes[curveIndex] = value > yAxisMaxes[curveIndex] ? value : yAxisMaxes[curveIndex];
-                    var seconds = time / 1000;
-                    tooltip = label +
-                        "<br>seconds: " + seconds +
-                        "<br>time: " + new Date(Number(valTime)).toUTCString() +
-                        "<br> statistic: " + statistic +
-                        "<br> value:" + value;
-                    count++;
-                    sum += value;
-                    timeObj.timeMean = sum / count;
-                    normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                    if (statistic != "mean") {
+                        truthIndex++;
+                    }
+                    valIndex++;
                 }
-                if (statistic != "mean") {
-                    truthIndex++;
-                }
-                valIndex++;
+                average = sum / count;
             }
-            average = sum / count;
         } else {   // this is a difference curve... we have to use the maximum valid interval
             var minuendIndex = 0;
             var subtrahendIndex = 0; // base curve
@@ -689,6 +707,12 @@ dataSeries = function (plotParams, plotFunction) {
             annotation: label + "- mean = " + average.toPrecision(4)
         };
         dataset.push(options);
+        var postQueryFinishMoment = moment();
+        dataRequests["post data retreival (query) process time - " + curve.label] = {
+            begin: postQueryStartMoment.format(),
+            finsih: postQueryFinishMoment.format(),
+            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
+        }
     }  // end for curves
 
     // matching
@@ -850,7 +874,9 @@ dataSeries = function (plotParams, plotFunction) {
                                     Object.keys(dataElement.sites).forEach(function (siteId) {
                                         var site = dataElement.sites[siteId];
                                         // wierd javascript exuse for Math.sum .....
-                                        timeSum = (site.values).reduce(function(a,b){return a + b; },0);
+                                        timeSum = (site.values).reduce(function (a, b) {
+                                            return a + b;
+                                        }, 0);
                                         sitesValueNum += site.numLevels;
                                         for (var li = 0; li < site.levels.length; li++) {
                                             if (timeLevels.indexOf(site.levels[li]) === -1) {
@@ -941,7 +967,8 @@ dataSeries = function (plotParams, plotFunction) {
                     if (matchedValidTimes.indexOf((time / 3600000) % 24) !== -1) {
                         // We will add a null if it is a time that satisfies the VALID UTC HOR (matchedValidTimes) criteria - otherwise no data entry at all
                         newDataSet[sci].data.push([time, null]);
-                    };
+                    }
+                    ;
                 }
             }
             time = Number(time) + Number(maxValidInterval);
@@ -1106,6 +1133,13 @@ dataSeries = function (plotParams, plotFunction) {
         points: {show: false},
         data: [[xAxisMin, 0, "zero"], [xAxisMax, 0, "zero"]]
     });
+
+    var totalProecssingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProecssingStart.format(),
+        finsih: totalProecssingFinish.format(),
+        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+    }
 
     var result = {
         error: error,
