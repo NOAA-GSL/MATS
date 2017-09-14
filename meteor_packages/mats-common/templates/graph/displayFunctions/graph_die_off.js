@@ -59,26 +59,29 @@ graphDieOff = function(result) {
             event.preventDefault();
             const id = event.target.id;
             const label = id.replace('-curve-errorbars','');
-            const color = event.target.style.backgroundColor;
             for (var c = 0; c < dataset.length; c++) {
-                if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
-                    // save the errorbars
-                    if (errorbars === undefined) {
-                        errorbars = [];
-                    }
-                    if (errorbars[c] === undefined) {
-                        errorbars[c] = dataset[c].points.errorbars;
-                        Session.set('errorbars', errorbars);
-                    }
-                    if (dataset[c].points.errorbars == undefined) {
-                        dataset[c].points.errorbars = errorbars[c];
+                if (dataset[c].curveId == label) {
+                    if (dataset[c].data.length === 0) {
+                        Session.set(label + "errorBarButtonText", 'NO DATA');
                     } else {
-                        dataset[c].points.errorbars = undefined;
-                    }
-                    if (dataset[c].points.errorbars !== undefined) {
-                        Session.set(label + "errorBarButtonText", 'no error bars');
-                    } else {
-                        Session.set(label + "errorBarButtonText", 'error bars');
+                        // save the errorbars
+                        if (errorbars === undefined) {
+                            errorbars = [];
+                        }
+                        if (errorbars[c] === undefined) {
+                            errorbars[c] = dataset[c].points.errorbars;
+                            Session.set('errorbars', errorbars);
+                        }
+                        if (dataset[c].points.errorbars == undefined) {
+                            dataset[c].points.errorbars = errorbars[c];
+                        } else {
+                            dataset[c].points.errorbars = undefined;
+                        }
+                        if (dataset[c].points.errorbars !== undefined) {
+                            Session.set(label + "errorBarButtonText", 'hide error bars');
+                        } else {
+                            Session.set(label + "errorBarButtonText", 'show error bars');
+                        }
                     }
                 }
             }
@@ -88,34 +91,25 @@ graphDieOff = function(result) {
         // add show/hide buttons
         $( "input[id$='-curve-show-hide']" ).click(function (event) {
             event.preventDefault();
-            const id = event.target.id;
-            const label = id.replace('-curve-show-hide','');
-            const color = event.target.style.backgroundColor;
+            var id = event.target.id;
+            var label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
-                // save the errorbars
-                // if (errorbars === undefined) {
-                //     errorbars = [];
-                // }
-                // if (errorbars[c] === undefined) {
-                //     errorbars[c] = dataset[c].points.errorbars;
-                //     Session.set('errorbars', errorbars);
-                // }
-                if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
-                    if (dataset[c].lines.show == dataset[c].points.show) {
-                        dataset[c].points.show = !dataset[c].points.show;
-                    }
-                    dataset[c].lines.show = !dataset[c].lines.show;
-                    // if (dataset[c].points.show) {
-                    //     dataset[c].points.errorbars = errorbars[c];
-                    // } else {
-                    //     dataset[c].points.errorbars = undefined;
-                    // }
-                    if (dataset[c].points.show == true) {
-                        Session.set(label + "hideButtonText", 'hide curve');
-                        Session.set(label + "pointsButtonText", 'hide points');
+                if (dataset[c].curveId == label) {
+                    if (dataset[c].data.length === 0) {
+                        Session.set(label + "hideButtonText", 'NO DATA');
+                        Session.set(label + "pointsButtonText", 'NO DATA');
                     } else {
-                        Session.set(label + "hideButtonText", 'show curve');
-                        Session.set(label + "pointsButtonText", 'show points');
+                        if (dataset[c].lines.show == dataset[c].points.show) {
+                            dataset[c].points.show = !dataset[c].points.show;
+                        }
+                        dataset[c].lines.show = !dataset[c].lines.show;
+                        if (dataset[c].points.show == true) {
+                            Session.set(label + "hideButtonText", 'hide curve');
+                            Session.set(label + "pointsButtonText", 'hide points');
+                        } else {
+                            Session.set(label + "hideButtonText", 'show curve');
+                            Session.set(label + "pointsButtonText", 'show points');
+                        }
                     }
                 }
             }
@@ -127,49 +121,35 @@ graphDieOff = function(result) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points','');
-        const color = event.target.style.backgroundColor;
         for (var c = 0; c < dataset.length; c++) {
-            if ((dataset[c].color).replace(/\s/g, '')  == color.replace(/\s/g, '')) {
-                dataset[c].points.show = !dataset[c].points.show;
-                if (dataset[c].points.show == true) {
-                    Session.set(label + "pointsButtonText", 'hide points');
+            if (dataset[c].curveId == label) {
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "pointsButtonText", 'NO DATA');
                 } else {
-                    Session.set(label + "pointsButtonText", 'show points');
+                    dataset[c].points.show = !dataset[c].points.show;
+                    if (dataset[c].points.show == true) {
+                        Session.set(label + "pointsButtonText", 'hide points');
+                    } else {
+                        Session.set(label + "pointsButtonText", 'show points');
+                    }
                 }
             }
         }
         plot = $.plot(placeholder, dataset, options);
     });
 
-    var normalizeYAxis = function (ranges) {
-        /*
-         The way the axis work, if there is only one yaxis the yaxis must be an object
-         but if there are multiple yaxis the yaxis must be an array.
-         */
-        var axis = {};
-        var axisKeys = _.keys(ranges);
-        for (var i = 0; i < axisKeys.length; i++) {
-            var axisKey = axisKeys[i];
-            axis[axisKey] = {};
-            axis[axisKey].min = ranges[axisKey].from;
-            axis[axisKey].max = ranges[axisKey].to;
-        }
-        return axis;
-    };
-
-    var drawGraph = function(ranges) {
-        var zOptions = $.extend(true, {}, options, normalizeYAxis(ranges));
-        plot = $.plot(placeholder, dataset, zOptions);
-    };
-
+    var zooming = false;
     // selection zooming
     placeholder.bind("plotselected", function (event, ranges) {
+        zooming = true;
+        event.preventDefault();
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges);
+        matsGraphUtils.drawGraphByRanges(ranges);
     });
 
+    matsGraphUtils.setNoDataLabels(dataset);
     var plot = $.plot(placeholder, dataset, options);
     // hide the spinner
     document.getElementById("spinner").style.display="none";

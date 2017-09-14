@@ -2,13 +2,13 @@ const setNoDataLabels = function (dataset) {
 // set the label for the hide show buttons (NO DATA) for the initial time here
     for (var c = 0; c < dataset.length; c++) {
         if (dataset[c].data.length === 0) {
-            Session.set(dataset[c].curveId + "pointsButtonText", 'NO DATA');
+            Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = true;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').style = "background-color:red";
             }
-            Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
+            Session.set(dataset[c].curveId + "pointsButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'NO DATA';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = true;
@@ -21,13 +21,13 @@ const setNoDataLabels = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-errorbars').style = "background-color:red";
             }
         } else {
-            Session.set(dataset[c].curveId + "pointsButtonText", 'hide curve');
+            Session.set(dataset[c].curveId + "hideButtonText", 'hide curve');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'hide curve';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').disabled = false;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').style = "background-color:" + dataset[c].color;
             }
-            Session.set(dataset[c].curveId + "hideButtonText", 'hide points');
+            Session.set(dataset[c].curveId + "pointsButtonText", 'hide points');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-points')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').value = 'hide points';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').disabled = false;
@@ -80,6 +80,11 @@ const normalizeYAxis = function (ranges, options) {
     return options;
 };
 
+const drawGraph = function(ranges, options) {
+    var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges,options));
+    plot = $.plot(placeholder, dataset, zOptions);
+};
+
 const drawErrorCaps = function (ctx, lowerx, upperx, y, radius) {
     // ctx is CanvasRenferingContext2d
     ctx.beginPath();
@@ -109,10 +114,63 @@ var uSquareCap = function (ctx, x, y, radius) {
     upperx = x;
 };
 
+const normalizeYAxisByRanges = function (ranges) {
+    /*
+     The way the axis work, if there is only one yaxis the yaxis must be an object
+     but if there are multiple yaxis the yaxis must be an array.
+     */
+    var axis = {};
+    var axisKeys = _.keys(ranges);
+    for (var i = 0; i < axisKeys.length; i++) {
+        var axisKey = axisKeys[i];
+        axis[axisKey] = {};
+        axis[axisKey].min = ranges[axisKey].from;
+        axis[axisKey].max = ranges[axisKey].to;
+    }
+    return axis;
+};
+
+const drawGraphByRanges = function(ranges) {
+    var zOptions = $.extend(true, {}, options, normalizeYAxisByRanges(ranges));
+    plot = $.plot(placeholder, dataset, zOptions);
+};
+
+const normalize2dYAxis = function (ranges) {
+    /*
+     The way the axis work, if there is only one yaxis the yaxis must be an object
+     but if there are multiple yaxis the yaxis must be an array.
+     */
+    var axis = {};
+    var axisKeys = _.keys(ranges);
+    for (var i = 0; i < axisKeys.length; i++) {
+        var axisKey = axisKeys[i];
+        axis[axisKey] = {};
+        axis[axisKey].min = ranges[axisKey].from;
+        axis[axisKey].max = ranges[axisKey].to;
+    }
+    return axis;
+};
+
+const draw2dGraph = function(ranges) {
+    var normalizedOptions = normalizeYAxis(ranges);
+    var zOptions = $.extend(true, {}, options, normalizedOptions);
+    delete zOptions.xaxes[0].max;
+    delete zOptions.xaxes[0].min;
+    delete zOptions.yaxes[0].max;
+    delete zOptions.yaxes[0].min;
+    plot = $.plot(placeholder, dataset, zOptions);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+};
+
 export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
     normalizeYAxis:normalizeYAxis,
+    drawGraph:drawGraph,
     drawErrorCaps:drawErrorCaps,
+    normalizeYAxisByRanges:normalizeYAxis,
+    drawGraphByRanges:drawGraphByRanges,
     lSquareCap:lSquareCap,
-    uSquareCap:uSquareCap
+    uSquareCap:uSquareCap,
+    draw2dGraph:draw2dGraph,
+    normalize2dYAxis:normalize2dYAxis
 };

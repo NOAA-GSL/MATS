@@ -5,13 +5,13 @@ import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
-    var dataRequests = {}; // used to store data queries
+    var dataRequests = {}; // used to store data queriesvar dataFoundForCurve = true;
     var dataFoundForCurve = true;
     var totalProecssingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
-    // // convert dates for sql
+    // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";

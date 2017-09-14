@@ -128,6 +128,13 @@ const getDieOffMatchedDataSet = function (dataset) {
         return dataset;
     }
     for (ci = 0; ci < curvesLength; ci++) {
+        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
+            // one of the curves has no data. No match possible
+            for (sci = 0; sci < curvesLength; sci++) {
+                dataset[sci].data = [];
+            }
+            return dataset;
+        }
         dataIndexes[ci] = 0;
         hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
@@ -335,6 +342,13 @@ const getMatchedDataSet = function (dataset, interval) {
         return dataset;
     }
     for (ci = 0; ci < curvesLength; ci++) {
+        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
+            // one of the curves has no data. No match possible
+            for (sci = 0; sci < curvesLength; sci++) {
+                dataset[sci].data = [];
+            }
+            return dataset;
+        }
         dataIndexes[ci] = 0;
         time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
         if (interval === undefined && dataset[ci].data.length > 1) {
@@ -345,6 +359,9 @@ const getMatchedDataSet = function (dataset, interval) {
     }
     if (interval === undefined && dataMaxInterval === Number.MIN_VALUE) {
         // we can't get an interval, give up
+        for (sci = 0; sci < curvesLength; sci++) {
+            dataset[sci].data = [];
+        }
         return dataset;
     }
     var done = false;

@@ -76,7 +76,7 @@ graphSeries = function(result) {
             const id = event.target.id;
             const label = id.replace('-curve-show-hide','');
             for (var c = 0; c < dataset.length; c++) {
-                if ((dataset[c].curveId) == id) {
+                if (dataset[c].curveId == label) {
                     if (dataset[c].lines.show == dataset[c].points.show) {
                         dataset[c].points.show = !dataset[c].points.show;
                     }
@@ -106,9 +106,8 @@ graphSeries = function(result) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points','');
-        //const color = event.target.style.backgroundColor.toLowerCase();
         for (var c = 0; c < dataset.length; c++) {
-            if ((dataset[c].curveId) == id) {
+            if (dataset[c].curveId == label) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].data.length === 0) {
                     Session.set(label + "pointsButtonText", 'NO DATA');

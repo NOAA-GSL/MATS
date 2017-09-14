@@ -101,7 +101,7 @@ graph2dScatter = function(result) {
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-points','');
         for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].label && (dataset[c].label) == label) {
+            if (dataset[c].curveId == label) {
                 dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].points.show == true) {
                     Session.set(label + "pointsButtonText", 'hide points');
@@ -115,32 +115,6 @@ graph2dScatter = function(result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
     });
-    var normalizeYAxis = function (ranges) {
-        /*
-         The way the axis work, if there is only one yaxis the yaxis must be an object
-         but if there are multiple yaxis the yaxis must be an array.
-         */
-        var axis = {};
-        var axisKeys = _.keys(ranges);
-        for (var i = 0; i < axisKeys.length; i++) {
-            var axisKey = axisKeys[i];
-            axis[axisKey] = {};
-            axis[axisKey].min = ranges[axisKey].from;
-            axis[axisKey].max = ranges[axisKey].to;
-        }
-        return axis;
-    };
-
-    var drawGraph = function(ranges) {
-        var normalizedOptions = normalizeYAxis(ranges);
-        var zOptions = $.extend(true, {}, options, normalizedOptions);
-        delete zOptions.xaxes[0].max;
-        delete zOptions.xaxes[0].min;
-        delete zOptions.yaxes[0].max;
-        delete zOptions.yaxes[0].min;
-        plot = $.plot(placeholder, dataset, zOptions);
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-    };
 
     var zooming = false;
     // selection zooming
@@ -151,7 +125,7 @@ graph2dScatter = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges);
+        matsGraphUtils.draw2dGraph(ranges);
     });
 
 

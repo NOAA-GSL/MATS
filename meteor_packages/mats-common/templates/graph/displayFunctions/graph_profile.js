@@ -71,9 +71,8 @@ graphProfile = function(result) {
             event.preventDefault();
             const id = event.target.id;
             const label = id.replace('-curve-errorbars','');
-            const color = event.target.style.backgroundColor;
             for (var c = 0; c < dataset.length; c++) {
-                if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '').toLowerCase()) {
+                if (dataset[c].curveId == label) {
                     // save the errorbars
                     if (errorbars === undefined) {
                         errorbars = [];
@@ -106,17 +105,16 @@ graphProfile = function(result) {
             event.preventDefault();
             var id = event.target.id;
             var label = id.replace('-curve-show-hide','');
-            const color = event.target.style.backgroundColor.toLowerCase();
             for (var c = 0; c < dataset.length; c++) {
-                if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '')) {
-                    if (dataset[c].lines.show == dataset[c].points.show) {
-                        dataset[c].points.show = !dataset[c].points.show;
-                    }
-                    dataset[c].lines.show = !dataset[c].lines.show;
+                if (dataset[c].curveId == label) {
                     if (dataset[c].data.length === 0) {
                         Session.set(label + "hideButtonText", 'NO DATA');
                         Session.set(label + "pointsButtonText", 'NO DATA');
                     } else {
+                        if (dataset[c].lines.show == dataset[c].points.show) {
+                            dataset[c].points.show = !dataset[c].points.show;
+                        }
+                        dataset[c].lines.show = !dataset[c].lines.show;
                         if (dataset[c].points.show == true) {
                             Session.set(label + "hideButtonText", 'hide curve');
                             Session.set(label + "pointsButtonText", 'hide points');
@@ -157,9 +155,8 @@ graphProfile = function(result) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points','');
-        const color = event.target.style.backgroundColor.toLowerCase();
         for (var c = 0; c < dataset.length; c++) {
-            if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '')) {
+            if (dataset[c].curveId == label) {
                 if (dataset[c].data.length === 0) {
                     Session.set(label + "pointsButtonText", 'NO DATA');
                 } else {
@@ -180,24 +177,22 @@ graphProfile = function(result) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-grid','');
-        const color = event.target.style.backgroundColor.toLowerCase();
         for (var c = 0; c < dataset.length; c++) {
-            if ((dataset[c].color).replace(/\s/g, '').toLowerCase()  == color.replace(/\s/g, '')) {
-                dataset[c].grid.show = !dataset[c].grid.show;
-                if (dataset[c].grid.show == true) {
-                    Session.set(label + "gridButtonText", 'hide grid');
-                } else {
-                    Session.set(label + "gridButtonText", 'show grid');
+            if (dataset[c].curveId == label) {
+                if (dataset[c].data.length === 0) {
+                    dataset[c].grid.show = !dataset[c].grid.show;
+                    if (dataset[c].grid.show == true) {
+                        Session.set(label + "gridButtonText", 'hide grid');
+                    } else {
+                        Session.set(label + "gridButtonText", 'show grid');
+                    }
                 }
             }
         }
         plot = $.plot(placeholder, dataset, options);
     });
 
-    var drawGraph = function(ranges, options) {
-        var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges,options));
-        plot = $.plot(placeholder, dataset, zOptions);
-    };
+
 
     var zooming = false;
     // selection zooming
@@ -207,7 +202,7 @@ graphProfile = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges, plot.getOptions());
+        matsGraphUtils.drawGraph(ranges, plot.getOptions());
     });
 
     matsGraphUtils.setNoDataLabels(dataset);
