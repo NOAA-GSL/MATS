@@ -105,8 +105,9 @@ dataProfile = function(plotParams, plotFunction) {
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
-                    finsih: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                    finish: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
             } catch (e) {

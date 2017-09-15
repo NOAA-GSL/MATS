@@ -111,8 +111,9 @@ dataSeries = function (plotParams, plotFunction) {
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
-                    finsih: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds"
+                    finish: finishMoment.format(),
+                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
             } catch (e) {
@@ -165,7 +166,7 @@ dataSeries = function (plotParams, plotFunction) {
         var postQueryFinishMoment = moment();
         dataRequests["post data retreival (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
-            finsih: postQueryFinishMoment.format(),
+            finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
         }
     }  // end for curves
@@ -182,7 +183,7 @@ dataSeries = function (plotParams, plotFunction) {
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
-        finsih: totalProecssingFinish.format(),
+        finish: totalProecssingFinish.format(),
         duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
     }
     var result = {
