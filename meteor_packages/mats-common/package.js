@@ -116,6 +116,8 @@ Package.onUse(function(api) {
   
   api.addFiles('templates/Home.html', "client");
   api.addFiles('templates/Home.js', "client");
+  api.addFiles('templates/underConstruction/underConstruction.html', "client");
+  api.addFiles('templates/underConstruction/underConstruction.js', "client");
   api.addFiles('templates/about.html', "client");
   api.addFiles('templates/about.js', "client");
   api.addFiles('templates/version/version.html', "client");

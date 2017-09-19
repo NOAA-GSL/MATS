@@ -15,3 +15,9 @@ Template.Home.onCreated(function(){
         return [false];
     });
 });
+
+Template.Home.helpers({
+    isUnderConstruction: function () {
+        return matsCollections.CurveParams.findOne({name:'underConstruction'}) !== undefined;
+    }
+});

@@ -16,6 +16,7 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
+
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -57,10 +58,16 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
+
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
     if (matsCollections.CurveParams.find().count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'underConstruction'
+            }
+        );
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
