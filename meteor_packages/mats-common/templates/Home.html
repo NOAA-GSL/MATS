@@ -16,7 +16,9 @@
             {{>About}}
             {{#if Template.subscriptionsReady}}
                 {{#if isUnderConstruction}}
-                    {{>underConstruction}}
+                    <div class="row pull-left col-lg-12">
+                        {{>underConstruction}}
+                    </div>
                 {{else}}
                     <div class="row pull-left col-lg-12">
                         {{>curveList}}
