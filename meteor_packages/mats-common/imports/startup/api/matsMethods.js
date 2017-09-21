@@ -299,6 +299,7 @@ const getUserAddress = new ValidatedMethod({
 const resetApp = function(params) {
     const appName = params.appName;
     const appVersion = params.appVersion;
+
 // if the metadata has changed ----
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
