@@ -1,6 +1,6 @@
 Template.underConstruction.helpers({
     image: function () {
-        var img = "spinner.gif";
+        var img = "underConstruction.jpg";
         return img;
     }
 });
