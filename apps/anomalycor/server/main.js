@@ -398,7 +398,7 @@ Meteor.startup(function () {
     // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
 
     matsMethods.resetApp({appName:'Anomaly Correlation'});
-    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
+//    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
     console.log("process.env", JSON.stringify(process.env, null, 2));
 });
 

@@ -296,11 +296,7 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
-const resetApp = function(params) {
-    const appName = params.appName;
-    const appVersion = params.appVersion;
-
-// if the metadata has changed ----
+const privateReset = function(appName,appVersion){
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
@@ -320,6 +316,48 @@ const resetApp = function(params) {
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
+};
+
+const resetApp = function(params) {
+    const appName = params.appName;
+//    const appVersion = params.appVersion;
+    var os = Npm.require('os');
+    var hostName = os.hostname();
+    var appVersion = 'unknown';
+
+    var tunnel = Npm.require('tunnel-ssh');
+    var MongoClient = Npm.require('mongodb').MongoClient, assert = require('assert');
+
+    var config = {
+        username:'www-data',
+        host:hostName,
+        dstHost:'mats.gsd.esrl.noaa.gov',
+        dstPort:27099
+    };
+
+    var tnl = tunnel(config, function(error, tnl){
+        if(error){
+            console.log("tunnel-ssh connection error: " + error);
+        }
+
+        MongoClient.connect('mongodb://' + hostName + ':27099/appProductionStatus', function(err, db) {
+            assert.equal(null, err);
+
+            var deployment = db.collection('deployment');
+            deployment.find({servers: { $in : [hostName] } }).toArray(function(err,docs) {
+
+                var apps = docs[0].apps.filter(function(d){
+                   return d.appName == appName;
+                });
+
+                appVersion = apps[0].version;
+
+                privateReset(appName,appVersion);
+            });
+
+        });
+    });
+
 };
 
 const reset = new ValidatedMethod({

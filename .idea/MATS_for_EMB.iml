@@ -12,6 +12,8 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/metproto/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitation/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/radarReflectivity/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
