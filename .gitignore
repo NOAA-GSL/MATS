@@ -1,5 +1,6 @@
 .idea/workspace.xml
 apps/*/.idea/workspace.xml
+apps/*/.idea/*
 meteor_packages/.idea/workspace.xml
 .idea/tasks.xml
 apps/*/.idea/tasks.xml
