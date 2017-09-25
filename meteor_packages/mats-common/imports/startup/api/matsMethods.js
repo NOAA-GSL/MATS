@@ -332,7 +332,9 @@ const resetApp = function(params) {
         username:'www-data',
         host:hostName,
         dstHost:'mats.gsd.esrl.noaa.gov',
-        dstPort:27099
+        dstPort:27017,
+        localHost:'127.0.0.1',
+        localPort: 27099
     };
 
     var tnl = tunnel(config, function(error, tnl){
@@ -340,7 +342,7 @@ const resetApp = function(params) {
             console.log("tunnel-ssh connection error: " + error);
         }
 
-        MongoClient.connect('mongodb://' + hostName + ':27099/appProductionStatus', function(err, db) {
+        MongoClient.connect('mongodb://127.0.0.1:27099/appProductionStatus', function(err, db) {
             assert.equal(null, err);
 
             var deployment = db.collection('deployment');
