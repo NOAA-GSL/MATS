@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#!/bin/sh
+# mongo_utilities.source
+# bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
+# Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
+# to source the utilities use...
+# > . mongo_utilities.source
+
+#to test use ...
+# > mongo_utilities.source test matsserver    (where matsserver is like mats.gsd.esrl.noaa.gov)
+
+
+function closeTunnel() {
+	# kill tunnels
+	kill -TERM `ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
+}
+
+function openTunnel() {
+	#open tunnel
+	#-N do not execute a remote command
+	#-f requests SSH to go to background
+	#-L port:host:hostport (port = local port, host and hostport are where you want the tunnel to point to. This does not have to be the box you are ssh-ing to!)
+	#-C compression ? optional
+	#local client connects to port 27020
+	#if a tunnel exists this returns 1 else 0
+	pids=`ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
+	if [[ "X$pids" == "X" ]]; then
+		ssh www-data@mats.gsd.esrl.noaa.gov -C -Nf -L 27020:localhost:27017  > /dev/null 2>&1
+	fi
+}
+
+setBuildConfigVarsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - worng number of params - usage: $0 server
+	fi
+	local server=$1
+	openTunnel
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildConfigForServer
+	   db.buildConfiguration.find(
+		{"server" : "$server"}, {_id:0});
+	%EODgetBuildConfigForServer
+	)
+
+	# and turn them into local shell variables.
+	# for jq documentation
+	# SERVER='mats-int.gsd.esrl.noaa.gov'
+	# DEPLOYMENT_ENVIRONMENT='production'
+	# DEPLOYMENT_STATUS='active'
+	# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
+	# BUILD_CODE_BRANCH='master'
+	# BUILD_DIRECTORY='/builds/buildArea/'
+	# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
+
+	eval $(echo $data | jq -r '. | {server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,build_cmd} | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"' )
+	closeTunnel
+}
+
+setAppDeploymentVarsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - worng number of params - usage: $0 server
+	fi
+	local server=$1
+	openTunnel
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetAppDeploymentsForServer
+		db.deployment.find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
+	%EODgetAppDeploymentsForServer
+	)
+	readarray -t VERSIONS <<< "$(echo $data | jq -r '.apps[]  | [.version] | @csv' | sed s/\"//g)"
+	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
+	readarray -t APPNAMES <<< "$(echo $data | jq -r '.apps[]  | [.appName] | @csv' | sed s/\"//g)"
+	closeTunnel
+}
+
+test () {
+	host=$1
+	echo ---------
+	unset SERVER
+	unset DEPLOYMENT_ENVIRONMENT
+	declare pattern
+	declare prodEnv
+	case "$host" in
+        mats.gsd.esrl.noaa.gov)
+		pattern="^[0-9]+\.[0-9]+\.[0-9]+$"
+		prodEnv="production"
+            ;;
+        mats-int.gsd.esrl.noaa.gov)
+		pattern="^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}$"
+		prodEnv="integration"
+           ;;
+        *)
+		pattern="^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}$"
+		prodEnv="development"
+	   ;;
+	esac
+
+	echo setBuildConfigVarsForServer
+	setBuildConfigVarsForServer ${host}
+	if [ "$SERVER" == "${host}" ]; then
+		echo setBuildConfigVarsForServer passed
+	else
+		echo setBuildConfigVarsForServer failed
+		echo $SERVER does not equal ${host}
+	fi
+
+	if [ "$DEPLOYMENT_ENVIRONMENT" == "${prodEnv}" ]; then
+		echo setBuildConfigVarsForServer passed
+	else
+		echo setBuildConfigVarsForServer failed
+		echo $DEPLOYMENT_ENVIRONMENT does not equal ${prodEnv}
+	fi
+
+	echo ---------
+	echo setAppDeploymentVarsForServer
+	unset APPS
+	unset APPNAMES
+	unset VERSIONS
+	setAppDeploymentVarsForServer ${host}
+	if [ "${APPS[0]}" == "upperair" ]; then
+		echo setAppDeploymentVarsForServer passed
+	else
+		echo setAppDeploymentVarsForServer failed
+		echo "${APPS[0]}" does not equal "upperair"
+        fi
+
+	if [ "${APPNAMES[1]}" == "Anomaly Correlation" ]; then
+		echo setAppDeploymentVarsForServer passed
+	else
+		echo setAppDeploymentVarsForServer failed
+		echo "${APPNAMES[1]}" does not equal "Anomaly Correlation"
+        fi
+
+	if [[ "${VERSIONS[0]}" =~ ${pattern} ]]; then
+		echo setAppDeploymentVarsForServer passed
+	else
+		echo setAppDeploymentVarsForServer failed
+		echo "${VERSIONS[0]}" does not match "digit.digit.digit"
+        fi
+}
+
+
+if [[ "$1" == "test" ]];then
+host=$2
+test ${host}
+fi
