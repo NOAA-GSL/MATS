@@ -1,26 +1,32 @@
-#!/usr/bin/env bash
 #!/bin/sh
 # mongo_utilities.source
 # bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
 # Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
-# to source the utilities use...
-# > . mongo_utilities.source
 
-#to test use ...
-# > mongo_utilities.source test matsserver    (where matsserver is like mats.gsd.esrl.noaa.gov)
+# For non-test usages the deploy collectios is named deployment. 
+# for test usage the deployment collection is duplicated and the duplicate "deployment-test" is used.
+export DEPLOYMENTCOLLECTION="deployment"
 
-
+# close the ssh tunnel to the server where the mongo db lives ...
+#PARAMETERS: none
+#RETURNS: none
+#TRANSFORMATION: opens ssh tunnel
 function closeTunnel() {
 	# kill tunnels
 	kill -TERM `ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
 }
 
+# establish the ssh tunnel to the server where the mongo db lives .e. mats.gsd.esrl.noaa.gov...
+# This routine assumes that the user www-data is configured and the ssh key for www-data on this machine has been shared in the mats.gsd.esrl.noaa.gov authorized keys
+#PARAMETERS: none
+#RETURNS: none
+#TRANSFORMATION: closses any open ssh tunnels like 27020:localhost:27017 
 function openTunnel() {
 	#open tunnel
 	#-N do not execute a remote command
 	#-f requests SSH to go to background
 	#-L port:host:hostport (port = local port, host and hostport are where you want the tunnel to point to. This does not have to be the box you are ssh-ing to!)
-	#-C compression ? optional
+	#-C compression – optional
 	#local client connects to port 27020
 	#if a tunnel exists this returns 1 else 0
 	pids=`ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
@@ -29,12 +35,30 @@ function openTunnel() {
 	fi
 }
 
+# this routine will populate shell variables to represent the values for
+# server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,and build_cmd
+# which are values that are defined in the buildConfiguration collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
+# and are indexed by the server keyword. There are a different set of variables for each of the servers, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# The variables will be defined as local shell variables like this....
+# SERVER='mats-int.gsd.esrl.noaa.gov'
+# DEPLOYMENT_ENVIRONMENT='production'
+# DEPLOYMENT_STATUS='active'
+# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
+# BUILD_CODE_BRANCH='master'
+# BUILD_DIRECTORY='/builds/buildArea/'
+# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
+
+#PARAMETERS: server
+#RETURNS: none
+#TRANSFORMATION: sets shell variables
 setBuildConfigVarsForServer() {
 	if [ $# -ne 1 ]; then
-		echo $0 - worng number of params - usage: $0 server
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
 	fi
 	local server=$1
 	openTunnel
+	unset data
 	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildConfigForServer
 	   db.buildConfiguration.find(
 		{"server" : "$server"}, {_id:0});
@@ -42,7 +66,7 @@ setBuildConfigVarsForServer() {
 	)
 
 	# and turn them into local shell variables.
-	# for jq documentation
+	# for jq documentation 
 	# SERVER='mats-int.gsd.esrl.noaa.gov'
 	# DEPLOYMENT_ENVIRONMENT='production'
 	# DEPLOYMENT_STATUS='active'
@@ -55,15 +79,24 @@ setBuildConfigVarsForServer() {
 	closeTunnel
 }
 
+# this routine will populate shell ARRAYS to represent the VERSIONS, APPS, and APPNAMES values in the 
+# deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
+# and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# the servers entry is actually a list of servers for which these values are configured.
+#PARAMETERS: server
+#RETURNS: none
+#TRANSFORMATION: sets shell variables
 setAppDeploymentVarsForServer() {
 	if [ $# -ne 1 ]; then
-		echo $0 - worng number of params - usage: $0 server
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
 	fi
 	local server=$1
 	openTunnel
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetAppDeploymentsForServer
-		db.deployment.find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
-	%EODgetAppDeploymentsForServer
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODsetAppDeploymentVarsForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
+	%EODsetAppDeploymentVarsForServer
 	)
 	readarray -t VERSIONS <<< "$(echo $data | jq -r '.apps[]  | [.version] | @csv' | sed s/\"//g)"
 	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
@@ -71,7 +104,156 @@ setAppDeploymentVarsForServer() {
 	closeTunnel
 }
 
+# This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the 
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+getBuildableAppsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 1
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').find(
+		{\$and: [ {server:"\${server}"},{'buildStatus':'enabled'} ]},
+````````````````{"app_list.app":1,_id:0}).pretty();
+	%EODgetBuildableAppsForServer
+	)
+	closeTunnel
+	readarray -t APPS <<< "$(echo $data | jq -r '.app_list[]  | [.app] | @csv'  | sed s/\"//g)"
+	echo ${APPS[@]}
+}
+
+# This routine will set or update the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+ 
+#PARAMETERS: new version, app reference, server
+#RETURNS: none
+#TRANSFORMATION: sets or updates icorresponding version field in database 
+setVersionForAppForServer() {
+	if [ $# -ne 3 ]; then
+		echo $0 - wrong number of params - usage: $0 version app server
+		return 1
+	fi
+	local newVersion=$1
+	export newVersion
+	local app=$2
+	export app
+	local server=$3
+	#retrieve current version
+	openTunnel
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODsetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
+	%EODsetVersionForAppForServer
+	)
+	closeTunnel
+#	echo $(echo $data | jq -r '.apps[].app=env.app' )
+}
+
+
+# This routine outputs the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: app reference, server
+#RETURNS: version
+#TRANSFORMATION: none
+getVersionForAppForServer() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 app server
+		return 1
+	fi
+	local app=$1
+	local server=$2
+	#retrieve current version
+	openTunnel
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+			{ \$and: [
+				{ servers: {
+				      \$in:["${server}"]
+				} },
+				{
+				    'apps.app':"$app"
+				}
+			] },
+		     	{
+			_id:0, 
+			apps: {
+			    \$elemMatch: {
+				'app':"$app"
+			    }
+			}
+	   	});
+	%EODgetVersionForAppForServer
+	)
+	closeTunnel
+	echo $data | jq -r '.apps[] | .version'
+}
+
+# This routine rolls the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
+# if deployment_environment is development only the date portion of the semver is modified and it is set to the current time stamp. If the deployment_environment is integration 
+# the date is set and the minor number is incremented and the minor number of the corresponding development server is incremented also, if the deployment_environment is production 
+# no action is taken.
+#PARAMETERS: app reference, server
+#RETURNS: modified versions
+#TRANSFORMATION: new versions for one or more servers for specified app
+rollDevelopmentVersionForAppForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 app
+		return 1
+	fi
+	local app=$1
+}
+
+# This routine duplicates a collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: existing collection, new collection name
+#RETURNS: success or an error message
+#TRANSFORMATION: makes a copy of the specified collection to the new name.
+duplicateCollection() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 collection copyName
+		return 1
+	fi
+	local collection=$1
+	local newCollection=$2
+	openTunnel
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODduplicateCollection
+		db.getCollection("${collection}").copyTo("${newCollection}");
+	%EODduplicateCollection
+	)
+	closeTunnel
+	echo $data
+}
+
+# This routine deletes a collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: existing collection
+#RETURNS: success or an error message
+#TRANSFORMATION: deletes (drops) a collection
+dropCollection() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 collection
+		return 1
+	fi
+	local collection=$1
+	openTunnel
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODdropCollection
+		db.getCollection("${collection}").drop();
+	%EODdropCollection
+	)
+	closeTunnel
+}
+
 test () {
+	DEPLOYMENTCOLLECTION="deployment-test"
+	duplicateCollection deployment ${DEPLOYMENTCOLLECTION}
 	host=$1
 	echo ---------
 	unset SERVER
@@ -93,6 +275,8 @@ test () {
 	   ;;
 	esac
 
+
+
 	echo setBuildConfigVarsForServer
 	setBuildConfigVarsForServer ${host}
 	if [ "$SERVER" == "${host}" ]; then
@@ -101,14 +285,14 @@ test () {
 		echo setBuildConfigVarsForServer failed
 		echo $SERVER does not equal ${host}
 	fi
-
+	
 	if [ "$DEPLOYMENT_ENVIRONMENT" == "${prodEnv}" ]; then
 		echo setBuildConfigVarsForServer passed
 	else
 		echo setBuildConfigVarsForServer failed
 		echo $DEPLOYMENT_ENVIRONMENT does not equal ${prodEnv}
 	fi
-
+	
 	echo ---------
 	echo setAppDeploymentVarsForServer
 	unset APPS
@@ -121,24 +305,104 @@ test () {
 		echo setAppDeploymentVarsForServer failed
 		echo "${APPS[0]}" does not equal "upperair"
         fi
-
+		
 	if [ "${APPNAMES[1]}" == "Anomaly Correlation" ]; then
 		echo setAppDeploymentVarsForServer passed
 	else
 		echo setAppDeploymentVarsForServer failed
 		echo "${APPNAMES[1]}" does not equal "Anomaly Correlation"
         fi
-
+	
 	if [[ "${VERSIONS[0]}" =~ ${pattern} ]]; then
 		echo setAppDeploymentVarsForServer passed
 	else
 		echo setAppDeploymentVarsForServer failed
 		echo "${VERSIONS[0]}" does not match "digit.digit.digit"
         fi
+	
+	echo ---------
+	echo getBuildableAppsForServer
+	unset appList
+	appList=($(getBuildableAppsForServer mats-dev.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2"\
+	 [8]="upperair-previous" [9]="anomalycor-previous" [10]="ceiling-previous" [11]="visibility-previous" [12]="surface-previous"\
+	 [13]="precipitation-previous" [14]="radarReflectivity-previous" [15]="wfip2-previous")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo getBuildableAppsForServer passed
+	else
+		echo getBuildableAppsForServer failed
+		echo found ${appList[@]} 
+		echo expec ${expectedApps[@]} 
+	fi
+
+	echo -----
+	unset appList
+	appList=($(getBuildableAppsForServer mats-int.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo getBuildableAppsForServer passed
+	else
+		echo getBuildableAppsForServer failed
+		echo found ${appList[@]} 
+		echo expec ${expectedApps[@]} 
+	fi
+
+	echo -----
+	unset appList
+	appList=($(getBuildableAppsForServer mats.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo getBuildableAppsForServer mats.gsd.esrl.noaa.gov passed
+	else
+		echo getBuildableAppsForServer mats.gsd.esrl.noaa.gov failed
+		echo found ${appList[@]} 
+		echo expec ${expectedApps[@]} 
+	fi
+
+
+	echo ---------
+	local upperAirCurrentVersion=$(getVersionForAppForServer upperair mats.gsd.esrl.noaa.gov)
+	echo getVersionForAppForServer upperair version is ${upperAirCurrentVersion}
+
+	echo ---------
+	setVersionForAppForServer "1.5.20-2017.09.26.16.16" upperair mats-dev.gsd.esrl.noaa.gov 
+
+
+	# drop test collection
+	dropCollection ${DEPLOYMENTCOLLECTION}
+
 }
 
-
 if [[ "$1" == "test" ]];then
-host=$2
-test ${host}
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 test host
+		return 1
+	fi
+
+	host=$2
+	test ${host}
 fi
