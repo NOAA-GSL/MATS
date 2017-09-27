@@ -226,7 +226,7 @@ exportCollections() {
     openTunnel
 	local collections=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
 	for collection in $collections; do
-        mongoexport --port 27020 -d appProductionStatus -c $collection --pretty() -o ${directory}/${collection}.json}
+        mongoexport --port 27020 -d appProductionStatus -c $collection --pretty -o ${directory}/${collection}.json}
     done
     closeTunnel
 }
