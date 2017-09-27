@@ -120,7 +120,7 @@ getBuildableAppsForServer() {
 	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildableAppsForServer
 		db.getCollection('buildConfiguration').find(
 		{\$and: [ {server:"\${server}"},{'buildStatus':'enabled'} ]},
-````````````````{"app_list.app":1,_id:0}).pretty();
+        {"app_list.app":1,_id:0}).pretty();
 	%EODgetBuildableAppsForServer
 	)
 	closeTunnel
@@ -211,6 +211,27 @@ rollDevelopmentVersionForAppForServer() {
 	local app=$1
 }
 
+#This routine exports each collection to a set of files that are named after each collection, with a .json suffix.
+# e.g.   "buildConfiguration.json", "deployment.json",
+#PARAMETERS: output directory
+#RETURNS: success or error message
+#TRANSFORMATION: records the mongo export of the collections to a set of files in a given directory.
+exportCollections() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 directory
+		return 1
+	fi
+    local directory=$1
+    mkdir -p ${directory}
+    openTunnel
+	local collections=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
+	for collection in $collections; do
+        mongoexport --port 27020 -d appProductionStatus -c $collection --pretty() -o ${directory}/${collection}.json}
+    done
+    closeTunnel
+}
+
+
 # This routine duplicates a collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov
 #PARAMETERS: existing collection, new collection name
@@ -224,6 +245,7 @@ duplicateCollection() {
 	local collection=$1
 	local newCollection=$2
 	openTunnel
+	unset data
 	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODduplicateCollection
 		db.getCollection("${collection}").copyTo("${newCollection}");
 	%EODduplicateCollection
@@ -391,6 +413,12 @@ test () {
 	echo ---------
 	setVersionForAppForServer "1.5.20-2017.09.26.16.16" upperair mats-dev.gsd.esrl.noaa.gov 
 
+	echo ---------
+    echo exportCollections /tmp/tmpCollections
+    rm -rf /tmp/exportCollections
+    mkdir /tmp/exportCollections
+    exportCollections /tmp/tmpCollections
+    ls -ltr /tmp/tmpCollections
 
 	# drop test collection
 	dropCollection ${DEPLOYMENTCOLLECTION}
