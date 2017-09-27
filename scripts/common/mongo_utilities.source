@@ -224,9 +224,12 @@ exportCollections() {
     local directory=$1
     mkdir -p ${directory}
     openTunnel
-	local collections=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
+    unset data
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
+	readarray -t collections <<< "$(echo $data)"
 	for collection in $collections; do
-        (mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json)
+    echo	(mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json)
+        #(mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json)
     done
     closeTunnel
 }
