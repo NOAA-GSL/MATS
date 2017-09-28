@@ -226,7 +226,7 @@ exportCollections() {
     openTunnel
     unset data
 	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
-	readarray -t collections <<< "$(echo $data)"
+	collections="($(echo $data))"
 	for collection in "${collections[@]}"; do
         mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json
     done
