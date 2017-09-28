@@ -227,7 +227,7 @@ exportCollections() {
     unset data
 	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
 	readarray -t collections <<< "$(echo $data)"
-	for collection in $collections; do
+	for collection in "${collections[@]}"; do
     echo	(mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json)
         #(mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json)
     done
