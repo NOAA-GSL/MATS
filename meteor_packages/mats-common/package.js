@@ -16,9 +16,7 @@ Package.onUse(function(api) {
     'fibers':'1.0.14',
     'fs':'0.0.2',
     "babel-runtime":"6.26.0",
-    "mongodb": "2.2.31",
     "meteor-node-stubs":"0.2.3",
-    "tunnel-ssh":"4.1.3"
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");

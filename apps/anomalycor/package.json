@@ -9,8 +9,6 @@
     "fibers": "^1.0.15",
     "fs": "0.0.1-security",
     "meteor-node-stubs": "^0.2.3",
-    "modules": "^0.4.0",
-    "mongodb": "^2.2.31",
-    "tunnel-ssh": "^4.1.3"
+    "modules": "^0.4.0"
   }
 }

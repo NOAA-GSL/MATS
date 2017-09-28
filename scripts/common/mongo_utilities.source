@@ -235,6 +235,21 @@ exportCollections() {
     closeTunnel
 }
 
+#This routine will check in all modified files within the specified directory to the master and the development_v1.0 branches.
+# It is primarily used to synchronize the appProductionStatus database collections that are resident on mats.gsd.esrl.noaa.gov.
+# Those collections are used to provide build and deployment information and to synchronize deployment. If a directory
+# is not specified the directory will default to the git root /appProductionStatusCollections directory.
+#PARAMETERS: the directory to check in. All modified files in that directory will be checked in. (new files are not added)
+#RETURNS: a success or failure message
+#TRANSFORMATION: the git repo is updated and the master and development_branches are synchronized.
+checkinDirectory() {
+	if [ $# -ne 1 ]; then
+    else
+	fi
+
+
+
+}
 
 # This routine duplicates a collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov
