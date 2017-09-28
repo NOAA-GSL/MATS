@@ -213,15 +213,17 @@ rollDevelopmentVersionForAppForServer() {
 
 #This routine exports each collection to a set of files that are named after each collection, with a .json suffix.
 # e.g.   "buildConfiguration.json", "deployment.json",
-#PARAMETERS: output directory
+#PARAMETERS: output directory - optional (if not supplied the root of the git repo/appProductionStatusCollections directory is used)
 #RETURNS: success or error message
 #TRANSFORMATION: records the mongo export of the collections to a set of files in a given directory.
 exportCollections() {
-	if [ $# -ne 1 ]; then
-		echo $0 - wrong number of params - usage: $0 directory
-		return 1
+	local directory
+	if [ $# -eq 1 ]; then
+	    directory=$1
+	else
+	    directory=$(git rev-parse --show-toplevel)/appProductionStatusCollections
 	fi
-    local directory=$1
+
     mkdir -p ${directory}
     openTunnel
     unset data
