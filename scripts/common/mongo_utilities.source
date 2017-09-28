@@ -225,10 +225,10 @@ exportCollections() {
     mkdir -p ${directory}
     openTunnel
     unset data
-	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[][",]//g' )
-	collections="($(echo $data))"
-	for collection in "${collections[@]}"; do
-        mongoexport --port 27020 -d appProductionStatus -c $collection  | jq -r -M '.' > ${directory}/${collection}.json
+    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[]["]//g' )
+	IFS=', ' read -r -a collections <<< "$data"
+    for collection in "${collections[@]}"; do
+		mongoexport --port 27020 -d appProductionStatus -c ${collection}  | jq -r -M '.' > "${directory}/${collection}.json"
     done
     closeTunnel
 }
