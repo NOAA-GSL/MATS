@@ -1,0 +1,195 @@
+[
+{
+  "_id": {
+    "$oid": "59c2f797146ff98462fe0415"
+  },
+  "deployment_environment": "development",
+  "servers": [
+    "mats-dev.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "appName": "Upper Air",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "anomalycor",
+      "appName": "Anomaly Correlation",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "ceiling",
+      "appName": "Ceiling",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "visibility",
+      "appName": "Visibility",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "surface",
+      "appName": "Surface",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "precipitation",
+      "appName": "Precipitation",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "radarReflectivity",
+      "appName": "Radar Reflectivity",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "wfip2",
+      "appName": "Wfip2",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "upperair-previous",
+      "appName": "Upper Air Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "anomalycor-previous",
+      "appName": "Anomaly Correlation Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "ceiling-previous",
+      "appName": "Ceiling Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "visibility-previous",
+      "appName": "Visibility Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "surface-previous",
+      "appName": "Surface Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "precipitation-previous",
+      "appName": "Precipitation Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "radarReflectivity-previous",
+      "appName": "Radar Reflectivity Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    },
+    {
+      "app": "wfip2-previous",
+      "appName": "Wfip2 Previous",
+      "version": "1.5.20-2017.09.21.16.16"
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "59c2f797146ff98462fe0416"
+  },
+  "deployment_environment": "production",
+  "servers": [
+    "mats.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "appName": "Upper Air",
+      "version": "1.5.19"
+    },
+    {
+      "app": "anomalycor",
+      "appName": "Anomaly Correlation",
+      "version": "1.5.19"
+    },
+    {
+      "app": "ceiling",
+      "appName": "Ceiling",
+      "version": "1.5.19"
+    },
+    {
+      "app": "visibility",
+      "appName": "Visibility",
+      "version": "1.5.19"
+    },
+    {
+      "app": "surface",
+      "appName": "Surface",
+      "version": "1.5.19"
+    },
+    {
+      "app": "precipitation",
+      "appName": "Precipitation",
+      "version": "1.5.19"
+    },
+    {
+      "app": "radarReflectivity",
+      "appName": "Radar Reflectivity",
+      "version": "1.5.19"
+    },
+    {
+      "app": "wfip2",
+      "appName": "Wfip2",
+      "version": "1.5.19"
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "59c41f97146ff98462fe0418"
+  },
+  "deployment_environment": "integration",
+  "servers": [
+    "mats-int.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "appName": "Upper Air",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "anomalycor",
+      "appName": "Anomaly Correlation",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "ceiling",
+      "appNAme": "Ceiling",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "visibility",
+      "appNAme": "Visibility",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "surface",
+      "appName": "Surface",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "precipitation",
+      "appName": "Precipitation",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "radarReflectivity",
+      "appName": "Radar Reflectivity",
+      "version": "1.5.19-2017.09.15.19.50"
+    },
+    {
+      "app": "wfip2",
+      "appName": "Wfip2",
+      "version": "1.5.19-2017.09.15.19.50"
+    }
+  ]
+}
+]

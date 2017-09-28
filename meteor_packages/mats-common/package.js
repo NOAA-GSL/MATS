@@ -17,6 +17,7 @@ Package.onUse(function(api) {
     'fs':'0.0.2',
     "babel-runtime":"6.26.0",
     "meteor-node-stubs":"0.2.3",
+    "url":"0.11.0"
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");
@@ -262,6 +263,7 @@ Package.onUse(function(api) {
   api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
   api.addAssets('public/img/subtle_grunge_@2X.png', "client");
+  api.addAssets('public/deployment/deployment.json',"server");
 });
 
 Package.onTest(function(api) {
