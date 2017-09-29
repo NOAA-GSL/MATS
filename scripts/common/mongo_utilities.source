@@ -133,8 +133,8 @@ getBuildableAppsForServer() {
  
 #PARAMETERS: new version, app reference, server
 #RETURNS: none
-#TRANSFORMATION: sets or updates icorresponding version field in database 
-setVersionForAppForServer() {
+#TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
+UpdateVersionForAppForServer() {
 	if [ $# -ne 3 ]; then
 		echo $0 - wrong number of params - usage: $0 version app server
 		return 1
@@ -246,7 +246,7 @@ checkinDirectory() {
 	if [ $# -eq 1 ]; then
 	    directory=$1
     else
-        directory=$(git rev-parse --show-toplevel)
+        directory=$(git rev-parse --show-toplevel)/appProductionStatusCollections
 	fi
     BRANCHES=(
     master
@@ -264,8 +264,7 @@ checkinDirectory() {
         git checkout $ORIGINALBRANCH;
         git stash pop;
     done
-
-
+    cd -
 }
 
 # This routine duplicates a collection of the appProductionStatus
