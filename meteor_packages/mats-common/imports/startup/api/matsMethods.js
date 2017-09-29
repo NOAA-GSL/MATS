@@ -300,14 +300,21 @@ const getUserAddress = new ValidatedMethod({
 const resetApp = function() {
     console.log("process.env", JSON.stringify(process.env, null, 2));
     var deployment;
+    var deploymentText = Assets.getText('public/deployment/deployment.json');
+    if (deploymentText === undefined || deploymentText == null) {
+        console.log ("Cannot read deployment.json");
+    }
     deployment = JSON.parse(Assets.getText('public/deployment/deployment.json'));
+    console.log(deployment);
     const myUrlStr = Meteor.absoluteUrl();
     var url = require('url');
     var myUrl = url.parse(myUrlStr);
     const hostName = myUrl.hostname;
+    console.log("hostname:", hostName);
     const urlPath = myUrl.pathname == "/" ? process.env.PWD : myUrl.pathname;
     const urlPathParts = urlPath.split('/');
     const appReference = urlPathParts[urlPathParts.length -1];
+    console.log("appReference:", appReference);
     var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
