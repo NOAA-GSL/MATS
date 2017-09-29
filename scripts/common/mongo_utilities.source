@@ -252,9 +252,10 @@ checkinDirectory() {
     master
     development_v1.0
     )
+    cd ${directory}
     ORIGINALBRANCH=$(git status | head -n1 | cut -c13-)
-    git commit -m $1
-    CHERRYCOMMIT=`git log -n1 | head -n1 | cut -c8-`
+    git commit -a -m "auto commit by checkinDirectory"
+    CHERRYCOMMIT=$(git log -n1 | head -n1 | cut -c8-)
     for BRANCH in "${BRANCHES[@]}";
     do
         git stash;
