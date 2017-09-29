@@ -329,9 +329,9 @@ const resetApp = function() {
     if (Object.keys(app).length === 0 && app.constructor === Object) {
         app = developmentApp;
     }
-    const appVersion = app.version;
-    const appName = app.appName;
-    const buildDate = app.buildDate;
+    const appVersion = app ? app.version : "unknown";
+    const appName = app ? app.appName : "unknown";
+    const buildDate = app ? app.buildDate : "unknown";
 // if the metadata has changed ----
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
