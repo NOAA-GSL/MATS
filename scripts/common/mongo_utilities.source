@@ -243,10 +243,26 @@ exportCollections() {
 #RETURNS: a success or failure message
 #TRANSFORMATION: the git repo is updated and the master and development_branches are synchronized.
 checkinDirectory() {
-	if [ $# -ne 1 ]; then
+	if [ $# -eq 1 ]; then
+	    directory=$1
     else
+        directory=$(git rev-parse --show-toplevel)
 	fi
-
+    BRANCHES=(
+    master
+    development_v1.0
+    )
+    ORIGINALBRANCH=$(git status | head -n1 | cut -c13-)
+    git commit -m $1
+    CHERRYCOMMIT=`git log -n1 | head -n1 | cut -c8-`
+    for BRANCH in "${BRANCHES[@]}";
+    do
+        git stash;
+        git checkout $BRANCH;
+        git cherry-pick $CHERRYCOMMIT;
+        git checkout $ORIGINALBRANCH;
+        git stash pop;
+    done
 
 
 }

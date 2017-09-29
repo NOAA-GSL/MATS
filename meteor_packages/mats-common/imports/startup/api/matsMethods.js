@@ -325,6 +325,7 @@ const resetApp = function() {
     }
     const appVersion = app.version;
     const appName = app.appName;
+    const buildDate = app.buildDate;
 // if the metadata has changed ----
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
@@ -336,7 +337,7 @@ const resetApp = function() {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appName, appVersion);
+    matsDataUtils.doSettings(appName, appVersion, buildDate);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});

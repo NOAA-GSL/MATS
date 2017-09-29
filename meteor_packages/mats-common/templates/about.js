@@ -10,8 +10,8 @@ Template.About.helpers({
         var version = "unknown";
         var buildDate = "unkown";
         if (settings) {
-            version = settings.version;
-            version = settings.buildDate;
+            version = settings.appVersion;
+            buildDate = settings.buildDate;
         }
         versionStr = "<h3>" + version + "</h3>";
         return versionStr + "<h3> Last Build Date: " + buildDate + "</h3>";

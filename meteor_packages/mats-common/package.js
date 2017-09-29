@@ -249,9 +249,6 @@ Package.onUse(function(api) {
   api.addAssets('public/img/bootstrap-colorpicker/hue-horizontal.png', "client");
   api.addAssets('public/img/bootstrap-colorpicker/hue.png', "client");
   api.addAssets('public/img/bootstrap-colorpicker/saturation.png', "client");
-  api.addAssets('public/img/buildings.png', "client");
-  api.addAssets('public/img/cloud.jpg', "client");
-  api.addAssets('public/img/tornado.jpg', "client");
   api.addAssets('public/img/arrow-down.gif', "client");
   api.addAssets('public/img/arrow-left.gif', "client");
   api.addAssets('public/img/arrow-right.gif', "client");
@@ -263,6 +260,7 @@ Package.onUse(function(api) {
   api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
   api.addAssets('public/img/subtle_grunge_@2X.png', "client");
+  api.addAssets('public/img/underConstruction.jpg', "client");
   api.addAssets('public/deployment/deployment.json',"server");
 });
 
