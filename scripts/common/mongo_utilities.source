@@ -552,8 +552,9 @@ test () {
     exportCollections /tmp/tmpCollections
     ls -ltr /tmp/tmpCollections
 
-	# drop test collection
+	# drop test collection and repoint the deploymentcollection
 	dropCollection ${DEPLOYMENTCOLLECTION}
+	DEPLOYMENTCOLLECTION="deployment"
 
 }
 
