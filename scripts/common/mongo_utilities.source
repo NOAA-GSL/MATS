@@ -104,6 +104,28 @@ setAppDeploymentVarsForServer() {
 	closeTunnel
 }
 
+# This routine will output the list of ALL apps (app references not names) that are currently defined in the deployment collection of the 
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the server in the first parameter
+#PARAMETERS: server
+#RETURNS: list of app references
+#TRANSFORMATION: none
+getDeployedAppsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetDeployedAppsForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0});
+	%EODgetDeployedAppsForServer
+	)
+	closeTunnel
+	readarray -t APPS <<< "$(echo $data | jq -r '.app_list[]  | [.app] | @csv'  | sed s/\"//g)"
+	echo ${APPS[@]}
+}
+
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the 
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
 #PARAMETERS: server
@@ -111,7 +133,7 @@ setAppDeploymentVarsForServer() {
 #TRANSFORMATION: none
 getBuildableAppsForServer() {
 	if [ $# -ne 1 ]; then
-		echo $0 - wrong number of params - usage: $0 1
+		echo $0 - wrong number of params - usage: $0 server
 		return 1
 	fi
 	local server=$1
@@ -120,7 +142,7 @@ getBuildableAppsForServer() {
 	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildableAppsForServer
 		db.getCollection('buildConfiguration').find(
 		{\$and: [ {server:"\${server}"},{'buildStatus':'enabled'} ]},
-        {"app_list.app":1,_id:0}).pretty();
+        {"app_list.app":1,_id:0});
 	%EODgetBuildableAppsForServer
 	)
 	closeTunnel
@@ -134,25 +156,41 @@ getBuildableAppsForServer() {
 #PARAMETERS: new version, app reference, server
 #RETURNS: none
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
-UpdateVersionForAppForServer() {
+updateVersionForAppForServer() {
 	if [ $# -ne 3 ]; then
 		echo $0 - wrong number of params - usage: $0 version app server
 		return 1
 	fi
 	local newVersion=$1
-	export newVersion
 	local app=$2
-	export app
 	local server=$3
-	#retrieve current version
+	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
+	local appList=$(getDeployedAppsForServer ${server})
+	local appPosition=-1
+	for i in "${appList[@]}"; do
+		((appPosition++))	
+		if [ "${appList[${appPosition}]"} == "${app}" ]; then
+			break
+		fi
+	done
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODsetVersionForAppForServer
-		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
-	%EODsetVersionForAppForServer
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODupdateVersionForAppForServer
+		db.getCollection("deployment").update(
+            { 
+                \$and: [
+                    { servers: {
+                        \$in:["${server}"]
+                    } },
+                    {"apps.app":"${app}"}
+                ],
+            },
+            {\$set: {"apps.${appPosition}.version":"${newVersion}"}}
+        );
+	%EODupdateVersionForAppForServer
 	)
+	echo $data
 	closeTunnel
-#	echo $(echo $data | jq -r '.apps[].app=env.app' )
 }
 
 
@@ -331,8 +369,6 @@ test () {
 		prodEnv="development"
 	   ;;
 	esac
-
-
 
 	echo setBuildConfigVarsForServer
 	setBuildConfigVarsForServer ${host}
