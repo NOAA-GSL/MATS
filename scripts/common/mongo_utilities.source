@@ -122,7 +122,7 @@ getDeployedAppsForServer() {
 	%EODgetDeployedAppsForServer
 	)
 	closeTunnel
-	readarray -t APPS <<< "$(echo $data | jq -r '.app_list[]  | [.app] | @csv'  | sed s/\"//g)"
+	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
 	echo ${APPS[@]}
 }
 
@@ -152,9 +152,8 @@ getBuildableAppsForServer() {
 
 # This routine will set or update the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
- 
 #PARAMETERS: new version, app reference, server
-#RETURNS: none
+#RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
 updateVersionForAppForServer() {
 	if [ $# -ne 3 ]; then
@@ -167,9 +166,9 @@ updateVersionForAppForServer() {
 	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
 	local appList=$(getDeployedAppsForServer ${server})
 	local appPosition=-1
-	for i in "${appList[@]}"; do
+	for theApp in ${appList[@]}; do
 		((appPosition++))	
-		if [ "${appList[${appPosition}]"} == "${app}" ]; then
+		if [ "${theApp}" == "${app}" ]; then
 			break
 		fi
 	done
@@ -186,6 +185,48 @@ updateVersionForAppForServer() {
                 ],
             },
             {\$set: {"apps.${appPosition}.version":"${newVersion}"}}
+        );
+	%EODupdateVersionForAppForServer
+	)
+	echo $data
+	closeTunnel
+}
+
+# This routine will set or update the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+#PARAMETERS: new build date, app reference, server
+#RETURNS: mongo update message
+#TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
+updateBuildDateForAppForServer() {
+	if [ $# -ne 3 ]; then
+		echo $0 - wrong number of params - usage: $0 buildDate app server
+		return 1
+	fi
+	local newBuildDate=$1
+	local app=$2
+	local server=$3
+	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
+	local appList=$(getDeployedAppsForServer ${server})
+	local appPosition=-1
+	for theApp in ${appList[@]}; do
+		((appPosition++))	
+		if [ "${theApp}" == "${app}" ]; then
+			break
+		fi
+	done
+	openTunnel
+	unset data
+	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODupdateVersionForAppForServer
+		db.getCollection("deployment").update(
+            { 
+                \$and: [
+                    { servers: {
+                        \$in:["${server}"]
+                    } },
+                    {"apps.app":"${app}"}
+                ],
+            },
+            {\$set: {"apps.${appPosition}.buildDate":"${newBuildDate}"}}
         );
 	%EODupdateVersionForAppForServer
 	)
