@@ -519,13 +519,32 @@ test () {
 
 
 	echo ---------
+
 	local upperAirCurrentVersion=$(getVersionForAppForServer upperair mats.gsd.esrl.noaa.gov)
-	echo getVersionForAppForServer upperair version is ${upperAirCurrentVersion}
+	setVersionForAppForServer "1.5.20-2017.09.26.16.16-test" upperair mats.gsd.esrl.noaa.gov
+	local upperAirNewVersion=$(getVersionForAppForServer upperair mats.gsd.esrl.noaa.gov)
+	if [ "1.5.20-2017.09.26.16.16-test" == "$upperAirNewVersion" ]; then
+		echo setVersionForAppForServer mats.gsd.esrl.noaa.gov passed
+	else
+		echo setVersionForAppForServer mats.gsd.esrl.noaa.gov failed
+		echo old version is ${upperAirCurrentVersion}
+		echo new version is ${upperAirNewVersion}
+		echo new version should be "1.5.20-2017.09.26.16.16-test"
+	fi
+	setVersionForAppForServer "1.5.20-2017.09.26.16.16" upperair mats.gsd.esrl.noaa.gov
+	local upperAirNewNewVersion=$(getVersionForAppForServer upperair mats.gsd.esrl.noaa.gov)
+	if [ "1.5.20-2017.09.26.16.16" == "$upperAirNewNewVersion" ]; then
+		echo setVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov passed
+	else
+		echo setVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov failed
+		echo old version is ${upperAirNewVersion}
+		echo new version is ${upperAirNewNewVersion}
+		echo new version should be "1.5.20-2017.09.26.16.16"
+	fi
 
 	echo ---------
-	setVersionForAppForServer "1.5.20-2017.09.26.16.16" upperair mats-dev.gsd.esrl.noaa.gov 
 
-	echo ---------
+
     echo exportCollections /tmp/tmpCollections
     rm -rf /tmp/exportCollections
     mkdir /tmp/exportCollections
