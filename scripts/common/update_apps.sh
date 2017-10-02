@@ -18,11 +18,14 @@ cd MATS_for_EMB/apps
 export METEOR_PACKAGE_DIRS=`ls -rt -d -1 "$PWD"/../meteor_packages/`
 
 # update all the apps
-find . -maxdepth 1 -type d -not -path "." | while read app
+for app in $(find . -maxdepth 1 -type d -not -path ".")
     do
         cd $app;
         pwd;
+        meteor reset
+        rm -rf node_modules
         meteor update --all-packages;
+        meteor npm install --save babel-runtime
         cd ..;
     done
 

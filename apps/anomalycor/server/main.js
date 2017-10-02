@@ -16,7 +16,6 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
-
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -58,7 +57,6 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
-
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
@@ -394,12 +392,7 @@ Meteor.startup(function () {
     } catch (err) {
         console.log(err.message);
     }
-
-    // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
-
-    matsMethods.resetApp({appName:'Anomaly Correlation'});
-//    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
-    console.log("process.env", JSON.stringify(process.env, null, 2));
+    matsMethods.resetApp();
 });
 
 // this object is global so that the reset code can get to it

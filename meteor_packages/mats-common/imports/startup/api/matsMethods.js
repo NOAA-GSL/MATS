@@ -4,6 +4,7 @@ import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
+import {url} from 'url';
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
@@ -296,7 +297,42 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
-const privateReset = function(appName,appVersion){
+const resetApp = function() {
+    console.log("process.env", JSON.stringify(process.env, null, 2));
+    var deployment;
+    var deploymentText = Assets.getText('public/deployment/deployment.json');
+    if (deploymentText === undefined || deploymentText == null) {
+        console.log ("Cannot read deployment.json");
+    }
+    deployment = JSON.parse(Assets.getText('public/deployment/deployment.json'));
+    const myUrlStr = Meteor.absoluteUrl();
+    var url = require('url');
+    var myUrl = url.parse(myUrlStr);
+    console.log('myUrlStr:',myUrlStr);
+    const hostName = myUrl.hostname;
+    const urlPath = myUrl.pathname == "/" ? process.env.PWD : myUrl.pathname.replace(/\//g, '');
+    console.log('urlPath:', urlPath);
+    const urlPathParts = urlPath.split('/');
+    const appReference = urlPathParts[urlPathParts.length -1];
+    var developmentApp = {};
+    var app = {};
+    for (var ai = 0; ai < deployment.length; ai++) {
+        var dep = deployment[ai];
+        if (dep.deployment_environment == "development") {
+            developmentApp = dep.apps.filter(function(app){return app.app === appReference})[0];
+        }
+        if (dep.servers.indexOf(hostName) != -1) {
+            app = dep.apps.filter(function(app){return app.app === appReference})[0];
+            break;
+        }
+    }
+    if (Object.keys(app).length === 0 && app.constructor === Object) {
+        app = developmentApp;
+    }
+    const appVersion = app ? app.version : "unknown";
+    const appName = app ? app.appName : "unknown";
+    const buildDate = app ? app.buildDate : "unknown";
+// if the metadata has changed ----
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
@@ -307,7 +343,7 @@ const privateReset = function(appName,appVersion){
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appName, appVersion);
+    matsDataUtils.doSettings(appName, appVersion, buildDate);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
@@ -316,48 +352,6 @@ const privateReset = function(appName,appVersion){
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
-};
-
-const resetApp = function(params) {
-    const appName = params.appName;
-//    const appVersion = params.appVersion;
-    var os = Npm.require('os');
-    var hostName = os.hostname();
-    var appVersion = 'unknown';
-
-    var tunnel = Npm.require('tunnel-ssh');
-    var MongoClient = Npm.require('mongodb').MongoClient, assert = require('assert');
-
-    var config = {
-        username:'www-data',
-        host:hostName,
-        dstHost:'mats.gsd.esrl.noaa.gov',
-        dstPort:27099
-    };
-
-    var tnl = tunnel(config, function(error, tnl){
-        if(error){
-            console.log("tunnel-ssh connection error: " + error);
-        }
-
-        MongoClient.connect('mongodb://' + hostName + ':27099/appProductionStatus', function(err, db) {
-            assert.equal(null, err);
-
-            var deployment = db.collection('deployment');
-            deployment.find({servers: { $in : [hostName] } }).toArray(function(err,docs) {
-
-                var apps = docs[0].apps.filter(function(d){
-                   return d.appName == appName;
-                });
-
-                appVersion = apps[0].version;
-
-                privateReset(appName,appVersion);
-            });
-
-        });
-    });
-
 };
 
 const reset = new ValidatedMethod({

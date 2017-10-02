@@ -1559,7 +1559,7 @@ const doColorScheme = function () {
     }
 };
 
-const doSettings = function (title, version) {
+const doSettings = function (title, version, buildDate) {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Settings.remove({});
     }
@@ -1568,6 +1568,7 @@ const doSettings = function (title, version) {
             LabelPrefix: "Curve",
             Title: title,
             appVersion: version,
+            buildDate: buildDate,
             LineWidth: 3.5,
             NullFillString: "---",
             resetFromCode: true
