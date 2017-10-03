@@ -400,10 +400,10 @@ rollDevelopmentVersionAndDateForAppForServer() {
 		return 1
 	fi
 	local app=$1
-	local server=$1
+	local server=$2
 	# double check that the environment for this server really is development
 	local deployment_environment=$(getDeploymentEnvironmentForServer ${server})
-	if [ "${deployment_environment}" -ne "development" ]; then
+	if [ "${deployment_environment}" != "development" ]; then
 		echo "wrong environment - should be development, is  ${deployment_environment}"
 		return 1
 	fi
@@ -417,7 +417,7 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	# get the corresponding integration version...
 	local integrationServer=$(getIntegrationServer)
 	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
-    intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
+    	local intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
 	if [ ${intPatch} -ge ${patch} ]; then
 		# have to roll development patch number
 		patch=$(intPatch + 1)
@@ -444,10 +444,10 @@ rollIntegrationVersionAndDateForAppForServer() {
 		return 1
 	fi
 	local app=$1
-	local server=$1
+	local server=$2
 	# double check that the environment for this server really is integration
 	local deployment_environment=$(getDeploymentEnvironmentForServer ${server})
-	if [ "${deployment_environment}" -ne "integration" ]; then
+	if [ "${deployment_environment}" != "integration" ]; then
 		echo "wrong environment - should be integration, is  ${deployment_environment}"
 		return 1
 	fi
@@ -739,45 +739,47 @@ test () {
 
 	echo ---------
     local productionServer=$(getProductionServer)
-    if [ ${productionServer} -ne "mats.gsd.esrl.noaa.gov" ]; then
-        echo getProductionServer failed ${productionServer} is not "mats.gsd.esrl.noaa.gov"
-    else
+    if [ ${productionServer} == "mats.gsd.esrl.noaa.gov" ]; then
         echo getProductionServer passed
+    else
+        echo getProductionServer failed ${productionServer} is not "mats.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local integrationServer=$(getIntegrationServer)
-    if [ ${integrationServer} -ne "mats-int.gsd.esrl.noaa.gov" ]; then
-        echo getIntegrationServer failed ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
-    else
+    if [ ${integrationServer} == "mats-int.gsd.esrl.noaa.gov" ]; then
         echo getIntegrationServer passed
+    else
+        echo getIntegrationServer failed ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local developmentServer=$(getDevelopmentServer)
-    if [ ${developmentServer} -ne "mats-dev.gsd.esrl.noaa.gov" ]; then
-        echo getDevelopmentServer failed ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
-    else
+    if [ ${developmentServer} == "mats-dev.gsd.esrl.noaa.gov" ]; then
         echo getDevelopmentServer passed
+    else
+        echo getDevelopmentServer failed ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-
+echo got dev
     local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-
+echo got int
     rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+echo rolled dev
     local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
 
-    rollIntegrationVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+echo rolled int
     local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
 
-    echo ${currentDevVersion}   ${buildVer}  ${buildDate}
-    echo ${currentIntVersion}   ${intVer}  ${intDate}
+    echo -e "${currentDevVersion}\t\t${currentDevBuildDate}\t\t${buildVer}\t\t\t\t${buildDate}"
+    echo -e "${currentIntVersion}\t\t${currentIntBuildDate}\t\t${intVer}\t\t\t\t${intDate}"
     echo ---------
 
     echo exportCollections /tmp/tmpCollections
