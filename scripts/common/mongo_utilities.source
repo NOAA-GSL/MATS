@@ -765,17 +765,13 @@ test () {
     echo ---------
     local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-echo got dev
     local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
-echo got int
     rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
-echo rolled dev
     local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
 
     rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
-echo rolled int
     local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
 
