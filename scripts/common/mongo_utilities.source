@@ -263,6 +263,42 @@ getDeploymentEnvironmentForServer() {
 	
 }
 
+getProductionServers() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'production'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+    closeTunnel
+    echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+}
+
+getIntegrationServers() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'integration'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+    closeTunnel
+    echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+}
+
+getDevelopmentServers() {
+	if [ $# -ne 0 ]; then
+		echo $0 - wrong number of params - usage: $0
+		return 1
+	fi
+	openTunnel
+	unset data
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'development'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+	closeTunnel
+	echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+}
+
 # This routine outputs the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov
 #PARAMETERS: app reference, server
@@ -342,11 +378,19 @@ getBuildDateForAppForServer() {
 }
 
 
-# This routine rolls the version and fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
-# if deployment_environment is development only the date portion of the semver is modified and it is set to the current time stamp. If the deployment_environment is integration 
-# the date is set and the minor number is incremented and the minor number of the corresponding development server is incremented also, if the deployment_environment is production 
-# no action is taken.
+# NOTE ABOUT ROLLING VERSIONS:
+# When the nightly build (development branch) happens the version must acquire a higher patch number than the integration version. This is
+# because the code gets tagged at the version number. We want to be able to roll the code back to either an integration version or
+# a development version. Therefore when the development version rolls we make sure that the patch number is one higher than the corresponding integration
+# patch number and we add the date postfix.
+# When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
+
+# This routine rolls the development version and sets fields in the app element identified by the app reference and server params
+# in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
+# according to the deployment_environment settings for the given server.
+# if deployment_environment is development, the date portion of the semver is modified and it is set to the current time stamp.
+# If the current patch number is not greater than the corresponding integration version then the patch number is also incremented.
 #PARAMETERS: app reference, server
 #RETURNS: modified versions
 #TRANSFORMATION: new versions for one or more servers for specified app
@@ -365,22 +409,36 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	fi
 	# get the current build version 
 	local currentVersion=$(getVersionForAppForServer ${app} ${server})
-	local currentVersionVersionPart=$(echo $currentVersion | cut -f1 -d'-')
-	# build versions roll by date... change the date protion to be current
+	local currentVersionPart=$(echo $currentVersion | cut -f1 -d'-')
+	local major=$(echo "${currentVersionPart}" | cut -d'.' -f1)
+	local minor=$(echo "${currentVersionPart}" | cut -d'.' -f2)
+	local patch=$(echo "${currentVersionPart}" | cut -d'.' -f3)
+
+	# get the corresponding integration version...
+	local integrationServers=$(getIntegrationServers)
+	# there should really only be one integration server but let's check for any extras and take the highes patch number
+	for intSever in "${integrationServers[@]}"; do
+		local currentIntVersion=$(getVersionForAppForServer ${app} ${intServer})
+		patchNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f3)
+	done
+	local intPatch=$(echo "${patchNumbers[*]}" | sort -nr | head -n1)
+	if [ ${intPatch} -ge ${developmentPatch} ]; then
+		# have to roll development patch number
+		patch=$(intPatch + 1)
+	fi
+	# build versions roll date... change the date portion to be current
 	local vdate=`date +%Y.%m.%d.%H.%M`
-	local newVersion="${currentVersionVersionPart}-${vdate}"
+	local newVersion="${major}.${minor}.${patch}-${vdate}"
 	#update the new version
 	updateVersionForAppForServer ${newVersion} ${app} ${server}
 	updateBuildDateForAppForServer ${vdate} ${app} ${server}
-	echo ${newVersion}
+	echo ${newVersion} ${vdate}
 }
 
 # This routine rolls the version and fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
-# if deployment_environment is development only the date portion of the semver is modified and it is set to the current time stamp. 
-# If the deployment_environment is integration the date is set and the minor number is incremented and the minor number 
-# of the corresponding development server is incremented also, 
-# if the deployment_environment is production no action is taken.
+# When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
 #PARAMETERS: app reference, server
 #RETURNS: modified versions
 #TRANSFORMATION: new versions for one or more servers for specified app
@@ -391,34 +449,27 @@ rollIntegrationVersionAndDateForAppForServer() {
 	fi
 	local app=$1
 	local server=$1
-	# double check that the environment for this server really is development
+	# double check that the environment for this server really is integration
 	local deployment_environment=$(getDeploymentEnvironmentForServer ${server})
 	if [ "${deployment_environment}" -ne "integration" ]; then
 		echo "wrong environment - should be integration, is  ${deployment_environment}"
 		return 1
 	fi
-	# get the current integration version 
-	local currentIntVersion=$(getVersionForAppForServer ${app} ${server})
-	local currentVersionVersionPart=$(echo $currentVersion | cut -f1 -d'-')
-	# build versions roll by date... change the date protion to be current
-	local vdate=`date +%Y.%m.%d.%H.%M`
-	dmajor=`echo "${developmentVersion}" | cut -d'.' -f1`
-    dminor=`echo "${developmentVersion}" | cut -d'.' -f2`
-    # overwrite the patch part of the version - roll the patch
-    major=`echo "${pversion}" | cut -d'.' -f1`
-    minor=`echo "${pversion}" | cut -d'.' -f2`
-    patch_old=`echo "${pversion}" | cut -d'.' -f3`
-    patch_new=$(patch_old + 1)
-    #make the development patch number one higher than the integration patch number - roll the dev patch
-    dpatch_new=$(patch_new + 1)
-    export developmentVersion="${dmajor}.${dminor}.${dpatch_new}-${ddate}"
-    export intversion="${major}.${minor}.${patch_new}-${ddate}"
-
-        	
-	local newVersion="${currentVersionVersionPart}-${vdate}"
-	#update the new version
-	updateVersionForAppForServer ${newVersion} ${app} ${server}
-	updateBuildDateForAppForServer ${vdate} ${app} ${server}
+	local developmentServers=$(getDevelopmentServers)
+	for devSever in "${developmentServers[@]}"; do
+		local currentdevVersion=$(getVersionForAppForServer ${app} ${devServer})
+		majorNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f1)
+		minorNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f2)
+		patchNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f3)
+	done
+	local devMajor=$(echo "${majorNumbers[*]}" | sort -nr | head -n1)
+	local devMinor=$(echo "${minorNumbers[*]}" | sort -nr | head -n1)
+	local devPatch=$(echo "${patchNumbers[*]}" | sort -nr | head -n1)
+	local intDate=`date +%Y.%m.%d.%H.%M`
+	local newIntegrationVersion="${devMajor}.${devMinor}.${devPatch}"
+	updateVersionForAppForServer ${newIntegrationVersion} ${app} ${server}
+	updateBuildDateForAppForServer ${intDate} ${app} ${server}
+	echo ${newIntegrationVersion} echo ${intDate}
 }
 
 #This routine exports each collection to a set of files that are named after each collection, with a .json suffix.
@@ -648,14 +699,10 @@ test () {
 		echo expec ${expectedApps[@]} 
 	fi
 
-
 	echo ---------
-
 	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
-echo ceilingCurrentVersion is $ceilingCurrentVersion
 	updateVersionForAppForServer "1.5.20-2017.09.26.16.16-test" ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
-echo ceilingNewVersion is $ceilingNewVersion
 	if [ "1.5.20-2017.09.26.16.16-test" == "$ceilingNewVersion" ]; then
 		echo updateVersionForAppForServer mats.gsd.esrl.noaa.gov passed
 	else
@@ -677,8 +724,6 @@ echo ceilingNewVersion is $ceilingNewVersion
 	fi
 
 	echo ---------
-
-
 	local ceilingCurrentBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	updateBuildDateForAppForServer "at the moment" ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
@@ -691,6 +736,7 @@ echo ceilingNewVersion is $ceilingNewVersion
 		echo new buildDate should be "at the moment"
 	fi
 
+    echo ---------
 	updateBuildDateForAppForServer $ceilingCurrentBuildDate ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	if [ "$ceilingCurrentBuildDate" == "$ceilingNewNewBuildDate" ]; then
@@ -703,13 +749,39 @@ echo ceilingNewVersion is $ceilingNewVersion
 	fi
 
 	echo ---------
+    local productionServers=$(getProductionServers)
+    if [ ${productionServers[0]} -ne "mats.gsd.esrl.noaa.gov" ]; then
+        echo getProductionServers failed ${productionServers[0]} is not "mats.gsd.esrl.noaa.gov"
+    else
+        echo getProductionServers passed
+    fi
+
+    echo ---------
+    local integrationServers=$(getIntegrationServers)
+    if [ ${integrationServers[0]} -ne "mats-int.gsd.esrl.noaa.gov" ]; then
+        echo getIntegrationServers failed ${integrationServers[0]} is not "mats-int.gsd.esrl.noaa.gov"
+    else
+        echo getIntegrationServers passed
+    fi
+
+    echo ---------
+    local developmentServers=$(getDevelopmentServers)
+    if [ ${developmentServers[0]} -ne "mats-dev.gsd.esrl.noaa.gov" ]; then
+        echo getDevelopmentServers failed ${developmentServers[0]} is not "mats-dev.gsd.esrl.noaa.gov"
+    else
+        echo getDevelopmentServers passed
+    fi
 
 
+
+
+    echo ---------
     echo exportCollections /tmp/tmpCollections
     rm -rf /tmp/exportCollections
     mkdir /tmp/exportCollections
     exportCollections /tmp/tmpCollections
     ls -ltr /tmp/tmpCollections
+    echo ---------
 
 	# drop test collection and repoint the deploymentcollection
 	dropCollection ${DEPLOYMENTCOLLECTION}
