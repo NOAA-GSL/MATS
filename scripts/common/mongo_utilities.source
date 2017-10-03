@@ -386,7 +386,7 @@ getBuildDateForAppForServer() {
 # When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
 # development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
 
-# This routine rolls the development version and sets fields in the app element identified by the app reference and server params
+# This routine will update the version and buildDate fields in the app element identified by the app reference and server params
 # in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
 # according to the deployment_environment settings for the given server.
 # if deployment_environment is development, the date portion of the semver is modified and it is set to the current time stamp.
@@ -415,14 +415,10 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	local patch=$(echo "${currentVersionPart}" | cut -d'.' -f3)
 
 	# get the corresponding integration version...
-	local integrationServers=$(getIntegrationServers)
-	# there should really only be one integration server but let's check for any extras and take the highes patch number
-	for intSever in "${integrationServers[@]}"; do
-		local currentIntVersion=$(getVersionForAppForServer ${app} ${intServer})
-		patchNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f3)
-	done
-	local intPatch=$(echo "${patchNumbers[*]}" | sort -nr | head -n1)
-	if [ ${intPatch} -ge ${developmentPatch} ]; then
+	local integrationServer=$(getIntegrationServer)
+	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
+    intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
+	if [ ${intPatch} -ge ${patch} ]; then
 		# have to roll development patch number
 		patch=$(intPatch + 1)
 	fi
@@ -435,7 +431,7 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	echo ${newVersion} ${vdate}
 }
 
-# This routine rolls the version and fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# This routine updates the version and buildDate fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
 # When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
 # development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
@@ -455,18 +451,11 @@ rollIntegrationVersionAndDateForAppForServer() {
 		echo "wrong environment - should be integration, is  ${deployment_environment}"
 		return 1
 	fi
-	local developmentServers=$(getDevelopmentServers)
-	for devSever in "${developmentServers[@]}"; do
-		local currentdevVersion=$(getVersionForAppForServer ${app} ${devServer})
-		majorNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f1)
-		minorNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f2)
-		patchNumbers+= $(echo "${currentIntVersion}" | cut -d'.' -f3)
-	done
-	local devMajor=$(echo "${majorNumbers[*]}" | sort -nr | head -n1)
-	local devMinor=$(echo "${minorNumbers[*]}" | sort -nr | head -n1)
-	local devPatch=$(echo "${patchNumbers[*]}" | sort -nr | head -n1)
+	local developmentServer=$(getDevelopmentServer)
+    local currentDevVersion=$(getVersionForAppForServer ${app} ${developmentServer})
+    local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
 	local intDate=`date +%Y.%m.%d.%H.%M`
-	local newIntegrationVersion="${devMajor}.${devMinor}.${devPatch}"
+	local newIntegrationVersion="${currentDevVersionPart}"
 	updateVersionForAppForServer ${newIntegrationVersion} ${app} ${server}
 	updateBuildDateForAppForServer ${intDate} ${app} ${server}
 	echo ${newIntegrationVersion} echo ${intDate}
@@ -749,33 +738,48 @@ test () {
 	fi
 
 	echo ---------
-    local productionServers=$(getProductionServers)
-    if [ ${productionServers[0]} -ne "mats.gsd.esrl.noaa.gov" ]; then
-        echo getProductionServers failed ${productionServers[0]} is not "mats.gsd.esrl.noaa.gov"
+    local productionServer=$(getProductionServer)
+    if [ ${productionServer} -ne "mats.gsd.esrl.noaa.gov" ]; then
+        echo getProductionServer failed ${productionServer} is not "mats.gsd.esrl.noaa.gov"
     else
-        echo getProductionServers passed
+        echo getProductionServer passed
     fi
 
     echo ---------
-    local integrationServers=$(getIntegrationServers)
-    if [ ${integrationServers[0]} -ne "mats-int.gsd.esrl.noaa.gov" ]; then
-        echo getIntegrationServers failed ${integrationServers[0]} is not "mats-int.gsd.esrl.noaa.gov"
+    local integrationServer=$(getIntegrationServer)
+    if [ ${integrationServer} -ne "mats-int.gsd.esrl.noaa.gov" ]; then
+        echo getIntegrationServer failed ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
     else
-        echo getIntegrationServers passed
+        echo getIntegrationServer passed
     fi
 
     echo ---------
-    local developmentServers=$(getDevelopmentServers)
-    if [ ${developmentServers[0]} -ne "mats-dev.gsd.esrl.noaa.gov" ]; then
-        echo getDevelopmentServers failed ${developmentServers[0]} is not "mats-dev.gsd.esrl.noaa.gov"
+    local developmentServer=$(getDevelopmentServer)
+    if [ ${developmentServer} -ne "mats-dev.gsd.esrl.noaa.gov" ]; then
+        echo getDevelopmentServer failed ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
     else
-        echo getDevelopmentServers passed
+        echo getDevelopmentServer passed
     fi
 
-
-
-
     echo ---------
+    local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+
+    local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+
+    echo ${currentDevVersion}   ${buildVer}  ${buildDate}
+    echo ${currentIntVersion}   ${intVer}  ${intDate}
+    echo ---------
+
     echo exportCollections /tmp/tmpCollections
     rm -rf /tmp/exportCollections
     mkdir /tmp/exportCollections
