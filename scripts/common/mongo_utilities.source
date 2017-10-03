@@ -59,7 +59,7 @@ setBuildConfigVarsForServer() {
 	local server=$1
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildConfigForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildConfigForServer
 	   db.buildConfiguration.find(
 		{"server" : "$server"}, {_id:0});
 	%EODgetBuildConfigForServer
@@ -94,7 +94,7 @@ setAppDeploymentVarsForServer() {
 	local server=$1
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODsetAppDeploymentVarsForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODsetAppDeploymentVarsForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
 	%EODsetAppDeploymentVarsForServer
 	)
@@ -117,7 +117,7 @@ getDeployedAppsForServer() {
 	local server=$1
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetDeployedAppsForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetDeployedAppsForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0});
 	%EODgetDeployedAppsForServer
 	)
@@ -139,7 +139,7 @@ getBuildableAppsForServer() {
 	local server=$1
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildableAppsForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
 		db.getCollection('buildConfiguration').find(
 		{\$and: [ {server:"\${server}"},{'buildStatus':'enabled'} ]},
         {"app_list.app":1,_id:0});
@@ -174,7 +174,7 @@ updateVersionForAppForServer() {
 	done
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODupdateVersionForAppForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODupdateVersionForAppForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").update(
             { 
                 \$and: [
@@ -216,7 +216,7 @@ updateBuildDateForAppForServer() {
 	done
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODupdateVersionForAppForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODupdateVersionForAppForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").update(
             { 
                 \$and: [
@@ -247,7 +247,7 @@ getDeploymentEnvironmentForServer() {
 	local server=$1
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetDeploymentEnvironmentForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetDeploymentEnvironmentForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
 		{ servers: {
 		      \$in:["${server}"]
@@ -278,7 +278,7 @@ getVersionForAppForServer() {
 	#retrieve current version
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetVersionForAppForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
 			{ \$and: [
 				{ servers: {
@@ -317,7 +317,7 @@ getBuildDateForAppForServer() {
 	#retrieve current buildDate
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetVersionForAppForServer
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
 		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
 			{ \$and: [
 				{ servers: {
@@ -408,9 +408,9 @@ rollIntegrationVersionAndDateForAppForServer() {
     major=`echo "${pversion}" | cut -d'.' -f1`
     minor=`echo "${pversion}" | cut -d'.' -f2`
     patch_old=`echo "${pversion}" | cut -d'.' -f3`
-    patch_new=$((patch_old + 1))
+    patch_new=$(patch_old + 1)
     #make the development patch number one higher than the integration patch number - roll the dev patch
-    dpatch_new=$((patch_new + 1))
+    dpatch_new=$(patch_new + 1)
     export developmentVersion="${dmajor}.${dminor}.${dpatch_new}-${ddate}"
     export intversion="${major}.${minor}.${patch_new}-${ddate}"
 
@@ -491,7 +491,7 @@ duplicateCollection() {
 	local newCollection=$2
 	openTunnel
 	unset data
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODduplicateCollection
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODduplicateCollection
 		db.getCollection("${collection}").copyTo("${newCollection}");
 	%EODduplicateCollection
 	)
@@ -511,7 +511,7 @@ dropCollection() {
 	fi
 	local collection=$1
 	openTunnel
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODdropCollection
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODdropCollection
 		db.getCollection("${collection}").drop();
 	%EODdropCollection
 	)
