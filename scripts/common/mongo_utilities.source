@@ -156,7 +156,7 @@ getBuildableAppsForServer() {
 #RETURNS: mongo update message
 #TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
 updateVersionForAppForServer() {
-	if [ $# -ns 3 ]; then
+	if [ $# -ne 3 ]; then
 		echo $0 - wrong number of params - usage: $0 version app server
 		return 1
 	fi
@@ -263,40 +263,40 @@ getDeploymentEnvironmentForServer() {
 	
 }
 
-getProductionServers() {
+getProductionServer() {
     if [ $# -ne 0 ]; then
         echo $0 - wrong number of params - usage: $0
         return 1
     fi
     openTunnel
     unset data
-    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'production'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'production'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
     closeTunnel
-    echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+    echo $data
 }
 
-getIntegrationServers() {
+getIntegrationServer() {
     if [ $# -ne 0 ]; then
         echo $0 - wrong number of params - usage: $0
         return 1
     fi
     openTunnel
     unset data
-    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'integration'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'integration'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
     closeTunnel
-    echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+    echo $data
 }
 
-getDevelopmentServers() {
+getDevelopmentServer() {
 	if [ $# -ne 0 ]; then
 		echo $0 - wrong number of params - usage: $0
 		return 1
 	fi
 	openTunnel
 	unset data
-	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.find({'deployment_environment':'development'}, {_id:0,servers:1})" | sed 's/[]["]//g' )
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'development'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
 	closeTunnel
-	echo $data | jq -r '.servers | @csv' | sed 's/"//g'
+	echo $data
 }
 
 # This routine outputs the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
@@ -798,3 +798,4 @@ if [[ "$1" == "test" ]];then
 	host=$2
 	test ${host}
 fi
+
