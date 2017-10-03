@@ -417,7 +417,8 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	# get the corresponding integration version...
 	local integrationServer=$(getIntegrationServer)
 	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
-    	local intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
+    local intVersionPart=$(echo "${currentIntVersion}" | cut -d'-' -f1)
+    local intPatch=$(echo "${intVersionPart}" | cut -d'.' -f3)
 	if [ ${intPatch} -ge ${patch} ]; then
 		# have to roll development patch number
 		patch=$(intPatch + 1)
