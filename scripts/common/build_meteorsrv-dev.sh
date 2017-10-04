@@ -19,34 +19,20 @@ echo "remove and clone MATS_for_EMB"
 /usr/bin/rm -rf MATS_for_EMB
 /usr/bin/git clone ${BUILD_GIT_REPO}
 cd MATS_for_EMB
-/usr/bin/git ${BUILD_CODE_BRANCH}
-# pick up any possible version number changes
-#/usr/bin/git merge master
-#test current dir is MATS_FOR_EMB
-remote_origin=`/usr/bin/git config --get remote.origin.url`
-
-if [ "$remote_origin" = "${BUILD_GIT_REPO}" ]
-then 
-	echo "In a MATS_for_EMB clone - good - I will continue"
-else
-	echo "NOT in a MATS_for_EMB clone - not good"
-	echo "try git clone gerrit:MATS_for_EMB MATS_for_EMB"
-	echo "then execute this script from inside MATS_for_EMB"
-	echo "quiting now."
-	exit 1
-fi
-
-#build all of the apps
-cd apps
-#find . -maxdepth 1 -type d -not -path "." | while read x
+/usr/bin/git fetch ${BUILD_CODE_BRANCH}
+#build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=$(getBuildableAppsForServer "${SERVER}")
+changes=$(git diff origin/development_v1.0 --no-pager  --name-only)
+changedApps=$(echo ${changes} | grep apps | cut -f2 -d'/')
+meteor_package=$(echo ${changes}  | grep meteor_packages | cut -f2 -d'/')
+
+
 for app in ${buildableApps[@]}; do
     if  [[ $#  -eq 1 ]] && [[ ! $app == "./${requestedApp}" ]]; then
         continue
     fi
     cd $app
     echo "$0 - building app $x"
-    /usr/bin/git pull
     meteor reset
     meteor npm cache clean
     meteor npm install
