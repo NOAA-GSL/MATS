@@ -783,8 +783,11 @@ test () {
     if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
         echo rollDevelopmentVersionAndDateForAppForServer FAILED initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
     fi
-    if [ "${currentDevVersionPart}" == "${buildVersionPart}" ]; then
+    if [ "${currentDevVersionPart}" == "${intVer}" ]; then
         echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
+    fi
+    if [ "${currentDevVersionPart}" != "${buildVersionPart}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build version part ${currentDevVersionPart} and new new build version part ${buildVersionPart} should be the SAME
     fi
 
     if [ "${currentIntVersion}" != "${intVer}" ]; then
@@ -795,11 +798,13 @@ test () {
     echo ---------
     echo rollIntegrationVersionAndDateForAppForServer
     currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
     currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
     buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
     buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
@@ -826,14 +831,16 @@ test () {
     currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
     rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
     buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
     buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
-    if [ "${currentDevVersionPart}" == "${buildVersionPart}" ]; then
+    if [ "${currentDevVersionPart}" == "${intVer}" ]; then
         echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
     fi
     if [ "${currentIntVersion}" != "${intVer}" ]; then
@@ -846,7 +853,11 @@ test () {
     currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
     rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
