@@ -777,6 +777,14 @@ test () {
 
     echo -e "${currentDevVersion}\t\t${currentDevBuildDate}\t\t${buildVer}\t\t\t\t${buildDate}"
     echo -e "${currentIntVersion}\t\t${currentIntBuildDate}\t\t${intVer}\t\t\t\t${intDate}"
+    local currentDevVersionPart
+    local currentDevDatePart
+    local buildVerVersionPart
+    local buildVerDatePart
+    local currentIntVersionPart
+    local currentIntDatePart
+    local buildIntVersionPart
+    local buildVerDatePart
     echo ---------
 
     echo exportCollections /tmp/tmpCollections
