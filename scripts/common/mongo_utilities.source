@@ -380,11 +380,11 @@ getBuildDateForAppForServer() {
 
 # NOTE ABOUT ROLLING VERSIONS:
 # When the nightly build (development branch) happens the version must acquire a higher patch number than the integration version. This is
-# because the code gets tagged at the version number. We want to be able to roll the code back to either an integration version or
+# because the code gets tagged with a combination of the app and the version number. We want to be able to roll the code back to either an integration version or
 # a development version. Therefore when the development version rolls we make sure that the patch number is one higher than the corresponding integration
 # patch number and we add the date postfix.
 # When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
-# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number and the date.
 
 # This routine will update the version and buildDate fields in the app element identified by the app reference and server params
 # in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
@@ -418,13 +418,9 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	local integrationServer=$(getIntegrationServer)
 	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
         local intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
-echo rollDevelopmentVersionAndDateForAppForServer currentIntVersion is ${currentIntVersion} intPatch is ${intPatch} integrationServer is ${integrationServer}
 	if [ ${intPatch} -ge ${patch} ]; then
-echo rollDevelopmentVersionAndDateForAppForServer in patch calculation - intPatch is ${intPatch} patch is ${patch}
 		patch=$((intPatch + 1))
-echo rollDevelopmentVersionAndDateForAppForServer in patch calculation - new patch is ${patch}
 	fi
-echo rollDevelopmentVersionAndDateForAppForServer new patch is ${patch}
 	# build versions roll date... change the date portion to be current
 	local vdate=`date +%Y.%m.%d.%H.%M`
 	local newVersion="${major}.${minor}.${patch}-${vdate}"
@@ -456,7 +452,7 @@ rollIntegrationVersionAndDateForAppForServer() {
 	local developmentServer=$(getDevelopmentServer)
         local currentDevVersion=$(getVersionForAppForServer ${app} ${developmentServer})
         local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
-	local intDate=`date +%Y.%m.%d.%H.%M`
+	local intDate=$(date +%Y.%m.%d.%H.%M)
 	local newIntegrationVersion="${currentDevVersionPart}"
 	updateVersionForAppForServer ${newIntegrationVersion} ${app} ${server}
 	updateBuildDateForAppForServer ${intDate} ${app} ${server}
