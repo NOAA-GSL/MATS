@@ -759,18 +759,38 @@ test () {
     fi
 
     echo ---------
+    # With this test the first instance will be a copy of the deployment collection
+    # so we will see a difference in the build dates between dev and int
+    # but the build dates resolution is one minute so subsequent rolling operations actually
+    # end up with the same build date.
     echo rollDevelopmentVersionAndDateForAppForServer
     local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
     local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
     local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local buildVersionPart=$(echo ${buildVersion} | cut -f1 -d'-')
     local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevBuildDate}" != "${intDate}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial DevBuildDate ${currentDevBuildDate} and new intDate ${intDate} should be the same
+    fi
+    if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
+    fi
+    if [ "${currentDevVersionPart}" != "${buildVersionPart}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build version part ${currentDevVersionPart} and new int version ${intVer} should be the SAME
+    fi
+
+    if [ "${currentIntVersion}" != "${intVersion}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int version ${currentIntVersion}  and new int version ${intVersion} should be the SAME
+    fi
+
 
     echo ---------
     echo rollIntegrationVersionAndDateForAppForServer
@@ -785,6 +805,20 @@ test () {
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevVersion}" != "${buildVer}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial dev version ${currentDevVersion} and new build version ${buildVer} should be the same
+    fi
+    if [ "${currentDevBuildDate}" != "${buildDate}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build date ${currentDevBuildDate} and new build date ${buildDate} should be the same
+    fi
+    if [ "${currentIntVersion}" == "${intVersion}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int version ${currentIntVersion}  and new int version ${intVersion} should NOT be the SAME
+    fi
+    if [ "${currentIntBuildDate}" == "${intDate}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int date ${currentIntBuildDate} and new int date ${intDate} should be the SAME
+    fi
+
+
 
     echo ------------
     echo rollDevelopmentVersionAndDateForAppForServer again
@@ -799,6 +833,12 @@ test () {
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevVersionPart}" == "${buildVersionPart}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
+    fi
+    if [ "${currentIntVersion}" != "${intVersion}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int version ${currentIntVersion}  and new int version ${intVersion} should be the SAME
+    fi
 
     echo ------------
     echo rollIntegrationVersionAndDateForAppForServer again
@@ -813,6 +853,15 @@ test () {
     intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentIntVersion}" == "${intVersion}" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int version ${currentIntVersion}  and new int version ${intVersion} should NOT be the SAME
+    fi
+    local initialIntVersionPatch=$(echo ${currentIntVersion} | cut -f3 -d'.')
+    local newIntVersionPatch=$(echo ${intVer} | cut -f3 -d'.')
+    if [ "${initialIntVersionPatch}" != "$((${newIntVersionPatch} - 1))" ]; then
+        echo rollDevelopmentVersionAndDateForAppForServer FAILED initial int version patch ${initialIntVersionPatch}  SHOULD be new intVersionPatch less 1, it is ${newIntVersionPatch}
+    fi
+
 
 
     echo ---------

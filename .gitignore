@@ -17,3 +17,4 @@ meteor_packages/.idea/tasks.xml
 apps/metproto/private/R_/R_work/data/
 static/img/image00.png
 .DS_Store
+/meteor_packages/mats-common/public/deployment/deployment.json
