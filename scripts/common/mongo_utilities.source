@@ -149,7 +149,7 @@ getBuildableAppsForServer() {
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
 		db.getCollection('buildConfiguration').find(
-		{\$and: [ {server:"\${server}"},{'buildStatus':'enabled'} ]},
+		{\$and: [ {server:"\${server}"},{'app_list.buildStatus':'enabled'} ]},
         {"app_list.app":1,_id:0});
 	%EODgetBuildableAppsForServer
 	)
