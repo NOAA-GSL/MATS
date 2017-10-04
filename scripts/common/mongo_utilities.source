@@ -417,19 +417,20 @@ rollDevelopmentVersionAndDateForAppForServer() {
 	# get the corresponding integration version...
 	local integrationServer=$(getIntegrationServer)
 	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
-    local intVersionPart=$(echo "${currentIntVersion}" | cut -d'-' -f1)
-    local intPatch=$(echo "${intVersionPart}" | cut -d'.' -f3)
+        local intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
+echo rollDevelopmentVersionAndDateForAppForServer currentIntVersion is ${currentIntVersion} intPatch is ${intPatch} integrationServer is ${integrationServer}
 	if [ ${intPatch} -ge ${patch} ]; then
-		# have to roll development patch number
-		patch=$(intPatch + 1)
+echo rollDevelopmentVersionAndDateForAppForServer in patch calculation - intPatch is ${intPatch} patch is ${patch}
+		patch=$((intPatch + 1))
+echo rollDevelopmentVersionAndDateForAppForServer in patch calculation - new patch is ${patch}
 	fi
+echo rollDevelopmentVersionAndDateForAppForServer new patch is ${patch}
 	# build versions roll date... change the date portion to be current
 	local vdate=`date +%Y.%m.%d.%H.%M`
 	local newVersion="${major}.${minor}.${patch}-${vdate}"
 	#update the new version
 	updateVersionForAppForServer ${newVersion} ${app} ${server}
 	updateBuildDateForAppForServer ${vdate} ${app} ${server}
-	echo ${newVersion} ${vdate}
 }
 
 # This routine updates the version and buildDate fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
@@ -453,13 +454,12 @@ rollIntegrationVersionAndDateForAppForServer() {
 		return 1
 	fi
 	local developmentServer=$(getDevelopmentServer)
-    local currentDevVersion=$(getVersionForAppForServer ${app} ${developmentServer})
-    local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
+        local currentDevVersion=$(getVersionForAppForServer ${app} ${developmentServer})
+        local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
 	local intDate=`date +%Y.%m.%d.%H.%M`
 	local newIntegrationVersion="${currentDevVersionPart}"
 	updateVersionForAppForServer ${newIntegrationVersion} ${app} ${server}
 	updateBuildDateForAppForServer ${intDate} ${app} ${server}
-	echo ${newIntegrationVersion} echo ${intDate}
 }
 
 #This routine exports each collection to a set of files that are named after each collection, with a .json suffix.
@@ -763,6 +763,7 @@ test () {
     fi
 
     echo ---------
+    echo rollDevelopmentVersionAndDateForAppForServer
     local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
@@ -770,21 +771,54 @@ test () {
     rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
     local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
     local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
-
-    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
     local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
 
-    echo -e "${currentDevVersion}\t\t${currentDevBuildDate}\t\t${buildVer}\t\t\t\t${buildDate}"
-    echo -e "${currentIntVersion}\t\t${currentIntBuildDate}\t\t${intVer}\t\t\t\t${intDate}"
-    local currentDevVersionPart
-    local currentDevDatePart
-    local buildVerVersionPart
-    local buildVerDatePart
-    local currentIntVersionPart
-    local currentIntDatePart
-    local buildIntVersionPart
-    local buildVerDatePart
+    echo ---------
+    echo rollIntegrationVersionAndDateForAppForServer
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+
+    echo ------------
+    echo rollDevelopmentVersionAndDateForAppForServer again
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+
+    echo ------------
+    echo rollIntegrationVersionAndDateForAppForServer again
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+
+
     echo ---------
 
     echo exportCollections /tmp/tmpCollections
