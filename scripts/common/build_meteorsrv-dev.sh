@@ -17,15 +17,15 @@ date
 cd ${BUILD_DIRECTORY}
 echo "remove and clone MATS_for_EMB"
 /usr/bin/rm -rf MATS_for_EMB
-/usr/bin/git clone gerrit:MATS_for_EMB
+/usr/bin/git clone ${BUILD_GIT_REPO}
 cd MATS_for_EMB
-/usr/bin/git checkout development_v1.0
+/usr/bin/git ${BUILD_CODE_BRANCH}
 # pick up any possible version number changes
 #/usr/bin/git merge master
 #test current dir is MATS_FOR_EMB
 remote_origin=`/usr/bin/git config --get remote.origin.url`
 
-if [ "$remote_origin" = "gerrit:MATS_for_EMB" ]
+if [ "$remote_origin" = "${BUILD_GIT_REPO}" ]
 then 
 	echo "In a MATS_for_EMB clone - good - I will continue"
 else
@@ -36,21 +36,15 @@ else
 	exit 1
 fi
 
-#build all the apps
-export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
-if [[ ! "$METEOR_PACKAGE_DIRS" =~ "meteor_packages" ]]; then
-	echo "failed to find the meteor packages subdirectory - what gives here? - must exit now"
-	exit 1
-fi
-
 #build all of the apps
 cd apps
-find . -maxdepth 1 -type d -not -path "." | while read x
-do
-    if  [[ $#  -eq 1 ]] && [[ ! $x == "./${requestedApp}" ]]; then
+#find . -maxdepth 1 -type d -not -path "." | while read x
+buildableApps=$(getBuildableAppsForServer "${SERVER}")
+for app in ${buildableApps[@]}; do
+    if  [[ $#  -eq 1 ]] && [[ ! $app == "./${requestedApp}" ]]; then
         continue
     fi
-    cd $x
+    cd $app
     echo "$0 - building app $x"
     /usr/bin/git pull
     meteor reset
