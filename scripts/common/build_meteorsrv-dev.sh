@@ -1,5 +1,8 @@
 #!/bin/bash
-# 
+#
+. /builds/buildArea/MATS_for_EMB/scripts/common/mongo_utilities.source
+setBuildConfigVarsForDevelopmentServer
+
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
@@ -11,7 +14,7 @@ requestedApp="$1"
 echo "$0 ----------- started with args $*"
 date
 
-cd /builds/buildArea
+cd ${BUILD_DIRECTORY}
 echo "remove and clone MATS_for_EMB"
 /usr/bin/rm -rf MATS_for_EMB
 /usr/bin/git clone gerrit:MATS_for_EMB

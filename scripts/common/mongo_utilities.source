@@ -51,34 +51,42 @@ function openTunnel() {
 #PARAMETERS: server
 #RETURNS: none
 #TRANSFORMATION: sets shell variables
-setBuildConfigVarsForServer() {
-	if [ $# -ne 1 ]; then
-		echo $0 - wrong number of params - usage: $0 server
+setBuildConfigVarsForDevelopmentServer() {
+	if [ $# -ne 0 ]; then
+		echo $0 - wrong number of params - usage: $0
 		return 1
 	fi
-	local server=$1
 	openTunnel
 	unset data
-	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildConfigForServer
-	   db.buildConfiguration.find(
-		{"server" : "$server"}, {_id:0});
-	%EODgetBuildConfigForServer
-	)
-
-	# and turn them into local shell variables.
-	# for jq documentation 
-	# SERVER='mats-int.gsd.esrl.noaa.gov'
-	# DEPLOYMENT_ENVIRONMENT='production'
-	# DEPLOYMENT_STATUS='active'
-	# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
-	# BUILD_CODE_BRANCH='master'
-	# BUILD_DIRECTORY='/builds/buildArea/'
-	# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
-
-	eval $(echo $data | jq -r '. | {server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,build_cmd} | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"' )
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'development'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
 	closeTunnel
 }
 
+setBuildConfigVarsForIntegrationServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'integration'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    closeTunnel
+}
+
+setBuildConfigVarsForProductionServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    local server=$1
+    openTunnel
+    unset data
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'production'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    closeTunnel
+}
 # this routine will populate shell ARRAYS to represent the VERSIONS, APPS, and APPNAMES values in the 
 # deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
 # and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
@@ -579,22 +587,57 @@ test () {
 	   ;;
 	esac
 
-	echo setBuildConfigVarsForServer
-	setBuildConfigVarsForServer ${host}
-	if [ "$SERVER" == "${host}" ]; then
-		echo setBuildConfigVarsForServer passed
+	echo setBuildConfigVarsForDevelopmentServer
+	setBuildConfigVarsForDevelopmentServer
+	if [ "$SERVER" == "mats-dev.gsd.esrl.noaa.gov" ]; then
+		echo setBuildConfigVarsDevelopmentForServer passed
 	else
 		echo setBuildConfigVarsForServer failed
 		echo $SERVER does not equal ${host}
 	fi
 	
-	if [ "$DEPLOYMENT_ENVIRONMENT" == "${prodEnv}" ]; then
-		echo setBuildConfigVarsForServer passed
+	if [ "$DEPLOYMENT_ENVIRONMENT" == "development" ]; then
+		echo setBuildConfigVarsForDevelopmentServer passed
 	else
-		echo setBuildConfigVarsForServer failed
-		echo $DEPLOYMENT_ENVIRONMENT does not equal ${prodEnv}
+		echo setBuildConfigVarsForDevelopmentServer failed
+		echo $DEPLOYMENT_ENVIRONMENT does not equal "development"
 	fi
-	
+
+
+    echo setBuildConfigVarsForIntegrationServer
+    setBuildConfigVarsForIntegrationServer
+    if [ "$SERVER" == "mats-int.gsd.esrl.noaa.gov" ]; then
+        echo setBuildConfigVarsForIntegrationServer passed
+    else
+        echo setBuildConfigVarsForServer failed
+        echo $SERVER does not equal ${host}
+    fi
+
+    if [ "$DEPLOYMENT_ENVIRONMENT" == "integration" ]; then
+        echo setBuildConfigVarsForIntegrationServer passed
+    else
+        echo setBuildConfigVarsForIntegrationServer failed
+        echo $DEPLOYMENT_ENVIRONMENT does not equal "integration"
+    fi
+
+
+    echo setBuildConfigVarsForProductionServer
+    setBuildConfigVarsForProductionServer
+    if [ "$SERVER" == "mats.gsd.esrl.noaa.gov" ]; then
+        echo setBuildConfigVarsForProductionServer passed
+    else
+        echo setBuildConfigVarsForProductionServer failed
+        echo $SERVER does not equal ${host}
+    fi
+
+    if [ "$DEPLOYMENT_ENVIRONMENT" == "production" ]; then
+        echo setBuildConfigVarsForProductionServer passed
+    else
+        echo setBuildConfigVarsForProductionServer failed
+        echo $DEPLOYMENT_ENVIRONMENT does not equal "production"
+    fi
+
+
 	echo ---------
 	echo setAppDeploymentVarsForServer
 	unset APPS
