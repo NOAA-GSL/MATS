@@ -88,7 +88,8 @@ if  [ "X${apps}" == "X"  ]; then
 	exit 1
 fi
 
-/usr/bin/git merge
+# go ahead and merge changes
+/usr/bin/git pull
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to ldableApps=($(getBuildableAppsForServer "${SERVER}")) - ret $ret - must exit now"
     exit 1
