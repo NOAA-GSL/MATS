@@ -44,6 +44,7 @@ fi
 buildableApps=($(getBuildableAppsForServer "${SERVER}"))
 echo buildable apps are....
 echo ${buildableApps[*]}
+echo working in $(pwd) BUILD_CODE_BRANCH is ${BUILD_CODE_BRANCH}
 diffs=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH} | grep -v 'appProductionStatus')
 if [ $? -ne 0 ]; then
     echo "failed to /usr/bin/git diff - must exit now"
