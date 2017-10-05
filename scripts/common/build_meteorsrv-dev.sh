@@ -95,6 +95,7 @@ if [ $ret -ne 0 ]; then
     exit 1
 fi
 
+cd ${DEPLOYMENT_DIRECTORY}/apps
 echo -e "$0 building these apps ${apps[*]}"
 for app in ${apps[*]}; do
     cd $app
