@@ -94,7 +94,7 @@ if [ $ret -ne 0 ]; then
     echo -e "${failed} to ldableApps=($(getBuildableAppsForServer "${SERVER}")) - ret $ret - must exit now"
     exit 1
 fi
-
+export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 cd ${DEPLOYMENT_DIRECTORY}/apps
 echo -e "$0 building these apps ${apps[*]}"
 for app in ${apps[*]}; do
