@@ -3,9 +3,13 @@
 # bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
 # Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
 
-# For non-test usages the deploy collectios is named deployment. 
+# For non-test usages the deploy collectios is named deployment.
 # for test usage the deployment collection is duplicated and the duplicate "deployment-test" is used.
 export DEPLOYMENTCOLLECTION="deployment"
+
+export passed='\033[0;32m passed \033[0m'
+export failed='\033[0;31m failed \033[0m'
+
 
 # close the ssh tunnel to the server where the mongo db lives ...
 #PARAMETERS: none
@@ -561,9 +565,6 @@ dropCollection() {
 }
 
 test () {
-	GRN='\033[0;32m'
-	RED='\033[0;31m'
-	NC='\033[0m' # No Color
 	DEPLOYMENTCOLLECTION="deployment-test"
 	duplicateCollection deployment ${DEPLOYMENTCOLLECTION}
 	host=$1
@@ -590,16 +591,16 @@ test () {
 	echo setBuildConfigVarsForDevelopmentServer
 	setBuildConfigVarsForDevelopmentServer
 	if [ "$SERVER" == "mats-dev.gsd.esrl.noaa.gov" ]; then
-		echo -e setBuildConfigVarsDevelopmentForServer ${GRN}passed${NC}
+		echo -e setBuildConfigVarsDevelopmentForServer ${passed}
 	else
-		echo -e setBuildConfigVarsForServer ${RED}failed${NC}
+		echo -e setBuildConfigVarsForServer ${failed}
 		echo -e $SERVER does not equal ${host}
 	fi
 	
 	if [ "$DEPLOYMENT_ENVIRONMENT" == "development" ]; then
-		echo -e setBuildConfigVarsForDevelopmentServer ${GRN}passed${NC}
+		echo -e setBuildConfigVarsForDevelopmentServer ${passed}
 	else
-		echo -e setBuildConfigVarsForDevelopmentServer ${RED}failed${NC}
+		echo -e setBuildConfigVarsForDevelopmentServer ${failed}
 		echo -e $DEPLOYMENT_ENVIRONMENT does not equal "development"
 	fi
 
@@ -607,16 +608,16 @@ test () {
     echo setBuildConfigVarsForIntegrationServer
     setBuildConfigVarsForIntegrationServer
     if [ "$SERVER" == "mats-int.gsd.esrl.noaa.gov" ]; then
-        echo -e setBuildConfigVarsForIntegrationServer ${GRN}passed${NC}
+        echo -e setBuildConfigVarsForIntegrationServer ${passed}
     else
-        echo -e setBuildConfigVarsForServer ${RED}failed${NC}
+        echo -e setBuildConfigVarsForServer ${failed}
         echo $SERVER does not equal ${host}
     fi
 
     if [ "$DEPLOYMENT_ENVIRONMENT" == "integration" ]; then
-        echo -e setBuildConfigVarsForIntegrationServer ${GRN}passed${NC}
+        echo -e setBuildConfigVarsForIntegrationServer ${passed}
     else
-        echo -e setBuildConfigVarsForIntegrationServer ${RED}failed${NC}
+        echo -e setBuildConfigVarsForIntegrationServer ${failed}
         echo -e $DEPLOYMENT_ENVIRONMENT does not equal "integration"
     fi
 
@@ -624,16 +625,16 @@ test () {
     echo setBuildConfigVarsForProductionServer
     setBuildConfigVarsForProductionServer
     if [ "$SERVER" == "mats.gsd.esrl.noaa.gov" ]; then
-        echo -e setBuildConfigVarsForProductionServer ${GRN}passed${NC}
+        echo -e setBuildConfigVarsForProductionServer ${passed}
     else
-        echo -e setBuildConfigVarsForProductionServer ${RED}failed${NC}
+        echo -e setBuildConfigVarsForProductionServer ${failed}
         echo -e $SERVER does not equal ${host}
     fi
 
     if [ "$DEPLOYMENT_ENVIRONMENT" == "production" ]; then
-        echo -e setBuildConfigVarsForProductionServer ${GRN}passed${NC}
+        echo -e setBuildConfigVarsForProductionServer ${passed}
     else
-        echo -e setBuildConfigVarsForProductionServer ${RED}failed${NC}
+        echo -e setBuildConfigVarsForProductionServer ${failed}
         echo -e $DEPLOYMENT_ENVIRONMENT does not equal "production"
     fi
 
@@ -645,23 +646,23 @@ test () {
 	unset VERSIONS
 	setAppDeploymentVarsForServer ${host}
 	if [ "${APPS[0]}" == "upperair" ]; then
-		echo -e setAppDeploymentVarsForServer ${GRN}passed${NC}
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo -e setAppDeploymentVarsForServer ${RED}failed${NC}
+		echo -e setAppDeploymentVarsForServer ${failed}
 		echo -e "${APPS[0]}" does not equal "upperair"
         fi
 		
 	if [ "${APPNAMES[1]}" == "Anomaly Correlation" ]; then
-		echo -e setAppDeploymentVarsForServer ${GRN}passed${NC}
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo -e setAppDeploymentVarsForServer ${RED}failed${NC}
+		echo -e setAppDeploymentVarsForServer ${failed}
 		echo -e "${APPNAMES[1]}" does not equal "Anomaly Correlation"
         fi
 	
 	if [[ "${VERSIONS[0]}" =~ ${pattern} ]]; then
-		echo -e setAppDeploymentVarsForServer ${GRN}passed${NC}
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo -e setAppDeploymentVarsForServer ${RED}failed${NC}
+		echo -e setAppDeploymentVarsForServer ${failed}
 		echo -e "${VERSIONS[0]}" does not match "digit.digit.digit"
         fi
 	
@@ -681,9 +682,9 @@ test () {
 	    [[ -n $skip ]] || diff+=("$i")
 	done
 	if [ ${#diff[@]} -eq 0 ]; then
-		echo -e getBuildableAppsForServer ${GRN}passed${NC}
+		echo -e getBuildableAppsForServer ${passed}
 	else
-		echo -e getBuildableAppsForServer ${RED}failed${NC}
+		echo -e getBuildableAppsForServer ${failed}
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
@@ -701,9 +702,9 @@ test () {
 	    [[ -n $skip ]] || diff+=("$i")
 	done
 	if [ ${#diff[@]} -eq 0 ]; then
-		echo -e getBuildableAppsForServer ${GRN}passed${NC}
+		echo -e getBuildableAppsForServer ${passed}
 	else
-		echo -e getBuildableAppsForServer ${RED}failed${NC}
+		echo -e getBuildableAppsForServer ${failed}
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
@@ -721,9 +722,9 @@ test () {
 	    [[ -n $skip ]] || diff+=("$i")
 	done
 	if [ ${#diff[@]} -eq 0 ]; then
-		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${GRN}passed${NC}
+		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${RED}failed${NC}
+		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${failed}
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
@@ -733,9 +734,9 @@ test () {
 	updateVersionForAppForServer "1.5.20-2017.09.26.16.16-test" ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	if [ "1.5.20-2017.09.26.16.16-test" == "$ceilingNewVersion" ]; then
-		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${GRN}passed${NC}
+		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${RED}failed${NC}
+		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${failed}
 		echo -e old version is ${ceilingCurrentVersion}
 		echo -e new version is ${ceilingNewVersion}
 		echo -e new version should be "1.5.20-2017.09.26.16.16-test"
@@ -744,9 +745,9 @@ test () {
 	updateVersionForAppForServer $ceilingCurrentVersion ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	if [ "$ceilingCurrentVersion" == "$ceilingNewNewVersion" ]; then
-		echo -e updateVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${GRN}passed${NC}
+		echo -e updateVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updatupdatupdatupdateeeesetVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${RED}failed${NC}
+		echo -e updatupdatupdatupdateeeesetVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${failed}
 		echo -e old version is ${ceilingNewVersion}
 		echo -e new version is ${ceilingNewNewVersion}
 		echo -e new version should be "$ceilingCurrentVersion"
@@ -757,9 +758,9 @@ test () {
 	updateBuildDateForAppForServer "at the moment" ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	if [ "at the moment" == "$ceilingNewBuildDate" ]; then
-		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${GRN}passed${NC}
+		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${RED}failed${NC}
+		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${failed}
 		echo -e old buildDate is ${ceilingCurrentBuildDate}
 		echo -e new buildDate is ${ceilingNewBuildDate}
 		echo -e new buildDate should be "at the moment"
@@ -769,9 +770,9 @@ test () {
 	updateBuildDateForAppForServer $ceilingCurrentBuildDate ceiling mats.gsd.esrl.noaa.gov
 	local ceilingNewNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
 	if [ "$ceilingCurrentBuildDate" == "$ceilingNewNewBuildDate" ]; then
-		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${GRN}passed${NC}
+		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${passed}
 	else
-		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${RED}failed${NC}
+		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${failed}
 		echo -e old buildDate is ${ceilingNewBuildDate}
 		echo -e new buildDate is ${ceilingNewNewBuildDate}
 		echo -e new buildDate should be "$ceilingCurrentBuildDate"
@@ -780,25 +781,25 @@ test () {
 	echo -e ---------
     local productionServer=$(getProductionServer)
     if [ ${productionServer} == "mats.gsd.esrl.noaa.gov" ]; then
-        echo -e getProductionServer ${GRN}passed${NC}
+        echo -e getProductionServer ${passed}
     else
-        echo -e getProductionServer ${RED}failed${NC} ${productionServer} is not "mats.gsd.esrl.noaa.gov"
+        echo -e getProductionServer ${failed} ${productionServer} is not "mats.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local integrationServer=$(getIntegrationServer)
     if [ ${integrationServer} == "mats-int.gsd.esrl.noaa.gov" ]; then
-        echo -e getIntegrationServer ${GRN}passed${NC}
+        echo -e getIntegrationServer ${passed}
     else
-        echo -e getIntegrationServer ${RED}failed${NC} ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
+        echo -e getIntegrationServer ${failed} ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
     local developmentServer=$(getDevelopmentServer)
     if [ ${developmentServer} == "mats-dev.gsd.esrl.noaa.gov" ]; then
-        echo -e getDevelopmentServer ${GRN}passed${NC}
+        echo -e getDevelopmentServer ${passed}
     else
-        echo -e getDevelopmentServer ${RED}failed${NC} ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
+        echo -e getDevelopmentServer ${failed} ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
     fi
 
     echo ---------
@@ -821,20 +822,20 @@ test () {
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentDevBuildDate}" != "${intDate}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial DevBuildDate ${currentDevBuildDate} and new intDate ${intDate} should be the same
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new intDate ${intDate} should be the same
     fi
     if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
     fi
     if [ "${currentDevVersionPart}" == "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
     fi
     if [ "${currentDevVersionPart}" != "${buildVersionPart}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial build version part ${currentDevVersionPart} and new new build version part ${buildVersionPart} should be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new new build version part ${buildVersionPart} should be the SAME
     fi
 
     if [ "${currentIntVersion}" != "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
     fi
 
 
@@ -854,16 +855,16 @@ test () {
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentDevVersion}" != "${buildVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial dev version ${currentDevVersion} and new build version ${buildVer} should be the same
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial dev version ${currentDevVersion} and new build version ${buildVer} should be the same
     fi
     if [ "${currentDevBuildDate}" != "${buildDate}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial build date ${currentDevBuildDate} and new build date ${buildDate} should be the same
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build date ${currentDevBuildDate} and new build date ${buildDate} should be the same
     fi
     if [ "${currentIntVersion}" == "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
     fi
     if [ "${currentIntBuildDate}" == "${intDate}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int date ${currentIntBuildDate} and new int date ${intDate} should be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int date ${currentIntBuildDate} and new int date ${intDate} should be the SAME
     fi
 
 
@@ -884,10 +885,10 @@ test () {
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentDevVersionPart}" != "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial build version part ${currentDevVersionPart} and new int version ${intVer} should be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new int version ${intVer} should be the SAME
     fi
     if [ "${currentIntVersion}" != "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
     fi
 
     echo -e ------------
@@ -908,12 +909,12 @@ test () {
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
     if [ "${currentIntVersion}" == "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
     fi
     local initialIntVersionPatch=$(echo ${currentIntVersion} | cut -f3 -d'.')
     local newIntVersionPatch=$(echo ${intVer} | cut -f3 -d'.')
     if [ "${initialIntVersionPatch}" != "$((${newIntVersionPatch} - 1))" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${RED}failed${NC} initial int version patch ${initialIntVersionPatch}  SHOULD be new intVersionPatch less 1, it is ${newIntVersionPatch}
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version patch ${initialIntVersionPatch}  SHOULD be new intVersionPatch less 1, it is ${newIntVersionPatch}
     fi
 
 
