@@ -42,13 +42,18 @@ fi
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=($(getBuildableAppsForServer "${SERVER}"))
-echo -e buildable apps are....
-echo -e ${buildableApps[*]}
-echo -e id is $(id) working in $(pwd) BUILD_CODE_BRANCH is ${BUILD_CODE_BRANCH}
-diffs=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH} | grep -v 'appProductionStatus')
+echo -e buildable apps are....  ${buildableApps[*]}
+diffOut=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH})
 ret=$?
 if [ $ret -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git diff - ret $ret - must exit now"
+    exit 1
+fi
+
+diffs=$(echo $diffOut | grep -v 'appProductionStatus')
+ret=$?
+if [ $ret -ne 0 ]; then
+    echo -e "${failed} no modified apps to build - ret $ret - must exit now"
     exit 1
 fi
 changedApps=($(echo -e ${diffs} | grep apps | cut -f2 -d'/'))
