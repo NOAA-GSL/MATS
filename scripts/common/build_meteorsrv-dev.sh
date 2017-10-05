@@ -44,10 +44,11 @@ fi
 buildableApps=($(getBuildableAppsForServer "${SERVER}"))
 echo buildable apps are....
 echo ${buildableApps[*]}
-echo working in $(pwd) BUILD_CODE_BRANCH is ${BUILD_CODE_BRANCH}
+echo id is $(id) working in $(pwd) BUILD_CODE_BRANCH is ${BUILD_CODE_BRANCH}
 diffs=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH} | grep -v 'appProductionStatus')
-if [ $? -ne 0 ]; then
-    echo "failed to /usr/bin/git diff - must exit now"
+ret=$?
+if [ $ret -ne 0 ]; then
+    echo "failed to /usr/bin/git diff - ret $ret - must exit now"
     exit 1
 fi
 changedApps=($(echo ${diffs} | grep apps | cut -f2 -d'/'))
@@ -76,6 +77,10 @@ else
         done
         echo modified and buildable apps are ${apps[*]}
     fi
+fi
+if  [ "X${apps}" == "X"  ]; then
+	echo no apps to build - exiting
+	exit 1
 fi
 echo "$0 building these apps ${apps[*]}"
 for app in ${apps[*]}; do
