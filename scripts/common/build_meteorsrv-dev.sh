@@ -55,7 +55,11 @@ meteor_package_changed=$(echo ${diffs}  | grep meteor_packages | cut -f2 -d'/')
 
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
-    apps+=(${requestedApp})
+    if [ "${requestedApp}" == "all" ]; then
+        apps=${buildableApps}
+    else
+        apps+=(${requestedApp})
+    fi
 else
     if [ "X${meteor_package_changed}" != "X"  ]; then
         # common code changed so we have to build all the apps
