@@ -75,7 +75,7 @@ else
     else
         # no common code changes do just build apps
         l2=" ${changedApps[*]} "
-        for a in ${buildableApps}; do
+        for a in ${buildableApps[*]}; do
             if [[ $l2 =~ " $a " ]]; then
                 apps+=($a)
             fi
@@ -87,6 +87,13 @@ if  [ "X${apps}" == "X"  ]; then
 	echo -e no apps to build - exiting
 	exit 1
 fi
+
+/usr/bin/git merge
+if [ $ret -ne 0 ]; then
+    echo -e "${failed} to ldableApps=($(getBuildableAppsForServer "${SERVER}")) - ret $ret - must exit now"
+    exit 1
+fi
+
 echo -e "$0 building these apps ${apps[*]}"
 for app in ${apps[*]}; do
     cd $app
