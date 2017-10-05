@@ -99,7 +99,7 @@ for app in ${apps[*]}; do
     cd ..
 done
 
-echo push tags that we added
+echo push appProductionStatus files and tags that we added
 git push origin --tags
 # clean up /tmp files
 echo "cleaning up /tmp/npm-* files"
