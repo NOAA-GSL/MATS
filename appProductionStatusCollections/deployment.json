@@ -177,49 +177,49 @@
     {
       "app": "upperair",
       "appName": "Upper Air",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "anomalycor",
       "appName": "Anomaly Correlation",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "ceiling",
       "appNAme": "Ceiling",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "visibility",
       "appNAme": "Visibility",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "surface",
       "appName": "Surface",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "precipitation",
       "appName": "Precipitation",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "radarReflectivity",
       "appName": "Radar Reflectivity",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     },
     {
       "app": "wfip2",
       "appName": "Wfip2",
-      "version": "1.5.19-2017.09.15.19.50",
+      "version": "1.5.19",
       "buildDate": "2017.09.21.16.16"
     }
   ]
