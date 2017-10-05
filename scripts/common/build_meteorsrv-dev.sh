@@ -29,14 +29,14 @@ cd ${DEPLOYMENT_DIRECTORY}
 echo checking out ${BUILD_CODE_BRANCH}
 /usr/bin/git checkout ${BUILD_CODE_BRANCH}
 if [ $? -ne 0 ]; then
-    echo "failed to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
+    echo "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
     exit 1
 fi
 
 echo fetching
 /usr/bin/git fetch
 if [ $? -ne 0 ]; then
-    echo "failed to /usr/bin/git fetch - must exit now"
+    echo "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
 
@@ -48,7 +48,7 @@ echo id is $(id) working in $(pwd) BUILD_CODE_BRANCH is ${BUILD_CODE_BRANCH}
 diffs=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH} | grep -v 'appProductionStatus')
 ret=$?
 if [ $ret -ne 0 ]; then
-    echo "failed to /usr/bin/git diff - ret $ret - must exit now"
+    echo "${failed} to /usr/bin/git diff - ret $ret - must exit now"
     exit 1
 fi
 changedApps=($(echo ${diffs} | grep apps | cut -f2 -d'/'))
@@ -99,7 +99,7 @@ for app in ${apps[*]}; do
     echo building app
     meteor build /builds
     if [ $? -ne 0 ]; then
-        echo "failed to meteor build - must exit now"
+        echo "${failed} to meteor build - must exit now"
         exit 1
     fi
     echo make a tag
