@@ -153,7 +153,13 @@ for app in ${apps[*]}; do
     meteor reset
     meteor npm cache clean
     meteor npm install
-    rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
+    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+        rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
+    else
+        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+            rollIntegrationVersionAndDateForAppForServer ${app} ${SERVER}
+        fi
+    fi
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
