@@ -20,7 +20,6 @@ while getopts "ar:e:t:" o; do
             tag=(${OPTARG})
             requestedTag="tags/${tag}"
             requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
-
         ;;
         a)
         #all apps
@@ -68,7 +67,7 @@ if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
         echo ${failed} You requested a tag that does not exist ${tag} - can not continue
-        These tags exist...
+        echo These tags exist...
         /usr/bin/git show-ref --tags
         exit 1
     fi
