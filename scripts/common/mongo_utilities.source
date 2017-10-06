@@ -143,6 +143,7 @@ getDeployedAppsForServer() {
 	echo ${APPS[@]}
 }
 
+
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the 
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
 #PARAMETERS: server
@@ -163,6 +164,30 @@ getBuildableAppsForServer() {
 	)
 	closeTunnel
     APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
+	echo ${APPS[@]}
+}
+
+# This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the provided server defined and the deploymentStatus field set to enabled.
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+
+getPublishableApps() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.deploymentStatus':'enabled'} ]}, {"app_list.app":1,_id:0});
+	%EODgetBuildableAppsForServer
+	)
+echo $data
+	closeTunnel
+	APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
 	echo ${APPS[@]}
 }
 
