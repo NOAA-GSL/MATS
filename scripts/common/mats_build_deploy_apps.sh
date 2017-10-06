@@ -31,9 +31,11 @@ while getopts "ar:e:t:" o; do
         ;;
         e)
             if [ "${OPTARG}" == "dev" ]; then
+                echo setting environment for development
                 setBuildConfigVarsForDevelopmentServer
             else
                 if [ "${OPTARG}" == "int" ]; then
+                    echo setting environment for integration
                     setBuildConfigVarsForIntegrationServer
                 else
                     echo -e ${RED}invalid server ${OPTARG} - should be int or dev exiting${NC}
@@ -48,10 +50,8 @@ while getopts "ar:e:t:" o; do
 done
 shift $((OPTIND - 1))
 
-
-
-echo -e "$0 ----------- started with args $*"
 date
+echo Build Dicrectory ${BUILD_DIRECTORY}
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
