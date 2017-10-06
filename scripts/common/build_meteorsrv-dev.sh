@@ -151,6 +151,13 @@ for app in ${apps[*]}; do
     cd ../..
 done
 
+# build the applist.json
+applistFile=`mktemp`
+echo $(getApplistJSONForServer ${SERVER}) > $applistFile
+mv $applistFile static/applist.json
+chmod a+r static/applist.json
+
+
 date
 echo -e "$0 ----------------- finished" 
 exit 0

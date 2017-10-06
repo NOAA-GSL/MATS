@@ -160,6 +160,42 @@ getBuildableAppsForServer() {
 	echo ${APPS[@]}
 }
 
+# This routine will output apps (app references and displayNames) that are currently defined in the buildConfiguration collection of the
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
+# according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
+# [
+#   {
+#       "app": "upperair",
+#       "displayName": "Upper Air"
+#   },
+#   {
+#       "app": "anomalycor",
+#       "displayName": "Anomaly Correlation"
+#   },
+#   ......
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+getApplistJSONForServer() {
+    if [ $# -ne 1 ]; then
+        echo $0 - wrong number of params - usage: $0 server
+        return 1
+    fi
+    local server=$1
+    openTunnel
+    unset data
+    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,"app_list.displayName":1,_id:0});
+	%EODgetBuildableAppsForServer
+    )
+    closeTunnel
+    APPS=($(echo $data | jq -r '.[]'))
+    echo ${APPS[@]}
+}
+
+
+
+
 # This routine will set or update the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
 # mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
 #PARAMETERS: new version, app reference, server
