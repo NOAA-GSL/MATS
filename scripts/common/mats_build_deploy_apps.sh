@@ -145,17 +145,12 @@ for app in ${apps[*]}; do
         exit 1
     fi
     buildVer=$(getVersionForAppForServer ${app} ${SERVER})
-    tag="${app}-${buildVer}"
-    echo -e tagged repo with ${GRN}${tag}${NC}
-    git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" ${tag}
+    git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
     git push origin ${tag}:
+    echo -e tagged repo with ${GRN}${tag}${NC}
     cd ..
 done
 
-if [ $? -ne 0 ]; then
-    echo -e "${failed} git push must exit now"
-    exit 1
-fi
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
