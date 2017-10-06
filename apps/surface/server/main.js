@@ -414,24 +414,11 @@ Meteor.startup(function () {
             var forecastLengthArr = forecastLengths.split(',');
             forecastLengthOptionsMap[model] = forecastLengthArr;
         }
-        //     }
-        //     qFuture['return']();
-        // }));
-        // qFuture.wait();
     } catch (err) {
         console.log(err.message);
     }
 
     try {
-        // var statement = "select regionMapTable,description from region_descriptions_mats;";
-        // var qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-        //     } else {
                 matsCollections.RegionDescriptions.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select regionMapTable,description from region_descriptions_mats;");
         for (var i = 0; i < rows.length; i++) {
@@ -441,19 +428,10 @@ Meteor.startup(function () {
             valueList.push(regionMapTable);
             matsCollections.RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
         }
-        //     }
-        //     qFuture['return']();
-        // }));
-        qFuture.wait();
     } catch (err) {
         console.log(err.message);
     }
-
-    // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
-    const appVersion = Assets.getText('version').trim();
-    matsMethods.resetApp({appName:'Surface', appVersion:appVersion});
-    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
-    console.log("process.env", JSON.stringify(process.env, null, 2));
+    matsMethods.resetApp();
 });
 
 // this object is global so that the reset code can get to it

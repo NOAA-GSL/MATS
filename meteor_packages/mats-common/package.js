@@ -15,7 +15,9 @@ Package.onUse(function(api) {
   Npm.depends({
     'fibers':'1.0.14',
     'fs':'0.0.2',
-    "meteor-node-stubs":"0.2.3"
+    "babel-runtime":"6.26.0",
+    "meteor-node-stubs":"0.2.3",
+    "url":"0.11.0"
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");
@@ -247,9 +249,6 @@ Package.onUse(function(api) {
   api.addAssets('public/img/bootstrap-colorpicker/hue-horizontal.png', "client");
   api.addAssets('public/img/bootstrap-colorpicker/hue.png', "client");
   api.addAssets('public/img/bootstrap-colorpicker/saturation.png', "client");
-  api.addAssets('public/img/buildings.png', "client");
-  api.addAssets('public/img/cloud.jpg', "client");
-  api.addAssets('public/img/tornado.jpg', "client");
   api.addAssets('public/img/arrow-down.gif', "client");
   api.addAssets('public/img/arrow-left.gif', "client");
   api.addAssets('public/img/arrow-right.gif', "client");
@@ -261,6 +260,8 @@ Package.onUse(function(api) {
   api.addAssets('public/img/drawing_spinner.gif', "client");
   api.addAssets('public/img/texturetastic_gray.png', "client");
   api.addAssets('public/img/subtle_grunge_@2X.png', "client");
+  api.addAssets('public/img/underConstruction.jpg', "client");
+  api.addAssets('public/deployment/deployment.json',"server");
 });
 
 Package.onTest(function(api) {

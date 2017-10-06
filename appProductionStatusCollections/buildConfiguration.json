@@ -1,0 +1,282 @@
+{
+  "_id": {
+    "$oid": "5963b438f53b9ee872a2a15c"
+  },
+  "server": "mats-int.gsd.esrl.noaa.gov",
+  "deployment_environment": "integration",
+  "deployment_status": "active",
+  "build_git_repo": "gerrit:MATS_for_EMB",
+  "build_code_branch": "master",
+  "build_directory": "/builds/buildArea/",
+  "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-int.sh",
+  "last_build_run": "",
+  "last_build_status": "",
+  "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
+  "test_code_branch": "master",
+  "test_directory": "/builds/buildArea/mats-testing",
+  "test_command": "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
+  "last_test_run": "",
+  "last_test_status": "",
+  "test_result_directory": "/builds/buildArea/test_results",
+  "app_list": [
+    {
+      "app": "upperair",
+      "displayName": "Upper Air",
+      "displayOrder": 1,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "anomalycor",
+      "displayName": "Anomaly Correlation",
+      "displayOrder": 2,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "ceiling",
+      "displayName": "Ceiling",
+      "displayOrder": 3,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "visibility",
+      "displayName": "Visibility",
+      "displayOrder": 4,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "surface",
+      "displayName": "Surface",
+      "displayOrder": 5,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "precipitation",
+      "displayName": "Precipitation",
+      "displayOrder": 6,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "radarReflectivity",
+      "displayName": "Radar Reflectivity",
+      "displayOrder": 7,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "wfip2",
+      "displayName": "Wfip2",
+      "displayOrder": 8,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    }
+  ]
+}
+{
+  "_id": {
+    "$oid": "59c2e504146ff98462fe0411"
+  },
+  "server": "mats-dev.gsd.esrl.noaa.gov",
+  "deployment_environment": "development",
+  "deployment_status": "active",
+  "deployment_directory": "/builds/buildArea/MATS_for_EMB",
+  "build_git_repo": "gerrit:MATS_for_EMB",
+  "build_code_branch": "development_v1.0",
+  "build_directory": "/builds/buildArea/",
+  "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-dev.sh",
+  "last_build_run": "",
+  "last_build_status": "",
+  "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
+  "test_code_branch": "master",
+  "test_directory": "/builds/buildArea/mats-testing",
+  "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-dev-`/bin/date +%Y.%m.%d.%H.%M.%S`",
+  "last_test_run": "",
+  "last_test_status": "",
+  "test_result_directory": "/builds/buildArea/test_results",
+  "app_list": [
+    {
+      "app": "upperair",
+      "displayName": "Upper Air",
+      "displayOrder": 1,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "anomalycor",
+      "displayName": "Anomaly Correlation",
+      "displayOrder": 2,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "ceiling",
+      "displayName": "Ceiling",
+      "displayOrder": 3,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "visibility",
+      "displayName": "Visibility",
+      "displayOrder": 4,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "surface",
+      "displayName": "Surface",
+      "displayOrder": 5,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "precipitation",
+      "displayName": "Precipitation",
+      "displayOrder": 6,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "radarReflectivity",
+      "displayName": "Radar Reflectivity",
+      "displayOrder": 7,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "wfip2",
+      "displayName": "Wfip2",
+      "displayOrder": 8,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "upperair-previous",
+      "displayName": "Upper Air Previous",
+      "displayOrder": 9,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "anomalycor-previous",
+      "displayName": "Anomaly Correlation Previous",
+      "displayOrder": 10,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "ceiling-previous",
+      "displayName": "Ceiling Previous",
+      "displayOrder": 11,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "visibility-previous",
+      "displayName": "Visibility Previous",
+      "displayOrder": 12,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "surface-previous",
+      "displayName": "Surface Previous",
+      "displayOrder": 13,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "precipitation-previous",
+      "displayName": "Precipitation Previous",
+      "displayOrder": 14,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "radarReflectivity-previous",
+      "displayName": "Radar Reflectivity Previous",
+      "displayOrder": 15,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "wfip2-previous",
+      "displayName": "Wfip2 Previous",
+      "displayOrder": 16,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    }
+  ]
+}
+{
+  "_id": {
+    "$oid": "59c2ecda146ff98462fe0412"
+  },
+  "server": "mats.gsd.esrl.noaa.gov",
+  "deployment_environment": "production",
+  "deployment_status": "active",
+  "publish_int_directory": "/web",
+  "publish_remote_directory": "/web/gsd/mats",
+  "publication_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/publish_app.sh mats.gsd.esrl.noaa.gov",
+  "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
+  "test_directory": "/builds/buildArea/test_results",
+  "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-`/bin/date +%Y.%m.%d.%H.%M.%S`",
+  "last_test_run": "",
+  "last_test_status": "",
+  "test_result_directory": "/builds/buildArea/test_results",
+  "app_list": [
+    {
+      "app": "upperair",
+      "displayName": "Upper Air",
+      "displayOrder": 1,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "anomalycor",
+      "displayName": "Anomaly Correlation",
+      "displayOrder": 2,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "ceiling",
+      "displayName": "Ceiling",
+      "displayOrder": 3,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "visibility",
+      "displayName": "Visibility",
+      "displayOrder": 4,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "surface",
+      "displayName": "Surface",
+      "displayOrder": 5,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "precipitation",
+      "displayName": "Precipitation",
+      "displayOrder": 6,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "radarReflectivity",
+      "displayName": "Radar Reflectivity",
+      "displayOrder": 7,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "wfip2",
+      "displayName": "Wfip2",
+      "displayOrder": 8,
+      "deploymentStatus": "enabled"
+    }
+  ]
+}

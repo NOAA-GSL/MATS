@@ -1,26 +1,40 @@
-#!/usr/bin/env bash
 #!/bin/sh
 # mongo_utilities.source
 # bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
 # Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
-# to source the utilities use...
-# > . mongo_utilities.source
 
-#to test use ...
-# > mongo_utilities.source test matsserver    (where matsserver is like mats.gsd.esrl.noaa.gov)
+# For non-test usages the deploy collectios is named deployment.
+# for test usage the deployment collection is duplicated and the duplicate "deployment-test" is used.
+export DEPLOYMENTCOLLECTION="deployment"
+
+export GRN='\033[0;32m'
+export RED='\033[0;31m'
+export NC='\033[0m'
+export passed='\033[0;32m passed \033[0m'
+export success='\033[0;32m success \033[0m'
+export failed='\033[0;31m failed \033[0m'
 
 
+# close the ssh tunnel to the server where the mongo db lives ...
+#PARAMETERS: none
+#RETURNS: none
+#TRANSFORMATION: opens ssh tunnel
 function closeTunnel() {
 	# kill tunnels
 	kill -TERM `ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
 }
 
+# establish the ssh tunnel to the server where the mongo db lives .e. mats.gsd.esrl.noaa.gov...
+# This routine assumes that the user www-data is configured and the ssh key for www-data on this machine has been shared in the mats.gsd.esrl.noaa.gov authorized keys
+#PARAMETERS: none
+#RETURNS: none
+#TRANSFORMATION: closses any open ssh tunnels like 27020:localhost:27017 
 function openTunnel() {
 	#open tunnel
 	#-N do not execute a remote command
 	#-f requests SSH to go to background
 	#-L port:host:hostport (port = local port, host and hostport are where you want the tunnel to point to. This does not have to be the box you are ssh-ing to!)
-	#-C compression ? optional
+	#-C compression – optional
 	#local client connects to port 27020
 	#if a tunnel exists this returns 1 else 0
 	pids=`ps -Awf | grep '27020:localhost:27017' | grep -v grep | tr -s ' ' | cut -f2 -d' '` > /dev/null 2>&1
@@ -29,41 +43,77 @@ function openTunnel() {
 	fi
 }
 
-setBuildConfigVarsForServer() {
-	if [ $# -ne 1 ]; then
-		echo $0 - worng number of params - usage: $0 server
+# this routine will populate shell variables to represent the values for
+# server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,and build_cmd
+# which are values that are defined in the buildConfiguration collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
+# and are indexed by the server keyword. There are a different set of variables for each of the servers, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# The variables will be defined as local shell variables like this....
+# SERVER='mats-int.gsd.esrl.noaa.gov'
+# DEPLOYMENT_ENVIRONMENT='production'
+# DEPLOYMENT_STATUS='active'
+# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
+# BUILD_CODE_BRANCH='master'
+# BUILD_DIRECTORY='/builds/buildArea/'
+# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
+
+#PARAMETERS: server
+#RETURNS: none
+#TRANSFORMATION: sets shell variables
+setBuildConfigVarsForDevelopmentServer() {
+	if [ $# -ne 0 ]; then
+		echo $0 - wrong number of params - usage: $0
+		return 1
 	fi
-	local server=$1
 	openTunnel
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetBuildConfigForServer
-	   db.buildConfiguration.find(
-		{"server" : "$server"}, {_id:0});
-	%EODgetBuildConfigForServer
-	)
-
-	# and turn them into local shell variables.
-	# for jq documentation
-	# SERVER='mats-int.gsd.esrl.noaa.gov'
-	# DEPLOYMENT_ENVIRONMENT='production'
-	# DEPLOYMENT_STATUS='active'
-	# BUILD_GIT_REPO='gerrit:MATS_for_EMB'
-	# BUILD_CODE_BRANCH='master'
-	# BUILD_DIRECTORY='/builds/buildArea/'
-	# BUILD_CMD='sh ./MATS_for_EMB/scripts/common/build-int.sh'
-
-	eval $(echo $data | jq -r '. | {server, deployment_environment,deployment_status,build_git_repo,build_code_branch,build_directory,build_cmd} | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"' )
+	unset data
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'development'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
 	closeTunnel
 }
 
+setBuildConfigVarsForIntegrationServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'integration'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    closeTunnel
+}
+
+setBuildConfigVarsForProductionServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    local server=$1
+    openTunnel
+    unset data
+    local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'production'},{_id:0}).shellPrint()")
+    eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
+    closeTunnel
+}
+
+# this routine will populate shell ARRAYS to represent the VERSIONS, APPS, and APPNAMES values in the 
+# deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
+# and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
+# the servers entry is actually a list of servers for which these values are configured.
+#PARAMETERS: server
+#RETURNS: none
+#TRANSFORMATION: sets shell variables
 setAppDeploymentVarsForServer() {
 	if [ $# -ne 1 ]; then
-		echo $0 - worng number of params - usage: $0 server
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
 	fi
 	local server=$1
 	openTunnel
-	local data=$((mongo  --port 27020 --quiet appProductionStatus) <<-%EODgetAppDeploymentsForServer
-		db.deployment.find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
-	%EODgetAppDeploymentsForServer
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODsetAppDeploymentVarsForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0}).pretty();
+	%EODsetAppDeploymentVarsForServer
 	)
 	readarray -t VERSIONS <<< "$(echo $data | jq -r '.apps[]  | [.version] | @csv' | sed s/\"//g)"
 	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
@@ -71,7 +121,533 @@ setAppDeploymentVarsForServer() {
 	closeTunnel
 }
 
+# This routine will output the list of ALL apps (app references not names) that are currently defined in the deployment collection of the 
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov for the server in the first parameter
+#PARAMETERS: server
+#RETURNS: list of app references
+#TRANSFORMATION: none
+getDeployedAppsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetDeployedAppsForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find({servers:{\$in:["${server}"]}},{apps:1,_id: 0});
+	%EODgetDeployedAppsForServer
+	)
+	closeTunnel
+	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
+	echo ${APPS[@]}
+}
+
+# This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the 
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled.
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+
+getBuildableAppsForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,_id:0});
+	%EODgetBuildableAppsForServer
+	)
+	closeTunnel
+    APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
+	echo ${APPS[@]}
+}
+
+# This routine will output apps (app references and displayNames) that are currently defined in the buildConfiguration collection of the
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
+# according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
+# [
+#   {
+#       "app": "upperair",
+#       "displayName": "Upper Air"
+#   },
+#   {
+#       "app": "anomalycor",
+#       "displayName": "Anomaly Correlation"
+#   },
+#   ......
+#PARAMETERS: server
+#RETURNS: list of app references with buildStatus enabled
+#TRANSFORMATION: none
+getApplistJSONForServer() {
+    if [ $# -ne 1 ]; then
+        echo $0 - wrong number of params - usage: $0 server
+        return 1
+    fi
+    local server=$1
+    openTunnel
+    unset data
+    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,"app_list.displayName":1,_id:0});
+	%EODgetBuildableAppsForServer
+    )
+    closeTunnel
+    APPS=($(echo $data | jq -r '.[]'))
+    echo ${APPS[@]}
+}
+
+
+
+
+# This routine will set or update the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+#PARAMETERS: new version, app reference, server
+#RETURNS: mongo update message
+#TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
+updateVersionForAppForServer() {
+	if [ $# -ne 3 ]; then
+		echo $0 - wrong number of params - usage: $0 version app server
+		return 1
+	fi
+	local newVersion=$1
+	local app=$2
+	local server=$3
+	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
+	local appList=$(getDeployedAppsForServer ${server})
+	local appPosition=-1
+	for theApp in ${appList[@]}; do
+		((appPosition++))	
+		if [ "${theApp}" == "${app}" ]; then
+			break
+		fi
+	done
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODupdateVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").update(
+            { 
+                \$and: [
+                    { servers: {
+                        \$in:["${server}"]
+                    } },
+                    {"apps.app":"${app}"}
+                ],
+            },
+            {\$set: {"apps.${appPosition}.version":"${newVersion}"}}
+        );
+	%EODupdateVersionForAppForServer
+	)
+	echo $data
+	closeTunnel
+}
+
+# This routine will set or update the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov, setting the version to be what is supplied in the parameter.
+#PARAMETERS: new build date, app reference, server
+#RETURNS: mongo update message
+#TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
+updateBuildDateForAppForServer() {
+	if [ $# -ne 3 ]; then
+		echo $0 - wrong number of params - usage: $0 buildDate app server
+		return 1
+	fi
+	local newBuildDate=$1
+	local app=$2
+	local server=$3
+	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
+	local appList=$(getDeployedAppsForServer ${server})
+	local appPosition=-1
+	for theApp in ${appList[@]}; do
+		((appPosition++))	
+		if [ "${theApp}" == "${app}" ]; then
+			break
+		fi
+	done
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODupdateVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").update(
+            { 
+                \$and: [
+                    { servers: {
+                        \$in:["${server}"]
+                    } },
+                    {"apps.app":"${app}"}
+                ],
+            },
+            {\$set: {"apps.${appPosition}.buildDate":"${newBuildDate}"}}
+        );
+	%EODupdateVersionForAppForServer
+	)
+	echo $data
+	closeTunnel
+}
+
+# This routine outputs the deployment_environment field for the server in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: server
+#RETURNS: deployment_environment
+#TRANSFORMATION: none
+getDeploymentEnvironmentForServer() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 server
+		return 1
+	fi
+	local server=$1
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetDeploymentEnvironmentForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+		{ servers: {
+		      \$in:["${server}"]
+		}}, 
+		{
+			_id:0, 
+			deployment_environment:1
+	   	});
+	%EODgetDeploymentEnvironmentForServer
+	)
+	closeTunnel
+	echo $data | jq -r '.deployment_environment'
+	
+}
+
+getProductionServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'production'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
+    closeTunnel
+    echo $data
+}
+
+getIntegrationServer() {
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
+        return 1
+    fi
+    openTunnel
+    unset data
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'integration'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
+    closeTunnel
+    echo $data
+}
+
+getDevelopmentServer() {
+	if [ $# -ne 0 ]; then
+		echo $0 - wrong number of params - usage: $0
+		return 1
+	fi
+	openTunnel
+	unset data
+	local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({ \$and: [{deployment_environment:'development'},{deployment_status:'active'}]},{_id:0,server:1}).shellPrint()" | jq -r '.server')
+	closeTunnel
+	echo $data
+}
+
+# This routine outputs the version field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: app reference, server
+#RETURNS: version
+#TRANSFORMATION: none
+getVersionForAppForServer() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 app server
+		return 1
+	fi
+	local app=$1
+	local server=$2
+	#retrieve current version
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+			{ \$and: [
+				{ servers: {
+				      \$in:["${server}"]
+				} },
+				{
+				    'apps.app':"$app"
+				}
+			] },
+		     	{
+			_id:0, 
+			apps: {
+			    \$elemMatch: {
+				'app':"$app"
+			    }
+			}
+	   	});
+	%EODgetVersionForAppForServer
+	)
+	closeTunnel
+	echo $data | jq -r '.apps[] | .version'
+}
+
+# This routine outputs the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: app reference, server
+#RETURNS: buildDate
+#TRANSFORMATION: none
+getBuildDateForAppForServer() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 app server
+		return 1
+	fi
+	local app=$1
+	local server=$2
+	#retrieve current buildDate
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+			{ \$and: [
+				{ servers: {
+				      \$in:["${server}"]
+				} },
+				{
+				    'apps.app':"$app"
+				}
+			] },
+		     	{
+			_id:0, 
+			apps: {
+			    \$elemMatch: {
+				'app':"$app"
+			    }
+			}
+	   	});
+	%EODgetVersionForAppForServer
+	)
+	closeTunnel
+	echo $data | jq -r '.apps[] | .buildDate'
+}
+
+# This routine outputs the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: app reference, server
+#RETURNS: buildDate
+#TRANSFORMATION: none
+getAppNameForAppForServer() {
+    if [ $# -ne 2 ]; then
+        echo $0 - wrong number of params - usage: $0 app server
+        return 1
+    fi
+    local app=$1
+    local server=$2
+    openTunnel
+    unset data
+    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+			{ \$and: [
+				{ servers: {
+				      \$in:["${server}"]
+				} },
+				{
+				    'apps.app':"$app"
+				}
+			] },
+		     	{
+			_id:0,
+			apps: {
+			    \$elemMatch: {
+				'app':"$app"
+			    }
+			}
+	   	});
+	%EODgetVersionForAppForServer
+    )
+    closeTunnel
+    echo $data | jq -r '.apps[] | .appName'
+}
+
+
+
+# NOTE ABOUT ROLLING VERSIONS:
+# When the nightly build (development branch) happens the version must acquire a higher patch number than the integration version. This is
+# because the code gets tagged with a combination of the app and the version number. We want to be able to roll the code back to either an integration version or
+# a development version. Therefore when the development version rolls we make sure that the patch number is one higher than the corresponding integration
+# patch number and we add the date postfix.
+# When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number and the date.
+
+# This routine will update the version and buildDate fields in the app element identified by the app reference and server params
+# in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
+# according to the deployment_environment settings for the given server.
+# if deployment_environment is development, the date portion of the semver is modified and it is set to the current time stamp.
+# If the current patch number is not greater than the corresponding integration version then the patch number is also incremented.
+#PARAMETERS: app reference, server
+#RETURNS: modified versions
+#TRANSFORMATION: new versions for one or more servers for specified app
+rollDevelopmentVersionAndDateForAppForServer() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 app server
+		return 1
+	fi
+	local app=$1
+	local server=$2
+	# double check that the environment for this server really is development
+	local deployment_environment=$(getDeploymentEnvironmentForServer ${server})
+	if [ "${deployment_environment}" != "development" ]; then
+		echo "wrong environment - should be development, is  ${deployment_environment}"
+		return 1
+	fi
+	# get the current build version 
+	local currentVersion=$(getVersionForAppForServer ${app} ${server})
+	local currentVersionPart=$(echo $currentVersion | cut -f1 -d'-')
+	local major=$(echo "${currentVersionPart}" | cut -d'.' -f1)
+	local minor=$(echo "${currentVersionPart}" | cut -d'.' -f2)
+	local patch=$(echo "${currentVersionPart}" | cut -d'.' -f3)
+
+	# get the corresponding integration version...
+	local integrationServer=$(getIntegrationServer)
+	local currentIntVersion=$(getVersionForAppForServer ${app} ${integrationServer})
+        local intPatch=$(echo "${currentIntVersion}" | cut -d'.' -f3)
+	if [ ${intPatch} -ge ${patch} ]; then
+		patch=$((intPatch + 1))
+	fi
+	# build versions roll date... change the date portion to be current
+	local vdate=`date +%Y.%m.%d.%H.%M`
+	local newVersion="${major}.${minor}.${patch}-${vdate}"
+	#update the new version
+	updateVersionForAppForServer ${newVersion} ${app} ${server}
+	updateBuildDateForAppForServer ${vdate} ${app} ${server}
+}
+
+# This routine updates the version and buildDate fields in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov according to the deployment_environment settings for the given server.
+# When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number.
+#PARAMETERS: app reference, server
+#RETURNS: modified versions
+#TRANSFORMATION: new versions for one or more servers for specified app
+rollIntegrationVersionAndDateForAppForServer() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 app server
+		return 1
+	fi
+	local app=$1
+	local server=$2
+	# double check that the environment for this server really is integration
+	local deployment_environment=$(getDeploymentEnvironmentForServer ${server})
+	if [ "${deployment_environment}" != "integration" ]; then
+		echo "wrong environment - should be integration, is  ${deployment_environment}"
+		return 1
+	fi
+	local developmentServer=$(getDevelopmentServer)
+        local currentDevVersion=$(getVersionForAppForServer ${app} ${developmentServer})
+        local currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
+	local intDate=$(date +%Y.%m.%d.%H.%M)
+	local newIntegrationVersion="${currentDevVersionPart}"
+	updateVersionForAppForServer ${newIntegrationVersion} ${app} ${server}
+	updateBuildDateForAppForServer ${intDate} ${app} ${server}
+}
+
+#This routine exports each collection to a set of files that are named after each collection, with a .json suffix.
+# e.g.   "buildConfiguration.json", "deployment.json",
+#PARAMETERS: output directory - optional (if not supplied the root of the git repo/appProductionStatusCollections directory is used)
+#RETURNS: success or error message
+#TRANSFORMATION: records the mongo export of the collections to a set of files in a given directory.
+exportCollections() {
+	local directory
+	if [ $# -eq 1 ]; then
+	    directory=$1
+	else
+	    directory=$(git rev-parse --show-toplevel)/appProductionStatusCollections
+	fi
+
+    mkdir -p ${directory}
+    openTunnel
+    unset data
+    local data=$(mongo  localhost:27020/appProductionStatus --quiet --eval "db.getCollectionNames()" | sed 's/[]["]//g' )
+	IFS=', ' read -r -a collections <<< "$data"
+    for collection in "${collections[@]}"; do
+		mongoexport --port 27020 -d appProductionStatus -c ${collection}  | jq -r -M '.' > "${directory}/${collection}.json"
+    done
+    closeTunnel
+}
+
+#This routine will check in all modified files within the specified directory to the master and the development_v1.0 branches.
+# It is primarily used to synchronize the appProductionStatus database collections that are resident on mats.gsd.esrl.noaa.gov.
+# Those collections are used to provide build and deployment information and to synchronize deployment. If a directory
+# is not specified the directory will default to the git root /appProductionStatusCollections directory.
+#PARAMETERS: the directory to check in. All modified files in that directory will be checked in. (new files are not added)
+#RETURNS: a success or failure message
+#TRANSFORMATION: the git repo is updated and the master and development_branches are synchronized.
+checkinDirectory() {
+	if [ $# -eq 1 ]; then
+	    directory=$1
+    else
+        directory=$(git rev-parse --show-toplevel)/appProductionStatusCollections
+	fi
+    BRANCHES=(
+    master
+    development_v1.0
+    )
+    cd ${directory}
+    ORIGINALBRANCH=$(git status | head -n1 | cut -c13-)
+    git commit -a -m "auto commit by checkinDirectory"
+    CHERRYCOMMIT=$(git log -n1 | head -n1 | cut -c8-)
+    for BRANCH in "${BRANCHES[@]}";
+    do
+        git stash;
+        git checkout $BRANCH;
+        git cherry-pick $CHERRYCOMMIT;
+        git checkout $ORIGINALBRANCH;
+        git stash pop;
+    done
+    cd -
+}
+
+# This routine duplicates a collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: existing collection, new collection name
+#RETURNS: success or an error message
+#TRANSFORMATION: makes a copy of the specified collection to the new name.
+duplicateCollection() {
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 collection copyName
+		return 1
+	fi
+	local collection=$1
+	local newCollection=$2
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODduplicateCollection
+		db.getCollection("${collection}").copyTo("${newCollection}");
+	%EODduplicateCollection
+	)
+	closeTunnel
+}
+
+# This routine deletes a collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: existing collection
+#RETURNS: success or an error message
+#TRANSFORMATION: deletes (drops) a collection
+dropCollection() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 collection
+		return 1
+	fi
+	local collection=$1
+	openTunnel
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODdropCollection
+		db.getCollection("${collection}").drop();
+	%EODdropCollection
+	)
+	closeTunnel
+}
+
 test () {
+	DEPLOYMENTCOLLECTION="deployment-test"
+	duplicateCollection deployment ${DEPLOYMENTCOLLECTION}
 	host=$1
 	echo ---------
 	unset SERVER
@@ -84,7 +660,7 @@ test () {
 		prodEnv="production"
             ;;
         mats-int.gsd.esrl.noaa.gov)
-		pattern="^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}$"
+		pattern="^[0-9]+\.[0-9]+\.[0-9]+$"
 		prodEnv="integration"
            ;;
         *)
@@ -93,52 +669,367 @@ test () {
 	   ;;
 	esac
 
-	echo setBuildConfigVarsForServer
-	setBuildConfigVarsForServer ${host}
-	if [ "$SERVER" == "${host}" ]; then
-		echo setBuildConfigVarsForServer passed
+	echo setBuildConfigVarsForDevelopmentServer
+	setBuildConfigVarsForDevelopmentServer
+	if [ "$SERVER" == "mats-dev.gsd.esrl.noaa.gov" ]; then
+		echo -e setBuildConfigVarsDevelopmentForServer ${passed}
 	else
-		echo setBuildConfigVarsForServer failed
-		echo $SERVER does not equal ${host}
+		echo -e setBuildConfigVarsForServer ${failed}
+		echo -e $SERVER does not equal ${host}
+	fi
+	
+	if [ "$DEPLOYMENT_ENVIRONMENT" == "development" ]; then
+		echo -e setBuildConfigVarsForDevelopmentServer ${passed}
+	else
+		echo -e setBuildConfigVarsForDevelopmentServer ${failed}
+		echo -e $DEPLOYMENT_ENVIRONMENT does not equal "development"
 	fi
 
-	if [ "$DEPLOYMENT_ENVIRONMENT" == "${prodEnv}" ]; then
-		echo setBuildConfigVarsForServer passed
-	else
-		echo setBuildConfigVarsForServer failed
-		echo $DEPLOYMENT_ENVIRONMENT does not equal ${prodEnv}
-	fi
 
-	echo ---------
-	echo setAppDeploymentVarsForServer
+    echo setBuildConfigVarsForIntegrationServer
+    setBuildConfigVarsForIntegrationServer
+    if [ "$SERVER" == "mats-int.gsd.esrl.noaa.gov" ]; then
+        echo -e setBuildConfigVarsForIntegrationServer ${passed}
+    else
+        echo -e setBuildConfigVarsForServer ${failed}
+        echo $SERVER does not equal ${host}
+    fi
+
+    if [ "$DEPLOYMENT_ENVIRONMENT" == "integration" ]; then
+        echo -e setBuildConfigVarsForIntegrationServer ${passed}
+    else
+        echo -e setBuildConfigVarsForIntegrationServer ${failed}
+        echo -e $DEPLOYMENT_ENVIRONMENT does not equal "integration"
+    fi
+
+
+    echo setBuildConfigVarsForProductionServer
+    setBuildConfigVarsForProductionServer
+    if [ "$SERVER" == "mats.gsd.esrl.noaa.gov" ]; then
+        echo -e setBuildConfigVarsForProductionServer ${passed}
+    else
+        echo -e setBuildConfigVarsForProductionServer ${failed}
+        echo -e $SERVER does not equal ${host}
+    fi
+
+    if [ "$DEPLOYMENT_ENVIRONMENT" == "production" ]; then
+        echo -e setBuildConfigVarsForProductionServer ${passed}
+    else
+        echo -e setBuildConfigVarsForProductionServer ${failed}
+        echo -e $DEPLOYMENT_ENVIRONMENT does not equal "production"
+    fi
+
+
+	echo -e ---------
+	echo -e setAppDeploymentVarsForServer
 	unset APPS
 	unset APPNAMES
 	unset VERSIONS
 	setAppDeploymentVarsForServer ${host}
 	if [ "${APPS[0]}" == "upperair" ]; then
-		echo setAppDeploymentVarsForServer passed
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo setAppDeploymentVarsForServer failed
-		echo "${APPS[0]}" does not equal "upperair"
+		echo -e setAppDeploymentVarsForServer ${failed}
+		echo -e "${APPS[0]}" does not equal "upperair"
         fi
-
+		
 	if [ "${APPNAMES[1]}" == "Anomaly Correlation" ]; then
-		echo setAppDeploymentVarsForServer passed
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo setAppDeploymentVarsForServer failed
-		echo "${APPNAMES[1]}" does not equal "Anomaly Correlation"
+		echo -e setAppDeploymentVarsForServer ${failed}
+		echo -e "${APPNAMES[1]}" does not equal "Anomaly Correlation"
         fi
-
+	
 	if [[ "${VERSIONS[0]}" =~ ${pattern} ]]; then
-		echo setAppDeploymentVarsForServer passed
+		echo -e setAppDeploymentVarsForServer ${passed}
 	else
-		echo setAppDeploymentVarsForServer failed
-		echo "${VERSIONS[0]}" does not match "digit.digit.digit"
+		echo -e setAppDeploymentVarsForServer ${failed}
+		echo -e "${VERSIONS[0]}" does not match "digit.digit.digit"
         fi
+	
+	echo -e ---------
+	echo -e getBuildableAppsForServer
+	unset appList
+	appList=($(getBuildableAppsForServer mats-dev.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo -e getBuildableAppsForServer ${passed}
+	else
+		echo -e getBuildableAppsForServer ${failed}
+		echo -e found ${appList[@]} 
+		echo -e expec ${expectedApps[@]} 
+	fi
+
+	echo -e -----
+	unset appList
+	appList=($(getBuildableAppsForServer mats-int.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo -e getBuildableAppsForServer ${passed}
+	else
+		echo -e getBuildableAppsForServer ${failed}
+		echo -e found ${appList[@]} 
+		echo -e expec ${expectedApps[@]} 
+	fi
+
+	echo -e -----
+	unset appList
+	appList=($(getBuildableAppsForServer mats.gsd.esrl.noaa.gov))
+	diff=()
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
+	for i in "${appList[@]}"; do
+	    skip=
+	    for j in "${expectedApps[@]}"; do
+		[[ $i == $j ]] && { skip=1; break; }
+	    done
+	    [[ -n $skip ]] || diff+=("$i")
+	done
+	if [ ${#diff[@]} -eq 0 ]; then
+		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${passed}
+	else
+		echo -e getBuildableAppsForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e found ${appList[@]} 
+		echo -e expec ${expectedApps[@]} 
+	fi
+
+    echo -e ---------
+    echo getAppNameForAppForServer
+    local anomalycorAppName=$(getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov)
+    if [ "Anomaly Correlation" == "${anomalycorAppName}" ]; then
+        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${passed}
+    else
+        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${failed} "Anomaly Correlation" is not "${anomalycorAppName}"
+    fi
+
+
+	echo -e ---------
+	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	updateVersionForAppForServer "1.5.20-2017.09.26.16.16-test" ceiling mats.gsd.esrl.noaa.gov
+	local ceilingNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	if [ "1.5.20-2017.09.26.16.16-test" == "$ceilingNewVersion" ]; then
+		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${passed}
+	else
+		echo -e updateVersionForAppForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e old version is ${ceilingCurrentVersion}
+		echo -e new version is ${ceilingNewVersion}
+		echo -e new version should be "1.5.20-2017.09.26.16.16-test"
+	fi
+
+	updateVersionForAppForServer $ceilingCurrentVersion ceiling mats.gsd.esrl.noaa.gov
+	local ceilingNewNewVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	if [ "$ceilingCurrentVersion" == "$ceilingNewNewVersion" ]; then
+		echo -e updateVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${passed}
+	else
+		echo -e updatupdatupdatupdateeeesetVersionForAppForServer version_reset mats.gsd.esrl.noaa.gov ${failed}
+		echo -e old version is ${ceilingNewVersion}
+		echo -e new version is ${ceilingNewNewVersion}
+		echo -e new version should be "$ceilingCurrentVersion"
+	fi
+
+	echo -e ---------
+	local ceilingCurrentBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	updateBuildDateForAppForServer "at the moment" ceiling mats.gsd.esrl.noaa.gov
+	local ceilingNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	if [ "at the moment" == "$ceilingNewBuildDate" ]; then
+		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${passed}
+	else
+		echo -e updateBuildDateForAppForServer mats.gsd.esrl.noaa.gov ${failed}
+		echo -e old buildDate is ${ceilingCurrentBuildDate}
+		echo -e new buildDate is ${ceilingNewBuildDate}
+		echo -e new buildDate should be "at the moment"
+	fi
+
+    echo -e ---------
+	updateBuildDateForAppForServer $ceilingCurrentBuildDate ceiling mats.gsd.esrl.noaa.gov
+	local ceilingNewNewBuildDate=$(getBuildDateForAppForServer ceiling mats.gsd.esrl.noaa.gov)
+	if [ "$ceilingCurrentBuildDate" == "$ceilingNewNewBuildDate" ]; then
+		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${passed}
+	else
+		echo -e updateBuildDateForAppForServer buildDate reset mats.gsd.esrl.noaa.gov ${failed}
+		echo -e old buildDate is ${ceilingNewBuildDate}
+		echo -e new buildDate is ${ceilingNewNewBuildDate}
+		echo -e new buildDate should be "$ceilingCurrentBuildDate"
+	fi
+
+	echo -e ---------
+    local productionServer=$(getProductionServer)
+    if [ ${productionServer} == "mats.gsd.esrl.noaa.gov" ]; then
+        echo -e getProductionServer ${passed}
+    else
+        echo -e getProductionServer ${failed} ${productionServer} is not "mats.gsd.esrl.noaa.gov"
+    fi
+
+    echo ---------
+    local integrationServer=$(getIntegrationServer)
+    if [ ${integrationServer} == "mats-int.gsd.esrl.noaa.gov" ]; then
+        echo -e getIntegrationServer ${passed}
+    else
+        echo -e getIntegrationServer ${failed} ${integrationServer} is not "mats-int.gsd.esrl.noaa.gov"
+    fi
+
+    echo ---------
+    local developmentServer=$(getDevelopmentServer)
+    if [ ${developmentServer} == "mats-dev.gsd.esrl.noaa.gov" ]; then
+        echo -e getDevelopmentServer ${passed}
+    else
+        echo -e getDevelopmentServer ${failed} ${developmentServer} is not "mats-dev.gsd.esrl.noaa.gov"
+    fi
+
+    echo ---------
+    # With this test the first instance will be a copy of the deployment collection
+    # so we will see a difference in the build dates between dev and int
+    # but the build dates resolution is one minute so subsequent rolling operations actually
+    # end up with the same build date.
+    echo rollDevelopmentVersionAndDateForAppForServer
+    local currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentDevVersionPart=$(echo -e ${currentDevVersion} | cut -f1 -d'-')
+    local currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    local currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    local buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
+    local buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    local intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevBuildDate}" != "${intDate}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new intDate ${intDate} should be the same
+    fi
+    if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
+    fi
+    if [ "${currentDevVersionPart}" == "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
+    fi
+    if [ "${currentDevVersionPart}" != "${buildVersionPart}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new new build version part ${buildVersionPart} should be the SAME
+    fi
+
+    if [ "${currentIntVersion}" != "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
+    fi
+
+
+    echo ---------
+    echo rollIntegrationVersionAndDateForAppForServer
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevVersion}" != "${buildVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial dev version ${currentDevVersion} and new build version ${buildVer} should be the same
+    fi
+    if [ "${currentDevBuildDate}" != "${buildDate}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build date ${currentDevBuildDate} and new build date ${buildDate} should be the same
+    fi
+    if [ "${currentIntVersion}" == "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
+    fi
+    if [ "${currentIntBuildDate}" == "${intDate}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int date ${currentIntBuildDate} and new int date ${intDate} should be the SAME
+    fi
+
+
+
+    echo ------------
+    echo rollDevelopmentVersionAndDateForAppForServer again
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
+    rollDevelopmentVersionAndDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentDevVersionPart}" != "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new int version ${intVer} should be the SAME
+    fi
+    if [ "${currentIntVersion}" != "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
+    fi
+
+    echo -e ------------
+    echo rollIntegrationVersionAndDateForAppForServer again
+    currentDevVersion=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentDevBuildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    currentIntVersion=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentIntBuildDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    currentDevVersionPart=$(echo ${currentDevVersion} | cut -f1 -d'-')
+    rollIntegrationVersionAndDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov
+    buildVer=$(getVersionForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    buildVersionPart=$(echo ${buildVer} | cut -f1 -d'-')
+    buildDate=$(getBuildDateForAppForServer ceiling mats-dev.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intVer=$(getVersionForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
+    echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
+    echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
+    if [ "${currentIntVersion}" == "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should NOT be the SAME
+    fi
+    local initialIntVersionPatch=$(echo ${currentIntVersion} | cut -f3 -d'.')
+    local newIntVersionPatch=$(echo ${intVer} | cut -f3 -d'.')
+    if [ "${initialIntVersionPatch}" != "$((${newIntVersionPatch} - 1))" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version patch ${initialIntVersionPatch}  SHOULD be new intVersionPatch less 1, it is ${newIntVersionPatch}
+    fi
+
+
+
+    echo ---------
+
+    echo exportCollections /tmp/tmpCollections
+    rm -rf /tmp/exportCollections
+    mkdir /tmp/exportCollections
+    exportCollections /tmp/tmpCollections
+    ls -ltr /tmp/tmpCollections
+    echo ---------
+
+	# drop test collection and repoint the deploymentcollection
+	dropCollection ${DEPLOYMENTCOLLECTION}
+	DEPLOYMENTCOLLECTION="deployment"
+
 }
 
-
 if [[ "$1" == "test" ]];then
-host=$2
-test ${host}
+	if [ $# -ne 2 ]; then
+		echo $0 - wrong number of params - usage: $0 test host
+		return 1
+	fi
+
+	host=$2
+	test ${host}
 fi
+

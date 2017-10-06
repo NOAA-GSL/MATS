@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 #
-# Used to copy existing Apps and part of .meteor to the production server
-#logDir="/builds/buildArea/logs"
+# Used to copy all the existing meteor apps and part of .meteor to a production server
 
 # This script should be modified in the following way...
 # There should be a previous location on the target.
@@ -44,7 +44,7 @@ if [ "X" == "X${requestedApp}" ]; then
     # build them all
     rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web/gsd/mats
 else
-    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='static/applist.json' --exclude='*' /web/*  ${server}:/web/gsd/mats
+    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
 ssh @${sever} "cd /web; ln -sf gsd/mats/* ."
 

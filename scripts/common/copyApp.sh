@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # 
 # Used to copy an existingApp MATS application to another name.
 #logDir="/builds/buildArea/logs"
@@ -133,7 +133,6 @@ replace_custom () {
                 return 1
         }
         return 0
-
 }
 
 {
