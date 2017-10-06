@@ -156,7 +156,7 @@ getBuildableAppsForServer() {
 	%EODgetBuildableAppsForServer
 	)
 	closeTunnel
-	readarray -t APPS <<< "$(echo $data | jq -r '.app_list[]  | [.app] | @csv'  | sed s/\"//g)"
+    APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
 	echo ${APPS[@]}
 }
 
@@ -386,6 +386,45 @@ getBuildDateForAppForServer() {
 	closeTunnel
 	echo $data | jq -r '.apps[] | .buildDate'
 }
+
+# This routine outputs the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
+# mongo database on mats.gsd.esrl.noaa.gov
+#PARAMETERS: app reference, server
+#RETURNS: buildDate
+#TRANSFORMATION: none
+getAppNameForAppForServer() {
+    if [ $# -ne 2 ]; then
+        echo $0 - wrong number of params - usage: $0 app server
+        return 1
+    fi
+    local app=$1
+    local server=$2
+    openTunnel
+    unset data
+    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
+		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
+			{ \$and: [
+				{ servers: {
+				      \$in:["${server}"]
+				} },
+				{
+				    'apps.app':"$app"
+				}
+			] },
+		     	{
+			_id:0,
+			apps: {
+			    \$elemMatch: {
+				'app':"$app"
+			    }
+			}
+	   	});
+	%EODgetVersionForAppForServer
+    )
+    closeTunnel
+    echo $data | jq -r '.apps[] | .appName'
+}
+
 
 
 # NOTE ABOUT ROLLING VERSIONS:
@@ -671,9 +710,7 @@ test () {
 	unset appList
 	appList=($(getBuildableAppsForServer mats-dev.gsd.esrl.noaa.gov))
 	diff=()
-	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2"\
-	 [8]="upperair-previous" [9]="anomalycor-previous" [10]="ceiling-previous" [11]="visibility-previous" [12]="surface-previous"\
-	 [13]="precipitation-previous" [14]="radarReflectivity-previous" [15]="wfip2-previous")'
+	declare -a expectedApps='([0]="upperair" [1]="anomalycor" [2]="ceiling" [3]="visibility" [4]="surface" [5]="precipitation" [6]="radarReflectivity" [7]="wfip2")'
 	for i in "${appList[@]}"; do
 	    skip=
 	    for j in "${expectedApps[@]}"; do
@@ -728,6 +765,16 @@ test () {
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
+
+    echo -e ---------
+    echo getAppNameForAppForServer
+    local anomalycorAppName=$(getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov)
+    if [ "Anomaly Correlation" == "${anomalycorAppName}" ]; then
+        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${passed}
+    else
+        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${failed} "Anomaly Correlation" is not "${anomalycorAppName}"
+    fi
+
 
 	echo -e ---------
 	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)

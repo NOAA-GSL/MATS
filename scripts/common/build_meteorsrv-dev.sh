@@ -129,6 +129,31 @@ git push origin --tags
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
 
+# now deploy the newly built apps
+echo deploying modified apps ${apps[*]}
+cd /web
+for app in ${apps[*]}; do
+    echo "deploying $x"
+    appName=$(getAppNameForAppForServer ${app} ${SERVER})
+    echo "appName $appName"
+    # if existing, rm previous and move existing app to previous, be sure to change its title
+    if [ -d "$appName" ]; then
+        if [ -d "$appName"-previous ]; then
+            rm -rf "$appName"-previous
+        fi
+        mv $appName "$appName"-previous
+        sed 's/$/-previous/' "$appName"-previous/bundle/programs/web.browser/app/title > /tmp/title$$
+        mv /tmp/title$$ "$appName"-previous/bundle/programs/web.browser/app/title
+    fi
+    mkdir $appName
+    cd $appName
+    tar -xzf $x
+    cd bundle
+    (cd programs/server && meteor npm install)
+    cd ../..
+done
+
+
 date
 echo -e "$0 ----------------- finished" 
 exit 0
