@@ -83,7 +83,7 @@ fi
 
 diffs=$(echo $diffOut | grep -v 'appProductionStatus')
 ret=$?
-if [ "X${requestedApp[@]}" == "X" -a $ret -ne 0 ]; then
+if [ "X${requestedApp}" == "X" -a ${ret} -ne 0 ]; then
     echo -e "${failed} no modified apps to build - ret $ret - must exit now"
     exit 1
 fi
@@ -148,10 +148,10 @@ for app in ${apps[*]}; do
     tag="${app}-${buildVer}"
     echo -e tagged repo with ${GRN}${tag}${NC}
     git tag ${tag}
+    git push origin ${tag}
     cd ..
 done
 
-git push origin --tags
 if [ $? -ne 0 ]; then
     echo -e "${failed} git push must exit now"
     exit 1
