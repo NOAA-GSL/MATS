@@ -187,7 +187,7 @@ getPublishableAppsForServer() {
 	)
 echo $data
 	closeTunnel
-	APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
+	APPS=($(echo $data | jq -r '.app_list[] | select(.deploymentStatus=="enabled") | .app'))
 	echo ${APPS[@]}
 }
 
