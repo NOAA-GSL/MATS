@@ -18,7 +18,7 @@ while getopts "ar:e:t:" o; do
     case "${o}" in
         t)
             tag=(${OPTARG})
-            requestedTag="tags/${tag} -b "
+            requestedTag="tags/${tag} "
             requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
         ;;
         a)
