@@ -139,7 +139,6 @@ for app in ${apps[*]}; do
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-
     meteor build /builds
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"
