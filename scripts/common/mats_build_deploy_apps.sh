@@ -71,19 +71,18 @@ if [ "X${requestedTag}" == "X" ]; then
     fi
 fi
 
-echo -e checking out ${requestedTag} ${BUILD_CODE_BRANCH}
+/usr/bin/git fetch
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to /usr/bin/git fetch - must exit now"
+    exit 1
+fi
+
 /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
     exit 1
 fi
 
-echo -e fetching
-/usr/bin/git fetch
-if [ $? -ne 0 ]; then
-    echo -e "${failed} to /usr/bin/git fetch - must exit now"
-    exit 1
-fi
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
