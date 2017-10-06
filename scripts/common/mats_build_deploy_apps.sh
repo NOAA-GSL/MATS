@@ -10,7 +10,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="$0 -e dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
+usage="$0 -e dev|int [-a][-r appReference][-t tag]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
 requestedApp=""
 requestedTag=""
 tag=""
@@ -18,7 +18,7 @@ while getopts "ar:e:t:" o; do
     case "${o}" in
         t)
             tag=(${OPTARG})
-            requestedTag="tags/${tag}"
+            requestedTag="tags/${tag} -b"
             requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
         ;;
         a)
