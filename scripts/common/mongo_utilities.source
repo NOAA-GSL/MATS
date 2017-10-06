@@ -173,7 +173,7 @@ getBuildableAppsForServer() {
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
 
-getPublishableApps() {
+getPublishableAppsForServer() {
 	if [ $# -ne 1 ]; then
 		echo $0 - wrong number of params - usage: $0 server
 		return 1
