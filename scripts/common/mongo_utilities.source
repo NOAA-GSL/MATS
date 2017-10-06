@@ -7,7 +7,11 @@
 # for test usage the deployment collection is duplicated and the duplicate "deployment-test" is used.
 export DEPLOYMENTCOLLECTION="deployment"
 
+export GRN='\033[0;32m'
+export RED='\033[0;31m'
+export NC='\033[0m'
 export passed='\033[0;32m passed \033[0m'
+export success='\033[0;32m success \033[0m'
 export failed='\033[0;31m failed \033[0m'
 
 
