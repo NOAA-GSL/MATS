@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # 
 # Used to remove an existing MATS application.
 

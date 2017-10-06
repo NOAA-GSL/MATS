@@ -1,16 +1,46 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/mongo_utilities.source
 # assign all the top level environment valuse from the build configuration to shell variables
-setBuildConfigVarsForDevelopmentServer
 # set up logging
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
-exec > >(tee -i $logname)
+exec > >( tee -i $logname )
 exec 2>&1
 
-requestedApp="$1"
+usage="$0 -s dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps"
+requestedApp=""
+while getopts "ar:s:" o; do
+    case "${o}" in
+        a)
+        #all apps
+            requestedApp="all"
+        ;;
+        r)
+            requestedApp=(${OPTARG})
+        ;;
+        s)
+            if [ "${OPTARG}" == "dev" ]; then
+                setBuildConfigVarsForDevelopmentServer
+            else
+                if [ "${OPTARG}" == "int" ]; then
+                    setBuildConfigVarsForIntegrationServer
+                else
+                    echo invalid server ${OPTARG} - should be int or dev exiting
+                    exit 1
+                fi
+            fi
+        ;;
+        *)
+            usage
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
 
 echo -e "$0 ----------- started with args $*"
 date
@@ -20,7 +50,7 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     cd ${DEPLOYMENT_DIRECTORY}
     /usr/bin/git clone ${BUILD_GIT_REPO}
     if [ $? -ne 0 ]; then
-         echo -e "failed to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now"
+        echo -e "failed to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now"
         exit 1
     fi
 fi
@@ -41,8 +71,8 @@ if [ $? -ne 0 ]; then
 fi
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
-buildableApps=($(getBuildableAppsForServer "${SERVER}"))
-echo -e buildable apps are....  ${buildableApps[*]}
+buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
+echo -e buildable apps are.... ${buildableApps[*]}
 diffOut=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH})
 ret=$?
 if [ $ret -ne 0 ]; then
@@ -56,19 +86,19 @@ if [ $ret -ne 0 ]; then
     echo -e "${failed} no modified apps to build - ret $ret - must exit now"
     exit 1
 fi
-changedApps=($(echo -e ${diffs} | grep apps | cut -f2 -d'/'))
+changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
 echo -e changedApps are ${changedApps}
-meteor_package_changed=$(echo -e ${diffs}  | grep meteor_packages | cut -f2 -d'/')
+meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/')
 
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
     if [ "${requestedApp}" == "all" ]; then
         apps=${buildableApps}
     else
-        apps+=(${requestedApp})
+        apps=( "${requestedApp[@]}" )
     fi
 else
-    if [ "X${meteor_package_changed}" != "X"  ]; then
+    if [ "X${meteor_package_changed}" != "X" ]; then
         # common code changed so we have to build all the apps
         echo -e common code changed - must build all buildable apps
         apps=${buildableApps}
@@ -77,15 +107,15 @@ else
         l2=" ${changedApps[*]} "
         for a in ${buildableApps[*]}; do
             if [[ $l2 =~ " $a " ]]; then
-                apps+=($a)
+                apps+=( $a )
             fi
         done
         echo -e modified and buildable apps are ${apps[*]}
     fi
 fi
-if  [ "X${apps}" == "X"  ]; then
-	echo -e no apps to build - exiting
-	exit 1
+if [ "X${apps}" == "X" ]; then
+    echo -e no apps to build - exiting
+    exit 1
 fi
 
 # go ahead and merge changes
@@ -109,7 +139,7 @@ for app in ${apps[*]}; do
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     echo -e copy deployment.json to uncontrolled common area
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
-        ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+            ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     echo -e building app
     meteor build /builds
     if [ $? -ne 0 ]; then
@@ -134,8 +164,6 @@ echo deploying modified apps ${apps[*]}
 cd /web
 for app in ${apps[*]}; do
     echo "deploying $app"
-    #appName=$(getAppNameForAppForServer ${app} ${SERVER})
-    #echo "appName $appName"
     # if existing, rm previous and move existing app to previous, be sure to change its title
     if [ -d "$app" ]; then
         if [ -d "$app"-previous ]; then
@@ -145,7 +173,12 @@ for app in ${apps[*]}; do
     fi
     mkdir $app
     cd $app
-    tar -xzf $x
+    tar -xzf "/builds/${app}.tar.gz"
+    if [ $? -ne 0 ]; then
+        echo -e "${failed} untar app /builds/${app}.tar.gz - must exit now"
+        exit 1
+    fi
+    rm -rf "/builds/${app}.tar.gz"
     cd bundle
     (cd programs/server && meteor npm install)
     cd ../..
@@ -159,5 +192,5 @@ chmod a+r static/applist.json
 
 
 date
-echo -e "$0 ----------------- finished" 
+echo -e "$0 ----------------- finished"
 exit 0

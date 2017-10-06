@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Used to export CurveSettings from a remote mats server and import them into the local one
 # most commonly used to export the CurveSettings collection on mats.gsd.esrl.noaa.gov

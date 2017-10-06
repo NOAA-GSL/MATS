@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 #
-# Used to copy existing Apps and part of .meteor to the production server
-#logDir="/builds/buildArea/logs"
+# Used to copy all the existing meteor apps and part of .meteor to a production server
 
 # This script should be modified in the following way...
 # There should be a previous location on the target.

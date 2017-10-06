@@ -91,6 +91,7 @@ setBuildConfigVarsForProductionServer() {
     eval $(echo $data |  jq -r '. as $in  | del(.app_list) | to_entries[] | "\(.key | ascii_upcase)=\(.value | @sh)"')
     closeTunnel
 }
+
 # this routine will populate shell ARRAYS to represent the VERSIONS, APPS, and APPNAMES values in the 
 # deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
 # and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
@@ -143,6 +144,7 @@ getDeployedAppsForServer() {
 #PARAMETERS: server
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
+
 getBuildableAppsForServer() {
 	if [ $# -ne 1 ]; then
 		echo $0 - wrong number of params - usage: $0 server
