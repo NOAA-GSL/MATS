@@ -10,7 +10,7 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="$0 -s dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps"
+usage="$0 -e dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
 requestedApp=""
 while getopts "ar:s:" o; do
     case "${o}" in
@@ -21,7 +21,7 @@ while getopts "ar:s:" o; do
         r)
             requestedApp=(${OPTARG})
         ;;
-        s)
+        e)
             if [ "${OPTARG}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
             else
