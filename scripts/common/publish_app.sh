@@ -44,7 +44,7 @@ if [ "X" == "X${requestedApp}" ]; then
     # build them all
     rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web/gsd/mats
 else
-    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='static/applist.json' --exclude='*' /web/*  ${server}:/web/gsd/mats
+    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
 ssh @${sever} "cd /web; ln -sf gsd/mats/* ."
 

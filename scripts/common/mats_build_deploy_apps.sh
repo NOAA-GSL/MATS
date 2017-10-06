@@ -12,8 +12,16 @@ exec 2>&1
 
 usage="$0 -e dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
 requestedApp=""
-while getopts "ar:e:" o; do
+requestedTag=""
+tag=""
+while getopts "ar:e:t:" o; do
     case "${o}" in
+        t)
+            tag=(${OPTARG})
+            requestedTag="tags/${tag}"
+            requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
+
+        ;;
         a)
         #all apps
             requestedApp="all"
@@ -56,9 +64,19 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     fi
 fi
 
+if [ "X${requestedTag}" == "X" ]; then
+    /usr/bin/git  rev-parse ${tag}
+    if [ $? -ne 0  ]; then
+        echo ${failed} You requested a tag that does not exist ${tag} - can not continue
+        These tags exist...
+        /usr/bin/git show-ref --tags
+        exit 1
+    fi
+fi
+
 cd ${DEPLOYMENT_DIRECTORY}
-echo -e checking out ${BUILD_CODE_BRANCH}
-/usr/bin/git checkout ${BUILD_CODE_BRANCH}
+echo -e checking out ${requestedTag} ${BUILD_CODE_BRANCH}
+/usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
     exit 1
