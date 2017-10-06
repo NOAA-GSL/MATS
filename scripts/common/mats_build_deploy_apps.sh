@@ -113,9 +113,9 @@ meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/'
 unset apps
 if [ "X${requestedApp}" != "X" ]; then
     if [ "${requestedApp}" == "all" ]; then
-        apps=${buildableApps}
+        apps=( ${buildableApps[@]} )
     else
-        apps=( "${requestedApp[@]}" )
+        apps=( ${requestedApp[@]} )
     fi
 else
     if [ "X${meteor_package_changed}" != "X" ]; then
