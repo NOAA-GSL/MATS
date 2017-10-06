@@ -12,7 +12,7 @@ exec 2>&1
 
 usage="$0 -e dev|int [[-a][-r appReference]]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
 requestedApp=""
-while getopts "ar:s:" o; do
+while getopts "ar:e:" o; do
     case "${o}" in
         a)
         #all apps
