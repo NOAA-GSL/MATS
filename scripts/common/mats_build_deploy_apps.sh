@@ -147,8 +147,8 @@ for app in ${apps[*]}; do
     buildVer=$(getVersionForAppForServer ${app} ${SERVER})
     tag="${app}-${buildVer}"
     echo -e tagged repo with ${GRN}${tag}${NC}
-    git tag ${tag}
-    git push origin ${tag}
+    git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" ${tag}
+    git push origin ${tag}:
     cd ..
 done
 
