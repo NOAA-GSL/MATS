@@ -16,14 +16,14 @@
     {
       "app": "anomalycor",
       "appName": "Anomaly Correlation",
-      "version": "1.5.20-2017.10.05.22.28",
-      "buildDate": "2017.10.05.22.28"
+      "version": "1.5.20-2017.10.06.18.41",
+      "buildDate": "2017.10.06.18.41"
     },
     {
       "app": "ceiling",
       "appName": "Ceiling",
-      "version": "1.5.20-2017.09.21.16.16",
-      "buildDate": "2017.09.21.16.16"
+      "version": "1.5.20-2017.10.06.18.43",
+      "buildDate": "2017.10.06.18.43"
     },
     {
       "app": "visibility",
