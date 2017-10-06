@@ -28,7 +28,7 @@ while getopts "ar:e:" o; do
                 if [ "${OPTARG}" == "int" ]; then
                     setBuildConfigVarsForIntegrationServer
                 else
-                    echo invalid server ${OPTARG} - should be int or dev exiting
+                    echo -e ${RED}invalid server ${OPTARG} - should be int or dev exiting${NC}
                     exit 1
                 fi
             fi
@@ -50,7 +50,7 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     cd ${DEPLOYMENT_DIRECTORY}
     /usr/bin/git clone ${BUILD_GIT_REPO}
     if [ $? -ne 0 ]; then
-        echo -e "failed to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now"
+        echo -e "${failed} to /usr/bin/git clone ${BUILD_GIT_REPO} - must exit now"
         exit 1
     fi
 fi
@@ -72,7 +72,7 @@ fi
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
-echo -e buildable apps are.... ${buildableApps[*]}
+echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
 diffOut=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH})
 ret=$?
 if [ $ret -ne 0 ]; then
@@ -87,7 +87,7 @@ if [ $ret -ne 0 ]; then
     exit 1
 fi
 changedApps=( $(echo -e ${diffs} | grep apps | cut -f2 -d'/') )
-echo -e changedApps are ${changedApps}
+echo -e changedApps are ${GRN}${changedApps}${NC}
 meteor_package_changed=$(echo -e ${diffs} | grep meteor_packages | cut -f2 -d'/')
 
 unset apps
@@ -110,51 +110,51 @@ else
                 apps+=( $a )
             fi
         done
-        echo -e modified and buildable apps are ${apps[*]}
+        echo -e modified and buildable apps are ${GRN}${apps[*]}${NC}
     fi
 fi
 if [ "X${apps}" == "X" ]; then
-    echo -e no apps to build - exiting
+    echo -e ${RED}no apps to build - exiting${NC}
     exit 1
 fi
 
 # go ahead and merge changes
 /usr/bin/git pull
-if [ $ret -ne 0 ]; then
-    echo -e "${failed} to ldableApps=($(getBuildableAppsForServer "${SERVER}")) - ret $ret - must exit now"
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to do git pull - must exit now"
     exit 1
 fi
 export METEOR_PACKAGE_DIRS=`find $PWD -name meteor_packages`
 cd ${DEPLOYMENT_DIRECTORY}/apps
-echo -e "$0 building these apps ${apps[*]}"
+echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
     cd $app
-    echo -e "$0 - building app $x"
+    echo -e "$0 - building app ${GRN}${app}${NC}"
     meteor reset
     meteor npm cache clean
     meteor npm install
     rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
-    echo -e export the appProductionStatus collections file
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
-    echo -e copy deployment.json to uncontrolled common area
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
-    echo -e building app
     meteor build /builds
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"
         exit 1
     fi
-    echo -e make a tag
     buildVer=$(getVersionForAppForServer ${app} ${SERVER})
     tag="${app}-${buildVer}"
+    echo -e tagged repo with ${GRN}${tag}${NC}
     git tag ${tag}
     cd ..
 done
 
-echo -e push appProductionStatus files and tags that we added
 git push origin --tags
+if [ $? -ne 0 ]; then
+    echo -e "${failed} git push must exit now"
+    exit 1
+fi
 # clean up /tmp files
 echo -e "cleaning up /tmp/npm-* files"
 rm -rf /tmp/npm-*
@@ -163,7 +163,7 @@ rm -rf /tmp/npm-*
 echo deploying modified apps ${apps[*]}
 cd /web
 for app in ${apps[*]}; do
-    echo "deploying $app"
+    echo "deploying ${GRN}$app${NC}"
     # if existing, rm previous and move existing app to previous, be sure to change its title
     if [ -d "$app" ]; then
         if [ -d "$app"-previous ]; then
