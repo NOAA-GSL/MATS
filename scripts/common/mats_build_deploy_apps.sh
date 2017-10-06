@@ -31,11 +31,9 @@ while getopts "ar:e:t:" o; do
         ;;
         e)
             if [ "${OPTARG}" == "dev" ]; then
-                echo setting environment for development
                 setBuildConfigVarsForDevelopmentServer
             else
                 if [ "${OPTARG}" == "int" ]; then
-                    echo setting environment for integration
                     setBuildConfigVarsForIntegrationServer
                 else
                     echo -e ${RED}invalid server ${OPTARG} - should be int or dev exiting${NC}
@@ -51,7 +49,6 @@ done
 shift $((OPTIND - 1))
 
 date
-echo Build Dicrectory ${BUILD_DIRECTORY}
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
@@ -63,6 +60,7 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     fi
 fi
 
+cd ${DEPLOYMENT_DIRECTORY}
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
@@ -73,7 +71,6 @@ if [ "X${requestedTag}" == "X" ]; then
     fi
 fi
 
-cd ${DEPLOYMENT_DIRECTORY}
 echo -e checking out ${requestedTag} ${BUILD_CODE_BRANCH}
 /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 if [ $? -ne 0 ]; then
