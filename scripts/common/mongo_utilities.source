@@ -185,7 +185,6 @@ getPublishableAppsForServer() {
 		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.deploymentStatus':'enabled'} ]}, {"app_list.app":1,_id:0});
 	%EODgetBuildableAppsForServer
 	)
-echo $data
 	closeTunnel
 	APPS=($(echo $data | jq -r '.app_list[] | select(.deploymentStatus=="enabled") | .app'))
 	echo ${APPS[@]}
