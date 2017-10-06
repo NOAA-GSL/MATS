@@ -20,6 +20,7 @@ while getopts "ar:e:" o; do
         ;;
         r)
             requestedApp=(${OPTARG})
+            echo -e "requsted apps ${requestedApp[@]}"
         ;;
         e)
             if [ "${OPTARG}" == "dev" ]; then
@@ -82,7 +83,7 @@ fi
 
 diffs=$(echo $diffOut | grep -v 'appProductionStatus')
 ret=$?
-if [ $ret -ne 0 ]; then
+if [ "X${requestedApp[@]}" == "X" -a $ret -ne 0 ]; then
     echo -e "${failed} no modified apps to build - ret $ret - must exit now"
     exit 1
 fi
