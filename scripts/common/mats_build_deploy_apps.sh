@@ -18,7 +18,7 @@ while getopts "ar:e:t:" o; do
     case "${o}" in
         t)
             tag=(${OPTARG})
-            requestedTag="tags/${tag} -b"
+            requestedTag="tags/${tag} -b ${tag}"
             requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
         ;;
         a)
@@ -61,6 +61,13 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
 fi
 
 cd ${DEPLOYMENT_DIRECTORY}
+
+/usr/bin/git fetch
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to /usr/bin/git fetch - must exit now"
+    exit 1
+fi
+
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
@@ -71,13 +78,12 @@ if [ "X${requestedTag}" == "X" ]; then
     fi
 fi
 
-/usr/bin/git fetch
-if [ $? -ne 0 ]; then
-    echo -e "${failed} to /usr/bin/git fetch - must exit now"
-    exit 1
+if [ "X${requestedTag}" == "X" ]; then
+    /usr/bin/git checkout ${requestedTag}
+else
+    /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 fi
 
-/usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
     exit 1
