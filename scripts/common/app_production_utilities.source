@@ -225,7 +225,7 @@ getPublishableApps() {
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
 
-getPublishableAppsForServerIncludes() {
+getPublishableAppIncludes() {
     if [ $# -ne 0 ]; then
         echo $0 - wrong number of params - usage: $0
         return 1
