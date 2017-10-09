@@ -27,15 +27,21 @@ touch $logname
 echo "$0 ----------- started"
 date
 
-usage="$0 [server || help]"
-
+usage="$0 [server [app] || help]"
+if [ $# -lt 1 ]; then
+    echo $0 - wrong number of params - usage: $usage
+    return 1
+fi
 server=$1
-requestedApp=$2
+requestedApp=""
+if [ $# -eq 2 ]; then
+    requestedApp=$2
+fi
 
 if [ "$1" == "help" ]; then
     cat <<xxxxxENDxxxx
 This program will rsync the current /web directory to the production server named in the first parameter. It copies a selected list of apps that are found in
-MATS_for_EMB/scripts/common/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
+the appProductionStatus database and are returned by getPublishableApps, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
 the node part of phusion passenger.
 xxxxxENDxxxx
     exit 0
@@ -43,15 +49,19 @@ fi
 # rsync the meteor stuff
 rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
 
-publishApps=$(getPublishableApps)
+# get the publication app list
+publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
-    # build them all
+    # publish them all
     for pa in "${publishApps[@]}"; do
         rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
     done
 else
+    # publish just the requested one
     rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
+
+# fix up some linksa for the public service endpoint
 ssh @${sever} "cd /web; ln -sf gsd/mats/* ."
 
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
@@ -59,7 +69,6 @@ npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
 servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`
 servernpmpath=`ssh ${server} readlink -e /usr/local/bin/npm`
 
-echo "do not forget to restart nginx on ${server}."
 if [ "$servernodepath" != "$servernodepath"  ];
 then
     echo "Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
@@ -74,4 +83,6 @@ then
     echo " should be : $npmpath"
     echo "ln -sf ${npmpath} /usr/local/bin/npm"
 fi
+
+echo "do not forget to restart nginx on ${server}."
 exit 0
