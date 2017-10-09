@@ -40,10 +40,15 @@ the node part of phusion passenger.
 xxxxxENDxxxx
 exit 0
 fi
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/meteor_includes /web/.meteor  ${server}:/web
+# rsync the meteor stuff
+rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
+
+publishApps=$(getPublishableApps)
 if [ "X" == "X${requestedApp}" ]; then
     # build them all
-    rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web/gsd/mats
+	for pa in "${publishApps[@]}"; do
+    	rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+    done
 else
     rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
