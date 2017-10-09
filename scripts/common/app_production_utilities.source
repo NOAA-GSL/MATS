@@ -124,7 +124,7 @@ setBuildConfigVarsForProductionServer() {
     closeTunnel
 }
 
-# this routine will populate shell ARRAYS to represent the VERSIONS, APPS, and APPNAMES values in the 
+# this routine will populate shell ARRAYS to represent the VERSIONS and APPS values in the
 # deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov
 # and are indexed by the servers keyword. There are a different set of variables for each of the servers entries, i.e. mats-dev.gsd.esrl.noaa.gov differ from mats.gsd.esrl.noaa.gov.
 # the servers entry is actually a list of servers for which these values are configured.
@@ -145,7 +145,6 @@ setAppDeploymentVarsForServer() {
 	)
 	readarray -t VERSIONS <<< "$(echo $data | jq -r '.apps[]  | [.version] | @csv' | sed s/\"//g)"
 	readarray -t APPS <<< "$(echo $data | jq -r '.apps[]  | [.app] | @csv'  | sed s/\"//g)"
-	readarray -t APPNAMES <<< "$(echo $data | jq -r '.apps[]  | [.appName] | @csv' | sed s/\"//g)"
 	closeTunnel
 }
 
@@ -196,17 +195,17 @@ getBuildableAppsForServer() {
 }
 
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the provided server defined and the deploymentStatus field set to enabled.
-#PARAMETERS: server
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the production server defined and the deploymentStatus field set to enabled.
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
 
-getPublishableAppsForServer() {
-	if [ $# -ne 1 ]; then
-		echo $0 - wrong number of params - usage: $0 server
+getPublishableApps() {
+	if [ $# -ne 0 ]; then
+		echo $0 - wrong number of params - usage: $0
 		return 1
 	fi
 	local server=$1
+	local server = getProductionServer
 	openTunnel
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
@@ -220,18 +219,18 @@ getPublishableAppsForServer() {
 
 
 # This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the provided server defined and the deploymentStatus field set to enabled.
-# IN THE FORM OF AN RSYNC INCLUDES STRING
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the production server defined and the deploymentStatus field set to enabled.
+# IN THE FORM OF AN RSYNC INCLUDES STRING - which will be used by the publishApps routine.
 #PARAMETERS: server
 #RETURNS: list of app references with buildStatus enabled
 #TRANSFORMATION: none
 
 getPublishableAppsForServerIncludes() {
-    if [ $# -ne 1 ]; then
-        echo $0 - wrong number of params - usage: $0 server
+    if [ $# -ne 0 ]; then
+        echo $0 - wrong number of params - usage: $0
         return 1
     fi
-    local server=$1
+	local server = getProductionServer
     openTunnel
     unset data
     local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
@@ -506,44 +505,6 @@ getBuildDateForAppForServer() {
 	echo $data | jq -r '.apps[] | .buildDate'
 }
 
-# This routine outputs the buildDate field in the app element identified by the app reference and server params in the deployment collection of the appProductionStatus
-# mongo database on mats.gsd.esrl.noaa.gov
-#PARAMETERS: app reference, server
-#RETURNS: buildDate
-#TRANSFORMATION: none
-getAppNameForAppForServer() {
-    if [ $# -ne 2 ]; then
-        echo $0 - wrong number of params - usage: $0 app server
-        return 1
-    fi
-    local app=$1
-    local server=$2
-    openTunnel
-    unset data
-    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetVersionForAppForServer
-		db.getCollection("${DEPLOYMENTCOLLECTION}").find(
-			{ \$and: [
-				{ servers: {
-				      \$in:["${server}"]
-				} },
-				{
-				    'apps.app':"$app"
-				}
-			] },
-		     	{
-			_id:0,
-			apps: {
-			    \$elemMatch: {
-				'app':"$app"
-			    }
-			}
-	   	});
-	%EODgetVersionForAppForServer
-    )
-    closeTunnel
-    echo $data | jq -r '.apps[] | .appName'
-}
-
 
 
 # NOTE ABOUT ROLLING VERSIONS:
@@ -800,7 +761,6 @@ test () {
 	echo -e ---------
 	echo -e setAppDeploymentVarsForServer
 	unset APPS
-	unset APPNAMES
 	unset VERSIONS
 	setAppDeploymentVarsForServer ${host}
 	if [ "${APPS[0]}" == "upperair" ]; then
@@ -810,11 +770,11 @@ test () {
 		echo -e "${APPS[0]}" does not equal "upperair"
         fi
 		
-	if [ "${APPNAMES[1]}" == "Anomaly Correlation" ]; then
+	if [ "${APPS[1]}" == "anomalycor" ]; then
 		echo -e setAppDeploymentVarsForServer ${passed}
 	else
 		echo -e setAppDeploymentVarsForServer ${failed}
-		echo -e "${APPNAMES[1]}" does not equal "Anomaly Correlation"
+		echo -e "${APPS[1]}" does not equal "anomalycor"
         fi
 	
 	if [[ "${VERSIONS[0]}" =~ ${pattern} ]]; then
@@ -884,16 +844,6 @@ test () {
 		echo -e found ${appList[@]} 
 		echo -e expec ${expectedApps[@]} 
 	fi
-
-    echo -e ---------
-    echo getAppNameForAppForServer
-    local anomalycorAppName=$(getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov)
-    if [ "Anomaly Correlation" == "${anomalycorAppName}" ]; then
-        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${passed}
-    else
-        echo -e getAppNameForAppForServer anomalycor mats.gsd.esrl.noaa.gov ${failed} "Anomaly Correlation" is not "${anomalycorAppName}"
-    fi
-
 
 	echo -e ---------
 	local ceilingCurrentVersion=$(getVersionForAppForServer ceiling mats.gsd.esrl.noaa.gov)
