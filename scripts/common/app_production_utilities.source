@@ -1,7 +1,35 @@
 #!/bin/sh
-# mongo_utilities.source
+# app_production_utilities.source
 # bash function source file with utilities for retrieving and setting the mongo appProductionStatus databse on mats.gsd.esrl.noaa.gov
 # Each function will create a temporary tunnel to mats.gsd.esrl.noaa.gov for the mongo client to use, then close it when finished.
+
+
+
+# NOTES on appProductionStatus database....
+
+# The appProductionStatus database has two collections, buildConfiguration, and deployment. The test routine at the end of this file
+# creates a temporary copy of the deployment database for use during testing, and deletes it ehen the tests complete.
+# The buildConfiguration collection is not modified by these routines. That collection defines the build, integration, and
+# production servers (one for each environment), and  specifies things like source code control, build and test directories,
+# build and test commands, results directories, and an app_list. The app_list specifies each app reference, displayName,
+# displayOrder, build status, and deployment status.
+# If build status is enabled then that app be built for that environment. If the build status is disabled the app will be not be built
+# when the build script runs for the given environment.
+# If the deploymentStatus is enabled then the app can be deployed in the given environment, if disabled the app will not be deployed,
+# even if it is built. This is how an app can progress from version to version from development, to integration, to production.
+
+
+# By modifyinfg the data in that collection, the build and deployment operations can be controlled independently of the build script.
+
+# The deployment collection is dynamic and is modified by the build, deploy, and publish routines.
+# There is a document for production servers, integration servers, and development servers.
+# The servers field in each document is a list because there may be more than one such server in each environment.
+# Each server entry is itself a list because a server may be known by different names or domains. Think internal verses DMZ.
+# Each environment document also contains an app list. Each app entry identifies the app reference, the version, the build date
+# (which is the date that app was last built for that environment), the last test run (which is the date that the automated
+# tests were last run, and the last test status (which is the result of the last test run).
+
+
 
 # For non-test usages the deploy collectios is named deployment.
 # for test usage the deployment collection is duplicated and the duplicate "deployment-test" is used.
