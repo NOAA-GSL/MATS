@@ -33,12 +33,12 @@ server=$1
 requestedApp=$2
 
 if [ "$1" == "help" ]; then
-        cat <<xxxxxENDxxxx
+    cat <<xxxxxENDxxxx
 This program will rsync the current /web directory to the production server named in the first parameter. It copies a selected list of apps that are found in
 MATS_for_EMB/scripts/common/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
 the node part of phusion passenger.
 xxxxxENDxxxx
-exit 0
+    exit 0
 fi
 # rsync the meteor stuff
 rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
@@ -46,8 +46,8 @@ rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --e
 publishApps=$(getPublishableApps)
 if [ "X" == "X${requestedApp}" ]; then
     # build them all
-	for pa in "${publishApps[@]}"; do
-    	rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+    for pa in "${publishApps[@]}"; do
+        rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
     done
 else
     rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
