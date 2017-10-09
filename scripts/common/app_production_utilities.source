@@ -217,31 +217,6 @@ getPublishableApps() {
 	echo ${APPS[@]}
 }
 
-
-# This routine will output the list of apps (app references not names) that are currently defined in the buildConfiguration collection of the
-# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the production server defined and the deploymentStatus field set to enabled.
-# IN THE FORM OF AN RSYNC INCLUDES STRING - which will be used by the publishApps routine.
-#PARAMETERS: server
-#RETURNS: list of app references with buildStatus enabled
-#TRANSFORMATION: none
-
-getPublishableAppIncludes() {
-    if [ $# -ne 0 ]; then
-        echo $0 - wrong number of params - usage: $0
-        return 1
-    fi
-	local server=getProductionServer
-    openTunnel
-    unset data
-    local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
-		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.deploymentStatus':'enabled'} ]}, {"app_list.app":1,"app_list.deploymentStatus":1,_id:0});
-	%EODgetBuildableAppsForServer
-    )
-    closeTunnel
-    APPS=($(echo $data | jq -r '.app_list[] | select(.deploymentStatus=="enabled") | "+" + .app + "/***"'))
-    echo "${APPS[@]} -*"
-}
-
 # This routine will output apps (app references and displayNames) that are currently defined in the buildConfiguration collection of the
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
 # according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
