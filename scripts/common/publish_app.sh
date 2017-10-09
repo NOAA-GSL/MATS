@@ -30,7 +30,7 @@ date
 usage="$0 [server [app] || help]"
 if [ $# -lt 1 ]; then
     echo $0 - wrong number of params - usage: $usage
-    return 1
+    exit 1
 fi
 server=$1
 requestedApp=""
