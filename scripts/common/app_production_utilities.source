@@ -943,13 +943,9 @@ test () {
     if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
         echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
     fi
-    if [ "${currentDevVersionPart}" == "${intVer}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new int version ${intVer} should NOT be the SAME
+    if [ "${buildVersionPart}" == "${intVer}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} final build version part ${currentDevVersionPart} and int version ${intVer} should NOT be the SAME
     fi
-    if [ "${currentDevVersionPart}" != "${buildVersionPart}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial build version part ${currentDevVersionPart} and new new build version part ${buildVersionPart} should be the SAME
-    fi
-
     if [ "${currentIntVersion}" != "${intVer}" ]; then
         echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version ${currentIntVersion}  and new int version ${intVer} should be the SAME
     fi
