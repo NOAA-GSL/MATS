@@ -937,8 +937,8 @@ test () {
     local intDate=$(getBuildDateForAppForServer ceiling mats-int.gsd.esrl.noaa.gov)
     echo -e "dev cur ${currentDevVersion}\t\t${currentDevBuildDate}\t\t\t\tnew ${buildVer}\t\t${buildDate}"
     echo -e "int cur ${currentIntVersion}\t\t\t\t${currentIntBuildDate}\t\t\t\tnew ${intVer}\t\t\t\t${intDate}"
-    if [ "${currentDevBuildDate}" != "${intDate}" ]; then
-        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new intDate ${intDate} should be the same
+    if [ "${currentIntBuildDate}" != "${intDate}" ]; then
+        echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial IntBuildDate ${currentIntBuildDate} and new intDate ${intDate} should be the same
     fi
     if [ "${currentDevBuildDate}" == "${buildDate}" ]; then
         echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial DevBuildDate ${currentDevBuildDate} and new buildDate ${buildDate} should NOT be the same
