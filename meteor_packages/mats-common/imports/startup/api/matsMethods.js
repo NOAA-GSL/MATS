@@ -326,7 +326,7 @@ const resetApp = function() {
             break;
         }
     }
-    if (Object.keys(app).length === 0 && app.constructor === Object) {
+    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
         app = developmentApp;
     }
     const appVersion = app ? app.version : "unknown";
