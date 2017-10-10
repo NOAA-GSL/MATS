@@ -10,7 +10,10 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="$0 -e dev|int [-a][-r appReference][-t tag]  #where -a is force build all apps, r is build only requested appReferences (like upperair ceiling) default is build changed apps, and e is build environment"
+usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag]  \n\
+	where -a is force build all apps, \n\
+	appReference is build only requested appReferences (like upperair ceiling), \n\
+	default is build changed apps, and e is build environment"
 requestedApp=""
 requestedTag=""
 tag=""
@@ -38,22 +41,22 @@ while getopts "ar:e:t:" o; do
                 if [ "${build_env}" == "int" ]; then
                     setBuildConfigVarsForIntegrationServer
                 else
-                    echo -e ${RED}invalid server ${OPTARG} - should be int or dev exiting${NC}
+                    echo -e "${RED}invalid environment ${OPTARG} - should be int or dev exiting${NC} \n$usage"
                     exit 1
                 fi
             fi
         ;;
         *)
-            echo $usage
+            echo -e "${RED} bad option? ${OPTARG}${NC} \n$usage"
             exit 1
         ;;
     esac
 done
 shift $((OPTIND - 1))
 if [ "X${build_env}" == "X" ]; then
-	echo You did not specify a build environment (-e dev|int)
-	echo $usage
-	echo "Must exit now"
+	echo -e "${RED}You did not specify a build environment (-e dev|int)${NC}"
+	echo -e $usage
+	echo "${RED}Must exit now${NC}"
 	exit 1
 fi
 date
