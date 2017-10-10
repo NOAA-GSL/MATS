@@ -330,7 +330,7 @@ const resetApp = function() {
         app = developmentApp;
     }
     const appVersion = app ? app.version : "unknown";
-    const appName = app ? app.appName : "unknown";
+    const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
 // if the metadata has changed ----
     matsCollections.Roles.remove({});
@@ -343,7 +343,7 @@ const resetApp = function() {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appName, appVersion, buildDate);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
