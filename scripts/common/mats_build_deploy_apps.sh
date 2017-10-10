@@ -14,6 +14,7 @@ usage="$0 -e dev|int [-a][-r appReference][-t tag]  #where -a is force build all
 requestedApp=""
 requestedTag=""
 tag=""
+build_env=""
 while getopts "ar:e:t:" o; do
     case "${o}" in
         t)
@@ -30,10 +31,11 @@ while getopts "ar:e:t:" o; do
             echo -e "requsted apps ${requestedApp[@]}"
         ;;
         e)
-            if [ "${OPTARG}" == "dev" ]; then
+            build_env=$(OPTARG)
+            if [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
             else
-                if [ "${OPTARG}" == "int" ]; then
+                if [ "${build_env}" == "int" ]; then
                     setBuildConfigVarsForIntegrationServer
                 else
                     echo -e ${RED}invalid server ${OPTARG} - should be int or dev exiting${NC}
@@ -42,12 +44,18 @@ while getopts "ar:e:t:" o; do
             fi
         ;;
         *)
-            usage
+            echo $usage
+            exit 1
         ;;
     esac
 done
 shift $((OPTIND - 1))
-
+if [ "X${build_env}" == "X" ]; then
+	echo You did not specify a build environment (-e dev|int)
+	echo $usage
+	echo "Must exit now"
+	exit 1
+fi
 date
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
