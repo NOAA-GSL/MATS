@@ -21,7 +21,7 @@ build_env=""
 while getopts "ar:e:t:" o; do
     case "${o}" in
         t)
-            tag=(${OPTARG})
+            tag=${OPTARG}
             requestedTag="tags/${tag} -b ${tag} "
             requestedApp=($(echo ${requestedTag} | cut -f1 -d'-'))
         ;;
@@ -34,20 +34,20 @@ while getopts "ar:e:t:" o; do
             echo -e "requsted apps ${requestedApp[@]}"
         ;;
         e)
-            build_env=$(OPTARG)
+            build_env="${OPTARG}"
             if [ "${build_env}" == "dev" ]; then
                 setBuildConfigVarsForDevelopmentServer
             else
                 if [ "${build_env}" == "int" ]; then
                     setBuildConfigVarsForIntegrationServer
                 else
-                    echo -e "${RED}invalid environment ${OPTARG} - should be int or dev exiting${NC} \n$usage"
+                    echo -e "${RED}invalid environment '${build_env}' - should be 'int' or 'dev' exiting${NC} \n$usage"
                     exit 1
                 fi
             fi
         ;;
         *)
-            echo -e "${RED} bad option? ${OPTARG}${NC} \n$usage"
+            echo -e "${RED} bad option? ${NC} \n$usage"
             exit 1
         ;;
     esac

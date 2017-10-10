@@ -9,6 +9,7 @@
   "apps": [
     {
       "app": "upperair",
+      "title": "Upper Air",
       "version": "1.5.21-2017.10.10.16.51",
       "buildDate": "2017.10.10.16.51",
       "last_test_run": "",
@@ -16,6 +17,7 @@
     },
     {
       "app": "anomalycor",
+      "title": "Anomaly Correlation",
       "version": "1.5.21-2017.10.10.16.53",
       "buildDate": "2017.10.10.16.53",
       "last_test_run": "",
@@ -23,6 +25,7 @@
     },
     {
       "app": "ceiling",
+      "title": "Ceiling",
       "version": "1.5.21-2017.10.10.16.55",
       "buildDate": "2017.10.10.16.55",
       "last_test_run": "",
@@ -30,6 +33,7 @@
     },
     {
       "app": "visibility",
+      "title": "Visibility",
       "version": "1.5.21-2017.10.10.16.57",
       "buildDate": "2017.10.10.16.57",
       "last_test_run": "",
@@ -37,6 +41,7 @@
     },
     {
       "app": "surface",
+      "title": "Surface",
       "version": "1.5.21-2017.10.10.17.00",
       "buildDate": "2017.10.10.17.00",
       "last_test_run": "",
@@ -44,6 +49,7 @@
     },
     {
       "app": "precipitation",
+      "title": "Precipitation",
       "version": "1.5.21-2017.10.10.17.02",
       "buildDate": "2017.10.10.17.02",
       "last_test_run": "",
@@ -51,6 +57,7 @@
     },
     {
       "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
       "version": "1.5.21-2017.10.10.17.05",
       "buildDate": "2017.10.10.17.05",
       "last_test_run": "",
@@ -58,6 +65,7 @@
     },
     {
       "app": "wfip2",
+      "title": "WFIP2",
       "version": "1.5.21-2017.10.10.17.07",
       "buildDate": "2017.10.10.17.07",
       "last_test_run": "",
@@ -65,6 +73,7 @@
     },
     {
       "app": "upperair-previous",
+      "title": "Upper Air previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -72,6 +81,7 @@
     },
     {
       "app": "anomalycor-previous",
+      "title": "Anomaly Correlation previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -79,6 +89,7 @@
     },
     {
       "app": "ceiling-previous",
+      "title": "Ceiling previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -86,6 +97,7 @@
     },
     {
       "app": "visibility-previous",
+      "title": "Visibility previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -93,6 +105,7 @@
     },
     {
       "app": "surface-previous",
+      "title": "Surface previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -100,6 +113,7 @@
     },
     {
       "app": "precipitation-previous",
+      "title": "Precipitation previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -107,6 +121,7 @@
     },
     {
       "app": "radarReflectivity-previous",
+      "title": "Radar Reflectivity previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -114,6 +129,7 @@
     },
     {
       "app": "wfip2-previous",
+      "title": "WFIP2 previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -133,6 +149,7 @@
   "apps": [
     {
       "app": "upperair",
+      "title": "Upper Air",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -140,6 +157,7 @@
     },
     {
       "app": "anomalycor",
+      "title": "Anomaly Correlation",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -147,6 +165,7 @@
     },
     {
       "app": "ceiling",
+      "title": "Ceiling",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -154,6 +173,7 @@
     },
     {
       "app": "visibility",
+      "title": "Visibility",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -161,6 +181,7 @@
     },
     {
       "app": "surface",
+      "title": "Surface",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -168,6 +189,7 @@
     },
     {
       "app": "precipitation",
+      "title": "Precipitation",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -175,6 +197,7 @@
     },
     {
       "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -182,6 +205,7 @@
     },
     {
       "app": "wfip2",
+      "title": "WFIP2",
       "version": "1.5.19",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -200,6 +224,7 @@
   "apps": [
     {
       "app": "upperair",
+      "title": "Upper air",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.00",
       "last_test_run": "",
@@ -207,6 +232,7 @@
     },
     {
       "app": "anomalycor",
+      "title": "Anomaly Correlation",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.02",
       "last_test_run": "",
@@ -214,6 +240,7 @@
     },
     {
       "app": "ceiling",
+      "title": "Ceiling",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.05",
       "last_test_run": "",
@@ -221,6 +248,7 @@
     },
     {
       "app": "visibility",
+      "title": "Visibility",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.07",
       "last_test_run": "",
@@ -228,6 +256,7 @@
     },
     {
       "app": "surface",
+      "title": "Surface",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.09",
       "last_test_run": "",
@@ -235,6 +264,7 @@
     },
     {
       "app": "precipitation",
+      "title": "Precipitation",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.11",
       "last_test_run": "",
@@ -242,6 +272,7 @@
     },
     {
       "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.13",
       "last_test_run": "",
@@ -249,6 +280,7 @@
     },
     {
       "app": "wfip2",
+      "title": "WFIP2",
       "version": "1.5.20",
       "buildDate": "2017.10.06.23.16",
       "last_test_run": "",
