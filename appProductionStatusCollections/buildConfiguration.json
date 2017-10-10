@@ -10,14 +10,10 @@
   "build_code_branch": "master",
   "build_directory": "/builds/buildArea/",
   "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-int.sh",
-  "last_build_run": "",
-  "last_build_status": "",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
   "test_command": "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
-  "last_test_run": "",
-  "last_test_status": "",
   "test_result_directory": "/builds/buildArea/test_results",
   "app_list": [
     {
@@ -90,14 +86,10 @@
   "build_code_branch": "development_v1.0",
   "build_directory": "/builds/buildArea/",
   "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-dev.sh",
-  "last_build_run": "",
-  "last_build_status": "",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
   "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-dev-`/bin/date +%Y.%m.%d.%H.%M.%S`",
-  "last_test_run": "",
-  "last_test_status": "",
   "test_result_directory": "/builds/buildArea/test_results",
   "app_list": [
     {
@@ -227,8 +219,6 @@
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_directory": "/builds/buildArea/test_results",
   "test_command": "sh ./matsTest -b phantomjs -f progress:/builds/buildArea/test_results/mats-`/bin/date +%Y.%m.%d.%H.%M.%S`",
-  "last_test_run": "",
-  "last_test_status": "",
   "test_result_directory": "/builds/buildArea/test_results",
   "app_list": [
     {
