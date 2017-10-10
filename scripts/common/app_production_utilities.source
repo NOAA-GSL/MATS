@@ -204,8 +204,7 @@ getPublishableApps() {
 		echo $0 - wrong number of params - usage: $0
 		return 1
 	fi
-	local server=$1
-	local server=(getProductionServer)
+	local server=$(getProductionServer)
 	openTunnel
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
