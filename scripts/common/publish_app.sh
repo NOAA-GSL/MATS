@@ -47,22 +47,24 @@ xxxxxENDxxxx
     exit 0
 fi
 # rsync the meteor stuff
-rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
+/usr/bin/rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
 
 # get the publication app list
 publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
-        rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
     done
 else
     # publish just the requested one
-    rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
+    echo "rsyncing ${requestedApp}"
+    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
 
 # fix up some linksa for the public service endpoint
-ssh @${sever} "cd /web; ln -sf gsd/mats/* ."
+echo "linking /gsd/mats"
+/usr/bin/ssh ${server} "cd /web; ln -sf gsd/mats/* ."
 
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
 npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
