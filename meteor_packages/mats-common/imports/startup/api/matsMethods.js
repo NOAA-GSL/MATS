@@ -310,7 +310,7 @@ const resetApp = function() {
     var myUrl = url.parse(myUrlStr);
     console.log('myUrlStr:',myUrlStr);
     const hostName = myUrl.hostname;
-    const urlPath = myUrl.pathname == "/" ? process.env.PWD : myUrl.pathname.replace(/\//g, '');
+    const urlPath = myUrl.pathname == "/" ? process.env.PWD : myUrl.pathname.replace(/\/$/g, '');
     console.log('urlPath:', urlPath);
     const urlPathParts = urlPath.split('/');
     const appReference = urlPathParts[urlPathParts.length -1];

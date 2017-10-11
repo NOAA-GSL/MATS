@@ -55,11 +55,13 @@ if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
         /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+        promoteApp ${pa}
     done
 else
     # publish just the requested one
     echo "rsyncing ${requestedApp}"
     /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
+    promoteApp ${pa}
 fi
 
 # fix up some linksa for the public service endpoint

@@ -216,6 +216,24 @@ getPublishableApps() {
 	echo ${APPS[@]}
 }
 
+# This routine will update the app in the apps list of the deployment collection production deployment_environment document of the
+# appProductionStatus mongo database on mats.gsd.esrl.noaa.gov to match the corresponding version and build date from the integration server app
+promoteApp() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 appReference
+		return 1
+	fi
+	local app=$1
+	local intServer=$(getIntegrationServer)
+    local prodServer=$(getProductionServer)
+	# make the version and build date for the production environment the same as the integration
+	local intVersion=$(getVersionForAppForServer ${app} ${intServer})
+	local intBuildDate=$(getBuildDateForAppForServer ${app} ${intServer})
+	updateVersionForAppForServer ${intVersion} ${app} ${prodServer}
+	updateBuildDateForAppForServer ${intBuildDate}  ${app} ${prodServer}
+}
+
+
 # This routine will output apps (app references and displayNames) that are currently defined in the buildConfiguration collection of the
 # appProductionStatus mongo database on mats.gsd.esrl.noaa.gov and that have the buildStatus field set to enabled, in the correct order
 # according to how they are stored in the database. The data is output as a valid JSON array.... i.e.
