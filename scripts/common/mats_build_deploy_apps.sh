@@ -90,7 +90,9 @@ if [ "X${requestedTag}" == "X" ]; then
 fi
 
 if [ "X${requestedTag}" == "X" ]; then
-    /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
+    /usr/bin/git checkout ${BUILD_CODE_BRANCH}
+    /usr/bin/git reset --hard
+    /usr/bin/git fetch
 else
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 fi
