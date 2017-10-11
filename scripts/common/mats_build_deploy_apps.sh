@@ -73,7 +73,6 @@ fi
 
 cd ${DEPLOYMENT_DIRECTORY}
 
-/usr/bin/git fetch --all --tags --prune
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
