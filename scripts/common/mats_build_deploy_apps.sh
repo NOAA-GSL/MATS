@@ -72,12 +72,11 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
 fi
 
 cd ${DEPLOYMENT_DIRECTORY}
-
+/usr/bin/git fetch
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
 fi
-
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
@@ -90,16 +89,19 @@ fi
 
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git checkout ${BUILD_CODE_BRANCH}
+    if [ $? -ne 0 ]; then
+        echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
+        exit 1
+    fi
     /usr/bin/git reset --hard
-    /usr/bin/git fetch
 else
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
+    if [ $? -ne 0 ]; then
+        echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
+        exit 1
+    fi
 fi
 
-if [ $? -ne 0 ]; then
-    echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
-    exit 1
-fi
 
 
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
