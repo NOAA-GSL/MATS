@@ -9,7 +9,7 @@
   "build_git_repo": "gerrit:MATS_for_EMB",
   "build_code_branch": "master",
   "build_directory": "/builds/buildArea/",
-  "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-int.sh",
+  "build_cmd": "./MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e dev",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
