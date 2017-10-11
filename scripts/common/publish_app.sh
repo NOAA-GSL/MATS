@@ -55,12 +55,14 @@ publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
-        /usr/bin/rsync -ralWq --rsh=ssh --no-motd --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+        promoteApp ${pa}
     done
 else
     # publish just the requested one
-    echo -e "${GRN}rsyncing ${requestedApp}${NC}"
-    /usr/bin/rsync -ralWq --rsh=ssh --no-motd --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
+    echo "rsyncing ${requestedApp}"
+    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
+    promoteApp ${pa}
 fi
 
 # fix up some linksa for the public service endpoint
