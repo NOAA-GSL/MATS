@@ -24,12 +24,12 @@ logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 #exec > >(tee -i $logname)
 #exec 2>&1
-echo "$0 ----------- started"
+echo -e "${GRN}$0 ----------- started${NC}"
 date
 
 usage="$0 [server [app] || help]"
 if [ $# -lt 1 ]; then
-    echo $0 - wrong number of params - usage: $usage
+    echo -e "${RED}$0 - wrong number of params - usage: $usage${NC}"
     exit 1
 fi
 server=$1
@@ -47,23 +47,24 @@ xxxxxENDxxxx
     exit 0
 fi
 # rsync the meteor stuff
-/usr/bin/rsync -ralW --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
+echo -e "${GRN}rsync meteor${NC}"
+/usr/bin/rsync -ralWq --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
 
 # get the publication app list
 publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
-        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
+        /usr/bin/rsync -ralWq --rsh=ssh --no-motd --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
     done
 else
     # publish just the requested one
-    echo "rsyncing ${requestedApp}"
-    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
+    echo -e "${GRN}rsyncing ${requestedApp}${NC}"
+    /usr/bin/rsync -ralWq --rsh=ssh --no-motd --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
 fi
 
 # fix up some linksa for the public service endpoint
-echo "linking /gsd/mats"
+echo -e "${GRN}linking /gsd/mats${NC}"
 /usr/bin/ssh ${server} "cd /web; ln -sf gsd/mats/* ."
 
 nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
@@ -73,7 +74,7 @@ servernpmpath=`ssh ${server} readlink -e /usr/local/bin/npm`
 
 if [ "$servernodepath" != "$servernodepath"  ];
 then
-    echo "Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
+    echo -e "${GRN}Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link${NC}"
     echo "server node path is : $servernodepath"
     echo " should be : $nodepath"
     echo "ln -sf ${nodepath} /usr/local/bin/node"
