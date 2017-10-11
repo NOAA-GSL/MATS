@@ -73,7 +73,6 @@ fi
 
 cd ${DEPLOYMENT_DIRECTORY}
 
-/usr/bin/git fetch --all --tags --prune
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
     exit 1
@@ -90,7 +89,9 @@ if [ "X${requestedTag}" == "X" ]; then
 fi
 
 if [ "X${requestedTag}" == "X" ]; then
-    /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
+    /usr/bin/git checkout ${BUILD_CODE_BRANCH}
+    /usr/bin/git reset --hard
+    /usr/bin/git fetch
 else
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
 fi
