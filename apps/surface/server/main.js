@@ -364,24 +364,8 @@ Meteor.startup(function () {
             database    : 'surface_sums',
             connectionLimit : 10
         });
-        matsCollections.Databases.insert({
-            name:"modelSetting",
-            role: "model_data",
-            status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'readonly',
-            password    : 'ReadOnly@2016!',
-            database    : 'madis3',
-            connectionLimit : 10
-        });
     }
 
-    var modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
-    // the pool is intended to be global
-    modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
     var sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
@@ -390,47 +374,32 @@ Meteor.startup(function () {
     });
 
     var rows;
+
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select model,regions,model_value from regions_per_model_mats;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
+            var model_value = rows[i].model.trim();
             var regions = rows[i].regions;
-            var model_value = rows[i].model_value.trim();
+            var model = rows[i].display_text.trim();
+            var forecastLengths = rows[i].fcst_lens;
+            var regionsArr = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < regionsArr.length; j++) {
+                regionsArr[j] = regionsArr[j].replace(/'|\[|\]/g,"");
+            }
+            for (var j = 0; j < forecastLengthArr.length; j++) {
+                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g,"");
+            }
             var valueList = [];
             valueList.push(model_value);
             modelOptionsMap[model] = valueList;
-            var regionsArr = regions.split(',');
             regionModelOptionsMap[model] = regionsArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
             forecastLengthOptionsMap[model] = forecastLengthArr;
         }
     } catch (err) {
         console.log(err.message);
     }
 
-    try {
-                matsCollections.RegionDescriptions.remove({});
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select regionMapTable,description from region_descriptions_mats;");
-        for (var i = 0; i < rows.length; i++) {
-            var description = rows[i].description;
-            var regionMapTable = rows[i].regionMapTable;
-            var valueList = [];
-            valueList.push(regionMapTable);
-            matsCollections.RegionDescriptions.insert({regionMapTable: regionMapTable ,  description: description});
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
     matsMethods.resetApp();
 });
 
