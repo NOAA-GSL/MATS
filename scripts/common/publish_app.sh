@@ -47,27 +47,54 @@ xxxxxENDxxxx
     exit 0
 fi
 # rsync the meteor stuff
-echo -e "${GRN}rsync meteor${NC}"
-/usr/bin/rsync -ralWq --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web
+echo -e "${GRN}rsyncing meteor${NC}"
+/usr/bin/rsync -ralWq --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web 2>&1 | grep -v "^\*.*\*$"
 
 # get the publication app list
 publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
-        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats
-        promoteApp ${pa}
+        echo -e "${GRN}rsyncing ${pa}${NC}"
+        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+	# promote the production versions and dates
+        versionDate=$(promoteApp ${pa})
+	version=$(echo ${versionDate} | cut -f1 -d' ')
+	buildDate=$(echo ${versionDate} | cut -f2 -d' ')
+	deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+	tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
+	cmd=$(cat <<-%EODpublish
+		chmod +w ${deploymentFile};
+		jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile}} > ${tmpfile}; 
+		cp ${tmpfile} ${deploymentFile};
+                chmod -w ${deploymentFile};
+	%EODpublish
+	)
+	/usr/bin/ssh -q ${server} ${cmd}
     done
 else
     # publish just the requested one
-    echo "rsyncing ${requestedApp}"
-    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats
-    promoteApp ${pa}
+    echo -e "${GRN}rsyncing ${requestedApp}${NC}"
+    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+    # promote the production version and date
+    versionDate=$(promoteApp ${pa})
+    version=$(echo ${versionDate} | cut -f1 -d' ')
+    buildDate=$(echo ${versionDate} | cut -f2 -d' ')
+    deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+    tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
+    cmd=$(cat <<-%EODpublish
+	chmod +w ${deploymentFile};
+	jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile}} > ${tmpfile}; 
+	cp ${tmpfile} ${deploymentFile};
+	chmod -w ${deploymentFile};
+    %EODpublish
+    )
+    /usr/bin/ssh -q ${server} ${cmd}
 fi
 
 # fix up some links for the public service endpoint
 echo -e "${GRN}linking /gsd/mats${NC}"
-/usr/bin/ssh ${server} "cd /web; ln -sf gsd/mats/* ."
+/usr/bin/ssh -q ${server} "cd /web; ln -sf gsd/mats/* ."
 
 echo -e "${RED}do not forget to restart nginx on ${server}.${NC}"
 exit 0
