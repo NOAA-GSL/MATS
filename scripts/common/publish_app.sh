@@ -42,8 +42,7 @@ if [ "$1" == "help" ]; then
     cat <<xxxxxENDxxxx
 This program will rsync the current /web directory to the production server named in the first parameter. It copies a selected list of apps that are found in
 the appProductionStatus database and are returned by getPublishableApps, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
-the node part of phusion passenger. The routine also promotes the versioning and dates that are in the pre-built deployment.json file. This file is a controlled reflection
-of the appProductionStatus deployment collection that resides on the production server.
+the node part of phusion passenger.
 xxxxxENDxxxx
     exit 0
 fi
