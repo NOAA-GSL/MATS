@@ -11,6 +11,7 @@ var regionModelOptionsMap = {};
 var modelTableMap = {};
 var forecastLengthOptionsMap = {};
 var forecastLengthModels = [];
+var thresholdsModelOptionsMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -153,22 +154,15 @@ const doCurveParams = function () {
                 displayGroup: 2
             });
 
-        optionsMap = {
-            '60000 (any cloud)': ['6000'],
-            '500 (ceiling<500 feet)': ['50'],
-            '3000 (ceiling <3000 feet)': ['300'],
-            '1000 (ceiling <1000 feet)': ['100']
-        };
-
         matsCollections.CurveParams.insert(
             {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: thresholdsModelOptionsMap['HRRR'],
+                options: Object.keys(thresholdsModelOptionsMap['HRRR']),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(thresholdsModelOptionsMap['HRRR'])[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -377,6 +371,7 @@ Meteor.startup(function () {
     modelPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
+
     const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
         user: 1,
@@ -391,49 +386,58 @@ Meteor.startup(function () {
     });
 
     var rows;
+    var rows2;
+
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select model,model_value,regions_name from regions_per_model;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
-            var regions_name = rows[i].regions_name;
-            var model_value = rows[i].model_value.trim();
+
+            var model_value = rows[i].model.trim();
+            var model = rows[i].display_text.trim();
             var valueList = [];
             valueList.push(model_value);
             modelOptionsMap[model] = valueList;
-            var regionsArr = regions_name.split(',');
-            regionModelOptionsMap[model] = regionsArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
 
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM ceiling.fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
             var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
+            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < forecastLengthArr.length; j++) {
+                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g,"");
+            }
             forecastLengthOptionsMap[model] = forecastLengthArr;
+
+            var thresholds = rows[i].trsh;
+            var thresholdsArr = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < thresholdsArr.length; j++) {
+                thresholdsArr[j] = thresholdsArr[j].replace(/'|\[|\]/g,"");
+            }
+
+            var regions = rows[i].regions;
+            var regionsArr = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < regionsArr.length; j++) {
+                regionsArr[j] = regionsArr[j].replace(/'|\[|\]/g,"");
+            }
+            regionModelOptionsMap[model] = regionsArr;
+
+            try {
+                rows2 = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+                var thresholdValuesMap = {};
+                for (var j = 0; j < rows2.length; j++) {
+                    var description = rows2[j].description.trim();
+                    var trsh = rows2[j].trsh.trim();
+                    if (thresholdsArr.indexOf(trsh) > -1) {
+                        thresholdValuesMap[description] = [trsh];
+                    }
+                }
+                thresholdsModelOptionsMap[model] = thresholdValuesMap;
+            } catch (err) {
+                console.log(err.message);
+            }
+
         }
     } catch (err) {
         console.log(err.message);
     }
 
-    try {
-        matsCollections.RegionDescriptions.remove({});
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select id,description,short_name from region_descriptions;");
-        for  (var i = 0; i < rows.length; i++) {
-            var regionNumber = rows[i].id;
-            var description = rows[i].description;
-            var shortName = rows[i].short_name;
-            var valueList = [];
-            valueList.push(shortName);
-            regionOptionsMap[description] = valueList;
-            matsCollections.RegionDescriptions.insert({ regionNumber: regionNumber,shortName: shortName, description: description});
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
     matsMethods.resetApp();
 });
 
