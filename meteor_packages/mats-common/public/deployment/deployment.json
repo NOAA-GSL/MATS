@@ -1,0 +1,290 @@
+[{
+  "_id": {
+    "$oid": "59c2f797146ff98462fe0415"
+  },
+  "deployment_environment": "development",
+  "servers": [
+    "mats-dev.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "title": "Upper Air",
+      "version": "1.5.21-2017.10.10.16.51",
+      "buildDate": "2017.10.10.16.51",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor",
+      "title": "Anomaly Correlation",
+      "version": "1.5.21-2017.10.10.16.53",
+      "buildDate": "2017.10.10.16.53",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling",
+      "title": "Ceiling",
+      "version": "1.5.21-2017.10.10.16.55",
+      "buildDate": "2017.10.10.16.55",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility",
+      "title": "Visibility",
+      "version": "1.5.21-2017.10.10.16.57",
+      "buildDate": "2017.10.10.16.57",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface",
+      "title": "Surface",
+      "version": "1.5.21-2017.10.10.17.00",
+      "buildDate": "2017.10.10.17.00",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation",
+      "title": "Precipitation",
+      "version": "1.5.21-2017.10.10.17.02",
+      "buildDate": "2017.10.10.17.02",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
+      "version": "1.5.21-2017.10.10.17.05",
+      "buildDate": "2017.10.10.17.05",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2",
+      "title": "WFIP2",
+      "version": "1.5.21-2017.10.10.17.07",
+      "buildDate": "2017.10.10.17.07",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "upperair-previous",
+      "title": "Upper Air previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor-previous",
+      "title": "Anomaly Correlation previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling-previous",
+      "title": "Ceiling previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility-previous",
+      "title": "Visibility previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface-previous",
+      "title": "Surface previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation-previous",
+      "title": "Precipitation previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "radarReflectivity-previous",
+      "title": "Radar Reflectivity previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2-previous",
+      "title": "WFIP2 previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "59c2f797146ff98462fe0416"
+  },
+  "deployment_environment": "production",
+  "servers": [
+    "mats.gsd.esrl.noaa.gov",
+    "www.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "title": "Upper Air",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor",
+      "title": "Anomaly Correlation",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling",
+      "title": "Ceiling",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility",
+      "title": "Visibility",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface",
+      "title": "Surface",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation",
+      "title": "Precipitation",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2",
+      "title": "WFIP2",
+      "version": "1.5.19",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "59c41f97146ff98462fe0418"
+  },
+  "deployment_environment": "integration",
+  "servers": [
+    "mats-int.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "title": "Upper air",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.00",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor",
+      "title": "Anomaly Correlation",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.02",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling",
+      "title": "Ceiling",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.05",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility",
+      "title": "Visibility",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.07",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface",
+      "title": "Surface",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.09",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation",
+      "title": "Precipitation",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.11",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.13",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2",
+      "title": "WFIP2",
+      "version": "1.5.20",
+      "buildDate": "2017.10.06.23.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+}]
