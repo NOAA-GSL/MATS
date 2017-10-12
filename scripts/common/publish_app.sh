@@ -65,29 +65,9 @@ else
     promoteApp ${pa}
 fi
 
-# fix up some linksa for the public service endpoint
+# fix up some links for the public service endpoint
 echo -e "${GRN}linking /gsd/mats${NC}"
 /usr/bin/ssh ${server} "cd /web; ln -sf gsd/mats/* ."
 
-nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
-npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
-servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`
-servernpmpath=`ssh ${server} readlink -e /usr/local/bin/npm`
-
-if [ "$servernodepath" != "$servernodepath"  ];
-then
-    echo -e "${GRN}Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link${NC}"
-    echo "server node path is : $servernodepath"
-    echo " should be : $nodepath"
-    echo "ln -sf ${nodepath} /usr/local/bin/node"
-fi
-if [ "$npmpath" != "$servernpmpath"  ];
-then
-    echo "Check the link for npm that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
-    echo "server node path is : $servernpmpath"
-    echo " should be : $npmpath"
-    echo "ln -sf ${npmpath} /usr/local/bin/npm"
-fi
-
-echo -e "${RED}do not forget to restart nginx on ${server}.${GRN}"
+echo -e "${RED}do not forget to restart nginx on ${server}.${NC}"
 exit 0
