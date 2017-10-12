@@ -38,6 +38,7 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         rm -rf node_modules
         meteor update --all-packages;
         meteor npm install --save babel-runtime
+	    meteor npm install --save fibers
         cd ..;
     done
 
