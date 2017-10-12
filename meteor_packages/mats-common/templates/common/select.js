@@ -64,7 +64,7 @@ Template.select.helpers({
         if (!longest) {
             return 10;
         }
-        const ret = longest.length < 8 ? 8 : Math.round(longest.length * 0.6);
+        const ret = longest.length < 8 ? 8 : Math.round(longest.length * 0.8);
 
         return ret;
     },
