@@ -68,7 +68,7 @@ mongo-dev-server@1.0.1
 mongo-id@1.0.6
 msavin:mongol@4.0.1
 natestrauser:select2@4.0.3
-npm-mongo@2.2.31
+npm-mongo@2.2.32
 oauth@1.1.13
 oauth2@1.1.11
 observe-sequence@1.0.16

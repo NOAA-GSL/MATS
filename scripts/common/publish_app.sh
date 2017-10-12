@@ -65,7 +65,7 @@ if [ "X" == "X${requestedApp}" ]; then
 	tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
 	cmd=$(cat <<-%EODpublish
 		chmod +w ${deploymentFile};
-		jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile}} > ${tmpfile}; 
+		jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile} > ${tmpfile}; 
 		cp ${tmpfile} ${deploymentFile};
                 chmod -w ${deploymentFile};
 	%EODpublish
@@ -84,7 +84,7 @@ else
     tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
     cmd=$(cat <<-%EODpublish
 	chmod +w ${deploymentFile};
-	jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile}} > ${tmpfile}; 
+	jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile} > ${tmpfile}; 
 	cp ${tmpfile} ${deploymentFile};
 	chmod -w ${deploymentFile};
     %EODpublish
