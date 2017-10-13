@@ -362,7 +362,6 @@ Meteor.startup(function () {
         });
     }
 
-
     const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
         host: 1,
         user: 1,
