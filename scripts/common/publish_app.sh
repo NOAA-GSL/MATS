@@ -47,6 +47,12 @@ the node part of phusion passenger.
 xxxxxENDxxxx
     exit 0
 fi
+# get the publication app list
+publishApps=($(getPublishableApps))
+if [ "X${publishApps}" == "X" ]; then
+	echo -e "${RED}nothing is currently publishable, check the appProductionStatus.buildConfiguration database - exiting${NC}"
+	exit 1
+fi
 # rsync the meteor stuff
 echo -e "${GRN}rsyncing meteor${NC}"
 /usr/bin/rsync -ralW -P --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web 2>&1 | grep -v "^\*.*\*$"
@@ -54,8 +60,6 @@ echo -e "${GRN}rsyncing meteor${NC}"
 # make a tempory export place
 tmpDeploymentDir="/tmp/deployment"
 /usr/bin/mkdir -p ${tmpDeploymentDir}
-# get the publication app list
-publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
