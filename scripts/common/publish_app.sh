@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+setBuildConfigVarsForIntegrationServer
 #
 # Used to copy all the existing meteor apps and part of .meteor to a production server
 
@@ -48,48 +49,43 @@ xxxxxENDxxxx
 fi
 # rsync the meteor stuff
 echo -e "${GRN}rsyncing meteor${NC}"
-/usr/bin/rsync -ralWq --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web 2>&1 | grep -v "^\*.*\*$"
+/usr/bin/rsync -ralW -P --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web 2>&1 | grep -v "^\*.*\*$"
 
+# make a tempory export place
+tmpDeploymentDir="/tmp/deployment"
+/usr/bin/mkdir -p ${tmpDeploymentDir}
 # get the publication app list
 publishApps=($(getPublishableApps))
 if [ "X" == "X${requestedApp}" ]; then
     # publish them all
     for pa in "${publishApps[@]}"; do
         echo -e "${GRN}rsyncing ${pa}${NC}"
-        /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
-	# promote the production versions and dates
-        versionDate=$(promoteApp ${pa})
-	version=$(echo ${versionDate} | cut -f1 -d' ')
-	buildDate=$(echo ${versionDate} | cut -f2 -d' ')
-	deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
-	tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
-	cmd=$(cat <<-%EODpublish
-		chmod +w ${deploymentFile};
-		jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile} > ${tmpfile}; 
-		cp ${tmpfile} ${deploymentFile};
-                chmod -w ${deploymentFile};
-	%EODpublish
-	)
-	/usr/bin/ssh -q ${server} ${cmd}
+        /usr/bin/rsync -ralW -P --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+        # promote the app (make versions and dates match integration)
+        deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+        promoteApp ${pa}
+        # export, make valid json,  and scp the new deployment.json to the production server
+        exportCollections ${tmpDeploymentDir}
+        /usr/bin/ssh -q ${server} "/usr/bin/chmod +w ${deploymentFile}"
+        cat "${tmpDeploymentDir}/deployment.json" | "${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl" > "${tmpDeploymentDir}/deployment.json.tmp"
+        /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
+        /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
+        /usr/bin/rm -rf "${tmpDeploymentDir}/*"
     done
 else
     # publish just the requested one
     echo -e "${GRN}rsyncing ${requestedApp}${NC}"
-    /usr/bin/rsync -ralW --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
-    # promote the production version and date
-    versionDate=$(promoteApp ${pa})
-    version=$(echo ${versionDate} | cut -f1 -d' ')
-    buildDate=$(echo ${versionDate} | cut -f2 -d' ')
-    deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
-    tmpfile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json.tmp"
-    cmd=$(cat <<-%EODpublish
-	chmod +w ${deploymentFile};
-	jq -r '(.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .buildDate) |="${buildDate}" | (.[] | select (.deployment_environment == "production") | .apps[]? | select(.app == "${pa}") | .version) |="${version}"' ${deploymentFile} > ${tmpfile}; 
-	cp ${tmpfile} ${deploymentFile};
-	chmod -w ${deploymentFile};
-    %EODpublish
-    )
-    /usr/bin/ssh -q ${server} ${cmd}
+    /usr/bin/rsync -ralW -P --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+    # promote the app (make versions and dates match integration)
+    deploymentFile="/web/gsd/mats/${requestedApp}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+    promoteApp ${requestedApp}
+    # export, make valid json,  and scp the new deployment.json to the production server
+    exportCollections ${tmpDeploymentDir}
+    /usr/bin/ssh -q ${server} "/usr/bin/chmod +w ${deploymentFile}"
+    cat "${tmpDeploymentDir}/deployment.json" | "${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl" > "${tmpDeploymentDir}/deployment.json.tmp"
+    /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
+    /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
+    /usr/bin/rm -rf "${tmpDeploymentDir}/*"
 fi
 
 # fix up some links for the public service endpoint
