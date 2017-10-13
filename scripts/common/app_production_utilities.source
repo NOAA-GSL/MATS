@@ -231,7 +231,6 @@ promoteApp() {
 	local intBuildDate=$(getBuildDateForAppForServer ${app} ${intServer})
 	updateVersionForAppForServer ${intVersion} ${app} ${prodServer}
 	updateBuildDateForAppForServer ${intBuildDate}  ${app} ${prodServer}
-	echo "${intVersion} ${intBuildDate}"
 }
 
 

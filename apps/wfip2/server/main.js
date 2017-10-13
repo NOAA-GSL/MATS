@@ -677,7 +677,7 @@ Meteor.startup(function () {
     });
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "call get_data_sources();");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows[0].length; i++) {
             var model = rows[0][i].description;
