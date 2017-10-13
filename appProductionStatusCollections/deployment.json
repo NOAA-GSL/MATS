@@ -10,64 +10,64 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.22-2017.10.11.19.53",
-      "buildDate": "2017.10.11.19.53",
+      "version": "1.5.23-2017.10.12.18.02",
+      "buildDate": "2017.10.12.18.02",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.22-2017.10.11.20.07",
-      "buildDate": "2017.10.11.20.07",
+      "version": "1.5.23-2017.10.12.18.05",
+      "buildDate": "2017.10.12.18.05",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.21-2017.10.10.18.29",
-      "buildDate": "2017.10.10.18.29",
+      "version": "1.5.22-2017.10.12.18.08",
+      "buildDate": "2017.10.12.18.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.21-2017.10.10.18.31",
-      "buildDate": "2017.10.10.18.31",
+      "version": "1.5.22-2017.10.12.18.10",
+      "buildDate": "2017.10.12.18.10",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.21-2017.10.10.18.33",
-      "buildDate": "2017.10.10.18.33",
+      "version": "1.5.22-2017.10.12.18.12",
+      "buildDate": "2017.10.12.18.12",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation",
       "title": "Precipitation",
-      "version": "1.5.21-2017.10.10.18.36",
-      "buildDate": "2017.10.10.18.36",
+      "version": "1.5.22-2017.10.12.18.15",
+      "buildDate": "2017.10.12.18.15",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "radarReflectivity",
       "title": "Radar Reflectivity",
-      "version": "1.5.21-2017.10.10.18.38",
-      "buildDate": "2017.10.10.18.38",
+      "version": "1.5.22-2017.10.12.18.17",
+      "buildDate": "2017.10.12.18.17",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.21-2017.10.10.18.40",
-      "buildDate": "2017.10.10.18.40",
+      "version": "1.5.22-2017.10.12.18.19",
+      "buildDate": "2017.10.12.18.19",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -150,64 +150,64 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.22",
+      "buildDate": "2017.10.11.20.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.22",
+      "buildDate": "2017.10.11.20.28",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.31",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.33",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.35",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation",
       "title": "Precipitation",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.37",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "radarReflectivity",
       "title": "Radar Reflectivity",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.39",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.19",
-      "buildDate": "2017.09.21.16.16",
+      "version": "1.5.21",
+      "buildDate": "2017.10.11.20.41",
       "last_test_run": "",
       "last_test_status": ""
     }
