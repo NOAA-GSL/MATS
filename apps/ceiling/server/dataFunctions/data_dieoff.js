@@ -36,6 +36,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
         var region = curve['region'];
+        var thresholdStr = curve['threshold'];
         var threshold = matsCollections.CurveParams.findOne({name: 'threshold'}).optionsMap[curve['threshold']][0];
         var label = curve['label'];
         var top = curve['top'];
