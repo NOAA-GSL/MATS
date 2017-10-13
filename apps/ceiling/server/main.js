@@ -12,6 +12,8 @@ var modelTableMap = {};
 var forecastLengthOptionsMap = {};
 var forecastLengthModels = [];
 var thresholdsModelOptionsMap = {};
+var masterRegionValuesMap = {};
+var masterThresholdValuesMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -101,6 +103,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:regionModelOptionsMap,
                 options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                valuesMap:masterRegionValuesMap,
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
@@ -158,11 +161,12 @@ const doCurveParams = function () {
             {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
-                optionsMap: thresholdsModelOptionsMap['HRRR'],
-                options: Object.keys(thresholdsModelOptionsMap['HRRR']),   // convenience
+                optionsMap:thresholdsModelOptionsMap,
+                options:thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],   // convenience
+                valuesMap:masterThresholdValuesMap,
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(thresholdsModelOptionsMap['HRRR'])[0],
+                default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -388,14 +392,26 @@ Meteor.startup(function () {
     var rows;
 
     try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT short_name,description FROM region_descriptions_dev;");
+        var masterRegDescription;
+        var masterShortName;
+        for (var j = 0; j < rows.length; j++) {
+            masterRegDescription = rows[j].description.trim();
+            masterShortName = rows[j].short_name.trim();
+            masterRegionValuesMap[masterShortName] = masterRegDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
-        var masterThresholdValuesMap = {};
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < rows.length; j++) {
             masterDescription = rows[j].description.trim();
             masterTrsh = rows[j].trsh.trim();
-            masterThresholdValuesMap[masterDescription] = masterTrsh;
+            masterThresholdValuesMap[masterTrsh] = masterDescription;
         }
     } catch (err) {
         console.log(err.message);
@@ -419,33 +435,26 @@ Meteor.startup(function () {
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
             var thresholds = rows[i].trsh;
-            var thresholdsArr = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < thresholdsArr.length; j++) {
-                thresholdsArr[j] = thresholdsArr[j].replace(/'|\[|\]/g,"");
+            var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
+            var thresholdsArr = [];
+            var dummyThresh;
+            for (var j = 0; j < thresholdsArrRaw.length; j++) {
+                dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g,"");
+                thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
             }
+            thresholdsModelOptionsMap[model] = thresholdsArr;
 
             var regions = rows[i].regions;
-            var regionsArr = regions.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < regionsArr.length; j++) {
-                regionsArr[j] = regionsArr[j].replace(/'|\[|\]/g,"");
+            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var regionsArr = [];
+            var dummyRegion;
+            for (var j = 0; j < regionsArrRaw.length; j++) {
+                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g,"");
+                regionsArr.push(masterRegionValuesMap[dummyRegion]);
             }
             regionModelOptionsMap[model] = regionsArr;
-
-            try {
-                var thresholdValuesMap = {};
-                var trsh;
-                for (var description in masterThresholdValuesMap) {
-                    trsh = masterThresholdValuesMap[description];
-                    if (thresholdsArr.indexOf(trsh) > -1) {
-                        thresholdValuesMap[description] = [trsh];
-                    }
-                }
-                thresholdsModelOptionsMap[model] = thresholdValuesMap;
-            } catch (err) {
-                console.log(err.message);
-            }
-
         }
+
     } catch (err) {
         console.log(err.message);
     }
