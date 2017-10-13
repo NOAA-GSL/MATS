@@ -28,9 +28,7 @@ dataSeries = function (plotParams, plotFunction) {
         var label = curve['label'];
         var color = curve['color'];
         var thresholdStr = curve['threshold'];
-        var thresholdParam = matsCollections.CurveParams.findOne({name: 'threshold'});
-        var thresholdValuesMap = thresholdParam['valuesMap'];
-        var threshold = thresholdValuesMap[thresholdStr];
+        var threshold = matsCollections.CurveParams.findOne({name: 'threshold'}).optionsMap[curve['threshold']][0];
 
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
