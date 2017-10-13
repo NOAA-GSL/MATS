@@ -386,7 +386,20 @@ Meteor.startup(function () {
     });
 
     var rows;
-    var rows2;
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+        var masterThresholdValuesMap = {};
+        var masterDescription;
+        var masterTrsh;
+        for (var j = 0; j < rows.length; j++) {
+            masterDescription = rows[j].description.trim();
+            masterTrsh = rows[j].trsh.trim();
+            masterThresholdValuesMap[masterDescription] = masterTrsh;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
 
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh from regions_per_model_mats_all_categories;");
@@ -419,11 +432,10 @@ Meteor.startup(function () {
             regionModelOptionsMap[model] = regionsArr;
 
             try {
-                rows2 = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
                 var thresholdValuesMap = {};
-                for (var j = 0; j < rows2.length; j++) {
-                    var description = rows2[j].description.trim();
-                    var trsh = rows2[j].trsh.trim();
+                var trsh;
+                for (var description in masterThresholdValuesMap) {
+                    trsh = masterThresholdValuesMap[description];
                     if (thresholdsArr.indexOf(trsh) > -1) {
                         thresholdValuesMap[description] = [trsh];
                     }
