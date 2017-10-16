@@ -9,7 +9,7 @@
   "build_git_repo": "gerrit:MATS_for_EMB",
   "build_code_branch": "master",
   "build_directory": "/builds/buildArea/",
-  "build_cmd": "./MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e dev",
+  "build_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e int",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
@@ -85,7 +85,7 @@
   "build_git_repo": "gerrit:MATS_for_EMB",
   "build_code_branch": "development_v1.0",
   "build_directory": "/builds/buildArea/",
-  "build_cmd": "sh ./MATS_for_EMB/scripts/common/build-dev.sh",
+  "build_cmd": "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e dev",
   "test_git_repo": "https://user@vlab.ncep.noaa.gov/git/mats-testing",
   "test_code_branch": "master",
   "test_directory": "/builds/buildArea/mats-testing",
@@ -225,49 +225,49 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 3,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 4,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 5,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitation",
       "displayName": "Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
       "displayOrder": 7,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 8,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     }
   ]
 }

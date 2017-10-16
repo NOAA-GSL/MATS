@@ -7,6 +7,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 var modelOptionsMap ={};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
+var masterRegionValuesMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -96,6 +97,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap:regionModelOptionsMap,
                 options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]],   // convenience
+                valuesMap:masterRegionValuesMap,
                 superiorNames: ['model'],
                 controlButtonCovered: true,
                 unique: false,
@@ -366,7 +368,37 @@ Meteor.startup(function () {
         });
     }
 
-    var sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
+    matsCollections.Databases.insert({
+        name:"modelSetting",
+        role: "model_data",
+        status: "active",
+        host        : 'wolphin.fsl.noaa.gov',
+        user        : 'readonly',
+        password    : 'ReadOnly@2016!',
+        database    : 'madis3',
+        connectionLimit : 10
+    });
+
+    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    modelPool = mysql.createPool(modelSettings);
+    modelPool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+
+    const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
@@ -376,26 +408,46 @@ Meteor.startup(function () {
     var rows;
 
     try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT short_name,description FROM region_descriptions_dev;");
+        var masterRegDescription;
+        var masterShortName;
+        for (var j = 0; j < rows.length; j++) {
+            masterRegDescription = rows[j].description.trim();
+            masterShortName = rows[j].short_name.trim();
+            masterRegionValuesMap[masterShortName] = masterRegDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
+
             var model_value = rows[i].model.trim();
-            var regions = rows[i].regions;
             var model = rows[i].display_text.trim();
-            var forecastLengths = rows[i].fcst_lens;
-            var regionsArr = regions.split(',').map(Function.prototype.call, String.prototype.trim);
-            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < regionsArr.length; j++) {
-                regionsArr[j] = regionsArr[j].replace(/'|\[|\]/g,"");
-            }
-            for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g,"");
-            }
             var valueList = [];
             valueList.push(model_value);
             modelOptionsMap[model] = valueList;
-            regionModelOptionsMap[model] = regionsArr;
+
+            var forecastLengths = rows[i].fcst_lens;
+            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < forecastLengthArr.length; j++) {
+                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g,"");
+            }
             forecastLengthOptionsMap[model] = forecastLengthArr;
+
+            var regions = rows[i].regions;
+            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var regionsArr = [];
+            var dummyRegion;
+            for (var j = 0; j < regionsArrRaw.length; j++) {
+                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g,"");
+                regionsArr.push(masterRegionValuesMap[dummyRegion]);
+            }
+            regionModelOptionsMap[model] = regionsArr;
         }
+
     } catch (err) {
         console.log(err.message);
     }
@@ -403,7 +455,7 @@ Meteor.startup(function () {
     matsMethods.resetApp();
 });
 
-// this object is global so that the reset code can get to it
+// this object is global so that the reset code can get to it --
 // These are application specific mongo data - like curve params
 appSpecificResetRoutines = {
     doPlotGraph:doPlotGraph,
