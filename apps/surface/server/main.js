@@ -455,7 +455,7 @@ Meteor.startup(function () {
     matsMethods.resetApp();
 });
 
-// this object is global so that the reset code can get to it
+// this object is global so that the reset code can get to it --
 // These are application specific mongo data - like curve params
 appSpecificResetRoutines = {
     doPlotGraph:doPlotGraph,
