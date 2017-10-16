@@ -20,6 +20,11 @@
       "resolved": "https://registry.npmjs.org/fs/-/fs-0.0.2.tgz",
       "from": "fs@0.0.2"
     },
+    "jquery-ui": {
+      "version": "1.12.1",
+      "resolved": "https://registry.npmjs.org/jquery-ui/-/jquery-ui-1.12.1.tgz",
+      "from": "jquery-ui@1.12.1"
+    },
     "meteor-node-stubs": {
       "version": "0.2.3",
       "resolved": "https://registry.npmjs.org/meteor-node-stubs/-/meteor-node-stubs-0.2.3.tgz",

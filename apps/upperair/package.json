@@ -8,6 +8,7 @@
     "babel-runtime": "^6.26.0",
     "fibers": "^1.0.15",
     "fs": "0.0.1-security",
+    "jquery-ui": "^1.12.1",
     "meteor-node-stubs": "^0.2.3",
     "modules": "^0.4.0"
   }

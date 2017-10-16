@@ -1525,7 +1525,7 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 };
 
 const doColorScheme = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.ColorScheme.remove({});
     }
     if (matsCollections.ColorScheme.find().count() == 0) {
@@ -1560,7 +1560,7 @@ const doColorScheme = function () {
 };
 
 const doSettings = function (title, version, buildDate) {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Settings.remove({});
     }
     if (matsCollections.Settings.find().count() == 0) {
@@ -1571,7 +1571,7 @@ const doSettings = function (title, version, buildDate) {
             buildDate: buildDate,
             LineWidth: 3.5,
             NullFillString: "---",
-            resetFromCode: true
+            resetFromCode: false
         });
     }
     // always update the version, roles, and the hostname, not just if it doesn't exist...
@@ -1592,7 +1592,7 @@ const doSettings = function (title, version, buildDate) {
 
 const doCredentials = function () {
 // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Credentials.remove({});
     }
     if (matsCollections.Credentials.find().count() == 0) {
@@ -1606,7 +1606,7 @@ const doCredentials = function () {
 };
 
 const doAuthorization = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Authorization.remove({});
     }
     if (matsCollections.Authorization.find().count() == 0) {
@@ -1620,13 +1620,66 @@ const doAuthorization = function () {
 };
 
 const doRoles = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Roles.remove({});
     }
     if (matsCollections.Roles.find().count() == 0) {
         matsCollections.Roles.insert({name: "administrator", description: "administrator privileges"});
     }
 };
+
+const areObjectsEqual = function(o, p) {
+    if ( JSON.stringify(o) === JSON.stringify(p)) {
+        return true;
+    };
+    var i,
+        keysO = Object.keys(o).sort(),
+        keysP = Object.keys(p).sort();
+    if (keysO.length !== keysP.length)
+        return false;//not the same nr of keys
+    if (keysO.join('') !== keysP.join(''))
+        return false;//different keys
+    for (i=0;i<keysO.length;++i)
+    {
+        if (o[keysO[i]] instanceof Array)
+        {
+            if (!(p[keysO[i]] instanceof Array))
+                return false;
+            //if (compareObjects(o[keysO[i]], p[keysO[i]] === false) return false
+            //would work, too, and perhaps is a better fit, still, this is easy, too
+            if (p[keysO[i]].sort().join('') !== o[keysO[i]].sort().join(''))
+                return false;
+        }
+        else if (o[keysO[i]] instanceof Date)
+        {
+            if (!(p[keysO[i]] instanceof Date))
+                return false;
+            if ((''+o[keysO[i]]) !== (''+p[keysO[i]]))
+                return false;
+        }
+        else if (o[keysO[i]] instanceof Function)
+        {
+            if (!(p[keysO[i]] instanceof Function))
+                return false;
+            //ignore functions, or check them regardless?
+        }
+        else if (o[keysO[i]] instanceof Object)
+        {
+            if (!(p[keysO[i]] instanceof Object))
+                return false;
+            if (o[keysO[i]] === o)
+            {//self reference?
+                if (p[keysO[i]] !== p)
+                    return false;
+            }
+            else if (compareObjects(o[keysO[i]], p[keysO[i]]) === false)
+                return false;//WARNING: does not deal with circular refs other than ^^
+        }
+        if (o[keysO[i]] !== p[keysO[i]])//change !== to != for loose comparison
+            return false;//not the same value
+    }
+    return true;
+}
 
 export default matsDataUtils = {
     getDateRange: getDateRange,
@@ -1655,5 +1708,6 @@ export default matsDataUtils = {
     doSettings: doSettings,
     doCredentials: doCredentials,
     doAuthorization: doAuthorization,
-    doRoles: doRoles
+    doRoles: doRoles,
+    areObjectsEqual:areObjectsEqual
 }

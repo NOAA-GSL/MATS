@@ -3,12 +3,19 @@ import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import {matsPlotUtils } from 'meteor/randyp:mats-common';
 import {matsParamUtils } from 'meteor/randyp:mats-common';
+import {matsMethods } from 'meteor/randyp:mats-common';
+
 function shadeRGBColor(color, percent) {
     var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
     return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
 }
 Template.paramList.helpers({
     CurveParamGroups: function() {
+        // matsMethods.refreshMetaData.call({}, function (error, result) {
+        //     if (error !== undefined) {
+        //         setError(new Error(error.message));
+        //     }
+        // });
         var lastUpdate = Session.get('lastUpdate');
         var groupNums = [];
         var params = matsCollections.CurveParams.find({}).fetch();
@@ -61,6 +68,11 @@ Template.paramList.events({
         var paramView = document.getElementById('paramList');
         var plotView = document.getElementById('plotList');
         document.getElementById('plot-type-' + plotType).checked = true;
+        matsMethods.refreshMetaData.call({}, function (error, result) {
+            if (error !== undefined) {
+                setError(new Error(error.message));
+            }
+        });
         matsParamUtils.setAllParamsToDefault();
     },
     'click .expand': function() {

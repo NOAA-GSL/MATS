@@ -1,3 +1,4 @@
+
 Template.topNav.events({
     'click .matshome' : function(event) {
         event.preventDefault();

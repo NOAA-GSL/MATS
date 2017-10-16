@@ -3,8 +3,13 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
+import  { matsDataUtils }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
+import { Mongo } from 'meteor/mongo'
+
+// local collection used to keep the table update times for refresh
+const metaDataTableUpdates = new Mongo.Collection('metaDataTableUpdates');
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
@@ -297,7 +302,39 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
-const resetApp = function() {
+const checkMetaDataRefresh = function() {
+    // This routine compares the current last modified time of the tables used for curveParameter metadata
+    // with the last update time to determine if an update is necessary. We really only do this for Curveparams
+    const tableUpdates = metaDataTableUpdates.find({}).fetch();
+    var refresh = false;
+    for (var ti =0; ti < tableUpdates.length; ti++) {
+        var tName = tableUpdates[ti].name;
+        var lastRefreshed = tableUpdates[ti].lastRefreshed;
+        var updated = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT UPDATE_TIME\n" +
+            "    FROM   information_schema.tables\n" +
+            "    WHERE  TABLE_SCHEMA = 'ruc_ua'\n" +
+            "    AND TABLE_NAME = '" + tName + "'")[0]['UPDATE_TIME'];
+        if (moment(lastRefreshed).isBefore(updated)) {
+            refresh = true;
+            break;
+        }
+    }
+    if (refresh) {
+        // refresh metadata
+        // app specific routines
+        const asrKeys = Object.keys(appSpecificResetRoutines);
+        for (var ai = 0; ai < asrKeys.length; ai++) {
+            global.appSpecificResetRoutines[asrKeys[ai]]();
+        }
+        // remember that we updated the metadata tables just now
+        for (var ti =0; ti < tableUpdates.length; ti++) {
+            var tName = tableUpdates[ti].name;
+            metaDataTableUpdates.update({name:tName},{$set:{lastRefreshed:moment().format()}},{upsert: true});
+        }
+    }
+}
+
+const resetApp = function(metaDataTableNames) {
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText === undefined || deploymentText == null) {
@@ -329,6 +366,12 @@ const resetApp = function() {
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
 
+    // remember that we updated the metadata tables just now
+    for (var ti =0; ti < metaDataTableNames.length; ti++) {
+        var tName = metaDataTableNames[ti];
+        metaDataTableUpdates.update({name:tName},{$set:{lastRefreshed:moment().format()}},{upsert: true});
+    }
+
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
@@ -350,19 +393,12 @@ const resetApp = function() {
     }
 };
 
-//const resetMetaData = function() {
-//    global.appSpecificResetRoutines['doCurveParams']();
-//}
-
-const reset = new ValidatedMethod({
-    name: 'matsMethods.reset',
-    validate: new SimpleSchema({
-        appName: {type: String},
-        appVersion: {type: String}
-    }).validator(),
-    run (params){
+const refreshMetaData = new ValidatedMethod({
+    name: 'matsMethods.refreshMetaData',
+    validate: new SimpleSchema({}).validator(),
+    run (){
         if (Meteor.isServer) {
-            resetApp(params);
+            checkMetaDataRefresh();
         }
     }
 });
@@ -837,7 +873,7 @@ export default matsMethods = {
     restoreFromFile:restoreFromFile,
     restoreFromParameterFile:restoreFromParameterFile,
     getUserAddress:getUserAddress,
-    reset:reset,
+    refreshMetaData:refreshMetaData,
     applyDatabaseSettings:applyDatabaseSettings,
     removeDatabase:removeDatabase,
     insertColor:insertColor,

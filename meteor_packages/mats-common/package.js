@@ -17,7 +17,8 @@ Package.onUse(function(api) {
     'fs':'0.0.2',
     "babel-runtime":"6.26.0",
     "meteor-node-stubs":"0.2.3",
-    "url":"0.11.0"
+    "url":"0.11.0",
+    "jquery-ui": "1.12.1",
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");

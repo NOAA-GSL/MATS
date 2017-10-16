@@ -677,23 +677,23 @@ Meteor.startup(function () {
     });
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
         matsCollections.Models.remove({});
-        for (var i = 0; i < rows[0].length; i++) {
-            var model = rows[0][i].description;
-            var is_instrument = rows[0][i].is_instrument;
-            var tablename = rows[0][i].tablename;
-            var thisid = rows[0][i].thisid;
-            var cycle_interval = rows[0][i].cycle_interval * 1000;   // seconds to ms
-            var variable_names = rows[0][i].variable_names.split(',');
-            var is_json = rows[0][i].isJSON;
-            var color = rows[0][i].color;
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].description;
+            var is_instrument = rows[i].is_instrument;
+            var tablename = rows[i].tablename;
+            var thisid = rows[i].thisid;
+            var cycle_interval = rows[i].cycle_interval * 1000;   // seconds to ms
+            var variable_names = rows[i].variable_names.split(',');
+            var is_json = rows[i].isJSON;
+            var color = rows[i].color;
 
 
-            var minDate = rows[0][i].mindate;
-            var maxDate = rows[0][i].maxdate;
-            var minutc = rows[0][i].minutc;
-            var maxutc = rows[0][i].maxutc;
+            var minDate = rows[i].mindate;
+            var maxDate = rows[i].maxdate;
+            var minutc = rows[i].minutc;
+            var maxutc = rows[i].maxutc;
             var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + model.toString() + "') as hd")[0]['hd'];
             var valueList = [];
             valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
