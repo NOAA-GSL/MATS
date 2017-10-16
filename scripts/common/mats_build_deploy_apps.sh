@@ -72,9 +72,19 @@ if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
 fi
 
 cd ${DEPLOYMENT_DIRECTORY}
-/usr/bin/git fetch
+currentCommit=$(git rev-parse HEAD)
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to git the current HEAD commit - must exit now"
+    exit 1
+fi
+/usr/bin/git pull
 if [ $? -ne 0 ]; then
     echo -e "${failed} to /usr/bin/git fetch - must exit now"
+    exit 1
+fi
+newCommit=$(git rev-parse HEAD)
+if [ $? -ne 0 ]; then
+    echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
 fi
 if [ "X${requestedTag}" == "X" ]; then
@@ -88,13 +98,9 @@ if [ "X${requestedTag}" == "X" ]; then
 fi
 
 if [ "X${requestedTag}" == "X" ]; then
-    /usr/bin/git checkout ${BUILD_CODE_BRANCH}
-    if [ $? -ne 0 ]; then
-        echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
-        exit 1
-    fi
-    /usr/bin/git reset --hard
+     echo "building to current head ${currentCommit}
 else
+     echo "building to ${requestedTag}
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
     if [ $? -ne 0 ]; then
         echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"
@@ -107,10 +113,10 @@ fi
 #build all of the apps that have changes (or if a meteor_package change just all the apps)
 buildableApps=( $(getBuildableAppsForServer "${SERVER}") )
 echo -e buildable apps are.... ${GRN}${buildableApps[*]} ${NC}
-diffOut=$(/usr/bin/git --no-pager diff --name-only origin/${BUILD_CODE_BRANCH})
+diffOut=$(/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit})
 ret=$?
 if [ $ret -ne 0 ]; then
-    echo -e "${failed} to /usr/bin/git diff - ret $ret - must exit now"
+    echo -e "${failed} to '/usr/bin/git --no-pager diff --name-only ${currentCommit}...${newCommit}' ... ret $ret - must exit now"
     exit 1
 fi
 
