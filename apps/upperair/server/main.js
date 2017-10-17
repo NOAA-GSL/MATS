@@ -691,7 +691,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
     // need to pass the metadata table names so that resetApp can remember the update times.
-    matsMethods.resetApp(['region_descriptions_mats_new','regions_per_model_mats_all_categories']);
+    matsMethods.resetApp({"ruc_ua": ['region_descriptions_mats_new','regions_per_model_mats_all_categories']});
 });
 
 // this object is global so that the reset code can get to it

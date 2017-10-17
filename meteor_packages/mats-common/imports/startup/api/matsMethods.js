@@ -305,36 +305,54 @@ const getUserAddress = new ValidatedMethod({
 const checkMetaDataRefresh = function() {
     // This routine compares the current last modified time of the tables used for curveParameter metadata
     // with the last update time to determine if an update is necessary. We really only do this for Curveparams
-    const tableUpdates = metaDataTableUpdates.find({}).fetch();
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
     var refresh = false;
-    for (var ti =0; ti < tableUpdates.length; ti++) {
-        var tName = tableUpdates[ti].name;
-        var lastRefreshed = tableUpdates[ti].lastRefreshed;
-        var updated = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT UPDATE_TIME\n" +
-            "    FROM   information_schema.tables\n" +
-            "    WHERE  TABLE_SCHEMA = 'ruc_ua'\n" +
-            "    AND TABLE_NAME = '" + tName + "'")[0]['UPDATE_TIME'];
-        if (moment(lastRefreshed).isBefore(updated)) {
-            refresh = true;
-            break;
+    const tableUpdates = metaDataTableUpdates.find({},{_id:0}).fetch();
+     for (var tui = 0; tui < tableUpdates.length; tui++) {
+            var dbName = tableUpdates[tui].name;
+            var tableNames = tableUpdates[tui].tables;
+            var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
+            for (var ti = 0; ti < tableNames.length; ti++) {
+                var tName = tableNames[ti];
+                var updatedEpoch = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                    "    FROM   information_schema.tables" +
+                    "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
+                    "    AND TABLE_NAME = '" + tName + "'")[0]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                const lastRefreshedEpoch = moment(lastRefreshed).valueOf()/1000;
+                if (lastRefreshedEpoch < updatedEpoch) {
+                    refresh = true;
+                    break;
+                }
+            }
+            if (refresh === true) {
+                // refresh the app metadata
+                // app specific routines
+                const asrKeys = Object.keys(appSpecificResetRoutines);
+                for (var ai = 0; ai < asrKeys.length; ai++) {
+                    global.appSpecificResetRoutines[asrKeys[ai]]();
+                }
+                // remember that we updated ALL the metadata tables just now
+                metaDataTableUpdates.update({}, {$set: {lastRefreshed: moment().format()}});
+                break;
+            }
         }
-    }
-    if (refresh) {
-        // refresh metadata
-        // app specific routines
-        const asrKeys = Object.keys(appSpecificResetRoutines);
-        for (var ai = 0; ai < asrKeys.length; ai++) {
-            global.appSpecificResetRoutines[asrKeys[ai]]();
-        }
-        // remember that we updated the metadata tables just now
-        for (var ti =0; ti < tableUpdates.length; ti++) {
-            var tName = tableUpdates[ti].name;
-            metaDataTableUpdates.update({name:tName},{$set:{lastRefreshed:moment().format()}},{upsert: true});
-        }
-    }
 }
 
-const resetApp = function(metaDataTableNames) {
+const resetApp = function(metaDataTables) {
+    /*
+    metaDataTables ---
+    {
+        dataBaseName: [tableName1,tableName2...],
+        dataBaseName2: [tableName1,tableName2...]
+    }
+     */
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText === undefined || deploymentText == null) {
@@ -366,12 +384,23 @@ const resetApp = function(metaDataTableNames) {
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
 
-    // remember that we updated the metadata tables just now
-    for (var ti =0; ti < metaDataTableNames.length; ti++) {
-        var tName = metaDataTableNames[ti];
-        metaDataTableUpdates.update({name:tName},{$set:{lastRefreshed:moment().format()}},{upsert: true});
-    }
-
+    // remember that we updated the metadata tables just now - create metaDataTableUpdates
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
+    if (metaDataTables) {
+        var dataBaseNames = Object.keys(metaDataTables);
+        for (var dbi = 0; dbi < dataBaseNames.length; dbi++) {
+            var dbName = dataBaseNames[dbi];
+            var tableNames = metaDataTables[dbName];
+            metaDataTableUpdates.update({name: dbName}, {$set: {tables:tableNames,lastRefreshed: moment.utc().format()}}, {upsert: true});
+        }
+    't really'}
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
