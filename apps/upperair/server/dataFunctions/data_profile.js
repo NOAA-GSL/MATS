@@ -30,7 +30,8 @@ dataProfile = function(plotParams, plotFunction) {
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        var region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
+        var regionStr = curve['region'];
+        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var curveDates = curve['curve-dates'];
         var fromDateStr = curveDates.split(' - ')[0]; // get the from part
         fromDateStr = fromDateStr.split(' ')[0];  // strip off time field

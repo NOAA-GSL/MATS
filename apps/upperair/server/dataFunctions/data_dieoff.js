@@ -33,7 +33,8 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
         const model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
-        const region = matsCollections.RegionDescriptions.findOne({description: curve['region']}).regionMapTable;
+        const regionStr = curve['region'];
+        const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         const tablePrefix = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']];
         const label = curve['label'];
         const top = curve['top'];

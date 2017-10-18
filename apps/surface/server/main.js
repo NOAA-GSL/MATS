@@ -426,9 +426,7 @@ Meteor.startup(function () {
 
             var model_value = rows[i].model.trim();
             var model = rows[i].display_text.trim();
-            var valueList = [];
-            valueList.push(model_value);
-            modelOptionsMap[model] = valueList;
+            modelOptionsMap[model] = [model_value];
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -452,7 +450,7 @@ Meteor.startup(function () {
         console.log(err.message);
     }
 
-    matsMethods.resetApp();
+    matsMethods.resetApp(['region_descriptions_dev','regions_per_model_mats_all_categories']);
 });
 
 // this object is global so that the reset code can get to it --
