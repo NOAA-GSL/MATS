@@ -47,13 +47,13 @@ const refreshDependents = function (event, param) {
                     selectAllbool = document.getElementById('selectAll').checked;
                 }
                 try {
-                    if (targetParam.type === matsTypes.InputTypes.dateRange || targetParam.type === matsTypes.InputTypes.numberSpinner) {
+                    //if (targetParam.type === matsTypes.InputTypes.dateRange || targetParam.type === matsTypes.InputTypes.numberSpinner) {
                         // dispatch the refresh event
                         targetElem.dispatchEvent(new CustomEvent("refresh"))
-                    } else {
+                    //} else {
                         // refresh explicitly instead of with event
-                        matsSelectUtils.refresh(null, targetParam.name);
-                    }
+                    //    matsSelectUtils.refresh(null, targetParam.name);
+                    //}
                 } catch(re) {
                     re.message = "INFO: refreshDependents of: " + param.name + " dependent: " + targetParam.name + " - error: " + re.message;
                     setInfo(re.message);

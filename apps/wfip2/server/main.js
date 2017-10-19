@@ -5,21 +5,7 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
-var datesMap = {};
-var modelOptionsMap = {};
-var regionOptionsMap = {};
-var siteOptionsMap = {};
-var siteMarkerOptionsMap = {};
-var discriminatorOptionsMap = {};
-var upperOptionsMap = {};
-var lowerOptionsMap = {};
-var forecastLengthOptionsMap = {};
-var variableFieldsMap = {};
-var variableOptionsMap = {};
-var variableInfoMap = {};
-variableOptionsMap[matsTypes.PlotTypes.profile] = {};
-variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
-variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
+
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -27,7 +13,7 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 var doScatter2dParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Scatter2dParams.remove({});
     }
 
@@ -62,7 +48,7 @@ var doScatter2dParams = function () {
 };
 
 var doPlotParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
     if (matsCollections.PlotParams.find().count() == 0) {
@@ -124,557 +110,26 @@ var doPlotParams = function () {
 };
 
 var doCurveParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    var datesMap = {};
+    var modelOptionsMap = {};
+    var regionOptionsMap = {};
+    var siteOptionsMap = {};
+    var siteMarkerOptionsMap = {};
+    var discriminatorOptionsMap = {};
+    var upperOptionsMap = {};
+    var lowerOptionsMap = {};
+    var forecastLengthOptionsMap = {};
+    var variableFieldsMap = {};
+    var variableOptionsMap = {};
+    var variableInfoMap = {};
+    variableOptionsMap[matsTypes.PlotTypes.profile] = {};
+    variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
+    variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
+    // force a reset if requested - simply remove all the existing params to force a reload
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-    if (matsCollections.CurveParams.find().count() == 0) {
-        var optionsMap = {};
-        matsCollections.CurveParams.insert(
-            {
-                name: 'label',
-                type: matsTypes.InputTypes.textInput,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                default: '',
-                unique: true,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 1,
-                help: 'label.html'
-            }
-        );
-        matsCollections.CurveParams.insert(
-            {
-                name: 'data-source',
-                type: matsTypes.InputTypes.select,
-                optionsMap: modelOptionsMap,
-                options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
-                controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
-                unique: false,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 2,
-                dates: datesMap
-            });
 
-        matsCollections.CurveParams.insert(
-            {
-                name: 'discriminator',
-                type: matsTypes.InputTypes.select,
-                optionsMap: discriminatorOptionsMap,
-                options: Object.keys(discriminatorOptionsMap),   // convenience
-                dependentNames: ['upper', 'lower'],
-                disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': [matsTypes.InputTypes.unused]},
-                hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
-                controlButtonCovered: true,
-                unique: false,
-                default: -1,   // -1 means selection is optional - enables clear selection button
-                controlButtonVisibility: 'block',
-                multiple: false,
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 2,
-                help: "discriminator-help.html"
-            });
-
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'upper',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: upperOptionsMap,
-                options: Object.keys(upperOptionsMap),   // convenience
-                superiorNames: ['discriminator'],
-                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
-                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
-                controlButtonCovered: true,
-                unique: false,
-                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'lower',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: lowerOptionsMap,
-                options: Object.keys(lowerOptionsMap),   // convenience
-                superiorNames: ['discriminator'],
-                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
-                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
-                controlButtonCovered: true,
-                unique: false,
-                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                controlButtonVisibility: 'block',
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-
-
-        var statisticOptionsMap = {
-            mean: ['mean'],
-            bias: ['bias'],
-            rmse: ['rmse'],
-            mae: ['mae']
-        };
-
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'statistic',
-                type: matsTypes.InputTypes.select,
-                optionsMap: statisticOptionsMap,
-                options: Object.keys(statisticOptionsMap),   // convenience
-                controlButtonCovered: true,
-                dependentNames: ["sites", "forecast-length", "variable"],
-                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
-                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
-                unique: false,
-                default: Object.keys(statisticOptionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 3,
-                help: 'wfip2-statistic.html'
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'truth-data-source',
-                type: matsTypes.InputTypes.select,
-                optionsMap: modelOptionsMap,
-                options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
-                controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
-                unique: false,
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 2,
-                displayGroup: 3,
-                dates: datesMap
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'region',
-                type: matsTypes.InputTypes.select,
-                optionsMap: regionOptionsMap,
-                options: Object.keys(regionOptionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                default: regionOptionsMap[Object.keys(regionOptionsMap)[0]][0],
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'valid-time',
-                type: matsTypes.InputTypes.select,
-                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: [],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'All',
-                controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 3,
-                multiple: true
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'sites',
-                type: matsTypes.InputTypes.select,
-                optionsMap: siteOptionsMap,
-                options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
-                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                superiorNames: ['data-source', 'truth-data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 4,
-                multiple: true
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'sitesMap',
-                type: matsTypes.InputTypes.selectMap,
-                optionsMap: siteMarkerOptionsMap,
-                options: Object.keys(siteMarkerOptionsMap),   // convenience
-                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
-                controlButtonCovered: true,
-                unique: false,
-                //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
-                default: Object.keys(siteMarkerOptionsMap)[0],
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 4,
-                multiple: true,
-                defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
-                help: 'map-help.html'
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'site-completeness',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '0',
-                max: '100',
-                step: 'any',
-                controlButtonCovered: true,
-                unique: false,
-                default: '0',
-                controlButtonVisibility: 'block',
-                displayOrder: 3,
-                displayPriority: 1,
-                displayGroup: 4,
-                help: "completeness.html"
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'variable',
-                type: matsTypes.InputTypes.select,
-                //variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
-                variableMap: variableFieldsMap,
-                optionsMap: variableOptionsMap,
-                infoMap: variableInfoMap,
-                options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
-                superiorNames: ['data-source', 'truth-data-source'],
-                plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
-                controlButtonCovered: true,
-                unique: false,
-                default: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]][0],
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 5,
-                help: "variable-help.html"
-            });
-
-        optionsMap = {};
-        matsCollections.CurveParams.insert(
-            {
-                name: 'forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: forecastLengthOptionsMap,
-                options: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorNames: ['data-source', 'truth-data-source'],
-                //selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
-                controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 5
-            });
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'top',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
-                min: '0',
-                max: '5000',
-                step: 'any',
-                controlButtonCovered: true,
-                unique: false,
-                default: '200',
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 6,
-                help: 'top-help.html'
-            });
-        matsCollections.CurveParams.insert(
-            {
-                name: 'bottom',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
-                min: '0',
-                max: '5000',
-                step: 'any',
-                controlButtonCovered: true,
-                unique: false,
-                default: '40',
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-                help: 'bottom-help.html'
-            });
-        matsCollections.CurveParams.insert(
-            {
-                name: 'level-completeness',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: '0',
-                max: '100',
-                step: 'any',
-                controlButtonCovered: true,
-                unique: false,
-                default: '0',
-                controlButtonVisibility: 'block',
-                displayOrder: 2,
-                displayPriority: 1,
-                displayGroup: 6,
-                help: "completeness.html"
-            });
-
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'curve-dates',
-                type: matsTypes.InputTypes.dateRange,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
-                startDate: startInit,
-                stopDate: stopInit,
-                superiorNames: ['data-source', 'truth-data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: dstr,
-                controlButtonVisibility: 'block',
-                controlButtonText: "curve-bounding-dates",
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 7,
-                help: "dateHelp.html"
-            });
-
-    }
-};
-
-/* The format of a curveTextPattern is an array of arrays, each sub array has
- [labelString, localVariableName, delimiterString]  any of which can be null.
- Each sub array will be joined (the localVariableName is always dereferenced first)
- and then the sub arrays will be joined maintaining order.
-
- The curveTextPattern is found by its name which must match the corresponding PlotGraphFunctions.PlotType value.
- See curve_item.js and graph.js.
- */
-var doCurveTextPatterns = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.CurveTextPatterns.remove({});
-    }
-    if (matsCollections.CurveTextPatterns.find().count() == 0) {
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.timeSeries,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ':'],
-                ['', 'truth-data-source', ':'],
-                [' region:', 'regionName', ', '],
-                [' sites:', 'sites', ', '],
-                ['', 'variable', ', '],
-                ['units', 'units', ', '],
-                ['', 'statistic', ':'],
-                [' top:', 'top', 'm, '],
-                [' bottom:', 'bottom', 'm, '],
-                [' discriminators:', 'discriminator', ', '],
-                [' upper:', 'upper', ', '],
-                [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast-length', ' ,'],
-                ['','valid-time','']
-            ],
-            displayParams: [
-                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","valid-time"
-                ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ':'],
-                ['', 'truth-data-source', ':'],
-                ['', 'regionName', ', '],
-                ['', 'sites', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ':'],
-                [' top:', 'top', 'm, '],
-                [' bottom:', 'bottom', 'm, '],
-                [' discriminators:', 'discriminator', ', '],
-                [' upper:', 'upper', ', '],
-                [' lower:', 'lower', ', '],
-                ['fcst_len:', 'forecast-length', ' ,'],
-                ['', 'curve-dates', ''],
-                ['', 'valid-time','']
-            ],
-            displayParams: [
-                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates","valid-time"
-            ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.scatter2d,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'xaxis-data-source', ':'],
-                ['', 'xaxis-truth-data-source', ':'],
-                ['', 'xaxis-region', ', '],
-                ['', 'xaxis-sites', ', '],
-                ['', 'xaxis-variable', ', '],
-                ['', 'xaxis-statistic', ':'],
-                ['fcst_len:', 'xaxis-forecast-length', ', '],
-                ['', 'xaxis-discriminator', ', '],
-                ['', 'xaxis-valid-time', ':']
-                ['lc', 'xaxis-level-completeness', ' '],
-                ['sc', 'xaxis-site-completeness', '']
-                ['', 'yaxis-data-source', ':'],
-                ['', 'yaxis-truth-data-source', ':'],
-                ['', 'yaxis-region', ', '],
-                ['', 'yaxis-sites', ', '],
-                ['', 'yaxis-variable', ', '],
-                ['', 'yaxis-statistic', ':'],
-                ['fcst_len:', 'yaxis-forecast-length', ', '],
-                ['', 'yaxis-discriminator', ', '],
-                ['', 'yaxis-valid-time', ', '],
-                ['lc', 'yaxis-level-completeness', ' '],
-                ['sc', 'yaxis-site-completeness', ''],
-                ['','Fit-Type','']
-            ],
-            displayParams: [
-                "label",
-                "Fit-Type",
-                "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
-                "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
-                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","xaxis-valid-time",
-
-                "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
-                "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
-                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","yaxis-level-completeness","yaxis-valid-time"
-            ],
-            groupSize:6
-        });
-
-    }
-};
-
-var doScatterAxisTextPattern = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.ScatterAxisTextPattern.remove({});
-    }
-    if (matsCollections.ScatterAxisTextPattern.find().count() == 0) {
-        matsCollections.ScatterAxisTextPattern.insert({
-            plotType: matsTypes.PlotTypes.scatter2d,
-            textPattern: [
-                ['label', ':'],
-                ['data-source', ':'],
-                ['region', ':'],
-                ['sites', ':'],
-                ['variable', ':'],
-                ['forecast-length', ':'],
-                ['discriminator', ""]
-            ]
-        });
-    }
-};
-
-var doSavedCurveParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.SavedCurveParams.remove({});
-    }
-    if (matsCollections.SavedCurveParams.find().count() == 0) {
-        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
-    }
-};
-
-var doPlotGraph = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.PlotGraphFunctions.remove({});
-    }
-    if (matsCollections.PlotGraphFunctions.find().count() == 0) {
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphSeries",
-            dataFunction: "dataSeries",
-            textViewId: "textSeriesView",
-            graphViewId: "graphSeriesView",
-            checked: true,
-            dependents: ['variable']
-        });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            graphFunction: "graphProfile",
-            dataFunction: "dataProfile",
-            textViewId: "textProfileView",
-            graphViewId: "graphSeriesView",
-            checked: false,
-            dependents: ['variable']
-        });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.scatter2d,
-            graphFunction: "graph2dScatter",
-            dataFunction: "data2dScatter",
-            textViewId: "textScatter2dView",
-            graphViewId: "graphSeriesView",
-            checked: false,
-            dependents: ['variable']
-        });
-    }
-};
-
-Meteor.startup(function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Databases.remove({});
-    }
-// remove for production
-    matsCollections.Databases.remove({});
-
-    if (matsCollections.Databases.find().count() == 0) {
-        matsCollections.Databases.insert({
-            name: "wfip2Setting",
-            role: "wfip2_data",
-            status: "active",
-            host: 'wfip2-dmzdb.gsd.esrl.noaa.gov',
-            user: 'readonly',
-            password: 'Readonlyp@$$405',
-            database: 'WFIP2_v2',
-            connectionLimit: 10
-        });
-    }
-    var wfip2Settings = matsCollections.Databases.findOne({role: "wfip2_data", status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 1
-    });
-    // the pool is intended to be global
-    wfip2Pool = mysql.createPool(wfip2Settings);
-    wfip2Pool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
@@ -850,19 +305,19 @@ Meteor.startup(function () {
 
     try {
         var all_fcst_lens = new Set();
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "CALL fl_per_model();");
-        for (var i = 0; i < rows[0].length; i++) {
-            const these_lengths = rows[0][i].fcst_lens.split(',');
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from fl_per_model");
+        for (var i = 0; i < rows.length; i++) {
+            const these_lengths = rows[i].fcst_lens.split(',');
             for (var j = 0; j < these_lengths.length; j++) {
                 all_fcst_lens.add(these_lengths[j]);
             }
         }
-        for (var i = 0; i < rows[0].length; i++) {
-            var model = rows[0][i].model;
-            var description = rows[0][i].description;
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model;
+            var description = rows[i].description;
             var is_instrument = modelOptionsMap[description][0].split(',')[1];
             var forecastLengths = [];
-            forecastLengths.push.apply(forecastLengths, rows[0][i].fcst_lens.split(','));
+            forecastLengths.push.apply(forecastLengths, rows[i].fcst_lens.split(','));
             forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
             if (is_instrument == 1) {
                 forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
@@ -914,7 +369,700 @@ Meteor.startup(function () {
         console.log("Database error:", err.message);
     }
 
-    matsMethods.resetApp();
+
+    if (matsCollections.CurveParams.findOne({name:'label'}) == undefined) {
+        var optionsMap = {};
+        matsCollections.CurveParams.insert(
+            {
+                name: 'label',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                default: '',
+                unique: true,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 1,
+                help: 'label.html'
+            }
+        );
+
+        if (matsCollections.CurveParams.findOne({name:'data-source'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'data-source',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap),   // convenience
+                    dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
+                    controlButtonCovered: true,
+                    default: Object.keys(modelOptionsMap)[0],
+                    unique: false,
+                    controlButtonVisibility: 'block',
+                    displayOrder: 1,
+                    displayPriority: 1,
+                    displayGroup: 2,
+                    dates: datesMap
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'data-source'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'data-source'},{$set:{
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap),   // convenience
+                    tableMap: modelTableMap,
+                    dates: datesMap
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'discriminator'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'discriminator',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: discriminatorOptionsMap,
+                    options: Object.keys(discriminatorOptionsMap),   // convenience
+                    dependentNames: ['upper', 'lower'],
+                    disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': [matsTypes.InputTypes.unused]},
+                    hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: -1,   // -1 means selection is optional - enables clear selection button
+                    controlButtonVisibility: 'block',
+                    multiple: false,
+                    displayOrder: 2,
+                    displayPriority: 1,
+                    displayGroup: 2,
+                    help: "discriminator-help.html"
+                });
+        }  else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'discriminator'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.discriminatorOptionsMap, discriminatorOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'discriminator'},{$set:{
+                    optionsMap: discriminatorOptionsMap,
+                    options: Object.keys(discriminatorOptionsMap),   // convenience
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'upper'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'upper',
+                    type: matsTypes.InputTypes.numberSpinner,
+                    optionsMap: upperOptionsMap,
+                    options: Object.keys(upperOptionsMap),   // convenience
+                    superiorNames: ['discriminator'],
+                    min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                    max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                    step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                    controlButtonVisibility: 'block',
+                    displayOrder: 3,
+                    displayPriority: 1,
+                    displayGroup: 2
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'upper'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.upperOptionsMap, upperOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'upper'},{$set:{
+                    optionsMap: upperOptionsMap,
+                    options: Object.keys(upperOptionsMap),   // convenience
+                    min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                    max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                    step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'lower'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'lower',
+                    type: matsTypes.InputTypes.numberSpinner,
+                    optionsMap: lowerOptionsMap,
+                    options: Object.keys(lowerOptionsMap),   // convenience
+                    superiorNames: ['discriminator'],
+                    min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                    max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                    step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                    controlButtonVisibility: 'block',
+                    displayOrder: 4,
+                    displayPriority: 1,
+                    displayGroup: 2
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'lower'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.lowerOptionsMap, lowerOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'lower'},{$set:{
+                    optionsMap: lowerOptionsMap,
+                    options: Object.keys(lowerOptionsMap),   // convenience
+                    min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                    max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                    step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'statistic'}) == undefined) {
+            var statisticOptionsMap = {
+                mean: ['mean'],
+                bias: ['bias'],
+                rmse: ['rmse'],
+                mae: ['mae']
+            };
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'statistic',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: statisticOptionsMap,
+                    options: Object.keys(statisticOptionsMap),   // convenience
+                    controlButtonCovered: true,
+                    dependentNames: ["sites", "forecast-length", "variable"],
+                    disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                    hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                    unique: false,
+                    default: Object.keys(statisticOptionsMap)[0],
+                    controlButtonVisibility: 'block',
+                    displayOrder: 1,
+                    displayPriority: 1,
+                    displayGroup: 3,
+                    help: 'wfip2-statistic.html'
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'statistic'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.statisticOptionsMap, statisticOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'statistic'},{$set:{
+                    optionsMap: statisticOptionsMap,
+                    options: Object.keys(statisticOptionsMap),   // convenience
+                }});
+            }
+
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'truth-data-source'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'truth-data-source',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap),   // convenience
+                    dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
+                    controlButtonCovered: true,
+                    default: Object.keys(modelOptionsMap)[0],
+                    unique: false,
+                    controlButtonVisibility: 'block',
+                    displayOrder: 2,
+                    displayPriority: 2,
+                    displayGroup: 3,
+                    dates: datesMap
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'truth-data-source'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'truth-data-source'},{$set:{
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap),   // convenience
+                    dates: datesMap
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'region'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'region',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: regionOptionsMap,
+                    options: Object.keys(regionOptionsMap),   // convenience
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: regionOptionsMap[Object.keys(regionOptionsMap)[0]][0],
+                    controlButtonVisibility: 'block',
+                    displayOrder: 3,
+                    displayPriority: 1,
+                    displayGroup: 3
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'region'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.regionOptionsMap, regionOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'region'},{$set:{
+                    optionsMap: regionOptionsMap,
+                    options: Object.keys(regionOptionsMap),   // convenience
+                }});
+            }
+        }
+
+
+        if (matsCollections.CurveParams.findOne({name:'sitesMap'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'valid-time',
+                    type: matsTypes.InputTypes.select,
+                    options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                    selected: [],
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: 'All',
+                    controlButtonVisibility: 'block',
+                    controlButtonText: "valid utc hour",
+                    displayOrder: 4,
+                    displayPriority: 1,
+                    displayGroup: 3,
+                    multiple: true
+                });
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'sites'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'sites',
+                    type: matsTypes.InputTypes.select,
+                    optionsMap: siteOptionsMap,
+                    options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                    peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                    superiorNames: ['data-source', 'truth-data-source'],
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
+                    controlButtonVisibility: 'block',
+                    displayOrder: 1,
+                    displayPriority: 1,
+                    displayGroup: 4,
+                    multiple: true
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'sites'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.siteOptionsMap, siteOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'sites'},{$set:{
+                    optionsMap: siteOptionsMap,
+                    options: Object.keys(siteOptionsMap),   // convenience
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'sitesMap'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'sitesMap',
+                    type: matsTypes.InputTypes.selectMap,
+                    optionsMap: siteMarkerOptionsMap,
+                    options: Object.keys(siteMarkerOptionsMap),   // convenience
+                    peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                    controlButtonCovered: true,
+                    unique: false,
+                    //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
+                    default: Object.keys(siteMarkerOptionsMap)[0],
+                    controlButtonVisibility: 'block',
+                    displayOrder: 2,
+                    displayPriority: 1,
+                    displayGroup: 4,
+                    multiple: true,
+                    defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
+                    help: 'map-help.html'
+                });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'sitesMap'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.siteMarkerOptionsMap, siteMarkerOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'sitesMap'},{$set:{
+                    optionsMap: siteMarkerOptionsMap,
+                    options: Object.keys(siteMarkerOptionsMap),   // convenience
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'site-completeness'}) == undefined) {
+            matsCollections.CurveParams.insert(
+                {
+                    name: 'site-completeness',
+                    type: matsTypes.InputTypes.numberSpinner,
+                    optionsMap: {},
+                    options: [],
+                    min: '0',
+                    max: '100',
+                    step: 'any',
+                    controlButtonCovered: true,
+                    unique: false,
+                    default: '0',
+                    controlButtonVisibility: 'block',
+                    displayOrder: 3,
+                    displayPriority: 1,
+                    displayGroup: 4,
+                    help: "completeness.html"
+                });
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'variable'}) == undefined) {
+            matsCollections.CurveParams.insert(
+            {
+                name: 'variable',
+                type: matsTypes.InputTypes.select,
+                //variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
+                variableMap: variableFieldsMap,
+                optionsMap: variableOptionsMap,
+                infoMap: variableInfoMap,
+                options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
+                superiorNames: ['data-source', 'truth-data-source'],
+                plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
+                controlButtonCovered: true,
+                unique: false,
+                default: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "variable-help.html"
+            });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'variable'});
+            if ((!matsDataUtils.areObjectsEqual(currentParam.variableFieldsMap, variableFieldsMap)) ||
+                (!matsDataUtils.areObjectsEqual(currentParam.variableOptionsMap, variableOptionsMap)) ||
+                (!matsDataUtils.areObjectsEqual(currentParam.variableInfoMap, variableInfoMap))){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'variable'},{$set:{
+                    variableMap: variableFieldsMap,
+                    optionsMap: variableOptionsMap,
+                    infoMap: variableInfoMap,
+                    options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]]
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'forecast-length'}) == undefined) {
+            optionsMap = {};
+            matsCollections.CurveParams.insert(
+            {
+                name: 'forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: forecastLengthOptionsMap,
+                options: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
+                superiorNames: ['data-source', 'truth-data-source'],
+                //selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5
+            });
+        } else {
+            // it is defined but check for necessary update
+            var currentParam = matsCollections.CurveParams.findOne({name:'forecast-length'});
+            if (!matsDataUtils.areObjectsEqual(currentParam.forecastLengthOptionsMap, forecastLengthOptionsMap)){
+                // have to reload model data
+                matsCollections.CurveParams.update({name:'forecast-length'},{$set:{
+                    optionsMap: forecastLengthOptionsMap,
+                    options: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])
+                }});
+            }
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'bottom'}) == undefined) {
+            optionsMap = {};
+            matsCollections.CurveParams.insert(
+                {
+                name: 'top',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                min: '0',
+                max: '5000',
+                step: 'any',
+                controlButtonCovered: true,
+                unique: false,
+                default: '200',
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 6,
+                help: 'top-help.html'
+            });
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'bottom'}) == undefined) {
+            optionsMap = {};
+            matsCollections.CurveParams.insert(
+            {
+                name: 'bottom',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                min: '0',
+                max: '5000',
+                step: 'any',
+                controlButtonCovered: true,
+                unique: false,
+                default: '40',
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+                help: 'bottom-help.html'
+            });
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'level-completeness'}) == undefined) {
+            matsCollections.CurveParams.insert(
+            {
+                name: 'level-completeness',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '0',
+                max: '100',
+                step: 'any',
+                controlButtonCovered: true,
+                unique: false,
+                default: '0',
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 6,
+                help: "completeness.html"
+            });
+        }
+
+        if (matsCollections.CurveParams.findOne({name:'curve-dates'}) == undefined) {
+            optionsMap = {};
+            matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source', 'truth-data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                controlButtonText: "curve-bounding-dates",
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 7,
+                help: "dateHelp.html"
+            });
+        }
+    }
+};
+
+/* The format of a curveTextPattern is an array of arrays, each sub array has
+ [labelString, localVariableName, delimiterString]  any of which can be null.
+ Each sub array will be joined (the localVariableName is always dereferenced first)
+ and then the sub arrays will be joined maintaining order.
+
+ The curveTextPattern is found by its name which must match the corresponding PlotGraphFunctions.PlotType value.
+ See curve_item.js and graph.js.
+ */
+var doCurveTextPatterns = function () {
+    if (matsCollections.CurveTextPatterns.find().count() == 0) {
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ':'],
+                ['', 'truth-data-source', ':'],
+                [' region:', 'regionName', ', '],
+                [' sites:', 'sites', ', '],
+                ['', 'variable', ', '],
+                ['units', 'units', ', '],
+                ['', 'statistic', ':'],
+                [' top:', 'top', 'm, '],
+                [' bottom:', 'bottom', 'm, '],
+                [' discriminators:', 'discriminator', ', '],
+                [' upper:', 'upper', ', '],
+                [' lower:', 'lower', ', '],
+                ['fcst_len:', 'forecast-length', ' ,'],
+                ['','valid-time','']
+            ],
+            displayParams: [
+                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","valid-time"
+                ],
+            groupSize: 6
+        });
+
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ':'],
+                ['', 'truth-data-source', ':'],
+                ['', 'regionName', ', '],
+                ['', 'sites', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ':'],
+                [' top:', 'top', 'm, '],
+                [' bottom:', 'bottom', 'm, '],
+                [' discriminators:', 'discriminator', ', '],
+                [' upper:', 'upper', ', '],
+                [' lower:', 'lower', ', '],
+                ['fcst_len:', 'forecast-length', ' ,'],
+                ['', 'curve-dates', ''],
+                ['', 'valid-time','']
+            ],
+            displayParams: [
+                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates","valid-time"
+            ],
+            groupSize: 6
+        });
+
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.scatter2d,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'xaxis-data-source', ':'],
+                ['', 'xaxis-truth-data-source', ':'],
+                ['', 'xaxis-region', ', '],
+                ['', 'xaxis-sites', ', '],
+                ['', 'xaxis-variable', ', '],
+                ['', 'xaxis-statistic', ':'],
+                ['fcst_len:', 'xaxis-forecast-length', ', '],
+                ['', 'xaxis-discriminator', ', '],
+                ['', 'xaxis-valid-time', ':']
+                ['lc', 'xaxis-level-completeness', ' '],
+                ['sc', 'xaxis-site-completeness', '']
+                ['', 'yaxis-data-source', ':'],
+                ['', 'yaxis-truth-data-source', ':'],
+                ['', 'yaxis-region', ', '],
+                ['', 'yaxis-sites', ', '],
+                ['', 'yaxis-variable', ', '],
+                ['', 'yaxis-statistic', ':'],
+                ['fcst_len:', 'yaxis-forecast-length', ', '],
+                ['', 'yaxis-discriminator', ', '],
+                ['', 'yaxis-valid-time', ', '],
+                ['lc', 'yaxis-level-completeness', ' '],
+                ['sc', 'yaxis-site-completeness', ''],
+                ['','Fit-Type','']
+            ],
+            displayParams: [
+                "label",
+                "Fit-Type",
+                "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
+                "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
+                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","xaxis-valid-time",
+
+                "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
+                "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
+                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","yaxis-level-completeness","yaxis-valid-time"
+            ],
+            groupSize:6
+        });
+    }
+};
+
+var doScatterAxisTextPattern = function () {
+    if (matsCollections.ScatterAxisTextPattern.find().count() == 0) {
+        matsCollections.ScatterAxisTextPattern.insert({
+            plotType: matsTypes.PlotTypes.scatter2d,
+            textPattern: [
+                ['label', ':'],
+                ['data-source', ':'],
+                ['region', ':'],
+                ['sites', ':'],
+                ['variable', ':'],
+                ['forecast-length', ':'],
+                ['discriminator', ""]
+            ]
+        });
+    }
+};
+
+var doSavedCurveParams = function () {
+    if (matsCollections.SavedCurveParams.find().count() == 0) {
+        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
+    }
+};
+
+var doPlotGraph = function () {
+    if (matsCollections.PlotGraphFunctions.find().count() == 0) {
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.timeSeries,
+            graphFunction: "graphSeries",
+            dataFunction: "dataSeries",
+            textViewId: "textSeriesView",
+            graphViewId: "graphSeriesView",
+            checked: true,
+            dependents: ['variable']
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            graphFunction: "graphProfile",
+            dataFunction: "dataProfile",
+            textViewId: "textProfileView",
+            graphViewId: "graphSeriesView",
+            checked: false,
+            dependents: ['variable']
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.scatter2d,
+            graphFunction: "graph2dScatter",
+            dataFunction: "data2dScatter",
+            textViewId: "textScatter2dView",
+            graphViewId: "graphSeriesView",
+            checked: false,
+            dependents: ['variable']
+        });
+    }
+};
+
+Meteor.startup(function () {
+    if (matsCollections.Databases.find().count() == 0) {
+        matsCollections.Databases.insert({
+            name: "wfip2Setting",
+            role: "wfip2_data",
+            status: "active",
+            host: 'wfip2-dmzdb.gsd.esrl.noaa.gov',
+            user: 'readonly',
+            password: 'Readonlyp@$$405',
+            database: 'WFIP2_v2',
+            connectionLimit: 10
+        });
+    }
+    var wfip2Settings = matsCollections.Databases.findOne({role: "wfip2_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    wfip2Pool = mysql.createPool(wfip2Settings);
+    wfip2Pool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", "WFIP2_v2", ['data_sources', 'discriminator_range', 'region_descriptions_mats']);
+    matsMethods.resetApp(mdr);
 });
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params

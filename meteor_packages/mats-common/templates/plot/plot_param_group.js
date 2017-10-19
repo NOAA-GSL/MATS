@@ -14,8 +14,7 @@ Template.plotParamGroup.helpers({
 
 Template.plotParamGroup.events({
     'click': function(event) {
-        //console.log('plotParamGroup click on ', event.currentTarget.id);
-        if (plotParamHandler) {
+        if (plotParamHandler !== undefined) {
             plotParamHandler (event);  // call app specific handler with event.
         }
     }

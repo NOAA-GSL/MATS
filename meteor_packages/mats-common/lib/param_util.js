@@ -25,7 +25,8 @@ const getControlElementForParamName = function(paramName) {
 const getValueElementForParamName = function(paramName) {
     // scatter axis don't really exist in matsCollections.CurveParams but they are elements
     const pname = paramName.replace(/^.axis-/, '');
-    return document.getElementById(getValueIdForParamName(pname));
+    const val = getValueIdForParamName(pname);
+    return document.getElementById(val);
 };
 
 // get the current selected value in the document element that corresponds to the param name

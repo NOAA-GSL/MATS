@@ -8,8 +8,8 @@ import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import { Mongo } from 'meteor/mongo'
 
-// local collection used to keep the table update times for refresh
-const metaDataTableUpdates = new Mongo.Collection('metaDataTableUpdates');
+// local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
+const metaDataTableUpdates = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
@@ -314,17 +314,31 @@ const checkMetaDataRefresh = function() {
         }
      */
     var refresh = false;
-    const tableUpdates = metaDataTableUpdates.find({},{_id:0}).fetch();
+    const tableUpdates = metaDataTableUpdates.find({}).fetch();
      for (var tui = 0; tui < tableUpdates.length; tui++) {
+            var id = tableUpdates[tui]._id;
+            var poolName = tableUpdates[tui].pool;
             var dbName = tableUpdates[tui].name;
             var tableNames = tableUpdates[tui].tables;
             var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
+            var updatedEpoch = Number.MAX_VALUE;
             for (var ti = 0; ti < tableNames.length; ti++) {
                 var tName = tableNames[ti];
-                var updatedEpoch = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                var rows = matsDataUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
                     "    FROM   information_schema.tables" +
                     "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
-                    "    AND TABLE_NAME = '" + tName + "'")[0]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                    "    AND TABLE_NAME = '" + tName + "'");
+                for (var i = 0; i < rows.length; i++) {
+                    try {
+                        updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                        break;
+                    } catch (e) {
+                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
+                    }
+                    if (updatedEpoch === Number.MAX_VALUE) {
+                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
+                    }
+                }
                 const lastRefreshedEpoch = moment(lastRefreshed).valueOf()/1000;
                 if (lastRefreshedEpoch < updatedEpoch) {
                     refresh = true;
@@ -339,20 +353,12 @@ const checkMetaDataRefresh = function() {
                     global.appSpecificResetRoutines[asrKeys[ai]]();
                 }
                 // remember that we updated ALL the metadata tables just now
-                metaDataTableUpdates.update({}, {$set: {lastRefreshed: moment().format()}});
-                break;
+                metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: moment().format()}});
             }
         }
 }
 
-const resetApp = function(metaDataTables) {
-    /*
-    metaDataTables ---
-    {
-        dataBaseName: [tableName1,tableName2...],
-        dataBaseName2: [tableName1,tableName2...]
-    }
-     */
+const resetApp = function(metaDataTableRecords) {
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText === undefined || deploymentText == null) {
@@ -393,14 +399,19 @@ const resetApp = function(metaDataTables) {
             lastRefreshed : timestamp
         }
      */
-    if (metaDataTables) {
-        var dataBaseNames = Object.keys(metaDataTables);
-        for (var dbi = 0; dbi < dataBaseNames.length; dbi++) {
-            var dbName = dataBaseNames[dbi];
-            var tableNames = metaDataTables[dbName];
-            metaDataTableUpdates.update({name: dbName}, {$set: {tables:tableNames,lastRefreshed: moment.utc().format()}}, {upsert: true});
+    // only create metadata tables if the resetApp was called with a real metaDataTables object
+    if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
+        var metaDataTables = metaDataTableRecords.getRecords();
+        for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
+            const metaDataRef =  metaDataTables[mdti];
+            if (metaDataTableUpdates.find({name:metaDataRef.name}).count() == 0) {
+                metaDataTableUpdates.update({name:metaDataRef.name},metaDataRef, {upsert:true});
+            }
         }
-    't really'}
+    } else {
+        throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
+    }
+
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
@@ -427,7 +438,12 @@ const refreshMetaData = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run (){
         if (Meteor.isServer) {
-            checkMetaDataRefresh();
+            try {
+                checkMetaDataRefresh();
+            } catch (e) {
+                console.log (e);
+                throw new Meteor.Error("Server error: ", e.message);
+            }
         }
     }
 });

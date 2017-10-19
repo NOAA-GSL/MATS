@@ -5,10 +5,6 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
-var modelOptionsMap = {};
-var regionModelOptionsMap = {};
-var forecastLengthOptionsMap = {};
-var forecastLengthModels = [];
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -16,7 +12,7 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
     if (matsCollections.PlotParams.find().count() == 0) {
@@ -57,15 +53,53 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    // force a reset - if requested
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-    if (matsCollections.CurveParams.find().count() == 0) {
+
+    if (matsCollections.CurveParams.findOne({name:'underConstruction'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'underConstruction'
             }
         );
+        return;
+    }
+
+    var modelOptionsMap = {};
+    var regionModelOptionsMap = {};
+    var forecastLengthOptionsMap = {};
+    var forecastLengthModels = [];
+    try {
+        var rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions_name,model_value from regions_per_model;");
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model.trim();
+            var regions = rows[i].regions_name;
+            var model_value = rows[i].model_value.trim();
+            var valueList = [];
+            valueList.push(model_value);
+            modelOptionsMap[model] = valueList;
+            var regionsArr = regions.split(',');
+            regionModelOptionsMap[model] = regionsArr;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        var rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM fcst_lens_per_model;");
+        for (var i = 0; i < rows.length; i++) {
+            var model = rows[i].model;
+            var forecastLengths = rows[i].fcst_lens;
+            var forecastLengthArr = forecastLengths.split(',');
+            forecastLengthOptionsMap[model] = forecastLengthArr;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
@@ -80,8 +114,10 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1,
                 help: 'label.html'
-            }
-        );
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'data-source',
@@ -97,6 +133,20 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name:'data-source'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.modelOptionsMap, modelOptionsMap)){
+            // have to reload model data
+            matsCollections.CurveParams.update({name:'data-source'},{$set:{
+                optionsMap: modelOptionsMap,
+                options: Object.keys(modelOptionsMap)
+            }});
+        }
+    }
+
+
+    if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'region',
@@ -112,7 +162,19 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name:'region'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.regionModelOptionsMap, regionModelOptionsMap)){
+            // have to reload model data
+            matsCollections.CurveParams.update({name:'region'},{$set:{
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
+            }});
+        }
+    }
 
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         optionsMap = {
             'TSS (True Skill Score)': ['(sum(m0.yy)+0.00) / sum(m0.yy+m0.ny) + (sum(m0.nn)+0.00) / sum(m0.nn+m0.yn) - 1 as stat'],
 
@@ -155,14 +217,15 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+    }
 
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         optionsMap = {
             '5 (vis < 5 mi)': ['_500_'],
             '3 (vis < 3 mi)': ['_300_'],
             '1 (vis < 1 mi)': ['_100_'],
             '1/2 (vis < 1/2 mi)': ['_50_']
         };
-
         matsCollections.CurveParams.insert(
             {
                 name: 'threshold',
@@ -177,7 +240,9 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+    }
 
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         optionsMap = {
             'None': ['ceil(3600*floor(m0.time/3600))'],
             '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
@@ -186,7 +251,6 @@ const doCurveParams = function () {
             '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
             '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)']
         };
-
         matsCollections.CurveParams.insert(
             {
                 name: 'average',
@@ -202,7 +266,9 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 3
             });
+    }
 
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
@@ -220,8 +286,19 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 3
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name:'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.forecastLengthOptionsMap, forecastLengthOptionsMap)){
+            // have to reload model data
+            matsCollections.CurveParams.update({name:'forecast-length'},{$set:{
+                optionsMap: forecastLengthOptionsMap,
+                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0]
+            }});
+        }
+    }
 
-
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
@@ -250,7 +327,7 @@ const doCurveParams = function () {
  See curve_item.js and graph.js.
  */
 const doCurveTextPatterns = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveTextPatterns.remove({});
     }
     if (matsCollections.CurveTextPatterns.find().count() == 0) {
@@ -295,7 +372,7 @@ const doCurveTextPatterns = function () {
 };
 
 const doSavedCurveParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.SavedCurveParams.remove({});
     }
     if (matsCollections.SavedCurveParams.find().count() == 0) {
@@ -304,7 +381,7 @@ const doSavedCurveParams = function () {
 };
 
 const doPlotGraph = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotGraphFunctions.remove({});
     }
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
@@ -325,7 +402,7 @@ const doPlotGraph = function () {
 
 
 Meteor.startup(function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Databases.remove({});
     }
     if (matsCollections.Databases.find().count() == 0) {
@@ -350,8 +427,6 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
     }
-
-
     const modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
@@ -365,34 +440,8 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    try {
-        var rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select model,regions_name,model_value from visibility.regions_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
-            var regions = rows[i].regions_name;
-            var model_value = rows[i].model_value.trim();
-            var valueList = [];
-            valueList.push(model_value);
-            modelOptionsMap[model] = valueList;
-            var regionsArr = regions.split(',');
-            regionModelOptionsMap[model] = regionsArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-
-    try {
-        var rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT model, fcst_lens FROM visibility.fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-        }
-    } catch (err) {
-        console.log(err.message);
-    }
-    matsMethods.resetApp();
+    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "visibility", ['regions_per_model', 'fcst_lens_per_model']);
+    matsMethods.resetApp(mdr);
 });
 
 // this object is global so that the reset code can get to it

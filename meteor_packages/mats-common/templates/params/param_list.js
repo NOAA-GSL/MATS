@@ -72,6 +72,7 @@ Template.paramList.events({
             if (error !== undefined) {
                 setError(new Error(error.message));
             }
+            Session.set("lastUpdate", Date.now());
         });
         matsParamUtils.setAllParamsToDefault();
     },

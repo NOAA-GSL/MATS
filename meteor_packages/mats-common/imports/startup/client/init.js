@@ -49,8 +49,3 @@ Session.set("Mongol", {
     'opacity_expand': ".9",
     'disable_warning': true
 });
-// matsMethods.refreshMetaData.call({}, function (error, result) {
-//     if (error !== undefined) {
-//         setError(new Error(error.message));
-//     }
-// });

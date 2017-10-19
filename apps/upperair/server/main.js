@@ -3,21 +3,13 @@ import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
-var modelOptionsMap ={};
-var forecastLengthOptionsMap = {};
-var regionModelOptionsMap = {};
-var masterRegionValuesMap = {};
-// models have option groups so we use a Map() because it maintains order.
-var modelOptionsGroups = {};
-var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
-var myModels = [];
-var modelTableMap = {};
-var modelDateRangeMap = {};
+
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
 const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
+
 const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
@@ -61,10 +53,17 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
-    // force a reset if there is no data - simply remove all the existing params to force a reload
-    if (process.env.NODE_ENV === "development") {
-        console.log("Checking for update - doCurveParams");
-    }
+    var modelOptionsMap ={};
+    var forecastLengthOptionsMap = {};
+    var regionModelOptionsMap = {};
+    var masterRegionValuesMap = {};
+// models have option groups so we use a Map() because it maintains order.
+    var modelOptionsGroups = {};
+    var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
+    var myModels = [];
+    var modelTableMap = {};
+    var modelDateRangeMap = {};
+    // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
        matsCollections.CurveParams.remove({});
     }
@@ -173,6 +172,7 @@ const doCurveParams = function () {
         console.log("upperair main.js",err.message);
     }
 
+
     // all the rest
     if (matsCollections.CurveParams.findOne({name:'label'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -251,14 +251,10 @@ const doCurveParams = function () {
                 help: 'region.html'
             });
     } else {
-        // it is defined but check for update
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name:'region'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)){
             // have to reload model data
-            if (process.env.NODE_ENV === "development") {
-                console.log("updating region data");
-            }
             matsCollections.CurveParams.update({name:'region'},{$set:{
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[myModels[0]]
@@ -438,9 +434,6 @@ const doCurveParams = function () {
         var currentParam = matsCollections.CurveParams.findOne({name:'forecast-length'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)){
             // have to reload model data
-            if (process.env.NODE_ENV === "development") {
-                console.log("updating forecast-length data");
-            }
             matsCollections.CurveParams.update({name:'forecast-length'},{$set:{
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap[myModels[0]]
@@ -682,8 +675,9 @@ Meteor.startup(function () {
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
-    // need to pass the metadata table names so that resetApp can remember the update times.
-    matsMethods.resetApp(['region_descriptions_dev','regions_per_model_mats_all_categories']);
+
+    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ruc_ua", ['region_descriptions_dev','regions_per_model_mats_all_categories']);
+    matsMethods.resetApp(mdr);
 });
 
 // this object is global so that the reset code can get to it
