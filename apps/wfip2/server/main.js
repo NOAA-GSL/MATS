@@ -370,7 +370,7 @@ var doCurveParams = function () {
     }
 
 
-    if (matsCollections.CurveParams.findOne({name:'label'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         var optionsMap = {};
         matsCollections.CurveParams.insert(
             {
@@ -389,7 +389,7 @@ var doCurveParams = function () {
             }
         );
 
-        if (matsCollections.CurveParams.findOne({name:'data-source'}) == undefined) {
+        if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
             matsCollections.CurveParams.insert(
                 {
                     name: 'data-source',
@@ -408,318 +408,337 @@ var doCurveParams = function () {
                 });
         } else {
             // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'data-source'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'data-source'},{$set:{
-                    optionsMap: modelOptionsMap,
-                    options: Object.keys(modelOptionsMap),   // convenience
-                    tableMap: modelTableMap,
-                    dates: datesMap
-                }});
-            }
-        }
-
-        if (matsCollections.CurveParams.findOne({name:'discriminator'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'discriminator',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: discriminatorOptionsMap,
-                    options: Object.keys(discriminatorOptionsMap),   // convenience
-                    dependentNames: ['upper', 'lower'],
-                    disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': [matsTypes.InputTypes.unused]},
-                    hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: -1,   // -1 means selection is optional - enables clear selection button
-                    controlButtonVisibility: 'block',
-                    multiple: false,
-                    displayOrder: 2,
-                    displayPriority: 1,
-                    displayGroup: 2,
-                    help: "discriminator-help.html"
+            var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+            if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) ||
+                (!matsDataUtils.areObjectsEqual(currentParam.dates, datesMap)))
+            // have to reload model data
+                matsCollections.CurveParams.update({name: 'data-source'}, {
+                    $set: {
+                        optionsMap: modelOptionsMap,
+                        options: Object.keys(modelOptionsMap),   // convenience
+                        dates: datesMap
+                    }
                 });
-        }  else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'discriminator'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.discriminatorOptionsMap, discriminatorOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'discriminator'},{$set:{
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'discriminator'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'discriminator',
+                type: matsTypes.InputTypes.select,
+                optionsMap: discriminatorOptionsMap,
+                options: Object.keys(discriminatorOptionsMap),   // convenience
+                dependentNames: ['upper', 'lower'],
+                disableOtherFor: {'upper': matsTypes.InputTypes.unused, 'lower': [matsTypes.InputTypes.unused]},
+                hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
+                controlButtonCovered: true,
+                unique: false,
+                default: -1,   // -1 means selection is optional - enables clear selection button
+                controlButtonVisibility: 'block',
+                multiple: false,
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2,
+                help: "discriminator-help.html"
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'discriminator'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, discriminatorOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'discriminator'}, {
+                $set: {
                     optionsMap: discriminatorOptionsMap,
                     options: Object.keys(discriminatorOptionsMap),   // convenience
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'upper'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'upper',
-                    type: matsTypes.InputTypes.numberSpinner,
+    if (matsCollections.CurveParams.findOne({name: 'upper'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'upper',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: upperOptionsMap,
+                options: Object.keys(upperOptionsMap),   // convenience
+                superiorNames: ['discriminator'],
+                min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
+                max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
+                controlButtonCovered: true,
+                unique: false,
+                default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'upper'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, upperOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'upper'}, {
+                $set: {
                     optionsMap: upperOptionsMap,
                     options: Object.keys(upperOptionsMap),   // convenience
-                    superiorNames: ['discriminator'],
                     min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
                     max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
                     step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                    controlButtonVisibility: 'block',
-                    displayOrder: 3,
-                    displayPriority: 1,
-                    displayGroup: 2
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'upper'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.upperOptionsMap, upperOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'upper'},{$set:{
-                    optionsMap: upperOptionsMap,
-                    options: Object.keys(upperOptionsMap),   // convenience
-                    min: upperOptionsMap[Object.keys(upperOptionsMap)[0]].min,
-                    max: upperOptionsMap[Object.keys(upperOptionsMap)[0]].max,
-                    step: upperOptionsMap[Object.keys(upperOptionsMap)[0]].step,
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'lower'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'lower',
-                    type: matsTypes.InputTypes.numberSpinner,
-                    optionsMap: lowerOptionsMap,
-                    options: Object.keys(lowerOptionsMap),   // convenience
-                    superiorNames: ['discriminator'],
-                    min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                    max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
-                    step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
-                    controlButtonVisibility: 'block',
-                    displayOrder: 4,
-                    displayPriority: 1,
-                    displayGroup: 2
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'lower'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.lowerOptionsMap, lowerOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'lower'},{$set:{
+    if (matsCollections.CurveParams.findOne({name: 'lower'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'lower',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: lowerOptionsMap,
+                options: Object.keys(lowerOptionsMap),   // convenience
+                superiorNames: ['discriminator'],
+                min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
+                step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
+                controlButtonCovered: true,
+                unique: false,
+                default: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'lower'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, lowerOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'lower'}, {
+                $set: {
                     optionsMap: lowerOptionsMap,
                     options: Object.keys(lowerOptionsMap),   // convenience
                     min: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].min,
                     max: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].max,
                     step: lowerOptionsMap[Object.keys(lowerOptionsMap)[0]].step,
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'statistic'}) == undefined) {
-            var statisticOptionsMap = {
-                mean: ['mean'],
-                bias: ['bias'],
-                rmse: ['rmse'],
-                mae: ['mae']
-            };
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'statistic',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
+        var statisticOptionsMap = {
+            mean: ['mean'],
+            bias: ['bias'],
+            rmse: ['rmse'],
+            mae: ['mae']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statisticOptionsMap,
+                options: Object.keys(statisticOptionsMap),   // convenience
+                controlButtonCovered: true,
+                dependentNames: ["sites", "forecast-length", "variable"],
+                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                unique: false,
+                default: Object.keys(statisticOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3,
+                help: 'wfip2-statistic.html'
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'statistic'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'statistic'}, {
+                $set: {
                     optionsMap: statisticOptionsMap,
                     options: Object.keys(statisticOptionsMap),   // convenience
-                    controlButtonCovered: true,
-                    dependentNames: ["sites", "forecast-length", "variable"],
-                    disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
-                    hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
-                    unique: false,
-                    default: Object.keys(statisticOptionsMap)[0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 1,
-                    displayPriority: 1,
-                    displayGroup: 3,
-                    help: 'wfip2-statistic.html'
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'statistic'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.statisticOptionsMap, statisticOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'statistic'},{$set:{
-                    optionsMap: statisticOptionsMap,
-                    options: Object.keys(statisticOptionsMap),   // convenience
-                }});
-            }
-
+                }
+            });
         }
 
-        if (matsCollections.CurveParams.findOne({name:'truth-data-source'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'truth-data-source',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: modelOptionsMap,
-                    options: Object.keys(modelOptionsMap),   // convenience
-                    dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
-                    controlButtonCovered: true,
-                    default: Object.keys(modelOptionsMap)[0],
-                    unique: false,
-                    controlButtonVisibility: 'block',
-                    displayOrder: 2,
-                    displayPriority: 2,
-                    displayGroup: 3,
-                    dates: datesMap
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'truth-data-source'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'truth-data-source'},{$set:{
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'truth-data-source'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'truth-data-source',
+                type: matsTypes.InputTypes.select,
+                optionsMap: modelOptionsMap,
+                options: Object.keys(modelOptionsMap),   // convenience
+                dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
+                controlButtonCovered: true,
+                default: Object.keys(modelOptionsMap)[0],
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 2,
+                displayGroup: 3,
+                dates: datesMap
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'truth-data-source'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.dates, datesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'truth-data-source'}, {
+                $set: {
                     optionsMap: modelOptionsMap,
                     options: Object.keys(modelOptionsMap),   // convenience
                     dates: datesMap
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'region'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'region',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'region',
+                type: matsTypes.InputTypes.select,
+                optionsMap: regionOptionsMap,
+                options: Object.keys(regionOptionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: regionOptionsMap[Object.keys(regionOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
                     optionsMap: regionOptionsMap,
                     options: Object.keys(regionOptionsMap),   // convenience
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: regionOptionsMap[Object.keys(regionOptionsMap)[0]][0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 3,
-                    displayPriority: 1,
-                    displayGroup: 3
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'region'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.regionOptionsMap, regionOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'region'},{$set:{
-                    optionsMap: regionOptionsMap,
-                    options: Object.keys(regionOptionsMap),   // convenience
-                }});
-            }
+                }
+            });
         }
+    }
 
 
-        if (matsCollections.CurveParams.findOne({name:'sitesMap'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'valid-time',
-                    type: matsTypes.InputTypes.select,
-                    options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                    selected: [],
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: 'All',
-                    controlButtonVisibility: 'block',
-                    controlButtonText: "valid utc hour",
-                    displayOrder: 4,
-                    displayPriority: 1,
-                    displayGroup: 3,
-                    multiple: true
-                });
-        }
+    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'All',
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 3,
+                multiple: true
+            });
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'sites'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'sites',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: siteOptionsMap,
-                    options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
-                    peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
-                    superiorNames: ['data-source', 'truth-data-source'],
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 1,
-                    displayPriority: 1,
-                    displayGroup: 4,
-                    multiple: true
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'sites'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.siteOptionsMap, siteOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'sites'},{$set:{
+    if (matsCollections.CurveParams.findOne({name: 'sites'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                superiorNames: ['data-source', 'truth-data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'sites'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'sites'}, {
+                $set: {
                     optionsMap: siteOptionsMap,
                     options: Object.keys(siteOptionsMap),   // convenience
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'sitesMap'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'sitesMap',
-                    type: matsTypes.InputTypes.selectMap,
+    if (matsCollections.CurveParams.findOne({name: 'sitesMap'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sitesMap',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: siteMarkerOptionsMap,
+                options: Object.keys(siteMarkerOptionsMap),   // convenience
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
+                default: Object.keys(siteMarkerOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true,
+                defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
+                help: 'map-help.html'
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'sitesMap'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteMarkerOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'sitesMap'}, {
+                $set: {
                     optionsMap: siteMarkerOptionsMap,
                     options: Object.keys(siteMarkerOptionsMap),   // convenience
-                    peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
-                    controlButtonCovered: true,
-                    unique: false,
-                    //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
-                    default: Object.keys(siteMarkerOptionsMap)[0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 2,
-                    displayPriority: 1,
-                    displayGroup: 4,
-                    multiple: true,
-                    defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
-                    help: 'map-help.html'
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'sitesMap'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.siteMarkerOptionsMap, siteMarkerOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'sitesMap'},{$set:{
-                    optionsMap: siteMarkerOptionsMap,
-                    options: Object.keys(siteMarkerOptionsMap),   // convenience
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'site-completeness'}) == undefined) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'site-completeness',
-                    type: matsTypes.InputTypes.numberSpinner,
-                    optionsMap: {},
-                    options: [],
-                    min: '0',
-                    max: '100',
-                    step: 'any',
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: '0',
-                    controlButtonVisibility: 'block',
-                    displayOrder: 3,
-                    displayPriority: 1,
-                    displayGroup: 4,
-                    help: "completeness.html"
-                });
-        }
+    if (matsCollections.CurveParams.findOne({name: 'site-completeness'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'site-completeness',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],
+                min: '0',
+                max: '100',
+                step: 'any',
+                controlButtonCovered: true,
+                unique: false,
+                default: '0',
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4,
+                help: "completeness.html"
+            });
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'variable'}) == undefined) {
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
+        matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
@@ -739,25 +758,27 @@ var doCurveParams = function () {
                 displayGroup: 5,
                 help: "variable-help.html"
             });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'variable'});
-            if ((!matsDataUtils.areObjectsEqual(currentParam.variableFieldsMap, variableFieldsMap)) ||
-                (!matsDataUtils.areObjectsEqual(currentParam.variableOptionsMap, variableOptionsMap)) ||
-                (!matsDataUtils.areObjectsEqual(currentParam.variableInfoMap, variableInfoMap))){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'variable'},{$set:{
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'variable'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.variableMap, variableFieldsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.infoMap, variableInfoMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'variable'}, {
+                $set: {
                     variableMap: variableFieldsMap,
                     optionsMap: variableOptionsMap,
                     infoMap: variableInfoMap,
                     options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]]
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'forecast-length'}) == undefined) {
-            optionsMap = {};
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+        optionsMap = {};
+        matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
@@ -774,22 +795,24 @@ var doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 5
             });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name:'forecast-length'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.forecastLengthOptionsMap, forecastLengthOptionsMap)){
-                // have to reload model data
-                matsCollections.CurveParams.update({name:'forecast-length'},{$set:{
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
                     optionsMap: forecastLengthOptionsMap,
                     options: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])
-                }});
-            }
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'bottom'}) == undefined) {
-            optionsMap = {};
-            matsCollections.CurveParams.insert(
-                {
+    if (matsCollections.CurveParams.findOne({name: 'bottom'}) == undefined) {
+        optionsMap = {};
+        matsCollections.CurveParams.insert(
+            {
                 name: 'top',
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: optionsMap,
@@ -806,11 +829,11 @@ var doCurveParams = function () {
                 displayGroup: 6,
                 help: 'top-help.html'
             });
-        }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'bottom'}) == undefined) {
-            optionsMap = {};
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.findOne({name: 'bottom'}) == undefined) {
+        optionsMap = {};
+        matsCollections.CurveParams.insert(
             {
                 name: 'bottom',
                 type: matsTypes.InputTypes.numberSpinner,
@@ -828,10 +851,10 @@ var doCurveParams = function () {
                 displayGroup: 6,
                 help: 'bottom-help.html'
             });
-        }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'level-completeness'}) == undefined) {
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.findOne({name: 'level-completeness'}) == undefined) {
+        matsCollections.CurveParams.insert(
             {
                 name: 'level-completeness',
                 type: matsTypes.InputTypes.numberSpinner,
@@ -849,11 +872,11 @@ var doCurveParams = function () {
                 displayGroup: 6,
                 help: "completeness.html"
             });
-        }
+    }
 
-        if (matsCollections.CurveParams.findOne({name:'curve-dates'}) == undefined) {
-            optionsMap = {};
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {};
+        matsCollections.CurveParams.insert(
             {
                 name: 'curve-dates',
                 type: matsTypes.InputTypes.dateRange,
@@ -872,9 +895,8 @@ var doCurveParams = function () {
                 displayGroup: 7,
                 help: "dateHelp.html"
             });
-        }
     }
-};
+}
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
  [labelString, localVariableName, delimiterString]  any of which can be null.
@@ -903,11 +925,11 @@ var doCurveTextPatterns = function () {
                 [' upper:', 'upper', ', '],
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,'],
-                ['','valid-time','']
+                ['', 'valid-time', '']
             ],
             displayParams: [
-                    "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","valid-time"
-                ],
+                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "forecast-length", "top", "bottom", "level-completeness", "valid-time"
+            ],
             groupSize: 6
         });
 
@@ -928,10 +950,10 @@ var doCurveTextPatterns = function () {
                 [' lower:', 'lower', ', '],
                 ['fcst_len:', 'forecast-length', ' ,'],
                 ['', 'curve-dates', ''],
-                ['', 'valid-time','']
+                ['', 'valid-time', '']
             ],
             displayParams: [
-                "label","data-source","truth-data-source","discriminator","upper","lower","statistic","region","sites","site-completeness","variable","forecast-length","top","bottom","level-completeness","curve-dates","valid-time"
+                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "forecast-length", "top", "bottom", "level-completeness", "curve-dates", "valid-time"
             ],
             groupSize: 6
         });
@@ -949,9 +971,9 @@ var doCurveTextPatterns = function () {
                 ['fcst_len:', 'xaxis-forecast-length', ', '],
                 ['', 'xaxis-discriminator', ', '],
                 ['', 'xaxis-valid-time', ':']
-                ['lc', 'xaxis-level-completeness', ' '],
+                    ['lc', 'xaxis-level-completeness', ' '],
                 ['sc', 'xaxis-site-completeness', '']
-                ['', 'yaxis-data-source', ':'],
+                    ['', 'yaxis-data-source', ':'],
                 ['', 'yaxis-truth-data-source', ':'],
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
@@ -962,20 +984,20 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-valid-time', ', '],
                 ['lc', 'yaxis-level-completeness', ' '],
                 ['sc', 'yaxis-site-completeness', ''],
-                ['','Fit-Type','']
+                ['', 'Fit-Type', '']
             ],
             displayParams: [
                 "label",
                 "Fit-Type",
-                "xaxis","xaxis-data-source","xaxis-truth-data-source","xaxis-discriminator",
-                "xaxis-upper","xaxis-lower","xaxis-statistic","xaxis-region","xaxis-sites",
-                "xaxis-site-completeness","xaxis-variable","xaxis-forecast-length","xaxis-top","xaxis-bottom","xaxis-level-completeness","xaxis-valid-time",
+                "xaxis", "xaxis-data-source", "xaxis-truth-data-source", "xaxis-discriminator",
+                "xaxis-upper", "xaxis-lower", "xaxis-statistic", "xaxis-region", "xaxis-sites",
+                "xaxis-site-completeness", "xaxis-variable", "xaxis-forecast-length", "xaxis-top", "xaxis-bottom", "xaxis-level-completeness", "xaxis-valid-time",
 
-                "yaxis","yaxis-data-source","yaxis-truth-data-source","yaxis-discriminator",
-                "yaxis-upper","yaxis-lower","yaxis-statistic","yaxis-region","yaxis-sites",
-                "yaxis-site-completeness","yaxis-variable","yaxis-forecast-length","yaxis-top","yaxis-bottom","yaxis-level-completeness","yaxis-valid-time"
+                "yaxis", "yaxis-data-source", "yaxis-truth-data-source", "yaxis-discriminator",
+                "yaxis-upper", "yaxis-lower", "yaxis-statistic", "yaxis-region", "yaxis-sites",
+                "yaxis-site-completeness", "yaxis-variable", "yaxis-forecast-length", "yaxis-top", "yaxis-bottom", "yaxis-level-completeness", "yaxis-valid-time"
             ],
-            groupSize:6
+            groupSize: 6
         });
     }
 };
@@ -1067,11 +1089,11 @@ Meteor.startup(function () {
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
 appSpecificResetRoutines = {
-    doPlotGraph:doPlotGraph,
-    doCurveParams:doCurveParams,
-    doScatter2dParams:doScatter2dParams,
-    doSavedCurveParams:doSavedCurveParams,
-    doPlotParams:doPlotParams,
-    doCurveTextPatterns:doCurveTextPatterns
+    doPlotGraph: doPlotGraph,
+    doCurveParams: doCurveParams,
+    doScatter2dParams: doScatter2dParams,
+    doSavedCurveParams: doSavedCurveParams,
+    doPlotParams: doPlotParams,
+    doCurveTextPatterns: doCurveTextPatterns
 };
 

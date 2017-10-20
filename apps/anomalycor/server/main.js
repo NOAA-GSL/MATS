@@ -41,7 +41,7 @@ const doPlotParams = function () {
                 name: 'plotFormat',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
-                options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
+                options: [matsTypes.PlotFormats.matching, matsTypes.PlotFormats.pairwise, matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: true,
                 controlButtonVisibility: 'block',
@@ -58,7 +58,7 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
 
-    if (matsCollections.CurveParams.findOne({name:'underConstruction'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'underConstruction'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'underConstruction'
@@ -135,13 +135,15 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name:'data-source'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.modelOptionsMap, modelOptionsMap)){
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.modelOptionsMap, modelOptionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name:'data-source'},{$set:{
-                optionsMap: modelOptionsMap,
-                options: Object.keys(modelOptionsMap)
-            }});
+            matsCollections.CurveParams.update({name: 'data-source'}, {
+                $set: {
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap)
+                }
+            });
         }
     }
 
@@ -164,13 +166,15 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name:'region'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.regionModelOptionsMap, regionModelOptionsMap)){
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name:'region'},{$set:{
-                optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
-            }});
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
+                    optionsMap: regionModelOptionsMap,
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
+                }
+            });
         }
     }
 
@@ -219,7 +223,7 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'threshold'}) == undefined) {
         optionsMap = {
             '5 (vis < 5 mi)': ['_500_'],
             '3 (vis < 3 mi)': ['_300_'],
@@ -242,7 +246,7 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
         optionsMap = {
             'None': ['ceil(3600*floor(m0.time/3600))'],
             '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
@@ -288,17 +292,19 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name:'forecast-length'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.forecastLengthOptionsMap, forecastLengthOptionsMap)){
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name:'forecast-length'},{$set:{
-                optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0]
-            }});
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
+                    optionsMap: forecastLengthOptionsMap,
+                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0]
+                }
+            });
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
@@ -344,11 +350,11 @@ const doCurveTextPatterns = function () {
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label","data-source","region","statistic","threshold","average","forecast-length","valid-time"
+                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
-    });
+        });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
@@ -363,7 +369,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label","model","data-source","region","statistic","threshold","average","forecast-length","valid-time"
+                "label", "model", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
@@ -427,14 +433,26 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
     }
-    const modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
     modelPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
     // the pool is intended to be global
-    const sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
+    const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
@@ -447,11 +465,11 @@ Meteor.startup(function () {
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
 appSpecificResetRoutines = {
-    doPlotGraph:doPlotGraph,
-    doCurveParams:doCurveParams,
-    doSavedCurveParams:doSavedCurveParams,
-    doPlotParams:doPlotParams,
-    doCurveTextPatterns:doCurveTextPatterns
+    doPlotGraph: doPlotGraph,
+    doCurveParams: doCurveParams,
+    doSavedCurveParams: doSavedCurveParams,
+    doPlotParams: doPlotParams,
+    doCurveTextPatterns: doCurveTextPatterns
 };
 
 
