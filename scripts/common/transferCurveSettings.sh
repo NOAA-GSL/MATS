@@ -16,5 +16,5 @@ localtmpfile=`/bin/mktemp`
 ssh ${remoteServer} /bin/mongoexport -d ${app} -c CurveSettings -o ${remotetmpfile}
 scp ${remoteServer}:{$remotetmpfile} ${localtmpfile}
 ssh ${remoteServer} /bin/rm ${remotetmpfile}
-/bin/mongoimport -d ${app} -c CurveSettings --file /tmp/CurveSettings.json --upsert
+/bin/mongoimport -d ${app} -c CurveSettings --file ${localtmpfile} --upsert
 /bin/rm ${localtmpfile}
