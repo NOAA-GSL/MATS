@@ -404,6 +404,7 @@ const resetApp = function(metaDataTableRecords) {
         var metaDataTables = metaDataTableRecords.getRecords();
         for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
             const metaDataRef =  metaDataTables[mdti];
+            metaDataRef.lastRefreshed = moment().format();
             if (metaDataTableUpdates.find({name:metaDataRef.name}).count() == 0) {
                 metaDataTableUpdates.update({name:metaDataRef.name},metaDataRef, {upsert:true});
             }

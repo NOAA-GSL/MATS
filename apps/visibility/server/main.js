@@ -65,7 +65,7 @@ const doCurveParams = function () {
     }
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT short_name,description FROM region_descriptions_dev;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -470,9 +470,7 @@ const doPlotGraph = function () {
 
 
 Meteor.startup(function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Databases.remove({});
-    }
+    matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
             name: "sumSetting",
@@ -492,6 +490,16 @@ Meteor.startup(function () {
             user: 'readonly',
             password: 'ReadOnly@2016!',
             database: 'visibility',
+            connectionLimit: 10
+        });
+        matsCollections.Databases.insert({
+            name: "metadataSetting",
+            role: "metadata",
+            status: "active",
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'mats_common',
             connectionLimit: 10
         });
     }
@@ -522,8 +530,20 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "visibility", ['region_descriptions_dev', 'threshold_descriptions']);
+    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+// the pool is intended to be global
+    metadataPool = mysql.createPool(metadataSettings);
+
+
+    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "visibility", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "visibility_sums2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 

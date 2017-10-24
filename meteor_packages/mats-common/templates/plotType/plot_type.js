@@ -72,8 +72,14 @@ Template.plotType.events({
                     }
                 }
                 Session.set('Curves',curves);
-                Session.set("lastUpdate", Date.now());
             }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
             return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
@@ -99,8 +105,14 @@ Template.plotType.events({
                     }
                 }
                 Session.set("Curves", curves);
-                Session.set("lastUpdate", Date.now());
             }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
             return false;
@@ -129,8 +141,14 @@ Template.plotType.events({
                     }
                 }
                 Session.set("Curves", curves);
-                Session.set("lastUpdate", Date.now());
             }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
             return false;
@@ -148,6 +166,13 @@ Template.plotType.events({
             matsCurveUtils.showScatterFace();
             Session.set("confirmPlotChange","");
             Session.set('plotChangeType',"");
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
             return false;
         } else {
             if (Session.get("Curves").length > 0 ) {

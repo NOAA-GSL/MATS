@@ -19,5 +19,13 @@ Template.Home.onCreated(function() {
 Template.Home.helpers({
     isUnderConstruction: function () {
         return matsCollections.CurveParams.findOne({name:'underConstruction'}) !== undefined;
+    },
+    resetDefaults: function() {
+        matsMethods.refreshMetaData.call({}, function (error, result) {
+            if (error !== undefined) {
+                setError(new Error(error.message));
+            }
+            matsParamUtils.setAllParamsToDefault();
+        });
     }
 });

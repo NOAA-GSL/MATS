@@ -62,7 +62,7 @@ const doCurveParams = function () {
 
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT short_name,description FROM region_descriptions_dev;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -451,9 +451,7 @@ var doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Databases.remove({});
-    }
+    matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
             name: "sumSetting",
@@ -468,17 +466,17 @@ Meteor.startup(function () {
     }
 
     matsCollections.Databases.insert({
-        name: "modelSetting",
-        role: "model_data",
+        name: "metadataSetting",
+        role: "metadata",
         status: "active",
         host: 'wolphin.fsl.noaa.gov',
         user: 'readonly',
         password: 'ReadOnly@2016!',
-        database: 'madis3',
+        database: 'mats_common',
         connectionLimit: 10
     });
 
-    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
         host: 1,
         user: 1,
         password: 1,
@@ -486,10 +484,7 @@ Meteor.startup(function () {
         connectionLimit: 1
     });
     // the pool is intended to be global
-    modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
+    metadataPool = mysql.createPool(metadataSettings);
 
     const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
@@ -504,7 +499,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "madis3", ['region_descriptions_dev']);
+    const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums", ['regions_per_model_mats_all_categories']);
     matsMethods.resetApp(mdr);
 });

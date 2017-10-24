@@ -1058,6 +1058,7 @@ var doPlotGraph = function () {
 };
 
 Meteor.startup(function () {
+    matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
             name: "wfip2Setting",

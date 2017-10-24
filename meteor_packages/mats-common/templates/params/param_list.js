@@ -11,11 +11,6 @@ function shadeRGBColor(color, percent) {
 }
 Template.paramList.helpers({
     CurveParamGroups: function() {
-        // matsMethods.refreshMetaData.call({}, function (error, result) {
-        //     if (error !== undefined) {
-        //         setError(new Error(error.message));
-        //     }
-        // });
         var lastUpdate = Session.get('lastUpdate');
         var groupNums = [];
         var params = matsCollections.CurveParams.find({}).fetch();
@@ -72,9 +67,8 @@ Template.paramList.events({
             if (error !== undefined) {
                 setError(new Error(error.message));
             }
-            Session.set("lastUpdate", Date.now());
+            matsParamUtils.setAllParamsToDefault();
         });
-        matsParamUtils.setAllParamsToDefault();
     },
     'click .expand': function() {
         matsParamUtils.expandParams();

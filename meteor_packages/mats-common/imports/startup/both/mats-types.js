@@ -94,7 +94,9 @@ class MetaDataDBRecord {
         if (! tables instanceof Array) {
             throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
         }
-        this._records = [{pool:poolName, name:dbName, tables:tables}];
+        this._records = [];
+        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        this._records.push(record);
     }
 
     addRecord(poolName, dbName, tables) {
@@ -107,7 +109,8 @@ class MetaDataDBRecord {
         if (! tables instanceof Array) {
             throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
         }
-        this._records = this._records.push({pool:poolName, name:dbName, tables:tables});
+        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        this._records.push(record);
     }
 
     getRecords() {

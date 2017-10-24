@@ -68,7 +68,7 @@ const doCurveParams = function () {
     var masterThresholdValuesMap = {};
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT short_name,description FROM region_descriptions_dev;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -285,7 +285,8 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]]
+                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+                    default:thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0]
                 }
             });
         }
@@ -473,9 +474,7 @@ const doPlotGraph = function () {
 
 
 Meteor.startup(function () {
-    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Databases.remove({});
-    }
+    matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
             name: "sumSetting",
@@ -497,6 +496,16 @@ Meteor.startup(function () {
             database: 'ceiling2',
             connectionLimit: 10
         });
+        matsCollections.Databases.insert({
+            name: "metadata",
+            role: "metadata",
+            status: "active",
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'mats_common',
+            connectionLimit: 10
+        });
     }
 
     const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
@@ -508,9 +517,16 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
+
+    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
     });
+    // the pool is intended to be global
+    metadataPool = mysql.createPool(metadataSettings);
 
     const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
@@ -525,8 +541,9 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling2", ['region_descriptions_dev', 'threshold_descriptions']);
+    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling2", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "ceiling_sums2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 
