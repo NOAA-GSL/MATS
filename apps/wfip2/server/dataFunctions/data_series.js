@@ -206,7 +206,7 @@ dataSeries = function (plotParams, plotFunction) {
 
 
                 statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause  + " order by avtime";
-                console.log("statement: for curve " + curve.label + " --- " + statement);
+                //console.log("statement: for curve " + curve.label + " --- " + statement);
                 dataRequests[curve.label] = statement;
                 var queryResult;
                 var startMoment;
