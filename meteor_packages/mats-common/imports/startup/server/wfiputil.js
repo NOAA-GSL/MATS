@@ -519,6 +519,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     realInterval = nextTime - time;
                 }
             }
+            if (Object.keys(resultData).length == 0) {
+                // there is no MATCHING data that can be returned
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            }
             dFuture['return']();
         }
     });

@@ -205,8 +205,8 @@ dataSeries = function (plotParams, plotFunction) {
                 }
 
 
-                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
-                //console.log("statement: " + statement);
+                statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause  + " order by avtime";
+                console.log("statement: for curve " + curve.label + " --- " + statement);
                 dataRequests[curve.label] = statement;
                 var queryResult;
                 var startMoment;
@@ -278,9 +278,9 @@ dataSeries = function (plotParams, plotFunction) {
                             " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                             " and fcst_utc_offset =" + 3600 * forecastLength +
                             " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) + utcOffset) +
-                            " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset) + " order by avtime";
+                            " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) + utcOffset);
                     }
-                    truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause;
+                    truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause  + " order by avtime";
                     //console.log("statement: " + truthStatement);
                     dataRequests['truth-' + curve.label] = truthStatement;
                     try {
