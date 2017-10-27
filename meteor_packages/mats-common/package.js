@@ -19,6 +19,7 @@ Package.onUse(function(api) {
     "meteor-node-stubs":"0.2.3",
     "url":"0.11.0",
     "jquery-ui": "1.12.1",
+    "dom-to-image":"2.6.0"
   });
   api.mainModule("server/main.js", "server");
   api.mainModule("client/main.js", "client");

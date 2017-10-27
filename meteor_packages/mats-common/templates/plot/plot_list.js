@@ -371,6 +371,7 @@ Template.plotList.events({
                     document.getElementById("textSeriesView").style.display = "none";
                     document.getElementById("textProfileView").style.display = "none";
                 });
+
                 break;
         }
         return false;
