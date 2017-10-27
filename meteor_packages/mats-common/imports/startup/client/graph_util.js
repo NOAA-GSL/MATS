@@ -80,7 +80,7 @@ const normalizeYAxis = function (ranges, options) {
     return options;
 };
 
-const drawGraph = function(ranges, options) {
+const drawGraph = function(ranges, dataset, options) {
     var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges,options));
     plot = $.plot(placeholder, dataset, zOptions);
 };
@@ -130,7 +130,7 @@ const normalizeYAxisByRanges = function (ranges) {
     return axis;
 };
 
-const drawGraphByRanges = function(ranges) {
+const drawGraphByRanges = function(ranges, dataset, options) {
     var zOptions = $.extend(true, {}, options, normalizeYAxisByRanges(ranges));
     plot = $.plot(placeholder, dataset, zOptions);
 };

@@ -202,7 +202,7 @@ graphProfile = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        matsGraphUtils.drawGraph(ranges, plot.getOptions());
+        matsGraphUtils.drawGraph(ranges, dataset, plot.getOptions());
     });
 
     matsGraphUtils.setNoDataLabels(dataset);

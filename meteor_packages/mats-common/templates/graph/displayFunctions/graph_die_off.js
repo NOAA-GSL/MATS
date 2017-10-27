@@ -146,7 +146,7 @@ graphDieOff = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        matsGraphUtils.drawGraphByRanges(ranges);
+        matsGraphUtils.drawGraphByRanges(ranges,dataset,options);
     });
 
     matsGraphUtils.setNoDataLabels(dataset);
