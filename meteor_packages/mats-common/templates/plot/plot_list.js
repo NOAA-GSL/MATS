@@ -317,6 +317,7 @@ Template.plotList.events({
                 break;
             case "plot":
             default:
+                matsCurveUtils.resizeGraph(matsPlotUtils.getPlotType());
                 var pt = matsPlotUtils.getPlotType();
                 var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
                 if (pgf === undefined) {

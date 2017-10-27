@@ -24,9 +24,9 @@ var height = function () {
     }
 };
 
-//$(window).on('resize orientationChange', function(event) {
 Template.graph.onCreated(function () {
     $(window).resize(function () {
+        console.log ("graph resizng now");
         switch (Session.get('graphViewMode')) {
             case matsTypes.PlotView.graph:
                 //console.log($(window).height());
@@ -290,6 +290,7 @@ Template.graph.events({
         document.getElementById('curve-text-buttons-grp').style.display = 'block';
     },
     'click .publish': function () {
+        matsCurveUtils.showSpinner();
         Session.set("printMode", true);
          document.getElementById('graph-control').style.display = 'none';
          document.getElementById('curve-text-buttons-grp').style.display = 'none';
@@ -301,29 +302,29 @@ Template.graph.events({
                 img.onload = function() {
                     var width = img.width;
                     var height = img.height;
-                    var ratio = height / width;
+                    const ratio = height / width;
                     width = width * 0.6;
                     height = width * ratio;
                     var canvas = document.createElement("canvas");
-                    var ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext("2d");
                     canvas.width = width;
                     canvas.height = height;
-                    canvas.position = "relative";
-                    canvas.top = 0;
-                    canvas.left = 0;
-                    canvas.margin = "20px";
                     ctx.drawImage(img, 0, 0, width, height);
-                    var newDataUrl = canvas.toDataURL("image/png");
-                    var wind = window.open("image","_blank","height=" + height + ",width=" + width);
-                    wind.document.write("<html><body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
+                    const newDataUrl = canvas.toDataURL("image/png");
+                    const wind = window.open("image","_blank","left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
+                    wind.document.write("<html><head><title>Plot</title></head>" +
+                        "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
                     document.getElementById('graph-control').style.display = 'block';
                     document.getElementById('curve-text-buttons-grp').style.display = 'block';
+                    setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
+                    matsCurveUtils.hideSpinner();
                 }
             })
             .catch(function (error) {
-                console.error('oops, something went wrong!', error);
+                console.error('Graph.publish error, ', error);
                 document.getElementById('graph-control').style.display = 'block';
                 document.getElementById('curve-text-buttons-grp').style.display = 'block';
+                matsCurveUtils.hideSpinner();
             });
     },
     'click .reload': function () {
