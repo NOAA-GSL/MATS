@@ -10,8 +10,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.24-2017.10.25.22.00",
-      "buildDate": "2017.10.25.22.00",
+      "version": "1.5.25-2017.10.27.18.48",
+      "buildDate": "2017.10.27.18.48",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -66,13 +66,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-<<<<<<< HEAD
       "version": "1.5.25-2017.10.26.17.06",
       "buildDate": "2017.10.26.17.06",
-=======
-      "version": "1.5.24-2017.10.26.17.04",
-      "buildDate": "2017.10.26.17.04",
->>>>>>> be25d9f93218edbdcc44eb3f20e089ee9104f504
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -286,13 +281,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-<<<<<<< HEAD
       "version": "1.5.24",
       "buildDate": "2017.10.26.17.05",
-=======
-      "version": "1.5.23",
-      "buildDate": "2017.10.26.15.48",
->>>>>>> be25d9f93218edbdcc44eb3f20e089ee9104f504
       "last_test_run": "",
       "last_test_status": ""
     }
