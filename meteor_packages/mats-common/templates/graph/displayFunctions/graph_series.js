@@ -1,4 +1,6 @@
 graphSeries = function(result) {
+    window.dispatchEvent(new Event('resize'));
+
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw,vph);

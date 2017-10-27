@@ -47,13 +47,7 @@ const refreshDependents = function (event, param) {
                     selectAllbool = document.getElementById('selectAll').checked;
                 }
                 try {
-                    //if (targetParam.type === matsTypes.InputTypes.dateRange || targetParam.type === matsTypes.InputTypes.numberSpinner) {
-                        // dispatch the refresh event
-                        targetElem.dispatchEvent(new CustomEvent("refresh"))
-                    //} else {
-                        // refresh explicitly instead of with event
-                    //    matsSelectUtils.refresh(null, targetParam.name);
-                    //}
+                    targetElem.dispatchEvent(new CustomEvent("refresh"))
                 } catch(re) {
                     re.message = "INFO: refreshDependents of: " + param.name + " dependent: " + targetParam.name + " - error: " + re.message;
                     setInfo(re.message);

@@ -5,25 +5,22 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsMethods} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
+import domtoimage from 'dom-to-image';
 
 var width = function () {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
-    if (min < 400) {
-        return (.9 * min).toString() + "px";
+    if (vpw < 400) {
+        return (.9 * vpw).toString() + "px";
     } else {
-        return (.7 * min).toString() + "px";
+        return (.8 * vpw).toString() + "px";
     }
 };
 var height = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
-    if (min < 400) {
-        return (.9 * min).toString() + "px";
+    if (vph < 400) {
+        return (.8 * vph).toString() + "px";
     } else {
-        return (.7 * min).toString() + "px";
+        return (.6 * vph).toString() + "px";
     }
 };
 
@@ -292,15 +289,42 @@ Template.graph.events({
         document.getElementById('footnav').style.display = 'block';
         document.getElementById('curve-text-buttons-grp').style.display = 'block';
     },
-    'click .print': function () {
-        alert ("Use the 'ESC' key to exit print preview mode");
+    'click .publish': function () {
         Session.set("printMode", true);
-        document.getElementById('graph-control').style.display = 'none';
-        document.getElementById('showAdministration').style.display = 'none';
-        document.getElementById('navbar').style.display = 'none';
-        document.getElementById('footnav').style.display = 'none';
-        document.getElementById('curve-text-buttons-grp').style.display = 'none';
-        document.getElementById('plotType').style.display = 'none';
+         document.getElementById('graph-control').style.display = 'none';
+         document.getElementById('curve-text-buttons-grp').style.display = 'none';
+        var node = document.getElementById("graph-container");
+        domtoimage.toPng(node)
+            .then(function (dataUrl) {
+                var img = new Image();
+                img.src=dataUrl;
+                img.onload = function() {
+                    var width = img.width;
+                    var height = img.height;
+                    var ratio = height / width;
+                    width = width * 0.6;
+                    height = width * ratio;
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.position = "relative";
+                    canvas.top = 0;
+                    canvas.left = 0;
+                    canvas.margin = "20px";
+                    ctx.drawImage(img, 0, 0, width, height);
+                    var newDataUrl = canvas.toDataURL("image/png");
+                    var wind = window.open("image","_blank","height=" + height + ",width=" + width);
+                    wind.document.write("<html><body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
+                    document.getElementById('graph-control').style.display = 'block';
+                    document.getElementById('curve-text-buttons-grp').style.display = 'block';
+                }
+            })
+            .catch(function (error) {
+                console.error('oops, something went wrong!', error);
+                document.getElementById('graph-control').style.display = 'block';
+                document.getElementById('curve-text-buttons-grp').style.display = 'block';
+            });
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
