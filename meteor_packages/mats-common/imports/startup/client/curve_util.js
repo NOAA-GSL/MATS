@@ -521,6 +521,69 @@ const get_err = function (sVals, sSecs) {
     return stats;
 };
 
+const showSpinner = function() {
+    document.getElementById("spinner").style.display = "block";
+}
+const hideSpinner = function() {
+    document.getElementById("spinner").style.display = "none";
+}
+
+const squareWidth = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw, vph);
+    if (min < 400) {
+        return (.9 * min).toString() + "px";
+    } else {
+        return (.7 * min).toString() + "px";
+    }
+};
+const squareHeight = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw, vph);
+    if (min < 400) {
+        return (.9 * min).toString() + "px";
+    } else {
+        return (.7 * min).toString() + "px";
+    }
+};
+const rectangleWidth = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    if (vpw < 400) {
+        return (.9 * vpw).toString() + "px";
+    } else {
+        return (.8 * vpw).toString() + "px";
+    }
+};
+const rectangleHeight = function () {
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    if (vph < 400) {
+        return (.8 * vph).toString() + "px";
+    } else {
+        return (.6 * vph).toString() + "px";
+    }
+};
+
+const resizeGraph = function(plotType) {
+    console.log ("resizing graph type is ", plotType );
+    switch (plotType) {
+        case matsTypes.PlotTypes.profile:
+        case matsTypes.PlotTypes.scatter2d:
+            // set the width square
+            document.getElementById('placeholder').style.width = squareWidth();
+            document.getElementById('placeholder').style.heigth = squareHeight();
+            break;
+        case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dieoff:
+            // set the width wide
+            document.getElementById('placeholder').style.width = rectangleWidth();
+            document.getElementById('placeholder').style.heigth = rectangleHeight();
+        default:
+
+    }
+}
+
 export default matsCurveUtils = {
     resetScatterApply:resetScatterApply,
     getUsedLabels:getUsedLabels,
@@ -539,7 +602,10 @@ export default matsCurveUtils = {
     showProfileFace:showProfileFace,
     showDieOffFace:showDieOffFace,
     get_err:get_err,
-    PlotResult:PlotResult
+    PlotResult:PlotResult,
+    showSpinner:showSpinner,
+    hideSpinner:hideSpinner,
+    resizeGraph:resizeGraph
 };
 
             
