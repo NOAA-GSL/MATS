@@ -54,7 +54,7 @@
         <div id="curves" class="row container-fluid">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp" class="btn-group btn-xs">
+                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
                     {{#if errorBarsAllowed}}

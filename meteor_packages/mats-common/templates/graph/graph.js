@@ -121,7 +121,10 @@ Template.graph.onCreated(function () {
             document.getElementById('showAdministration').style.display = 'block';
             document.getElementById('navbar').style.display = 'block';
             document.getElementById('footnav').style.display = 'block';
-            document.getElementById('curve-text-buttons-grp').style.display = 'block';
+            var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+            for (var i=0; i < ctbgElems.length; i++){
+                ctbgElems[i].style.display = 'block';
+            }
             document.getElementById('plotType').style.display = 'block';
             Session.set("printMode", false);
         }
@@ -287,16 +290,28 @@ Template.graph.events({
         document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
-        document.getElementById('curve-text-buttons-grp').style.display = 'block';
+
+        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+        for (var i=0; i < ctbgElems.length; i++){
+            ctbgElems[i].style.display = 'block';
+        }
     },
     'click .publish': function () {
         matsCurveUtils.showSpinner();
         Session.set("printMode", true);
-         document.getElementById('graph-control').style.display = 'none';
-         document.getElementById('curve-text-buttons-grp').style.display = 'none';
+        document.getElementById('graph-control').style.display = 'none';
+        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+        for (var i=0; i < ctbgElems.length; i++){
+            ctbgElems[i].style.display = 'none';
+        }
         var node = document.getElementById("graph-container");
         domtoimage.toPng(node)
             .then(function (dataUrl) {
+                document.getElementById('graph-control').style.display = 'block';
+                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+                for (var i=0; i < ctbgElems.length; i++){
+                    ctbgElems[i].style.display = 'block';
+                }
                 var img = new Image();
                 img.src=dataUrl;
                 img.onload = function() {
@@ -315,7 +330,10 @@ Template.graph.events({
                     wind.document.write("<html><head><title>Plot</title></head>" +
                         "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
                     document.getElementById('graph-control').style.display = 'block';
-                    document.getElementById('curve-text-buttons-grp').style.display = 'block';
+                    var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+                    for (var i=0; i < ctbgElems.length; i++){
+                        ctbgElems[i].style.display = 'block';
+                    }
                     setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
                     matsCurveUtils.hideSpinner();
                 }
@@ -323,7 +341,10 @@ Template.graph.events({
             .catch(function (error) {
                 console.error('Graph.publish error, ', error);
                 document.getElementById('graph-control').style.display = 'block';
-                document.getElementById('curve-text-buttons-grp').style.display = 'block';
+                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
+                for (var i=0; i < ctbgElems.length; i++){
+                    ctbgElems[i].style.display = 'block';
+                }
                 matsCurveUtils.hideSpinner();
             });
     },
