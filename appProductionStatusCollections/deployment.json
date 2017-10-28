@@ -10,8 +10,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.25-2017.10.27.18.48",
-      "buildDate": "2017.10.27.18.48",
+      "version": "1.5.26-2017.10.28.06.02",
+      "buildDate": "2017.10.28.06.02",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -150,81 +150,6 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.23",
-      "buildDate": "2017.10.12.19.09",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "anomalycor",
-      "title": "Anomaly Correlation",
-      "version": "1.5.23",
-      "buildDate": "2017.10.12.19.13",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "ceiling",
-      "title": "Ceiling",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.16",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "visibility",
-      "title": "Visibility",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.18",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "surface",
-      "title": "Surface",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.21",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "precipitation",
-      "title": "Precipitation",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.23",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "radarReflectivity",
-      "title": "Radar Reflectivity",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.25",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
-      "app": "wfip2",
-      "title": "WFIP2",
-      "version": "1.5.22",
-      "buildDate": "2017.10.12.19.28",
-      "last_test_run": "",
-      "last_test_status": ""
-    }
-  ]
-}
-{
-  "_id": {
-    "$oid": "59c41f97146ff98462fe0418"
-  },
-  "deployment_environment": "integration",
-  "servers": [
-    "mats-int.gsd.esrl.noaa.gov"
-  ],
-  "apps": [
-    {
-      "app": "upperair",
-      "title": "Upper air",
       "version": "1.5.24",
       "buildDate": "2017.10.26.15.30",
       "last_test_run": "",
@@ -283,6 +208,81 @@
       "title": "WFIP2",
       "version": "1.5.24",
       "buildDate": "2017.10.26.17.05",
+      "last_test_run": "",
+      "last_test_status": ""
+    }
+  ]
+}
+{
+  "_id": {
+    "$oid": "59c41f97146ff98462fe0418"
+  },
+  "deployment_environment": "integration",
+  "servers": [
+    "mats-int.gsd.esrl.noaa.gov"
+  ],
+  "apps": [
+    {
+      "app": "upperair",
+      "title": "Upper air",
+      "version": "1.5.25",
+      "buildDate": "2017.10.27.19.43",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "anomalycor",
+      "title": "Anomaly Correlation",
+      "version": "1.5.25",
+      "buildDate": "2017.10.27.19.46",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "ceiling",
+      "title": "Ceiling",
+      "version": "1.5.24",
+      "buildDate": "2017.10.27.19.48",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "visibility",
+      "title": "Visibility",
+      "version": "1.5.24",
+      "buildDate": "2017.10.27.19.50",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "surface",
+      "title": "Surface",
+      "version": "1.5.24",
+      "buildDate": "2017.10.27.19.52",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation",
+      "title": "Precipitation",
+      "version": "1.5.24",
+      "buildDate": "2017.10.27.19.55",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "radarReflectivity",
+      "title": "Radar Reflectivity",
+      "version": "1.5.24",
+      "buildDate": "2017.10.27.19.57",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "wfip2",
+      "title": "WFIP2",
+      "version": "1.5.25",
+      "buildDate": "2017.10.27.19.59",
       "last_test_run": "",
       "last_test_status": ""
     }
