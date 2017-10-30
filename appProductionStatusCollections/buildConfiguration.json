@@ -225,49 +225,49 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 3,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 4,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 5,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitation",
       "displayName": "Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
       "displayOrder": 7,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 8,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     }
   ]
 }
