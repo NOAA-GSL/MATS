@@ -66,8 +66,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.27-2017.10.30.19.38",
-      "buildDate": "2017.10.30.19.38",
+      "version": "1.5.27-2017.10.30.20.15",
+      "buildDate": "2017.10.30.20.15",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -257,8 +257,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.25",
-      "buildDate": "2017.10.30.18.43",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.17",
       "last_test_run": "",
       "last_test_status": ""
     },
