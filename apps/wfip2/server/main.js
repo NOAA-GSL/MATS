@@ -561,19 +561,6 @@ var doCurveParams = function () {
                 displayGroup: 3,
                 help: 'wfip2-statistic.html'
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'statistic'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'statistic'}, {
-                $set: {
-                    optionsMap: statisticOptionsMap,
-                    options: Object.keys(statisticOptionsMap),   // convenience
-                }
-            });
-        }
-
     }
     console.log('doCurveParams - 8');
 
