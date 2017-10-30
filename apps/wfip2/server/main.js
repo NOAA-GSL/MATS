@@ -13,6 +13,7 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 var doScatter2dParams = function () {
+    console.log('doScatter2dParams');
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Scatter2dParams.remove({});
     }
@@ -48,6 +49,7 @@ var doScatter2dParams = function () {
 };
 
 var doPlotParams = function () {
+    console.log('doPlotParams');
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
@@ -110,6 +112,7 @@ var doPlotParams = function () {
 };
 
 var doCurveParams = function () {
+    console.log('doCurveParams');
     var datesMap = {};
     var modelOptionsMap = {};
     var regionOptionsMap = {};
@@ -129,7 +132,7 @@ var doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-
+    console.log('doCurveParams - 0');
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
@@ -184,7 +187,7 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
+    console.log('doCurveParams - 1');
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
         matsCollections.Instruments.remove({});
@@ -286,7 +289,7 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
+    console.log('doCurveParams - 2');
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select D.name as name, min_value, max_value, label from discriminator_range as D, variables as V where D.name = V.name;");
         for (var i = 0; i < rows.length; i++) {
@@ -303,6 +306,7 @@ var doCurveParams = function () {
         console.log("Database error:", err.message);
     }
 
+    console.log('doCurveParams - 3');
     try {
         var all_fcst_lens = new Set();
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from fl_per_model");
@@ -370,6 +374,7 @@ var doCurveParams = function () {
     }
 
 
+    console.log('doCurveParams - 4');
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         var optionsMap = {};
         matsCollections.CurveParams.insert(
@@ -421,6 +426,7 @@ var doCurveParams = function () {
                 });
         }
     }
+    console.log('doCurveParams - 5');
 
     if (matsCollections.CurveParams.findOne({name: 'discriminator'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -492,6 +498,7 @@ var doCurveParams = function () {
         }
     }
 
+    console.log('doCurveParams - 6');
     if (matsCollections.CurveParams.findOne({name: 'lower'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -527,6 +534,7 @@ var doCurveParams = function () {
             });
         }
     }
+    console.log('doCurveParams - 7');
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         var statisticOptionsMap = {
@@ -567,6 +575,7 @@ var doCurveParams = function () {
         }
 
     }
+    console.log('doCurveParams - 8');
 
     if (matsCollections.CurveParams.findOne({name: 'truth-data-source'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -600,6 +609,7 @@ var doCurveParams = function () {
             });
         }
     }
+    console.log('doCurveParams - 9');
 
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -649,6 +659,7 @@ var doCurveParams = function () {
                 multiple: true
             });
     }
+    console.log('doCurveParams - 10');
 
     if (matsCollections.CurveParams.findOne({name: 'sites'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -775,6 +786,7 @@ var doCurveParams = function () {
             });
         }
     }
+    console.log('doCurveParams - 11');
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         optionsMap = {};
@@ -1020,12 +1032,15 @@ var doScatterAxisTextPattern = function () {
 };
 
 var doSavedCurveParams = function () {
+    console.log('doSavedCurveParams');
+
     if (matsCollections.SavedCurveParams.find().count() == 0) {
         matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
     }
 };
 
 var doPlotGraph = function () {
+    console.log('doPlotGraph');
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
