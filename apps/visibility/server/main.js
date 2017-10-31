@@ -4,14 +4,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
-var modelOptionsMap = {};
-var regionModelOptionsMap = {};
-var forecastLengthOptionsMap = {};
-// this should be in the metdata someday
-var thresholdsModelOptionsMap = {};
-var forecastLengthModels = [];
-var masterRegionValuesMap = {};
-var masterThresholdValuesMap = {};
+
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -63,6 +56,14 @@ const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
+    var modelOptionsMap = {};
+    var regionModelOptionsMap = {};
+    var forecastLengthOptionsMap = {};
+// this should be in the metdata someday
+    var thresholdsModelOptionsMap = {};
+    var forecastLengthModels = [];
+    var masterRegionValuesMap = {};
+    var masterThresholdValuesMap = {};
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
