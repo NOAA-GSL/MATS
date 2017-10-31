@@ -129,7 +129,6 @@ var doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
@@ -184,7 +183,6 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
         matsCollections.Instruments.remove({});
@@ -286,7 +284,6 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select D.name as name, min_value, max_value, label from discriminator_range as D, variables as V where D.name = V.name;");
         for (var i = 0; i < rows.length; i++) {
@@ -553,19 +550,6 @@ var doCurveParams = function () {
                 displayGroup: 3,
                 help: 'wfip2-statistic.html'
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'statistic'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, statisticOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'statistic'}, {
-                $set: {
-                    optionsMap: statisticOptionsMap,
-                    options: Object.keys(statisticOptionsMap),   // convenience
-                }
-            });
-        }
-
     }
 
     if (matsCollections.CurveParams.findOne({name: 'truth-data-source'}) == undefined) {

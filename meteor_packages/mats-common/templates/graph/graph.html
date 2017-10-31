@@ -8,6 +8,7 @@
                 <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
+                <button type="button" class="preview btn btn-primary fa fa-eye">&nbsp;Preview</button>
                 <button type="button" class="publish btn btn-primary fa fa-print">&nbsp;Publish</button>
                 <button type="button" class="btn spacebutton" id="spacer"></button>
                 <button id = "textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style= "display:block;">&nbsp;Text</button>
@@ -54,7 +55,7 @@
         <div id="curves" class="row container-fluid">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp" class="btn-group btn-xs">
+                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
                     {{#if errorBarsAllowed}}
