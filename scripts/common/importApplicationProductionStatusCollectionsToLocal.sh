@@ -1,10 +1,12 @@
 #!/bin/bash
-
-# Used to export CurveSettings from a remote mats server and import them into the local development machine.
-# most commonly used to export the CurveSettings collection on mats.gsd.esrl.noaa.gov
-# then scp the export file to local development, and then import the settings into the CurveSettings collection on localhost
-# mongoimport -h localhost:3001 --db meteor -c CurveSettings --file /tmp/CurveSettings.json --upsert
-# meteor has to be running your app.
-# you have to download and extract mongodb to your development workstation from mongodb.org
-
-. ${PWD}/app_production_utilities.source
+# Used to export the appProductionStatus mongo database from mats.gsd.esrl.noaa.gov
+# and then import it into your local appProductionStatus mongo collection for
+# development.
+# assumes that you have installed mongodb on your local system (to get mongo import) and
+# that you have cloned MATS_for_EMB into a ${HOME}/WebstormProjects/MATS_for_EMB directory
+. ${HOME}/WebstormProjects/MATS_for_EMB/scripts/common/app_production_utilities.source
+localtmpfile=/tmp/appProductionStatusCollections
+mkdir -p ${localtmpfile}
+exportCollections ${localtmpfile}
+mongoimport -h localhost:3001 --db meteor -c deployment --file ${localtmpfile}/deployment.json --upsert
+mongoimport -h localhost:3001 --db meteor -c buildConfiguration --file ${localtmpfile}/buildConfiguration.json --upsert
