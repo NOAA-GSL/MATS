@@ -10,8 +10,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.27-2017.10.30.19.21",
-      "buildDate": "2017.10.30.19.21",
+      "version": "1.5.28-2017.10.31.17.26",
+      "buildDate": "2017.10.31.17.26",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -150,64 +150,64 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.25",
-      "buildDate": "2017.10.27.19.43",
+      "version": "1.5.27",
+      "buildDate": "2017.10.30.20.07",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.25",
-      "buildDate": "2017.10.27.19.46",
+      "version": "1.5.27",
+      "buildDate": "2017.10.30.20.10",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.24",
-      "buildDate": "2017.10.27.19.48",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.12",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.24",
-      "buildDate": "2017.10.27.19.50",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.14",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.24",
-      "buildDate": "2017.10.27.19.52",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.17",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation",
       "title": "Precipitation",
-      "version": "1.5.24",
-      "buildDate": "2017.10.27.19.55",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.19",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "radarReflectivity",
       "title": "Radar Reflectivity",
-      "version": "1.5.24",
-      "buildDate": "2017.10.27.19.57",
+      "version": "1.5.26",
+      "buildDate": "2017.10.30.20.21",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.25",
-      "buildDate": "2017.10.27.19.59",
+      "version": "1.5.27",
+      "buildDate": "2017.10.30.20.28",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -281,8 +281,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.26",
-      "buildDate": "2017.10.30.18.50",
+      "version": "1.5.27",
+      "buildDate": "2017.10.30.20.28",
       "last_test_run": "",
       "last_test_status": ""
     }
