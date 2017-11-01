@@ -898,6 +898,7 @@ const queryDieoffDB = function (pool, statement, interval) {
 };
 
 const querySeriesDB = function (pool, statement, interval, averageStr) {
+    //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
