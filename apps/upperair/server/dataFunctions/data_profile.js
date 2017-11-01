@@ -47,13 +47,17 @@ dataProfile = function(plotParams, plotFunction) {
         var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statistic;
         if (variableStr == 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
+            var statKey = statisticSelect + '-winds';
+            statistic = statistic + "," + statAuxMap[statKey];
         } else {
             statistic = statisticOptionsMap[statisticSelect][0];
+            var statKey = statisticSelect + '-other';
+            statistic = statistic + "," + statAuxMap[statKey];
         }
-        statistic = statistic + "," + statisticOptionsMap[statisticSelect][2];
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var validTimeStr = curve['valid-time'];
@@ -101,6 +105,7 @@ dataProfile = function(plotParams, plotFunction) {
             var queryResult;
             var startMoment = moment();
             var finishMoment;
+            console.log("query is: " + statement);
             try {
                 queryResult = matsDataUtils.queryProfileDB(sumPool, statement, statisticSelect, label);
                 finishMoment = moment();
