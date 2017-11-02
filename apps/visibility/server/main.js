@@ -64,9 +64,8 @@ const doCurveParams = function () {
     var forecastLengthModels = [];
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
-    var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -79,7 +78,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < rows.length; j++) {
@@ -92,7 +91,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh from regions_per_model_mats_all_categories;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
