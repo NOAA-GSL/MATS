@@ -52,23 +52,30 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "precipitation",
-      "displayName": "Precipitation",
+      "app": "precipitation24hr",
+      "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "precipitationSub24hr",
+      "displayName": "Sub 24 Hour Precipitation",
+      "displayOrder": 7,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
-      "displayOrder": 7,
+      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 8,
+      "displayOrder": 9,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
@@ -128,79 +135,93 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "precipitation",
-      "displayName": "Precipitation",
+      "app": "precipitation24hr",
+      "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "precipitationSub24hr",
+      "displayName": "Sub 24 Hour Precipitation",
+      "displayOrder": 7,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
-      "displayOrder": 7,
+      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 8,
+      "displayOrder": 9,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "upperair-previous",
       "displayName": "Upper Air Previous",
-      "displayOrder": 9,
+      "displayOrder": 10,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
-      "displayOrder": 10,
+      "displayOrder": 11,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "ceiling-previous",
       "displayName": "Ceiling Previous",
-      "displayOrder": 11,
+      "displayOrder": 12,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "visibility-previous",
       "displayName": "Visibility Previous",
-      "displayOrder": 12,
+      "displayOrder": 13,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "surface-previous",
       "displayName": "Surface Previous",
-      "displayOrder": 13,
+      "displayOrder": 14,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
-      "app": "precipitation-previous",
-      "displayName": "Precipitation Previous",
-      "displayOrder": 14,
+      "app": "precipitation24hr-previous",
+      "displayName": "24 Hour Precipitation Previous",
+      "displayOrder": 15,
+      "deploymentStatus": "enabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "precipitationSub24hr-previous",
+      "displayName": "Sub 24 Hour Precipitation Previous",
+      "displayOrder": 16,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "radarReflectivity-previous",
       "displayName": "Radar Reflectivity Previous",
-      "displayOrder": 15,
+      "displayOrder": 17,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "wfip2-previous",
       "displayName": "Wfip2 Previous",
-      "displayOrder": 16,
+      "displayOrder": 18,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     }
@@ -252,21 +273,27 @@
       "deploymentStatus": "enabled"
     },
     {
-      "app": "precipitation",
-      "displayName": "Precipitation",
+      "app": "precipitation24hr",
+      "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
+      "deploymentStatus": "enabled"
+    },
+    {
+      "app": "precipitationSub24hr",
+      "displayName": "Sub 24 Hour Precipitation",
+      "displayOrder": 7,
       "deploymentStatus": "enabled"
     },
     {
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
-      "displayOrder": 7,
+      "displayOrder": 8,
       "deploymentStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 8,
+      "displayOrder": 9,
       "deploymentStatus": "enabled"
     }
   ]

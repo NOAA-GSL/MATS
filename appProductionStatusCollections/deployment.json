@@ -10,48 +10,56 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.28-2017.11.01.16.33",
-      "buildDate": "2017.11.01.16.33",
+      "version": "1.5.29-2017.11.01.23.21",
+      "buildDate": "2017.11.01.23.21",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.28-2017.11.01.16.35",
-      "buildDate": "2017.11.01.16.35",
+      "version": "1.5.29-2017.11.01.23.23",
+      "buildDate": "2017.11.01.23.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.27-2017.11.01.16.37",
-      "buildDate": "2017.11.01.16.37",
+      "version": "1.5.28-2017.11.01.23.25",
+      "buildDate": "2017.11.01.23.25",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.27-2017.11.01.16.39",
-      "buildDate": "2017.11.01.16.39",
+      "version": "1.5.28-2017.11.01.23.27",
+      "buildDate": "2017.11.01.23.27",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.27-2017.11.01.16.41",
-      "buildDate": "2017.11.01.16.41",
+      "version": "1.5.28-2017.11.01.23.30",
+      "buildDate": "2017.11.01.23.30",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
-      "app": "precipitation",
-      "title": "Precipitation",
-      "version": "1.5.27-2017.11.01.16.44",
-      "buildDate": "2017.11.01.16.44",
+      "app": "precipitation24hr",
+      "title": "24 Hour Precipitation",
+      "version": "1.5.28-2017.11.01.23.32",
+      "buildDate": "2017.11.01.23.32",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitationSub24hr",
+      "title": "Sub 24 Hour Precipitation",
+      "version": "1.5.27-2017.11.01.16.41",
+      "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -112,10 +120,18 @@
       "last_test_status": ""
     },
     {
-      "app": "precipitation-previous",
-      "title": "Precipitation previous",
-      "version": "1.5.20-2017.09.21.16.16",
-      "buildDate": "2017.09.21.16.16",
+      "app": "precipitation24hr",
+      "title": "24 Hour Precipitation",
+      "version": "1.5.27-2017.11.01.16.41",
+      "buildDate": "2017.11.01.19.33",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitationSub24hr",
+      "title": "Sub 24 Hour Precipitation",
+      "version": "1.5.27-2017.11.01.16.41",
+      "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -188,10 +204,18 @@
       "last_test_status": ""
     },
     {
-      "app": "precipitation",
-      "title": "Precipitation",
-      "version": "1.5.26",
-      "buildDate": "2017.10.30.20.19",
+      "app": "precipitation24hr",
+      "title": "24 Hour Precipitation",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.33",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitationSub24hr",
+      "title": "Sub 24 Hour Precipitation",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -225,8 +249,8 @@
     {
       "app": "upperair",
       "title": "Upper air",
-      "version": "1.5.28",
-      "buildDate": "2017.11.01.19.22",
+      "version": "1.5.29",
+      "buildDate": "2017.11.02.13.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -265,6 +289,22 @@
     {
       "app": "precipitation",
       "title": "Precipitation",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.33",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitation24hr",
+      "title": "24 Hour Precipitation",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.33",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "precipitationSub24hr",
+      "title": "Sub 24 Hour Precipitation",
       "version": "1.5.27",
       "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
