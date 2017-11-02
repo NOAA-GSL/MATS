@@ -50,8 +50,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.28-2017.11.01.23.32",
-      "buildDate": "2017.11.01.23.32",
+      "version": "1.5.27-2017.11.01.16.41",
+      "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -249,40 +249,40 @@
     {
       "app": "upperair",
       "title": "Upper air",
-      "version": "1.5.29",
-      "buildDate": "2017.11.02.13.15",
+      "version": "1.5.28",
+      "buildDate": "2017.11.01.19.22",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.29",
-      "buildDate": "2017.11.02.13.02",
+      "version": "1.5.28",
+      "buildDate": "2017.11.01.19.24",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.28",
-      "buildDate": "2017.11.02.13.04",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.28",
-      "buildDate": "2017.11.02.13.06",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.28",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.28",
-      "buildDate": "2017.11.02.13.08",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.31",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -297,8 +297,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.28",
-      "buildDate": "2017.11.02.13.10",
+      "version": "1.5.27",
+      "buildDate": "2017.11.01.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
