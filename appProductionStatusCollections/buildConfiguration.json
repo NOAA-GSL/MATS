@@ -55,15 +55,15 @@
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 7,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "radarReflectivity",
@@ -276,13 +276,13 @@
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 7,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "radarReflectivity",
