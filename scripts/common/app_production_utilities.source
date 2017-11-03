@@ -186,11 +186,17 @@ getBuildableAppsForServer() {
 	openTunnel
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
-		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,_id:0});
+		db.getCollection('buildConfiguration').aggregate([
+		{\$match:{server:"${server}"}},
+		{\$unwind: '\$app_list'},
+		{\$match: {'app_list.buildStatus': 'enabled'}},
+		{\$group:{_id:null, app:{\$addToSet:"\$app_list.app"}}},
+		{\$project: {_id:0,app: 1}}
+		])
 	%EODgetBuildableAppsForServer
 	)
 	closeTunnel
-    APPS=($(echo $data | jq -r '.app_list[] | select(.app | contains ("previous") | not)[]'))
+    APPS=($(echo $data | jq -r '.app[]'))
 	echo ${APPS[@]}
 }
 
@@ -208,11 +214,17 @@ getPublishableApps() {
 	openTunnel
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
-		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.deploymentStatus':'enabled'} ]}, {"app_list.app":1,"app_list.deploymentStatus":1,_id:0});
-	%EODgetBuildableAppsForServer
+		db.getCollection('buildConfiguration').aggregate([
+		{\$match:{server:"${server}"}},
+		{\$unwind: '\$app_list'},
+		{\$match: {'app_list.deploymentStatus': 'enabled'}},
+		{\$group:{_id:null, app:{\$addToSet:"\$app_list.app"}}},
+		{\$project: {_id:0,app: 1}}
+		])
+%EODgetBuildableAppsForServer
 	)
 	closeTunnel
-	APPS=($(echo $data | jq -r '.app_list[] | select(.deploymentStatus=="enabled") | .app'))
+	APPS=($(echo $data | jq -r '.app[]'))
 	echo ${APPS[@]}
 }
 
