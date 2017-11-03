@@ -11,7 +11,6 @@ dataSeries = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    // convert dates for sql
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -21,48 +20,48 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var region = curve['region'];
-        var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
-        var thresholdSelect = curve['threshold'];
-        var thresholdOptionsMap = matsCollections.CurveParams.findOne({name: 'threshold'}, {optionsMap: 1})['optionsMap'];
-        var threshold = thresholdOptionsMap[thresholdSelect][0];
+        var regionStr = curve['region'];
+        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var thresholdStr = curve['threshold'];
+        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        threshold = threshold * 0.01;
+        var label = curve['label'];
+        var color = curve['color'];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-
+        var forecastTypeStr = curve['forecast-type'];
+        var forecastTypeOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastType = forecastTypeOptionsMap[forecastTypeStr];
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast-length'];
+        var scaleStr = curve['scale'];
+        var scaleOptionsMap = matsCollections.CurveParams.findOne({name: 'scale'}, {optionsMap: 1})['optionsMap'];
+        var scale = scaleOptionsMap[scaleStr];
         // axisKey is used to determine which axis a curve should use.
-        // This axisMap object is used like a set and if a curve has the same
+        // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
-        // The axis number is assigned to the axisMap value, which is the axisKey.
+        // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var axisKey = thresholdStr + ":" + statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
-
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select {{average}} as avtime, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 " +
-                "{{validTimeClause}} " +
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
+                "and m0.trsh = '{{threshold}}' " +
+                "and m0.accum_len = '{{forecastType}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -70,14 +69,10 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + threshold + forecastLength + '_' + region);
+            statement = statement.replace('{{data_source}}', data_source + '_' + scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTimeClause = " ";
-            if (validTimes.length > 0){
-                validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-            }
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            console.log("query=" + statement);
+            statement = statement.replace('{{threshold}}', threshold);
+            statement = statement.replace('{{forecastType}}', forecastType);
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
@@ -91,7 +86,7 @@ dataSeries = function (plotParams, plotFunction) {
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                     recordCount: queryResult.data.length
                 }
-            d = queryResult.data;
+                d = queryResult.data;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -101,27 +96,28 @@ dataSeries = function (plotParams, plotFunction) {
                     // This is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
-            }
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
 
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
                 xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
+                interval = queryResult.interval;
                 var sum = 0;
                 var count = 0;
                 for (var i = 0; i < d.length; i++) {
-                        if (d[i][1] !== null) {
-                            sum = sum + d[i][1];
-                            count++;
-                            ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
-                            ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
+                    if (d[i][1] !== null) {
+                        sum = sum + d[i][1];
+                        count++;
+                        ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
+                        ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
                     }
                 }
             }
-        } else{
+        } else {
             // this is a difference curve
             const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
             d = diffResult.dataset;
@@ -148,7 +144,7 @@ dataSeries = function (plotParams, plotFunction) {
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
-        }
+    }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
