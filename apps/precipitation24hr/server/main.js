@@ -233,7 +233,7 @@ const doCurveParams = function () {
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "threshold"],
                 controlButtonCovered: true,
-                default: 'Bak13',
+                default: 'HRRR',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -289,14 +289,14 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         var optionsMap = {
-            'CSI (Critical Success Index)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn+0.000) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'Bias (Forecast / Observed)': ['(sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn+0.000) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'PODy (POD of precip > threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+0.000) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'PODn (POD of precip < threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn+0.000) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)+0.000 as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'TSS (True Skill Score)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)+(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'HSS (Heidke Skill Score)': ['2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny))/((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0'],
-            'Ratio (fcst / total)': ['sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, count(m0.nn)/1000 as Nhrs0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0']
+            'CSI (Critical Success Index)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn+0.000) as stat'],
+            'Bias (Forecast / Observed)': ['(sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn+0.000) as stat'],
+            'PODy (POD of precip > threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+0.000) as stat'],
+            'PODn (POD of precip < threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn+0.000) as stat'],
+            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)+0.000 as stat'],
+            'TSS (True Skill Score)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)+(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat'],
+            'HSS (Heidke Skill Score)': ['2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny))/((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as stat'],
+            'Ratio (fcst / total)': ['sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat']
         };
 
         matsCollections.CurveParams.insert(
@@ -404,11 +404,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'scale'}).count() == 0) {
         optionsMap = {
-            '3 km': '03km',
-            '13 km': '13km',
-            '20 km': '20km',
-            '40 km': '40km',
-            '80 km': '80km'
+            '3 km grid': '03km',
+            '13 km grid': '13km',
+            '20 km grid': '20km',
+            '40 km grid': '40km',
+            '80 km grid': '80km'
         };
 
         matsCollections.CurveParams.insert(
@@ -422,7 +422,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '3 km',
+                default: Object.keys(optionsMap)[2],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -466,15 +466,14 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.threshold,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ' in '],
+                ['', 'data-source', ':'],
                 ['', 'regionName', ', '],
-                ['', 'statistic', ', '],
-                ['', 'threshold', ', '],
-                [' fcst_len:', 'dieoff-forecast-length', 'h '],
-                ['', 'scale', ' '],
+                ['', 'statistic', ' '],
+                ['', 'forecast-type', ' '],
+                ['', 'scale', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "scale", "dieoff-forecast-length"
+                "label", "data-source", "region", "statistic", "forecast-type", "scale"
             ],
             groupSize: 6
         });
@@ -502,9 +501,9 @@ const doPlotGraph = function () {
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
-            dataFunction: "dataDieOff",
+            plotType: matsTypes.PlotTypes.threshold,
+            graphFunction: "graphSeries",
+            dataFunction: "dataThreshold",
             checked: false
         });
     }

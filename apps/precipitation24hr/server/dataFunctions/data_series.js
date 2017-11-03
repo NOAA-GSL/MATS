@@ -55,8 +55,8 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             var statement = "select {{average}} as avtime, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 " +
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +

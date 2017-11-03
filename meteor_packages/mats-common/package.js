@@ -164,6 +164,9 @@ Package.onUse(function(api) {
   api.addFiles("templates/graph/text_dieoff_output.html", "client");
   api.addFiles("templates/graph/text_dieoff_output.js", "client");
 
+  api.addFiles("templates/graph/text_threshold_output.html", "client");
+  api.addFiles("templates/graph/text_threshold_output.js", "client");
+
   api.addFiles("templates/graph/text_scatter2d_output.html", "client");
   api.addFiles("templates/graph/text_scatter2d_output.js", "client");
 
