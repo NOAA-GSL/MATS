@@ -393,7 +393,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'none',
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
