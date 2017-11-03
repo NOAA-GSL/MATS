@@ -26,8 +26,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.28-2017.11.01.23.25",
-      "buildDate": "2017.11.01.23.25",
+      "version": "1.5.29-2017.11.03.22.50",
+      "buildDate": "2017.11.03.22.50",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -42,24 +42,24 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.28-2017.11.01.23.30",
-      "buildDate": "2017.11.01.23.30",
+      "version": "1.5.29-2017.11.03.22.47",
+      "buildDate": "2017.11.03.22.47",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.29-2017.11.03.21.42",
-      "buildDate": "2017.11.03.21.42",
+      "version": "1.5.29-2017.11.03.22.42",
+      "buildDate": "2017.11.03.22.42",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.28-2017.11.03.22.08",
-      "buildDate": "2017.11.03.22.08",
+      "version": "1.5.28-2017.11.03.22.45",
+      "buildDate": "2017.11.03.22.45",
       "last_test_run": "",
       "last_test_status": ""
     },
