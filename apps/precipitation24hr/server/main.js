@@ -502,7 +502,7 @@ const doPlotGraph = function () {
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.threshold,
-            graphFunction: "graphSeries",
+            graphFunction: "graphThreshold",
             dataFunction: "dataThreshold",
             checked: false
         });
