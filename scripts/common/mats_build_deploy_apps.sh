@@ -193,7 +193,7 @@ for app in ${apps[*]}; do
     fi
     buildVer=$(getVersionForAppForServer ${app} ${SERVER})
     git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
-    git push origin ${tag}
+    git push origin +${tag}^{commit}:${BUILD_CODE_BRANCH}
     echo -e tagged repo with ${GRN}${tag}${NC}
     cd ..
 done
