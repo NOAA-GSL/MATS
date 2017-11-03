@@ -27,10 +27,10 @@ dataSeries = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
-        const model = matsCollections.CurveParams.findOne({name: 'model'}).optionsMap[curve['model']][0];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        const tablePrefix = matsCollections.CurveParams.findOne({name: 'model'}).tableMap[curve['model']];
+        const tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
         const label = curve['label'];
         const top = curve['top'];
         const bottom = curve['bottom'];
