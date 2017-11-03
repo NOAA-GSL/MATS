@@ -75,6 +75,8 @@ if [ "X" == "X${requestedApp}" ]; then
         /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
         /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
         /usr/bin/rm -rf "${tmpDeploymentDir}/*"
+        # reset deploymentStatus to disabled for production for this app
+        disablePublicationStatusForApp ${pa}
     done
 else
     # publish just the requested one
@@ -90,6 +92,8 @@ else
     /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
     /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
     /usr/bin/rm -rf "${tmpDeploymentDir}/*"
+    # reset deploymentStatus to disabled for production for this app
+    disablePublicationStatusForApp ${requestedApp}
 fi
 
 # fix up some links for the public service endpoint
