@@ -61,7 +61,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
                 "and m0.trsh = '{{threshold}}' " +
-                "and m0.num_fcsts = '{{forecastType}}' " +
+                "and m0.accum_len = '{{forecastType}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";

@@ -172,7 +172,7 @@ const doCurveParams = function () {
         const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "show tables;");
         for (var i = 0; i < rows.length; i++) {
 
-            var model_value = rows[i]['Tables_in_precip'].replace(/_[0-80]*km.*/g, "");
+            var model_value = rows[i]['Tables_in_precip2'].replace(/_[0-80]*km.*/g, "");
             var model = model_value;    //could change model to be a more descriptive display text.
 
             if (Object.values(modelOptionsMap).indexOf(model_value) === -1) {
@@ -189,7 +189,7 @@ const doCurveParams = function () {
                 regionsArr = [];
             }
 
-            var region_value = rows[i]['Tables_in_precip'].replace(/.*[0-80]*km_/g, "");
+            var region_value = rows[i]['Tables_in_precip2'].replace(/.*[0-80]*km_/g, "");
 
             if (regionsArr.indexOf(masterRegionValuesMap[region_value]) === -1) {
                 regionsArr.push(masterRegionValuesMap[region_value]);
@@ -377,10 +377,9 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'forecast-type'}).count() == 0) {
         optionsMap = {
-            '2 12hr totals': '2',
-            '8 3hr totals': '8',
-            '24 1hr totals': '24',
-            '1 24hr total': '1'
+            '1 hr accums (1 hr total)': '1',
+            '6 hr accums (6 hr total)': '6',
+            '12 hr accums (6 hr total)': '12'
         };
 
         matsCollections.CurveParams.insert(
@@ -394,7 +393,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: '2 12hr totals',
+                default: 'none',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -521,7 +520,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'precip',
+            database: 'precip2',
             connectionLimit: 10
         });
     }
@@ -539,7 +538,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories']);
     matsMethods.resetApp(mdr);
 });
 
