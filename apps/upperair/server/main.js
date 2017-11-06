@@ -22,7 +22,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -193,10 +193,10 @@ const doCurveParams = function () {
         );
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'model'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'data-source'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
-                name: 'model',
+                name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 optionsGroups: modelOptionsGroups,
@@ -215,7 +215,7 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'model'});
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
         if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.dates, modelDateRangeMap)) ||
             (!matsDataUtils.areObjectsEqual(currentParam.tableMap, modelTableMap))) {
@@ -223,7 +223,7 @@ const doCurveParams = function () {
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
             }
-            matsCollections.CurveParams.update({name: 'model'}, {
+            matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
                     optionsGroups: modelOptionsGroups,
@@ -244,7 +244,7 @@ const doCurveParams = function () {
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[myModels[0]],   // convenience
                 valuesMap: masterRegionValuesMap,
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[myModels[0]][0],  // always use the first region for the first model
@@ -435,7 +435,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap[myModels[0]],
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -520,7 +520,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: startInit,
                 stopDate: stopInit,
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
@@ -550,7 +550,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ' in '],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
                 ['', 'statistic', ', '],
@@ -569,7 +569,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ' in '],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
                 ['', 'statistic', ', '],
@@ -589,7 +589,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ' in '],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
                 ['', 'statistic', ', '],

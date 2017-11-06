@@ -248,6 +248,140 @@ const getDieOffMatchedDataSet = function (dataset) {
     return newDataSet;
 };
 
+const getThresholdMatchedDataSet = function (dataset) {
+    var curvesLength = dataset.length;
+    var dataIndexes = {};
+    var ci;
+    var sci;
+    var trsh_vals = [3.00,2.00,1.50,1.00,0.50,0.25,0.10,0.01];
+    var trsh = trsh_vals.pop();
+    var trshMax = Number.MIN_VALUE;
+    var dataMaxInterval = Number.MIN_VALUE;
+    // set up the indexes and determine the minimum hour for the dataset
+    if (curvesLength == 1) {
+        return dataset;
+    }
+    for (ci = 0; ci < curvesLength; ci++) {
+        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
+            // one of the curves has no data. No match possible
+            for (sci = 0; sci < curvesLength; sci++) {
+                dataset[sci].data = [];
+            }
+            return dataset;
+        }
+        dataIndexes[ci] = 0;
+        trshMax = trshMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? trshMax : dataset[ci].data[dataset[ci].data.length - 1][0];
+    }
+    var done = false;
+    // find the first common start point (by trsh).
+    // if there is none then there is no matched data
+    while (!done) {
+        var same = true;
+        for (ci = 0; ci < curvesLength; ci++) {
+            if (dataIndexes[ci] >= dataset[ci].data.length) {
+                same = false;
+                done = true; // I went past the end - no coinciding points
+                break;
+            }
+            if (ci == curvesLength - 1) {
+                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
+                    dataIndexes[0]++;
+                    same = false;
+                }
+            } else {
+                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
+                    dataIndexes[ci + 1]++;
+                    same = false;
+                }
+            }
+        }
+        if (same) {
+            done = true;
+            // since they are the same just use the trsh
+            // belonging to the current dataindex of the 0th curve
+            // that will be our common start trsh
+            trsh = dataset[0].data[dataIndexes[0]][0];
+        }
+    }
+    var trshMatches;
+    var newDataSet = [];
+    while (trsh <= trshMax) {
+        trshMatches = true;
+        for (ci = 0; ci < curvesLength; ci++) {
+            // move this curves index to equal or exceed the new trsh
+            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < trsh) {
+                dataIndexes[ci]++;
+            }
+            // if the trsh isn't right or the data is null it doesn't match
+            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != trsh) {
+                trshMatches = false;
+                break;
+            } else {
+                // if there is no data entry here at this trsh it doesn't match
+                if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
+                    trshMatches = false;
+                }
+            }
+        }   // for all the curves
+        if (trshMatches) {
+            for (sci = 0; sci < curvesLength; sci++) {
+                if (!newDataSet[sci]) {
+                    newDataSet[sci] = {};
+                    var keys = Object.keys(dataset[sci]);
+                    for (var k = 0; k < keys.length; k++) {
+                        var key = keys[k];
+                        if (key == "data") {
+                            newDataSet[sci][key] = [];
+                        } else {
+                            newDataSet[sci][key] = dataset[sci][key];
+                        }
+                    }
+                }
+                const valueObject = dataset[sci].data[dataIndexes[sci]];
+                // push the data
+                newDataSet[sci].data.push(valueObject);
+            }
+        }
+        trsh = trsh_vals.pop();
+    }// while trsh
+    // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
+    for (ci = 0; ci < curvesLength; ci++) {
+        if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
+            continue;   // don't do it if there isn't an annotation
+        }
+        var sum = 0;
+        var count = 0;
+        d = newDataSet[ci].data;
+        var mean = d[0][1];
+        for (var i = 0; i < d.length; i++) {
+            if (d[i][1] !== null) {
+                sum = sum + d[i][1];
+                count++
+            }
+        }
+        if (count > 1) {
+            mean = sum / count;
+        }
+        const annotationParts = dataset[ci].annotation.split(" = ");
+        annotationParts[1] = mean === null ? null : mean.toPrecision(4);
+        const annotation = annotationParts.join(" = ");
+        var optionsKeys = Object.keys(dataset[ci]);
+        var index = optionsKeys.indexOf('data');
+        if (index > -1) {
+            optionsKeys.splice(index, 1);
+        }
+        index = optionsKeys.indexOf('annotation');
+        if (index > -1) {
+            optionsKeys.splice(index, 1);
+        }
+        optionsKeys.forEach(function (item) {
+            newDataSet[ci][item] = dataset[ci][item];
+        });
+        newDataSet[ci]['annotation'] = annotation;
+    }
+    return newDataSet;
+};
+
 const getMatchedDataSet = function (dataset, interval) {
     /*
      Parameters:
@@ -897,6 +1031,62 @@ const queryDieoffDB = function (pool, statement, interval) {
     };
 };
 
+const queryThresholdDB = function (pool, statement, interval) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+    //var ctime = [];
+    var ymin;
+    var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = matsTypes.Messages.NO_DATA_FOUND;
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveTime = [];
+            var curveStat = [];
+            var N0_max = 0;
+            var N_times_max = 0;
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var trsh = Number(rows[rowIndex].avtime);
+                var stat = rows[rowIndex].stat;
+                var N0_loop = rows[rowIndex].N0;
+                var N_times_loop = rows[rowIndex].N_times;
+                if (N0_loop > N0) {
+                    N0_max = N0_loop;
+                }
+                if (N_times_loop > N_times) {
+                    N_times_max = N_times_loop;
+                }
+                d.push([trsh, stat]);
+                N0.push(N0_loop);
+                N_times.push(N_times_loop);
+            }
+            dFuture['return']();
+        }
+    });
+
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        N0: N0,
+        N_times: N_times,
+    };
+};
+
 const querySeriesDB = function (pool, statement, interval, averageStr) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     var dFuture = new Future();
@@ -1036,6 +1226,102 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
         },
         xaxes: [{
             axisLabel: 'forecast hour',
+            color: 'grey',
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+        }],
+        xaxis: {
+            zoomRange: [0.1, null],
+            mode: 'xy'
+        },
+        yaxes: yaxes,
+        yaxis: yaxis,
+        legend: {
+            show: false,
+            container: "#legendContainer",
+            noColumns: 0,
+            position: 'ne'
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
+            },
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            xDateFormat: "%Y-%m-%d:%H",
+            onHover: function (flotItem, $tooltipEl) {
+            }
+        }
+    };
+    return options;
+};
+
+const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
+    // generate y-axis
+    var yaxes = [];
+    var yaxis = [];
+    var axisLabel;
+    for (var dsi = 0; dsi < dataset.length; dsi++) {
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
+            continue;
+        }
+        const axisKey = curves[dsi].axisKey;
+        const ymin = axisMap[axisKey].ymin;
+        const ymax = axisMap[axisKey].ymax;
+        axisLabel = axisMap[axisKey].axisLabel;
+        const yPad = (ymax - ymin) * 0.2;
+        const position = dsi === 0 ? "left" : "right";
+        const yaxesOptions = {
+            position: position,
+            color: 'grey',
+            axisLabel: axisLabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 3,
+            alignTicksWithAxis: 1,
+            tickDecimals: 1,
+            min: ymin - yPad,
+            max: ymax + yPad
+        };
+        const yaxisOptions = {   // used for zooming
+            zoomRange: [0.1, 10]
+        };
+        yaxes.push(yaxesOptions);
+        yaxis.push(yaxisOptions);
+    }
+    const options = {
+        axisLabels: {
+            show: true
+        },
+        xaxes: [{
+            axisLabel: 'threshold',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
@@ -1691,12 +1977,15 @@ export default matsDataUtils = {
     arrayContainsArray: arrayContainsArray,
     getMatchedDataSet: getMatchedDataSet,
     getDieOffMatchedDataSet: getDieOffMatchedDataSet,
+    getThresholdMatchedDataSet: getThresholdMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     getPointSymbol: getPointSymbol,
+    generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     queryDieoffDB: queryDieoffDB,
+    queryThresholdDB: queryThresholdDB,
     querySeriesDB:querySeriesDB,
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateSeriesCurveOptions: generateSeriesCurveOptions,

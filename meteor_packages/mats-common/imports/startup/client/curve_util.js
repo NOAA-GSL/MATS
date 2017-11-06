@@ -334,6 +334,10 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
@@ -373,6 +377,27 @@ const showDieOffFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.dieoff);
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showThresholdFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.threshold);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
@@ -601,6 +626,7 @@ export default matsCurveUtils = {
     showTimeseriesFace:showTimeseriesFace,
     showProfileFace:showProfileFace,
     showDieOffFace:showDieOffFace,
+    showThresholdFace:showThresholdFace,
     get_err:get_err,
     PlotResult:PlotResult,
     showSpinner:showSpinner,

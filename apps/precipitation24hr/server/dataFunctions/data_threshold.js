@@ -29,19 +29,17 @@ dataThreshold = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var label = curve['label'];
         var color = curve['color'];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var forecastLength = curve['forecast-length'];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
-        }
+        var forecastTypeStr = curve['forecast-type'];
+        var forecastTypeOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-type'}, {optionsMap: 1})['optionsMap'];
+        var forecastType = forecastTypeOptionsMap[forecastTypeStr];
+        var scaleStr = curve['scale'];
+        var scaleOptionsMap = matsCollections.CurveParams.findOne({name: 'scale'}, {optionsMap: 1})['optionsMap'];
+        var scale = scaleOptionsMap[scaleStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -53,33 +51,30 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
+                "m0.trsh as avtime, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0" +
-                " where 1=1" +
-                " {{validTimeClause}}" +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " group by avtime" +
-                " order by avtime;";
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= '{{fromSecs}}' " +
+                "and m0.time <= '{{toSecs}}' " +
+                "and m0.num_fcsts = '{{forecastType}}' " +
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + region);
+            statement = statement.replace('{{data_source}}', data_source + '_' + scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{threshold}}', threshold);
-            var validTimeClause = " ";
-            if (validTimes.length > 0){
-                validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimeStr + ")";
-            }
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastType}}', forecastType);
+
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
+                queryResult = matsDataUtils.queryThresholdDB(sumPool,statement, interval);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -143,13 +138,13 @@ dataThreshold = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+        dataset = matsDataUtils.getThresholdMatchedDataSet(dataset);
         }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateDieoffPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateThresholdPlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
