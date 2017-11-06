@@ -24,7 +24,8 @@ var  PlotTypes = {
     profile : "Profile",
     scatter2d : "Scatter2d",
     dieoff : "DieOff",
-    threshold : "Threshold"
+    threshold : "Threshold",
+    validtime : "ValidTime"
 };
 
 var ForecastTypes = {
