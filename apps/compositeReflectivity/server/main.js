@@ -543,6 +543,12 @@ const doPlotGraph = function () {
             dataFunction: "dataDieOff",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
+            checked: false
+        });
     }
 };
 
