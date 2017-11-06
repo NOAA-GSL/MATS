@@ -138,22 +138,22 @@
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 7,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
-    },
-    {
-      "app": "radarReflectivity",
-      "displayName": "Radar Reflectivity",
-      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
+    },
+    {
+      "app": "compositeReflectivity",
+      "displayName": "Composite Reflectivity",
+      "displayOrder": 8,
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "wfip2",
@@ -212,10 +212,10 @@
       "buildStatus": "disabled"
     },
     {
-      "app": "radarReflectivity-previous",
-      "displayName": "Radar Reflectivity Previous",
+      "app": "compositeReflectivity-previous",
+      "displayName": "Composite Reflectivity Previous",
       "displayOrder": 17,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
