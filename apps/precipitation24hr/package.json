@@ -1,5 +1,5 @@
 {
-  "name": "precipitation",
+  "name": "visibility",
   "private": true,
   "scripts": {
     "start": "meteor run"

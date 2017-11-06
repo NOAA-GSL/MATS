@@ -123,10 +123,10 @@ const doCurveParams = function () {
         );
     }
 
-    if (matsCollections.CurveParams.find({name: 'model'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'data-source'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'model',
+                name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
@@ -141,10 +141,10 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'model'});
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
         if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'model'}, {
+            matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
                     options: Object.keys(modelOptionsMap)
@@ -161,7 +161,7 @@ const doCurveParams = function () {
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]],   // convenience
                 valuesMap: masterRegionValuesMap,
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]][0],
@@ -326,7 +326,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
-                superiorNames: ['model'],
+                superiorNames: ['data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -388,7 +388,7 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
+                ['', 'data-source', ':'],
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ' '],
@@ -405,7 +405,7 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ' in '],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
                 ['', 'statistic', ', '],

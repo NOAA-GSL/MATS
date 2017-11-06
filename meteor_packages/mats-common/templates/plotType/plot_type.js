@@ -126,6 +126,31 @@ Template.plotType.events({
             }
         }
     },
+    'click .plot-type-Threshold': function(event) {
+        if (Session.get("confirmPlotChange")) {
+            // change has been confirmed
+            matsCurveUtils.showThresholdFace();
+            var curves = Session.get("Curves");
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
+            Session.set("confirmPlotChange","");
+            Session.set('plotChangeType',"");
+            return false;
+        } else {
+            // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
+            if (Session.get("Curves").length > 0 ) {
+                Session.set('plotChangeType',matsTypes.PlotTypes.threshold);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showThresholdFace();
+            }
+        }
+    },
     'click .plot-type-TimeSeries': function(event) {
         if (Session.get("confirmPlotChange")) {
             matsCurveUtils.showTimeseriesFace();
@@ -135,6 +160,9 @@ Template.plotType.events({
                 for (var ci = 0; ci < curves.length; ci ++) {
                     if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name:'average'}) && matsCollections.CurveParams.findOne({name:'average'}).default) {
                         curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
+                    }
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
