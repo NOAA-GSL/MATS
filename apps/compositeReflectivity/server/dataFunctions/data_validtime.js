@@ -4,7 +4,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataSeries = function (plotParams, plotFunction) {
+dataValidTime = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProecssingStart = moment();
