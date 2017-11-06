@@ -73,7 +73,8 @@ var PlotView = {
     textProfile: "textProfile",
     textScatter: "textScatter",
     textDieoff: "textDieoff",
-    textThreshold: "textThreshold"
+    textThreshold: "textThreshold",
+    textValidTime: "testValidTime"
 };
 
 var Messages = {
