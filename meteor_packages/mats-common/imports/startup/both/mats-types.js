@@ -23,7 +23,8 @@ var  PlotTypes = {
     timeSeries : "TimeSeries",
     profile : "Profile",
     scatter2d : "Scatter2d",
-    dieoff : "DieOff"
+    dieoff : "DieOff",
+    threshold : "Threshold"
 };
 
 var ForecastTypes = {
@@ -70,7 +71,8 @@ var PlotView = {
     textSeries: "textSeries",
     textProfile: "textProfile",
     textScatter: "textScatter",
-    textDieoff: "textDieoff"
+    textDieoff: "textDieoff",
+    textThreshold: "textThreshold"
 };
 
 var Messages = {
