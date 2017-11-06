@@ -497,6 +497,23 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ':'],
+                ['', 'region', ', '],
+                ['', 'threshold', ', '],
+                ['', 'scale', ', '],
+                ['', 'statistic', ', '],
+                ['fcst_len:', 'forecast-length', 'h ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
