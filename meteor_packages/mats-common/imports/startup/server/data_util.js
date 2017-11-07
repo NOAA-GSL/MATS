@@ -1318,7 +1318,7 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
     };
 };
 
-const queryValidTimeDB = function (pool, statement, interval, averageStr) {
+const queryValidTimeDB = function (pool, statement, interval) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -1376,7 +1376,7 @@ const queryValidTimeDB = function (pool, statement, interval, averageStr) {
                 N_times.push(N_times_loop);
             }
             var interval = time_interval !== undefined ? time_interval * 1000 : undefined;
-            if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
+            if (xmin < Number(rows[0].avtime) * 1000) {
                 xmin = Number(rows[0].avtime) * 1000;
             }
             if (interval < 0) {
@@ -1411,7 +1411,6 @@ const queryValidTimeDB = function (pool, statement, interval, averageStr) {
         error: error,
         N0: N0,
         N_times: N_times,
-        averageStr: averageStr,
         interval: interval,
     };
 };
