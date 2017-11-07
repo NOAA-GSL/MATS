@@ -40,12 +40,7 @@ dataValidTime = function (plotParams, plotFunction) {
         //var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         //var average = averageOptionsMap[averageStr][0];
         var forecastLength = curve['forecast-length'];
-        var forecastOperator;
-        if (forecastLength != "All") {
-            forecastOperator = "=";
-        } else {
-            forecastOperator = "!="
-        }
+
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -64,18 +59,16 @@ dataValidTime = function (plotParams, plotFunction) {
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
                 "and m0.trsh = '{{threshold}}' " +
-                "and m0.fcst_len '{{forecastOperator}}' '{{forecastLength}}' " +
-                "group by avtime " +
-                "order by avtime" +
+                "and m0.fcst_len = '{{forecastLength}}' " +
+                "group by hr_of_day " +
+                "order by hr_of_day" +
                 ";";
 
-            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{data_source}}', data_source + '_' + grid_scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
-            statement = statement.replace('{{forecastOperator}}', forecastOperator);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             //var validTimeClause = " ";
             //if (validTimes.length > 0){
@@ -87,7 +80,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
+                queryResult = matsDataUtils.queryValidTimeDB(sumPool,statement, interval);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -158,7 +151,7 @@ dataValidTime = function (plotParams, plotFunction) {
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateValidTimePlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

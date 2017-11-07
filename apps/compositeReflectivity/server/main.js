@@ -512,7 +512,6 @@ const doCurveTextPatterns = function () {
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length"
             ],
             groupSize: 6
-
         });
     }
 };
