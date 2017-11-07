@@ -390,7 +390,7 @@ disablePublicationStatusForApp() {
 	openTunnel
 	unset data
 	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODdisablePublicationStatusForApp
-		db.getCollection("${DEPLOYMENTCOLLECTION}").update(
+		db.getCollection('buildConfiguration').update(
             {
                 \$and: [
                     { servers: {
@@ -400,6 +400,47 @@ disablePublicationStatusForApp() {
                 ],
             },
             {\$set: {"apps.${appPosition}.deploymentStatus":"disabled"}}
+        );
+	%EODdisablePublicationStatusForApp
+	)
+	echo $data
+	closeTunnel
+}
+
+# This routine will set the deploymentStatus field in the app element identified by the app reference and server params in the deployment collection of the production document
+# of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov, setting the deploymentStaus to ensabled.
+#PARAMETERS: new build date, app reference, server
+#RETURNS: mongo update message
+#TRANSFORMATION: sets or updates corresponding version field in the deployment collection of the appProductionStatus database
+enablePublicationStatusForApp() {
+	if [ $# -ne 1 ]; then
+		echo $0 - wrong number of params - usage: $0 app
+		return 1
+	fi
+	local app=$1
+	local server=$(getProductionServer)
+	# we need the ordinal position of the app in the apps array to be updated to provide to the set operator
+	local appList=$(getDeployedAppsForServer ${server})
+	local appPosition=-1
+	for theApp in ${appList[@]}; do
+		((appPosition++))
+		if [ "${theApp}" == "${app}" ]; then
+			break
+		fi
+	done
+	openTunnel
+	unset data
+	local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODdisablePublicationStatusForApp
+		db.getCollection('buildConfiguration').update(
+            {
+                \$and: [
+                    { servers: {
+                        \$in:["${server}"]
+                    } },
+                    {"apps.app":"${app}"}
+                ],
+            },
+            {\$set: {"apps.${appPosition}.deploymentStatus":"enabled"}}
         );
 	%EODdisablePublicationStatusForApp
 	)
@@ -1074,7 +1115,35 @@ test () {
         echo -e rollDevelopmentVersionAndDateForAppForServer ${failed} initial int version patch ${initialIntVersionPatch}  SHOULD be new intVersionPatch less 1, it is ${newIntVersionPatch}
     fi
 
+	echo ---------
+	echo getPublishableApps enable/disable
+	firstPublishableApps=($(getPublishableApps))
+    firstLength=${#firstPublishableApps[@]}
+    firstApp=${firstPublishableApps[0]}
+	disablePublicationStatusForApp ${firstApp}
+	secondPublishableApps=($(getPublishableApps))
+	if [ ${firstLength} -eq 0 ]; then
+		echo -e getPublishableApps ${failed} no publishable apps
+	fi
+	secondLength=${#firstPublishableApps[@]}
+	secondApp=${firstPublishableApps[0]}
+    if [ "${firstApp}" == "${secondApp}" ]; then
+		echo -e getPublishableApps ${failed} first app is still ${firstApp} after being disabled
+	fi
+	if [ ${firstLength} -ne ${secondLength} -1 ]; then
+		echo -e getPublishableApps ${failed} number of apps should be one less after diabling one
+	fi
+	enablePublicationStatusForApp ${firstApp}
+	secondPublishableApps=($(getPublishableApps))
+	secondLength=${#firstPublishableApps[@]}
+	secondApp=${firstPublishableApps[0]}
+	if [ ${firstLength} -ne ${secondLength} ]; then
+		echo -e getPublishableApps ${failed} number of apps should be the same after re-enabling the disabled one
+	fi
 
+	if [ "${firstApp}" != "${secondApp}" ]; then
+		echo -e getPublishableApps ${failed} first app is not ${firstApp} after being re-enabled
+	fi
 
     echo ---------
 
