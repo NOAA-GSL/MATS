@@ -379,7 +379,7 @@ const doCurveParams = function () {
         optionsMap = {
             '1 hr accums (1 hr total)': '1',
             '6 hr accums (6 hr total)': '6',
-            '12 hr accums (6 hr total)': '12'
+            '12 hr accums (12 hr total)': '12'
         };
 
         matsCollections.CurveParams.insert(
