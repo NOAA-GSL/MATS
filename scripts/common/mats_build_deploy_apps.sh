@@ -184,6 +184,8 @@ for app in ${apps[*]}; do
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
+    git push origin ${BUILD_CODE_BRANCH}
     meteor build /builds
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"
@@ -191,7 +193,7 @@ for app in ${apps[*]}; do
     fi
     buildVer=$(getVersionForAppForServer ${app} ${SERVER})
     git tag -a -m"automated build ${DEPLOYMENT_ENVIRONMENT}" "${app}-${buildVer}"
-    git push origin ${tag}:
+    git push origin +${tag}:${BUILD_CODE_BRANCH}
     echo -e tagged repo with ${GRN}${tag}${NC}
     cd ..
 done
