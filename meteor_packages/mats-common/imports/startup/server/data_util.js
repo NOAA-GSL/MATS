@@ -253,8 +253,9 @@ const getValidTimeMatchedDataSet = function (dataset) {
     var dataIndexes = {};
     var ci;
     var sci;
-    var hour = 0;
-    var hourMax = Number.MIN_VALUE;
+    var vt_vals = [23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0];
+    var vt = vt_vals.pop();
+    var vtMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
     // set up the indexes and determine the minimum hour for the dataset
     if (curvesLength == 1) {
@@ -269,10 +270,10 @@ const getValidTimeMatchedDataSet = function (dataset) {
             return dataset;
         }
         dataIndexes[ci] = 0;
-        hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
+        vtMax = vtMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? vtMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
     var done = false;
-    // find the first common start point (by hour).
+    // find the first common start point (by vt).
     // if there is none then there is no matched data
     while (!done) {
         var same = true;
@@ -296,33 +297,33 @@ const getValidTimeMatchedDataSet = function (dataset) {
         }
         if (same) {
             done = true;
-            // since they are the same just use the hour
+            // since they are the same just use the vt
             // belonging to the current dataindex of the 0th curve
-            // that will be our common start hour
-            hour = dataset[0].data[dataIndexes[0]][0];
+            // that will be our common start vt
+            vt = dataset[0].data[dataIndexes[0]][0];
         }
     }
-    var hourMatches;
+    var vtMatches;
     var newDataSet = [];
-    while (hour < hourMax) {
-        hourMatches = true;
+    while (vt <= vtMax) {
+        vtMatches = true;
         for (ci = 0; ci < curvesLength; ci++) {
-            // move this curves index to equal or exceed the new hour
-            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < hour) {
+            // move this curves index to equal or exceed the new trsh
+            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < vt) {
                 dataIndexes[ci]++;
             }
-            // if the hour isn't right or the data is null it doesn't match
-            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != hour) {
-                hourMatches = false;
+            // if the vt isn't right or the data is null it doesn't match
+            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != vt) {
+                vtMatches = false;
                 break;
             } else {
-                // if there is no data entry here at this hour it doesn't match
+                // if there is no data entry here at this vt it doesn't match
                 if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
-                    hourMatches = false;
+                    vtMatches = false;
                 }
             }
         }   // for all the curves
-        if (hourMatches) {
+        if (vtMatches) {
             for (sci = 0; sci < curvesLength; sci++) {
                 if (!newDataSet[sci]) {
                     newDataSet[sci] = {};
@@ -341,8 +342,8 @@ const getValidTimeMatchedDataSet = function (dataset) {
                 newDataSet[sci].data.push(valueObject);
             }
         }
-        hour = hour + 1;
-    }// while hour
+        vt = vt_vals.pop();
+    }// while vt
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
     for (ci = 0; ci < curvesLength; ci++) {
         if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
@@ -1319,7 +1320,6 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
 };
 
 const queryValidTimeDB = function (pool, statement, interval) {
-    //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -1346,60 +1346,21 @@ const queryValidTimeDB = function (pool, statement, interval) {
             var curveStat = [];
             var N0_max = 0;
             var N_times_max = 0;
-            var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var avSeconds = Number(rows[rowIndex].avtime);
-                var avTime = avSeconds * 1000;
-                xmin = avTime < xmin ? avTime : xmin;
-                xmax = avTime > xmax ? avTime : xmax;
+                var hr_of_day = Number(rows[rowIndex].hr_of_day);
                 var stat = rows[rowIndex].stat;
                 var N0_loop = rows[rowIndex].N0;
                 var N_times_loop = rows[rowIndex].N_times;
-                if (rowIndex < rows.length - 1) {
-                    // find the minimum interval for this query
-                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
-                    if (time_diff < time_interval) {
-                        time_interval = time_diff;
-                    }
-                }
-
                 if (N0_loop > N0) {
                     N0_max = N0_loop;
                 }
                 if (N_times_loop > N_times) {
                     N_times_max = N_times_loop;
                 }
-
-                curveTime.push(avTime);
-                curveStat.push(stat);
+                d.push([hr_of_day, stat]);
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
-            var interval = time_interval !== undefined ? time_interval * 1000 : undefined;
-            if (xmin < Number(rows[0].avtime) * 1000) {
-                xmin = Number(rows[0].avtime) * 1000;
-            }
-            if (interval < 0) {
-                error = ("Invalid time interval: " + interval);
-                dFuture['return']();
-            }
-            var loopTime = xmin;
-            while (loopTime <= xmax) {
-                if (curveTime.indexOf(loopTime) < 0) {
-                    d.push([loopTime, null]);
-                } else {
-                    var d_idx = curveTime.indexOf(loopTime);
-                    var this_N0 = N0[d_idx];
-                    var this_N_times = N_times[d_idx];
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
-                        d.push([loopTime, null]);
-                    } else {
-                        d.push([loopTime, curveStat[d_idx]]);
-                    }
-                }
-                loopTime = loopTime + interval;
-            }
-            // done waiting - have results
             dFuture['return']();
         }
     });
@@ -1411,7 +1372,6 @@ const queryValidTimeDB = function (pool, statement, interval) {
         error: error,
         N0: N0,
         N_times: N_times,
-        interval: interval,
     };
 };
 
@@ -1551,7 +1511,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'time',
+            axisLabel: 'Hour of Day',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
@@ -1560,7 +1520,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
         }],
         xaxis: {
             zoomRange: [0.1, null],
-            mode: 'time'
+            mode: 'xy'
         },
         yaxes: yaxes,
         yaxis: yaxis,

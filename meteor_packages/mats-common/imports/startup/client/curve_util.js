@@ -401,6 +401,10 @@ const showValidTimeFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.validtime);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());

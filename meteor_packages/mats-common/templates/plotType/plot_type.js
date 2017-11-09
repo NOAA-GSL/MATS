@@ -195,8 +195,8 @@ Template.plotType.events({
             var curves = Session.get("Curves");
             if (curves.length > 0 ) {
                 for (var ci = 0; ci < curves.length; ci ++) {
-                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
-                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
