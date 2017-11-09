@@ -35,11 +35,9 @@ dataThreshold = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
         var forecastTypeStr = curve['forecast-type'];
-        var forecastTypeOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-type'}, {optionsMap: 1})['optionsMap'];
-        var forecastType = forecastTypeOptionsMap[forecastTypeStr];
+        var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
         var scaleStr = curve['scale'];
-        var scaleOptionsMap = matsCollections.CurveParams.findOne({name: 'scale'}, {optionsMap: 1})['optionsMap'];
-        var scale = scaleOptionsMap[scaleStr];
+        var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
