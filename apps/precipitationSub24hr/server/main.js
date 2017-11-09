@@ -6,12 +6,13 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
 var regionModelOptionsMap = {};
-var forecastLengthOptionsMap = {};
-// this should be in the metdata someday
 var thresholdsModelOptionsMap = {};
-var forecastLengthModels = [];
+var scaleModelOptionsMap = {};
+var fcstTypeModelOptionsMap = {};
 var masterRegionValuesMap = {};
 var masterThresholdValuesMap = {};
+var masterScaleValuesMap = {};
+var masterFcstTypeValuesMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -64,146 +65,113 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
 
-    //************************************************************************************************
-    // var rows;
-    // try {
-    //     rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
-    //     var masterRegDescription;
-    //     var masterShortName;
-    //     for (var j = 0; j < rows.length; j++) {
-    //         masterRegDescription = rows[j].description.trim();
-    //         masterShortName = rows[j].short_name.trim();
-    //         masterRegionValuesMap[masterShortName] = masterRegDescription;
-    //     }
-    // } catch (err) {
-    //     console.log(err.message);
-    // }
-    //************************************************************************************************
-    //The commented block above will be used once proper metadata is implemented. For now, this is the
-    //hardcoded workaround.
-    //************************************************************************************************
-
-    masterRegionValuesMap = {
-        'CONUS': 'CONUS',
-        'EUS': 'Eastern US',
-        'WUS': 'Western US',
-        'NE': 'Northeastern US',
-        'SE': 'Southeastern US'
-    };
-
-    //************************************************************************************************
-    // try {
-    //     rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
-    //     var masterDescription;
-    //     var masterTrsh;
-    //     for (var j = 0; j < rows.length; j++) {
-    //         masterDescription = rows[j].description.trim();
-    //         masterTrsh = rows[j].trsh.trim();
-    //         masterThresholdValuesMap[masterTrsh] = masterDescription;
-    //     }
-    // } catch (err) {
-    //     console.log(err.message);
-    // }
-    //************************************************************************************************
-    //The commented block above will be used once proper metadata is implemented. For now, this is the
-    //hardcoded workaround.
-    //************************************************************************************************
-
-    masterThresholdValuesMap = {
-        '1': '0.01 (precip >= 0.01 in)',
-        '10': '0.10 (precip >= 0.10 in)',
-        '25': '0.25 (precip >= 0.25 in)',
-        '50': '0.50 (precip >= 0.50 in)',
-        '100': '1.00 (precip >= 1.00 in)',
-        '150': '1.50 (precip >= 1.50 in)',
-        '200': '2.00 (precip >= 2.00 in)',
-        '300': '3.00 (precip >= 3.00 in)'
-    };
-
-    //************************************************************************************************
-    // try {
-    //     rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh from regions_per_model_mats_all_categories;");
-    //     for (var i = 0; i < rows.length; i++) {
-    //
-    //         var model_value = rows[i].model.trim();
-    //         var model = rows[i].display_text.trim();
-    //         modelOptionsMap[model] = [model_value];
-    //
-    //         var forecastLengths = rows[i].fcst_lens;
-    //         var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
-    //         for (var j = 0; j < forecastLengthArr.length; j++) {
-    //             forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
-    //         }
-    //         forecastLengthOptionsMap[model] = forecastLengthArr;
-    //
-    //         var thresholds = rows[i].trsh;
-    //         var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
-    //         var thresholdsArr = [];
-    //         var dummyThresh;
-    //         for (var j = 0; j < thresholdsArrRaw.length; j++) {
-    //             dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
-    //             thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
-    //         }
-    //         thresholdsModelOptionsMap[model] = thresholdsArr;
-    //
-    //         var regions = rows[i].regions;
-    //         var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
-    //         var regionsArr = [];
-    //         var dummyRegion;
-    //         for (var j = 0; j < regionsArrRaw.length; j++) {
-    //             dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-    //             regionsArr.push(masterRegionValuesMap[dummyRegion]);
-    //         }
-    //         regionModelOptionsMap[model] = regionsArr;
-    //     }
-    //
-    // } catch (err) {
-    //     console.log(err.message);
-    // }
-    //************************************************************************************************
-    //The commented block above will be used once proper metadata is implemented. For now, this is the
-    //hardcoded workaround.
-    //************************************************************************************************
-
-    var regionsArr = [];
-    var prevModel = "";
-
+    var rows;
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "show tables;");
-        for (var i = 0; i < rows.length; i++) {
-
-            var model_value = rows[i]['Tables_in_precip2'].replace(/_[0-80]*km.*/g, "");
-            var model = model_value;    //could change model to be a more descriptive display text.
-
-            if (Object.values(modelOptionsMap).indexOf(model_value) === -1) {
-
-                modelOptionsMap[model] = [model_value];
-
-                var thresholdsArr = Object.values(masterThresholdValuesMap);
-                thresholdsModelOptionsMap[model] = thresholdsArr;
-
-            }
-
-            if (prevModel !== model && prevModel !== "") {
-                regionModelOptionsMap[prevModel] = regionsArr;
-                regionsArr = [];
-            }
-
-            var region_value = rows[i]['Tables_in_precip2'].replace(/.*[0-80]*km_/g, "");
-
-            if (regionsArr.indexOf(masterRegionValuesMap[region_value]) === -1) {
-                regionsArr.push(masterRegionValuesMap[region_value]);
-            }
-
-            prevModel = model;
-
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        var masterRegDescription;
+        var masterShortName;
+        for (var j = 0; j < rows.length; j++) {
+            masterRegDescription = rows[j].description.trim();
+            masterShortName = rows[j].short_name.trim();
+            masterRegionValuesMap[masterShortName] = masterRegDescription;
         }
-        regionModelOptionsMap[prevModel] = regionsArr;
-
     } catch (err) {
         console.log(err.message);
     }
 
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT trsh,description FROM threshold_descriptions;");
+        var masterDescription;
+        var masterTrsh;
+        for (var j = 0; j < rows.length; j++) {
+            masterDescription = rows[j].description.trim();
+            masterTrsh = rows[j].trsh.trim();
+            masterThresholdValuesMap[masterTrsh] = masterDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scle,description FROM scale_descriptions;");
+        var masterScaleDescription;
+        var masterScale;
+        for (var j = 0; j < rows.length; j++) {
+            masterScaleDescription = rows[j].description.trim();
+            masterScale = rows[j].scle.trim();
+            masterScaleValuesMap[masterScale] = masterScaleDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT fcst_type,description FROM fcst_type_descriptions;");
+        var masterFcstTypeDescription;
+        var masterFcstType;
+        for (var j = 0; j < rows.length; j++) {
+            masterFcstTypeDescription = rows[j].description.trim();
+            masterFcstType = rows[j].fcst_type.trim();
+            masterFcstTypeValuesMap[masterFcstType] = masterFcstTypeDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_types,trsh,scle from regions_per_model_mats_all_categories;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var model_value = rows[i].model.trim();
+            var model = rows[i].display_text.trim();
+            modelOptionsMap[model] = [model_value];
+
+            var fcstTypes = rows[i].fcst_types;
+            var fcstTypesArrRaw = fcstTypes.split(',').map(Function.prototype.call, String.prototype.trim);
+            var fcstTypesArr = [];
+            var dummyfcstType;
+            for (var j = 0; j < fcstTypesArrRaw.length; j++) {
+                dummyfcstType = fcstTypesArrRaw[j].replace(/'|\[|\]/g, "");
+                fcstTypesArr.push(masterFcstTypeValuesMap[dummyfcstType]);
+            }
+            fcstTypeModelOptionsMap[model] = fcstTypesArr;
+
+            var thresholds = rows[i].trsh;
+            var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
+            var thresholdsArr = [];
+            var dummyThresh;
+            for (var j = 0; j < thresholdsArrRaw.length; j++) {
+                dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
+                thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
+            }
+            thresholdsModelOptionsMap[model] = thresholdsArr;
+
+            var regions = rows[i].regions;
+            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var regionsArr = [];
+            var dummyRegion;
+            for (var j = 0; j < regionsArrRaw.length; j++) {
+                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
+                if (!dummyRegion.includes("moving")) {
+                    regionsArr.push(masterRegionValuesMap[dummyRegion]);
+                }
+            }
+            regionModelOptionsMap[model] = regionsArr;
+
+            var scales = rows[i].scle;
+            var scalesArrRaw = scales.split(',').map(Function.prototype.call, String.prototype.trim);
+            var scalesArr = [];
+            var dummyScale;
+            for (var j = 0; j < scalesArrRaw.length; j++) {
+                dummyScale = scalesArrRaw[j].replace(/'|\[|\]/g, "");
+                scalesArr.push(masterScaleValuesMap[dummyScale]);
+            }
+            scaleModelOptionsMap[model] = scalesArr;
+        }
+
+    } catch (err) {
+        console.log(err.message);
+    }
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -231,7 +199,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "threshold"],
+                dependentNames: ["region", "threshold","scale","forecast-type"],
                 controlButtonCovered: true,
                 default: 'HRRR',
                 unique: false,
@@ -376,12 +344,6 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'forecast-type'}).count() == 0) {
-        optionsMap = {
-            '1 hr accums (1 hr total)': '1',
-            '6 hr accums (6 hr total)': '6',
-            '12 hr accums (6 hr total)': '12'
-        };
-
         matsCollections.CurveParams.insert(
             {// bias and model average are a different formula for wind (element 0 differs from element 1)
                 // but stays the same (element 0 and element 1 are the same) otherwise.
@@ -389,27 +351,35 @@ const doCurveParams = function () {
                 // time series we never append element 2. Element 3 is used to give us error values for error bars.
                 name: 'forecast-type',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: fcstTypeModelOptionsMap,
+                options: fcstTypeModelOptionsMap[Object.keys(fcstTypeModelOptionsMap)[0]],   // convenience
+                valuesMap: masterFcstTypeValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: fcstTypeModelOptionsMap[Object.keys(fcstTypeModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-type'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, fcstTypeModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterFcstTypeValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-type'}, {
+                $set: {
+                    optionsMap: fcstTypeModelOptionsMap,
+                    valuesMap: masterFcstTypeValuesMap,
+                    options: fcstTypeModelOptionsMap[Object.keys(fcstTypeModelOptionsMap)[0]]
+                }
+            });
+        }
     }
 
     if (matsCollections.CurveParams.find({name: 'scale'}).count() == 0) {
-        optionsMap = {
-            '3 km grid': '03km',
-            '13 km grid': '13km',
-            '20 km grid': '20km',
-            '40 km grid': '40km',
-            '80 km grid': '80km'
-        };
-
         matsCollections.CurveParams.insert(
             {// bias and model average are a different formula for wind (element 0 differs from element 1)
                 // but stays the same (element 0 and element 1 are the same) otherwise.
@@ -417,16 +387,32 @@ const doCurveParams = function () {
                 // time series we never append element 2. Element 3 is used to give us error values for error bars.
                 name: 'scale',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
+                optionsMap: scaleModelOptionsMap,
+                options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]],   // convenience
+                valuesMap: masterScaleValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[2],
+                default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'scale'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'scale'}, {
+                $set: {
+                    optionsMap: scaleModelOptionsMap,
+                    valuesMap: masterScaleValuesMap,
+                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]]
+                }
+            });
+        }
     }
 };
 
@@ -523,6 +509,16 @@ Meteor.startup(function () {
             database: 'precip2',
             connectionLimit: 10
         });
+        matsCollections.Databases.insert({
+            name: "metadataSetting",
+            role: "metadata",
+            status: "active",
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'mats_common',
+            connectionLimit: 10
+        });
     }
 
     const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
@@ -538,7 +534,18 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories']);
+    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+// the pool is intended to be global
+    metadataPool = mysql.createPool(metadataSettings);
+
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories','threshold_descriptions','scale_descriptions','fcst_type_descriptions']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 

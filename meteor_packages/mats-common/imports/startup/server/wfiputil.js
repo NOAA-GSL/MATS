@@ -320,9 +320,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     } else {
                         const missing_value = JSON.parse(rows[rowIndex].data)['missing_value'];
                         if ( !(missing_value === undefined) ){
-                            if ( values === missing_value ) {
-                                values = undefined;
-                                continue;
+                            for (var vi = 0; vi < values.length; vi++) {
+                                if (values[vi] === missing_value) {
+                                    values[vi] = null;
+                                }
                             }
                         }
                         if ( (myVariable === 'allws') || (myVariable === 'allwd')){
