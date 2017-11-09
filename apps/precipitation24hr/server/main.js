@@ -173,49 +173,6 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
-
-
-
-    // var regionsArr = [];
-    // var prevModel = "";
-    //
-    // try {
-    //     const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "show tables;");
-    //     for (var i = 0; i < rows.length; i++) {
-    //
-    //         var model_value = rows[i]['Tables_in_precip'].replace(/_[0-80]*km.*/g, "");
-    //         var model = model_value;    //could change model to be a more descriptive display text.
-    //
-    //         if (Object.values(modelOptionsMap).indexOf(model_value) === -1) {
-    //
-    //             modelOptionsMap[model] = [model_value];
-    //
-    //             var thresholdsArr = Object.values(masterThresholdValuesMap);
-    //             thresholdsModelOptionsMap[model] = thresholdsArr;
-    //
-    //         }
-    //
-    //         if (prevModel !== model && prevModel !== "") {
-    //             regionModelOptionsMap[prevModel] = regionsArr;
-    //             regionsArr = [];
-    //         }
-    //
-    //         var region_value = rows[i]['Tables_in_precip'].replace(/.*[0-80]*km_/g, "");
-    //
-    //         if (regionsArr.indexOf(masterRegionValuesMap[region_value]) === -1) {
-    //             regionsArr.push(masterRegionValuesMap[region_value]);
-    //         }
-    //
-    //         prevModel = model;
-    //
-    //     }
-    //     regionModelOptionsMap[prevModel] = regionsArr;
-    //
-    // } catch (err) {
-    //     console.log(err.message);
-    // }
-
-
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
