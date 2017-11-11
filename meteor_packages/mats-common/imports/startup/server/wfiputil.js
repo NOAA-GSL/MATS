@@ -205,7 +205,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     const variableIsDiscriminator = variableInfoMap.infoMap[myVariable].type == 2;
     var si;
     var statements = [statement];
-    if (isInstrument && siteIds.length > 1) {
+    if (isInstrument && siteIds.length > 1 && verificationRunInterval) {
         // deter ine if the sampleIntervals (cadence) of the instruments at the sites are the same. If they are not we have to query and process
         // once for each sampleRate with the corresponding sites.
         const siteSampleIntervals = matsCollections.Instruments.findOne({instrument_id: Number(instrumentId)}).siteSampleIntervals;
