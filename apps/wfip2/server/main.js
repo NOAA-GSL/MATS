@@ -122,6 +122,7 @@ var doCurveParams = function () {
     var variableFieldsMap = {};
     var variableOptionsMap = {};
     var variableInfoMap = {};
+    var instrumentSampleIntervalPerSite = {};
     variableOptionsMap[matsTypes.PlotTypes.profile] = {};
     variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
     variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
@@ -184,6 +185,20 @@ var doCurveParams = function () {
         console.log("Database error:", err.message);
     }
     try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT * FROM instruments_per_site;");
+        for (var i = 0; i < rows.length; i++) {
+            var siteId = rows[i].sites_siteid;
+            var instrumentId = rows[i].instruments_instrid;
+            var sample_interval = rows[i].sample_interval;
+            if (! instrumentSampleIntervalPerSite[instrumentId]) {
+                instrumentSampleIntervalPerSite[instrumentId] = {};
+            }
+            instrumentSampleIntervalPerSite[instrumentId][siteId] = sample_interval;
+        }
+    } catch (err) {
+        console.log("Database error:", err.message);
+    }
+    try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
         matsCollections.Instruments.remove({});
         for (var i = 0; i < rows.length; i++) {
@@ -194,6 +209,7 @@ var doCurveParams = function () {
             matsCollections.Instruments.insert({
                 name: instrument,
                 instrument_id: instrid,
+                siteSampleIntervals: instrumentSampleIntervalPerSite[instrid],
                 color: color,
                 highlight: highlight
             });
