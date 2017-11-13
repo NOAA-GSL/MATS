@@ -10,8 +10,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.31-2017.11.09.18.52",
-      "buildDate": "2017.11.09.18.52",
+      "version": "1.5.31-2017.11.13.23.10",
+      "buildDate": "2017.11.13.23.10",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -26,56 +26,72 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.30-2017.11.09.18.42",
-      "buildDate": "2017.11.09.18.42",
+      "version": "1.5.30-2017.11.13.23.04",
+      "buildDate": "2017.11.13.23.04",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.30-2017.11.09.18.50",
-      "buildDate": "2017.11.09.18.50",
+      "version": "1.5.30-2017.11.13.23.08",
+      "buildDate": "2017.11.13.23.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.30-2017.11.09.18.40",
-      "buildDate": "2017.11.09.18.40",
+      "version": "1.5.30-2017.11.13.22.59",
+      "buildDate": "2017.11.13.22.59",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.30-2017.11.09.23.02",
-      "buildDate": "2017.11.09.23.02",
+      "version": "1.5.31-2017.11.13.22.55",
+      "buildDate": "2017.11.13.22.55",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.29-2017.11.09.23.09",
-      "buildDate": "2017.11.09.23.09",
+      "version": "1.5.30-2017.11.13.22.57",
+      "buildDate": "2017.11.13.22.57",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
-      "app": "radarReflectivity",
-      "title": "Radar Reflectivity",
-      "version": "1.5.27-2017.11.01.16.46",
+      "app": "compositeReflectivity",
+      "title": "Composite Reflectivity",
+      "version": "1.5.0-2017.11.01.16.46",
       "buildDate": "2017.11.01.16.46",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "vil",
+      "title": "Vertically Integrated Liquid",
+      "version": "1.5.0-2017.11.13.23.29",
+      "buildDate": "2017.11.13.23.29",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "echotop",
+      "title": "Echo Top",
+      "version": "1.5.0-2017.11.13.23.27",
+      "buildDate": "2017.11.13.23.27",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.30-2017.11.09.18.47",
-      "buildDate": "2017.11.09.18.47",
+      "version": "1.5.30-2017.11.13.23.06",
+      "buildDate": "2017.11.13.23.06",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -287,18 +303,10 @@
       "last_test_status": ""
     },
     {
-      "app": "precipitation",
-      "title": "Precipitation",
-      "version": "1.5.27",
-      "buildDate": "2017.11.01.19.33",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.30",
-      "buildDate": "2017.11.09.23.25",
+      "version": "1.5.31",
+      "buildDate": "2017.11.13.23.30",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -311,10 +319,26 @@
       "last_test_status": ""
     },
     {
-      "app": "radarReflectivity",
-      "title": "Radar Reflectivity",
-      "version": "1.5.27",
-      "buildDate": "2017.11.07.00.14",
+      "app": "compositeReflectivity",
+      "title": "Composite Reflectivity",
+      "version": "1.5.0-2017.11.01.16.46",
+      "buildDate": "2017.11.01.16.46",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "vil",
+      "title": "Vertically Integrated Liquid",
+      "version": "1.5.0-2017.11.01.16.46",
+      "buildDate": "2017.11.01.16.46",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "echotop",
+      "title": "Echo Top",
+      "version": "1.5.0-2017.11.01.16.46",
+      "buildDate": "2017.11.01.16.46",
       "last_test_run": "",
       "last_test_status": ""
     },
