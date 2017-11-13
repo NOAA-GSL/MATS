@@ -4,8 +4,8 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataSeries = function (plotParams, plotFunction) {
-    var dataRequests = {}; // used to store data queriesvar dataFoundForCurve = true;
+dataDieOff = function (plotParams, plotFunction) {
+    var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProecssingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
@@ -14,6 +14,11 @@ dataSeries = function (plotParams, plotFunction) {
     // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+
+    var weitemp = fromDate.split("-");
+    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
+    weitemp = toDate.split("-");
+    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -51,10 +56,10 @@ dataSeries = function (plotParams, plotFunction) {
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimeClause = validTimeOptionsMap[validTimeStr][0];
-        const averageStr = curve['average'];
-        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        const average = averageOptionsMap[averageStr][0];
-        const forecastLength = curve['forecast-length'];
+        const forecastLength = curve['dieoff-forecast-length'];
+        if (forecastLength !== "dieoff") {
+            throw new Error("INFO:  non dieoff curves are not yet supported");
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -62,38 +67,27 @@ dataSeries = function (plotParams, plotFunction) {
         var axisKey = variableStr + ":" + statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
-        if (averageStr == "None") {
-            if (validTimeStr === 'both') {
-                interval = 12 * 3600 * 1000;
-            } else {
-                interval = 24 * 3600 * 1000;
-            }
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
-        }
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 " +
+            var statement = "SELECT " +
+                "m0.fcst_len AS avtime, " +
+                "    COUNT(DISTINCT UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS N_times, " +
+                "    MIN(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS min_secs, " +
+                "    MAX(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS max_secs, " +
+                "    {{statistic}} " +
+                "FROM {{model}} AS m0 " +
+                "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
+                "AND m0.fcst_len >= 0 " +
+                "AND m0.mb10 >= {{top}} / 10 " +
+                "AND m0.mb10 <= {{bottom}} / 10 " +
+                "AND m0.date >= '{{fromDate}}' " +
+                "AND m0.date <= '{{toDate}}' " +
+                "AND m0.N_dt IS NOT NULL " +
+                "GROUP BY avtime " +
+                "ORDER BY avtime";
 
-            // build the query
-            //statement = statement.replace('{{model}}', model + '_Areg' + region);
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
@@ -102,13 +96,12 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{average}}', average);
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -174,19 +167,20 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateDieoffPlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
         finish: totalProecssingFinish.format(),
         duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
     }
+
     var result = {
         error: error,
         data: dataset,
