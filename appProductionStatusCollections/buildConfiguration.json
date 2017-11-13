@@ -187,7 +187,7 @@
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
       "displayOrder": 13,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
