@@ -84,9 +84,11 @@ const doCurveParams = function () {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
         var masterDescription;
         var masterTrsh;
+        var trshTemp;
         for (var j = 0; j < rows.length; j++) {
             masterDescription = rows[j].description.trim();
-            masterTrsh = rows[j].trsh.trim();
+            trshTemp = rows[j].trsh.trim();
+            masterTrsh = trshTemp * 10000;
             masterThresholdValuesMap[masterTrsh] = masterDescription;
         }
     } catch (err) {
@@ -124,9 +126,11 @@ const doCurveParams = function () {
             var thresholds = rows[i].trsh;
             var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
             var thresholdsArr = [];
+            var dummyThreshTemp;
             var dummyThresh;
             for (var j = 0; j < thresholdsArrRaw.length; j++) {
-                dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
+                dummyThreshTemp = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
+                dummyThresh = dummyThreshTemp*10000;
                 thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
             }
             thresholdsModelOptionsMap[model] = thresholdsArr;
@@ -310,7 +314,7 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[3]]
+                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]]
                 }
             });
         }
@@ -343,7 +347,7 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: thresholdsModelOptionsMap,
                     valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[3]]
+                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]]
                 }
             });
         }
