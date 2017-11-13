@@ -230,53 +230,6 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
-        optionsMap = {
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat,m0.N_{{variable0}} as N0'],
-            'Obs average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
-                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0']
-        };
-
-        var statAuxMap = {
-            'RMS-winds': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'RMS-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Bias (Model - Obs)-winds': 'group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Bias (Model - Obs)-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'N-winds': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'N-other': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Model average-winds': 'group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Model average-other': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Obs average-winds': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'Obs average-other': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0'
-        };
-
-        matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
-                name: 'statistic',
-                type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                statAuxMap:statAuxMap,
-                options: ['RMS', 'Bias (Model - Obs)', 'N', 'Model average', 'Obs average'],   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                default: 'RMS',
-                controlButtonVisibility: 'block',
-                displayOrder: 4,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-    }
-
     if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
         optionsMap = {
             temperature: ['dt', 't'],
@@ -296,24 +249,6 @@ const doCurveParams = function () {
                 default: 'winds',
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
-                displayPriority: 1,
-                displayGroup: 2
-            });
-    }
-
-    if (matsCollections.CurveParams.findOne({name: 'cloud-coverage'}) == undefined) {
-        optionsMap = {All: ['All'], Clear: ['Clear'], Cloudy: ['Cloudy']};
-        matsCollections.CurveParams.insert(
-            {
-                name: 'cloud-coverage',
-                type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: ['All', 'Clear', 'Cloudy'],
-                controlButtonCovered: true,
-                unique: false,
-                default: 'All',
-                controlButtonVisibility: 'block',
-                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -461,36 +396,6 @@ const doCurveParams = function () {
                 help: 'bottom-help.html'
             });
     }
-
-    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
-        optionsMap = {
-            '1 day': ['1 day'],
-            '3 days': ['3 days'],
-            '7 days': ['7 days'],
-            '31 days': ['31 days'],
-            '90 days': ['90 days'],
-            '180 days': ['180 days'],
-            '365 days': ['365 days']
-        };
-        matsCollections.CurveParams.insert(
-            {
-                name: 'curve-dates',
-                type: matsTypes.InputTypes.dateRange,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap).sort(),
-                startDate: startInit,
-                stopDate: stopInit,
-                superiorNames: ['data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: dstr,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 5,
-                help: "dateHelp.html"
-            });
-    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -513,7 +418,6 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
-                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
                 ['to ', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
@@ -521,27 +425,7 @@ const doCurveTextPatterns = function () {
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "average", "forecast-length", "top", "bottom"
-            ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
-                ['', 'variable', ': '],
-                ['', 'statistic', ', '],
-                ['level ', 'top', ' '],
-                ['to', 'bottom', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' '],
-                ['', 'curve-dates', '']
-            ],
-            displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "model", "region", "variable", "valid-time", "average", "forecast-length", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -552,7 +436,6 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
-                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
                 ['to', 'bottom', ' '],
                 ['fcst_len:', 'dieoff-forecast-length', 'h '],
@@ -560,7 +443,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
+                "label", "model", "region", "variable", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -588,12 +471,6 @@ const doPlotGraph = function () {
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            graphFunction: "graphProfile",
-            dataFunction: "dataProfile",
-            checked: false
-        });
-        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
@@ -613,17 +490,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'ruc_ua_sums2',
-            connectionLimit: 10
-        });
-        matsCollections.Databases.insert({
-            name: "modelSetting",
-            role: "model_data",
-            status: "active",
-            host: 'wolphin.fsl.noaa.gov',
-            user: 'readonly',
-            password: 'ReadOnly@2016!',
-            database: 'ruc_ua',
+            database: 'anomaly_corr_stats',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
@@ -637,19 +504,6 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
     }
-    var modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
-        host: 1,
-        user: 1,
-        password: 1,
-        database: 1,
-        connectionLimit: 10
-    });
-    var rows;
-    // the pool is intended to be global
-    modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
-    });
     var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
         user: 1,
@@ -673,7 +527,7 @@ Meteor.startup(function () {
     metadataPool = mysql.createPool(metadataSettings);
 
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ruc_ua", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anomaly_corr_stats", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
