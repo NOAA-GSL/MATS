@@ -189,6 +189,40 @@ Template.plotType.events({
             }
         }
     },
+    'click .plot-type-ValidTime': function(event) {
+        if (Session.get("confirmPlotChange")) {
+            matsCurveUtils.showValidTimeFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0 ) {
+                for (var ci = 0; ci < curves.length; ci ++) {
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
+                    }
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+            }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
+            Session.set("confirmPlotChange","");
+            Session.set('plotChangeType',"");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0 ) {
+                Session.set('plotChangeType',matsTypes.PlotTypes.validtime);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showValidTimeFace();
+            }
+        }
+    },
     'click .plot-type-Scatter2d': function(event) {
         if (Session.get("confirmPlotChange")) {
             matsCurveUtils.showScatterFace();
