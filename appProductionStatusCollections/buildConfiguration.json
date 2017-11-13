@@ -27,8 +27,8 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling",
@@ -55,27 +55,20 @@
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 6,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 7,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
-    },
-    {
-      "app": "radarReflectivity",
-      "displayName": "Radar Reflectivity",
-      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 9,
+      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
@@ -110,8 +103,8 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling",
@@ -152,76 +145,104 @@
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 8,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "echotop",
+      "displayName": "Echo Top",
+      "displayOrder": 9,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "vil",
+      "displayName": "Vertically Integrated Liquid",
+      "displayOrder": 10,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 9,
+      "displayOrder": 11,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "upperair-previous",
       "displayName": "Upper Air Previous",
-      "displayOrder": 10,
+      "displayOrder": 12,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
-      "displayOrder": 11,
-      "deploymentStatus": "enabled",
+      "displayOrder": 13,
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "ceiling-previous",
       "displayName": "Ceiling Previous",
-      "displayOrder": 12,
+      "displayOrder": 14,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "visibility-previous",
       "displayName": "Visibility Previous",
-      "displayOrder": 13,
+      "displayOrder": 15,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "surface-previous",
       "displayName": "Surface Previous",
-      "displayOrder": 14,
+      "displayOrder": 16,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "precipitation24hr-previous",
       "displayName": "24 Hour Precipitation Previous",
-      "displayOrder": 15,
+      "displayOrder": 17,
       "deploymentStatus": "disabled",
       "buildStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr-previous",
       "displayName": "Sub 24 Hour Precipitation Previous",
-      "displayOrder": 16,
+      "displayOrder": 18,
       "deploymentStatus": "disabled",
       "buildStatus": "disabled"
     },
     {
       "app": "compositeReflectivity-previous",
       "displayName": "Composite Reflectivity Previous",
-      "displayOrder": 17,
+      "displayOrder": 19,
+      "deploymentStatus": "disabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "echotop-previous",
+      "displayName": "Echo Top Previous",
+      "displayOrder": 20,
+      "deploymentStatus": "disabled",
+      "buildStatus": "archive"
+    },
+    {
+      "app": "vil-previous",
+      "displayName": "Vertically Integrated Liquid Previous",
+      "displayOrder": 21,
       "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "wfip2-previous",
       "displayName": "Wfip2 Previous",
-      "displayOrder": 18,
+      "displayOrder": 22,
       "deploymentStatus": "enabled",
       "buildStatus": "archive"
     }
@@ -246,31 +267,31 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 3,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 4,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 5,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
@@ -288,13 +309,13 @@
       "app": "radarReflectivity",
       "displayName": "Radar Reflectivity",
       "displayOrder": 8,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 9,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     }
   ]
 }
