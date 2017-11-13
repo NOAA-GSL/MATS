@@ -624,9 +624,9 @@ Meteor.startup(function () {
     metadataPool = mysql.createPool(metadataSettings);
 
 
-    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "cref", ['threshold_descriptions']);
-    mdr.addRecord("sumPool", "cref", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("metadataPool", "cref", ['region_descriptions']);
+    const mdr = new matsTypes.MetaDataDBRecord("modelPool", "echotop", ['threshold_descriptions']);
+    mdr.addRecord("sumPool", "echotop", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("metadataPool", "echotop", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 
