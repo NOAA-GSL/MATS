@@ -1396,7 +1396,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1418,7 +1418,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'forecast hour',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1462,7 +1462,15 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            // allowed templates are:
+            // %s -> series label,
+            // %c -> series color,
+            // %lx -> x axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %ly -> y axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %x -> X value,
+            // %y -> Y value,
+            // %x.2 -> precision of X value,
+            // %p -> percentcontent: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {
             }
@@ -1588,7 +1596,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1610,7 +1618,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'threshold',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1654,7 +1662,16 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            // allowed templates are:
+            // %s -> series label,
+            // %c -> series color,
+            // %lx -> x axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %ly -> y axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %x -> X value,
+            // %y -> Y value,
+            // %x.2 -> precision of X value,
+            // %p -> percent
+            content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {
             }
@@ -1684,7 +1701,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1706,7 +1723,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'time',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: axisLabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1750,7 +1767,16 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            // allowed templates are:
+            // %s -> series label,
+            // %c -> series color,
+            // %lx -> x axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %ly -> y axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
+            // %x -> X value,
+            // %y -> Y value,
+            // %x.2 -> precision of X value,
+            // %p -> percent
+            content: "<span style='font-size:150%'><strong>%s<br>%x.4:<br>value %y.4</strong></span>",
             xDateFormat: "%Y-%m-%d:%H",
             onHover: function (flotItem, $tooltipEl) {
             }
@@ -1992,7 +2018,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             axisLabel: xAxislabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: xAxislabel.length > 40 ? 16 : 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
@@ -2027,7 +2053,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
                 color: "#545454"
             },
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 26,
+            axisLabelFontSizePixels: 14,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,

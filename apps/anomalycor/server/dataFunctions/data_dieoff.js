@@ -4,15 +4,21 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataSeries = function (plotParams, plotFunction) {
+dataDieOff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProecssingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
+    // convert dates for sql
+    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
+    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+
+    var weitemp = fromDate.split("-");
+    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
+    weitemp = toDate.split("-");
+    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -25,34 +31,35 @@ dataSeries = function (plotParams, plotFunction) {
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
-        var diffFrom = curve.diffFrom;
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
-        var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        const diffFrom = curve.diffFrom;
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        const regionStr = curve['region'];
+        const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        const tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
+        const label = curve['label'];
+        const top = curve['top'];
+        const bottom = curve['bottom'];
+        const color = curve['color'];
+        const variableStr = curve['variable'];
+        const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        const variable = variableOptionsMap[variableStr];
+        const statisticSelect = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
-        if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr == 'wind'  ) {
-            statistic = statisticOptionsMap[statisticSelect][2];
-        } else {
+        if (variableStr == 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
+        } else {
+            statistic = statisticOptionsMap[statisticSelect][0];
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast-length'];
+        const validTimeStr = curve['valid-time'];
+        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        const forecastLength = curve['dieoff-forecast-length'];
+        if (forecastLength !== "dieoff") {
+            throw new Error("INFO:  non dieoff curves are not yet supported");
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -60,43 +67,42 @@ dataSeries = function (plotParams, plotFunction) {
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey = statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var interval = undefined;
+        var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                ",avg(m0.valid_day+3600*m0.hour) as middle_secs"+
-                ",min(m0.valid_day+3600*m0.hour) as min_secs"+
-                ",max(m0.valid_day+3600*m0.hour) as max_secs,"+
-                "count(m0.hour)/1000 as N_times, " +
-                "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 "+
+            var statement = "SELECT " +
+                "m0.fcst_len AS avtime, " +
+                "    COUNT(DISTINCT UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS N_times, " +
+                "    MIN(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS min_secs, " +
+                "    MAX(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS max_secs, " +
+                "    {{statistic}} " +
+                "FROM {{model}} AS m0 " +
+                "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "group by avtime " +
-                "order by avtime" +
-                ";";
+                "AND m0.fcst_len >= 0 " +
+                "AND m0.mb10 >= {{top}} / 10 " +
+                "AND m0.mb10 <= {{bottom}} / 10 " +
+                "AND m0.date >= '{{fromDate}}' " +
+                "AND m0.date <= '{{toDate}}' " +
+                "AND m0.N_dt IS NOT NULL " +
+                "GROUP BY avtime " +
+                "ORDER BY avtime";
 
-            statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
-            statement = statement.replace('{{statistic}}', statistic);
-            var validTimeClause =" ";
-            if (validTimes.length > 0){
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
-            }
+            statement = statement.replace('{{model}}', tablePrefix + region);
+            statement = statement.replace('{{top}}', top);
+            statement = statement.replace('{{bottom}}', bottom);
+            statement = statement.replace('{{fromDate}}', fromDate);
+            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{forecastLength}}', forecastLength);
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -140,6 +146,8 @@ dataSeries = function (plotParams, plotFunction) {
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
+            sum = diffResult.sum;
+            count = diffResult.count;
         }
 
         const mean = sum / count;
@@ -160,19 +168,20 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
-        }
+        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+    }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateDieoffPlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
         finish: totalProecssingFinish.format(),
         duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
     }
+
     var result = {
         error: error,
         data: dataset,

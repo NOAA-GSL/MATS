@@ -45,7 +45,8 @@ dataSeries = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = thresholdStr + ":" + statisticSelect;
+        //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
+        var axisKey = statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];
