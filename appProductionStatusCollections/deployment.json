@@ -50,16 +50,16 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.30-2017.11.09.19.05",
-      "buildDate": "2017.11.09.19.05",
+      "version": "1.5.30-2017.11.09.23.02",
+      "buildDate": "2017.11.09.23.02",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.29-2017.11.09.18.37",
-      "buildDate": "2017.11.09.18.37",
+      "version": "1.5.29-2017.11.09.23.09",
+      "buildDate": "2017.11.09.23.09",
       "last_test_run": "",
       "last_test_status": ""
     },
