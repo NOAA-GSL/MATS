@@ -1,0 +1,37 @@
+{
+  "_id": "Teem4rawwcz3qRiw3",
+  "createdAt": {
+    "$date": "2017-11-10T19:41:51.804+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$96fflh0TgiYZXIIwWvBqWO4znR.KM.o6JLRmKXnEJ9zjnJo179hWi"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "randy.pierce@noaa.gov"
+}
+{
+  "_id": "zw5gFAgaj5LGgRkjt",
+  "createdAt": {
+    "$date": "2017-11-13T17:14:44.135+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$z3Tfd7LwbbOJ5C.gUcbWGuj7R.p4tYb/CpgNbh0wC5XhaYVOBbLhW"
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2017-11-13T17:14:44.162+0000"
+          },
+          "hashedToken": "p2O7/7/centLky9e6FYSZwvQjQhHiIPSkNaS6PjIaFU="
+        }
+      ]
+    }
+  },
+  "username": "Jeffrey.A.Hamilton@noaa.gov"
+}
