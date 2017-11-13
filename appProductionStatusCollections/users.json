@@ -1,4 +1,26 @@
 {
+  "_id": "GXf6nRFToiLsW5xNG",
+  "createdAt": {
+    "$date": "2017-11-13T22:53:16.114+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$MMIcStDMQ.a9ah3S9exage/5rbSXsXsHKXeSqk0jF4NNEB6Q5HCR."
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2017-11-13T22:53:16.140+0000"
+          },
+          "hashedToken": "5Z0WfbR6U1A2HHJQoAFfaS9x4Sm8D+f6SupRWTDi+lw="
+        }
+      ]
+    }
+  },
+  "username": "molly.b.smith@noaa.gov"
+}
+{
   "_id": "Teem4rawwcz3qRiw3",
   "createdAt": {
     "$date": "2017-11-10T19:41:51.804+0000"
