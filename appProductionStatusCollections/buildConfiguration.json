@@ -66,16 +66,9 @@
       "buildStatus": "enabled"
     },
     {
-      "app": "radarReflectivity",
-      "displayName": "Radar Reflectivity",
-      "displayOrder": 8,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
-    },
-    {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 9,
+      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
