@@ -12,6 +12,17 @@ const startInit = dateInitStrParts[0];
 const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
+const LCM = function(A)  // A is an integer array (e.g. [-50,25,-45,-18,90,447])
+{
+    var n = A.length, a = Math.abs(A[0]);
+    for (var i = 1; i < n; i++)
+    { var b = Math.abs(A[i]), c = a;
+        while (a && b){ a > b ? a %= b : b %= a; }
+        a = Math.abs(c*A[i])/(a+b);
+    }
+    return a;
+}
+
 var doScatter2dParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.Scatter2dParams.remove({});
@@ -122,7 +133,6 @@ var doCurveParams = function () {
     var variableFieldsMap = {};
     var variableOptionsMap = {};
     var variableInfoMap = {};
-    var instrumentSampleIntervalPerSite = {};
     variableOptionsMap[matsTypes.PlotTypes.profile] = {};
     variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
     variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
@@ -131,69 +141,99 @@ var doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
     var rows;
+    var dataSourceSites = {};
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources_new;");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows.length; i++) {
+            var dataSources = [];
+            var dataSourceCycleIntervals = [];
             var model = rows[i].description;
-            var is_instrument = rows[i].is_instrument;
-            var tablename = rows[i].tablename;
-            var thisid = rows[i].thisid;
-            var cycle_interval = rows[i].cycle_interval * 1000;   // seconds to ms
-            var variable_names = rows[i].variable_names.split(',');
-            var is_json = rows[i].isJSON;
-            var color = rows[i].color;
+            var cycle_intervals_str = rows[i].cycle_interval.replace(/'/g, '"');
+            var cycle_intervals = JSON.parse(cycle_intervals_str);
+            var cycle_interval_sampleRates = Object.keys(cycle_intervals);
 
-
-            var minDate = rows[i].mindate;
-            var maxDate = rows[i].maxdate;
-            var minutc = rows[i].minutc;
-            var maxutc = rows[i].maxutc;
-            var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + model.toString() + "') as hd")[0]['hd'];
-            var valueList = [];
-            valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
-            modelOptionsMap[model] = valueList;
-            datesMap[model] = {};
-            datesMap[model]["minDate"] = minDate;
-            datesMap[model]["maxDate"] = maxDate;
-            datesMap[model]["minutc"] = minutc;
-            datesMap[model]["maxutc"] = maxutc;
-
-            var labels = [];
-            for (var j = 0; j < variable_names.length; j++) {
-                const rows2 = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select getVariableInfo('" + variable_names[j] + "') as info;");
-                var infostring = rows2[0].info.split('|');
-                labels.push(infostring[1]);
-                variableFieldsMap[infostring[1]] = variable_names[j];
-                variableInfoMap[variable_names[j]] = {
-                    'type': infostring[0],
-                    'units': infostring[2],
-                    'minexpected': infostring[3],
-                    'maxexpected': infostring[4]
-                };
-                variableOptionsMap[matsTypes.PlotTypes.profile][model] = [];
-                variableOptionsMap[matsTypes.PlotTypes.profile][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.profile][model], labels);
-                variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [];
-                variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][model], labels);
-                variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [];
-                variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][model], labels);
-
-                matsCollections.Models.insert({name: model, table_name: tablename, thisid: thisid});
+            // var cycle_interval = rows[i].cycle_interval * 1000;   // seconds to ms
+            // cycle interval is a map - indexed by sample rate with valuse being a list of siteIds valid for the sample interval.
+            // If there are different sample rates the reuslt will be different data sources with different valid sites. An empty list indicates all sites are valid (like for a model.
+            // e.g. {'900': ['9', '7', '4', '1'], '600': ['17', '18', '19', '20']} would result in three different datasources, datasource-1800, datasource-600, and datasource-900
+            // where datasource-1800 is the least common multiple of 600 and 900 and has valid sites [1,2,7,9,17,18,19,20],
+            // and datasource-600 is valid for sites [17,18,19,20], and datasource-900 is valid for sites [1,4,7,9].
+            var ci = 0;
+            var lcm;
+            if (cycle_interval_sampleRates.length === 1) {
+                lcm = cycle_interval_sampleRates[0];
+                dataSources[0] = model;
+                dataSourceCycleIntervals[0] = lcm;
+                dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]];
+            } else {
+                lcm = LCM(cycle_interval_sampleRates);
+                dataSourceCycleIntervals[0] = lcm;
+                dataSources[0] = model + "-LCM-" + lcm;
+                for (ci = 0; ci < cycle_interval_sampleRates.length; ci++) {
+                    var addedModel = model + "-" + cycle_interval_sampleRates[ci];
+                    dataSources.push(addedModel);
+                    dataSourceCycleIntervals.push(cycle_interval_sampleRates[ci]);
+                    // either a single sampleRate source or the first of multisampleRate source
+                    dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]].concat(cycle_intervals[cycle_interval_sampleRates[ci]]);
+                    dataSourceSites[addedModel] = cycle_intervals[cycle_interval_sampleRates[ci]];
+                }
             }
-        }
-    } catch (err) {
-        console.log("Database error:", err.message);
-    }
-    try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT * FROM instruments_per_site;");
-        for (var i = 0; i < rows.length; i++) {
-            var siteId = rows[i].sites_siteid;
-            var instrumentId = rows[i].instruments_instrid;
-            var sample_interval = rows[i].sample_interval;
-            if (! instrumentSampleIntervalPerSite[instrumentId]) {
-                instrumentSampleIntervalPerSite[instrumentId] = {};
+
+            //loop through the datasources - most of which will only be one, but multi-sample datasources will have more
+            // be sure to save the actual model for use in sub queries and stuff
+            var actualModel = model;
+            for (var ci = 0; ci < dataSources.length; ci++) {
+                model = dataSources[ci];  // might be a multi-sampleRate model
+                var cycle_interval = dataSourceCycleIntervals[ci];
+                var is_instrument = rows[i].is_instrument;
+                var tablename = rows[i].tablename;
+                var thisid = rows[i].thisid;
+                var variable_names = rows[i].variable_names.split(',');
+                var is_json = rows[i].isJSON;
+                var color = rows[i].color;
+
+
+                var minDate = rows[i].mindate;
+                var maxDate = rows[i].maxdate;
+                var minutc = rows[i].minutc;
+                var maxutc = rows[i].maxutc;
+
+                var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + actualModel.toString() + "') as hd")[0]['hd'];
+                var valueList = [];
+                valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
+                modelOptionsMap[model] = valueList;
+                if (model !== actualModel) {
+                    modelOptionsMap[actualModel] = valueList;
+                }
+                datesMap[model] = {};
+                datesMap[model]["minDate"] = minDate;
+                datesMap[model]["maxDate"] = maxDate;
+                datesMap[model]["minutc"] = minutc;
+                datesMap[model]["maxutc"] = maxutc;
+
+                var labels = [];
+                for (var j = 0; j < variable_names.length; j++) {
+                    const rows2 = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select getVariableInfo('" + variable_names[j] + "') as info;");
+                    var infostring = rows2[0].info.split('|');
+                    labels.push(infostring[1]);
+                    variableFieldsMap[infostring[1]] = variable_names[j];
+                    variableInfoMap[variable_names[j]] = {
+                        'type': infostring[0],
+                        'units': infostring[2],
+                        'minexpected': infostring[3],
+                        'maxexpected': infostring[4]
+                    };
+                    variableOptionsMap[matsTypes.PlotTypes.profile][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.profile][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.profile][model], labels);
+                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.scatter2d][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.scatter2d][model], labels);
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model] = [];
+                    variableOptionsMap[matsTypes.PlotTypes.timeSeries][model].push.apply(variableOptionsMap[matsTypes.PlotTypes.timeSeries][model], labels);
+
+                    matsCollections.Models.insert({name: model, table_name: tablename, thisid: thisid});
+                }
             }
-            instrumentSampleIntervalPerSite[instrumentId][siteId] = sample_interval;
         }
     } catch (err) {
         console.log("Database error:", err.message);
@@ -209,7 +249,6 @@ var doCurveParams = function () {
             matsCollections.Instruments.insert({
                 name: instrument,
                 instrument_id: instrid,
-                siteSampleIntervals: instrumentSampleIntervalPerSite[instrid],
                 color: color,
                 highlight: highlight
             });
