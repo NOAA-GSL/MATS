@@ -48,6 +48,7 @@ data2dScatter = function (plotParams, plotFunction) {
             const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve[axis + '-data-source']][0].split(',');
             curve[axis + "-dataSource_is_instrument"] = parseInt(tmp[1]);
             curve[axis + "-dataSource_tablename"] = tmp[2];
+            curve[axis + "-dataSource_instrumentId"] = tmp[3];
             curve[axis + "-verificationRunInterval"] = tmp[4];
             curve[axis + "-dataSource_is_json"] = parseInt(tmp[5]);
             max_verificationRunInterval = Number(curve[axis + "-verificationRunInterval"]) > Number(max_verificationRunInterval) ? curve[axis + "-verificationRunInterval"] : max_verificationRunInterval;
@@ -56,6 +57,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve[axis + '-truth-data-source']][0].split(',');
                 curve[axis + "-truthDataSource_is_instrument"] = parseInt(tmp[1]);
                 curve[axis + "-truthDataSource_tablename"] = tmp[2];
+                curve[axis + "-truthDataSource_instrumentId"] = tmp[3];
                 curve[axis + "-truthRunInterval"] = tmp[4];
                 curve[axis + "-truthDataSource_is_json"] = parseInt(tmp[5]);
                 // might override the datasource assigned max_verificationRunInterval
@@ -73,6 +75,7 @@ data2dScatter = function (plotParams, plotFunction) {
             // each axis has a data source - get the right data source and derive the model
             var dataSource_is_instrument = curve[axis + "-dataSource_is_instrument"];
             var dataSource_tablename = curve[axis + "-dataSource_tablename"];
+            var dataSource_instrumentId = curve[axis + "-dataSource_instrumentId"];
             var verificationRunInterval = curve[axis + "-verificationRunInterval"];
             var dataSource_is_json = curve[axis + "-dataSource_is_json"];
             // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
@@ -157,7 +160,7 @@ data2dScatter = function (plotParams, plotFunction) {
 
             try {
                 var startMoment = moment();
-                rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval);
+                rawAxisData[axis] = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId);
                 var finishMoment = moment();
                 dataRequests["data retrieval (query) time - " +  axis + " - " + curve.label] = {
                     begin: startMoment.format(),
@@ -183,6 +186,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 // only the truth model is different form the curves other parameters
                 var truthDataSource_is_instrument = curve[axis + "-truthDataSource_is_instrument"];
                 var truthDataSource_tablename = curve[axis + "-truthDataSource_tablename"];
+                var truthDataSource_instrumentId = curve[axis + "-truthDataSource_instrumentId"];
                 var truthRunInterval = curve[axis + "-truthRunInterval"];
                 var truthDataSource_is_json = curve[axis + "-truthDataSource_is_json"];
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
@@ -224,7 +228,7 @@ data2dScatter = function (plotParams, plotFunction) {
                 dataRequests[axis + '-truth-' + curve.label] = truthStatement;
                 try {
                     startMoment = moment();
-                    rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
+                    rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
                     finishMoment = moment();
                     dataRequests["truth data retrieveal (query) time - " + axis + " - " + curve.label] = {
                         begin: startMoment.format(),
