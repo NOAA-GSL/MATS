@@ -10,3 +10,4 @@ mkdir -p ${localtmpfile}
 exportCollections ${localtmpfile}
 mongoimport -h localhost:3001 --db meteor -c deployment --file ${localtmpfile}/deployment.json --upsert
 mongoimport -h localhost:3001 --db meteor -c buildConfiguration --file ${localtmpfile}/buildConfiguration.json --upsert
+mongoimport -h localhost:3001 --db meteor -c allowedUsers --file ${localtmpfile}/allowedUsers.json --upsert

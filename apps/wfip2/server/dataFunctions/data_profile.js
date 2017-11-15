@@ -40,6 +40,7 @@ dataProfile = function (plotParams, plotFunction) {
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         curve.dataSource_is_instrument = parseInt(tmp[1]);
         curve.dataSource_tablename = tmp[2];
+        curve.dataSource_instrumentId = tmp[3];
         curve.verificationRunInterval = tmp[4];
         curve.dataSource_is_json = parseInt(tmp[5]);
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
@@ -51,6 +52,7 @@ dataProfile = function (plotParams, plotFunction) {
             const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
             curve.truthDataSource_is_instrument = parseInt(tmp[1]);
             curve.truthDataSource_tablename = tmp[2];
+            curve.truthDataSource_instrumentId = tmp[3];
             curve.truthRunInterval = tmp[4];
             curve.truthDataSource_is_json = parseInt(tmp[5]);
             // might override the datasource assigned max_verificationRunInterval
@@ -72,6 +74,7 @@ dataProfile = function (plotParams, plotFunction) {
         var dataSource = curve['data-source'];
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
+        var dataSource_instrumentId = curve.dataSource_instrumentId;
         var verificationRunInterval = curve.verificationRunInterval;
         var halfVerificationInterval = verificationRunInterval / 2;
 
@@ -183,7 +186,7 @@ dataProfile = function (plotParams, plotFunction) {
             // queryWFIP2DB has embedded quality control for windDir
             // if corresponding windSpeed < 3ms null the windDir
             var startMoment = moment();
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId);
             var finishMoment = moment();
             dataRequests["data retrieval (query) time - " + curve.label] = {
                 begin: startMoment.format(),
@@ -206,6 +209,7 @@ dataProfile = function (plotParams, plotFunction) {
                 // need a truth data source for statistic
                 var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
                 var truthDataSource_tablename = curve.truthDataSource_tablename;
+                var truthDataSource_instrumentId = curve.truthDataSource_instrumentId;
                 var truthRunInterval = curve.truthRunInterval;
                 var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
@@ -249,7 +253,7 @@ dataProfile = function (plotParams, plotFunction) {
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     startMoment = moment();
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
                     finishMoment = moment();
                     dataRequests["truth data retrieveal (query) time - " + curve.label] = {
                         begin: startMoment.format(),
