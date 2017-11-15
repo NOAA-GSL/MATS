@@ -249,7 +249,7 @@ const doCurveParams = function () {
                 controlButtonText: "valid utc hour",
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     }
 
@@ -276,7 +276,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     }
 
@@ -348,7 +348,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 8,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 3,
                 help: 'top-help.html'
             });
     }
@@ -369,7 +369,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 9,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 3,
                 help: 'bottom-help.html'
             });
     }
