@@ -14,11 +14,6 @@ dataDieOff = function (plotParams, plotFunction) {
     // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -28,75 +23,64 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        const tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
         const label = curve['label'];
-        const top = curve['top'];
-        const bottom = curve['bottom'];
         const color = curve['color'];
-        const variableStr = curve['variable'];
-        const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        const variable = variableOptionsMap[variableStr];
-        const statisticSelect = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        if (variableStr == 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
+        const validTimes = validTimeOptionsMap[validTimeStr][0];
+        var validTimeClause = " ";
+        if (validTimes.length > 0){
+            validTimeClause = "and m0.valid_hour = " + validTimes;
         }
+        const variable = curve['variable'];
+        const top = curve['top'];
+        const bottom = curve['bottom'];
+
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-        var axisKey = statisticSelect;
+        var axisKey = variable;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
-                "    COUNT(DISTINCT UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS N_times, " +
-                "    MIN(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS min_secs, " +
-                "    MAX(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS max_secs, " +
-                "    {{statistic}} " +
-                "FROM {{model}} AS m0 " +
-                "WHERE 1 = 1 " +
+            var statement = "select m0.fcst_len as avtime, " +
+                "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
+                "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
+                "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+                "avg(m0.wacorr/100) as stat, " +
+                "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values " +
+                "from stats as m0 " +
+                "where 1=1 " +
+                "and m0.model = '{{data_source}}' " +
+                "and m0.variable = '{{variable}}' " +
+                "and m0.region = {{region}} " +
                 "{{validTimeClause}} " +
-                "AND m0.fcst_len >= 0 " +
-                "AND m0.mb10 >= {{top}} / 10 " +
-                "AND m0.mb10 <= {{bottom}} / 10 " +
-                "AND m0.date >= '{{fromDate}}' " +
-                "AND m0.date <= '{{toDate}}' " +
-                "AND m0.N_dt IS NOT NULL " +
-                "GROUP BY avtime " +
-                "ORDER BY avtime";
+                "and m0.level >= {{top}} " +
+                "and m0.level <= {{bottom}} " +
+                "and m0.valid_date >= '{{fromDate}}' " +
+                "and m0.valid_date <= '{{toDate}}' " +
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
-            statement = statement.replace('{{model}}', tablePrefix + region);
+            statement = statement.replace('{{data_source}}', data_source);
+            statement = statement.replace('{{region}}', region);
+            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
