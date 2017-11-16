@@ -217,25 +217,20 @@ const doCurveParams = function () {
         if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
             var optionsMap = {
 
-                'TSS (True Skill Score) * 100': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1.) * 100 as stat,' +
+                'TSS (True Skill Score)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1.) * 100 as stat,' +
                 'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
-
-
-                'Bias (Model - RAOB)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat,' + 'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
-
-                'Nlow(metars<thresh,avg per hr)': ['avg(m0.yy+m0.ny+0.000)/1000 as stat,' + 'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
-
-                'Ntot(total metars,avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as stat,' + 'count(m0.nn)/1000 as N0'],
-
-                'Ratio (Nlow/Ntot) * 100': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat,' + 'count(m0.nn)/1000 as N0'],
-                'PODy (POD of ceil< thresh) * 100': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'PODn (POD of ceil< thresh) * 100': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'FAR (False Alarm Ratio) * 100': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'N_in_avg(to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/100000  as stat,count(m0.nn)/1000 as N0'],
-                'ETS (Equitable Threat Score) * 100': ['((sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))+0.00)/(sum(m0.yy+m0.ny+m0.yn) -(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn)))) * 100 as stat,' +
+                'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny))*100 as stat,' + 'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'], // should be divided by 1000, but legacy app seems to undo this later
+                'Nlow(metars<thresh,avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat,' + 'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'], // should be divided by 1000, but legacy app seems to undo this later
+                'Ntot(total metars,avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat,' + 'count(m0.nn)/1000 as N0'], // should be divided by 1000, but legacy app seems to undo this later
+                'Ratio (Nlow/Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat,' + 'count(m0.nn)/1000 as N0'],
+                'PODy (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'PODn (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'N_in_avg(to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)  as stat,count(m0.nn)/1000 as N0'],// should be divided by 100000, but legacy app seems to undo this later
+                'ETS (Equitable Threat Score)': ['((sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))+0.00)/(sum(m0.yy+m0.ny+m0.yn) -(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn)))) * 100 as stat,' +
                 'count(m0.nn)/1000 as N0'],
-                'CSI (Critical Success Index) * 100': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'HSS(Heidke Skill Score) * 100': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as stat,' +
+                'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'HSS(Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as stat,' +
                 'count(m0.nn)/1000 as N0'],
 
             };

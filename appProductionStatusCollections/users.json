@@ -14,6 +14,12 @@
             "$date": "2017-11-13T22:53:16.140+0000"
           },
           "hashedToken": "5Z0WfbR6U1A2HHJQoAFfaS9x4Sm8D+f6SupRWTDi+lw="
+        },
+        {
+          "when": {
+            "$date": "2017-11-15T21:40:06.243+0000"
+          },
+          "hashedToken": "K1B3h9J+pTp1zl4EBV9owZ906dsIqmxYxlMYnnVNm6M="
         }
       ]
     }
@@ -51,6 +57,12 @@
             "$date": "2017-11-13T17:14:44.162+0000"
           },
           "hashedToken": "p2O7/7/centLky9e6FYSZwvQjQhHiIPSkNaS6PjIaFU="
+        },
+        {
+          "when": {
+            "$date": "2017-11-15T22:46:24.110+0000"
+          },
+          "hashedToken": "6Qxf4JTXhvIqhEf8JiOLeGIyE/pr/zK6XpE5Jr+QH9w="
         }
       ]
     }

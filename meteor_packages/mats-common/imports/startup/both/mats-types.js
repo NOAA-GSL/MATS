@@ -24,7 +24,8 @@ var  PlotTypes = {
     profile : "Profile",
     scatter2d : "Scatter2d",
     dieoff : "DieOff",
-    threshold : "Threshold"
+    threshold : "Threshold",
+    validtime : "ValidTime"
 };
 
 var ForecastTypes = {
@@ -72,7 +73,8 @@ var PlotView = {
     textProfile: "textProfile",
     textScatter: "textScatter",
     textDieoff: "textDieoff",
-    textThreshold: "textThreshold"
+    textThreshold: "textThreshold",
+    textValidTime: "testValidTime"
 };
 
 var Messages = {
