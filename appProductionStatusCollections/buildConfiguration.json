@@ -27,8 +27,8 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -69,8 +69,8 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 8,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     }
   ]
 }
@@ -103,8 +103,8 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -180,7 +180,7 @@
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
       "displayOrder": 13,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
@@ -208,35 +208,35 @@
       "app": "precipitation24hr-previous",
       "displayName": "24 Hour Precipitation Previous",
       "displayOrder": 17,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr-previous",
       "displayName": "Sub 24 Hour Precipitation Previous",
       "displayOrder": 18,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "disabled"
     },
     {
       "app": "compositeReflectivity-previous",
       "displayName": "Composite Reflectivity Previous",
       "displayOrder": 19,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "echotop-previous",
       "displayName": "Echo Top Previous",
       "displayOrder": 20,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "vil-previous",
       "displayName": "Vertically Integrated Liquid Previous",
       "displayOrder": 21,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
