@@ -103,8 +103,8 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 2,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -222,21 +222,21 @@
       "app": "compositeReflectivity-previous",
       "displayName": "Composite Reflectivity Previous",
       "displayOrder": 19,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "echotop-previous",
       "displayName": "Echo Top Previous",
       "displayOrder": 20,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "vil-previous",
       "displayName": "Vertically Integrated Liquid Previous",
       "displayOrder": 21,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
