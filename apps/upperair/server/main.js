@@ -561,7 +561,7 @@ const doCurveTextPatterns = function () {
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "average", "forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "average", "forecast-length", "top", "bottom"
             ],
             groupSize: 6
         });
@@ -581,7 +581,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -600,7 +600,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
