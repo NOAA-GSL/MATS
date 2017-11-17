@@ -180,12 +180,12 @@ Template.textDieOffOutput.helpers({
         const stats = matsCurveUtils.get_err(data,times);
         const n = data.length;
         const line = "<td>" + curve.label + "</td>" +
-            "<td>" + stats.d_mean.toPrecision(4) + "</td>" +
-            "<td> +/- " + stats.stde_betsy.toPrecision(4) + "</td>" +
-            "<td>" + stats.n_good + "</td>" +
-            "<td>" + stats.sd.toPrecision(4) + "</td>" +
-            "<td>" + stats.minVal.toPrecision(4) + "</td>" +
-            "<td>" + stats.maxVal.toPrecision(4) + "</td>";
+            "<td>" + (stats.d_mean ? stats.d_mean.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.stde_betsy ? stats.stde_betsy.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.n_good).toString() + "</td>" +
+            "<td>" + (stats.sd ? stats.sd.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.minVal ? stats.minVal.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.maxVal ? stats.maxVal.toPrecision(4) : "undefined").toString() + "</td>";
         return line;
     }
 });
