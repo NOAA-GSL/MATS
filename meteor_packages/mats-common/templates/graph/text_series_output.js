@@ -180,13 +180,14 @@ Template.textSeriesOutput.helpers({
         const stats = matsCurveUtils.get_err(data,times);
         const n = data.length;
         const line = "<td>" + curve.label + "</td>" +
-            "<td>" + stats.d_mean ? stats.d_mean.toPrecision(4) : "undefined" + "</td>" +
-            "<td> +/- " + stats.stde_betsy ? stats.stde_betsy.toPrecision(4) :"undefined" + "</td>" +
-            "<td>" + stats.n_good + "</td>" +
-            "<td>" + stats.sd ? stats.sd.toPrecision(4) : "undefined" + "</td>" +
-            "<td>" + stats.lag1 ? stats.lag1.toPrecision(4) : "undefined" + "</td>" +
-            "<td>" + stats.minVal ? stats.minVal.toPrecision(4) : "undefined" + "</td>" +
-            "<td>" + stats.maxVal ? stats.maxVal.toPrecision(4) : "undefined" + "</td>";
+            "<td>" + (stats.d_mean ? stats.d_mean.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.stde_betsy ? stats.stde_betsy.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.n_good).toString() + "</td>" +
+            "<td>" + (stats.sd ? stats.sd.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.lag1 ? stats.lag1.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.minVal ? stats.minVal.toPrecision(4) : "undefined").toString() + "</td>" +
+            "<td>" + (stats.maxVal ? stats.maxVal.toPrecision(4) : "undefined").toString() + "</td>";
+
         return line;
     }
 });
