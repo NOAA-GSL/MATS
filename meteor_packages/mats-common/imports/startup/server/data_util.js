@@ -1093,8 +1093,15 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avVal = Number(rows[rowIndex].avVal);
                     var stat = rows[rowIndex].stat;
-                    var sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-                    var sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                    var sub_values;
+                    var sub_secs;
+                    if (stat !== null) {
+                        sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                        sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                    } else {
+                        sub_values = NaN;
+                        sub_secs = NaN;
+                    }
                     d.push([stat, avVal, -1, sub_values, sub_secs]); // -1 is a placeholder for the stde_betsy value
                 }// end of loop row
                 // done waiting - have results
