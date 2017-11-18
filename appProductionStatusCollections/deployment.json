@@ -26,8 +26,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.32-2017.11.17.17.43",
-      "buildDate": "2017.11.17.17.43",
+      "version": "1.5.32-2017.11.18.06.02",
+      "buildDate": "2017.11.18.06.02",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -337,24 +337,24 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.0-2017.11.01.16.46",
-      "buildDate": "2017.11.01.16.46",
+      "version": "1.5.0",
+      "buildDate": "2017.11.17.18.37",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.5.0-2017.11.01.16.46",
-      "buildDate": "2017.11.01.16.46",
+      "version": "1.5.0",
+      "buildDate": "2017.11.17.18.46",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.0-2017.11.01.16.46",
-      "buildDate": "2017.11.01.16.46",
+      "version": "1.5.0",
+      "buildDate": "2017.11.17.18.40",
       "last_test_run": "",
       "last_test_status": ""
     },
