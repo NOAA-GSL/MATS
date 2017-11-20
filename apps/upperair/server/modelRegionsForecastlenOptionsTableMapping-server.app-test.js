@@ -26,7 +26,7 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
             before(function (done) {
                 this.timeout(15000);
                 // runs before all tests in this block
-                models = matsCollections.CurveParams.findOne({name: "model"});
+                models = matsCollections.CurveParams.findOne({name: "data-source"});
                 optionsMap = models.optionsMap;
                 optionsGroups = models.optionsGroups;
                 disabledOptions = models.disabledOptions;
