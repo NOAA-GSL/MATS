@@ -418,10 +418,9 @@ const doCurveTextPatterns = function () {
                 ['to ', 'bottom', ' '],
                 ['fcst_len:', 'dieoff-forecast-length', 'h '],
                 [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "average", "dieoff-forecast-length", "top", "bottom"
+                "label", "data-source", "region", "variable", "valid-time", "dieoff-forecast-length", "top", "bottom"
             ],
             groupSize: 6
         });
