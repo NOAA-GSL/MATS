@@ -1093,8 +1093,15 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                     var avVal = Number(rows[rowIndex].avVal);
                     var stat = rows[rowIndex].stat;
-                    var sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-                    var sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                    var sub_values;
+                    var sub_secs;
+                    if (stat !== null) {
+                        sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                        sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                    } else {
+                        sub_values = NaN;
+                        sub_secs = NaN;
+                    }
                     d.push([stat, avVal, -1, sub_values, sub_secs]); // -1 is a placeholder for the stde_betsy value
                 }// end of loop row
                 // done waiting - have results
@@ -1623,8 +1630,13 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabelPadding: 20,
         }],
         xaxis: {
-            zoomRange: [0.1, null],
-            mode: 'xy'
+            zoomRange: [0.01, null],
+            mode: 'xy',
+            //ticks: [[0, 0.01], [1, 0.10], [2, 0.25], [3, 0.50], [4, 1.00], [5, 1.50], [6, 2.00], [7, 3.00]],
+            ticks: [[0.01, "0.01"], [0.1, "0.10"], [0.25, "0.25"], [0.5, "0.50"], [1.0, "1.00"], [1.5, "1.50"], [2.0, "2.00"], [3.0, "3.00"]],
+            //ticks: [0.01,0.1,0.25,0.5,1.0,1.5,2.0,3.0],
+            // transform: function (v) {return v === 0 ? 0 : Math.log(v);},
+            // inverseTransform: function (v) {return Math.exp(v);}
         },
         yaxes: yaxes,
         yaxis: yaxis,

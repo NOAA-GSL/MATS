@@ -397,7 +397,7 @@ var doCurveTextPatterns = function () {
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "average", "forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time"
             ],
             groupSize: 4
         });
@@ -414,7 +414,7 @@ var doCurveTextPatterns = function () {
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "model", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time"
             ],
             groupSize: 6
         });

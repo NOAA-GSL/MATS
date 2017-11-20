@@ -90,7 +90,7 @@ fi
 if [ "X${requestedTag}" == "X" ]; then
     /usr/bin/git  rev-parse ${tag}
     if [ $? -ne 0  ]; then
-        echo ${failed} You requested a tag that does not exist ${tag} - can not continue
+        echo -e ${failed} You requested a tag that does not exist ${tag} - can not continue
         echo These tags exist...
         /usr/bin/git show-ref --tags
         exit 1
@@ -206,7 +206,7 @@ rm -rf /tmp/npm-*
 echo deploying modified apps ${apps[*]}
 cd /web
 for app in ${apps[*]}; do
-    echo "deploying ${GRN}$app${NC}"
+    echo -e "deploying ${GRN}$app${NC}"
     # if existing, rm previous and move existing app to previous, be sure to change its title
     if [ -d "$app" ]; then
         if [ -d "$app"-previous ]; then
