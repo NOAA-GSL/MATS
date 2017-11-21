@@ -69,22 +69,22 @@
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 8,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 9,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 10,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
