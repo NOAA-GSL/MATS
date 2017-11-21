@@ -130,7 +130,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "dates", "variable"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -305,25 +305,25 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
-                controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
-                displayOrder: 7,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
+    // if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+    //     matsCollections.CurveParams.insert(
+    //         {
+    //             name: 'dieoff-forecast-length',
+    //             type: matsTypes.InputTypes.select,
+    //             optionsMap: {},
+    //             options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
+    //             superiorNames: [],
+    //             selected: '',
+    //             controlButtonCovered: true,
+    //             unique: false,
+    //             default: matsTypes.ForecastTypes.dieoff,
+    //             controlButtonVisibility: 'block',
+    //             controlButtonText: 'forecast-length',
+    //             displayOrder: 7,
+    //             displayPriority: 1,
+    //             displayGroup: 3
+    //         });
+    // }
 
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -422,6 +422,36 @@ const doCurveParams = function () {
                 help: 'bottom-help.html'
             });
     }
+
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 12,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
+            });
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -477,26 +507,26 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
-                ['', 'variable', ': '],
-                ['', 'statistic', ', '],
-                ['level ', 'top', ' '],
-                ['to', 'bottom', ' '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                ['valid-time:', 'valid-time', ' '],
-                ['phase:', 'phase', ' '],
-                ['', 'curve-dates', '']
-            ],
-            displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "dieoff-forecast-length", "phase", "top", "bottom"
-            ],
-            groupSize: 6
-        });
+        // matsCollections.CurveTextPatterns.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     textPattern: [
+        //         ['', 'label', ': '],
+        //         ['', 'data-source', ' in '],
+        //         ['', 'regionName', ', '],
+        //         ['', 'variable', ': '],
+        //         ['', 'statistic', ', '],
+        //         ['level ', 'top', ' '],
+        //         ['to', 'bottom', ' '],
+        //         ['fcst_len:', 'dieoff-forecast-length', 'h '],
+        //         ['valid-time:', 'valid-time', ' '],
+        //         ['phase:', 'phase', ' '],
+        //         ['', 'curve-dates', '']
+        //     ],
+        //     displayParams: [
+        //         "label", "data-source", "region", "statistic", "variable", "valid-time", "dieoff-forecast-length", "phase", "top", "bottom"
+        //     ],
+        //     groupSize: 6
+        // });
     }
 };
 
@@ -520,12 +550,12 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
-            dataFunction: "dataDieOff",
-            checked: false
-        });
+        // matsCollections.PlotGraphFunctions.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     graphFunction: "graphDieOff",
+        //     dataFunction: "dataDieOff",
+        //     checked: false
+        // });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphProfile",

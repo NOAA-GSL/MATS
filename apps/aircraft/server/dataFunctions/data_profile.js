@@ -29,7 +29,7 @@ dataProfile = function(plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var curveDates = curve['curve-dates'];
@@ -60,47 +60,51 @@ dataProfile = function(plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid-time'];
-        var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
-        var forecastLength = curve['forecast-length'];
+        const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var validTimeClause =" ";
+        if (validTimes.length > 0){
+            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+        }
+        const forecastLength = curve['forecast-length'];
+        const phaseStr = curve['phase'];
+        const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        const phase = phaseOptionsMap[phaseStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-        var axisKey = statisticSelect;
+        const axisKey = statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var interval;
         var d = [];
-        // create database query statements
-        if (diffFrom === null || diffFrom === undefined) {
+        if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            // create the database queries and retrieve the data
-            var statement = "select  -m0.mb10*10 as avVal, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+            var statement = "select -m0.mb10*10 as avVal, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                "from {{model}} as m0 " +
-                "where 1=1 " +
+                " from {{data_source}} as m0 " +
+                "  where 1=1 "+
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 > {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
+                "{{phase}} " +
+                "and m0.mb10 >= {{top}}/10 " +
+                "and m0.mb10 <= {{bottom}}/10 " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
-            // build the query
-            statement = statement.replace('{{model}}', model + '_Areg' + region);
+
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{phase}}', phase);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', curveDatesDateRangeFrom);
             statement = statement.replace('{{toDate}}', curveDatesDateRangeTo);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
             var queryResult;
