@@ -42,10 +42,10 @@ dataSeries = function (plotParams, plotFunction) {
         var average = averageOptionsMap[averageStr][0];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
-        // This axisKeySet object is used like a set and if a curve has the same
+        // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
-        // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = scaleStr + ":" + thresholdStr + ":" + statisticSelect;
+        // The axis number is assigned to the axisMap value, which is the axisKey.
+        var axisKey =  statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];
