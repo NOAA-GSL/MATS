@@ -234,7 +234,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
-        optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+        optionsMap = {both: [''], '0-UTC': ['and m0.valid_hour = 0'], '12-UTC': ['and m0.valid_hour = 12']};
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
