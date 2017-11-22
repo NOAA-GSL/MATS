@@ -517,7 +517,8 @@ const doCurveTextPatterns = function () {
                 ['level ', 'top', ' '],
                 ['to ', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['valid-time:', 'valid-time', ' '],
+                ['clouds:', 'cloud-coverage', ' '],
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
@@ -536,8 +537,8 @@ const doCurveTextPatterns = function () {
                 ['level ', 'top', ' '],
                 ['to', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' '],
+                ['valid-time:', 'valid-time', ' '],
+                ['clouds:', 'cloud-coverage', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
@@ -556,11 +557,12 @@ const doCurveTextPatterns = function () {
                 ['level ', 'top', ' '],
                 ['to', 'bottom', ' '],
                 ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['valid-time:', 'valid-time', ' '],
+                ['clouds:', 'cloud-coverage', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom"
             ],
             groupSize: 6
         });

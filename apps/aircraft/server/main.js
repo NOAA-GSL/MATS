@@ -60,16 +60,14 @@ const doCurveParams = function () {
     var modelOptionsMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-    var levelModelOptionsMap = {};
-    var variableModelOptionsMap = {};
     var masterRegionValuesMap = {};
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "select short_name,description from region_descriptions;");
         var masterRegDescription;
         var masterId;
         for (var j = 0; j < rows.length; j++) {
             masterRegDescription = rows[j].description.trim();
-            masterId = rows[j].id;
+            masterId = rows[j].short_name;
             masterRegionValuesMap[masterId] = masterRegDescription;
         }
     } catch (err) {
@@ -77,7 +75,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,lev,variable from regions_per_model_mats_all_categories;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -90,20 +88,6 @@ const doCurveParams = function () {
                 forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
-
-            var levels = rows[i].lev;
-            var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < levelArr.length; j++) {
-                levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
-            }
-            levelModelOptionsMap[model] = levelArr;
-
-            var variables = rows[i].variable;
-            var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < variableArr.length; j++) {
-                variableArr[j] = variableArr[j].replace(/'|\[|\]/g, "");
-            }
-            variableModelOptionsMap[model] = variableArr;
 
             var regions = rows[i].regions;
             var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -146,7 +130,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "dates", "variable"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -202,65 +186,106 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
+    if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
+        optionsMap = {
+            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0'],
+            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
+                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
+            'OmF (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
+                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
+            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
+                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
+            'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
+                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat,m0.N_{{variable0}} as N0'],
+            'Obs average': ['sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
+                'sum(m0.sum_ob_{{variable1}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0']
+        };
+
+        const statAuxMap = {
+            'RMS-winds': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'RMS-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Bias (Model - Obs)-winds': 'group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Bias (Model - Obs)-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'OmF (Obs - Model)': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_model_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'OmF (Obs - Model)': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'N-winds': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'N-other': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Model average-winds': 'group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Model average-other': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Obs average-winds': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'Obs average-other': 'group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0'
+        };
+
         matsCollections.CurveParams.insert(
-            {
-                name: 'variable',
+            {// bias and model average are a different formula for wind (element 0 differs from element 1)
+                // but stays the same (element 0 and element 1 are the same) otherwise.
+                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
+                // time series we never append element 2. Element 3 is used to give us error values for error bars.
+                name: 'statistic',
                 type: matsTypes.InputTypes.select,
-                optionsMap: variableModelOptionsMap,
-                options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],   // convenience
-                superiorNames: ['data-source'],
-                selected: '',
+                optionsMap: optionsMap,
+                statAuxMap:statAuxMap,
+                options: ['RMS', 'Bias (Model - Obs)', 'OmF (Obs - Model)', 'N', 'Model average', 'Obs average'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]][0],
+                default: 'RMS',
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'variable'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableModelOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'variable'}, {
-                $set: {
-                    optionsMap: variableModelOptionsMap,
-                    options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]]
-                }
-            });
-        }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
-        optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+    if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
+        optionsMap = {
+            temperature: ['dt', 't'],
+            RH: ['dR', 'R'],
+            winds: ['dw', 'ws']
+        };
         matsCollections.CurveParams.insert(
             {
-                name: 'valid-time',
+                name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options: ['both', '0-UTC', '12-UTC',],
+                options: ['temperature', 'RH', 'winds'],   // convenience
                 controlButtonCovered: true,
-                selected: 'both',
                 unique: false,
-                default: 'both',
+                default: 'winds',
                 controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                displayOrder: 7,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
     }
 
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 3,
+                multiple: true
+            });
+    }
+
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
-            'None': ['ceil(3600*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/3600))'],
-            '1D': ['ceil(86400*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/86400)+86400/2)'],
-            '3D': ['ceil(259200*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/259200)+259200/2)'],
-            '7D': ['ceil(604800*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/604800)+604800/2)'],
-            '30D': ['ceil(2592000*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/2592000)+2592000/2)'],
-            '60D': ['ceil(5184000*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/5184000)+5184000/2)']
+            'None': ['ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour)/3600))'],
+            '1D': ['ceil(86400*floor((unix_timestamp(m0.date)+3600*m0.hour)/86400)+86400/2)'],
+            '3D': ['ceil(259200*floor((unix_timestamp(m0.date)+3600*m0.hour)/259200)+259200/2)'],
+            '7D': ['ceil(604800*floor((unix_timestamp(m0.date)+3600*m0.hour)/604800)+604800/2)'],
+            '30D': ['ceil(2592000*floor((unix_timestamp(m0.date)+3600*m0.hour)/2592000)+2592000/2)'],
+            '60D': ['ceil(5184000*floor((unix_timestamp(m0.date)+3600*m0.hour)/5184000)+5184000/2)']
         };
 
         matsCollections.CurveParams.insert(
@@ -274,31 +299,31 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 9,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 4
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
-                controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
-                displayOrder: 7,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
+    // if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+    //     matsCollections.CurveParams.insert(
+    //         {
+    //             name: 'dieoff-forecast-length',
+    //             type: matsTypes.InputTypes.select,
+    //             optionsMap: {},
+    //             options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
+    //             superiorNames: [],
+    //             selected: '',
+    //             controlButtonCovered: true,
+    //             unique: false,
+    //             default: matsTypes.ForecastTypes.dieoff,
+    //             controlButtonVisibility: 'block',
+    //             controlButtonText: 'forecast-length',
+    //             displayOrder: 7,
+    //             displayPriority: 1,
+    //             displayGroup: 3
+    //         });
+    // }
 
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -332,6 +357,30 @@ const doCurveParams = function () {
         }
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'phase'}) == undefined) {
+        optionsMap = {
+            "All" : "and m0.up_dn = 2 ",
+            "EnR" : "and m0.up_dn = 0 ",
+            "Up" : "and m0.up_dn = 1 ",
+            "Dn" : "and m0.up_dn = -1 "
+//            "R" : ""
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'phase',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 8,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'top'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -339,16 +388,16 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
                 options: [],
-                min: 1,
+                min: 100,
                 max: 1000,
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
-                default: 1,
+                default: 100,
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 help: 'top-help.html'
             });
     }
@@ -360,17 +409,47 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.numberSpinner,
                 optionsMap: {},
                 options: [],
-                min: 100,
+                min: 150,
                 max: 1050,
                 step: 'any',
                 controlButtonCovered: true,
                 unique: false,
                 default: 1050,
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 11,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 help: 'bottom-help.html'
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 12,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
             });
     }
 };
@@ -392,38 +471,62 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
+                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
                 ['to ', 'bottom', ' '],
                 ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['valid-time:', 'valid-time', ' '],
+                ['phase:', 'phase', ' '],
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "average", "top", "bottom"
             ],
             groupSize: 6
-
         });
         matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
+            plotType: matsTypes.PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ': '],
+                ['', 'statistic', ', '],
                 ['level ', 'top', ' '],
-                ['to ', 'bottom', ' '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['to', 'bottom', ' '],
+                ['fcst_len:', 'forecast-length', 'h '],
+                ['valid-time:', 'valid-time', ' '],
+                ['phase:', 'phase', ' '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "dieoff-forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
+        // matsCollections.CurveTextPatterns.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     textPattern: [
+        //         ['', 'label', ': '],
+        //         ['', 'data-source', ' in '],
+        //         ['', 'regionName', ', '],
+        //         ['', 'variable', ': '],
+        //         ['', 'statistic', ', '],
+        //         ['level ', 'top', ' '],
+        //         ['to', 'bottom', ' '],
+        //         ['fcst_len:', 'dieoff-forecast-length', 'h '],
+        //         ['valid-time:', 'valid-time', ' '],
+        //         ['phase:', 'phase', ' '],
+        //         ['', 'curve-dates', '']
+        //     ],
+        //     displayParams: [
+        //         "label", "data-source", "region", "statistic", "variable", "valid-time", "dieoff-forecast-length", "phase", "top", "bottom"
+        //     ],
+        //     groupSize: 6
+        // });
     }
 };
 
@@ -447,10 +550,16 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
+        // matsCollections.PlotGraphFunctions.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     graphFunction: "graphDieOff",
+        //     dataFunction: "dataDieOff",
+        //     checked: false
+        // });
         matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
-            dataFunction: "dataDieOff",
+            plotType: matsTypes.PlotTypes.profile,
+            graphFunction: "graphProfile",
+            dataFunction: "dataProfile",
             checked: false
         });
     }
@@ -467,7 +576,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'anomaly_corr_stats',
+            database: 'acars_RR',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
@@ -504,7 +613,7 @@ Meteor.startup(function () {
     metadataPool = mysql.createPool(metadataSettings);
 
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anomaly_corr_stats", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
