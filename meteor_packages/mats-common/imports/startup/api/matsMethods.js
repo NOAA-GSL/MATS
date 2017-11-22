@@ -150,6 +150,7 @@ const getPlotResult = new ValidatedMethod({
             return "";
     }
 });
+
 const readDataFile = new ValidatedMethod({
     name:'matsMethods.readDataFile',
     validate: new SimpleSchema({
@@ -911,6 +912,27 @@ const testGetTables = new ValidatedMethod({
     }
 });
 
+const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
+    name: 'matsMethods.testSetMetaDataTableUpdatesLastRefreshedBack',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+        var mtu = metaDataTableUpdates.find({}).fetch();
+        var id = tableUpdates[0]._id;
+        metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: 0}});
+    }
+});
+
+
+const testGetMetaDataTableUpdates = new ValidatedMethod({
+    name: 'matsMethods.testGetMetaDataTableUpdates',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
+
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
     getGraphFunctionFileList:getGraphFunctionFileList,
@@ -936,5 +958,7 @@ export default matsMethods = {
     emailImage:emailImage,
     resetApp:resetApp,
     testGetTables:testGetTables,
-    getPlotResult:getPlotResult
+    getPlotResult:getPlotResult,
+    testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
+    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack
 };

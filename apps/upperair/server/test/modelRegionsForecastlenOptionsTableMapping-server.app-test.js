@@ -18,8 +18,8 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
             var modelNames = undefined;
             var regions = undefined;
             var regionOptions = undefined;
-            var regionOptionsMap = undefined;
-            var regionDescriptions = undefined;
+            var regionModelOptionsMap = undefined;
+            var masterRegionValues = undefined;
             var forecastLen = undefined;
             var tables = undefined;
 
@@ -36,9 +36,9 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
                 //console.log('modelNames length is ', modelNames.length);
                 expect(modelNames).to.be.a('array');
                 regions = matsCollections.CurveParams.findOne({name: "region"});
-                regionOptionsMap = regions.optionsMap;
+                regionModelOptionsMap = regions.optionsMap;
                 regionOptions = regions.options;
-                regionDescriptions = matsCollections.RegionDescriptions.find({}).fetch();
+                masterRegionValues = regions.valuesMap;
                 forecastLen = matsCollections.CurveParams.findOne({name: "forecast-length"});
                 matsMethods.testGetTables.call({
                     host: 'wolphin.fsl.noaa.gov',
@@ -79,13 +79,14 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
             it('regions should exist', function () {
                 //console.log(regions);
                 //console.log(regionOptions);
-                //console.log(regionOptionsMap);
+                //console.log(regionModelOptionsMap);
                 expect(regions).to.exist;
                 expect(regions).to.be.a('object');
                 expect(regionOptions).to.exist;
-                expect(regionOptionsMap).to.exist;
-                expect(regionOptionsMap).to.be.a('object');
-                expect(regionDescriptions).to.be.a('array');
+                expect(regionModelOptionsMap).to.exist;
+                expect(regionModelOptionsMap).to.be.a('object');
+                expect(masterRegionValues).to.exist;
+                expect(masterRegionValues).to.be.a('object');
             });
             it('forecastLenghts should exist', () => {
                 //console.log(forecastLen);
@@ -97,17 +98,14 @@ describe('test mapping of tables wrt models, regions, and forecast lengths - ser
                 for (var mi = 0; mi < modelNames.length; mi++) {
                     const model = modelNames[mi];
                     const modelTablePrefix = tableMap[model];
-                    for (var ri = 0; ri < regionOptionsMap[model].length; ri++) {
-                        //console.log("regionOptionsMap ", JSON.stringify(regionOptionsMap,null,2));
-                        //console.log("model ", model, " regionOptionsMap for model ", model, + " and ri ", ri + " is " + regionOptionsMap[model][ri] )
-                        const region = regionOptionsMap[model][ri];
+                    for (var ri = 0; ri < regionModelOptionsMap[model].length; ri++) {
+                        //console.log("regionModelOptionsMap ", JSON.stringify(regionModelOptionsMap,null,2));
+                        //console.log("model ", model, " regionModelOptionsMap for model ", model, + " and ri ", ri + " is " + regionModelOptionsMap[model][ri] )
+                        const region = regionModelOptionsMap[model][ri];
                         expect (region, "region for " + ri + " of model: " + model + " does not seem to exist").to.exist;
-                        const regionMap = matsCollections.RegionDescriptions.findOne({description: region});
-                        expect (regionMap, "options map for region: " + region + " does not exist").to.exist;
-                        //console.log ("checking " + region + " against map " + regionMap);
-                        const regionNumber = regionMap.regionMapTable;
+                        const regionNumber = Object.keys(masterRegionValues).find(key => region);
                         const table = modelTablePrefix + regionNumber;
-                        //console.log("modelTablePrefix:" + modelTablePrefix + " regionNumber:" + regionNumber + " table: " + table);
+                        //console.log("modelTablePrefix:" + modelTablePrefix + " region:" + region + " table: " + table);
                         expect(tables).to.include(table);
                     }
                 }

@@ -57,7 +57,6 @@ const doCurveParams = function () {
     var forecastLengthOptionsMap = {};
     var regionModelOptionsMap = {};
     var masterRegionValuesMap = {};
-// models have option groups so we use a Map() because it maintains order.
     var modelOptionsGroups = {};
     var modelDisabledOptions = [];  // model select has optionGroups (disabled options are group labels)
     var myModels = [];
@@ -67,49 +66,8 @@ const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-    // build regionDescriptions, myModels, modelOptionsMap, modelTableMap, RegionModelOptionsMap, forecastLengthOptionsMap
-    /*
-         regionDescriptions = {
-             region1Number : regionDescriotionText,
-             regionN2umber : region2DescriotionText,
-             .
-             .
-         }
-         myModels =["model1", "model2" ... "modeln"]
-         modelOptionsMap = {
-            "model1" : ["model1"],
-            "model2" : ["model2"],
-            .
-            .
-            "modeln" : ["modeln"]
-        }
-        modelTableMap = {
-            "model1" : "tableNamePrefix",   // something like LAPS_HWT_Areg
-            "model2" : "tableNamePrefix",
-            .
-            .
-            "modeln" : "Areg" OR "reg"
-        }
-        RegionModelOptionsMap = {
-            "model1" : ["region1"],
-            "model2" : ["region2"],
-            .
-            .
-            "modeln" : ["region"]
-        }
-        forecastLengthOptionsMap = {
-            "model1" : ["0","1", .....],
-            "model2" : ["0","1", .....],
-            .
-            .
-            "modeln" : ["0","1", .....]
-        }
-     */
-
-    //regionNumberDescriptionMapping - gives us a region description for a region number
 
     var rows;
-
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
         var masterRegDescription;
@@ -235,7 +193,9 @@ const doCurveParams = function () {
             });
         }
     }
-
+/* regionModelOptionsMap is indexed by model(data_source) and contains array of regions.
+   masterRegionValuesMap is indexed by table id and contains a region description.
+ */
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
