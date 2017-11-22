@@ -2256,8 +2256,6 @@ const areObjectsEqual = function(o, p) {
         {
             if (!(p[keysO[i]] instanceof Array))
                 return false;
-            //if (compareObjects(o[keysO[i]], p[keysO[i]] === false) return false
-            //would work, too, and perhaps is a better fit, still, this is easy, too
             if (p[keysO[i]].sort().join('') !== o[keysO[i]].sort().join(''))
                 return false;
         }
@@ -2272,7 +2270,6 @@ const areObjectsEqual = function(o, p) {
         {
             if (!(p[keysO[i]] instanceof Function))
                 return false;
-            //ignore functions, or check them regardless?
         }
         else if (o[keysO[i]] instanceof Object)
         {
@@ -2283,8 +2280,8 @@ const areObjectsEqual = function(o, p) {
                 if (p[keysO[i]] !== p)
                     return false;
             }
-            else if (compareObjects(o[keysO[i]], p[keysO[i]]) === false)
-                return false;//WARNING: does not deal with circular refs other than ^^
+            else if (p[keysO[i]].sort().join('') !== o[keysO[i]].sort().join(''))
+                return false;
         }
         if (o[keysO[i]] !== p[keysO[i]])//change !== to != for loose comparison
             return false;//not the same value
