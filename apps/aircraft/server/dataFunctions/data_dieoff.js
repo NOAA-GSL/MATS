@@ -30,57 +30,70 @@ dataDieOff = function (plotParams, plotFunction) {
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         const label = curve['label'];
-        const color = curve['color'];
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimes = validTimeOptionsMap[validTimeStr][0];
-        var validTimeClause = " ";
-        if (validTimes.length > 0){
-            validTimeClause = validTimes;
-        }
-        const variable = curve['variable'];
         const top = curve['top'];
         const bottom = curve['bottom'];
-
+        const color = curve['color'];
+        const variableStr = curve['variable'];
+        const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        const variable = variableOptionsMap[variableStr];
+        const statisticSelect = curve['statistic'];
+        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statistic;
+        if (variableStr == 'winds') {
+            statistic = statisticOptionsMap[statisticSelect][1];
+        } else {
+            statistic = statisticOptionsMap[statisticSelect][0];
+        }
+        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
+        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var validTimeClause =" ";
+        if (validTimes.length > 0){
+            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+        }
+        const averageStr = curve['average'];
+        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        const average = averageOptionsMap[averageStr][0];
+        const forecastLength = curve['forecast-length'];
+        const phaseStr = curve['phase'];
+        const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        const phase = phaseOptionsMap[phaseStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-        var axisKey = variable;
+        var axisKey = statisticSelect;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select m0.fcst_len as avtime, " +
-                "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
-                "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
-                "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
-                "avg(m0.wacorr/100) as stat, " +
-                "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values " +
-                "from stats as m0 " +
-                "where 1=1 " +
-                "and m0.model = '{{data_source}}' " +
-                "and m0.variable = '{{variable}}' " +
-                "and m0.region = {{region}} " +
+                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
+                " from {{data_source}} as m0 " +
+                "  where 1=1 "+
                 "{{validTimeClause}} " +
-                "and m0.level >= {{top}} " +
-                "and m0.level <= {{bottom}} " +
-                "and m0.valid_date >= '{{fromDate}}' " +
-                "and m0.valid_date <= '{{toDate}}' " +
+                "and m0.date >= '{{fromDate}}' " +
+                "and m0.date <= '{{toDate}}' " +
+                "{{phase}} " +
+                "and m0.mb10 >= {{top}}/10 " +
+                "and m0.mb10 <= {{bottom}}/10 " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{data_source}}', data_source);
-            statement = statement.replace('{{region}}', region);
-            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{phase}}', phase);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
+
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();

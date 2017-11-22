@@ -1,4 +1,32 @@
 {
+  "_id": "ESRFZ7K5QSMRDLeus",
+  "createdAt": {
+    "$date": "2017-11-20T16:31:05.224+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2017-11-20T16:31:05.249+0000"
+          },
+          "hashedToken": "YU+BLuNyF21o/K8pOPwGwqrcuBqDQhRuOFuXyYfRkLA="
+        },
+        {
+          "when": {
+            "$date": "2017-11-21T20:50:14.997+0000"
+          },
+          "hashedToken": "We+rSpMxJqEN5Y5muRHwN11eB5Yh5ZdTQCpF3T5yLvo="
+        }
+      ]
+    }
+  },
+  "username": "randy.pierce@noaa.gov"
+}
+{
   "_id": "GXf6nRFToiLsW5xNG",
   "createdAt": {
     "$date": "2017-11-13T22:53:16.114+0000"
@@ -25,21 +53,6 @@
     }
   },
   "username": "molly.b.smith@noaa.gov"
-}
-{
-  "_id": "Teem4rawwcz3qRiw3",
-  "createdAt": {
-    "$date": "2017-11-10T19:41:51.804+0000"
-  },
-  "services": {
-    "password": {
-      "bcrypt": "$2a$10$96fflh0TgiYZXIIwWvBqWO4znR.KM.o6JLRmKXnEJ9zjnJo179hWi"
-    },
-    "resume": {
-      "loginTokens": []
-    }
-  },
-  "username": "randy.pierce@noaa.gov"
 }
 {
   "_id": "zw5gFAgaj5LGgRkjt",
