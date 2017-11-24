@@ -48,6 +48,12 @@
             "$date": "2017-11-15T21:40:06.243+0000"
           },
           "hashedToken": "K1B3h9J+pTp1zl4EBV9owZ906dsIqmxYxlMYnnVNm6M="
+        },
+        {
+          "when": {
+            "$date": "2017-11-22T21:17:20.283+0000"
+          },
+          "hashedToken": "ZYxD5TZjjZHVEayDwwuVc8/P5I1RotSlQ1e1mJzaEy0="
         }
       ]
     }
