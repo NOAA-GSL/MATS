@@ -33,7 +33,7 @@ describe('test resetting app', () => {
                         lastRefreshed = result[0].lastRefreshed;
                         originalRefreshed = new String(result[0].lastRefreshed);
                         expect(lastRefreshed).to.not.equal(newLastRefreshed); // newLastRefreshed still undefined
-                        console.log("0 lastRefreshed:",lastRefreshed,"newLastRefreshed:",newLastRefreshed);
+                        console.log("0 lastRefreshed:", lastRefreshed, "newLastRefreshed:", newLastRefreshed);
                         done();
                     }
                 });
@@ -46,7 +46,7 @@ describe('test resetting app', () => {
                     } else {
                         newLastRefreshed = result[0].lastRefreshed;
                         expect(lastRefreshed).to.equal(originalRefreshed);
-                        console.log("0 lastRefreshed:",lastRefreshed,"newLastRefreshed:",newLastRefreshed);
+                        console.log("0 lastRefreshed:", lastRefreshed, "newLastRefreshed:", newLastRefreshed);
                         done();
                     }
                 });
@@ -59,21 +59,22 @@ describe('test resetting app', () => {
                     } else {
                         newLastRefreshed = result[0].lastRefreshed;
                         expect(lastRefreshed).to.not.equal(newLastRefreshed);
-                        console.log("3 lastRefreshed:",lastRefreshed,"newLastRefreshed:",newLastRefreshed);
+                        console.log("3 lastRefreshed:", lastRefreshed, "newLastRefreshed:", newLastRefreshed);
                         done();
                     }
                 });
                 it('reset with older metadata does cause reset', function (done) {
-                matsMethods.testGetMetaDataTableUpdates.call({}, function (error, result) {
-                    if (error !== undefined) {
-                        assert.fail("error: ", error);
-                        done(error);
-                    } else {
-                        newLastRefreshed = result[0].lastRefreshed;
-                        expect(originalRefreshed).to.not.equal(newLastRefreshed);
-                        console.log("4 originalRefreshed:",originalRefreshed,"newLastRefreshed:",newLastRefreshed);
-                        done();
-                    }
+                    matsMethods.testGetMetaDataTableUpdates.call({}, function (error, result) {
+                        if (error !== undefined) {
+                            assert.fail("error: ", error);
+                            done(error);
+                        } else {
+                            newLastRefreshed = result[0].lastRefreshed;
+                            expect(originalRefreshed).to.not.equal(newLastRefreshed);
+                            console.log("4 originalRefreshed:", originalRefreshed, "newLastRefreshed:", newLastRefreshed);
+                            done();
+                        }
+                    });
                 });
             });
         });

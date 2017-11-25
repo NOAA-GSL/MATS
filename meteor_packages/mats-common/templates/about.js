@@ -14,8 +14,8 @@ Template.About.helpers({
             version = settings.appVersion;
             buildDate = settings.buildDate;
         }
-        versionStr = "<h3>" + version + "</h3>";
-        return versionStr + "<h3> Last Build Date: " + buildDate + "</h3>";
+        versionStr = "<h4>Version: " + version + "</h4>";
+        return versionStr + "<h4> Last Build Date: " + buildDate + "</h4>";
 
     }
 });

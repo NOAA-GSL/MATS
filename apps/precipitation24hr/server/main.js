@@ -5,6 +5,7 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
+var modelDateRangeMap = {};
 var regionModelOptionsMap = {};
 var thresholdsModelOptionsMap = {};
 var scaleModelOptionsMap = {};
@@ -119,12 +120,16 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_types,trsh,scle from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_types,trsh,scle,mindate,maxdate from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
+
+            var minDate = moment(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
             var fcstTypes = rows[i].fcst_types;
             var fcstTypesArrRaw = fcstTypes.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -198,6 +203,7 @@ const doCurveParams = function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
+                dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "threshold","scale","forecast-type"],
                 controlButtonCovered: true,
