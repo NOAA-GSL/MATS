@@ -23,6 +23,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -60,13 +61,13 @@ const doCurveParams = function () {
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-// this should be in the metdata someday
     var thresholdsModelOptionsMap = {};
     var scaleModelOptionsMap = {};
     var forecastLengthModels = [];
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
     var masterScaleValuesMap = {};
+
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
@@ -117,8 +118,8 @@ const doCurveParams = function () {
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
 
-            var minDate = moment(rows[i].mindate).format("MM/DD/YYYY HH:mm");
-            var maxDate = moment(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
             var forecastLengths = rows[i].fcst_lens;
@@ -192,7 +193,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "threshold", "scale"],
+                dependentNames: ["region", "forecast-length", "threshold", "scale", "dates"],
                 controlButtonCovered: true,
                 default: 'Bak13',
                 unique: false,

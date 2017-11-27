@@ -27,6 +27,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -83,8 +84,8 @@ const doCurveParams = function () {
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
 
-            var minDate = moment(rows[i].mindate).format("MM/DD/YYYY HH:mm");
-            var maxDate = moment(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
             var forecastLengths = rows[i].fcst_lens;
@@ -136,7 +137,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length"],
+                dependentNames: ["region", "forecast-length", "dates"],
                 controlButtonCovered: true,
                 default: 'RAP',
                 unique: false,
