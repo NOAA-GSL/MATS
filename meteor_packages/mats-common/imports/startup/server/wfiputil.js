@@ -329,11 +329,16 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                                 }
                             }
                         }
+                        // var zVar = 'z'
+                        // if (JSON.parse(rows[rowIndex].data)['zmap']) {     // if there is a zmap
+                        //    var zbar = JSON.parse(rows[rowIndex].data)['zmap'][myVariable]
+                        //} else {
                         if ((myVariable === 'allws') || (myVariable === 'allwd')) {
-                            levels = JSON.parse(rows[rowIndex].data)['allz'];
+                            levels = JSON.parse(rows[rowIndex].data)['allz'];  // allz changes to zVar
                         } else {
-                            levels = JSON.parse(rows[rowIndex].data)['z'];
+                            levels = JSON.parse(rows[rowIndex].data)['z'];  // z changes to zVar
                         }
+                        //}
                         if (!(Array.isArray(levels))) {
                             levels = [Number(levels)];
                         }

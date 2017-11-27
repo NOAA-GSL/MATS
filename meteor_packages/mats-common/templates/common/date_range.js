@@ -154,12 +154,12 @@ Template.dateRange.onRendered(function () {
                     const tStart = superiorVals[si].min;
                     const tEnd = superiorVals[si].max;
                     if (dataEnd.isBefore(tStart)) {
-                        // NCD
+                        // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return  false;
                     } else if (tEnd.isBefore(dataStart)) {
-                        // NCD
+                        // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return false;
