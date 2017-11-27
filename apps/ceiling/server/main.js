@@ -24,6 +24,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -102,8 +103,8 @@ const doCurveParams = function () {
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
 
-            var minDate = moment(rows[i].mindate).format("MM/DD/YYYY HH:mm");
-            var maxDate = moment(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
             var forecastLengths = rows[i].fcst_lens;
@@ -156,36 +157,36 @@ const doCurveParams = function () {
             }
         );
 
-        if (matsCollections.CurveParams.find({name: 'data-source'}).count() == 0) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'data-source',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.find({name: 'data-source'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'data-source',
+                type: matsTypes.InputTypes.select,
+                optionsMap: modelOptionsMap,
+                dates: modelDateRangeMap,
+                options: Object.keys(modelOptionsMap),   // convenience
+                dependentNames: ["region", "forecast-length", "threshold", "dates"],
+                controlButtonCovered: true,
+                default: Object.keys(modelOptionsMap)[0],
+                unique: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'data-source'}, {
+                $set: {
                     optionsMap: modelOptionsMap,
-                    dates: modelDateRangeMap,
-                    options: Object.keys(modelOptionsMap),   // convenience
-                    dependentNames: ["region", "forecast-length"],
-                    controlButtonCovered: true,
-                    default: 'HRRR',
-                    unique: false,
-                    controlButtonVisibility: 'block',
-                    displayOrder: 2,
-                    displayPriority: 1,
-                    displayGroup: 1
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
-                // have to reload model data
-                matsCollections.CurveParams.update({name: 'data-source'}, {
-                    $set: {
-                        optionsMap: modelOptionsMap,
-                        options: Object.keys(modelOptionsMap)
-                    }
-                });
-            }
+                    options: Object.keys(modelOptionsMap)
+                }
+            });
         }
+    }
 
         if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
             matsCollections.CurveParams.insert(
@@ -268,6 +269,7 @@ const doCurveParams = function () {
                 optionsMap: thresholdsModelOptionsMap,
                 options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],   // convenience
                 valuesMap: masterThresholdValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
