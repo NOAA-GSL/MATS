@@ -23,6 +23,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -57,15 +58,16 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
     var modelOptionsMap = {};
+    var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-// this should be in the metdata someday
     var thresholdsModelOptionsMap = {};
     var scaleModelOptionsMap = {};
     var forecastLengthModels = [];
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
     var masterScaleValuesMap = {};
+
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
@@ -109,12 +111,16 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
+
+            var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -185,8 +191,9 @@ const doCurveParams = function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
+                dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "threshold", "scale"],
+                dependentNames: ["region", "forecast-length", "threshold", "scale", "dates"],
                 controlButtonCovered: true,
                 default: 'Bak13',
                 unique: false,

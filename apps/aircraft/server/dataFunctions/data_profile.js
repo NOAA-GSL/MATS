@@ -154,22 +154,42 @@ dataProfile = function(plotParams, plotFunction) {
             }
             d = diffResult.dataset;
         }  // end difference curve
-            // get the x min and max
-            for (var di = 0; di < d.length; di++) {
+        // get the x min and max
+
+        //make sure outliers don't skew axis scale
+        var d_n = d.length;
+        var d_n_good = 0;
+        var d_sum_d = 0;
+        var d_sum2_d = 0;
+        for (var di = 0; di < d_n; di++) {
+            if (d[di][0] !== null) {
+                d_n_good = d_n_good + 1;
+                d_sum_d = d_sum_d + d[di][0];
+                d_sum2_d = d_sum2_d + d[di][0] * d[di][0];
+            }
+        }
+        var d_mean = d_sum_d / d_n_good;
+        var d_sd2 = d_sum2_d / d_n_good - d_mean * d_mean;
+        var d_sd = d_sd2 > 0 ? Math.sqrt(d_sd2) : d_sd2;
+        var d_sd_limit = 3 * d_sd;
+
+        for (var di = 0; di < d.length; di++) {
+            if (d[di][0] <= d_mean + d_sd_limit) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];
                 xmin = xmin < d[di][0] ? xmin : d[di][0];
-                maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
             }
+            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+        }
 
-            // specify these so that the curve options generator has them available
-            // profile plots always go from 0 to 1000 initially
-            curve['annotation'] = "";
-            curve['ymin'] = ymin;
-            curve['ymax'] = ymax;
-            curve['xmin'] = xmin;
-            curve['xmax'] = xmax;
-            const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
-            dataset.push(cOptions);
+        // specify these so that the curve options generator has them available
+        // profile plots always go from 0 to 1000 initially
+        curve['annotation'] = "";
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
+        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        dataset.push(cOptions);
 
     }  // end for curves
 

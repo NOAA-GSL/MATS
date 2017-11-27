@@ -36,7 +36,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const validTimes = validTimeOptionsMap[validTimeStr][0];
         var validTimeClause = " ";
         if (validTimes.length > 0){
-            validTimeClause = "and m0.valid_hour = " + validTimes;
+            validTimeClause = validTimes;
         }
         const variable = curve['variable'];
         const top = curve['top'];
