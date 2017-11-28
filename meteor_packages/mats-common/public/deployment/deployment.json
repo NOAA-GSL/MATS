@@ -50,8 +50,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.33-2017.11.27.19.47",
-      "buildDate": "2017.11.27.19.47",
+      "version": "1.5.33-2017.11.28.00.08",
+      "buildDate": "2017.11.28.00.08",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -361,8 +361,8 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.1",
-      "buildDate": "2017.11.27.18.10",
+      "version": "1.5.2",
+      "buildDate": "2017.11.28.00.09",
       "last_test_run": "",
       "last_test_status": ""
     },
