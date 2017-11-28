@@ -142,6 +142,7 @@ var doCurveParams = function () {
     }
     var rows;
     var dataSourceSites = {};
+    var dynamicallyAddedModels = {};  // used to update the siteOptionsMap with dynamically added models - due to sample rates or disparate date ranges
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources_new;");
         matsCollections.Models.remove({});
@@ -160,24 +161,24 @@ var doCurveParams = function () {
             // where datasource-1800 is the least common multiple of 600 and 900 and has valid sites [1,2,7,9,17,18,19,20],
             // and datasource-600 is valid for sites [17,18,19,20], and datasource-900 is valid for sites [1,4,7,9].
             var ci = 0;
-            var lcm;
-            if (cycle_interval_sampleRates.length === 1) {
-                lcm = cycle_interval_sampleRates[0];
-                dataSources[0] = model;
-                dataSourceCycleIntervals[0] = lcm;
-                dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]];
-            } else {
-                lcm = LCM(cycle_interval_sampleRates);
-                dataSourceCycleIntervals[0] = lcm;
-                dataSources[0] = model + "-LCM-" + lcm;
-                for (ci = 0; ci < cycle_interval_sampleRates.length; ci++) {
-                    var addedModel = model + "-" + cycle_interval_sampleRates[ci];
-                    dataSources.push(addedModel);
-                    dataSourceCycleIntervals.push(cycle_interval_sampleRates[ci]);
-                    // either a single sampleRate source or the first of multisampleRate source
-                    dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]].concat(cycle_intervals[cycle_interval_sampleRates[ci]]);
-                    dataSourceSites[addedModel] = cycle_intervals[cycle_interval_sampleRates[ci]];
-                }
+            dataSources[0] = model;
+            dataSourceCycleIntervals[0] = Number(cycle_interval_sampleRates[0]);
+            dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]];
+            if (cycle_interval_sampleRates.length > 1) {
+                    var lcm = LCM(cycle_interval_sampleRates);
+                    dataSources.push( model + "-LCM-" + lcm );
+                    dataSourceCycleIntervals.push(lcm);
+                    dynamicallyAddedModels[model] = [model + "-LCM-" + lcm];
+                    for (ci = 0; ci < cycle_interval_sampleRates.length; ci++) {
+                        var addedModel = model + "-" + cycle_interval_sampleRates[ci];
+                        dynamicallyAddedModels[model].push(addedModel);
+                        dataSources.push(addedModel);
+                        dataSourceCycleIntervals.push(Number(cycle_interval_sampleRates[ci]));
+                        // either a single sampleRate source or the first of multisampleRate source
+                        dataSourceSites[model] = dataSourceSites[model].concat(cycle_intervals[cycle_interval_sampleRates[ci]]);
+                        dataSourceSites[addedModel] = cycle_intervals[cycle_interval_sampleRates[ci]];
+                    }
+                    dataSourceSites[model + "-LCM-" + lcm] = dataSourceSites[model];
             }
 
             //loop through the datasources - most of which will only be one, but multi-sample datasources will have more
@@ -256,7 +257,7 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
+    var siteIdNameMap = {};// used in added models below
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT siteid, name,description,lat,lon,elev,instruments_instrid FROM sites, instruments_per_site where sites.siteid = instruments_per_site.sites_siteid;");
         siteMarkerOptionsMap = [];
@@ -279,6 +280,7 @@ var doCurveParams = function () {
         for (var i = 0; i < rows.length; i++) {
             var name = rows[i].description;
             var siteid = rows[i].siteid;
+            siteIdNameMap[siteid] = name; // save use in added models below
             matsCollections.SiteMap.insert({siteName: name, siteId: siteid});
             var description = rows[i].description;
             var lat = rows[i].lat;
@@ -322,6 +324,8 @@ var doCurveParams = function () {
                 }
             }
         }
+
+        // determine if a model (datasource) is an instrument or not. If it isn't an instrument i.e. it is a model then it gets all the sites.
         var modelNames = matsCollections.Models.find({}, {fields: {'name': 1, '_id': 0}}).fetch();
         for (var i = 0; i < modelNames.length; i++) {
             var mName = modelNames[i].name;
@@ -334,6 +338,22 @@ var doCurveParams = function () {
             }
             if (test == 1) {
                 siteOptionsMap[mName] = siteOptionsMap['model'];
+            }
+        }
+
+        // Now, we may have added datasources due to disparate sample rates or time frames etc.. If so, we have to also add the modified site lists
+        var dynamicallyAddedRootModelNames = Object.keys(dynamicallyAddedModels);
+        for (var darmni=0; darmni< dynamicallyAddedRootModelNames.length; darmni++) {
+            var newModels = dynamicallyAddedModels[dynamicallyAddedRootModelNames[darmni]]; // new models added for this root
+            for (var nmi=0; nmi < newModels.length; nmi++) {
+                var newModel = newModels[nmi];
+                var sitesIdsForNewModel = dataSourceSites[newModel];
+                siteOptionsMap[newModel] = [];
+                for (var sifnmi=0; sifnmi<sitesIdsForNewModel.length; sifnmi++) {
+                    var siteId = sitesIdsForNewModel[sifnmi];
+                    var siteName = siteIdNameMap[siteId];
+                    siteOptionsMap[newModel].push(siteName);
+                }
             }
         }
     } catch (err) {
@@ -616,7 +636,7 @@ var doCurveParams = function () {
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: Object.keys(modelOptionsMap)[0],
+                default: 'HRRR NCEP',
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
