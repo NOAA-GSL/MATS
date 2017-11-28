@@ -18,8 +18,8 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.5.33-2017.11.27.19.51",
-      "buildDate": "2017.11.27.19.51",
+      "version": "1.5.33-2017.11.28.00.13",
+      "buildDate": "2017.11.28.00.13",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -329,8 +329,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.33",
-      "buildDate": "2017.11.27.18.14",
+      "version": "1.5.34",
+      "buildDate": "2017.11.28.00.14",
       "last_test_run": "",
       "last_test_status": ""
     },
