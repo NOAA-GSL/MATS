@@ -78,14 +78,17 @@ dataSeries = function (plotParams, plotFunction) {
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
-        var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
+        var variableParam = matsCollections.CurveParams.findOne({name: 'variable'});
+        var variableMap = variableParam.variableMap;
         var variableStr = curve['variable'];
         var myVariable = variableMap[variableStr];
         if (myVariable === undefined) {
             throw new Error("variable " + variableStr + " is not in variableMap");
         }
+        var variableInfoMap = variableParam.infoMap[myVariable];
+        // stash the variableInfoMap in the curves for use in determinig the y axis labels
+        curves[curveIndex].variableInfoMap = variableInfoMap;
         const windVar = myVariable.startsWith('wd');
-
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -1035,18 +1038,18 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = maxMax + yAxisPad;
     for (dsi = 0; dsi < dataset.length; dsi++) {
         var position = dsi === 0 ? "left" : "right";
-        var vStr = curves[dsi].variable;
+        var vStr = curves[dsi].variableInfoMap.units;
         var yaxesOptions;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
-                label: curves[dsi]['label'] + ":" + vStr + ":" + curves[dsi]['data-source'],
+                label: curves[dsi]['label'] + " | " ,
                 curveNumber: dsi
             };
 
             yaxesOptions = {
                 position: position,
                 color: 'grey',
-                axisLabel: yLabels[vStr].label,
+                axisLabel: yLabels[vStr].label + vStr,
                 axisLabelColour: "black",
                 axisLabelUseCanvas: true,
                 axisLabelFontSizePixels: 16,
@@ -1061,7 +1064,7 @@ dataSeries = function (plotParams, plotFunction) {
             // set the yAxesOption that has this key to this new label
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
-            yaxes[curveNum].axisLabel = yLabels[vStr].label;
+            yaxes[curveNum].axisLabel = yLabels[vStr].label + vStr;
             yaxesOptions = {
                 show: false,
                 min: ymin,
