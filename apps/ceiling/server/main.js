@@ -230,9 +230,9 @@ const doCurveParams = function () {
                 'Nlow(metars<thresh,avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat,' + 'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'], // should be divided by 1000, but legacy app seems to undo this later
                 'Ntot(total metars,avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat,' + 'count(m0.nn)/1000 as N0'], // should be divided by 1000, but legacy app seems to undo this later
                 'Ratio (Nlow/Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat,' + 'count(m0.nn)/1000 as N0'],
-                'PODy (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'PODn (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
-                'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'PODy (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'PODn (POD of ceil< thresh)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat,count(m0.nn)/1000 as N0'],
+                'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat,count(m0.nn)/1000 as N0'],
                 'N_in_avg(to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)  as stat,count(m0.nn)/1000 as N0'],// should be divided by 100000, but legacy app seems to undo this later
                 'ETS (Equitable Threat Score)': ['((sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))+0.00)/(sum(m0.yy+m0.ny+m0.yn) -(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn)))) * 100 as stat,' +
                 'count(m0.nn)/1000 as N0'],

@@ -259,11 +259,11 @@ const doCurveParams = function () {
 
             'Ratio (Nlow / Ntot)': ['sum(m0.yy+m0.ny+0.000) / sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat'],
 
-            'PODy (POD of visibility < threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) as stat'],
+            'PODy (POD of visibility < threshold)': ['(sum(m0.yy)+0.00)/sum(m0.yy+m0.yn) as stat'],
 
-            'PODn (POD of visibility > threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) as stat'],
+            'PODn (POD of visibility > threshold)': ['(sum(m0.nn)+0.00)/sum(m0.nn+m0.ny) as stat'],
 
-            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy) as stat'],
+            'FAR (False Alarm Ratio)': ['(sum(m0.yn)+0.00)/sum(m0.ny+m0.yy) as stat'],
 
             'Bias (Forecast low cigs/actual)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat'],
 
