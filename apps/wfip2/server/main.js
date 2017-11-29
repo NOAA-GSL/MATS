@@ -144,7 +144,7 @@ var doCurveParams = function () {
     var dataSourceSites = {};
     var dynamicallyAddedModels = {};  // used to update the siteOptionsMap with dynamically added models - due to sample rates or disparate date ranges
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources_new;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows.length; i++) {
             var dataSources = [];
@@ -377,19 +377,26 @@ var doCurveParams = function () {
 
     try {
         var all_fcst_lens = new Set();
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from fl_per_model");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +
+                        "from nwps " +
+                        "union select short_name, 0, description  " +
+                        "from instruments as U " +
+                        "where exists ( select model from data_sources where model = U.short_name) order by upper(short_name);");
         for (var i = 0; i < rows.length; i++) {
-            const these_lengths = rows[i].fcst_lens.split(',');
+            const these_lengths = rows[i].fcst_hours.split(',');
             for (var j = 0; j < these_lengths.length; j++) {
                 all_fcst_lens.add(these_lengths[j]);
             }
         }
         for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
+            var model = rows[i].short_name;
             var description = rows[i].description;
+            if (modelOptionsMap[description] === undefined) {
+                continue;
+            }
             var is_instrument = modelOptionsMap[description][0].split(',')[1];
             var forecastLengths = [];
-            forecastLengths.push.apply(forecastLengths, rows[i].fcst_lens.split(','));
+            forecastLengths.push.apply(forecastLengths, rows[i].fcst_hours.split(','));
             forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
             if (is_instrument == 1) {
                 forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
