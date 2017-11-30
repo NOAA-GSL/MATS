@@ -27,12 +27,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var vgtypStr = curve['vgtyp'];
+        var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
         var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -64,27 +61,24 @@ dataDieOff = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             var statement = "SELECT " +
-            "m0.fcst_len AS avtime, " +
-            "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-            "    Min(m0.valid_day + 3600 * m0.hour)            AS min_secs, " +
-            "    Max(m0.valid_day + 3600 * m0.hour)            AS max_secs, " +
-            "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-            "    {{statistic}} " +
-            "FROM {{model}} AS m0 " +
-            "WHERE 1 = 1 " +
-            "{{validTimeClause}} " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30 " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30 " +
-            "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-            "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-            "group by avtime " +
-            "order by avtime" +
-            ";";
+                "m0.fcst_len AS avtime, " +
+                "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
+                "    Count(m0.hour) / 1000                         AS Nhrs0, " +
+                "    {{statistic}} " +
+                "FROM {{model}} AS m0 " +
+                "WHERE 1 = 1 " +
+                "{{validTimeClause}} " +
+                "and m0.vgtyp IN({{vgtyp}}) "+
+                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
+                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{vgtyp}}', vgtyp);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
+            statement = statement.replace('{{model}}', model +"_vgtyp");
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause =" ";
             if (validTimes.length > 0){
@@ -119,9 +113,9 @@ dataDieOff = function (plotParams, plotFunction) {
                     // This is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
-            }
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
 
             var postQueryStartMoment = moment();

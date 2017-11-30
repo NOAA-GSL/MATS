@@ -4,7 +4,7 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataDieOff = function (plotParams, plotFunction) {
+dataSeries = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProecssingStart = moment();
@@ -27,12 +27,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var vgtypStr = curve['vgtyp'];
+        var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
         var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
@@ -49,10 +46,10 @@ dataDieOff = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
-        }
+        var averageStr = curve['average'];
+        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
+        var average = averageOptionsMap[averageStr][0];
+        var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -63,28 +60,27 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            var statement = "SELECT " +
-            "m0.fcst_len AS avtime, " +
-            "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-            "    Min(m0.valid_day + 3600 * m0.hour)            AS min_secs, " +
-            "    Max(m0.valid_day + 3600 * m0.hour)            AS max_secs, " +
-            "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-            "    {{statistic}} " +
-            "FROM {{model}} AS m0 " +
-            "WHERE 1 = 1 " +
-            "{{validTimeClause}} " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30 " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30 " +
-            "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-            "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-            "group by avtime " +
-            "order by avtime" +
-            ";";
+            // this is a database driven curve, not a difference curve
+            var statement = "select {{average}} as avtime, " +
+                "count(m0.hour)/1000 as N_times, " +
+                "{{statistic}} " +
+                " from {{model}} as m0 " +
+                "  where 1=1 "+
+                "{{validTimeClause}} " +
+                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
+                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "and m0.fcst_len = {{forecastLength}} " +
+                "and m0.vgtyp IN({{vgtyp}}) "+
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
+            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{vgtyp}}', vgtyp);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
+            statement = statement.replace('{{model}}', model + "_vgtyp");
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause =" ";
             if (validTimes.length > 0){
@@ -101,7 +97,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool,statement, interval);
+                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -119,9 +115,9 @@ dataDieOff = function (plotParams, plotFunction) {
                     // This is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
-            }
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
 
             var postQueryStartMoment = moment();
@@ -165,20 +161,19 @@ dataDieOff = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateDieoffPlotOptions( dataset, curves, axisMap );
+    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
         finish: totalProecssingFinish.format(),
         duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
     }
-
     var result = {
         error: error,
         data: dataset,
