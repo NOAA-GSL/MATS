@@ -1150,7 +1150,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", "WFIP2_v2", ['data_sources', 'discriminator_range', 'region_descriptions_mats']);
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", "WFIP2_v2", ['data_sources', 'discriminator_range', 'region_descriptions_mats','instruments','instruments_per_site','sites','nwps']);
     matsMethods.resetApp(mdr);
 });
 // this object is global so that the reset code can get to it

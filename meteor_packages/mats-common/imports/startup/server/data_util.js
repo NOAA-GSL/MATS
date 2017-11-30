@@ -2255,7 +2255,7 @@ const areObjectsEqual = function(o, p) {
         {
             if (!(p[keysO[i]] instanceof Array))
                 return false;
-            console.log('o[keysO[i]] instanceof Array and p[keysO[i]] is ', p[keysO[i]]);
+            //console.log('o[keysO[i]] instanceof Array and p[keysO[i]] is ', p[keysO[i]]);
             if (p[keysO[i]].sort().join('') !== o[keysO[i]].sort().join(''))
                 return false;
         }
@@ -2275,7 +2275,7 @@ const areObjectsEqual = function(o, p) {
         {
             if (!(p[keysO[i]] instanceof Object))
                 return false;
-            console.log('o[keysO[i]] instanceof Object and p[keysO[i]] is ', p[keysO[i]]);
+            //console.log('o[keysO[i]] instanceof Object and p[keysO[i]] is ', p[keysO[i]]);
             if (o[keysO[i]] === o)
             {//self reference?
                 if (p[keysO[i]] !== p)
