@@ -91,6 +91,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+
+            if ((statisticSelect == 'MAE' && variableStr == 'wind') || (statisticSelect == 'MAE' && variableStr == 'RH') || (statisticSelect == 'Std deviation' && variableStr == 'wind')) {
+                throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database.");
+            }
+
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
