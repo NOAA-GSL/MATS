@@ -1828,7 +1828,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -1904,7 +1904,7 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
         }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -1961,7 +1961,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + " | " + label;
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
         }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -1989,7 +1989,6 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
 };
 
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
-// generate y-axis
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
     var xAxislabel = "";
@@ -2011,7 +2010,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
                 if (xAxislabel.length > 30) {
                     xAxislabel += "\n";  // wrap long labels
                 }
-                xAxislabel = xAxislabel + '|' + axisMap[axisKey].axisLabel;
+                xAxislabel = xAxislabel + ' | ' + axisMap[axisKey].axisLabel;
             }
         }
         xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;

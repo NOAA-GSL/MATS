@@ -1042,14 +1042,14 @@ dataSeries = function (plotParams, plotFunction) {
         var yaxesOptions;
         if (yLabels[vStr] == undefined) {
             yLabels[vStr] = {
-                label: curves[dsi]['label'] + " | " ,
+                label: curves[dsi]['label'] ,
                 curveNumber: dsi
             };
 
             yaxesOptions = {
                 position: position,
                 color: 'grey',
-                axisLabel: yLabels[vStr].label + vStr,
+                axisLabel: yLabels[vStr].label + ' | ' + vStr,
                 axisLabelColour: "black",
                 axisLabelUseCanvas: true,
                 axisLabelFontSizePixels: 16,
@@ -1060,11 +1060,11 @@ dataSeries = function (plotParams, plotFunction) {
                 max: ymax
             };
         } else {
-            yLabels[vStr].label = curves[dsi]['label'] + " | " + yLabels[vStr].label;
+            yLabels[vStr].label = curves[dsi]['label'] + ", " + yLabels[vStr].label;
             // set the yAxesOption that has this key to this new label
             // find the yaxes element that has this labelKey]
             var curveNum = yLabels[vStr].curveNumber;
-            yaxes[curveNum].axisLabel = yLabels[vStr].label + vStr;
+            yaxes[curveNum].axisLabel = yLabels[vStr].label + ' | ' + vStr;
             yaxesOptions = {
                 show: false,
                 min: ymin,
