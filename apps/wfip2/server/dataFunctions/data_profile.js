@@ -713,12 +713,6 @@ dataProfile = function (plotParams, plotFunction) {
                     lag1: errorResult.lag1,
                     stde_betsy: errorResult.stde_betsy,
                 }
-                // const corrected  = errorResult.qaCorrected.length > 0 ? "<font style='color: red'>: QA corrected! (see data lineage)</font>" : "";
-                // if (corrected) {
-                //     qaCorrections[curve.label] = qaCorrections[curve.label] === undefined ? {} : qaCorrections[curve.label];
-                //     qaCorrections[curve.label][level] = qaCorrections[curve.label][level] === undefined ? [] : qaCorrections[curve.label][level];
-                //     qaCorrections[curve.label][level].push(errorResult.qaCorrected);
-                // }
                 tooltip = label +
                     "<br>" + level + "m" +
                     "<br> " + statistic + ":" + value.toPrecision(4) +

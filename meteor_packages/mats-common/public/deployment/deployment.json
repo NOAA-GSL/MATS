@@ -50,8 +50,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.35-2017.11.30.00.18",
-      "buildDate": "2017.11.30.00.18",
+      "version": "1.5.36-2017.11.30.17.38",
+      "buildDate": "2017.11.30.17.38",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -96,6 +96,14 @@
       "last_test_status": ""
     },
     {
+      "app": "landuse",
+      "title": "Land Use",
+      "version": "1.5.35-2017.11.30.17.35",
+      "buildDate": "2017.11.30.17.35",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
       "app": "wfip2",
       "title": "WFIP2",
       "version": "1.5.36-2017.11.30.00.38",
@@ -106,6 +114,14 @@
     {
       "app": "upperair-previous",
       "title": "Upper Air previous",
+      "version": "1.5.20-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "aircraft-previous",
+      "title": "Aircraft (AMDAR) previous",
       "version": "1.5.20-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
@@ -160,9 +176,33 @@
       "last_test_status": ""
     },
     {
-      "app": "radarReflectivity-previous",
-      "title": "Radar Reflectivity previous",
-      "version": "1.5.20-2017.09.21.16.16",
+      "app": "compositeReflectivity-previous",
+      "title": "Composite Reflectivity previous",
+      "version": "1.5.0-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "echotop-previous",
+      "title": "Echotop previous",
+      "version": "1.5.0-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "vil-previous",
+      "title": "Vertically Integrated Liquid previous",
+      "version": "1.5.0-2017.09.21.16.16",
+      "buildDate": "2017.09.21.16.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "landuse-previous",
+      "title": "Surface land Use previous",
+      "version": "1.5.0-2017.09.21.16.16",
       "buildDate": "2017.09.21.16.16",
       "last_test_run": "",
       "last_test_status": ""

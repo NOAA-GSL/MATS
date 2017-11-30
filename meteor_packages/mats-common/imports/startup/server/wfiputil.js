@@ -919,7 +919,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
                 if (xAxislabel.length > 30) {
                     xAxislabel += "\n";  // wrap long labels
                 }
-                xAxislabel = xAxislabel + '|' + axisMap[axisKey].axisLabel;
+                xAxislabel = xAxislabel + ' | ' + axisMap[axisKey].axisLabel;
             }
         }
         xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
