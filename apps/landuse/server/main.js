@@ -101,7 +101,9 @@ const doCurveParams = function () {
             var dummyVgtyp;
             for (var j = 0; j < vgtypsArrRaw.length; j++) {
                 dummyVgtyp = vgtypsArrRaw[j].replace(/'|\[|\]/g, "");
-                vgtypsArr.push(masterVgtypValuesMap[dummyVgtyp]);
+                if (dummyVgtyp !== '0') {
+                    vgtypsArr.push(masterVgtypValuesMap[dummyVgtyp]);
+                }
             }
             vgtypsModelOptionsMap[model] = vgtypsArr;
         }
