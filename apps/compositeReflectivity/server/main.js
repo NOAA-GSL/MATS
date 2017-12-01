@@ -589,7 +589,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'cref',
+            database: 'mats_common',
             connectionLimit: 10
         });
     }
@@ -633,7 +633,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "cref", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "cref", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("metadataPool", "cref", ['region_descriptions']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 

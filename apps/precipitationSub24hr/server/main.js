@@ -158,9 +158,7 @@ const doCurveParams = function () {
             var dummyRegion;
             for (var j = 0; j < regionsArrRaw.length; j++) {
                 dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
-                if (!dummyRegion.includes("moving")) {
-                    regionsArr.push(masterRegionValuesMap[dummyRegion]);
-                }
+                regionsArr.push(masterRegionValuesMap[dummyRegion]);
             }
             regionModelOptionsMap[model] = regionsArr;
 
