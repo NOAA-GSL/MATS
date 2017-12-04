@@ -357,7 +357,8 @@ const checkMetaDataRefresh = function() {
                 metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: moment().format()}});
             }
         }
-}
+        return true;
+};
 
 const resetApp = function(metaDataTableRecords) {
     var deployment;
@@ -447,6 +448,7 @@ const refreshMetaData = new ValidatedMethod({
                 throw new Meteor.Error("Server error: ", e.message);
             }
         }
+        return metaDataTableUpdates.find({}).fetch();
     }
 });
 
@@ -918,8 +920,9 @@ const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
     }).validator(),
     run (){
         var mtu = metaDataTableUpdates.find({}).fetch();
-        var id = tableUpdates[0]._id;
+        var id = mtu[0]._id;
         metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: 0}});
+        return metaDataTableUpdates.find({}).fetch();
     }
 });
 
