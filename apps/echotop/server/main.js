@@ -342,15 +342,15 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
+        var currentParam = matsCollections.CurveParams.findOne({name: 'scale'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap))) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'threshold'}, {
+            matsCollections.CurveParams.update({name: 'scale'}, {
                 $set: {
-                    optionsMap: thresholdsModelOptionsMap,
-                    valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[3]]
+                    optionsMap: scaleModelOptionsMap,
+                    valuesMap: masterScaleValuesMap,
+                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]]
                 }
             });
         }
@@ -589,7 +589,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'echotop',
+            database: 'mats_common',
             connectionLimit: 10
         });
     }
@@ -633,7 +633,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "echotop", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "echotop", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("metadataPool", "echotop", ['region_descriptions']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
 
