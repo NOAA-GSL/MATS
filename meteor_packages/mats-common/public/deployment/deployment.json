@@ -98,8 +98,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.5.35-2017.12.01.00.56",
-      "buildDate": "2017.12.01.00.56",
+      "version": "1.5.37-2017.12.01.22.58",
+      "buildDate": "2017.12.01.22.58",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -236,10 +236,18 @@
       "last_test_status": ""
     },
     {
+      "app": "aircraft",
+      "title": "Aircraft (AMDAR)",
+      "version": "1.5.35",
+      "buildDate": "2017.11.30.16.19",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.34",
-      "buildDate": "2017.11.29.00.37",
+      "version": "1.5.35",
+      "buildDate": "2017.11.30.16.32",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -310,8 +318,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.35",
-      "buildDate": "2017.11.29.18.49",
+      "version": "1.5.37",
+      "buildDate": "2017.11.30.18.13",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -369,6 +377,14 @@
     {
       "app": "surface",
       "title": "Surface",
+      "version": "1.5.36",
+      "buildDate": "2017.11.30.18.16",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "landuse",
+      "title": "Surface Land Use",
       "version": "1.5.36",
       "buildDate": "2017.11.30.18.16",
       "last_test_run": "",
