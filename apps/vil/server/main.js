@@ -346,15 +346,15 @@ const doCurveParams = function () {
             });
     } else {
         // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
+        var currentParam = matsCollections.CurveParams.findOne({name: 'scale'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, scaleModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterScaleValuesMap))) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'threshold'}, {
+            matsCollections.CurveParams.update({name: 'scale'}, {
                 $set: {
-                    optionsMap: thresholdsModelOptionsMap,
-                    valuesMap: masterThresholdValuesMap,
-                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]]
+                    optionsMap: scaleModelOptionsMap,
+                    valuesMap: masterScaleValuesMap,
+                    options: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]]
                 }
             });
         }
