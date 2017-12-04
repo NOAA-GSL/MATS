@@ -87,7 +87,7 @@ dataSeries = function (plotParams, plotFunction) {
         }
         var variableInfoMap = variableParam.infoMap[myVariable];
         // stash the variableInfoMap in the curves for use in determinig the y axis labels
-        curves[curveIndex].variableInfoMap = variableInfoMap;
+        curves[curveIndex].variableInfoMap = variableInfoMap === undefined ? {} : variableInfoMap;
         const windVar = myVariable.startsWith('wd');
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];

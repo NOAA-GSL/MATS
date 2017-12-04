@@ -95,7 +95,7 @@ dataProfile = function (plotParams, plotFunction) {
         }
         var variableInfoMap = variableParam.infoMap[myVariable];
         // stash the variableInfoMap in the curves for use in determinig the y axis labels
-        curves[curveIndex].variableInfoMap = variableInfoMap;
+        curves[curveIndex].variableInfoMap = variableInfoMap === undefined ? {} : variableInfoMap;
         var myVariable_isDiscriminator = false;
         if (myVariable === undefined) {
             myVariable = curve['variable'];
