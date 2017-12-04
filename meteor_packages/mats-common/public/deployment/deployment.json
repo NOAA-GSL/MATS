@@ -74,24 +74,24 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.5-2017.12.01.00.43",
-      "buildDate": "2017.12.01.00.43",
+      "version": "1.5.6-2017.12.04.21.17",
+      "buildDate": "2017.12.04.21.17",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.5.5-2017.12.01.00.33",
-      "buildDate": "2017.12.01.00.33",
+      "version": "1.5.6-2017.12.04.21.13",
+      "buildDate": "2017.12.04.21.13",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.5-2017.12.01.00.36",
-      "buildDate": "2017.12.01.00.36",
+      "version": "1.5.6-2017.12.04.21.15",
+      "buildDate": "2017.12.04.21.15",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -230,88 +230,88 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.35",
-      "buildDate": "2017.11.29.00.42",
+      "version": "1.5.37",
+      "buildDate": "2017.12.01.23.46",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.5.35",
-      "buildDate": "2017.11.30.16.19",
+      "version": "1.5.36",
+      "buildDate": "2017.12.01.23.32",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.35",
-      "buildDate": "2017.11.30.16.32",
+      "version": "1.5.36",
+      "buildDate": "2017.12.01.23.41",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.34",
-      "buildDate": "2017.11.29.00.28",
+      "version": "1.5.36",
+      "buildDate": "2017.12.01.23.34",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.34",
-      "buildDate": "2017.11.29.00.35",
+      "version": "1.5.36",
+      "buildDate": "2017.12.01.23.39",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.34",
-      "buildDate": "2017.11.29.00.20",
+      "version": "1.5.37",
+      "buildDate": "2017.12.01.23.25",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.35",
-      "buildDate": "2017.11.29.00.15",
+      "version": "1.5.37",
+      "buildDate": "2017.12.01.23.21",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.34",
-      "buildDate": "2017.11.29.00.18",
+      "version": "1.5.36",
+      "buildDate": "2017.12.01.23.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.3",
-      "buildDate": "2017.11.29.00.33",
+      "version": "1.5.5",
+      "buildDate": "2017.12.01.23.37",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.5.3",
-      "buildDate": "2017.11.29.00.23",
+      "version": "1.5.5",
+      "buildDate": "2017.12.01.23.28",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.3",
-      "buildDate": "2017.11.29.00.30",
+      "version": "1.5.5",
+      "buildDate": "2017.12.01.23.30",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -391,14 +391,6 @@
       "last_test_status": ""
     },
     {
-      "app": "landuse",
-      "title": "Surface Land Use",
-      "version": "1.5.36",
-      "buildDate": "2017.11.30.18.16",
-      "last_test_run": "",
-      "last_test_status": ""
-    },
-    {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
       "version": "1.5.37",
@@ -425,8 +417,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.5.5",
-      "buildDate": "2017.12.01.23.28",
+      "version": "1.5.6",
+      "buildDate": "2017.12.04.23.00",
       "last_test_run": "",
       "last_test_status": ""
     },
