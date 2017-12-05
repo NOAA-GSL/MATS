@@ -26,7 +26,7 @@ var height = function () {
 
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        console.log ("graph resizng now");
+        //console.log ("graph resizng now");
         switch (Session.get('graphViewMode')) {
             case matsTypes.PlotView.graph:
                 //console.log($(window).height());

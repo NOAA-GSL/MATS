@@ -80,7 +80,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{vgtyp}}', vgtyp);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model + "_vgtyp");
+            statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause =" ";
             if (validTimes.length > 0){
