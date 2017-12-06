@@ -170,9 +170,9 @@ echo -e "$0 building these apps ${GRN}${apps[*]}${NC}"
 for app in ${apps[*]}; do
     cd $app
     echo -e "$0 - building app ${GRN}${app}${NC}"
-    meteor reset
-    meteor npm cache clean
-    meteor npm install
+    /usr/local/bin/meteor reset
+    /usr/local/bin/meteor npm cache clean
+    /usr/local/bin/meteor npm install
     if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
         rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
     else
@@ -186,7 +186,7 @@ for app in ${apps[*]}; do
             ${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl > ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/meteor_packages/mats-common/public/deployment/deployment.json
     git push origin ${BUILD_CODE_BRANCH}
-    meteor build /builds
+    /usr/local/bin/meteor build /builds
     if [ $? -ne 0 ]; then
         echo -e "${failed} to meteor build - must exit now"
         exit 1
@@ -223,7 +223,7 @@ for app in ${apps[*]}; do
     fi
     rm -rf "/builds/${app}.tar.gz"
     cd bundle
-    (cd programs/server && meteor npm install)
+    (cd programs/server && /usr/local/bin/meteor npm install)
     cd ../..
 done
 
