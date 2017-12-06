@@ -1478,7 +1478,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             // %y -> Y value,
             // %x.2 -> precision of X value,
             // %p -> percentcontent: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
+            xDateFormat: "%Y-%m-%d:%H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1574,7 +1574,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
         tooltip: true,
         tooltipOpts: {
             content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
+            xDateFormat: "%Y-%m-%d:%H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1684,7 +1684,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             // %x.2 -> precision of X value,
             // %p -> percent
             content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
+            xDateFormat: "%Y-%m-%d:%H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1789,7 +1789,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             // %x.2 -> precision of X value,
             // %p -> percent
             content: "<span style='font-size:150%'><strong>%s<br>%x.4:<br>value %y.4</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H",
+            xDateFormat: "%Y-%m-%d:%H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
