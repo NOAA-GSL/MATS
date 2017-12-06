@@ -9,4 +9,4 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
    exit 1
 fi
-/bin/pkill monitor_restart.sh; /bin/rm -rf /tmp/monitor_restart.pid
+/bin/pkill  monitor_restart; /bin/rm -rf /tmp/monitor_restart.pid
