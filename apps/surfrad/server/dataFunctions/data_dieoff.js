@@ -94,8 +94,12 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause =" and floor((m0.secs)%(24*3600)/3600) IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            dataRequests[curve.label] = statement;
 
+            if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
+                throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
+            }
+
+            dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
