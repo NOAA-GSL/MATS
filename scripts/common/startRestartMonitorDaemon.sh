@@ -10,4 +10,4 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
    exit 1
 fi
-/sbin/daemonize -p /tmp/monitor_restart.pid -l /tmp/monitor_restart.pid /builds/MATS_for_EMB/scripts/common/monitor_restart.sh
+/sbin/daemonize -p /tmp/monitor_restart.pid -l /tmp/monitor_restart.pid /builds/buildArea/MATS_for_EMB/scripts/common/monitor_restart.sh
