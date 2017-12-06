@@ -1422,7 +1422,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'forecast hour',
+            axisLabel: 'forecast lead time',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 14,

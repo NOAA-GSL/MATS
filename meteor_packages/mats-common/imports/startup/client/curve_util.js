@@ -297,7 +297,15 @@ const showProfileFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
         if (elem && elem.style) {
             elem.style.display = "block";
         }
@@ -327,6 +335,10 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
             elem.style.display = "block";
         }
@@ -368,9 +380,17 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
@@ -397,11 +417,23 @@ const showValidTimeFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('average-item');
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -418,11 +450,31 @@ const showThresholdFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('average-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }

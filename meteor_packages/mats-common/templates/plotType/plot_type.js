@@ -63,8 +63,11 @@ Template.plotType.events({
                 if (tsDate !== undefined && tsDate !== "") {
                     for (var ci = 0; ci < curves.length; ci++) {
                         curves[ci]['curve-dates'] = tsDate;
-                        if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name:'average'}) && matsCollections.CurveParams.findOne({name:'average'}).default) {
-                            curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
+                        if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                            curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
+                        }
+                        if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
+                            curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
                         }
                         if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                             curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
@@ -100,6 +103,12 @@ Template.plotType.events({
             if (curves.length > 0 ) {
                 // the average may not have been carried over from a dieoff so let it default
                 for (var ci = 0; ci < curves.length; ci ++) {
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
+                    }
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
+                    }
                     if (!curves[ci]['dieoff-forecast-length'] && matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}) && matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}).default) {
                         curves[ci]['dieoff-forecast-length'] = matsCollections.CurveParams.findOne({name:'dieoff-forecast-length'}).default;
                     }
@@ -131,6 +140,17 @@ Template.plotType.events({
             // change has been confirmed
             matsCurveUtils.showThresholdFace();
             var curves = Session.get("Curves");
+            if (curves.length > 0 ) {
+                for (var ci = 0; ci < curves.length; ci ++) {
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
+                    }
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+            }
             matsMethods.refreshMetaData.call({}, function (error, result) {
                 if (error !== undefined) {
                     setError(new Error(error.message));
@@ -160,6 +180,9 @@ Template.plotType.events({
                 for (var ci = 0; ci < curves.length; ci ++) {
                     if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name:'average'}) && matsCollections.CurveParams.findOne({name:'average'}).default) {
                         curves[ci]['average'] = matsCollections.CurveParams.findOne({name:'average'}).default;
+                    }
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
                     }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
@@ -195,8 +218,8 @@ Template.plotType.events({
             var curves = Session.get("Curves");
             if (curves.length > 0 ) {
                 for (var ci = 0; ci < curves.length; ci ++) {
-                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name:'validtime'}) && matsCollections.CurveParams.findOne({name:'validtime'}).default) {
-                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name:'validtime'}).default;
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name:'threshold'}) && matsCollections.CurveParams.findOne({name:'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name:'threshold'}).default;
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name:'forecast-length'}) && matsCollections.CurveParams.findOne({name:'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name:'forecast-length'}).default;
