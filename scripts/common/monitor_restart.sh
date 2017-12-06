@@ -13,16 +13,22 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if [[ ! -e /builds/restart_nginx ]]; then
-	touch /builds/restart_nginx
+	/bin/touch /builds/restart_nginx
 fi
 if [[ ! -e /builds/restart_nginx.log ]]; then
-	touch /builds/restart_nginx.log
+	/bin/touch /builds/restart_nginx.log
 fi
-chown www-data:www-data /builds/restart_nginx
-chmod a-rw  /builds/restart_nginx
-chown www-data:www-data /builds/restart_nginx.log
-chmod a-rw  /builds/restart_nginx.log
-inotifywait  -m  -e attrib /builds/restart_nginx | while read; do
+/bin/chown www-data:www-data /builds/restart_nginx
+/bin/chmod a-rw  /builds/restart_nginx
+/bin/chown www-data:www-data /builds/restart_nginx.log
+/bin/chmod a-rw  /builds/restart_nginx.log
+
+prefix=$(/bin/hostname | /bin/cut -f1 -d'.')
+/bin/inotifywait  -m  -e attrib /builds/restart_nginx | while read; do
+	secs=$(/bin/date +%s)
 	echo "/builds/restart_nginx touched at  $(date)  - must restart nginx" >> /builds/restart_nginx.log
+	echo "saving /etc/nginx/conf.d/ssl.conf to /etc/nginx/conf.d/ssl.conf.bak_${secs}" >> /builds/restart_nginx.log
+	/bin/cp /etc/nginx/conf.d/ssl.conf /etc/nginx/conf.d/ssl.conf.bak_${secs}
+	/bin/wget -q -O - https://www.esrl.noaa.gov/gsd/mats/${prefix}_ssl.conf.gpg |  /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes -o /etc/nginx/conf.d/ssl.conf
 	/bin/systemctl restart nginx.service > /builds/restart_nginx.log 2>&1
 done
