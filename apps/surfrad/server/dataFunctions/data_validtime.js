@@ -82,6 +82,10 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{regionClause}}', regionClause);
 
+            if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
+                throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
+            }
+
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
