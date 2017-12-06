@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="test-full-app-upperair" type="meteor-app-runner" factoryName="Meteor" singleton="false" programParameters="test --full-app --driver-package practicalmeteor:mocha --debug-port 5858" workingDirectory="$PROJECT_DIR$/apps/upperair">
+  <configuration default="false" name="test-full-app-wfip2" type="meteor-app-runner" factoryName="Meteor" singleton="false" programParameters="test --full-app --driver-package practicalmeteor:mocha --debug-port 5858" workingDirectory="$PROJECT_DIR$/apps/wfip2">
     <option name="envs">
       <entry key="METEOR_PACKAGE_DIRS" value="$PROJECT_DIR$/meteor_packages" />
     </option>

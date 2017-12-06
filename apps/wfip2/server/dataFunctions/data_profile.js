@@ -95,7 +95,7 @@ dataProfile = function (plotParams, plotFunction) {
         }
         var variableInfoMap = variableParam.infoMap[myVariable];
         // stash the variableInfoMap in the curves for use in determinig the y axis labels
-        curves[curveIndex].variableInfoMap = variableInfoMap;
+        curves[curveIndex].variableInfoMap = variableInfoMap === undefined ? {} : variableInfoMap;
         var myVariable_isDiscriminator = false;
         if (myVariable === undefined) {
             myVariable = curve['variable'];
@@ -631,7 +631,7 @@ dataProfile = function (plotParams, plotFunction) {
         // This axisMap object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis,
         // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey = curve.variableInfoMap.units;
+        var axisKey = curve.variableInfoMap === undefined ? variableStr : curve.variableInfoMap.units;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var levelSums = {};
         var curveStats = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};

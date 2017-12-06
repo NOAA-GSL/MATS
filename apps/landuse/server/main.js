@@ -77,7 +77,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories_vgtyp;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -469,7 +469,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'surface_sums',
+            database: 'vgtyp_sums',
             connectionLimit: 10
         });
     }
@@ -487,7 +487,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surface_sums", ['regions_per_model_mats_all_categories_vgtyp','vgtyp_descriptions']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories','vgtyp_descriptions']);
     matsMethods.resetApp(mdr);
 });
 

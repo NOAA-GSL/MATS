@@ -339,13 +339,13 @@
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "ceiling",
@@ -399,7 +399,7 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 12,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     }
   ]
 }
