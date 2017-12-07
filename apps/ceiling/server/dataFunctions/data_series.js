@@ -25,7 +25,6 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxRunInterval = Number.MIN_VALUE;
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -177,7 +176,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, maxRunInterval);
+        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
         }
 
     // add black 0 line curve
