@@ -25,10 +25,17 @@ fi
 
 prefix=$(/bin/hostname | /bin/cut -f1 -d'.')
 /bin/inotifywait  -m  -e attrib /builds/restart_nginx | while read; do
-	secs=$(/bin/date +%s)
-	echo "/builds/restart_nginx touched at  $(date)  - must restart nginx" >> /builds/restart_nginx.log
-	echo "saving /etc/nginx/conf.d/ssl.conf to /etc/nginx/conf.d/ssl.conf.bak_${secs}" >> /builds/restart_nginx.log
-	/bin/cp /etc/nginx/conf.d/ssl.conf /etc/nginx/conf.d/ssl.conf.bak_${secs}
+	d=$(/bin/date +%F_%T)
+	echo "/builds/restart_nginx touched at  $(/bin/date +%F_%T)  - must restart nginx" >> /builds/restart_nginx.log
+	echo "saving /etc/nginx/conf.d/ssl.conf to /etc/nginx/conf.d/ssl.conf.bak_${d}" >> /builds/restart_nginx.log
+	/bin/cp /etc/nginx/conf.d/ssl.conf /etc/nginx/conf.d/ssl.conf.bak_${d}
 	/bin/wget -q -O - https://www.esrl.noaa.gov/gsd/mats/${prefix}_ssl.conf.gpg |  /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes -o /etc/nginx/conf.d/ssl.conf
-	/bin/systemctl restart nginx.service > /builds/restart_nginx.log 2>&1
+	/usr/sbin/nginx -t
+	if [[ $? -ne 0 ]]; then
+		echo "ERROR: Retrieved and decrypted ${prefix}_ssl.conf.gpg from mats and installed it in /etc/nginx/conf.d/ssl.conf - but 'nginx - t' failed."
+		echo "Restoring the previous /etc/nginx/conf.d/ssl.conf - NO RESTART"
+	else
+		echo "Restarting nginx with new configuration"
+		echo "/bin/systemctl restart nginx.service > /builds/restart_nginx.log 2>&1"
+	fi
 done
