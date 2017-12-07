@@ -59,7 +59,7 @@ if [ "X${build_env}" == "X" ]; then
 	echo "${RED}Must exit now${NC}"
 	exit 1
 fi
-date
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(date)"
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"

@@ -1,0 +1,53 @@
+The mats servers, i.e. mats-dev.gsd.esrl.noaa.gov, mats-int.gsd.esrl.noaa.gov, and mats.gsd.esrl.noaa.gov occaisionally share encrypted data.
+One example is the sharing of /etc/nginx/conf.d/ssl.conf files.
+These files are used and modifiable by root but ocaisionally they must be modified to add application locations by a user authenticated as "www-data".
+
+NGINX location configuration:
+In order to minimize the need for distributing root access the following mechanism is employed to reconfigure nginx locations for adding new apps or removing old ones.
+1) a user logs into, for example, mats-dev.gsd.esrl.noaa.gov as www-data.
+2) The user copies the /etc/nginx/conf.d/ssl.conf file to a temporary location.
+3) The user modifies the file to add or remove locations.
+4) The user uses the encryptAndPushToMats.sh script (this directory) to encrypt the modified file and copy to a hidden directory on the mats.gsd.esrl.noaa.gov server.
+
+When the monitor_restart.sh script (here, but runs as a root daemon) is notified to restart nginx it follows these steps...
+1) First it retrieves the encrypted ssl.conf file from the mats.gsd.esrl.noaa.gov server using the decryptAndGetfromMats.sh script (this directory).
+2) It then decrypts the file.
+3) It makes a backup copy of the current /etc/nginx/conf.d/ssl.conf file
+4) It overWrites the /etc/nginx/conf.d/ssl.conf file with the new one.
+5) It tests the new /etc/nginx/conf.d/ssl.conf with nginx -t
+6) If the test fails the backup file is reverted and an error message is logged.
+7) If the test succeeds it then restarts nginx.
+
+SHARED KEYS
+In order to encrypt data as user www-data and decrypt that data as user root there must exist a shared key.
+The following steps are manual and have to be followed for each new mats server.
+
+1) log in as user www-data
+2) generate www-data key
+    > gpg --gen-key
+    answer questions:
+        user - www-data
+        email - mats.gsd@noaa.gov
+        passphrase - matsP@$$Phrase
+        etc
+3) export the public and private keys
+    >  gpg --export -a "www-data" > /tmp/www-data.key
+    >  gpg --export-secret-key -a "www-data" > /tmp/www-data-secret.key
+
+4) log in as user root and import the keys
+    >  gpg --import /tmp/www-data.key
+    >  gpg --allow-secret-key-import --import /tmp/www-data-secret.key
+
+5) Be sure to rm the /tmp/www-data.key and /tmp/www-data-secret.key
+
+The script encryptAndPushToMats.sh in this directory is used by a user to encrypt and push a servers new ssl.conf file to the mats.gsd.esrl.noaa.gov server.
+The script decryptAndGetFromMats.sh is used by the restart daemon to retrieve the latest ssl.conf file and it can be used to view the latest saved ssl.conf file.
+
+
+encryption command... run as user www-data at a terminal
+gpg -e --passphrase "matsP@$$Phrase" --batch --quiet --yes -u "www-data" -r "www-data" /tmp/ssl.conf   (/tmp/ssl.conf could be any file)
+
+decryption command... runs as root by restart daemon or as user www-data at a terminal
+gpg -d -u "www-data" -r "www-data" --passphrase "matsP@$$Phrase" --batch --quiet --yes /tmp/ssl.conf.gpg  (/tmp/ssl.conf.gpg could be any file)
+
+

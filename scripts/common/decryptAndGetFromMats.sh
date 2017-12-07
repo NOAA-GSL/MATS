@@ -17,4 +17,5 @@ if [[ "${host}" != "mats-dev" && "${host}" != "mats-int" ]]; then
     exit 1
 fi
 outputFile="${host}_ssl.conf.gpg"
-/bin/wget -q -O - https://www.esrl.noaa.gov/gsd/mats/${outputFile} |  /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes
+--no-check-certificate https://mats.gsd.esrl.noaa.gov
+/bin/wget -q -O - --no-check-certificate https://mats.gsd.esrl.noaa.gov${outputFile} |  /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes
