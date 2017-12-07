@@ -213,8 +213,8 @@ const doCurveParams = function () {
             'RMS-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
             'Bias (Model - Obs)-winds': 'group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
             'Bias (Model - Obs)-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'OmF (Obs - Model)': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_model_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
-            'OmF (Obs - Model)': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'OmF (Obs - Model)-winds': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_model_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
+            'OmF (Obs - Model)-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
             'N-winds': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
             'N-other': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
             'Model average-winds': 'group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0',
@@ -249,11 +249,46 @@ const doCurveParams = function () {
             RH: ['dR', 'R'],
             winds: ['dw', 'ws']
         };
+
+        const statVarUnitMap = {
+            'RMS': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            },
+            'Bias (Model - Obs)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            },
+            'OmF (Obs - Model)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            },
+            'N': {
+                'temperature': 'Number',
+                'RH': 'Number',
+                'winds': 'Number'
+            },
+            'Model average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            },
+            'Obs average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'winds': 'm/s'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
+                statVarUnitMap: statVarUnitMap,
                 options: ['temperature', 'RH', 'winds'],   // convenience
                 controlButtonCovered: true,
                 unique: false,

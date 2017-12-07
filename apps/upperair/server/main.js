@@ -279,17 +279,57 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
         optionsMap = {
-            temperature: ['dt', 't'],
-            RH: ['dR', 'R'],
-            RHobT: ['dRoT', 'RoT'],
-            winds: ['dw', 'ws'],
-            height: ['dH', 'H']
+            'temperature': ['dt', 't'],
+            'RH': ['dR', 'R'],
+            'RHobT': ['dRoT', 'RoT'],
+            'winds': ['dw', 'ws'],
+            'height': ['dH', 'H']
         };
+
+        const statVarUnitMap = {
+            'RMS': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
+            },
+            'Bias (Model - Obs)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
+            },
+            'N': {
+                'temperature': 'Number',
+                'RH': 'Number',
+                'RHobT': 'Number',
+                'winds': 'Number',
+                'height': 'Number'
+            },
+            'Model average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
+            },
+            'Obs average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'RHobT': 'RH (%)',
+                'winds': 'm/s',
+                'height': 'm'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
+                statVarUnitMap: statVarUnitMap,
                 options: ['temperature', 'RH', 'RHobT', 'winds', 'height'],   // convenience
                 controlButtonCovered: true,
                 unique: false,
