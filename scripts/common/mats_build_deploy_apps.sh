@@ -59,7 +59,7 @@ if [ "X${build_env}" == "X" ]; then
 	echo "${RED}Must exit now${NC}"
 	exit 1
 fi
-echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(date)"
+echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
@@ -233,7 +233,5 @@ echo $(getApplistJSONForServer ${SERVER}) > $applistFile
 mv $applistFile static/applist.json
 chmod a+r static/applist.json
 
-
-date
-echo -e "$0 ----------------- finished"
+echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 exit 0

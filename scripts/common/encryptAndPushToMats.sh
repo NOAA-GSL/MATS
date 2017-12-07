@@ -38,6 +38,6 @@ then
     echo {"input file ${inFile} does not exist - exiting"
     exit -1
 fi
-/bin/ssh www-data@${remoteServer} "/bin/cp  /web/static/gsd/mats/${outputFile} /web/static/gsd/mats/${outputFile}.bak.$(/bin/date +%s)"
+/bin/ssh www-data@${remoteServer} "/bin/cp  /web/static/gsd/mats/${outputFile} /web/static/gsd/mats/${outputFile}.bak.$(/bin/date +%F_%T)"
 /bin/cat ${inFile} | /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes -c -o - --cipher-algo AES256 | /bin/ssh www-data@${remoteServer} "/bin/cat > /web/static/gsd/mats/${outputFile}"
 
