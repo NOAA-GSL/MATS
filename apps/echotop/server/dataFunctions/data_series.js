@@ -44,7 +44,7 @@ dataSeries = function (plotParams, plotFunction) {
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey =  statisticSelect;
+        var axisKey =  statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];

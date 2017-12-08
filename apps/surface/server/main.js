@@ -255,10 +255,61 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
         optionsMap = {
-            temperature: ['dt', 't'],
-            RH: ['drh', 'rh'],
-            dewpoint: ['dTd', 'td'],
-            wind: ['dw', 'ws'],
+            'temperature': ['dt', 't'],
+            'RH': ['drh', 'rh'],
+            'dewpoint': ['dTd', 'td'],
+            'wind': ['dw', 'ws'],
+        };
+
+        const statVarUnitMap = {
+            'RMS': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Bias (Model - Obs)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Bias (Obs - Model)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'N': {
+                'temperature': 'Number',
+                'RH': 'Number',
+                'dewpoint': 'Number',
+                'wind': 'Number'
+            },
+            'Model average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Obs average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Std deviation': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'MAE': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            }
         };
 
         matsCollections.CurveParams.insert(
@@ -266,6 +317,7 @@ const doCurveParams = function () {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
+                statVarUnitMap: statVarUnitMap,
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
@@ -425,6 +477,21 @@ var doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ':'],
+                ['', 'region', ', '],
+                ['', 'statistic', ', '],
+                ['', 'variable', ', '],
+                ['fcst_len:', 'forecast-length', 'h ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "forecast-length"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -452,6 +519,12 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
             checked: false
         });
     }
