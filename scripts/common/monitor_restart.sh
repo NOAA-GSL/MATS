@@ -51,6 +51,6 @@ fi
         /bin/cp /etc/nginx/conf.d/backups/ssl.conf.bak_${d} /etc/nginx/conf.d/ssl.conf
 	else
 		echo "Restarting nginx with new configuration"
-		echo "/bin/systemctl restart nginx.service > /builds/restart_nginx.log 2>&1"
+		/bin/systemctl restart nginx.service > /builds/restart_nginx.log 2>&1
 	fi
 done
