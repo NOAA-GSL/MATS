@@ -263,11 +263,63 @@ const doCurveParams = function () {
             wind: ['dw', 'ws'],
         };
 
+        const statVarUnitMap = {
+            'RMS': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Bias (Model - Obs)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Bias (Obs - Model)': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'N': {
+                'temperature': 'Number',
+                'RH': 'Number',
+                'dewpoint': 'Number',
+                'wind': 'Number'
+            },
+            'Model average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Obs average': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'Std deviation': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            },
+            'MAE': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
+                statVarUnitMap: statVarUnitMap,
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,

@@ -49,12 +49,14 @@ dataValidTime = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey =  statisticSelect;
+        var axisKey =  varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];

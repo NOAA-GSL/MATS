@@ -262,14 +262,27 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         var optionsMap = {
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn+0.000)) * 100 as stat'],
-            'Bias (Forecast / Observed)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn+0.000)) * 100 as stat'],
-            'PODy (POD of precip > threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+0.000)) * 100 as stat'],
-            'PODn (POD of precip < threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.ny+0.000)) * 100 as stat'],
-            'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)+0.000) * 100 as stat'],
-            'TSS (True Skill Score)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)+(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1.) * 100 as stat'],
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny))/((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as stat'],
-            'Ratio (fcst / total)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat']
+            'TSS (True Skill Score)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1.) * 100 as stat', 'x100'],
+
+            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat', 'Number'],
+
+            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat', 'Number'],
+
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat', 'x100'],
+
+            'PODy (POD of visibility < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat', 'x100'],
+
+            'PODn (POD of visibility > threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat', 'x100'],
+
+            'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat', 'x100'],
+
+            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny))*100 as stat', 'x100'],
+
+            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat', 'Number'],
+
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat', 'x100'],
+
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat', 'x100']
         };
 
         matsCollections.CurveParams.insert(

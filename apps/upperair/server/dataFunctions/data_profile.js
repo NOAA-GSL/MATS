@@ -60,6 +60,8 @@ dataProfile = function(plotParams, plotFunction) {
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var validTimeStr = curve['valid-time'];
         var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         var validTimeClause = validTimeOptionsMap[validTimeStr][0];
@@ -69,7 +71,7 @@ dataProfile = function(plotParams, plotFunction) {
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-        var axisKey = statisticSelect;
+        var axisKey =  varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var d = [];
         // create database query statements
@@ -127,7 +129,11 @@ dataProfile = function(plotParams, plotFunction) {
                     dataFoundForCurve = false;
                 } else {
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('Unknown column')) {
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             }
         } else {

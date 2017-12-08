@@ -266,11 +266,71 @@ const doCurveParams = function () {
             '15 min avg direct (experimental HRRR only)': ['ob0.direct - m0.direct15','m0.direct15','ob0.direct']
         };
 
+        const statVarUnitMap = {
+            'RMS': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'Bias (Model - Obs)': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'Bias (Obs - Model)': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'N': {
+                'dswrf': 'Number',
+                'direct (experimental HRRR only)': 'Number',
+                'diffuse (experimental HRRR only)': 'Number',
+                '15 min avg dswrf (experimental HRRR only)': 'Number',
+                '15 min avg direct (experimental HRRR only)': 'Number'
+            },
+            'Model average': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'Obs average': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'Std deviation': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            },
+            'MAE': {
+                'dswrf': 'W/m2',
+                'direct (experimental HRRR only)': 'W/m2',
+                'diffuse (experimental HRRR only)': 'W/m2',
+                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
+                '15 min avg direct (experimental HRRR only)': 'W/m2'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
+                statVarUnitMap: statVarUnitMap,
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
@@ -344,25 +404,25 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
-                controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
-                displayOrder: 8,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
+    // if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+    //     matsCollections.CurveParams.insert(
+    //         {
+    //             name: 'dieoff-forecast-length',
+    //             type: matsTypes.InputTypes.select,
+    //             optionsMap: {},
+    //             options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
+    //             superiorNames: [],
+    //             selected: '',
+    //             controlButtonCovered: true,
+    //             unique: false,
+    //             default: matsTypes.ForecastTypes.dieoff,
+    //             controlButtonVisibility: 'block',
+    //             controlButtonText: 'forecast-length',
+    //             displayOrder: 8,
+    //             displayPriority: 1,
+    //             displayGroup: 3
+    //         });
+    // }
 
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -448,23 +508,23 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
-        matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ' in '],
-                ['', 'region', ', '],
-                ['', 'statistic', ', '],
-                ['', 'variable', ', '],
-                ['', 'scale', ' '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-            ],
-            displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "valid-time", "dieoff-forecast-length"
-            ],
-            groupSize: 6
-        });
+        // matsCollections.CurveTextPatterns.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     textPattern: [
+        //         ['', 'label', ': '],
+        //         ['', 'data-source', ' in '],
+        //         ['', 'region', ', '],
+        //         ['', 'statistic', ', '],
+        //         ['', 'variable', ', '],
+        //         ['', 'scale', ' '],
+        //         ['fcst_len:', 'dieoff-forecast-length', 'h '],
+        //         [' valid-time:', 'valid-time', ' '],
+        //     ],
+        //     displayParams: [
+        //         "label", "data-source", "region", "statistic", "variable", "scale", "valid-time", "dieoff-forecast-length"
+        //     ],
+        //     groupSize: 6
+        // });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
@@ -504,12 +564,12 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
-            dataFunction: "dataDieOff",
-            checked: false
-        });
+        // matsCollections.PlotGraphFunctions.insert({
+        //     plotType: matsTypes.PlotTypes.dieoff,
+        //     graphFunction: "graphDieOff",
+        //     dataFunction: "dataDieOff",
+        //     checked: false
+        // });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphValidTime",
