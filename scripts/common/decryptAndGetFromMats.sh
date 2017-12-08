@@ -21,5 +21,5 @@ outputFile="${host}_ssl.conf.gpg"
 tmpGpgFile=$(mktemp)
 rm -rf /tmp/ssl.conf
 /bin/wget -q -O ${tmpGpgFile} --no-check-certificate https://mats.gsd.esrl.noaa.gov/${outputFile}
-cat /builds/passphrase | gpg2 --batch -q -d ${tmpGpgFile} > /tmp/ssl.conf
+cat /builds/passphrase | gpg2 --batch --passphrase-fd 0 --armor -quiet -decrypt ${tmpGpgFile} > /tmp/ssl.conf
 rm -rf ${tmpGpgFile}
