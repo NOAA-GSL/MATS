@@ -100,5 +100,8 @@ fi
 echo -e "${GRN}linking /gsd/mats${NC}"
 /usr/bin/ssh -q ${server} "cd /web; ln -sf gsd/mats/* ."
 
-echo -e "${RED}do not forget to restart nginx on ${server}.${NC}"
+echo -e "${RED}triggering restart nginx on ${server}.${NC}"
+/usr/bin/ssh -q ${server} "/bin/touch /builds/restart_nginx"
 exit 0
+
+
