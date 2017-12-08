@@ -39,7 +39,7 @@ then
     exit -1
 fi
 /bin/ssh www-data@${remoteServer} "/bin/cp  /web/static/gsd/mats/${outputFile} /web/static/gsd/mats/${outputFile}.bak.$(/bin/date +%F_%T)"
-/bin/cat ${inFile} | /bin/gpg2 -e -u "www-data" -r "www-data" ${inFile}} | /bin/ssh www-data@${remoteServer} "/bin/cat > /web/static/gsd/mats/${outputFile}"
+/bin/cat ${inFile} | /bin/gpg2 -e -u "www-data" -r "www-data" ${inFile}} | /bin/ssh www-data@${remoteServer} "/bin/cat > /web/static/${outputFile}"
 # trigger the restart
 /bin/touch /builds/restart_nginx
 
