@@ -1,15 +1,34 @@
-The mats servers, i.e. mats-dev.gsd.esrl.noaa.gov, mats-int.gsd.esrl.noaa.gov, and mats.gsd.esrl.noaa.gov occaisionally share encrypted data.
-One example is the sharing of /etc/nginx/conf.d/ssl.conf files.
-These files are used and modifiable by root but ocaisionally they must be modified to add application locations by a user authenticated as "www-data".
+OVERVIEW:
+Mats apps are served by an nginx web server that uses Passenger Phusion to run a nodejs server on behalf of each app.
+The nginx server must be configured with an ssl.conf configuration file that defines the location block for each app.
+This ssl.conf file (/etc/nginx/conf.d/ssl.conf) must be modified with root authority.
+In order to minimize the need for distributing root access the following mechanism is employed to reconfigure nginx locations for adding new apps or removing old ones,
+and for restarting the server after reconfiguration. When an app is rebuilt and redeployed to the server, even though it may already be
+properly configured, an nginx restart is appropriate because resources within the app may have been cached. Therefore this mechanism
+is also triggered after a rebuild.
+
+The nginx configuration file /etc/nginx/conf.d/ssl.conf for each of the mats serverds is saved in encrypted format on the mats.gsd.esrl.noaa.gov production server.
+These files are used by root but ocaisionally they must be modified to add application locations by a user authenticated as "www-data".
+There is a utility named encryptAndPushToMats.sh that is used by a user authenticated as www-data to encrypt and push a new version of an ssl.conf file to the
+mats.gsd.esrl.noaa.gov production server. There is another utility named decryptAndGetFromMats.sh that is used to retrieve and decrypt an ssl.conf file from the
+mats.gsd.esrl.noaa.gov production server by the monitor_restart utlitliy.
+
+The monitor_restart.sh utility is a root authenticated daemon thata monitors a file /builds/restart_nginx. Every time that file is touched an event monitor in the
+monitor_restart daemon will retrieve and decrypt the latest ssl.conf file from the mats.gsd.esrl.noaa.gov production server, make a time stampde copy of the current
+/etc/nginx/conf.d/ssl.conf file and replace /etc/nginx/conf.d/ssl.conf with the new file from mats.
+The monitor_restart daemon will then test the syntax of the new configuratio file and if successful restart the server. If the syntax is bad the previous configuration is restored.
+The build script will touch the trigger file automatically after a successful build, as will the publish script on the production server. Also the
+encryptAndPushToMats.sh script will touch the trigger file automatically triggering a new build.
+
 
 NGINX location configuration:
-In order to minimize the need for distributing root access the following mechanism is employed to reconfigure nginx locations for adding new apps or removing old ones.
 1) a user logs into, for example, mats-dev.gsd.esrl.noaa.gov as www-data.
 2) The user copies the /etc/nginx/conf.d/ssl.conf file to a temporary location.
 3) The user modifies the file to add or remove locations.
-4) The user uses the encryptAndPushToMats.sh script (this directory) to encrypt the modified file and copy to a hidden directory on the mats.gsd.esrl.noaa.gov server.
+4) The user uses the encryptAndPushToMats.sh script (MATS_forEMB/script/common directory) to encrypt the modified file and copy to a hidden directory on the mats.gsd.esrl.noaa.gov server.
+5) the encryptAndPushToMats.sh (MATS_forEMB/script/common directory) automatically triggers  a restart.
 
-When the monitor_restart.sh script (here, but runs as a root daemon) is notified to restart nginx it follows these steps...
+When the monitor_restart.sh script (MATS_forEMB/script/common directory, but runs as a root daemon) is triggered to restart nginx it follows these steps...
 1) First it retrieves the encrypted ssl.conf file from the mats.gsd.esrl.noaa.gov server using the decryptAndGetfromMats.sh script (this directory).
 2) It then decrypts the file.
 3) It makes a backup copy of the current /etc/nginx/conf.d/ssl.conf file
@@ -18,36 +37,93 @@ When the monitor_restart.sh script (here, but runs as a root daemon) is notified
 6) If the test fails the backup file is reverted and an error message is logged.
 7) If the test succeeds it then restarts nginx.
 
-SHARED KEYS
+BUILD and PUBLISH:
+Whenever the mats_build_deploy_apps.sh is sucessfully run and results in an app being rebuilt the monitor_restart.sh is automatically triggerd to restart nginx.
+Whenever the publish_app.sh script is used to publish new apps to the production server the monitor_restart.sh on the production server is automatically triggerd to restart nginx.
+
+SHARED gpg2 KEYS
 In order to encrypt data as user www-data and decrypt that data as user root there must exist a shared key.
 The following steps are manual and have to be followed for each new mats server.
+Put the shared passphrase in the file /builds/passphrase (initially used "matsP@$$Phrase"), the only thing in the file should be the EXACT passphrase, no spaces, no linefeeds, no quotes, etc.
 
 1) log in as user www-data
 2) generate www-data key
-    > gpg --gen-key
-    answer questions:
-        user - www-data
-        email - mats.gsd@noaa.gov
-        passphrase - matsP@$$Phrase
-        etc
+    ***Use the passphrase that is in the /builds/passphrase file e.g. "matsP@$$Phrase" when prompted, the same passphrase must be used for decryption***
+        -bash-4.2$ gpg2 --gen-key
+        gpg (GnuPG) 2.0.22; Copyright (C) 2013 Free Software Foundation, Inc.
+        This is free software: you are free to change and redistribute it.
+        There is NO WARRANTY, to the extent permitted by law.
+
+        Please select what kind of key you want:
+           (1) RSA and RSA (default)
+           (2) DSA and Elgamal
+           (3) DSA (sign only)
+           (4) RSA (sign only)
+        Your selection? 1
+        RSA keys may be between 1024 and 4096 bits long.
+        What keysize do you want? (2048) 2048
+        Requested keysize is 2048 bits
+        Please specify how long the key should be valid.
+                 0 = key does not expire
+              <n>  = key expires in n days
+              <n>w = key expires in n weeks
+              <n>m = key expires in n months
+              <n>y = key expires in n years
+        Key is valid for? (0) 0
+        Key does not expire at all
+        Is this correct? (y/N) y
+
+        GnuPG needs to construct a user ID to identify your key.
+
+        Real name: www-data
+        Email address: mats.gsd@noaa.gov
+        Comment:
+        You selected this USER-ID:
+            "www-data <mats.gsd@noaa.gov>"
+
+        Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? O
+        You need a Passphrase to protect your secret key.
+
+        We need to generate a lot of random bytes. It is a good idea to perform
+        some other action (type on the keyboard, move the mouse, utilize the
+        disks) during the prime generation; this gives the random number
+        generator a better chance to gain enough entropy.
+        We need to generate a lot of random bytes. It is a good idea to perform
+        some other action (type on the keyboard, move the mouse, utilize the
+        disks) during the prime generation; this gives the random number
+        generator a better chance to gain enough entropy.
+        gpg: key 23A6448B marked as ultimately trusted
+        public and secret key created and signed.
+
+        gpg: checking the trustdb
+        gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+        gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+        pub   2048R/23A6448B 2017-12-07
+              Key fingerprint = 1338 D6A7 2EE9 F2F1 C73E  61D1 DE78 0313 23A6 448B
+        uid                  www-data <mats.gsd@noaa.gov>
+        sub   2048R/00F8A6AA 2017-12-07
+
+
 3) export the public and private keys
-    >  gpg --export -a "www-data" > /tmp/www-data.key
-    >  gpg --export-secret-key -a "www-data" > /tmp/www-data-secret.key
+    >  gpg2 --export -a "www-data" > /tmp/www-data.key
+    >  gpg2 --export-secret-key -a "www-data" > /tmp/www-data-secret.key
 
 4) log in as user root and import the keys
-    >  gpg --import /tmp/www-data.key
-    >  gpg --allow-secret-key-import --import /tmp/www-data-secret.key
+    >  gpg2 --import /tmp/www-data.key
+    >  gpg2 --allow-secret-key-import --import /tmp/www-data-secret.key
 
 5) Be sure to rm the /tmp/www-data.key and /tmp/www-data-secret.key
 
-The script encryptAndPushToMats.sh in this directory is used by a user to encrypt and push a servers new ssl.conf file to the mats.gsd.esrl.noaa.gov server.
-The script decryptAndGetFromMats.sh is used by the restart daemon to retrieve the latest ssl.conf file and it can be used to view the latest saved ssl.conf file.
-
+NOTE: If for some reason you have gotten your keys messed up just delete them and do it over.
+>  gpg2 --delete-secret-keys "www-data"
+>  gpg2 --delete-key "www-data"
+>  gpg2 --list-secret-keys
+>  gpg2 --list-keys
 
 encryption command... run as user www-data at a terminal
-gpg -e --passphrase "matsP@$$Phrase" --batch --quiet --yes -u "www-data" -r "www-data" /tmp/ssl.conf   (/tmp/ssl.conf could be any file)
+gpg2 -e -u "www-data" -r "www-data" /tmp/ssl.conf   (/tmp/ssl.conf could be any file)
 
 decryption command... runs as root by restart daemon or as user www-data at a terminal
-gpg -d -u "www-data" -r "www-data" --passphrase "matsP@$$Phrase" --batch --quiet --yes /tmp/ssl.conf.gpg  (/tmp/ssl.conf.gpg could be any file)
+cat /builds/passphrase | gpg2 --batch -q -d /tmp/ssl.conf.gpg  (/tmp/ssl.conf.gpg could be any encrypted file, the echo'd passphrase must be the same as used to create keys)
 
 
