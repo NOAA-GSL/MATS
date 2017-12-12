@@ -498,7 +498,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['', 'variable', ', '],
-                ['fcst_len:', 'forecast-length', 'h '],
+                ['fcst_len: ', 'forecast-length', ' min '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
             ],
@@ -517,7 +517,7 @@ const doCurveTextPatterns = function () {
         //         ['', 'statistic', ', '],
         //         ['', 'variable', ', '],
         //         ['', 'scale', ' '],
-        //         ['fcst_len:', 'dieoff-forecast-length', 'h '],
+        //         ['fcst_len :', 'dieoff-forecast-length', ' min '],
         //         [' valid-time:', 'valid-time', ' '],
         //     ],
         //     displayParams: [
@@ -534,7 +534,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['', 'variable', ', '],
-                ['fcst_len:', 'forecast-length', 'h ']
+                ['fcst_len: ', 'forecast-length', ' min ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length"
