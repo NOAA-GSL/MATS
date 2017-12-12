@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# Used to gpg encrypt a file and send the encrypted copy to the public directory of the production mats server.
+# Used to retrieve and gpg decrypt the most recent ssl.conf from the public directory of the production mats server.
 # this script must be run as user www-data.
+# The ssl.conf file is placed in /tmp/ssl.conf
 
 usage="USAGE $0 - will retrieve and decrypt the current ssl.conf file for the server on which the script is run."
 
@@ -17,5 +18,8 @@ if [[ "${host}" != "mats-dev" && "${host}" != "mats-int" ]]; then
     exit 1
 fi
 outputFile="${host}_ssl.conf.gpg"
---no-check-certificate https://mats.gsd.esrl.noaa.gov
-/bin/wget -q -O - --no-check-certificate https://mats.gsd.esrl.noaa.gov${outputFile} |  /bin/gpg --passphrase "matsP@$$Phrase" --batch --quiet --yes
+tmpGpgFile=$(mktemp)
+rm -rf /tmp/ssl.conf
+/bin/wget -q -O ${tmpGpgFile} --no-check-certificate https://mats.gsd.esrl.noaa.gov/.conf_files/${outputFile}
+cat /builds/passphrase | /bin/gpg2 --quiet --batch --passphrase-fd 0 --decrypt ${tmpGpgFile} > /tmp/ssl.conf
+rm -rf ${tmpGpgFile}

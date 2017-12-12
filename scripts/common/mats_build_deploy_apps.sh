@@ -233,5 +233,7 @@ echo $(getApplistJSONForServer ${SERVER}) > $applistFile
 mv $applistFile static/applist.json
 chmod a+r static/applist.json
 
+echo -e "$0 trigger nginx restart"
+/bin/touch /builds/restart_nginx
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 exit 0
