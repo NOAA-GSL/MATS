@@ -372,7 +372,7 @@
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 4,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "visibility",
@@ -390,7 +390,7 @@
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
@@ -426,7 +426,7 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 13,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     }
   ]
 }
