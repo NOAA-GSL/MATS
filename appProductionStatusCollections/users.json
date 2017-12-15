@@ -90,6 +90,12 @@
             "$date": "2017-12-14T23:42:56.081+0000"
           },
           "hashedToken": "5SW/h+Z1SspkQM1CSpLpD+quF9qgBj+oJHgEnJATrZU="
+        },
+        {
+          "when": {
+            "$date": "2017-12-15T00:20:31.105+0000"
+          },
+          "hashedToken": "akkW0JeYtXmnoLd8rBeswVuqkrHpdutc9bfg7B4fmJ0="
         }
       ]
     }

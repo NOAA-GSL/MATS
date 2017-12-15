@@ -140,22 +140,22 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -175,22 +175,22 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 8,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
@@ -231,28 +231,28 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 14,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "upperair-previous",
       "displayName": "Upper Air Previous",
       "displayOrder": 15,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "aircraft-previous",
       "displayName": "Aircraft (AMDAR) Previous",
       "displayOrder": 16,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
       "displayOrder": 17,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
@@ -273,21 +273,21 @@
       "app": "surface-previous",
       "displayName": "Surface Previous",
       "displayOrder": 20,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "landuse-previous",
       "displayName": "Surface Land Use Previous",
       "displayOrder": 21,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
       "app": "surfrad-previous",
       "displayName": "Surface Radiation Previous",
       "displayOrder": 22,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     },
     {
@@ -329,7 +329,7 @@
       "app": "wfip2-previous",
       "displayName": "Wfip2 Previous",
       "displayOrder": 28,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     }
   ]
@@ -372,13 +372,13 @@
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 4,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 5,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "surface",
@@ -396,31 +396,31 @@
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 8,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 9,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 10,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 11,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 12,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "wfip2",
