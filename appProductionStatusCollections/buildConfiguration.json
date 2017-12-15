@@ -21,22 +21,22 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling",
@@ -56,22 +56,22 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 8,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
@@ -112,8 +112,8 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 14,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     }
   ]
 }
@@ -140,22 +140,22 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling",
@@ -175,22 +175,22 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 8,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
@@ -231,28 +231,28 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 14,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "upperair-previous",
       "displayName": "Upper Air Previous",
       "displayOrder": 15,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "aircraft-previous",
       "displayName": "Aircraft (AMDAR) Previous",
       "displayOrder": 16,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
       "displayOrder": 17,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
@@ -273,21 +273,21 @@
       "app": "surface-previous",
       "displayName": "Surface Previous",
       "displayOrder": 20,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "landuse-previous",
       "displayName": "Surface Land Use Previous",
       "displayOrder": 21,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
       "app": "surfrad-previous",
       "displayName": "Surface Radiation Previous",
       "displayOrder": 22,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     },
     {
@@ -329,7 +329,7 @@
       "app": "wfip2-previous",
       "displayName": "Wfip2 Previous",
       "displayOrder": 28,
-      "deploymentStatus": "enabled",
+      "deploymentStatus": "disabled",
       "buildStatus": "archive"
     }
   ]
