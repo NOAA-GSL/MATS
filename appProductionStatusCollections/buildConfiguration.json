@@ -354,19 +354,19 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -384,13 +384,13 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
@@ -426,7 +426,7 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 13,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     }
   ]
 }
