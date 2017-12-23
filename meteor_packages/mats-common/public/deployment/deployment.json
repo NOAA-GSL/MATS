@@ -74,8 +74,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.18-2017.12.22.06.00",
-      "buildDate": "2017.12.22.06.00",
+      "version": "1.5.19-2017.12.23.06.00",
+      "buildDate": "2017.12.23.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -246,8 +246,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.41",
-      "buildDate": "2017.12.14.08.34",
+      "version": "1.5.42",
+      "buildDate": "2017.12.22.21.10",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -361,8 +361,8 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.41",
-      "buildDate": "2017.12.14.08.34",
+      "version": "1.5.42",
+      "buildDate": "2017.12.22.21.10",
       "last_test_run": "",
       "last_test_status": ""
     },
