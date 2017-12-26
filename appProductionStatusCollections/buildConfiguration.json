@@ -21,22 +21,22 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "ceiling",
@@ -56,22 +56,22 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 8,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
@@ -112,8 +112,8 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 14,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
@@ -360,73 +360,73 @@
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 4,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 5,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 6,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 7,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 8,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 9,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 10,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 11,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 12,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 13,
-      "deploymentStatus": "enabled"
+      "deploymentStatus": "disabled"
     }
   ]
 }
