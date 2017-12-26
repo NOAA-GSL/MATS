@@ -70,7 +70,7 @@ dataDieOff = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
+                "m0.fcst_len/60 AS avtime, " +
                 "{{statistic}} " +
                 "from surfrad as ob0, {{data_source}} as m0 " +
                 "where 1=1 " +
