@@ -1422,7 +1422,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'forecast lead time',
+            axisLabel: 'Forecast Hour',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 14,
@@ -1622,7 +1622,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'threshold',
+            axisLabel: 'Threshold',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 14,
@@ -1732,7 +1732,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'time',
+            axisLabel: 'Time',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 14,

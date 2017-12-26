@@ -55,7 +55,7 @@ dataSeries = function (plotParams, plotFunction) {
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast-length'];
+        var forecastLength = Number(curve['forecast-length']) * 60;
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
