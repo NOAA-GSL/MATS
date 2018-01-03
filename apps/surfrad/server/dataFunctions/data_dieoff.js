@@ -92,7 +92,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{regionClause}}', regionClause);
             var validTimeClause = " ";
             if (validTimes.length > 0){
-                validTimeClause =" and floor((m0.secs)%(24*3600)/3600) IN(" + validTimes + ")";
+                validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
 
