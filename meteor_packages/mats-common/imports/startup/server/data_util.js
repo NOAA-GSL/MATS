@@ -1534,7 +1534,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabelPadding: 20,
         }],
         xaxis: {
-            zoomRange: [0.1, null],
+            zoomRange: [0.01, null],
             mode: 'xy'
         },
         yaxes: yaxes,
@@ -1573,7 +1573,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
+            content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
             xDateFormat: "%Y-%m-%d %H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
