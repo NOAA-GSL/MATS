@@ -74,8 +74,8 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.61-2018.01.03.06.07",
-      "buildDate": "2018.01.03.06.07",
+      "version": "1.5.62-2018.01.03.19.58",
+      "buildDate": "2018.01.03.19.58",
       "last_test_run": "",
       "last_test_status": ""
     },
