@@ -1154,7 +1154,16 @@ const queryDieoffDB = function (pool, statement, interval) {
                 if (N_times_loop > N_times) {
                     N_times_max = N_times_loop;
                 }
-                d.push([fhr, stat]);
+                var sub_values;
+                var sub_secs;
+                if (stat !== null) {
+                    sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                    sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                } else {
+                    sub_values = NaN;
+                    sub_secs = NaN;
+                }
+                d.push([fhr, stat, -1, sub_values, sub_secs]); // -1 is a placeholder for the stde_betsy value
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
@@ -1382,7 +1391,7 @@ const queryValidTimeDB = function (pool, statement, interval) {
     };
 };
 
-const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
+const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -1392,10 +1401,12 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             continue;
         }
         const axisKey = curves[dsi].axisKey;
-        const ymin = axisMap[axisKey].ymin;
-        const ymax = axisMap[axisKey].ymax;
+        var ymin = axisMap[axisKey].ymin;
+        var ymax = axisMap[axisKey].ymax;
+        ymax = ymax + errorMax;
+        ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const yPad = (ymax - ymin) * 0.2;
+        const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
@@ -1469,18 +1480,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            // allowed templates are:
-            // %s -> series label,
-            // %c -> series color,
-            // %lx -> x axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
-            // %ly -> y axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
-            // %x -> X value,
-            // %y -> Y value,
-            // %x.2 -> precision of X value,
-            // %p -> percentcontent: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d %H:%M",
-            onHover: function (flotItem, $tooltipEl) {
-            }
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
     return options;
@@ -1925,9 +1926,22 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
-        points: {symbol: pointSymbol, fillColor: curve['color'], show: true},
+        points: {
+            symbol: pointSymbol,
+            fillColor: curve['color'],
+            show: true,
+            errorbars: "y",
+            yerr: {
+                show: true,
+                asymmetric: false,
+                upperCap: "squareCap",
+                lowerCap: "squareCap",
+                color: curve['color'],
+                radius: 5
+            }},
         lines: {show: true, fill: false}
     };
+
     return curveOptions;
 };
 
@@ -2271,6 +2285,7 @@ export default matsDataUtils = {
     querySeriesDB:querySeriesDB,
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateSeriesCurveOptions: generateSeriesCurveOptions,
+    generateDieoffCurveOptions: generateDieoffCurveOptions,
     queryValidTimeDB:queryValidTimeDB,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
     //generateValidTimeCurveOptions: generateValidTimeCurveOptions,

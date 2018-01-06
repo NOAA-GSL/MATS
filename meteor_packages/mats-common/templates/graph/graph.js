@@ -295,7 +295,7 @@ Template.graph.helpers({
         return Session.get(sval);
     },
     errorBarsAllowed: function () {
-        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile);
+        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff);
     },
     isProfile: function() {
         return (Session.get('plotType') == matsTypes.PlotTypes.profile);

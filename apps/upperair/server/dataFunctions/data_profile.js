@@ -49,13 +49,14 @@ dataProfile = function(plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statistic;
-        if (variableStr == 'winds') {
+        var statKey;
+        if (variableStr === 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
-            var statKey = statisticSelect + '-winds';
+            statKey = statisticSelect + '-winds';
             statistic = statistic + "," + statAuxMap[statKey];
         } else {
             statistic = statisticOptionsMap[statisticSelect][0];
-            var statKey = statisticSelect + '-other';
+            statKey = statisticSelect + '-other';
             statistic = statistic + "," + statAuxMap[statKey];
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
