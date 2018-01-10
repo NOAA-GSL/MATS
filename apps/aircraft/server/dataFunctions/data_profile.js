@@ -292,6 +292,8 @@ dataProfile = function(plotParams, plotFunction) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 if (matching) {
                     data[di][2] = errorBar;
+                } else {
+                    data[di][2] = -1;
                 }
                 data[di][5] = {
                     d_mean: errorResult.d_mean,

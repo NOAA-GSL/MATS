@@ -30,7 +30,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var maxValuesPerFhr = 0;
 
-
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
@@ -106,7 +105,6 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{toDate}}', toDate);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
@@ -157,12 +155,13 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForSeriesDiffCurve({
+            var diffResult = matsDataUtils.getDataForDieoffDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
             });
+
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
@@ -215,7 +214,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
-        if (diffFrom === undefined || diffFrom === null || (diffFrom !== null && (plotParams['plotAction'] === matsTypes.PlotActions.matched))) {
+        // if (diffFrom === undefined || diffFrom === null || (diffFrom !== null && (plotParams['plotAction'] === matsTypes.PlotActions.matched))) {
             data = dataset[curveIndex].data;
             const dataLength = data.length;
             const label = dataset[curveIndex].label;
@@ -277,6 +276,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
                     data[di][2] = errorBar;
+                } else {
+                    data[di][2] = -1;
                 }
                 data[di][5] = {
                     d_mean: errorResult.d_mean,
@@ -308,7 +309,7 @@ dataDieOff = function (plotParams, plotFunction) {
             stats.miny = miny;
             stats.maxy = maxy;
             dataset[curveIndex]['stats'] = stats;
-        }
+        // }
     }
 
 

@@ -908,6 +908,197 @@ const getDataForSeriesDiffCurve = function (params) {
     };
 };
 
+const getDataForDieoffDiffCurve = function (params) {
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - fhr (plotted against the x axis)
+     data[1] - statValue (ploted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - fhr values
+     data[4] - fhr times
+     data[5] - fhr stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+    var ymin = params.ymin; // optional - current y axis minimum
+    var ymax = params.ymax;  // optional - current yaxis minimum
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // time values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var largeIntervalCurveData = dataset[diffFrom[0]].data;
+    if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+        largeIntervalCurveData = dataset[diffFrom[1]].data;
+    }
+    var minuendData = dataset[diffFrom[0]].data;
+    var subtrahendData = dataset[diffFrom[1]].data;
+    var subtrahendIndex = 0;
+    var minuendIndex = 0;
+    var d = [];
+    var count = 0;
+    var sum = 0;
+    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+        var subtrahendTime = subtrahendData[subtrahendIndex][0];
+        var minuendTime = minuendData[minuendIndex][0];
+        var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+                minuendTime = minuendData[++minuendIndex][0];
+                minuendChanged = true;
+        }
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+            subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
+        }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
+        var diffValue = null;
+        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+            if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+                diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = diffValue;
+
+                var minuendDataSubValues = minuendData[minuendIndex][3];
+                var minuendDataSubSeconds = minuendData[minuendIndex][4];
+                var subtrahendDataSubValues = subtrahendData[subtrahendIndex][3];
+                var subtrahendDataSubSeconds = subtrahendData[subtrahendIndex][4];
+
+                const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+                    return subtrahendDataSubSeconds.indexOf(n) !== -1;
+                });
+                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                    d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
+                    d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+                }
+
+                ymin = diffValue < ymin ? diffValue : ymin;
+                ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count++;
+            } else {
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = null;
+            }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
+        }
+    }
+    return {
+        sum: sum,
+        count: count,
+        dataset: d,
+        ymin: ymin,
+        ymax: ymax
+    };
+};
+
+const getDataForDieoffDiffCurveSumTables = function (params) {
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - fhr (plotted against the x axis)
+     data[1] - statValue (ploted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - fhr values
+     data[4] - fhr times
+     data[5] - fhr stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+    var ymin = params.ymin; // optional - current y axis minimum
+    var ymax = params.ymax;  // optional - current yaxis minimum
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // time values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var largeIntervalCurveData = dataset[diffFrom[0]].data;
+    if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+        largeIntervalCurveData = dataset[diffFrom[1]].data;
+    }
+    var minuendData = dataset[diffFrom[0]].data;
+    var subtrahendData = dataset[diffFrom[1]].data;
+    var subtrahendIndex = 0;
+    var minuendIndex = 0;
+    var d = [];
+    var count = 0;
+    var sum = 0;
+    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+        var subtrahendTime = subtrahendData[subtrahendIndex][0];
+        var minuendTime = minuendData[minuendIndex][0];
+        var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+            minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
+        }
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+            subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
+        }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
+        var diffValue = null;
+        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+            if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+                diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = diffValue;
+
+                ymin = diffValue < ymin ? diffValue : ymin;
+                ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count++;
+            } else {
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = null;
+            }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
+        }
+    }
+    return {
+        sum: sum,
+        count: count,
+        dataset: d,
+        ymin: ymin,
+        ymax: ymax
+    };
+};
+
 const getPointSymbol = function (curveIndex) {
     var pointSymbol = "circle";
     switch (curveIndex % 5) {
@@ -1156,7 +1347,7 @@ const queryDieoffDB = function (pool, statement, interval) {
                 }
                 var sub_values;
                 var sub_secs;
-                if (stat !== null) {
+                if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
                     sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
                     sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
                 } else {
@@ -1898,6 +2089,8 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const label = curve['label'];
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
@@ -1907,13 +2100,16 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
         } else {
             axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
         }
-        axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
             index: curveIndex + 1,
             label: label,
+            xmin: xmin,
+            xmax: xmax,
             ymin: ymin,
             ymax: ymax,
             axisLabel: axisKey + " - " + label
@@ -1921,7 +2117,7 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     }
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
-        label: axisMap[axisKey].axisLabel,
+        label: label,
         curveId: label,
         annotation: annotation,
         color: curve['color'],
@@ -2260,8 +2456,8 @@ const areObjectsEqual = function(o, p) {
         return true;
     } else {
         return false;
-    };
-}
+    }
+};
 
 export default matsDataUtils = {
     getDateRange: getDateRange,
@@ -2275,6 +2471,8 @@ export default matsDataUtils = {
     getThresholdMatchedDataSet: getThresholdMatchedDataSet,
     getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
+    getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
+    getDataForDieoffDiffCurveSumTables: getDataForDieoffDiffCurveSumTables,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     getPointSymbol: getPointSymbol,
@@ -2288,7 +2486,6 @@ export default matsDataUtils = {
     generateDieoffCurveOptions: generateDieoffCurveOptions,
     queryValidTimeDB:queryValidTimeDB,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
-    //generateValidTimeCurveOptions: generateValidTimeCurveOptions,
     queryProfileDB: queryProfileDB,
     get_err: get_err,
     generateProfileCurveOptions: generateProfileCurveOptions,
