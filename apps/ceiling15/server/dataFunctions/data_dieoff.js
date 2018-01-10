@@ -30,7 +30,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxRunInterval = Number.MIN_VALUE;
+    var maxValuesPerFhr = 0;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -96,6 +96,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+
             dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
@@ -137,11 +138,12 @@ dataDieOff = function (plotParams, plotFunction) {
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
                     }
+                    maxValuesPerFhr = maxValuesPerFhr > d[i][3].length ? maxValuesPerFhr : d[i][3].length;
                 }
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForDieoffDiffCurveSumTables({
+            var diffResult = matsDataUtils.getDataForDieoffDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -176,6 +178,22 @@ dataDieOff = function (plotParams, plotFunction) {
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+
+        var subSecs = new Set();
+        var fhrGroups = [];
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            fhrGroups[curveIndex] = [];
+            var data = dataset[curveIndex].data;
+            for (var di = 0; di < data.length; di++) { // every pressure level
+                sub_secs = data[di][4];
+                fhrGroups[curveIndex].push(data[di][0]);
+                for (var sec of sub_secs) {
+                    subSecs.add(sec);
+                }
+            }
+        }
+        var matchingFhrs = _.intersection.apply(_, fhrGroups);
+        var subSecIntersection = Array.from(subSecs);
     }
 
     var diffFrom;
@@ -195,6 +213,30 @@ dataDieOff = function (plotParams, plotFunction) {
             var means = [];
 
             while (di < data.length) {
+                if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingFhrs.indexOf(data[di][0]) === -1) {
+                    dataset[curveIndex].data.splice(di, 1);
+                    continue;   // not a matching level - skip it
+                }
+
+                var sub_secs = data[di][4];
+                var subValues = data[di][3];
+                var errorResult = {};
+
+                if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) {
+                    var newSubValues = [];
+                    for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
+                        var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
+                        var newVal = subValues[secsIndex];
+                        if (newVal === undefined || newVal == 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        } else {
+                            newSubValues.push(newVal);
+                        }
+                    }
+                    data[di][3] = newSubValues;
+                    data[di][4] = subSecIntersection;
+                }
+
                 /*
                  DATASET ELEMENTS:
                  series: [data,data,data ...... ]   each data is itself an array
@@ -208,20 +250,42 @@ dataDieOff = function (plotParams, plotFunction) {
                  */
 
                 //console.log('Getting errors for fhr ' + data[di][0]);
+                errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
                 values.push(data[di][1]);
                 fhrs.push(data[di][0]);  // inverted data for graphing - remember?
+                means.push(errorResult.d_mean);
 
                 // already have [stat,pl,subval,subsec]
                 // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
                 // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
                 // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
                 // unmatched curves get no error bars
-                data[di][5] = {"d_mean": null, "sd": null, "n_good": null, "lag1": null, "stde": null};
-                data[di][2] = -1
+                const errorBar = errorResult.stde_betsy * 1.96;
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
+                if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+                    data[di][2] = errorBar;
+                } else {
+                    data[di][2] = -1;
+                }
+                data[di][5] = {
+                    d_mean: errorResult.d_mean,
+                    sd: errorResult.sd,
+                    n_good: errorResult.n_good,
+                    lag1: errorResult.lag1,
+                    stde_betsy: errorResult.stde_betsy
+                };
+
                 // this is the tooltip, it is the last element of each dataseries element
                 data[di][6] = label +
                     "<br>" + "fhr: " + data[di][0] +
-                    "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4));
+                    "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
+                    "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                    "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                    "<br>  n: " + errorResult.n_good +
+                    "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                    "<br>  stde: " + errorResult.stde_betsy +
+                    "<br>  errorbars: " + Number((data[di][1]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+
                 di++;
             }
             // get the overall stats for the text output - this uses the means not the stats. refer to
