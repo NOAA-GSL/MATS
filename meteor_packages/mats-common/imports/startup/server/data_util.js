@@ -879,12 +879,25 @@ const getDataForSeriesDiffCurve = function (params) {
         var subtrahendTime = subtrahendData[subtrahendIndex][0];
         var minuendTime = minuendData[minuendIndex][0];
         var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
-        while (largeIntervalTime > minuendTime) {
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
             minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
         }
-        while (largeIntervalTime > subtrahendTime) {
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
         }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
         var diffValue = null;
         if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
             if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
@@ -897,6 +910,8 @@ const getDataForSeriesDiffCurve = function (params) {
             } else {
                 d.push([largeIntervalTime, null])
             }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
         }
     }
     return {
