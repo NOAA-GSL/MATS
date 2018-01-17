@@ -494,6 +494,20 @@ var doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.map,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'map', ', '],
+                ['', 'statistic', ', '],
+                ['', 'variable', ', '],
+                ['fcst_len:', 'forecast-length', 'h ']
+            ],
+            displayParams: [
+                "label", "map", "statistic", "variable", "forecast-length"
+            ],
+            groupSize: 5
+        });
     }
 };
 
@@ -527,6 +541,12 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphValidTime",
             dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.map,
+            graphFunction: "graphMap",
+            dataFunction: "dataMap",
             checked: false
         });
     }
