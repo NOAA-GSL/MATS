@@ -484,6 +484,47 @@ const showThresholdFace = function() {
     }
 };
 
+const showMapFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
+        var elem = document.getElementById(matsTypes.PlotTypes.map);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.map);
+        matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 const showScatterFace = function() {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -708,6 +749,7 @@ export default matsCurveUtils = {
     showProfileFace:showProfileFace,
     showDieOffFace:showDieOffFace,
     showThresholdFace:showThresholdFace,
+    showMapFace:showMapFace,
     showValidTimeFace:showValidTimeFace,
     get_err:get_err,
     PlotResult:PlotResult,
