@@ -486,7 +486,7 @@ const showThresholdFace = function() {
 
 const showMapFace = function() {
     // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.map);
         if (elem && elem.style) {
             elem.style.display = "none";
