@@ -503,21 +503,9 @@ const showMapFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('valid-time-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
         elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "block";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.map);
         matsParamUtils.setAllParamsToDefault();

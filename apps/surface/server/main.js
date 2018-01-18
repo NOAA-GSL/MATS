@@ -7,6 +7,9 @@ import {matsDataUtils} from 'meteor/randyp:mats-common';
 var modelOptionsMap = {};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
+var siteOptionsMap = {};
+var masterSitesMap = {};
+var sitesLocationMap = {};
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
 const dateInitStr = matsCollections.dateInitStr();
@@ -104,6 +107,26 @@ const doCurveParams = function () {
                 regionsArr.push(masterRegionValuesMap[dummyRegion]);
             }
             regionModelOptionsMap[model] = regionsArr;
+        }
+
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var site_name = rows[i].name.trim();
+            var site_description = rows[i].desc.trim();
+            var site_id = rows[i].madis_id;
+            var site_lat = rows[i].lat;
+            var site_lon = rows[i].lon;
+            var site_elev = rows[i].elev;
+            siteOptionsMap[site_id] = [site_name];
+            masterSitesMap[site_id] = [site_description];
+            sitesLocationMap[site_id] = {lat: site_lat, lon: site_lon, elev: site_elev};
+
         }
 
     } catch (err) {
@@ -430,6 +453,73 @@ const doCurveParams = function () {
                 multiple: true
             });
     }
+
+    if (matsCollections.CurveParams.findOne({name: 'sites'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'sites'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterSitesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'sites'}, {
+                $set: {
+                    optionsMap: siteOptionsMap,
+                    valuesMap: masterSitesMap,
+                    options: Object.keys(siteOptionsMap),   // convenience
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'Map'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'Map',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: siteMarkerOptionsMap,
+                options: Object.keys(siteMarkerOptionsMap),   // convenience
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
+                default: Object.keys(siteMarkerOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true,
+                defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
+                help: 'map-help.html'
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'Map'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteMarkerOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'sitesMap'}, {
+                $set: {
+                    optionsMap: siteMarkerOptionsMap,
+                    options: Object.keys(siteMarkerOptionsMap),   // convenience
+                }
+            });
+        }
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -498,15 +588,18 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'data-source', ':'],
+                ['', 'sites', ':'],
                 ['', 'map', ', '],
                 ['', 'statistic', ', '],
                 ['', 'variable', ', '],
-                ['fcst_len:', 'forecast-length', 'h ']
+                ['fcst_len:', 'forecast-length', 'h '],
+                ['avg:', 'average', ' ']
             ],
             displayParams: [
-                "label", "map", "statistic", "variable", "forecast-length"
+                "label", "data-source", "sites", "statistic", "variable", "forecast-length", "average"
             ],
-            groupSize: 5
+            groupSize: 7
         });
     }
 };
@@ -578,6 +671,17 @@ Meteor.startup(function () {
         connectionLimit: 10
     });
 
+    matsCollections.Databases.insert({
+        name: "siteSetting",
+        role: "site_data",
+        status: "active",
+        host: 'wolphin.fsl.noaa.gov',
+        user: 'readonly',
+        password: 'ReadOnly@2016!',
+        database: 'madis3',
+        connectionLimit: 10
+    });
+
     const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
         host: 1,
         user: 1,
@@ -601,8 +705,22 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
+    const siteSettings = matsCollections.Databases.findOne({role: "site_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    sitePool = mysql.createPool(siteSettings);
+    sitePool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("sitePool", "madis3", ['metars']);
     matsMethods.resetApp(mdr);
 });
 

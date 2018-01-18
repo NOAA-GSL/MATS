@@ -75,7 +75,8 @@ var PlotView = {
     textScatter: "textScatter",
     textDieoff: "textDieoff",
     textThreshold: "textThreshold",
-    textValidTime: "testValidTime"
+    textValidTime: "testValidTime",
+    textMap: "textMap"
 };
 
 var Messages = {
