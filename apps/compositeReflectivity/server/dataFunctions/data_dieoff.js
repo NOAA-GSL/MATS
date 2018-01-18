@@ -272,8 +272,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
             // get the overall stats for the text output - this uses the means not the stats. refer to
 
-            //const stats = matsDataUtils.get_err(means.reverse(), levels.reverse()); // have to reverse because of data inversion
-            const stats = matsDataUtils.get_err(fhrs.reverse(), values.reverse()); // have to reverse because of data inversion
+            const stats = matsDataUtils.get_err(fhrs, values);
             const miny = Math.min.apply(null, means);
             const maxy = Math.max.apply(null, means);
             stats.miny = miny;
