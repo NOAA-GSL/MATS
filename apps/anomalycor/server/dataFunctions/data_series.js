@@ -27,6 +27,7 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
         const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        const dbtable = matsCollections.CurveParams.findOne({name: 'data-source'}).tables[data_source];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         const label = curve['label'];
@@ -63,7 +64,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
                 "avg(m0.wacorr/100) as stat, " +
                 "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values " +
-                "from stats as m0 " +
+                "from {{dbtable}} as m0 " +
                 "where 1=1 " +
                 "and m0.model = '{{data_source}}' " +
                 "and m0.variable = '{{variable}}' " +
@@ -78,6 +79,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
+            statement = statement.replace('{{dbtable}}', dbtable);
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{data_source}}', data_source);
             statement = statement.replace('{{region}}', region);
