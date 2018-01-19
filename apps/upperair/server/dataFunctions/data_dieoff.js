@@ -273,8 +273,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
                 // unmatched curves get no error bars
                 const errorBar = errorResult.stde_betsy * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
                 if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+                    errorMax = errorMax > errorBar ? errorMax : errorBar;
                     data[di][2] = errorBar;
                 } else {
                     data[di][2] = -1;
@@ -302,8 +302,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
             // get the overall stats for the text output - this uses the means not the stats. refer to
 
-            //const stats = matsDataUtils.get_err(means.reverse(), levels.reverse()); // have to reverse because of data inversion
-            const stats = matsDataUtils.get_err(fhrs.reverse(), values.reverse()); // have to reverse because of data inversion
+            const stats = matsDataUtils.get_err(fhrs, values);
             const miny = Math.min.apply(null, means);
             const maxy = Math.max.apply(null, means);
             stats.miny = miny;
@@ -345,8 +344,8 @@ dataDieOff = function (plotParams, plotFunction) {
             "sd": 0,
             "n_good": 0,
             "lag1": 0,
-            "min": 50,
-            "max": 1000,
+            "min": 0,
+            "max": 0,
             "sum": 0,
             "miny": 0,
             "maxy": 0
