@@ -203,18 +203,18 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+       if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+           (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'region'}, {
-                $set: {
+          matsCollections.CurveParams.update({name: 'region'}, {
+               $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
                     options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
                 }
-            });
-        }
-    }
+          });
+       }
+   }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         optionsMap = {
@@ -454,13 +454,13 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'sites'}) == undefined) {
+    if (matsCollections.CurveParams.find({name: 'sites'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'sites',
                 type: matsTypes.InputTypes.select,
                 optionsMap: siteOptionsMap,
-                options: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                options: Object.keys(siteOptionsMap),
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
@@ -471,54 +471,28 @@ const doCurveParams = function () {
                 displayGroup: 4,
                 multiple: true
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'sites'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterSitesMap))) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'sites'}, {
-                $set: {
-                    optionsMap: siteOptionsMap,
-                    valuesMap: masterSitesMap,
-                    options: Object.keys(siteOptionsMap),   // convenience
-                }
-            });
-        }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'Map'}) == undefined) {
+    if (matsCollections.CurveParams.find({name: 'Map'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'Map',
                 type: matsTypes.InputTypes.selectMap,
-                optionsMap: siteMarkerOptionsMap,
-                options: Object.keys(siteMarkerOptionsMap),   // convenience
+                optionsMap: siteOptionsMap,
+                options: Object.keys(siteOptionsMap),   // convenience
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                //default: siteMarkerOptionsMap[Object.keys(siteMarkerOptionsMap)[0]],
-                default: Object.keys(siteMarkerOptionsMap)[0],
+                //default: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                default: Object.keys(siteOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true,
-                defaultMapView: {point: [45.904233, -120.814632], zoomLevel: 8, minZoomLevel: 4, maxZoomLevel: 13},
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 6, minZoomLevel: 4, maxZoomLevel: 13},
                 help: 'map-help.html'
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'Map'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, siteMarkerOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'sitesMap'}, {
-                $set: {
-                    optionsMap: siteMarkerOptionsMap,
-                    options: Object.keys(siteMarkerOptionsMap),   // convenience
-                }
-            });
-        }
     }
 };
 

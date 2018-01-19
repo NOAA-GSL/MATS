@@ -313,6 +313,14 @@ const showProfileFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('map-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.profile);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
@@ -351,6 +359,14 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('map-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -396,6 +412,14 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('map-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.dieoff);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
@@ -437,6 +461,14 @@ const showValidTimeFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('map-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         Session.set('plotType', matsTypes.PlotTypes.validtime);
         matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
@@ -475,6 +507,14 @@ const showThresholdFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('map-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
