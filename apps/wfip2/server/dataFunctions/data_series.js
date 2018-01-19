@@ -140,11 +140,13 @@ dataSeries = function (plotParams, plotFunction) {
                         return (parseFloat(item) * 3600);
                     });
                     // get the first valid cycle_utc for the time/date range specified
-                    const validFirstCycleUtc = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool,
-                        "select cycle_utc from nwp_recs as N , " +
-                        dataSource_tablename +
-                        " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
-                        matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;")[0].cycle_utc;
+
+                    var s1 = "select cycle_utc from nwp_recs as N , " +
+                    dataSource_tablename +
+                    " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
+                    matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
+
+                    const validFirstCycleUtc = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool,s1)[0].cycle_utc;
 
                     // / this is an all forecasts curve. It cannot be an instrument.
                     statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
