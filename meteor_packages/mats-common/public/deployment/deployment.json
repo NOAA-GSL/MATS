@@ -465,8 +465,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.80",
-      "buildDate": "2018.01.21.08.04",
+      "version": "1.5.81",
+      "buildDate": "2018.01.22.08.04",
       "last_test_run": "",
       "last_test_status": ""
     },
