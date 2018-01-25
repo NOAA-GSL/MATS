@@ -378,7 +378,7 @@ const resetApp = function(metaDataTableRecords) {
     const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
     const urlPathParts = urlPath.split(path.sep);
     //console.log("path parts are "+urlPathParts);
-    const appReference = urlPathParts[urlPathParts.length -1].trim();
+    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length -6].trim() : urlPathParts[urlPathParts.length -1];
     var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
