@@ -26,7 +26,7 @@ var  PlotTypes = {
     dieoff : "DieOff",
     threshold : "Threshold",
     validtime : "ValidTime",
-    map : "GeographicMap"
+    map : "Map"
 };
 
 var ForecastTypes = {

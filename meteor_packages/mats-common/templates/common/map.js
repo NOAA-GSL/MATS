@@ -28,14 +28,23 @@ Template.map.onRendered(function () {
         zoomControl:true,
         minZoom: minZoomLevel,
         maxZoom: maxZoomLevel,
-        wheelPxPerZoomLevel: 5
+        wheelPxPerZoomLevel: 3
     }).setView(defaultPoint, defaultZoomLevel);
     // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
-    //L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
-    //    attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
-    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}.{ext}', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 16}).addTo(map);
+//    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+//        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+//        maxZoom: 16}).addTo(map);
+//    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}.{ext}', {
+//        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+//        subdomains: 'abcd',
+//        minZoom: 0,
+//        maxZoom: 20,
+//        ext: 'png'
+//    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        maxZoom: 16
+    }).addTo(map);
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
     if (!markerFeatures) {
         markerFeatures = {};
@@ -50,7 +59,7 @@ Template.map.onRendered(function () {
             'height:' + options.size + 'px;' +
             'background-color:' + options.color + ';' +
             'border-radius:50%;">' +
-            '<b style="font-size: large">&nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
+            //'<b style="font-size: large">&nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
             '</div>',
             options: options
         });
@@ -67,7 +76,7 @@ Template.map.onRendered(function () {
             'height:' + options.size + 'px;' +
             'background-color:' + options.color + ';' +
             'border-radius:50%;">' +
-            '<b style="font-size: large"> &nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
+            //'<b style="font-size: large"> &nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
             '</div>',
             options: options
         });
@@ -133,7 +142,7 @@ Template.map.onRendered(function () {
 
                     var marker = new L.Marker(markers[m].point, {
                         icon: unSelectedIcon,
-                        title: markers[m].options.title,
+                        title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
                     }).on('click', function (event) {
                             // toggle selection of corresponding site option for this marker
                             toggleTargetSelection(event);
@@ -179,10 +188,17 @@ Template.map.onRendered(function () {
 
     var resizeMap = function (what) {
         map.invalidateSize();   // really important....
+        //$('#mapModal').on('show.bs.modal', function(){
+        //    setTimeout(function() {
+        //        map.invalidateSize();
+        //    }, 10);
+        //});
         var ref = what.data.name + '-' + what.data.type;
         var elem = document.getElementById(ref);
         elem.style.height = mapHeight();
         elem.style.width = mapWidth();
+        //elem.style.height = '350px';
+        //elem.style.width = '350px';
     };
     // initial resize seems to be necessary
     resizeMap(this);
@@ -200,4 +216,5 @@ Template.map.onRendered(function () {
         refresh(e.detail.refElement);
     });
     refresh(targetElement);
+
 });

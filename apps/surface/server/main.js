@@ -2,6 +2,7 @@ import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
@@ -9,7 +10,7 @@ var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
 var siteOptionsMap = {};
 var masterSitesMap = {};
-var sitesLocationMap = {};
+var sitesLocationMap = [];
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
 const dateInitStr = matsCollections.dateInitStr();
@@ -114,18 +115,32 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars order by name;");
         for (var i = 0; i < rows.length; i++) {
 
-            var site_name = rows[i].name.trim();
-            var site_description = rows[i].desc.trim();
+            var site_name = rows[i].name;
+            var site_description = rows[i].desc;
             var site_id = rows[i].madis_id;
-            var site_lat = rows[i].lat;
-            var site_lon = rows[i].lon;
+            var site_lat = rows[i].lat/100;
+            var site_lon = rows[i].lon/100;
             var site_elev = rows[i].elev;
-            siteOptionsMap[site_id] = [site_name];
-            masterSitesMap[site_id] = [site_description];
-            sitesLocationMap[site_id] = {lat: site_lat, lon: site_lon, elev: site_elev};
+            siteOptionsMap[site_name] = [site_id];
+            //masterSitesMap[site_name] = [site_description];
+            //sitesLocationMap[site_name] = {lat: site_lat, lon: site_lon, elev: site_elev};
+            var point = [site_lat, site_lon];
+            var obj = {
+                point: point,
+                elevation: site_elev,
+                options: {
+                    title: site_description,
+                    color: 'blue',
+                    size: 5,
+                    network: 'METAR',
+                    peerOption: site_name,
+                    highLightColor: 'cyan'
+                }
+            };
+            sitesLocationMap.push(obj);
 
         }
 
@@ -464,7 +479,7 @@ const doCurveParams = function () {
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: siteOptionsMap[Object.keys(siteOptionsMap)[0]][0],
+                default: Object.keys(siteOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -476,15 +491,15 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'Map'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'Map',
+                name: 'sitesMap',
                 type: matsTypes.InputTypes.selectMap,
-                optionsMap: siteOptionsMap,
-                options: Object.keys(siteOptionsMap),   // convenience
+                optionsMap: sitesLocationMap,
+                options: Object.keys(sitesLocationMap),   // convenience
                 peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
                 //default: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
-                default: Object.keys(siteOptionsMap)[0],
+                default: Object.keys(sitesLocationMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
