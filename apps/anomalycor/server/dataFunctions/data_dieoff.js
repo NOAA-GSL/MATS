@@ -29,6 +29,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
         const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        const dbtable = matsCollections.CurveParams.findOne({name: 'data-source'}).tables[data_source];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         const label = curve['label'];
@@ -61,7 +62,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
                 "avg(m0.wacorr/100) as stat, " +
                 "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, group_concat( unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0 " +
-                "from stats as m0 " +
+                "from {{dbtable}} as m0 " +
                 "where 1=1 " +
                 "and m0.model = '{{data_source}}' " +
                 "and m0.variable = '{{variable}}' " +
@@ -75,6 +76,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
+            statement = statement.replace('{{dbtable}}', dbtable);
             statement = statement.replace('{{data_source}}', data_source);
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{variable}}', variable);
@@ -251,8 +253,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
                 // unmatched curves get no error bars
                 const errorBar = errorResult.stde_betsy * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
                 if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+                    errorMax = errorMax > errorBar ? errorMax : errorBar;
                     data[di][2] = errorBar;
                 } else {
                     data[di][2] = -1;
@@ -280,8 +282,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
             // get the overall stats for the text output - this uses the means not the stats. refer to
 
-            //const stats = matsDataUtils.get_err(means.reverse(), levels.reverse()); // have to reverse because of data inversion
-            const stats = matsDataUtils.get_err(fhrs.reverse(), values.reverse()); // have to reverse because of data inversion
+            const stats = matsDataUtils.get_err(fhrs, values);
             const miny = Math.min.apply(null, means);
             const maxy = Math.max.apply(null, means);
             stats.miny = miny;
@@ -323,8 +324,8 @@ dataDieOff = function (plotParams, plotFunction) {
             "sd": 0,
             "n_good": 0,
             "lag1": 0,
-            "min": 50,
-            "max": 1000,
+            "min": 0,
+            "max": 0,
             "sum": 0,
             "miny": 0,
             "maxy": 0
