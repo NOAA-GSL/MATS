@@ -1048,6 +1048,73 @@ const getDataForDieoffDiffCurve = function (params) {
     };
 };
 
+const getDataForValidTimeDiffCurve = function (params) {
+    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+    var ymin = params.ymin; // optional - current y axis minimum
+    var ymax = params.ymax;  // optional - current yaxis minimum
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // time values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var largeIntervalCurveData = dataset[diffFrom[0]].data;
+    if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+        largeIntervalCurveData = dataset[diffFrom[1]].data;
+    }
+    var minuendData = dataset[diffFrom[0]].data;
+    var subtrahendData = dataset[diffFrom[1]].data;
+    var subtrahendIndex = 0;
+    var minuendIndex = 0;
+    var d = [];
+    var count = 0;
+    var sum = 0;
+    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+        var subtrahendTime = subtrahendData[subtrahendIndex][0];
+        var minuendTime = minuendData[minuendIndex][0];
+        var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+            minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
+        }
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+            subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
+        }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
+        var diffValue = null;
+        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+            if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+                diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+                d.push([largeIntervalTime, diffValue]);
+                ymin = diffValue < ymin ? diffValue : ymin;
+                ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count++;
+            } else {
+                d.push([largeIntervalTime, null])
+            }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
+        }
+    }
+    return {
+        sum: sum,
+        count: count,
+        dataset: d,
+        ymin: ymin,
+        ymax: ymax
+    };
+};
+
 // const getDataForDieoffDiffCurveConTables = function (params) {
 //     /*
 //      DATASET ELEMENTS:
@@ -2257,6 +2324,63 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
+const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+    /*
+     some curves will share an axis based on the axis map key.
+     for example all the curves that have the same variable and statistic might share an axis.
+     The axis key might be different for different apps.
+     These axis have parameters that have been stashed in the axisMap
+     PARAMETERS:
+     curve -  the curve object
+     curveIndex : Number - the integer index of this curve
+     axisMap: object - a map of axis params ....
+     required curve params for generating an axisMap are:
+     label : String - that is the label of an axis
+     ymin : Number - the minimum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     ymax : the maximum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
+     optional params in an axisMap:
+     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
+
+     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
+     */
+    const label = curve['label'];
+    const ymin = curve['ymin'];
+    const ymax = curve['ymax'];
+    const axisKey = curve['axisKey'];
+    const annotation = curve['annotation'];
+    const pointSymbol = getPointSymbol(curveIndex);
+    if (axisKey in axisMap) {
+        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
+            axisMap[axisKey].axisLabel = label;
+        } else {
+            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+        }
+        axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+    } else {
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey + " - " + label
+        };
+    }
+    const curveOptions = {
+        yaxis: axisMap[axisKey].index,
+        label: axisMap[axisKey].axisLabel,
+        curveId: curve.label,
+        annotation: annotation,
+        color: curve['color'],
+        data: dataSeries,
+        points: {symbol: pointSymbol, fillColor: curve['color'], show: true},
+        lines: {show: true, fill: false}
+    };
+    return curveOptions;
+};
+
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
@@ -2531,6 +2655,7 @@ export default matsDataUtils = {
     getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
+    getDataForValidTimeDiffCurve: getDataForValidTimeDiffCurve,
     // getDataForDieoffDiffCurveConTables: getDataForDieoffDiffCurveConTables,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
@@ -2542,6 +2667,7 @@ export default matsDataUtils = {
     querySeriesDB:querySeriesDB,
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateSeriesCurveOptions: generateSeriesCurveOptions,
+    generateValidTimeCurveOptions: generateValidTimeCurveOptions,
     generateDieoffCurveOptions: generateDieoffCurveOptions,
     queryValidTimeDB:queryValidTimeDB,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
