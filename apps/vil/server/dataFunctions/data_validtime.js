@@ -67,12 +67,8 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            //var validTimeClause = " ";
-            //if (validTimes.length > 0){
-            //    validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-            //}
-            //statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            //dataRequests[curve.label] = statement;
+
+            dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
