@@ -82,8 +82,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.55-2018.01.27.06.00",
-      "buildDate": "2018.01.27.06.00",
+      "version": "1.5.56-2018.01.28.06.00",
+      "buildDate": "2018.01.28.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -393,120 +393,120 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.5.78",
-      "buildDate": "2018.01.26.08.27",
+      "version": "1.5.79",
+      "buildDate": "2018.01.27.08.33",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.5.76",
-      "buildDate": "2018.01.26.08.17",
+      "version": "1.5.77",
+      "buildDate": "2018.01.27.08.21",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.76",
-      "buildDate": "2018.01.26.08.23",
+      "version": "1.5.77",
+      "buildDate": "2018.01.27.08.28",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.85",
-      "buildDate": "2018.01.26.08.19",
+      "version": "1.5.86",
+      "buildDate": "2018.01.27.08.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "1.5.84",
-      "buildDate": "2018.01.26.08.08",
+      "version": "1.5.85",
+      "buildDate": "2018.01.27.08.11",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.84",
-      "buildDate": "2018.01.26.08.21",
+      "version": "1.5.85",
+      "buildDate": "2018.01.27.08.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.77",
-      "buildDate": "2018.01.26.08.06",
+      "version": "1.5.78",
+      "buildDate": "2018.01.27.08.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.5.78",
-      "buildDate": "2018.01.26.08.29",
+      "version": "1.5.79",
+      "buildDate": "2018.01.27.08.35",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.5.79",
-      "buildDate": "2018.01.26.08.10",
+      "version": "1.5.80",
+      "buildDate": "2018.01.27.08.13",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.5.85",
-      "buildDate": "2018.01.26.08.04",
+      "version": "1.5.86",
+      "buildDate": "2018.01.27.08.06",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.5.84",
-      "buildDate": "2018.01.26.08.02",
+      "version": "1.5.85",
+      "buildDate": "2018.01.27.08.04",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.54",
-      "buildDate": "2018.01.26.08.00",
+      "version": "1.5.55",
+      "buildDate": "2018.01.27.08.00",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.5.54",
-      "buildDate": "2018.01.26.08.12",
+      "version": "1.5.55",
+      "buildDate": "2018.01.27.08.16",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.54",
-      "buildDate": "2018.01.26.08.14",
+      "version": "1.5.55",
+      "buildDate": "2018.01.27.08.19",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.79",
-      "buildDate": "2018.01.26.08.25",
+      "version": "1.5.80",
+      "buildDate": "2018.01.27.08.31",
       "last_test_run": "",
       "last_test_status": ""
     }
