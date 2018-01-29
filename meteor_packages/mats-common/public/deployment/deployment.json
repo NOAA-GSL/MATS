@@ -409,8 +409,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.78",
-      "buildDate": "2018.01.28.08.27",
+      "version": "1.5.79",
+      "buildDate": "2018.01.29.08.27",
       "last_test_run": "",
       "last_test_status": ""
     },
