@@ -59,6 +59,7 @@ const doCurveParams = function () {
     }
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
+    var modelTableMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var levelModelOptionsMap = {};
@@ -79,7 +80,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,lev,variable,mindate,maxdate from regions_per_model_mats_all_categories;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,lev,variable,mindate,maxdate,dbase from regions_per_model_mats_all_categories;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -89,6 +90,9 @@ const doCurveParams = function () {
             var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
             var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+
+            var dbtable = rows[i].dbase;
+            modelTableMap[model] = dbtable;
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -152,6 +156,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
+                tables: modelTableMap,
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "variable"],
                 controlButtonCovered: true,
