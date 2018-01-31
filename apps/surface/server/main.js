@@ -505,7 +505,7 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true,
-                defaultMapView: {point: [39.834, -98.604], zoomLevel: 6, minZoomLevel: 4, maxZoomLevel: 13},
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 4, minZoomLevel: 3, maxZoomLevel: 10},
                 help: 'map-help.html'
             });
     }
