@@ -23,7 +23,7 @@ Template.map.onRendered(function () {
     var markerFeatures = {};
     var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: false,
-        scrollWheelZoom: true,
+        scrollWheelZoom: false,
         trackResize:true,
         zoomControl:true,
         minZoom: minZoomLevel,
