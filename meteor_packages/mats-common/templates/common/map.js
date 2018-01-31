@@ -195,10 +195,10 @@ Template.map.onRendered(function () {
         //});
         var ref = what.data.name + '-' + what.data.type;
         var elem = document.getElementById(ref);
-        elem.style.height = mapHeight();
-        elem.style.width = mapWidth();
-        //elem.style.height = '350px';
-        //elem.style.width = '350px';
+        //elem.style.height = mapHeight();
+        //elem.style.width = mapWidth();
+        elem.style.height = '500px';
+        elem.style.width = '875px';
     };
     // initial resize seems to be necessary
     resizeMap(this);
