@@ -1789,13 +1789,14 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
             tickDecimals: 1,
             min: ymin - yPad,
-            max: ymax + yPad
+            max: ymax + yPad,
+            font: {size: 18}
         };
         const yaxisOptions = {   // used for zooming
             zoomRange: [0.1, 10]
@@ -1811,13 +1812,14 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabel: 'Forecast Hour',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
         xaxis: {
             zoomRange: [0.1, null],
-            mode: 'xy'
+            mode: 'xy',
+            font: {size: 18}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -1883,13 +1885,14 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
             tickDecimals: 1,
             min: ymin - yPad,
-            max: ymax + yPad
+            max: ymax + yPad,
+            font: {size: 18}
         };
         const yaxisOptions = {   // used for zooming
             zoomRange: [0.1, 10]
@@ -1905,13 +1908,14 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'Hour of Day',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
         xaxis: {
             zoomRange: [0.01, null],
-            mode: 'xy'
+            mode: 'xy',
+            font: {size: 18}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -1979,13 +1983,14 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
             tickDecimals: 1,
             min: ymin - yPad,
-            max: ymax + yPad
+            max: ymax + yPad,
+            font: {size: 18}
         };
         const yaxisOptions = {   // used for zooming
             zoomRange: [0.1, 10]
@@ -2001,7 +2006,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'Threshold',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -2012,7 +2017,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             ticks: [[0.01, "0.01"], [0.1, "0.10"], [0.25, "0.25"], [0.5, "0.50"], [1.0, "1.00"], [1.5, "1.50"], [2.0, "2.00"], [3.0, "3.00"]],
             //ticks: [0.01,0.1,0.25,0.5,1.0,1.5,2.0,3.0],
             // transform: function (v) {return v === 0 ? 0 : Math.log(v);},
-            // inverseTransform: function (v) {return Math.exp(v);}
+            // inverseTransform: function (v) {return Math.exp(v);},
+            font: {size: 13}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -2091,13 +2097,14 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
             tickDecimals: 1,
             min: ymin - yPad,
-            max: ymax + yPad
+            max: ymax + yPad,
+            font: {size: 18}
         };
         const yaxisOptions = {   // used for zooming
             zoomRange: [0.1, 10]
@@ -2113,13 +2120,14 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabel: 'Time',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
         xaxis: {
             zoomRange: [0.1, null],
-            mode: 'time'
+            mode: 'time',
+            font: {size: 18}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -2546,7 +2554,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             axisLabel: xAxislabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
@@ -2581,7 +2589,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
                 color: "#545454"
             },
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 16,
+            axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -2768,44 +2776,50 @@ const areObjectsEqual = function(o, p) {
 
 export default matsDataUtils = {
     getDateRange: getDateRange,
-    sortFunction: sortFunction,
     dateConvert: dateConvert,
     secsConvert: secsConvert,
+    sortFunction: sortFunction,
     arraysEqual: arraysEqual,
     arrayContainsArray: arrayContainsArray,
+    areObjectsEqual:areObjectsEqual,
+
+    querySeriesDB:querySeriesDB,
+    queryProfileDB: queryProfileDB,
+    queryDieoffDB: queryDieoffDB,
+    queryThresholdDB: queryThresholdDB,
+    queryValidTimeDB:queryValidTimeDB,
+
+    getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
+    getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
+    getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
+    getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
+    getDataForThresholdDiffCurve: getDataForThresholdDiffCurve,
+    getDataForValidTimeDiffCurve: getDataForValidTimeDiffCurve,
+
     getMatchedDataSet: getMatchedDataSet,
     getDieOffMatchedDataSet: getDieOffMatchedDataSet,
     getThresholdMatchedDataSet: getThresholdMatchedDataSet,
     getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
-    getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
-    getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
-    getDataForValidTimeDiffCurve: getDataForValidTimeDiffCurve,
-    getDataForThresholdDiffCurve: getDataForThresholdDiffCurve,
-    // getDataForDieoffDiffCurveConTables: getDataForDieoffDiffCurveConTables,
-    getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
-    getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
-    getPointSymbol: getPointSymbol,
-    generateThresholdPlotOptions: generateThresholdPlotOptions,
-    generateDieoffPlotOptions: generateDieoffPlotOptions,
-    queryDieoffDB: queryDieoffDB,
-    queryThresholdDB: queryThresholdDB,
-    querySeriesDB:querySeriesDB,
-    generateSeriesPlotOptions: generateSeriesPlotOptions,
+
     generateSeriesCurveOptions: generateSeriesCurveOptions,
-    generateValidTimeCurveOptions: generateValidTimeCurveOptions,
-    generateThresholdCurveOptions: generateThresholdCurveOptions,
-    generateDieoffCurveOptions: generateDieoffCurveOptions,
-    queryValidTimeDB:queryValidTimeDB,
-    generateValidTimePlotOptions: generateValidTimePlotOptions,
-    queryProfileDB: queryProfileDB,
-    get_err: get_err,
     generateProfileCurveOptions: generateProfileCurveOptions,
+    generateDieoffCurveOptions: generateDieoffCurveOptions,
+    generateThresholdCurveOptions: generateThresholdCurveOptions,
+    generateValidTimeCurveOptions: generateValidTimeCurveOptions,
+
+    generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateProfilePlotOptions: generateProfilePlotOptions,
+    generateDieoffPlotOptions: generateDieoffPlotOptions,
+    generateThresholdPlotOptions: generateThresholdPlotOptions,
+    generateValidTimePlotOptions: generateValidTimePlotOptions,
+
     simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
+    get_err: get_err,
+    getPointSymbol: getPointSymbol,
+
     doColorScheme: doColorScheme,
     doSettings: doSettings,
     doCredentials: doCredentials,
     doAuthorization: doAuthorization,
-    doRoles: doRoles,
-    areObjectsEqual:areObjectsEqual
+    doRoles: doRoles
 }
