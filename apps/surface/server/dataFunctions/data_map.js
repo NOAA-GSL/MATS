@@ -31,25 +31,10 @@ dataMap = function (plotParams, plotFunction) {
         var siteId = [];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
-        var statisticSelect = curve['statistic'];
-        var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr == 'wind'  ) {
-            statistic = statisticOptionsMap[statisticSelect][2];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
