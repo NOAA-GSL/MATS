@@ -130,7 +130,7 @@ Template.map.onRendered(function () {
                     var unSelectedIcon = createUnSelectedIcon(markers[m]);
                     var selectedIcon = createSelectedIcon(markers[m]);
                     var markerOptions = markers[m].options;
-                    var title = markerOptions.title;
+                    var title = markerOptions.peerOption + ' - ' + markerOptions.title;
                     var point = markers[m].point;
                     var markerId = point[0] + ',' + point[1] + ':' + title;
                     var features = {
@@ -174,7 +174,7 @@ Template.map.onRendered(function () {
                 })[0];
                 if (marker !== undefined) {
                     var peerOption = marker.options.peerOption;
-                    var markerId = marker.point[0] + ',' + marker.point[1] + ':' + marker.options.title;
+                    var markerId = marker.point[0] + ',' + marker.point[1] + ':' + marker.options.peerOption + ' - ' + marker.options.title;
                     var mFeatures = markerFeatures[markerId];
                     if (_.contains(selectedValues, peerOption)) {
                         map._layers[ml].setIcon(mFeatures.selectedIcon);
