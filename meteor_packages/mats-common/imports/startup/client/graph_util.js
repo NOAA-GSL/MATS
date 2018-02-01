@@ -43,6 +43,50 @@ const setNoDataLabels = function (dataset) {
     }
 };
 
+const drawMap = function () {
+    var defaultPoint = this.data.defaultMapView.point;
+    var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
+    var minZoomLevel = this.data.defaultMapView.minZoomLevel;
+    var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
+    var peerName = this.data.peerName;
+
+    var targetElement = document.getElementsByName(peerName)[0];
+    if (!targetElement) {
+        return;
+    }
+    var targetId = '#' + targetElement.id;
+    var markers = this.data.optionsMap;   // from app startup
+    var markerFeatures = {};
+    var map = L.map(this.data.name + "-" + this.data.type, {
+        doubleClickZoom: false,
+        scrollWheelZoom: false,
+        trackResize:true,
+        zoomControl:true,
+        minZoom: minZoomLevel,
+        maxZoom: maxZoomLevel,
+        wheelPxPerZoomLevel: 3
+    }).setView(defaultPoint, defaultZoomLevel);
+    // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
+//    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+//        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+//        maxZoom: 16}).addTo(map);
+//    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}.{ext}', {
+//        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+//        subdomains: 'abcd',
+//        minZoom: 0,
+//        maxZoom: 20,
+//        ext: 'png'
+//    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        maxZoom: 16
+    }).addTo(map);
+    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+    if (!markerFeatures) {
+        markerFeatures = {};
+    }
+}
+
 const normalizeYAxis = function (ranges, options) {
     /*
      The range object will have one or more yaxis values.
@@ -195,6 +239,7 @@ export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
     normalizeYAxis:normalizeYAxis,
     drawGraph:drawGraph,
+    drawMap:drawMap,
     drawXErrorCaps:drawXErrorCaps,
     drawYErrorCaps:drawYErrorCaps,
     normalizeYAxisByRanges:normalizeYAxis,
