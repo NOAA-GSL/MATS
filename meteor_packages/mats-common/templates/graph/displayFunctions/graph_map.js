@@ -82,14 +82,11 @@ graphMap = function(result) {
                 }
                 dataset[c].lines.show = !dataset[c].lines.show;
                 if (dataset[c].data.length === 0) {
-                    Session.set(label + "hideButtonText", 'NO DATA');
                     Session.set(label + "pointsButtonText", 'NO DATA');
                 } else {
                     if (dataset[c].lines.show == true) {
-                        Session.set(label + "hideButtonText", 'hide curve');
                         Session.set(label + "pointsButtonText", 'hide points');
                     } else {
-                        Session.set(label + "hideButtonText", 'show curve');
                         Session.set(label + "pointsButtonText", 'show points');
                     }
                 }
@@ -126,8 +123,8 @@ graphMap = function(result) {
 
     });
 
-    var drawGraph = function(ranges, options) {
-        var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges,options));
+    var drawMap = function(ranges, options) {
+        var zOptions = $.extend(true, {}, options, matsGraphUtils.MapGraph(defaultPoint,options));
         plot = $.plot(placeholder, dataset, zOptions);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     };
@@ -140,7 +137,7 @@ graphMap = function(result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges, plot.getOptions());
+        drawMap(ranges, plot.getOptions());
     });
     matsGraphUtils.setNoDataLabels(dataset);
 
