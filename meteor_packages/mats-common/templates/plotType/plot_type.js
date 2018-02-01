@@ -171,7 +171,7 @@ Template.plotType.events({
             }
         }
     },
-    'click .plot-type-GeographicMap': function(event) {
+    'click .plot-type-Map': function(event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
             matsCurveUtils.showMapFace();
