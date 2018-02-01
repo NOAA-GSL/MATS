@@ -479,7 +479,7 @@ const doCurveParams = function () {
                 peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(siteOptionsMap)[0],
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
@@ -499,7 +499,7 @@ const doCurveParams = function () {
                 controlButtonCovered: true,
                 unique: false,
                 //default: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
-                default: Object.keys(sitesLocationMap)[0],
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
