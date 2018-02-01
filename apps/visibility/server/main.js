@@ -221,7 +221,7 @@ const doCurveParams = function () {
 
         if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
             var optionsMap = {
-                'TSS (True Skill Score)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.ny) - 1.) * 100 as stat, group_concat((m0.yy/(m0.yy+m0.yn) + m0.nn/(m0.nn+m0.ny) - 1.) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+                'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
                 'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
 
