@@ -108,6 +108,18 @@
             "$date": "2017-12-26T22:25:06.200+0000"
           },
           "hashedToken": "HGZR/5YwyQGOd6C6d4zQ7juNr2BNxYe8CZexPj5b9Xk="
+        },
+        {
+          "when": {
+            "$date": "2018-01-04T22:10:30.363+0000"
+          },
+          "hashedToken": "fOy27MzatS/7Wjhoc6v76ETv9jTHK0gLnsRFz3Ug1Fc="
+        },
+        {
+          "when": {
+            "$date": "2018-01-18T17:58:30.899+0000"
+          },
+          "hashedToken": "gvI7yvVqdJPXHMSM1uuQv7h9yQ4HVQlGQndMCsZtNWI="
         }
       ]
     }
@@ -180,6 +192,12 @@
             "$date": "2017-11-15T22:46:24.110+0000"
           },
           "hashedToken": "6Qxf4JTXhvIqhEf8JiOLeGIyE/pr/zK6XpE5Jr+QH9w="
+        },
+        {
+          "when": {
+            "$date": "2018-01-04T17:12:54.316+0000"
+          },
+          "hashedToken": "1+BzpGG5PHPOB6FuSnXxqGBH6t2i4KgraqlrkZ61qow="
         }
       ]
     }
