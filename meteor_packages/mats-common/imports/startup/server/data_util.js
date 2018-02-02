@@ -1600,6 +1600,62 @@ const queryThresholdDB = function (pool, statement, interval) {
     };
 };
 
+const queryMapDB = function (pool, statement, interval) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+    //var ctime = [];
+    var ymin;
+    var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+    pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = matsTypes.Messages.NO_DATA_FOUND;
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveTime = [];
+            var curveStat = [];
+            var N0_max = 0;
+            var N_times_max = 0;
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var trsh = Number(rows[rowIndex].avtime);
+                var stat = rows[rowIndex].stat;
+                var N0_loop = rows[rowIndex].N0;
+                var N_times_loop = rows[rowIndex].N_times;
+                if (N0_loop > N0) {
+                    N0_max = N0_loop;
+                }
+                if (N_times_loop > N_times) {
+                    N_times_max = N_times_loop;
+                }
+                d.push([trsh, stat]);
+                N0.push(N0_loop);
+                N_times.push(N_times_loop);
+            }
+            dFuture['return']();
+        }
+    });
+
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        N0: N0,
+        N_times: N_times,
+    };
+};
+
 const querySeriesDB = function (pool, statement, interval, averageStr) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     var dFuture = new Future();
@@ -2790,6 +2846,7 @@ export default matsDataUtils = {
     queryDieoffDB: queryDieoffDB,
     queryThresholdDB: queryThresholdDB,
     querySeriesDB:querySeriesDB,
+    queryMapDB:queryMapDB,
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateValidTimeCurveOptions: generateValidTimeCurveOptions,

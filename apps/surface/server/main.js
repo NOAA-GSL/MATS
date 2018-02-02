@@ -296,10 +296,10 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
         optionsMap = {
-            'temperature': ['dt', 't'],
-            'RH': ['drh', 'rh'],
-            'dewpoint': ['dTd', 'td'],
-            'wind': ['dw', 'ws'],
+            'temperature': ['dt', 't', 'temp'],
+            'RH': ['drh', 'rh', 'rh'],
+            'dewpoint': ['dTd', 'td', 'dp'],
+            'wind': ['dw', 'ws', 'ws'],
         };
 
         const statVarUnitMap = {

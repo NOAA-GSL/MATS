@@ -27,13 +27,11 @@ dataMap = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var siteStr = curve['sites'];
-        var siteId = [];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var sitesStr = curve['sites'];
         var label = curve['label'];
         var color = curve['color'];
         var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
@@ -72,6 +70,7 @@ dataMap = function (plotParams, plotFunction) {
             } else {
                 statement = statement.replace('{{model}}', model +"qp");
             }
+            statement = statement.replace('{{variable}}', variable);
 
             dataRequests[curve.label] = statement;
             var queryResult;
@@ -146,13 +145,13 @@ dataMap = function (plotParams, plotFunction) {
     }  // end for curves
 
     //if matching
-    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMapMatchedDataSet(dataset, interval);
-    }
+    //if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
+    //    dataset = matsDataUtils.getMapMatchedDataSet(dataset, interval);
+    //}
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
+    //dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
     const resultOptions = matsDataUtils.generateMapPlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
