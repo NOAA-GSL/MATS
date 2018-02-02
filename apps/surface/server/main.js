@@ -141,6 +141,7 @@ const doCurveParams = function () {
                 }
             };
             sitesLocationMap.push(obj);
+            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
 
         }
 
