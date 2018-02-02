@@ -48,22 +48,30 @@ dataMap = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select floor((m0.valid_day+3600*m0.hour)%(24*3600)/3600) as hr_of_day, " +
-                "{{statistic}} " +
-                "from {{model}} as m0 " +
+            var statement = "select s.name as sta_name, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_time," +
+                "max(m0.time) as max_time," +
+                "sum(m0.{{variable}} - o.{{variable}})/count(distinct m0.time) as model_ob_diff" +
+                "from metars as s, obs as o, {{model}} as m0 " +
                 "where 1=1 " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "group by hr_of_day " +
-                "order by hr_of_day" +
+                "and m0.time >= '{{fromSecs}}' " +
+                "and m0.time <= '{{toSecs}}' " +
+                "and s.name = '{{station}}' " +
+                "and s.madis_id = m0.sta_id " +
+                "and s.madis_id = o.sta_id " +
+                "and m0.time = o.time " +
                 ";";
 
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
-            statement = statement.replace('{{statistic}}', statistic);
+            if (forecastLength == 1) {
+                statement = statement.replace('{{model}}', model +"qp1f");
+            } else {
+                statement = statement.replace('{{model}}', model +"qp");
+            }
 
             dataRequests[curve.label] = statement;
             var queryResult;
