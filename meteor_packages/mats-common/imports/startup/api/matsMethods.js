@@ -13,7 +13,7 @@ const metaDataTableUpdates = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
-    var graphDataDir = ".graphData/";
+    var graphDataDir = "graphData/";
     var publicGraphDir = publicDir + "/" + graphDataDir;
     var fs = require('fs');
     try {
@@ -25,7 +25,7 @@ const saveResultData = function(result){
         return "Error creating directory " + publicGraphDir + " <br>" + e;
     }
     var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
-    var tStamp = moment(new Date()).utc().format();
+    var tStamp = moment(new Date()).utc().format("YYYY-MM-DD_hh_mm_ss");
     var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
     var link;
@@ -368,11 +368,17 @@ const resetApp = function(metaDataTableRecords) {
     deployment = JSON.parse(deploymentText);
     const myUrlStr = Meteor.absoluteUrl();
     var url = require('url');
+    var path = require('path');
+    //console.log("delimiter is "+path.sep);
     var myUrl = url.parse(myUrlStr);
     const hostName = myUrl.hostname.trim();
-    const urlPath = myUrl.pathname == "/" ? process.env.PWD : myUrl.pathname.replace(/\/$/g, '');
-    const urlPathParts = urlPath.split('/');
-    const appReference = urlPathParts[urlPathParts.length -1].trim();
+    //console.log("url path is "+myUrl.pathname);
+    //console.log("PWD is "+process.env.PWD);
+    //console.log("CWD is "+process.cwd());
+    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
+    const urlPathParts = urlPath.split(path.sep);
+    //console.log("path parts are "+urlPathParts);
+    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length -6].trim() : urlPathParts[urlPathParts.length -1];
     var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {

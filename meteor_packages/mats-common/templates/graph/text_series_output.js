@@ -7,24 +7,63 @@ import { matsMathUtils } from 'meteor/randyp:mats-common';
 
 var times = [];
 
-const getDataForTime = function(curveIndex, time) {
-    try {
-        for (var i = 0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
-            if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time)) {
-                return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
-            }
+const getDataForTime = function(data, time) {
+    for (var i =0; i < data.length; i++) {
+        if (data[i][0] == Number(time)) {
+            return data[i] === null ? undefined : data[i];
         }
-        return undefined;
-    } catch (e)
-        {
-            console.log ("getDataForTime error: " + e);
-            return undefined;
+    }
+    return undefined;
+};
+
+const getDataForCurve = function(curve) {
+    for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
+        if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
+            return matsCurveUtils.PlotResult.data[dataIndex];
         }
+    }
+    return undefined;
 };
 
 Template.textSeriesOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
+    },
+    avTimes: function(curve) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered when the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        const plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
+
+        if (matsCurveUtils.PlotResult.data === undefined) {
+            return [];
+        }
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
+            return [];
+        }
+        const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+        if (curveData === undefined || curveData.length == 0) {
+            return [];
+        }
+
+        var timeSet = new Set();
+        var di;
+        for (di = 0; di < curveData.length; di++) {
+            curveData[di] && timeSet.add(curveData[di][0]);
+        }
+        var times = Array.from (timeSet);
+        times.sort((a, b) => (a - b));
+        return times;
     },
     curves: function () {
         /*
@@ -99,8 +138,17 @@ Template.textSeriesOutput.helpers({
         times.sort((a, b) => (a - b));
         return times;
     },
-
     points: function(time) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
         const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
@@ -112,32 +160,36 @@ Template.textSeriesOutput.helpers({
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
             return false;
         }
-        const curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
-            return false;
-        }
+        var curve = Template.parentData();
         var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD:HH:mm') + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
         }
         const fillStr = settings.NullFillString;
-        // We must only set data when the times match on a curve.
         var pdata = fillStr;
-        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
-            pdata = fillStr;
-            try {
-                // see if I have a valid data object for this curve and this time....
-                const dataPointVal = getDataForTime(curveIndex, time);
-                if (dataPointVal !== undefined) {
-                    pdata = dataPointVal.toPrecision(4);
-                }
-            } catch (problem) {
-                console.log("Problem in deriving curve text: " + problem);
+        var perror = fillStr;
+        var mean = fillStr;
+        var lag1 = fillStr;
+        var n = fillStr;
+        var stddev = fillStr;
+        try {
+            // see if I have a valid data object for this dataIndex and this level....
+            const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+            const dataPointVal = getDataForTime(curveData, time);
+            if (dataPointVal !== undefined) {
+                pdata = dataPointVal[1] && dataPointVal[1].toPrecision(4);
+                mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
+                perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
+                stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
+                lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
+                n = dataPointVal[5].n_good;
             }
-            // pdata is now either data value or fillStr
-            line += "<td>" + pdata + "</td>";
+        } catch (problem) {
+            console.log("Problem in deriving curve text: " + problem);
         }
+        // pdata is now either data value or fillStr
+        line += "<td>" + mean + "</td>" + "<td>" + pdata + "</td>" +  "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     },
     stats: function(curve) {

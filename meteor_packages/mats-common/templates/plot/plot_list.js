@@ -220,6 +220,15 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.timeSeries:
                                 matsCurveUtils.showTimeseriesFace();
                                 break;
+                            case matsTypes.PlotTypes.dieoff:
+                                matsCurveUtils.showDieOffFace();
+                                break;
+                            case matsTypes.PlotTypes.threshold:
+                                matsCurveUtils.showThresholdFace();
+                                break;
+                            case matsTypes.PlotTypes.validtime:
+                                matsCurveUtils.showValidTimeFace();
+                                break;
                             case matsTypes.PlotTypes.scatter2d:
                                 matsCurveUtils.showScatterFace();
                                 break;
