@@ -171,7 +171,7 @@ const getDieOffMatchedDataSet = function (dataset) {
     }
     var hourMatches;
     var newDataSet = [];
-    while (hour < hourMax) {
+    while (hour <= hourMax) {
         hourMatches = true;
         for (ci = 0; ci < curvesLength; ci++) {
             // move this curves index to equal or exceed the new hour
@@ -668,7 +668,7 @@ const getMatchedDataSet = function (dataset, interval) {
     var matchCount = 1;
     // no valid maximum interval was given us, we have to use our data derived one
     interval = interval === undefined ? dataMaxInterval : interval;
-    while (time < timeMax) {
+    while (time <= timeMax) {
         timeMatches = true;
         for (ci = 0; ci < curvesLength; ci++) {
             // move this curves index to equal or exceed the new time

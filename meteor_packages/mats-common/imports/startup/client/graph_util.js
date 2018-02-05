@@ -116,21 +116,23 @@ var uXSquareCap = function (ctx, x, y, radius) {
 
 const drawYErrorCaps = function (ctx, lowery, uppery, x, radius) {
     // ctx is CanvasRenferingContext2d
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
     ctx.beginPath();
     var r2 = radius / 2;
-    var minWidth = 20;  // sort of arbitrary, really
-    var width = ((uppery - lowery) <= minWidth) ? 1 : ((uppery - lowery) - minWidth) / 2;
+    var minHeight = 20;  // sort of arbitrary, really
+    var height = ((lowery - uppery) <= minHeight) ? 1 : ((lowery - uppery) - minHeight) / 2;
     ctx.fillStyle = 'white';
-    ctx.rect(x, lowery, width, radius);
+    ctx.rect(x - r2, lowery - height, radius, height);
     ctx.stroke();
     ctx.fill();
-    ctx.rect(x, uppery - width, width, radius);
+    ctx.rect(x - r2, uppery, radius, height);
     ctx.stroke();
     ctx.fill();
 
 };
 
 const lYSquareCap = function (ctx, x, y, radius) {
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
     lowery = y;
     // this is where you would make the xradius vary by the size of the error
     var xradius = radius;
@@ -139,6 +141,7 @@ const lYSquareCap = function (ctx, x, y, radius) {
 };
 
 var uYSquareCap = function (ctx, x, y, radius) {
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
     // upper gets called first -- see drawError in flot
     uppery = y;
 };
