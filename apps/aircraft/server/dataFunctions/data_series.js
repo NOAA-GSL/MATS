@@ -110,7 +110,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, interval, averageStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -156,7 +156,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForSeriesDiffCurve({
+            var diffResult = matsDataUtils.getDataForSeriesWithLevelsDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -187,10 +187,28 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
+    var sub_levs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getMatchedDataSetWithLevels(dataset, interval);
+
+        var subLevs = new Set();
+        var avTimeGroups = [];
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            avTimeGroups[curveIndex] = [];
+            var data = dataset[curveIndex].data;
+            for (var di = 0; di < data.length; di++) { // every fhr
+                sub_levs = data[di][5];
+                avTimeGroups[curveIndex].push(data[di][0]);
+                for (var li = 0; li < sub_levs.length; li++) {
+                    var lev = sub_levs[li];
+                    subLevs.add(lev);
+                }
+            }
+        }
+        var matchingAvTimes = _.intersection.apply(_, avTimeGroups);
+        var subLevIntersection = Array.from(subLevs);
     }
 
     var diffFrom;
@@ -198,8 +216,7 @@ dataSeries = function (plotParams, plotFunction) {
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
-        var data = dataset[curveIndex].data;
+        data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
         //for (di = 0; di < dataLength; di++) { // every forecast hour
@@ -209,7 +226,34 @@ dataSeries = function (plotParams, plotFunction) {
         var means = [];
 
         while (di < dataLength) {
+            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingAvTimes.indexOf(data[di][0]) === -1) {
+                dataset[curveIndex].data.splice(di, 1);
+                continue;   // not a matching time - skip it
+            }
+
+            sub_levs = data[di][5];
+            var sub_secs = data[di][4];
+            var subValues = data[di][3];
             var errorResult = {};
+
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_levs)) {
+                var newSubValues = [];
+                var newSubSecs = [];
+                for (var subLevIntersectionIndex = 0; subLevIntersectionIndex < subLevIntersection.length; subLevIntersectionIndex++) {
+                    var levsIndex = sub_levs.indexOf(subLevIntersection[subLevIntersectionIndex]);
+                    var newVal = subValues[levsIndex];
+                    var newSec = sub_secs[levsIndex];
+                    if (newVal === undefined || newVal == 0) {
+                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                    } else {
+                        newSubValues.push(newVal);
+                        newSubSecs.push(newSec);
+                    }
+                }
+                data[di][3] = newSubValues;
+                data[di][4] = newSubSecs;
+                data[di][5] = subLevIntersection; // we're going to overwrite this later because we don't need it anymore and we need to keep dataset with a similar structure to the rest of the apps
+            }
 
             /*
              DATASET ELEMENTS:
