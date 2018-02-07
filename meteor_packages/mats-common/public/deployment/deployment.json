@@ -50,8 +50,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.6.0-2018.02.06.06.24",
-      "buildDate": "2018.02.06.06.24",
+      "version": "1.6.1-2018.02.07.00.33",
+      "buildDate": "2018.02.07.00.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -374,8 +374,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.5.71",
-      "buildDate": "2018.01.18.08.25",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.45",
       "last_test_run": "",
       "last_test_status": ""
     }
