@@ -2667,7 +2667,8 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            axisLabel: axisKey + " - " + label
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
         };
     }
     const curveOptions = {
@@ -2745,7 +2746,8 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            axisLabel: axisKey + " - " + label
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
         };
     }
     const curveOptions = {
@@ -2820,7 +2822,8 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            axisLabel: axisKey + " - " + label
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
         };
     }
     const curveOptions = {
@@ -2890,7 +2893,8 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
             label: label,
             ymin: ymin,
             ymax: ymax,
-            axisLabel: axisKey + " - " + label
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
         };
     }
     const curveOptions = {
@@ -2947,7 +2951,8 @@ const generateThresholdCurveOptions = function (curve, curveIndex, axisMap, data
             label: label,
             ymin: ymin,
             ymax: ymax,
-            axisLabel: axisKey + " - " + label
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
         };
     }
     const curveOptions = {
