@@ -18,8 +18,8 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.6.0-2018.02.06.06.19",
-      "buildDate": "2018.02.06.06.19",
+      "version": "1.6.1-2018.02.07.00.28",
+      "buildDate": "2018.02.07.00.28",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -270,8 +270,8 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.5.68",
-      "buildDate": "2018.01.18.08.17",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.35",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -286,8 +286,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.5.77",
-      "buildDate": "2018.01.18.08.19",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.37",
       "last_test_run": "",
       "last_test_status": ""
     },
