@@ -122,8 +122,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.6.0-2018.02.06.18.16",
-      "buildDate": "2018.02.06.18.16",
+      "version": "1.6.1-2018.02.07.00.38",
+      "buildDate": "2018.02.07.00.38",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -318,8 +318,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.5.70",
-      "buildDate": "2018.01.18.08.29",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.50",
       "last_test_run": "",
       "last_test_status": ""
     },
