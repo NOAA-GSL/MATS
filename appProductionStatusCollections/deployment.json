@@ -34,8 +34,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.6.0-2018.02.06.06.21",
-      "buildDate": "2018.02.06.06.21",
+      "version": "1.6.1-2018.02.07.00.31",
+      "buildDate": "2018.02.07.00.31",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -278,8 +278,8 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.5.68",
-      "buildDate": "2018.01.18.08.23",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.42",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -302,8 +302,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.5.76",
-      "buildDate": "2018.01.18.08.21",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.40",
       "last_test_run": "",
       "last_test_status": ""
     },
