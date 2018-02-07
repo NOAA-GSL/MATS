@@ -98,8 +98,8 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.6.0-2018.02.06.06.17",
-      "buildDate": "2018.02.06.06.17",
+      "version": "1.6.1-2018.02.07.00.26",
+      "buildDate": "2018.02.07.00.26",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -366,8 +366,8 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.5.46",
-      "buildDate": "2018.01.18.08.14",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.33",
       "last_test_run": "",
       "last_test_status": ""
     },
