@@ -66,8 +66,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.6.0-2018.02.06.06.05",
-      "buildDate": "2018.02.06.06.05",
+      "version": "1.6.1-2018.02.07.00.14",
+      "buildDate": "2018.02.07.00.14",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -350,8 +350,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.5.46",
-      "buildDate": "2018.01.18.08.00",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.16",
       "last_test_run": "",
       "last_test_status": ""
     },
