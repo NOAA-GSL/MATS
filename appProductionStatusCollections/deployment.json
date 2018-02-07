@@ -42,8 +42,8 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "1.6.0-2018.02.06.06.10",
-      "buildDate": "2018.02.06.06.10",
+      "version": "1.6.1-2018.02.07.00.19",
+      "buildDate": "2018.02.07.00.19",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -310,8 +310,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.5.69",
-      "buildDate": "2018.01.18.08.06",
+      "version": "1.6.0",
+      "buildDate": "2018.02.06.23.23",
       "last_test_run": "",
       "last_test_status": ""
     },
