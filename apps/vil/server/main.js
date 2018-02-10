@@ -111,7 +111,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,scale,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();

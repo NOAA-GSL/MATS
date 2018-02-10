@@ -163,10 +163,10 @@ const doCurveParams = function () {
                 disabledOptions: modelDisabledOptions,
                 tableMap: modelTableMap,
                 dates: modelDateRangeMap,
-                options: myModels,   // convenience
+                options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: myModels[0],
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
@@ -190,7 +190,7 @@ const doCurveParams = function () {
                     disabledOptions: modelDisabledOptions,
                     tableMap: modelTableMap,
                     dates: modelDateRangeMap,
-                    options: myModels
+                    options: Object.keys(modelOptionsMap)
                 }
             });
         }
