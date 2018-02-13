@@ -552,8 +552,8 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling_15", ['threshold_descriptions']);
-    mdr.addRecord("sumPool", "ceiling_15_sums", ['regions_per_model_mats_all_categories']);
+    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling_5min", ['threshold_descriptions']);
+    mdr.addRecord("sumPool", "ceiling_5min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 });
