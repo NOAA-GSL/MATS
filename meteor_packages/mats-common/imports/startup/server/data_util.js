@@ -2653,7 +2653,8 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -2732,7 +2733,8 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -2808,7 +2810,8 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -2882,7 +2885,8 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
         }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -2940,7 +2944,8 @@ const generateThresholdCurveOptions = function (curve, curveIndex, axisMap, data
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
             axisMap[axisKey].axisLabel = label;
         } else {
-            axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
         }
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
