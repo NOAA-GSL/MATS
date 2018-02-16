@@ -17,10 +17,10 @@ graphProfile = function(result) {
             capRadius = 10;
         }
         if (o.points.xerr.lowerCap === "squareCap") {
-            o.points.xerr.lowerCap = matsGraphUtils.lSquareCap;
+            o.points.xerr.lowerCap = matsGraphUtils.lXSquareCap;
         }
         if (o.points.xerr.upperCap === "squareCap") {
-            o.points.xerr.upperCap = matsGraphUtils.uSquareCap;
+            o.points.xerr.upperCap = matsGraphUtils.uXSquareCap;
         }
     }
 

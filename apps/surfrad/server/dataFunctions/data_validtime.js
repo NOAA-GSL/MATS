@@ -51,7 +51,7 @@ dataValidTime = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var forecastLength = curve['forecast-length'];
+        var forecastLength = Number(curve['forecast-length']) * 60;
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -62,7 +62,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select floor(m0.secs%(24*3600)/3600) as hr_of_day, " +
+            var statement = "select (m0.secs%(24*3600)/3600) as hr_of_day, " +
                 "{{statistic}} " +
                 "from surfrad as ob0, {{data_source}} as m0 " +
                 "where 1=1 " +
@@ -71,6 +71,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 "and m0.secs >= '{{fromSecs}}' " +
                 "and m0.secs <= '{{toSecs}}' " +
                 "and m0.fcst_len = '{{forecastLength}}' " +
+                "and m0.scale = '{{scale}}' " +
                 "{{regionClause}} " +
                 "group by hr_of_day " +
                 "order by hr_of_day" +

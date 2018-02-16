@@ -879,12 +879,25 @@ const getDataForSeriesDiffCurve = function (params) {
         var subtrahendTime = subtrahendData[subtrahendIndex][0];
         var minuendTime = minuendData[minuendIndex][0];
         var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
-        while (largeIntervalTime > minuendTime) {
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
             minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
         }
-        while (largeIntervalTime > subtrahendTime) {
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
         }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
         var diffValue = null;
         if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
             if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
@@ -897,6 +910,8 @@ const getDataForSeriesDiffCurve = function (params) {
             } else {
                 d.push([largeIntervalTime, null])
             }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
         }
     }
     return {
@@ -907,6 +922,197 @@ const getDataForSeriesDiffCurve = function (params) {
         ymax: ymax
     };
 };
+
+const getDataForDieoffDiffCurve = function (params) {
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - fhr (plotted against the x axis)
+     data[1] - statValue (ploted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - fhr values
+     data[4] - fhr times
+     data[5] - fhr stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+    var ymin = params.ymin; // optional - current y axis minimum
+    var ymax = params.ymax;  // optional - current yaxis minimum
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // time values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var largeIntervalCurveData = dataset[diffFrom[0]].data;
+    if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+        largeIntervalCurveData = dataset[diffFrom[1]].data;
+    }
+    var minuendData = dataset[diffFrom[0]].data;
+    var subtrahendData = dataset[diffFrom[1]].data;
+    var subtrahendIndex = 0;
+    var minuendIndex = 0;
+    var d = [];
+    var count = 0;
+    var sum = 0;
+    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+        var subtrahendTime = subtrahendData[subtrahendIndex][0];
+        var minuendTime = minuendData[minuendIndex][0];
+        var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+                minuendTime = minuendData[++minuendIndex][0];
+                minuendChanged = true;
+        }
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+            subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
+        }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+            ++subtrahendIndex;
+        }
+
+        var diffValue = null;
+        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+            if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+                diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = diffValue;
+
+                var minuendDataSubValues = minuendData[minuendIndex][3];
+                var minuendDataSubSeconds = minuendData[minuendIndex][4];
+                var subtrahendDataSubValues = subtrahendData[subtrahendIndex][3];
+                var subtrahendDataSubSeconds = subtrahendData[subtrahendIndex][4];
+
+                const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+                    return subtrahendDataSubSeconds.indexOf(n) !== -1;
+                });
+                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                    d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
+                    d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+                }
+
+                ymin = diffValue < ymin ? diffValue : ymin;
+                ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count++;
+            } else {
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = null;
+            }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
+        }
+    }
+    return {
+        sum: sum,
+        count: count,
+        dataset: d,
+        ymin: ymin,
+        ymax: ymax
+    };
+};
+
+// const getDataForDieoffDiffCurveConTables = function (params) {
+//     /*
+//      DATASET ELEMENTS:
+//      series: [data,data,data ...... ]   each data is itself an array
+//      data[0] - fhr (plotted against the x axis)
+//      data[1] - statValue (ploted against the y axis)
+//      data[2] - errorBar (stde_betsy * 1.96)
+//      data[3] - fhr values
+//      data[4] - fhr times
+//      data[5] - fhr stats
+//      data[6] - tooltip
+//      */
+//
+//     const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+//     var ymin = params.ymin; // optional - current y axis minimum
+//     var ymax = params.ymax;  // optional - current yaxis minimum
+//     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+//     // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+//     // time values of whichever has the largest interval
+//     // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+//     var largeIntervalCurveData = dataset[diffFrom[0]].data;
+//     if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+//         largeIntervalCurveData = dataset[diffFrom[1]].data;
+//     }
+//     var minuendData = dataset[diffFrom[0]].data;
+//     var subtrahendData = dataset[diffFrom[1]].data;
+//     var subtrahendIndex = 0;
+//     var minuendIndex = 0;
+//     var d = [];
+//     var count = 0;
+//     var sum = 0;
+//     for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+//         var subtrahendTime = subtrahendData[subtrahendIndex][0];
+//         var minuendTime = minuendData[minuendIndex][0];
+//         var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+//
+//         var minuendChanged = false;
+//         while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+//             minuendTime = minuendData[++minuendIndex][0];
+//             minuendChanged = true;
+//         }
+//         if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+//             ++minuendIndex;
+//         }
+//
+//         var subtrahendChanged = false;
+//         while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+//             subtrahendTime = subtrahendData[++subtrahendIndex][0];
+//             subtrahendChanged = true;
+//         }
+//         if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+//             ++subtrahendIndex;
+//         }
+//
+//         var diffValue = null;
+//         if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+//             if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+//                 diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+//
+//                 d[largeIntervalCurveIndex] = [];
+//                 d[largeIntervalCurveIndex][3] = [];
+//                 d[largeIntervalCurveIndex][4] = [];
+//                 d[largeIntervalCurveIndex][0] = largeIntervalTime;
+//                 d[largeIntervalCurveIndex][1] = diffValue;
+//
+//                 ymin = diffValue < ymin ? diffValue : ymin;
+//                 ymax = diffValue > ymax ? diffValue : ymax;
+//                 sum += diffValue;
+//                 count++;
+//             } else {
+//                 d[largeIntervalCurveIndex] = [];
+//                 d[largeIntervalCurveIndex][3] = [];
+//                 d[largeIntervalCurveIndex][4] = [];
+//                 d[largeIntervalCurveIndex][0] = largeIntervalTime;
+//                 d[largeIntervalCurveIndex][1] = null;
+//             }
+//         } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+//             break;
+//         }
+//     }
+//     return {
+//         sum: sum,
+//         count: count,
+//         dataset: d,
+//         ymin: ymin,
+//         ymax: ymax
+//     };
+// };
 
 const getPointSymbol = function (curveIndex) {
     var pointSymbol = "circle";
@@ -1154,7 +1360,16 @@ const queryDieoffDB = function (pool, statement, interval) {
                 if (N_times_loop > N_times) {
                     N_times_max = N_times_loop;
                 }
-                d.push([fhr, stat]);
+                var sub_values;
+                var sub_secs;
+                if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+                    sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                    sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                } else {
+                    sub_values = NaN;
+                    sub_secs = NaN;
+                }
+                d.push([fhr, stat, -1, sub_values, sub_secs]); // -1 is a placeholder for the stde_betsy value
                 N0.push(N0_loop);
                 N_times.push(N_times_loop);
             }
@@ -1382,7 +1597,7 @@ const queryValidTimeDB = function (pool, statement, interval) {
     };
 };
 
-const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
+const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -1392,10 +1607,12 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             continue;
         }
         const axisKey = curves[dsi].axisKey;
-        const ymin = axisMap[axisKey].ymin;
-        const ymax = axisMap[axisKey].ymax;
+        var ymin = axisMap[axisKey].ymin;
+        var ymax = axisMap[axisKey].ymax;
+        ymax = ymax + errorMax;
+        ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const yPad = (ymax - ymin) * 0.2;
+        const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
@@ -1403,7 +1620,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1422,10 +1639,10 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'forecast lead time',
+            axisLabel: 'Forecast Hour',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1469,18 +1686,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            // allowed templates are:
-            // %s -> series label,
-            // %c -> series color,
-            // %lx -> x axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
-            // %ly -> y axis label (requires flot-axislabels plugin https://github.com/markrcote/flot-axislabels),
-            // %x -> X value,
-            // %y -> Y value,
-            // %x.2 -> precision of X value,
-            // %p -> percentcontent: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H:%M",
-            onHover: function (flotItem, $tooltipEl) {
-            }
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
     return options;
@@ -1507,7 +1714,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1529,12 +1736,12 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabel: 'Hour of Day',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
         xaxis: {
-            zoomRange: [0.1, null],
+            zoomRange: [0.01, null],
             mode: 'xy'
         },
         yaxes: yaxes,
@@ -1573,8 +1780,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x:<br>value %y</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H:%M",
+            content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
+            xDateFormat: "%Y-%m-%d %H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1603,7 +1810,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1622,10 +1829,10 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'threshold',
+            axisLabel: 'Threshold',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1684,7 +1891,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap) {
             // %x.2 -> precision of X value,
             // %p -> percent
             content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H:%M",
+            xDateFormat: "%Y-%m-%d %H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1713,7 +1920,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -1732,10 +1939,10 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             show: true
         },
         xaxes: [{
-            axisLabel: 'time',
+            axisLabel: 'Time',
             color: 'grey',
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
         }],
@@ -1789,7 +1996,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap) {
             // %x.2 -> precision of X value,
             // %p -> percent
             content: "<span style='font-size:150%'><strong>%s<br>%x.4:<br>value %y.4</strong></span>",
-            xDateFormat: "%Y-%m-%d:%H:%M",
+            xDateFormat: "%Y-%m-%d %H:%M",
             onHover: function (flotItem, $tooltipEl) {
             }
         }
@@ -1897,6 +2104,8 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const label = curve['label'];
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
@@ -1906,13 +2115,16 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
         } else {
             axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
         }
-        axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
             index: curveIndex + 1,
             label: label,
+            xmin: xmin,
+            xmax: xmax,
             ymin: ymin,
             ymax: ymax,
             axisLabel: axisKey + " - " + label
@@ -1920,14 +2132,27 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     }
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
-        label: axisMap[axisKey].axisLabel,
+        label: label,
         curveId: label,
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
-        points: {symbol: pointSymbol, fillColor: curve['color'], show: true},
+        points: {
+            symbol: pointSymbol,
+            fillColor: curve['color'],
+            show: true,
+            errorbars: "y",
+            yerr: {
+                show: true,
+                asymmetric: false,
+                upperCap: "squareCap",
+                lowerCap: "squareCap",
+                color: curve['color'],
+                radius: 5
+            }},
         lines: {show: true, fill: false}
     };
+
     return curveOptions;
 };
 
@@ -2029,7 +2254,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             axisLabel: xAxislabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
@@ -2064,7 +2289,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
                 color: "#545454"
             },
             axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 14,
+            axisLabelFontSizePixels: 16,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
@@ -2246,8 +2471,8 @@ const areObjectsEqual = function(o, p) {
         return true;
     } else {
         return false;
-    };
-}
+    }
+};
 
 export default matsDataUtils = {
     getDateRange: getDateRange,
@@ -2261,6 +2486,8 @@ export default matsDataUtils = {
     getThresholdMatchedDataSet: getThresholdMatchedDataSet,
     getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
+    getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
+    // getDataForDieoffDiffCurveConTables: getDataForDieoffDiffCurveConTables,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     getPointSymbol: getPointSymbol,
@@ -2271,9 +2498,9 @@ export default matsDataUtils = {
     querySeriesDB:querySeriesDB,
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateSeriesCurveOptions: generateSeriesCurveOptions,
+    generateDieoffCurveOptions: generateDieoffCurveOptions,
     queryValidTimeDB:queryValidTimeDB,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
-    //generateValidTimeCurveOptions: generateValidTimeCurveOptions,
     queryProfileDB: queryProfileDB,
     get_err: get_err,
     generateProfileCurveOptions: generateProfileCurveOptions,
