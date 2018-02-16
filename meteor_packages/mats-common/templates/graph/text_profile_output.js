@@ -137,7 +137,6 @@ Template.textProfileOutput.helpers({
         levels.sort((a, b) => (b - a));
         return levels;
     },
-
     points: function(level) {
         /*
          This (plotResultsUpDated) is very important.

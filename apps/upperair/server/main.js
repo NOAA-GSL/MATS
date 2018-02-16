@@ -82,7 +82,7 @@ const doCurveParams = function () {
     }
     // all the rest
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select RPM.id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,DC.id,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories as RPM,all_display_categories as DC where RPM.display_category = DC.id order by display_order;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories order by display_category, display_order;");
 
         var label = "";
         for (var i = 0; i < rows.length; i++) {
@@ -96,8 +96,10 @@ const doCurveParams = function () {
             if (label === "" || label !== category) {
                 label = category;
                 // the models param has option groups so we have to create a list of disabled options that act as the group labels
-                modelDisabledOptions.push(label);
-                modelOptionsGroups[label] = [];
+                if (!modelOptionsGroups[label]) {
+                    modelDisabledOptions.push(label);
+                    modelOptionsGroups[label] = [];
+                }
             }
             var minDate = moment(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
             var maxDate = moment(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");

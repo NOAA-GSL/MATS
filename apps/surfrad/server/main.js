@@ -107,7 +107,7 @@ const doCurveParams = function () {
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, ""))/60).toString();
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
@@ -457,11 +457,15 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+
+        const optionsArrRaw = [...Array(96).keys()].map(x => x / 4);
+        const optionsArr = optionsArrRaw.map(String);
+
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                options: optionsArr,
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -498,7 +502,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['', 'variable', ', '],
-                ['fcst_len: ', 'forecast-length', ' min '],
+                ['fcst_len: ', 'forecast-length', ' h '],
                 [' valid-time:', 'valid-time', ' '],
                 ['avg:', 'average', ' ']
             ],
@@ -517,7 +521,7 @@ const doCurveTextPatterns = function () {
         //         ['', 'statistic', ', '],
         //         ['', 'variable', ', '],
         //         ['', 'scale', ' '],
-        //         ['fcst_len :', 'dieoff-forecast-length', ' min '],
+        //         ['fcst_len :', 'dieoff-forecast-length', ' h '],
         //         [' valid-time:', 'valid-time', ' '],
         //     ],
         //     displayParams: [
@@ -534,7 +538,7 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['', 'variable', ', '],
-                ['fcst_len: ', 'forecast-length', ' min ']
+                ['fcst_len: ', 'forecast-length', ' h ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length"

@@ -85,7 +85,7 @@ const drawGraph = function(ranges, dataset, options) {
     plot = $.plot(placeholder, dataset, zOptions);
 };
 
-const drawErrorCaps = function (ctx, lowerx, upperx, y, radius) {
+const drawXErrorCaps = function (ctx, lowerx, upperx, y, radius) {
     // ctx is CanvasRenferingContext2d
     ctx.beginPath();
     var r2 = radius / 2;
@@ -101,17 +101,49 @@ const drawErrorCaps = function (ctx, lowerx, upperx, y, radius) {
 
 };
 
-const lSquareCap = function (ctx, x, y, radius) {
+const lXSquareCap = function (ctx, x, y, radius) {
     lowerx = x;
     // this is where you would make the xradius vary by the size of the error
     var xradius = radius;
     var yradius = radius;
-   drawErrorCaps(ctx, lowerx, upperx, y, radius);
+   drawXErrorCaps(ctx, lowerx, upperx, y, radius);
 };
 
-var uSquareCap = function (ctx, x, y, radius) {
+var uXSquareCap = function (ctx, x, y, radius) {
     // upper gets called first -- see drawError in flot
     upperx = x;
+};
+
+const drawYErrorCaps = function (ctx, lowery, uppery, x, radius) {
+    // ctx is CanvasRenferingContext2d
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
+    ctx.beginPath();
+    var r2 = radius / 2;
+    var minHeight = 20;  // sort of arbitrary, really
+    var height = ((lowery - uppery) <= minHeight) ? 1 : ((lowery - uppery) - minHeight) / 2;
+    ctx.fillStyle = 'white';
+    ctx.rect(x - r2, lowery - height, radius, height);
+    ctx.stroke();
+    ctx.fill();
+    ctx.rect(x - r2, uppery, radius, height);
+    ctx.stroke();
+    ctx.fill();
+
+};
+
+const lYSquareCap = function (ctx, x, y, radius) {
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
+    lowery = y;
+    // this is where you would make the xradius vary by the size of the error
+    var xradius = radius;
+    var yradius = radius;
+    drawYErrorCaps(ctx, lowery, uppery, x, radius);
+};
+
+var uYSquareCap = function (ctx, x, y, radius) {
+    //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
+    // upper gets called first -- see drawError in flot
+    uppery = y;
 };
 
 const normalizeYAxisByRanges = function (ranges) {
@@ -166,11 +198,14 @@ export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
     normalizeYAxis:normalizeYAxis,
     drawGraph:drawGraph,
-    drawErrorCaps:drawErrorCaps,
+    drawXErrorCaps:drawXErrorCaps,
+    drawYErrorCaps:drawYErrorCaps,
     normalizeYAxisByRanges:normalizeYAxis,
     drawGraphByRanges:drawGraphByRanges,
-    lSquareCap:lSquareCap,
-    uSquareCap:uSquareCap,
+    lXSquareCap:lXSquareCap,
+    uXSquareCap:uXSquareCap,
+    lYSquareCap:lYSquareCap,
+    uYSquareCap:uYSquareCap,
     draw2dGraph:draw2dGraph,
     normalize2dYAxis:normalize2dYAxis
 };

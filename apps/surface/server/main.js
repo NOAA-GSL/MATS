@@ -198,37 +198,39 @@ const doCurveParams = function () {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
-            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'
+            'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}}) order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}}))/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
             ],
-            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'],
+            'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
+            ],
             //Added
-            'Bias (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0'],
-
-            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
+            'Bias (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((-m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
+            ],
+            'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
+            ],
             'Model average': [
-                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0'
+                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}}-32.)/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                '(sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
             ],
-            'Obs average': ['(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                '(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                'sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0'
+            'Obs average': ['(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})-32)/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_ob_{{variable1}}/m0.N_{{variable0}}-32.)/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                '(sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}))/ as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sum(m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_ob_{{variable1}}/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
             ],
             //Added
-            'Std deviation': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
-                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, avg(m0.N_{{variable0}})/1000 as N0',
+            'Std deviation': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2))/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
+                'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2)) as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat(sqrt(m0.sum2_{{variable0}}/m0.N_{{variable0}}-pow(m0.sum_{{variable0}}/m0.N_{{variable0}},2)) order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})-pow(sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}),2))/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0'
             ],
             //Added
-            'MAE': ['sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0',
+            'MAE': ['sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 as stat, avg(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_a{{variable0}})/(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}})) as stat, avg(m0.N_{{variable0}})/1000 as N0',
                 'sum(m0.sum_a{{variable0}})/sum(if(m0.sum_a{{variable0}} is null,0,m0.N_{{variable0}}))/2.23693629 as stat, avg(m0.N_{{variable0}})/1000 as N0']
 

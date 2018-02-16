@@ -1,4 +1,5 @@
 import { matsCollections } from 'meteor/randyp:mats-common';
+import { plotParamHandler } from 'meteor/randyp:mats-common';
 Template.plotParamGroup.helpers({
     PlotParams: function (num) {
             var params = matsCollections.PlotParams.find({displayGroup:num},{sort:["displayOrder", "asc"]}).fetch();

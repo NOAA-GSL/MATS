@@ -262,27 +262,27 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         var optionsMap = {
-            'TSS (True Skill Score)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1.) * 100 as stat', 'x100'],
+            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.ny)*sum(m0.yn))/((sum(m0.yy)+sum(m0.yn))*(sum(m0.ny)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.ny*m0.yn)/((m0.yy+m0.yn)*(m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.yn+0.000) as stat', 'Number'],
+            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.yn+0.000) as stat, group_concat((m0.yy+m0.yn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
 
-            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat', 'Number'],
+            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
 
-            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.yn+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat', 'x100'],
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.yn+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny+m0.yn+m0.nn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'PODy (POD of precipitation < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat', 'x100'],
+            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'PODn (POD of precipitation > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.ny)) * 100 as stat', 'x100'],
+            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.ny)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat', 'x100'],
+            'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat, group_concat(((m0.ny)/(m0.ny+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn))*100 as stat', 'x100'],
+            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat', 'Number'],
+            'N in average (to nearest 100)': ['sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
 
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat', 'x100'],
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
 
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat', 'x100']
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.yn*m0.ny) / ((m0.nn+m0.ny)*(m0.ny+m0.yy) + (m0.nn+m0.yn)*(m0.yn+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100']
         };
 
         matsCollections.CurveParams.insert(

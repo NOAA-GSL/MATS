@@ -2,17 +2,17 @@
     <div id="textDieOffOutput" class="container">
         <button id="text_export" type="button" class="export" style="display:none">Export</button>
         <br/>
-            {{#each curves}}
-                <h5>{{curveText}}</h5>
-            {{/each}}
+        {{#each curves}}
+            <h5>{{curveText}}</h5>
+        {{/each}}
         <table class="table table-condensed table-striped table-bordered">
             <thead>
             <tr>
                 <th>label</th>
                 <th>mean</th>
-                <th>standard deviation</th>
-                <th>n</th>
                 <th>standard error</th>
+                <th>n</th>
+                <th>standard deviation</th>
                 <th>minimum</th>
                 <th>maximum</th>
             </tr>
@@ -25,22 +25,27 @@
             {{/each}}
             </tbody>
         </table>
-        <table class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                <th>forecast lead time</th>
-                {{#each curves}}
-                    <th>{{curveLabel this}}</th>
-                {{/each}}
-            </tr>
-            </thead>
-            <tbody>
-                {{#each dataRows}}
+        {{#each curves}}
+            <table class="table table-condensed table-bordered table-striped table-hover table-sm">
+                <thead class="thead-inverse">
+                <tr>
+                    <th>{{curveLabel this}} forecast lead time</th>
+                    <th>mean</th>
+                    <th>stat</th>
+                    <th>std error</th>
+                    <th>std dev</th>
+                    <th>lag1</th>
+                    <th>n</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#each fhrs this}}
                     <tr>
                         {{{points this}}}
                     </tr>
                 {{/each}}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        {{/each}}
     </div>
 </template>

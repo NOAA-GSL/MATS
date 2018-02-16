@@ -84,7 +84,7 @@ practicalmeteor:sinon@1.14.1_2
 promise@0.9.0
 random@1.0.10
 randyp:flot@1.0.0
-randyp:mats-common@1.4.1
+randyp:mats-common@1.6.0
 rate-limit@1.0.8
 reactive-dict@1.1.9
 reactive-var@1.0.11
