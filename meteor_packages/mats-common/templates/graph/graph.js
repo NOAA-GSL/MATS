@@ -267,7 +267,7 @@ Template.graph.helpers({
         return addresses;
     },
     displayErrorBarButton: function () {
-        if ((Session.get("plotType") === undefined) || Session.get("plotType").toLowerCase() === matsTypes.PlotTypes.timeSeries) {
+        if (Session.get("plotType") === undefined) {
             return "none";
         } else {
             return "block";
@@ -295,7 +295,7 @@ Template.graph.helpers({
         return Session.get(sval);
     },
     errorBarsAllowed: function () {
-        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff);
+        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries);
     },
     isProfile: function() {
         return (Session.get('plotType') == matsTypes.PlotTypes.profile);

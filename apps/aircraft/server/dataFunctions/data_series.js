@@ -23,6 +23,8 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
+    var maxValuesPerAvtime = 0;
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
@@ -36,13 +38,19 @@ dataSeries = function (plotParams, plotFunction) {
         const variableStr = curve['variable'];
         const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         const variable = variableOptionsMap[variableStr];
-        const statisticSelect = curve['statistic'];
+        var statisticSelect = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
         var statistic;
-        if (variableStr == 'winds') {
+        var statKey;
+        if (variableStr === 'winds') {
             statistic = statisticOptionsMap[statisticSelect][1];
+            statKey = statisticSelect + '-winds';
+            statistic = statistic + "," + statAuxMap[statKey];
         } else {
             statistic = statisticOptionsMap[statisticSelect][0];
+            statKey = statisticSelect + '-other';
+            statistic = statistic + "," + statAuxMap[statKey];
         }
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
@@ -102,7 +110,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool,statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, interval, averageStr);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -142,15 +150,24 @@ dataSeries = function (plotParams, plotFunction) {
                         count++;
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
+                        maxValuesPerAvtime = maxValuesPerAvtime > d[i][3].length ? maxValuesPerAvtime : d[i][3].length;
                     }
                 }
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
+            var diffResult = matsDataUtils.getDataForSeriesWithLevelsDiffCurve({
+                dataset: dataset,
+                ymin: ymin,
+                ymax: ymax,
+                diffFrom: diffFrom
+            });
+
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
+            sum = diffResult.sum;
+            count = diffResult.count;
         }
 
         const mean = sum / count;
@@ -169,28 +186,193 @@ dataSeries = function (plotParams, plotFunction) {
         }
     }  // end for curves
 
+    var errorMax = Number.MIN_VALUE;
+    var sub_levs;
+
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getMatchedDataSetWithLevels(dataset, interval);
+
+        var subLevs = new Set();
+        var avTimeGroups = [];
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            avTimeGroups[curveIndex] = [];
+            var data = dataset[curveIndex].data;
+            for (var di = 0; di < data.length; di++) { // every fhr
+                sub_levs = data[di][5];
+                avTimeGroups[curveIndex].push(data[di][0]);
+                for (var li = 0; li < sub_levs.length; li++) {
+                    var lev = sub_levs[li];
+                    subLevs.add(lev);
+                }
+            }
+        }
+        var matchingAvTimes = _.intersection.apply(_, avTimeGroups);
+        var subLevIntersection = Array.from(subLevs);
     }
+
+    var diffFrom;
+    // calculate stats for each dataset matching to subsec_intersection if matching is specified
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        var statisticSelect = curves[curveIndex]['statistic'];
+        diffFrom = curves[curveIndex].diffFrom;
+        data = dataset[curveIndex].data;
+        const dataLength = data.length;
+        const label = dataset[curveIndex].label;
+        //for (di = 0; di < dataLength; di++) { // every forecast hour
+        var di = 0;
+        var values = [];
+        var avtimes = [];
+        var means = [];
+
+        while (di < dataLength) {
+            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingAvTimes.indexOf(data[di][0]) === -1) {
+                dataset[curveIndex].data.splice(di, 1);
+                continue;   // not a matching time - skip it
+            }
+
+            sub_levs = data[di][5];
+            var sub_secs = data[di][4];
+            var subValues = data[di][3];
+            var errorResult = {};
+
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_levs)) {
+                var newSubValues = [];
+                var newSubSecs = [];
+                for (var subLevIntersectionIndex = 0; subLevIntersectionIndex < subLevIntersection.length; subLevIntersectionIndex++) {
+                    var levsIndex = sub_levs.indexOf(subLevIntersection[subLevIntersectionIndex]);
+                    var newVal = subValues[levsIndex];
+                    var newSec = sub_secs[levsIndex];
+                    if (newVal === undefined || newVal == 0) {
+                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                    } else {
+                        newSubValues.push(newVal);
+                        newSubSecs.push(newSec);
+                    }
+                }
+                data[di][3] = newSubValues;
+                data[di][4] = newSubSecs;
+                data[di][5] = subLevIntersection; // we're going to overwrite this later because we don't need it anymore and we need to keep dataset with a similar structure to the rest of the apps
+            }
+
+            /*
+             DATASET ELEMENTS:
+             series: [data,data,data ...... ]   each data is itself an array
+             data[0] - avtime (plotted against the x axis)
+             data[1] - statValue (ploted against the y axis)
+             data[2] - errorBar (stde_betsy * 1.96)
+             data[3] - avtime values
+             data[4] - avtime times
+             data[5] - avtime stats
+             data[6] - tooltip
+             */
+
+            //console.log('Getting errors for avtime ' + data[di][0]);
+            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            values.push(data[di][1]);
+            avtimes.push(data[di][0]);  // inverted data for graphing - remember?
+            means.push(errorResult.d_mean);
+
+            // already have [stat,pl,subval,subsec]
+            // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
+            // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
+            // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
+            // unmatched curves get no error bars
+            const errorBar = errorResult.stde_betsy * 1.96;
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
+                data[di][2] = errorBar;
+            } else {
+                data[di][2] = -1;
+            }
+            data[di][5] = {
+                d_mean: errorResult.d_mean,
+                sd: errorResult.sd,
+                n_good: errorResult.n_good,
+                lag1: errorResult.lag1,
+                stde_betsy: errorResult.stde_betsy
+            };
+
+            // this is the tooltip, it is the last element of each dataseries element
+            data[di][6] = label +
+                "<br>" + "time: " + moment(data[di][0]).format("YYYY-MM-DD HH:mm") +
+                "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
+                "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                "<br>  n: " + errorResult.n_good +
+                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                "<br>  stde: " + errorResult.stde_betsy +
+                "<br>  errorbars: " + Number((data[di][1]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+
+            di++;
+        }
+        // get the overall stats for the text output - this uses the means not the stats. refer to
+
+        const stats = matsDataUtils.get_err(avtimes, values);
+        const miny = Math.min.apply(null, means);
+        const maxy = Math.max.apply(null, means);
+        stats.miny = miny;
+        stats.maxy = maxy;
+        dataset[curveIndex]['stats'] = stats;
+        // }
+    }
+
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions( dataset, curves, axisMap );
+    dataset.push({
+        "yaxis": 1,
+        "label": "zero",
+        "annotation": "",
+        "color": "rgb(0,0,0)",
+        "data": [
+            [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+            [xmax, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "y",
+            "yerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": 0,
+            "max": 0,
+            "sum": 0,
+            "miny": 0,
+            "maxy": 0
+        }
+    });
+    const resultOptions = matsDataUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),
         finish: totalProecssingFinish.format(),
         duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
     }
+
     var result = {
         error: error,
         data: dataset,
         options: resultOptions,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);

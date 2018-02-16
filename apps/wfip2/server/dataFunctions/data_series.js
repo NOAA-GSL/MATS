@@ -435,7 +435,7 @@ dataSeries = function (plotParams, plotFunction) {
                                     "<br>time: " + new Date(Number(valTime)).toUTCString() +
                                     "<br> statistic: " + statistic +
                                     "<br> value:" + null;
-                                normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                                normalizedData.push([time, value, [0], [0], timeObj, tooltip]);   // recalculated statistic
                                 valIndex++;
                                 continue;
                             }
@@ -446,7 +446,7 @@ dataSeries = function (plotParams, plotFunction) {
                                     "<br>time: " + new Date(Number(valTime)).toUTCString() +
                                     "<br> statistic: " + statistic +
                                     "<br> value:" + null;
-                                normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                                normalizedData.push([time, value, [0], [0], timeObj, tooltip]);   // recalculated statistic
                                 if (statistic != "mean") {
                                     truthIndex++;
                                 }
@@ -466,7 +466,7 @@ dataSeries = function (plotParams, plotFunction) {
                                     "<br>time: " + new Date(Number(valTime)).toUTCString() +
                                     "<br> statistic: " + statistic +
                                     "<br> value:" + null;
-                                normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                                normalizedData.push([time, value, [0], [0], timeObj, tooltip]);   // recalculated statistic
                                 valIndex++;
                                 if (statistic != "mean") {
                                     truthIndex++;
@@ -635,7 +635,7 @@ dataSeries = function (plotParams, plotFunction) {
                             count++;
                             sum += value;
                             timeObj.timeMean = sum / count;
-                            normalizedData.push([time, value, timeObj, tooltip]);   // recalculated statistic
+                            normalizedData.push([time, value, [0], [0], timeObj, tooltip]);   // recalculated statistic
                         }
                         if (statistic != "mean") {
                             truthIndex++;
@@ -692,7 +692,7 @@ dataSeries = function (plotParams, plotFunction) {
                         "<br> diffValue:" + diffValue;
                     yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
                     yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
-                    normalizedData.push([diffTime, diffValue, {
+                    normalizedData.push([diffTime, diffValue, [0], [0], {
                         seconds: diffSeconds,
                         date: d,
                         minuend: fromValue,
@@ -719,8 +719,37 @@ dataSeries = function (plotParams, plotFunction) {
             curveId: label,
             color: color,
             data: normalizedData,
-            points: {symbol: pointSymbol, fillColor: color, show: true, radius: 1},
-            lines: {show: true, fill: false},
+            points: {
+                symbol: pointSymbol,
+                fillColor: color,
+                show: true,
+                radius: 1,
+                errorbars: "y",
+                yerr: {
+                    "show": false,
+                    "asymmetric": false,
+                    "upperCap": "squareCap",
+                    "lowerCap": "squareCap",
+                    "color": "rgb(0,0,255)",
+                    "radius": 5
+                }
+            },
+            lines: {
+                show: true,
+                fill: false
+            },
+            stats: {
+                "d_mean": 0,
+                "stde_betsy": 0,
+                "sd": 0,
+                "n_good": 0,
+                "lag1": 0,
+                "min": 0,
+                "max": 0,
+                "sum": 0,
+                "miny": 0,
+                "maxy": 0
+            },
             annotation: label + "- mean = " + average.toPrecision(4)
         };
         dataset.push(options);
@@ -1110,7 +1139,28 @@ dataSeries = function (plotParams, plotFunction) {
             },
             points: {
                 show: true,
-                radius: 1
+                radius: 1,
+                errorbars: "y",
+                yerr: {
+                    "show": false,
+                    "asymmetric": false,
+                    "upperCap": "squareCap",
+                    "lowerCap": "squareCap",
+                    "color": "rgb(0,0,255)",
+                    "radius": 5
+                },
+            stats: {
+                    "d_mean": 0,
+                    "stde_betsy": 0,
+                    "sd": 0,
+                    "n_good": 0,
+                    "lag1": 0,
+                    "min": 0,
+                    "max": 0,
+                    "sum": 0,
+                    "miny": 0,
+                    "maxy": 0
+                }
             },
             shadowSize: 0
         },
@@ -1145,10 +1195,42 @@ dataSeries = function (plotParams, plotFunction) {
     // need to find the minimum and maximum x value for making the zero curve
 
     dataset.push({
-        annotation: "",
-        color: 'black',
-        points: {show: false},
-        data: [[xAxisMin, 0, "zero"], [xAxisMax, 0, "zero"]]
+        "annotation": "",
+        "yaxis": 1,
+        "label": "zero",
+        "color": "rgb(0,0,0)",
+        "data": [
+            [xAxisMin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+            [xAxisMax, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "y",
+            "yerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": 0,
+            "max": 0,
+            "sum": 0,
+            "miny": 0,
+            "maxy": 0
+        }
     });
 
     var totalProecssingFinish = moment();

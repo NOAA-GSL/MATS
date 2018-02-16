@@ -20,6 +20,8 @@ dataValidTime = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
+    var idealValues = [];
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -43,6 +45,10 @@ dataValidTime = function (plotParams, plotFunction) {
         // The axis number is assigned to the axisMap value, which is the axisKey.
         var axisKey =  statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var idealVal = statisticOptionsMap[statisticSelect][2];
+        if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
+            idealValues.push(idealVal);
+        }
         var interval;
         var d = [];
         if (diffFrom == null) {
@@ -66,12 +72,8 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            //var validTimeClause = " ";
-            //if (validTimes.length > 0){
-            //    validTimeClause =" and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")";
-            //}
-            //statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            //dataRequests[curve.label] = statement;
+
+            dataRequests[curve.label] = statement;
             var queryResult;
             var startMoment = moment();
             var finishMoment;
@@ -117,7 +119,7 @@ dataValidTime = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
+            const diffResult = matsDataUtils.getDataForValidTimeDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
@@ -129,7 +131,7 @@ dataValidTime = function (plotParams, plotFunction) {
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataUtils.generateValidTimeCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retreival (query) process time - " + curve.label] = {
@@ -147,6 +149,14 @@ dataValidTime = function (plotParams, plotFunction) {
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
+
+    //add ideal value lines, if any
+    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+
+        dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,idealValues[ivIdx],idealValues[ivIdx].toString()],[xmax,idealValues[ivIdx],idealValues[ivIdx].toString()]]});
+
+    }
+
     const resultOptions = matsDataUtils.generateValidTimePlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
