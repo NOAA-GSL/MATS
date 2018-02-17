@@ -1941,7 +1941,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
     var cycles = []
     var rows = []
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select * from mats_common.cycles_per_model where model = '" + dataSource + "';");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select * from mats_common.cycles_per_model where model = '" + dataSource + "';");
     } catch (e) {
         //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
     }
@@ -2053,6 +2053,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
                 xmin = Number(rows[0].avtime) * 1000;
             }
 
+            time_interval = time_interval * 1000;
             var loopTime = xmin;
             while (loopTime <= xmax) {
                 if (curveTime.indexOf(loopTime) < 0) {
