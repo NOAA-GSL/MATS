@@ -80,11 +80,12 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select {{average}} as avtime, " +
+                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 "+
+                "from {{data_source}} as m0 " +
+                "where 1=1 "+
                 "{{validTimeClause}} " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
@@ -110,7 +111,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, data_source, forecastLength);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

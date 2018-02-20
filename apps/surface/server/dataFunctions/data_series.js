@@ -67,14 +67,16 @@ dataSeries = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                ",avg(m0.valid_day+3600*m0.hour) as middle_secs"+
-                ",min(m0.valid_day+3600*m0.hour) as min_secs"+
-                ",max(m0.valid_day+3600*m0.hour) as max_secs,"+
-                "count(m0.hour)/1000 as N_times, " +
+            var statement = "select {{average}} as avtime, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+                "avg(m0.valid_day+3600*m0.hour) as middle_secs "+
+                "min(m0.valid_day+3600*m0.hour) as min_secs, "+
+                "max(m0.valid_day+3600*m0.hour) as max_secs, "+
                 "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 "+
+                "from {{model}} as m0 " +
+                "where 1=1 "+
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +

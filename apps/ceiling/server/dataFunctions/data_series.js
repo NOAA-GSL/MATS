@@ -87,19 +87,20 @@ dataSeries = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                " ,min(m0.time) as min_secs" +
-                ",max(m0.time) as max_secs" +
-                ", {{statistic}} " +
-                "from {{model}}_{{region}} as m0" +
-                " where 1=1" +
+            var statement = "select {{average}} as avtime, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
+                "{{statistic}} " +
+                "from {{model}}_{{region}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " and m0.fcst_len = {{forecastLength}} " +
-                " group by avtime" +
-                " order by avtime;";
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "and m0.fcst_len = {{forecastLength}} " +
+                "group by avtime " +
+                "order by avtime;";
 
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{model}}', model);

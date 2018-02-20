@@ -69,6 +69,9 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select {{average}} as avtime, " +
+                "count(distinct m0.secs) as N_times, " +
+                "min(m0.secs) as min_secs, " +
+                "max(m0.secs) as max_secs, " +
                 "{{statistic}} " +
                 "from surfrad as ob0, {{data_source}} as m0 " +
                 "where 1=1 " +
