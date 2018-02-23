@@ -23,12 +23,15 @@ const getModelCadence = function (pool, dataSource) {
     var cycles = []
     var rows = []
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select * from mats_common.primary_model_orders where model = '" + dataSource + "';");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
+            "from mats_common.primary_model_orders " +
+            "where model = " +
+            "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
     } catch (e) {
         //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
     }
-    for (var r = 0; r < rows.length; r++) {
-        cycles = JSON.parse(rows[r].cycle_seconds.trim());
+    cycles = JSON.parse(rows[0].cycle_seconds);
+    if (cycles !== null && cycles.length > 0) {
         for (var c = 0; c < cycles.length; c++) {
             cycles[c] = cycles[c] * 1000;         // convert to milliseconds
         }
@@ -561,11 +564,11 @@ const getThresholdMatchedDataSet = function (dataset) {
     return newDataSet;
 };
 
-const getMatchedDataSet = function (dataset, interval) {
+const getSeriesMatchedDataSet = function (dataset) {
     /*
      Parameters:
      dataset - this is the current dataset. It should like the following format,
-     which is for a small two curve plot, one eith 5 points and one with 2 points.
+     which is for a small two curve plot, one with 5 points and one with 2 points.
      [
      {
      "yaxis": 1,
@@ -631,7 +634,6 @@ const getMatchedDataSet = function (dataset, interval) {
      }
      ]
 
-     interval - a number that contains the integer value of the data interval
 
      RETURN: An object that contains the new dataset and the new yAxisRanges
      {
@@ -644,13 +646,8 @@ const getMatchedDataSet = function (dataset, interval) {
     // time iterator is set to the earliest and timeMax is set to the latest time,
     // interval for a set of regular curves - or a set of curves that has at least one regular curve - is the maximum regular valid time interval,
     // interval for a set of all irregular curves is the intersection of the cadences
-
-    // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
-    var cycles = getModelCadence(pool, dataSource);
-
-    // regular means regular cadence for model initialization, false is a model that has an irregular cadence
-    // If averageing the cadence is always regular i.e. its the cadence of the average
-    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+    // we shouldn't need to redetermine the cadences by querying the db because the data has already had all of its missing data handled and represented by nulls.
+    // So we just need to see if the diff between points on the curve is constant.
 
     var curvesLength = dataset.length;
     var dataIndexes = {};
@@ -659,27 +656,43 @@ const getMatchedDataSet = function (dataset, interval) {
     var time = Number.MAX_VALUE;
     var timeMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
+    var dataMinInterval= Number.MAX_VALUE;
+    var regular = true;
     // set up the indexes and determine the minimum time for the dataset
     if (curvesLength == 1) {
         return dataset;
     }
     for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
-            // one of the curves has no data. No match possible
-            for (sci = 0; sci < curvesLength; sci++) {
-                dataset[sci].data = [];
+        try {
+            if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
+                // one of the curves has no data. No match possible
+                for (sci = 0; sci < curvesLength; sci++) {
+                    dataset[sci].data = [];
+                }
+                return dataset;
             }
-            return dataset;
+            dataIndexes[ci] = 0;
+            time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
+            if (dataset[ci].data.length > 1) {
+                var prevDiff = -1;
+                for (var di = 0; di < dataset[ci].data.length - 1; di++) {  // don't go all the way to the end - one shy
+                    diff = dataset[ci].data[di + 1][0] - dataset[ci].data[di][0];
+                    prevDiff = prevDiff === -1 ? diff : prevDiff;
+                    regular = (prevDiff !== diff || !regular) ? false : true;
+                    dataMaxInterval = dataMaxInterval > diff ? dataMaxInterval : diff;
+                    dataMinInterval = dataMinInterval < diff ? dataMinInterval : diff;
+                    prevDiff = diff;
+                    if (!regular) {
+                        break;
+                    }
+                }
+            }
+            timeMax = timeMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length - 1][0];
+        } catch (e) {
+            console.log(e)
         }
-        dataIndexes[ci] = 0;
-        time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
-        if (interval === undefined && dataset[ci].data.length > 1) {
-            const diff = dataset[ci].data[1][0] - dataset[ci].data[0][0];
-            dataMaxInterval = dataMaxInterval > diff ? dataMaxInterval : diff;
-        }
-        timeMax = timeMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
-    if (interval === undefined && dataMaxInterval === Number.MIN_VALUE) {
+    if (dataMaxInterval === Number.MIN_VALUE) {
         // we can't get an interval, give up
         for (sci = 0; sci < curvesLength; sci++) {
             dataset[sci].data = [];
@@ -720,8 +733,7 @@ const getMatchedDataSet = function (dataset, interval) {
     var timeMatches;
     var newDataSet = [];
     var matchCount = 1;
-    // no valid maximum interval was given us, we have to use our data derived one
-    interval = interval === undefined ? dataMaxInterval : interval;
+    var interval = regular ? dataMaxInterval : dataMinInterval;
     while (time <= timeMax) {
         timeMatches = true;
         for (ci = 0; ci < curvesLength; ci++) {
@@ -743,7 +755,9 @@ const getMatchedDataSet = function (dataset, interval) {
         if (timeMatches) {
             for (sci = 0; sci < curvesLength; sci++) {
                 if (!newDataSet[sci]) {
+                    // create a new data set if we do not already have one
                     newDataSet[sci] = {};
+                    // copy the extraneous data for the new dataset over from the old dataset
                     var keys = Object.keys(dataset[sci]);
                     for (var k = 0; k < keys.length; k++) {
                         var key = keys[k];
@@ -763,7 +777,9 @@ const getMatchedDataSet = function (dataset, interval) {
             for (sci = 0; sci < curvesLength; sci++) {
                 newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
                 newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
-                newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                if (dataset[sci].data[dataIndexes[sci][0]]) {
+                    newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                }
             }
         }
         time = Number(time) + Number(interval);
@@ -807,7 +823,7 @@ const getMatchedDataSet = function (dataset, interval) {
     return newDataSet;
 };
 
-const getMatchedDataSetWithLevels = function (dataset, interval) {
+const getSeriesMatchedDataSetWithLevels = function (dataset) {
     /*
      Parameters:
      dataset - this is the current dataset. It should like the following format,
@@ -1996,7 +2012,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
     // If averageing the cadence is always regular i.e. its the cadence of the average
-    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+    var regular = averageStr == "None" && (cycles !== null && cycles.length != 0) ? false : true;
 
     var time_interval;
     var dFuture = new Future();
@@ -2090,6 +2106,10 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
             dFuture['return']();
         }
     });
+
+    if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
+        time_interval = null;
+    }
 
     // wait for future to finish
     dFuture.wait();
@@ -3319,8 +3339,8 @@ export default matsDataUtils = {
     getDataForThresholdDiffCurve: getDataForThresholdDiffCurve,
     getDataForValidTimeDiffCurve: getDataForValidTimeDiffCurve,
 
-    getMatchedDataSet: getMatchedDataSet,
-    getMatchedDataSetWithLevels: getMatchedDataSetWithLevels,
+    getSeriesMatchedDataSet: getSeriesMatchedDataSet,
+    getSeriesMatchedDataSetWithLevels: getSeriesMatchedDataSetWithLevels,
     getDieOffMatchedDataSet: getDieOffMatchedDataSet,
     getThresholdMatchedDataSet: getThresholdMatchedDataSet,
     getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
