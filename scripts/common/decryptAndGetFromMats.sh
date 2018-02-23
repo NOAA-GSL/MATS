@@ -12,8 +12,8 @@ if [[ $# -ne 0 ]]; then
 fi
 
 host=$(/bin/hostname | /bin/cut -f1 -d'.')
-if [[ "${host}" != "mats-dev" && "${host}" != "mats-int" ]]; then
-    echo "This script must be run on either mats.gsd.esrl.noaa.gov or mats-int.gsd.esrl.noaa.gov"
+if [[ "${host}" != "mats" && "${host}" != "mats-dev" && "${host}" != "mats-int" ]]; then
+    echo "This script must be run on either mats.gsd.esrl.noaa.gov or mats-dev.gsd.esrl.noaa.gov or mats-int.gsd.esrl.noaa.gov"
     echo "exiting"
     exit 1
 fi

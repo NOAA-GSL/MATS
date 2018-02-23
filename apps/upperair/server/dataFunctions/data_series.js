@@ -90,8 +90,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 " +
+                "from {{model}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -118,7 +118,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, model, forecastLength);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

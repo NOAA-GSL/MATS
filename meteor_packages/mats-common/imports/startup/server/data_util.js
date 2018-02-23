@@ -19,6 +19,51 @@ const getDateRange = function (dateRange) {
     }
 };
 
+const getModelCadence = function (pool, dataSource) {
+    var cycles = []
+    var rows = []
+    try {
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select * from mats_common.primary_model_orders where model = '" + dataSource + "';");
+    } catch (e) {
+        //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
+    }
+    for (var r = 0; r < rows.length; r++) {
+        cycles = JSON.parse(rows[r].cycle_seconds.trim());
+        for (var c = 0; c < cycles.length; c++) {
+            cycles[c] = cycles[c] * 1000;         // convert to milliseconds
+        }
+    }
+    return cycles;
+};
+
+
+const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
+    //have to calculate the time_interval
+    // if the relative time is a modulo of the first cycle time use the first cycle time
+    var ti;
+    var dayInMilliSeconds = 24 * 60 * 60 * 1000;
+
+    if ((avTime - (foreCastOffset * 3600 * 1000)) % dayInMilliSeconds == cycles[0]) {
+        ti = cycles[1] - cycles[0];
+    } else {
+        // the interval is the next interval
+        for (var ci = 0; ci < cycles.length; ci++) {
+            // find the one we are on
+            if (cycles[ci] == time_interval) {
+                if (ci == cycles.length - 1) {
+                    // if we have already reached the last cycle then make the interval sufficient to take us around to the first one, take 24 hrs and subtract the current intvl and add back on the first invl
+                    ti = dayInMilliSeconds - time_interval + cycles[0];
+                } else {
+                    // just use the difference to the next interval
+                    ti = cycles[ci + 1] - cycles[ci];
+                    break;
+                }
+            }
+        }
+    }
+    return ti;
+};
+
 const sortFunction = function (a, b) {
     if (a[0] === b[0]) {
         return 0;
@@ -597,7 +642,16 @@ const getMatchedDataSet = function (dataset, interval) {
     // for matching - the begin time must be the first coinciding time for all the curves.
     // Once we know at which index the curves coincide we can increment by the interval.
     // time iterator is set to the earliest and timeMax is set to the latest time,
-    // interval is the maximum valid time interval
+    // interval for a set of regular curves - or a set of curves that has at least one regular curve - is the maximum regular valid time interval,
+    // interval for a set of all irregular curves is the intersection of the cadences
+
+    // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    var cycles = getModelCadence(pool, dataSource);
+
+    // regular means regular cadence for model initialization, false is a model that has an irregular cadence
+    // If averageing the cadence is always regular i.e. its the cadence of the average
+    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+
     var curvesLength = dataset.length;
     var dataIndexes = {};
     var ci;
@@ -1935,18 +1989,27 @@ const queryThresholdDB = function (pool, statement, interval) {
     };
 };
 
-const querySeriesDB = function (pool, statement, interval, averageStr) {
+const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
+    // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    var cycles = getModelCadence(pool, dataSource);
+
+    // regular means regular cadence for model initialization, false is a model that has an irregular cadence
+    // If averageing the cadence is always regular i.e. its the cadence of the average
+    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+
+    var time_interval;
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
+
+
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -1963,8 +2026,7 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
             var curveStat = [];
             var curveSubValues = [];
             var curveSubSecs = [];
-            var N0_max = 0;
-            var N_times_max = 0;
+
             var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
@@ -1972,21 +2034,14 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
                 xmin = avTime < xmin ? avTime : xmin;
                 xmax = avTime > xmax ? avTime : xmax;
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                // find the minimum time_interval. This might be what we process the loopTime with unless it's is not a regular model
                 if (rowIndex < rows.length - 1) {
-                    // find the minimum interval for this query
                     var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
                     if (time_diff < time_interval) {
                         time_interval = time_diff;
                     }
-                }
-
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
                 }
                 var sub_values;
                 var sub_secs;
@@ -2001,32 +2056,35 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
                 curveStat.push(stat);
                 curveSubValues.push(sub_values);
                 curveSubSecs.push(sub_secs);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
             }
-            var interval = time_interval !== undefined ? time_interval * 1000 : undefined;
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
             if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
                 xmin = Number(rows[0].avtime) * 1000;
             }
-            if (interval < 0) {
-                error = ("Invalid time interval: " + interval);
-                dFuture['return']();
-            }
+
+            time_interval = time_interval * 1000;
             var loopTime = xmin;
             while (loopTime <= xmax) {
-                if (curveTime.indexOf(loopTime) < 0) {
+                var d_idx = curveTime.indexOf(loopTime);
+                if (d_idx < 0) {
                     d.push([loopTime, null, -1, NaN, NaN]);
                 } else {
-                    var d_idx = curveTime.indexOf(loopTime);
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
+                    // HIDDEN QC! This needs to be brought out to a notification or status on the gui
                     if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
                         d.push([loopTime, null, -1, NaN, NaN]);
                     } else {
                         d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]);
                     }
                 }
-                loopTime = loopTime + interval;
+                if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
+                    time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
+                }
+                loopTime = loopTime + time_interval;
             }
             // done waiting - have results
             dFuture['return']();
@@ -2041,22 +2099,31 @@ const querySeriesDB = function (pool, statement, interval, averageStr) {
         N0: N0,
         N_times: N_times,
         averageStr: averageStr,
-        interval: interval,
+        interval: time_interval,
     };
 };
 
-const querySeriesWithLevelsDB = function (pool, statement, interval, averageStr) {
+const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
+    // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    var cycles = getModelCadence(pool, dataSource);
+
+    // regular means regular cadence for model initialization, false is a model that has an irregular cadence
+    // If averageing the cadence is always regular i.e. its the cadence of the average
+    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+
+    var time_interval;
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
+
+
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -2074,8 +2141,6 @@ const querySeriesWithLevelsDB = function (pool, statement, interval, averageStr)
             var curveSubValues = [];
             var curveSubSecs = [];
             var curveSubLevs = [];
-            var N0_max = 0;
-            var N_times_max = 0;
             var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
@@ -2083,21 +2148,14 @@ const querySeriesWithLevelsDB = function (pool, statement, interval, averageStr)
                 xmin = avTime < xmin ? avTime : xmin;
                 xmax = avTime > xmax ? avTime : xmax;
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                // find the minimum time_interval. This might be what we process the loopTime with unless it's is not a regular model
                 if (rowIndex < rows.length - 1) {
-                    // find the minimum interval for this query
                     var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
                     if (time_diff < time_interval) {
                         time_interval = time_diff;
                     }
-                }
-
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
                 }
                 var sub_values;
                 var sub_secs;
@@ -2116,32 +2174,35 @@ const querySeriesWithLevelsDB = function (pool, statement, interval, averageStr)
                 curveSubValues.push(sub_values);
                 curveSubSecs.push(sub_secs);
                 curveSubLevs.push(sub_levs);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
             }
-            var interval = time_interval !== undefined ? time_interval * 1000 : undefined;
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
             if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
                 xmin = Number(rows[0].avtime) * 1000;
             }
-            if (interval < 0) {
-                error = ("Invalid time interval: " + interval);
-                dFuture['return']();
-            }
+
+            time_interval = time_interval * 1000;
             var loopTime = xmin;
             while (loopTime <= xmax) {
-                if (curveTime.indexOf(loopTime) < 0) {
+                var d_idx = curveTime.indexOf(loopTime);
+                if (d_idx < 0) {
                     d.push([loopTime, null, -1, NaN, NaN, NaN]);
                 } else {
-                    var d_idx = curveTime.indexOf(loopTime);
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
+                    // HIDDEN QC! This needs to be brought out to a notification or status on the gui
                     if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
                         d.push([loopTime, null, -1, NaN, NaN, NaN]);
                     } else {
                         d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);
                     }
                 }
-                loopTime = loopTime + interval;
+                if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
+                    time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
+                }
+                loopTime = loopTime + time_interval;
             }
             // done waiting - have results
             dFuture['return']();
@@ -2156,7 +2217,7 @@ const querySeriesWithLevelsDB = function (pool, statement, interval, averageStr)
         N0: N0,
         N_times: N_times,
         averageStr: averageStr,
-        interval: interval,
+        interval: time_interval,
     };
 };
 

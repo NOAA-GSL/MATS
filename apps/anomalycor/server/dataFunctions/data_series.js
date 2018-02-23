@@ -65,7 +65,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
                 "avg(m0.wacorr/100) as stat, " +
-                "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, group_concat( unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0 " +
+                "count(m0.wacorr) as N0, group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, group_concat( unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0 " +
                 "from {{dbtable}} as m0 " +
                 "where 1=1 " +
                 "and m0.model = '{{data_source}}' " +
@@ -97,7 +97,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, averageStr, data_source,  forecastLength);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
