@@ -24,7 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
-
+    var cycles = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
@@ -71,17 +71,6 @@ dataSeries = function (plotParams, plotFunction) {
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var interval;
-        if (averageStr == "None") {
-            if (validTimeStr === 'both') {
-                interval = 12 * 3600 * 1000;
-            } else {
-                interval = 24 * 3600 * 1000;
-            }
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
-        }
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -127,6 +116,7 @@ dataSeries = function (plotParams, plotFunction) {
                     recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
+                cycles[curveIndex] = queryResult.cycles;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -198,7 +188,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSetWithLevels(dataset);
+        dataset = matsDataUtils.getSeriesMatchedDataSetWithLevels(dataset, cycles);
 
         var subLevs = new Set();
         var avTimeGroups = [];

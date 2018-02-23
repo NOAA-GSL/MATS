@@ -778,6 +778,7 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
                 newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
                 newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
                 for (var ci = 0; ci < cycles.length; ci++) {
+                    var time_interval = (time % 24) * 3600 * 1000;
                     if ((time_interval % cycles[ci]) == 0) {
                         newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
                         break;
@@ -2046,7 +2047,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
             var curveSubValues = [];
             var curveSubSecs = [];
 
-            var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
+            time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var avTime = avSeconds * 1000;
@@ -2104,6 +2105,8 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
                     time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
                 }
                 loopTime = loopTime + time_interval;
+                console.log("regular: "+ regular)
+                console.log("time_interval: "+ time_interval)
             }
             // done waiting - have results
             dFuture['return']();
