@@ -564,7 +564,7 @@ const getThresholdMatchedDataSet = function (dataset) {
     return newDataSet;
 };
 
-const getSeriesMatchedDataSet = function (dataset) {
+const getSeriesMatchedDataSet = function (dataset, cycles) {
     /*
      Parameters:
      dataset - this is the current dataset. It should like the following format,
@@ -777,8 +777,11 @@ const getSeriesMatchedDataSet = function (dataset) {
             for (sci = 0; sci < curvesLength; sci++) {
                 newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
                 newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
-                if (dataset[sci].data[dataIndexes[sci][0]]) {
-                    newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                for (var ci = 0; ci < cycles.length; ci++) {
+                    if ((time_interval % cycles[ci]) == 0) {
+                        newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                        break;
+                    }
                 }
             }
         }
@@ -2107,10 +2110,9 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
         }
     });
 
-    if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
-        time_interval = null;
+    if (regular) {
+        cycles = [time_interval];
     }
-
     // wait for future to finish
     dFuture.wait();
     return {
@@ -2119,7 +2121,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
         N0: N0,
         N_times: N_times,
         averageStr: averageStr,
-        interval: time_interval,
+        cycles: cycles,
     };
 };
 
@@ -2229,6 +2231,10 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
         }
     });
 
+    if (regular) {
+        cycles = [time_interval];
+    }
+
     // wait for future to finish
     dFuture.wait();
     return {
@@ -2237,7 +2243,7 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
         N0: N0,
         N_times: N_times,
         averageStr: averageStr,
-        interval: time_interval,
+        cycles: cycles,
     };
 };
 

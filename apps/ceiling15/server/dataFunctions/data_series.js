@@ -27,7 +27,7 @@ dataSeries = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
     var idealValues = [];
-
+    var cycles = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -62,7 +62,6 @@ dataSeries = function (plotParams, plotFunction) {
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
-        var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -110,6 +109,7 @@ dataSeries = function (plotParams, plotFunction) {
                     recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
+                cycles[curveIndex] = queryResult.cycles;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -176,7 +176,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
     }
 
     var diffFrom;

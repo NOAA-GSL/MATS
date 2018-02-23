@@ -27,7 +27,7 @@ dataSeries = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
     var idealValues = [];
-
+    var cycles = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -60,29 +60,6 @@ dataSeries = function (plotParams, plotFunction) {
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
-        }
-        var interval;
-        interval = 1 * 3600 * 1000;
-        if (averageStr == "None") {
-            if (model.search('FIM') >= 0) {
-                interval = 12 * 3600 * 1000;
-            }
-            else if (model.search('GFS') >= 0) {
-                interval = 6 * 3600 * 1000;
-            }
-            else if (model.search('NAM') >= 0) {
-                interval = 6 * 3600 * 1000;
-            }
-            else if (model.search('RR') >= 0) {
-                interval = 1 * 3600 * 1000;
-            }
-            else if (model.search('RAP') >= 0) {
-                interval = 1 * 3600 * 1000;
-            }
-
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
         }
         var d = [];
         if (diffFrom == null) {
@@ -129,6 +106,7 @@ dataSeries = function (plotParams, plotFunction) {
                     recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
+                cycles[curveIndex] = queryResult.cycles;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -195,7 +173,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
     }
 
     var diffFrom;
