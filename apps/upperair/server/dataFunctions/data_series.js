@@ -198,7 +198,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSetWithLevels(dataset, interval);
+        dataset = matsDataUtils.getSeriesMatchedDataSetWithLevels(dataset);
 
         var subLevs = new Set();
         var avTimeGroups = [];
