@@ -28,6 +28,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var metarString = matsCollections.CurveParams.findOne({name: 'data-source'}).metars[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var label = curve['label'];
@@ -66,28 +67,24 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            var statement = "SELECT " +
-            "m0.fcst_len AS avtime, " +
-            "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-            "    Min(m0.valid_day + 3600 * m0.hour)            AS min_secs, " +
-            "    Max(m0.valid_day + 3600 * m0.hour)            AS max_secs, " +
-            "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-            "    {{statistic}} " +
-            "FROM {{model}} AS m0 " +
-            "WHERE 1 = 1 " +
-            "{{validTimeClause}} " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 > -1e30 " +
-            "AND Sqrt(( m0.sum2_dt ) / ( m0.n_dt )) / 1.8 < 1e30 " +
-            "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-            "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-            "group by avtime " +
-            "order by avtime" +
-            ";";
+            var statement = "SELECT m0.fcst_len AS avtime, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
+                "FROM {{model}} AS m0 " +
+                "WHERE 1 = 1 " +
+                "{{validTimeClause}} " +
+                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
+                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
+            statement = statement.replace('{{model}}', model + "_" + metarString + "_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause =" ";
             if (validTimes.length > 0){

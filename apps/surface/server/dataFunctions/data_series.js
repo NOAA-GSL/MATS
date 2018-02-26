@@ -28,6 +28,7 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+        var metarString = matsCollections.CurveParams.findOne({name: 'data-source'}).metars[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var label = curve['label'];
@@ -70,9 +71,6 @@ dataSeries = function (plotParams, plotFunction) {
                 "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
                 "min(m0.valid_day+3600*m0.hour) as min_secs, " +
                 "max(m0.valid_day+3600*m0.hour) as max_secs, " +
-                "avg(m0.valid_day+3600*m0.hour) as middle_secs "+
-                "min(m0.valid_day+3600*m0.hour) as min_secs, "+
-                "max(m0.valid_day+3600*m0.hour) as max_secs, "+
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 "+
@@ -88,7 +86,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model +"_metar_v2_"+ region);
+            statement = statement.replace('{{model}}', model + "_" + metarString + "_"+ region);
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause =" ";
             if (validTimes.length > 0){
