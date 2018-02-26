@@ -120,6 +120,12 @@
             "$date": "2018-01-18T17:58:30.899+0000"
           },
           "hashedToken": "gvI7yvVqdJPXHMSM1uuQv7h9yQ4HVQlGQndMCsZtNWI="
+        },
+        {
+          "when": {
+            "$date": "2018-02-05T23:04:44.638+0000"
+          },
+          "hashedToken": "uqENqClIZy1cQPn/zCrchvwPQle/PlQ5sMWqht75QRo="
         }
       ]
     }

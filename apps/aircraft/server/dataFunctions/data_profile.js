@@ -341,6 +341,7 @@ dataProfile = function(plotParams, plotFunction) {
             "yaxis": 1,
             "label": "zero",
             "color": "rgb(0,0,0)",
+            "annotation": "",
             "data": [
                 [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
                 [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]

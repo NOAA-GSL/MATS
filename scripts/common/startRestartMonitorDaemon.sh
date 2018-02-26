@@ -5,7 +5,8 @@
 # yum install daemonize
 # this script must be run as user root.
 # This daemon uses /tmp/monitor_restart.pid as a pid file for the running process and as a lock file to prevent inadvertant superfluous processes.
-
+# this script depends on daemonize which is available with
+# yum install daemonize
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
    exit 1

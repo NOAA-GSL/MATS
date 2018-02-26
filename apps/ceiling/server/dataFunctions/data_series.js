@@ -26,7 +26,8 @@ dataSeries = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
-
+    var idealValues = [];
+    var cycles = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -56,45 +57,27 @@ dataSeries = function (plotParams, plotFunction) {
         // The axis number is assigned to the axisMap value, which is the axisKey.
         var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var interval;
-        interval = 1 * 3600 * 1000;
-        if (averageStr == "None") {
-            if (model.search('FIM') >= 0) {
-                interval = 12 * 3600 * 1000;
-            }
-            else if (model.search('GFS') >= 0) {
-                interval = 6 * 3600 * 1000;
-            }
-            else if (model.search('NAM') >= 0) {
-                interval = 6 * 3600 * 1000;
-            }
-            else if (model.search('RR') >= 0) {
-                interval = 1 * 3600 * 1000;
-            }
-            else if (model.search('RAP') >= 0) {
-                interval = 1 * 3600 * 1000;
-            }
-
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
+        var idealVal = statisticOptionsMap[statisticSelect][2];
+        if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
+            idealValues.push(idealVal);
         }
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "select {{average}} as avtime " +
-                " ,min(m0.time) as min_secs" +
-                ",max(m0.time) as max_secs" +
-                ", {{statistic}} " +
-                "from {{model}}_{{region}} as m0" +
-                " where 1=1" +
+            var statement = "select {{average}} as avtime, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
+                "{{statistic}} " +
+                "from {{model}}_{{region}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " and m0.fcst_len = {{forecastLength}} " +
-                " group by avtime" +
-                " order by avtime;";
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "and m0.fcst_len = {{forecastLength}} " +
+                "group by avtime " +
+                "order by avtime;";
 
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{model}}', model);
@@ -114,7 +97,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, averageStr, model, forecastLength);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -123,6 +106,7 @@ dataSeries = function (plotParams, plotFunction) {
                     recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
+                cycles[curveIndex] = queryResult.cycles;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -189,7 +173,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
     }
 
     var diffFrom;
@@ -250,7 +234,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
-                "<br>" + "time: " + data[di][0]/1000 +
+                "<br>" + "time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm") +
                 "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
@@ -313,6 +297,51 @@ dataSeries = function (plotParams, plotFunction) {
             "maxy": 0
         }
     });
+
+    //add ideal value lines, if any
+    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+
+        dataset.push({
+            "yaxis": 1,
+            "label": idealValues[ivIdx].toString(),
+            "annotation": "",
+            "color": "rgb(0,0,0)",
+            "data": [
+                [xmin, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()],
+                [xmax, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()]
+            ],
+            "points": {
+                "show": false,
+                "errorbars": "y",
+                "yerr": {
+                    "show": false,
+                    "asymmetric": false,
+                    "upperCap": "squareCap",
+                    "lowerCap": "squareCap",
+                    "color": "rgb(0,0,255)",
+                    "radius": 5
+                }
+            },
+            "lines": {
+                "show": true,
+                "fill": false
+            },
+            "stats": {
+                "d_mean": 0,
+                "stde_betsy": 0,
+                "sd": 0,
+                "n_good": 0,
+                "lag1": 0,
+                "min": 0,
+                "max": 0,
+                "sum": 0,
+                "miny": 0,
+                "maxy": 0
+            }
+        });
+
+    }
+
     const resultOptions = matsDataUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
