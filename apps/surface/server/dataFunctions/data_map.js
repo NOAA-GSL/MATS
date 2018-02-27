@@ -27,12 +27,16 @@ dataMap = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var sitesStr = curve['sites'];
+        var sitesList = curve['sites'];
+        var siteLength = sitesList.length;
         var label = curve['label'];
         var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
+        var variableOption = variableOptionsMap[variableStr];
+        var variable = variableOption[2];
+        var statisticSelect = curve['statistic'];
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
@@ -44,65 +48,71 @@ dataMap = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var interval;
         var d = [];
-        if (diffFrom == null) {
-            // this is a database driven curve, not a difference curve
-            var statement = "select s.name as sta_name, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_time," +
-                "max(m0.time) as max_time," +
-                "sum(m0.{{variable}} - o.{{variable}})/count(distinct m0.time) as model_ob_diff" +
-                "from metars as s, obs as o, {{model}} as m0 " +
-                "where 1=1 " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.time >= '{{fromSecs}}' " +
-                "and m0.time <= '{{toSecs}}' " +
-                "and s.name = '{{station}}' " +
-                "and s.madis_id = m0.sta_id " +
-                "and s.madis_id = o.sta_id " +
-                "and m0.time = o.time " +
-                ";";
+        for (var siteIndex = 0; siteIndex < siteLength; siteIndex++) {
+            if (diffFrom == null) {
+                var site = sitesList[siteIndex];
+                // this is a database driven curve, not a difference curve
+                var statement = "select s.name as sta_name, " +
+                    "count(distinct m0.time) as N_times, " +
+                    "min(m0.time) as min_time, " +
+                    "max(m0.time) as max_time, " +
+                    "sum(m0.{{variable}} - o.{{variable}})/count(distinct m0.time) as model_ob_diff " +
+                    "from metars as s, obs as o, {{model}} as m0 " +
+                    "where 1=1 " +
+                    "and m0.fcst_len = {{forecastLength}} " +
+                    "and m0.time >= '{{fromSecs}}' " +
+                    "and m0.time <= '{{toSecs}}' " +
+                    "and s.name = '{{station}}' " +
+                    "and s.madis_id = m0.sta_id " +
+                    "and s.madis_id = o.sta_id " +
+                    "and m0.time = o.time " +
+                    ";";
 
-            statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
-            if (forecastLength == 1) {
-                statement = statement.replace('{{model}}', model +"qp1f");
-            } else {
-                statement = statement.replace('{{model}}', model +"qp");
-            }
-            statement = statement.replace('{{variable}}', variable);
-
-            dataRequests[curve.label] = statement;
-            var queryResult;
-            var startMoment = moment();
-            var finishMoment;
-            try {
-                queryResult = matsDataUtils.queryMapDB(sumPool,statement, interval);
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
-                }
-                d = queryResult.data;
-            } catch (e) {
-                e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
-                throw new Error(e.message);
-            }
-            if (queryResult.error !== undefined && queryResult.error !== "") {
-                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // This is NOT an error just a no data condition
-                    dataFoundForCurve = false;
+                statement = statement.replace('{{forecastLength}}', forecastLength);
+                statement = statement.replace('{{fromSecs}}', fromSecs);
+                statement = statement.replace('{{toSecs}}', toSecs);
+                if (forecastLength == 1) {
+                    statement = statement.replace('{{model}}', model + "qp1f");
                 } else {
-                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                    statement = statement.replace('{{model}}', model + "qp");
+                }
+                statement = statement.replace('{{variable}}', variable);
+                statement = statement.replace('{{variable}}', variable);
+                statement = statement.replace('{{station}}', site);
+
+                dataRequests[curve.label + " - " + site] = statement;
+                var queryResult;
+                var startMoment = moment();
+                var finishMoment;
+                try {
+                    queryResult = matsDataUtils.queryMapDB(sumPool, statement, interval);
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label + " - " + site] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                        recordCount: queryResult.data.length
+                    }
+                    d[siteIndex] = queryResult.data;
+                } catch (e) {
+                    e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
+                    throw new Error(e.message);
+                }
+                if (queryResult.error !== undefined && queryResult.error !== "") {
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                        // This is NOT an error just a no data condition
+                        dataFoundForCurve = false;
                     } else {
-                        throw new Error(error);
+                        error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                        if (error.includes('Unknown column')) {
+                            throw new Error("INFO:  The variable combination [" + variableStr + "] is not supported by the database for the model/site [" + model + " and " + site + "].");
+                        } else {
+                            throw new Error(error);
+                        }
                     }
                 }
             }
+        }
 
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
@@ -120,13 +130,13 @@ dataMap = function (plotParams, plotFunction) {
                     }
                 }
             }
-        } else {
+        //} else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
-            d = diffResult.dataset;
-            ymin = diffResult.ymin;
-            ymax = diffResult.ymax;
-        }
+        //    const diffResult = matsDataUtils.getDataForSeriesDiffCurve({dataset:dataset, ymin:ymin, ymax:ymax, diffFrom:diffFrom});
+        //    d = diffResult.dataset;
+        //    ymin = diffResult.ymin;
+        //    ymax = diffResult.ymax;
+        //}
 
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
