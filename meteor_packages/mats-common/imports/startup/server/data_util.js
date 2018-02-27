@@ -1903,7 +1903,7 @@ const queryMapDB = function (pool, statement) {
                 pFuture['return']();
             } else {
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var siteName = Number(rows[rowIndex].sta_name);
+                    var siteName = rows[rowIndex].sta_name;
                     var N_times = rows[rowIndex].N_times;
                     var min_time = rows[rowIndex].min_time;
                     var max_time = rows[rowIndex].max_time;
@@ -2981,6 +2981,64 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
+const generateMapCurveOptions = function (curve, curveIndex, dataSeries) {
+    /*
+     PARAMETERS:
+     curve -  the curve object
+     curveIndex : Number - the integer index of this curve
+     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
+     */
+
+    const pointSymbol = getPointSymbol(curveIndex);
+    if (axisKey in axisMap) {
+        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
+            axisMap[axisKey].axisLabel = label;
+        } else {
+            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
+            axisMap[axisKey].axisLabel = label;
+        }
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
+    } else {
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            xmin: xmin,
+            xmax: xmax,
+            ymin: ymin,
+            ymax: ymax,
+            // axisLabel: axisKey + " - " + label
+            axisLabel: axisKey
+        };
+    }
+    const curveOptions = {
+        yaxis: axisMap[axisKey].index,
+        label: label,
+        curveId: label,
+        annotation: annotation,
+        color: curve['color'],
+        data: dataSeries,
+        points: {
+            symbol: pointSymbol,
+            fillColor: curve['color'],
+            show: true,
+            errorbars: "y",
+            yerr: {
+                show: true,
+                asymmetric: false,
+                upperCap: "squareCap",
+                lowerCap: "squareCap",
+                color: curve['color'],
+                radius: 5
+            }},
+        lines: {show: true, fill: false}
+    };
+
+    return curveOptions;
+};
+
 const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
     /*
      some curves will share an axis based on the axis map key.
@@ -3396,6 +3454,7 @@ export default matsDataUtils = {
     generateDieoffCurveOptions: generateDieoffCurveOptions,
     generateThresholdCurveOptions: generateThresholdCurveOptions,
     generateValidTimeCurveOptions: generateValidTimeCurveOptions,
+    generateMapCurveOptions: generateMapCurveOptions,
 
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateProfilePlotOptions: generateProfilePlotOptions,
