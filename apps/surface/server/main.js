@@ -13,6 +13,7 @@ var masterSitesMap = {};
 var sitesLocationMap = [];
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
+var modelMetarsMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -81,7 +82,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,metar_string,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -91,6 +92,13 @@ const doCurveParams = function () {
             var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
             var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+
+            var metarStrings = rows[i].metar_string;
+            var metarStringsArr = metarStrings.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < metarStringsArr.length; j++) {
+                metarStringsArr[j] = metarStringsArr[j].replace(/'|\[|\]/g, "");
+            }
+            modelMetarsMap[model] = metarStringsArr;
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -645,7 +653,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'surface_sums',
+            database: 'surface_sums2',
             connectionLimit: 10
         });
     }
@@ -709,7 +717,7 @@ Meteor.startup(function () {
     });
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "surface_sums", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("sitePool", "madis3", ['metars']);
     matsMethods.resetApp(mdr);
 });
