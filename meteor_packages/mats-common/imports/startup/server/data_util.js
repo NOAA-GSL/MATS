@@ -1888,6 +1888,126 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
         error: error,
     };
 };
+
+const queryMapDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
+    //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
+    // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    var cycles = getModelCadence(pool, dataSource);
+
+    // regular means regular cadence for model initialization, false is a model that has an irregular cadence
+    // If averageing the cadence is always regular i.e. its the cadence of the average
+    var regular = averageStr == "None" && (cycles !== null && cycles.length != 0) ? false : true;
+
+    var time_interval;
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+    var ymin;
+    var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+
+
+    pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = matsTypes.Messages.NO_DATA_FOUND;
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveTime = [];
+            var curveStat = [];
+            var curveSubValues = [];
+            var curveSubSecs = [];
+
+            time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var avSeconds = Number(rows[rowIndex].avtime);
+                var avTime = avSeconds * 1000;
+                xmin = avTime < xmin ? avTime : xmin;
+                xmax = avTime > xmax ? avTime : xmax;
+                var stat = rows[rowIndex].stat;
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                // find the minimum time_interval. This might be what we process the loopTime with unless it's is not a regular model
+                if (rowIndex < rows.length - 1) {
+                    var time_diff = Number(rows[rowIndex + 1].avtime) - Number(rows[rowIndex].avtime);
+                    if (time_diff < time_interval) {
+                        time_interval = time_diff;
+                    }
+                }
+                var sub_values;
+                var sub_secs;
+                if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+                    sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                    sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                } else {
+                    sub_values = NaN;
+                    sub_secs = NaN;
+                }
+                curveTime.push(avTime);
+                curveStat.push(stat);
+                curveSubValues.push(sub_values);
+                curveSubSecs.push(sub_secs);
+            }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            if (xmin < Number(rows[0].avtime) * 1000 || averageStr != "None") {
+                xmin = Number(rows[0].avtime) * 1000;
+            }
+
+            time_interval = time_interval * 1000;
+            var loopTime = xmin;
+            while (loopTime <= xmax) {
+                var d_idx = curveTime.indexOf(loopTime);
+                if (d_idx < 0) {
+                    d.push([loopTime, null, -1, NaN, NaN]);
+                } else {
+                    var this_N0 = N0[d_idx];
+                    var this_N_times = N_times[d_idx];
+                    // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                        d.push([loopTime, null, -1, NaN, NaN]);
+                    } else {
+                        d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]);
+                    }
+                }
+                if (!regular) {  // it is a model that has an irregular set of intervals, i.e. an irregular cadence
+                    time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
+                }
+                loopTime = loopTime + time_interval;
+                console.log("regular: "+ regular)
+                console.log("time_interval: "+ time_interval)
+            }
+            // done waiting - have results
+            dFuture['return']();
+        }
+    });
+
+    if (regular) {
+        cycles = [time_interval];
+    }
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        N0: N0,
+        N_times: N_times,
+        averageStr: averageStr,
+        cycles: cycles,
+    };
+};
+
 const queryDieoffDB = function (pool, statement, interval) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -3339,6 +3459,7 @@ export default matsDataUtils = {
     queryDieoffDB: queryDieoffDB,
     queryThresholdDB: queryThresholdDB,
     queryValidTimeDB:queryValidTimeDB,
+    queryMapDB:queryMapDB,
 
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForSeriesWithLevelsDiffCurve: getDataForSeriesWithLevelsDiffCurve,
