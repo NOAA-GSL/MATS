@@ -20,8 +20,7 @@ const getDateRange = function (dateRange) {
 };
 
 const getModelCadence = function (pool, dataSource) {
-    var cycles = []
-    var rows = []
+    var rows = [];
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
             "from mats_common.primary_model_orders " +
@@ -30,11 +29,13 @@ const getModelCadence = function (pool, dataSource) {
     } catch (e) {
         //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
     }
-    cycles = JSON.parse(rows[0].cycle_seconds);
+    var cycles = JSON.parse(rows[0].cycle_seconds);
     if (cycles !== null && cycles.length > 0) {
         for (var c = 0; c < cycles.length; c++) {
             cycles[c] = cycles[c] * 1000;         // convert to milliseconds
         }
+    } else {
+        cycles = [];
     }
     return cycles;
 };
@@ -796,16 +797,19 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
 
         var sum = 0;
         var count = 0;
-        d = newDataSet[ci].data;
-        var mean = d[0][1];
-        for (var i = 0; i < d.length; i++) {
-            if (d[i][1] !== null) {
-                sum = sum + d[i][1];
-                count++
+        var mean = null;
+        var d = newDataSet[ci].data;
+        if (d.length > 0) {
+            mean = d[0][1];
+            for (var i = 0; i < d.length; i++) {
+                if (d[i][1] !== null) {
+                    sum = sum + d[i][1];
+                    count++
+                }
             }
-        }
-        if (count > 1) {
-            mean = sum / count;
+            if (count > 1) {
+                mean = sum / count;
+            }
         }
         const annotationParts = dataset[ci].annotation.split(" = ");
         annotationParts[1] = mean === null ? null : mean.toPrecision(4);
@@ -1033,16 +1037,19 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
 
         var sum = 0;
         var count = 0;
-        d = newDataSet[ci].data;
-        var mean = d[0][1];
-        for (var i = 0; i < d.length; i++) {
-            if (d[i][1] !== null) {
-                sum = sum + d[i][1];
-                count++
+        var mean = null;
+        var d = newDataSet[ci].data;
+        if (d.length > 0) {
+            mean = d[0][1];
+            for (var i = 0; i < d.length; i++) {
+                if (d[i][1] !== null) {
+                    sum = sum + d[i][1];
+                    count++
+                }
             }
-        }
-        if (count > 1) {
-            mean = sum / count;
+            if (count > 1) {
+                mean = sum / count;
+            }
         }
         const annotationParts = dataset[ci].annotation.split(" = ");
         annotationParts[1] = mean === null ? null : mean.toPrecision(4);
@@ -2135,7 +2142,7 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
     // If averageing the cadence is always regular i.e. its the cadence of the average
-    var regular = averageStr == "None" && cycles.length != 0 ? false : true;
+    var regular = averageStr == "None" && (cycles !== null && cycles.length != 0) ? false : true;
 
     var time_interval;
     var dFuture = new Future();

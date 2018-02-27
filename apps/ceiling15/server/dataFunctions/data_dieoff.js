@@ -71,22 +71,20 @@ dataDieOff = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "SELECT " +
-                "m0.fcst_len + (m0.fcst_min/60) AS avtime " +
-                ",min(m0.time) as min_secs" +
-                ",max(m0.time) as max_secs" +
-                ",{{statistic}} " +
-                ",count(m0.nn)/1000 as Nhrs0" +
-                ",avg(m0.yy+m0.ny+0.000)/1000 as Nlow0" +
-                ",avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as Ntot0" +
-                " from {{model}}_{{region}} as m0" +
-                " where 1=1" +
-                " {{validTimeClause}}" +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " group by avtime" +
-                " order by avtime;";
+            var statement = "SELECT m0.fcst_len + (m0.fcst_min/60) AS avtime, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
+                "{{statistic}} " +
+                "from {{model}}_{{region}} as m0 " +
+                "where 1=1 " +
+                "{{validTimeClause}} " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= {{fromSecs}} " +
+                "and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "group by avtime " +
+                "order by avtime;";
 
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{region}}', region);

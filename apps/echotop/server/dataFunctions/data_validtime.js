@@ -54,9 +54,12 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select floor(m0.time%(24*3600)/3600) as hr_of_day, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 " +
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +

@@ -63,11 +63,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
-                "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-                "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-                "    {{statistic}} " +
+            var statement = "SELECT m0.fcst_len AS avtime, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
                 "FROM {{model}} AS m0 " +
                 "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
