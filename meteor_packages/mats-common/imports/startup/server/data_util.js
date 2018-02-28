@@ -2032,7 +2032,7 @@ const queryDieoffDB = function (pool, statement, interval) {
                 var this_N_times = N_times[d_idx];
                 // HIDDEN QC! This needs to be brought out to a notification or status on the gui
                 if (this_N0 < 0.05 * N0_max) {
-                    d.push([curveFhrs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
+                    // d.push([curveFhrs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
                 } else {
                     d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]); // -1 is a placeholder for the stde_betsy value
                 }
