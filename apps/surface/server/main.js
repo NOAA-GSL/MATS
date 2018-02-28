@@ -145,11 +145,12 @@ const doCurveParams = function () {
                     size: 5,
                     network: 'METAR',
                     peerOption: site_name,
+                    id: site_id,
                     highLightColor: 'cyan'
                 }
             };
             sitesLocationMap.push(obj);
-            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+            matsCollections.SiteMap.insert(obj);
 
         }
 
