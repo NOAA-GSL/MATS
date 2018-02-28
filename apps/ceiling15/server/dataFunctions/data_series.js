@@ -155,6 +155,43 @@ dataSeries = function (plotParams, plotFunction) {
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
+
+            //determine cadence of diff curve
+            var diffedCurveA = diffFrom[0];
+            var diffedCurveB = diffFrom[1];
+
+            var curveACylces = cycles[diffedCurveA];
+            var curveBCylces = cycles[diffedCurveB];
+
+            var newCurveACycles = [];
+            var newCurveBCycles = [];
+
+            var currentInterval;
+
+            if (curveACylces.length === 1) {
+                var curveAInterval = curveACylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveACycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveACycles = curveACylces;
+            }
+
+            if (curveBCylces.length === 1) {
+                var curveBInterval = curveBCylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveBCycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveBCycles = curveBCylces;
+            }
+
+            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+
         }
 
         const mean = sum / count;
