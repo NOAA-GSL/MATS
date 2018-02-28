@@ -775,19 +775,46 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
                 matchCount++;
             }
         } else {
+            var needNullPoint = [];
             for (sci = 0; sci < curvesLength; sci++) {
-                newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
-                newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
-                for (var ci = 0; ci < cycles.length; ci++) {
-                    var time_interval = (time % 24) * 3600 * 1000;
-                    if ((time_interval % cycles[ci]) == 0) {
-                        newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
-                        break;
+                if (regular) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
+                    newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                } else {
+                    var timeInterval = (time % (24*3600*1000));
+                    if (cycles[sci].length === 1 && (timeInterval % cycles[sci][0]) === 0) {
+                        needNullPoint.push(true);
+                    } else if (cycles[sci].length > 1 && cycles[sci].indexOf(timeInterval) !== -1) {
+                        needNullPoint.push(true);
+                    } else {
+                        needNullPoint.push(false);
                     }
                 }
             }
+            if (!regular && needNullPoint.indexOf(false) === -1) {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
+                    newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
+                }
+            }
         }
-        time = Number(time) + Number(interval);
+        if (regular) {
+            time = Number(time) + Number(interval);
+        } else {
+            var timeInterval = (time % (24*3600*1000));
+            if (Number(timeInterval) + Number(interval) <= ((24*3600*1000))) {
+                time = Number(time) + Number(interval);
+            } else {
+                var minCycleTime = 0;
+                for (sci = 0; sci < curvesLength; sci++) {
+                    var currentMinCycleTime = Math.min(cycles[sci]);
+                    minCycleTime = minCycleTime > currentMinCycleTime ? currentMinCycleTime : minCycleTime;
+                }
+                time = Number(time) - timeInterval + (24*3600*1000) + minCycleTime;
+            }
+        }
     }// while time
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
     for (ci = 0; ci < curvesLength; ci++) {
@@ -831,11 +858,11 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
     return newDataSet;
 };
 
-const getSeriesMatchedDataSetWithLevels = function (dataset) {
+const getSeriesMatchedDataSetWithLevels = function (dataset, cycles) {
     /*
      Parameters:
      dataset - this is the current dataset. It should like the following format,
-     which is for a small two curve plot, one eith 5 points and one with 2 points.
+     which is for a small two curve plot, one with 5 points and one with 2 points.
      [
      {
      "yaxis": 1,
@@ -901,7 +928,6 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
      }
      ]
 
-     interval - a number that contains the integer value of the data interval
 
      RETURN: An object that contains the new dataset and the new yAxisRanges
      {
@@ -912,7 +938,11 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
     // for matching - the begin time must be the first coinciding time for all the curves.
     // Once we know at which index the curves coincide we can increment by the interval.
     // time iterator is set to the earliest and timeMax is set to the latest time,
-    // interval is the maximum valid time interval
+    // interval for a set of regular curves - or a set of curves that has at least one regular curve - is the maximum regular valid time interval,
+    // interval for a set of all irregular curves is the intersection of the cadences
+    // we shouldn't need to redetermine the cadences by querying the db because the data has already had all of its missing data handled and represented by nulls.
+    // So we just need to see if the diff between points on the curve is constant.
+
     var curvesLength = dataset.length;
     var dataIndexes = {};
     var ci;
@@ -920,27 +950,43 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
     var time = Number.MAX_VALUE;
     var timeMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
+    var dataMinInterval= Number.MAX_VALUE;
+    var regular = true;
     // set up the indexes and determine the minimum time for the dataset
     if (curvesLength == 1) {
         return dataset;
     }
     for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
-            // one of the curves has no data. No match possible
-            for (sci = 0; sci < curvesLength; sci++) {
-                dataset[sci].data = [];
+        try {
+            if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
+                // one of the curves has no data. No match possible
+                for (sci = 0; sci < curvesLength; sci++) {
+                    dataset[sci].data = [];
+                }
+                return dataset;
             }
-            return dataset;
+            dataIndexes[ci] = 0;
+            time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
+            if (dataset[ci].data.length > 1) {
+                var prevDiff = -1;
+                for (var di = 0; di < dataset[ci].data.length - 1; di++) {  // don't go all the way to the end - one shy
+                    diff = dataset[ci].data[di + 1][0] - dataset[ci].data[di][0];
+                    prevDiff = prevDiff === -1 ? diff : prevDiff;
+                    regular = (prevDiff !== diff || !regular) ? false : true;
+                    dataMaxInterval = dataMaxInterval > diff ? dataMaxInterval : diff;
+                    dataMinInterval = dataMinInterval < diff ? dataMinInterval : diff;
+                    prevDiff = diff;
+                    if (!regular) {
+                        break;
+                    }
+                }
+            }
+            timeMax = timeMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length - 1][0];
+        } catch (e) {
+            console.log(e)
         }
-        dataIndexes[ci] = 0;
-        time = time < dataset[ci].data[0][0] ? time : dataset[ci].data[0][0];
-        if (interval === undefined && dataset[ci].data.length > 1) {
-            const diff = dataset[ci].data[1][0] - dataset[ci].data[0][0];
-            dataMaxInterval = dataMaxInterval > diff ? dataMaxInterval : diff;
-        }
-        timeMax = timeMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? timeMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
-    if (interval === undefined && dataMaxInterval === Number.MIN_VALUE) {
+    if (dataMaxInterval === Number.MIN_VALUE) {
         // we can't get an interval, give up
         for (sci = 0; sci < curvesLength; sci++) {
             dataset[sci].data = [];
@@ -981,8 +1027,7 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
     var timeMatches;
     var newDataSet = [];
     var matchCount = 1;
-    // no valid maximum interval was given us, we have to use our data derived one
-    interval = interval === undefined ? dataMaxInterval : interval;
+    var interval = regular ? dataMaxInterval : dataMinInterval;
     while (time <= timeMax) {
         timeMatches = true;
         for (ci = 0; ci < curvesLength; ci++) {
@@ -1004,7 +1049,9 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
         if (timeMatches) {
             for (sci = 0; sci < curvesLength; sci++) {
                 if (!newDataSet[sci]) {
+                    // create a new data set if we do not already have one
                     newDataSet[sci] = {};
+                    // copy the extraneous data for the new dataset over from the old dataset
                     var keys = Object.keys(dataset[sci]);
                     for (var k = 0; k < keys.length; k++) {
                         var key = keys[k];
@@ -1021,13 +1068,46 @@ const getSeriesMatchedDataSetWithLevels = function (dataset) {
                 matchCount++;
             }
         } else {
+            var needNullPoint = [];
             for (sci = 0; sci < curvesLength; sci++) {
-                newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
-                newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
-                newDataSet[sci].data.push([time, null, -1, NaN, NaN, NaN]);
+                if (regular) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
+                    newDataSet[sci].data.push([time, null, -1, NaN, NaN, NaN]);
+                } else {
+                    var timeInterval = (time % (24*3600*1000));
+                    if (cycles[sci].length === 1 && (timeInterval % cycles[sci][0]) === 0) {
+                        needNullPoint.push(true);
+                    } else if (cycles[sci].length > 1 && cycles[sci].indexOf(timeInterval) !== -1) {
+                        needNullPoint.push(true);
+                    } else {
+                        needNullPoint.push(false);
+                    }
+                }
+            }
+            if (!regular && needNullPoint.indexOf(false) === -1) {
+                for (sci = 0; sci < curvesLength; sci++) {
+                    newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
+                    newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
+                    newDataSet[sci].data.push([time, null, -1, NaN, NaN, NaN]);
+                }
             }
         }
-        time = Number(time) + Number(interval);
+        if (regular) {
+            time = Number(time) + Number(interval);
+        } else {
+            var timeInterval = (time % (24*3600*1000));
+            if (Number(timeInterval) + Number(interval) <= ((24*3600*1000))) {
+                time = Number(time) + Number(interval);
+            } else {
+                var minCycleTime = 0;
+                for (sci = 0; sci < curvesLength; sci++) {
+                    var currentMinCycleTime = Math.min(cycles[sci]);
+                    minCycleTime = minCycleTime > currentMinCycleTime ? currentMinCycleTime : minCycleTime;
+                }
+                time = Number(time) - timeInterval + (24*3600*1000) + minCycleTime;
+            }
+        }
     }// while time
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
     for (ci = 0; ci < curvesLength; ci++) {
@@ -2112,17 +2192,15 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
                     time_interval = getTimeInterval(loopTime, time_interval, foreCastOffset, cycles);
                 }
                 loopTime = loopTime + time_interval;
-                console.log("regular: "+ regular)
-                console.log("time_interval: "+ time_interval)
+            }
+            if (regular) {
+                cycles = [time_interval];
             }
             // done waiting - have results
             dFuture['return']();
         }
     });
 
-    if (regular) {
-        cycles = [time_interval];
-    }
     // wait for future to finish
     dFuture.wait();
     return {
@@ -2173,7 +2251,8 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
             var curveSubValues = [];
             var curveSubSecs = [];
             var curveSubLevs = [];
-            var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
+
+            time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var avSeconds = Number(rows[rowIndex].avtime);
                 var avTime = avSeconds * 1000;
@@ -2236,14 +2315,13 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
                 }
                 loopTime = loopTime + time_interval;
             }
+            if (regular) {
+                cycles = [time_interval];
+            }
             // done waiting - have results
             dFuture['return']();
         }
     });
-
-    if (regular) {
-        cycles = [time_interval];
-    }
 
     // wait for future to finish
     dFuture.wait();

@@ -191,7 +191,7 @@ const doCurveParams = function () {
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "threshold", "scale", "dates"],
                 controlButtonCovered: true,
-                default: 'Bak13',
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
