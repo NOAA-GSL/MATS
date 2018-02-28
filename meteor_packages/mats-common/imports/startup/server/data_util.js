@@ -566,7 +566,7 @@ const getThresholdMatchedDataSet = function (dataset) {
     return newDataSet;
 };
 
-const getSeriesMatchedDataSet = function (dataset, cycles) {
+const getSeriesMatchedDataSet = function (dataset, cycles, forecastLength) {
     /*
      Parameters:
      dataset - this is the current dataset. It should like the following format,
@@ -777,13 +777,18 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
             }
         } else {
             var needNullPoint = [];
+            var timeInterval = (time % (24 * 3600 * 1000));
+            if (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000) < 0) {
+                timeInterval = (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000) + (24 * 3600 * 1000));
+            } else {
+                timeInterval = (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000));
+            }
             for (sci = 0; sci < curvesLength; sci++) {
                 if (regular) {
                     newDataSet[sci] = newDataSet[sci] === undefined ? {} : newDataSet[sci];
                     newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
                     newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
                 } else {
-                    var timeInterval = (time % (24 * 3600 * 1000));
                     if (cycles[sci].length === 1 && (timeInterval % cycles[sci][0]) === 0) {
                         needNullPoint.push(true);
                     } else if (cycles[sci].length > 1 && cycles[sci].indexOf(timeInterval) !== -1) {
@@ -804,13 +809,18 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
         if (regular) {
             time = Number(time) + Number(interval);
         } else {
-            var timeInterval = (time % (24 * 3600 * 1000));
+            timeInterval = (time % (24 * 3600 * 1000));
+            if (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000) < 0) {
+                timeInterval = (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000) + (24 * 3600 * 1000));
+            } else {
+                timeInterval = (Number(timeInterval) - (Number(forecastLength) * 3600 * 1000));
+            }
             if (Number(timeInterval) + Number(interval) <= ((24 * 3600 * 1000))) {
                 time = Number(time) + Number(interval);
             } else {
-                var minCycleTime = 0;
+                var minCycleTime = Number.MAX_VALUE;
                 for (sci = 0; sci < curvesLength; sci++) {
-                    var currentMinCycleTime = Math.min(cycles[sci]);
+                    var currentMinCycleTime = Math.min(...cycles[sci]);
                     minCycleTime = minCycleTime > currentMinCycleTime ? currentMinCycleTime : minCycleTime;
                 }
                 time = Number(time) - timeInterval + (24 * 3600 * 1000) + minCycleTime;
