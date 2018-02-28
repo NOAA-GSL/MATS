@@ -1,6 +1,7 @@
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
+
 const Future = require('fibers/future');
 
 const getDateRange = function (dateRange) {
@@ -233,7 +234,7 @@ const getDieOffMatchedDataSet = function (dataset) {
                 break;
             } else {
                 // if there is no data entry here at this hour it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
+                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
                     hourMatches = false;
                 }
             }
@@ -302,7 +303,7 @@ const getValidTimeMatchedDataSet = function (dataset) {
     var dataIndexes = {};
     var ci;
     var sci;
-    var vt_vals = [23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0];
+    var vt_vals = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
     var vt = vt_vals.pop();
     var vtMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
@@ -367,7 +368,7 @@ const getValidTimeMatchedDataSet = function (dataset) {
                 break;
             } else {
                 // if there is no data entry here at this vt it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
+                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
                     vtMatches = false;
                 }
             }
@@ -436,7 +437,7 @@ const getThresholdMatchedDataSet = function (dataset) {
     var dataIndexes = {};
     var ci;
     var sci;
-    var trsh_vals = [3.00,2.00,1.50,1.00,0.50,0.25,0.10,0.01];
+    var trsh_vals = [3.00, 2.00, 1.50, 1.00, 0.50, 0.25, 0.10, 0.01];
     var trsh = trsh_vals.pop();
     var trshMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
@@ -501,7 +502,7 @@ const getThresholdMatchedDataSet = function (dataset) {
                 break;
             } else {
                 // if there is no data entry here at this trsh it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]]  !== undefined  && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1]  !== undefined )) {
+                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
                     trshMatches = false;
                 }
             }
@@ -657,7 +658,7 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
     var time = Number.MAX_VALUE;
     var timeMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
-    var dataMinInterval= Number.MAX_VALUE;
+    var dataMinInterval = Number.MAX_VALUE;
     var regular = true;
     // set up the indexes and determine the minimum time for the dataset
     if (curvesLength == 1) {
@@ -782,7 +783,7 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
                     newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
                     newDataSet[sci].data.push([time, null, -1, NaN, NaN]);
                 } else {
-                    var timeInterval = (time % (24*3600*1000));
+                    var timeInterval = (time % (24 * 3600 * 1000));
                     if (cycles[sci].length === 1 && (timeInterval % cycles[sci][0]) === 0) {
                         needNullPoint.push(true);
                     } else if (cycles[sci].length > 1 && cycles[sci].indexOf(timeInterval) !== -1) {
@@ -803,8 +804,8 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
         if (regular) {
             time = Number(time) + Number(interval);
         } else {
-            var timeInterval = (time % (24*3600*1000));
-            if (Number(timeInterval) + Number(interval) <= ((24*3600*1000))) {
+            var timeInterval = (time % (24 * 3600 * 1000));
+            if (Number(timeInterval) + Number(interval) <= ((24 * 3600 * 1000))) {
                 time = Number(time) + Number(interval);
             } else {
                 var minCycleTime = 0;
@@ -812,7 +813,7 @@ const getSeriesMatchedDataSet = function (dataset, cycles) {
                     var currentMinCycleTime = Math.min(cycles[sci]);
                     minCycleTime = minCycleTime > currentMinCycleTime ? currentMinCycleTime : minCycleTime;
                 }
-                time = Number(time) - timeInterval + (24*3600*1000) + minCycleTime;
+                time = Number(time) - timeInterval + (24 * 3600 * 1000) + minCycleTime;
             }
         }
     }// while time
@@ -950,7 +951,7 @@ const getSeriesMatchedDataSetWithLevels = function (dataset, cycles) {
     var time = Number.MAX_VALUE;
     var timeMax = Number.MIN_VALUE;
     var dataMaxInterval = Number.MIN_VALUE;
-    var dataMinInterval= Number.MAX_VALUE;
+    var dataMinInterval = Number.MAX_VALUE;
     var regular = true;
     // set up the indexes and determine the minimum time for the dataset
     if (curvesLength == 1) {
@@ -1075,7 +1076,7 @@ const getSeriesMatchedDataSetWithLevels = function (dataset, cycles) {
                     newDataSet[sci].data = newDataSet[sci].data === undefined ? [] : newDataSet[sci].data;
                     newDataSet[sci].data.push([time, null, -1, NaN, NaN, NaN]);
                 } else {
-                    var timeInterval = (time % (24*3600*1000));
+                    var timeInterval = (time % (24 * 3600 * 1000));
                     if (cycles[sci].length === 1 && (timeInterval % cycles[sci][0]) === 0) {
                         needNullPoint.push(true);
                     } else if (cycles[sci].length > 1 && cycles[sci].indexOf(timeInterval) !== -1) {
@@ -1096,8 +1097,8 @@ const getSeriesMatchedDataSetWithLevels = function (dataset, cycles) {
         if (regular) {
             time = Number(time) + Number(interval);
         } else {
-            var timeInterval = (time % (24*3600*1000));
-            if (Number(timeInterval) + Number(interval) <= ((24*3600*1000))) {
+            var timeInterval = (time % (24 * 3600 * 1000));
+            if (Number(timeInterval) + Number(interval) <= ((24 * 3600 * 1000))) {
                 time = Number(time) + Number(interval);
             } else {
                 var minCycleTime = 0;
@@ -1105,7 +1106,7 @@ const getSeriesMatchedDataSetWithLevels = function (dataset, cycles) {
                     var currentMinCycleTime = Math.min(cycles[sci]);
                     minCycleTime = minCycleTime > currentMinCycleTime ? currentMinCycleTime : minCycleTime;
                 }
-                time = Number(time) - timeInterval + (24*3600*1000) + minCycleTime;
+                time = Number(time) - timeInterval + (24 * 3600 * 1000) + minCycleTime;
             }
         }
     }// while time
@@ -1283,7 +1284,7 @@ const getDataForSeriesDiffCurve = function (params) {
             minuendTime = minuendData[++minuendIndex][0];
             minuendChanged = true;
         }
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
             ++minuendIndex;
         }
 
@@ -1292,7 +1293,7 @@ const getDataForSeriesDiffCurve = function (params) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
             subtrahendChanged = true;
         }
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
             ++subtrahendIndex;
         }
 
@@ -1373,7 +1374,7 @@ const getDataForSeriesWithLevelsDiffCurve = function (params) {
             minuendTime = minuendData[++minuendIndex][0];
             minuendChanged = true;
         }
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
             ++minuendIndex;
         }
 
@@ -1382,7 +1383,7 @@ const getDataForSeriesWithLevelsDiffCurve = function (params) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
             subtrahendChanged = true;
         }
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
             ++subtrahendIndex;
         }
 
@@ -1480,10 +1481,10 @@ const getDataForDieoffDiffCurve = function (params) {
 
         var minuendChanged = false;
         while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
-                minuendTime = minuendData[++minuendIndex][0];
-                minuendChanged = true;
+            minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
         }
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
             ++minuendIndex;
         }
 
@@ -1492,7 +1493,7 @@ const getDataForDieoffDiffCurve = function (params) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
             subtrahendChanged = true;
         }
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
             ++subtrahendIndex;
         }
 
@@ -1573,7 +1574,7 @@ const getDataForValidTimeDiffCurve = function (params) {
             minuendTime = minuendData[++minuendIndex][0];
             minuendChanged = true;
         }
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
             ++minuendIndex;
         }
 
@@ -1582,7 +1583,7 @@ const getDataForValidTimeDiffCurve = function (params) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
             subtrahendChanged = true;
         }
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
             ++subtrahendIndex;
         }
 
@@ -1640,7 +1641,7 @@ const getDataForThresholdDiffCurve = function (params) {
             minuendTime = minuendData[++minuendIndex][0];
             minuendChanged = true;
         }
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1){
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
             ++minuendIndex;
         }
 
@@ -1649,7 +1650,7 @@ const getDataForThresholdDiffCurve = function (params) {
             subtrahendTime = subtrahendData[++subtrahendIndex][0];
             subtrahendChanged = true;
         }
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1){
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
             ++subtrahendIndex;
         }
 
@@ -1981,11 +1982,11 @@ const queryDieoffDB = function (pool, statement, interval) {
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
+
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -1998,21 +1999,16 @@ const queryDieoffDB = function (pool, statement, interval) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveTime = [];
+            var curveFhrs = [];
             var curveStat = [];
-            var N0_max = 0;
-            var N_times_max = 0;
+            var curveSubValues = [];
+            var curveSubSecs = [];
+
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var fhr = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
-                }
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
                 var sub_values;
                 var sub_secs;
                 if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
@@ -2022,10 +2018,26 @@ const queryDieoffDB = function (pool, statement, interval) {
                     sub_values = NaN;
                     sub_secs = NaN;
                 }
-                d.push([fhr, stat, -1, sub_values, sub_secs]); // -1 is a placeholder for the stde_betsy value
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
+                curveFhrs.push(fhr);
+                curveStat.push(stat);
+                curveSubValues.push(sub_values);
+                curveSubSecs.push(sub_secs);
             }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            for (var d_idx = 0; d_idx < curveFhrs.length; d_idx++) {
+                var this_N0 = N0[d_idx];
+                var this_N_times = N_times[d_idx];
+                // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                if (this_N0 < 0.05 * N0_max) {
+                    d.push([curveFhrs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
+                } else {
+                    d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]); // -1 is a placeholder for the stde_betsy value
+                }
+            }
+
             dFuture['return']();
         }
     });
@@ -2946,7 +2958,8 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
                 lowerCap: "squareCap",
                 color: curve['color'],
                 radius: 5
-            }},
+            }
+        },
         lines: {show: true, fill: false}
     };
 
@@ -3023,7 +3036,8 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
                 lowerCap: "squareCap",
                 color: curve['color'],
                 radius: 5
-            }},
+            }
+        },
         lines: {show: true, fill: false}
     };
 
@@ -3398,11 +3412,11 @@ const doRoles = function () {
     }
 };
 
-const areObjectsEqual = function(o, p) {
-    if ((o  && !p) || p && !o ) {
+const areObjectsEqual = function (o, p) {
+    if ((o && !p) || p && !o) {
         return false;
     }
-    if ( JSON.stringify(o) === JSON.stringify(p)) {
+    if (JSON.stringify(o) === JSON.stringify(p)) {
         return true;
     } else {
         return false;
@@ -3416,14 +3430,14 @@ export default matsDataUtils = {
     sortFunction: sortFunction,
     arraysEqual: arraysEqual,
     arrayContainsArray: arrayContainsArray,
-    areObjectsEqual:areObjectsEqual,
+    areObjectsEqual: areObjectsEqual,
 
-    querySeriesDB:querySeriesDB,
-    querySeriesWithLevelsDB:querySeriesWithLevelsDB,
+    querySeriesDB: querySeriesDB,
+    querySeriesWithLevelsDB: querySeriesWithLevelsDB,
     queryProfileDB: queryProfileDB,
     queryDieoffDB: queryDieoffDB,
     queryThresholdDB: queryThresholdDB,
-    queryValidTimeDB:queryValidTimeDB,
+    queryValidTimeDB: queryValidTimeDB,
 
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForSeriesWithLevelsDiffCurve: getDataForSeriesWithLevelsDiffCurve,
