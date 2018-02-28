@@ -24,7 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
-
+    var cycles = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         const diffFrom = curve.diffFrom;
@@ -71,17 +71,6 @@ dataSeries = function (plotParams, plotFunction) {
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var interval;
-        if (averageStr == "None") {
-            if (validTimeStr === 'both') {
-                interval = 12 * 3600 * 1000;
-            } else {
-                interval = 24 * 3600 * 1000;
-            }
-        } else {
-            var daycount = averageStr.replace("D", "");
-            interval = daycount * 24 * 3600 * 1000;
-        }
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -90,8 +79,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                " from {{model}} as m0 " +
-                "  where 1=1 " +
+                "from {{model}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -118,7 +107,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, interval, averageStr);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, model, forecastLength);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -127,6 +116,7 @@ dataSeries = function (plotParams, plotFunction) {
                     recordCount: queryResult.data.length
                 }
                 d = queryResult.data;
+                cycles[curveIndex] = queryResult.cycles;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -163,7 +153,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForSeriesDiffCurve({
+            var diffResult = matsDataUtils.getDataForSeriesWithLevelsDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -175,6 +165,43 @@ dataSeries = function (plotParams, plotFunction) {
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
+
+            //determine cadence of diff curve
+            var diffedCurveA = diffFrom[0];
+            var diffedCurveB = diffFrom[1];
+
+            var curveACylces = cycles[diffedCurveA];
+            var curveBCylces = cycles[diffedCurveB];
+
+            var newCurveACycles = [];
+            var newCurveBCycles = [];
+
+            var currentInterval;
+
+            if (curveACylces.length === 1) {
+                var curveAInterval = curveACylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveACycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveACycles = curveACylces;
+            }
+
+            if (curveBCylces.length === 1) {
+                var curveBInterval = curveBCylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveBCycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveBCycles = curveBCylces;
+            }
+
+            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+
         }
 
         const mean = sum / count;
@@ -194,10 +221,28 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
+    var sub_levs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getMatchedDataSet(dataset, interval);
+        dataset = matsDataUtils.getSeriesMatchedDataSetWithLevels(dataset, cycles);
+
+        var subLevs = new Set();
+        var avTimeGroups = [];
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            avTimeGroups[curveIndex] = [];
+            var data = dataset[curveIndex].data;
+            for (var di = 0; di < data.length; di++) { // every fhr
+                sub_levs = data[di][5];
+                avTimeGroups[curveIndex].push(data[di][0]);
+                for (var li = 0; li < sub_levs.length; li++) {
+                    var lev = sub_levs[li];
+                    subLevs.add(lev);
+                }
+            }
+        }
+        var matchingAvTimes = _.intersection.apply(_, avTimeGroups);
+        var subLevIntersection = Array.from(subLevs);
     }
 
     var diffFrom;
@@ -205,8 +250,7 @@ dataSeries = function (plotParams, plotFunction) {
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
-        var data = dataset[curveIndex].data;
+        data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
         //for (di = 0; di < dataLength; di++) { // every forecast hour
@@ -216,7 +260,34 @@ dataSeries = function (plotParams, plotFunction) {
         var means = [];
 
         while (di < dataLength) {
+            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingAvTimes.indexOf(data[di][0]) === -1) {
+                dataset[curveIndex].data.splice(di, 1);
+                continue;   // not a matching time - skip it
+            }
+
+            sub_levs = data[di][5];
+            var sub_secs = data[di][4];
+            var subValues = data[di][3];
             var errorResult = {};
+
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_levs)) {
+                var newSubValues = [];
+                var newSubSecs = [];
+                for (var subLevIntersectionIndex = 0; subLevIntersectionIndex < subLevIntersection.length; subLevIntersectionIndex++) {
+                    var levsIndex = sub_levs.indexOf(subLevIntersection[subLevIntersectionIndex]);
+                    var newVal = subValues[levsIndex];
+                    var newSec = sub_secs[levsIndex];
+                    if (newVal === undefined || newVal == 0) {
+                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                    } else {
+                        newSubValues.push(newVal);
+                        newSubSecs.push(newSec);
+                    }
+                }
+                data[di][3] = newSubValues;
+                data[di][4] = newSubSecs;
+                data[di][5] = subLevIntersection; // we're going to overwrite this later because we don't need it anymore and we need to keep dataset with a similar structure to the rest of the apps
+            }
 
             /*
              DATASET ELEMENTS:
@@ -258,7 +329,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
-                "<br>" + "time: " + moment(data[di][0]).format("YYYY-MM-DD HH:mm") +
+                "<br>" + "time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm") +
                 "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
@@ -286,6 +357,7 @@ dataSeries = function (plotParams, plotFunction) {
     dataset.push({
         "yaxis": 1,
         "label": "zero",
+        "annotation": "",
         "color": "rgb(0,0,0)",
         "data": [
             [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],

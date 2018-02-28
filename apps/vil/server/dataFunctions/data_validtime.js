@@ -20,6 +20,8 @@ dataValidTime = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
+    var idealValues = [];
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -44,14 +46,21 @@ dataValidTime = function (plotParams, plotFunction) {
         // The axis number is assigned to the axisMap value, which is the axisKey.
         var axisKey =  statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var idealVal = statisticOptionsMap[statisticSelect][2];
+        if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
+            idealValues.push(idealVal);
+        }
         var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select floor(m0.time%(24*3600)/3600) as hr_of_day, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 " +
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
@@ -144,6 +153,14 @@ dataValidTime = function (plotParams, plotFunction) {
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
+
+    //add ideal value lines, if any
+    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+
+        dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,idealValues[ivIdx],idealValues[ivIdx].toString()],[xmax,idealValues[ivIdx],idealValues[ivIdx].toString()]]});
+
+    }
+
     const resultOptions = matsDataUtils.generateValidTimePlotOptions( dataset, curves, axisMap );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {

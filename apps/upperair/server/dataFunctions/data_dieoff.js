@@ -80,12 +80,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
-            var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
-                "    COUNT(DISTINCT UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS N_times, " +
-                "    MIN(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS min_secs, " +
-                "    MAX(UNIX_TIMESTAMP(m0.date) + 3600 * m0.hour) AS max_secs, " +
-                "    {{statistic}} " +
+            var statement = "SELECT m0.fcst_len AS avtime, " +
+                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
+                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
+                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
                 "FROM {{model}} AS m0 " +
                 "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
@@ -186,6 +185,7 @@ dataDieOff = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
+    var sub_secs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
@@ -230,11 +230,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 continue;   // not a matching level - skip it
             }
 
-            var sub_secs = data[di][4];
+            sub_secs = data[di][4];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_secs)) {
                 var newSubValues = [];
                 for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);

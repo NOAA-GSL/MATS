@@ -24,6 +24,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var maxValuesPerFhr = 0;
+    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -51,21 +52,28 @@ dataDieOff = function (plotParams, plotFunction) {
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey =  statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        var idealVal = statisticOptionsMap[statisticSelect][2];
+        if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
+            idealValues.push(idealVal);
+        }
         var interval;
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "SELECT " +
                 "m0.fcst_len AS avtime, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0" +
-                " where 1=1" +
-                " {{validTimeClause}}" +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " group by avtime" +
-                " order by avtime;";
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
+                "{{validTimeClause}} " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "group by avtime " +
+                "order by avtime;";
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
@@ -155,6 +163,7 @@ dataDieOff = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
+    var sub_secs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
@@ -199,11 +208,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 continue;   // not a matching level - skip it
             }
 
-            var sub_secs = data[di][4];
+            sub_secs = data[di][4];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_secs)) {
                 var newSubValues = [];
                 for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
@@ -286,6 +295,7 @@ dataDieOff = function (plotParams, plotFunction) {
     dataset.push({
         "yaxis": 1,
         "label": "zero",
+        "annotation": "",
         "color": "rgb(0,0,0)",
         "data": [
             [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
@@ -320,6 +330,51 @@ dataDieOff = function (plotParams, plotFunction) {
             "maxy": 0
         }
     });
+
+    //add ideal value lines, if any
+    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+
+        dataset.push({
+            "yaxis": 1,
+            "label": idealValues[ivIdx].toString(),
+            "annotation": "",
+            "color": "rgb(0,0,0)",
+            "data": [
+                [xmin, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()],
+                [xmax, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()]
+            ],
+            "points": {
+                "show": false,
+                "errorbars": "y",
+                "yerr": {
+                    "show": false,
+                    "asymmetric": false,
+                    "upperCap": "squareCap",
+                    "lowerCap": "squareCap",
+                    "color": "rgb(0,0,255)",
+                    "radius": 5
+                }
+            },
+            "lines": {
+                "show": true,
+                "fill": false
+            },
+            "stats": {
+                "d_mean": 0,
+                "stde_betsy": 0,
+                "sd": 0,
+                "n_good": 0,
+                "lag1": 0,
+                "min": 0,
+                "max": 0,
+                "sum": 0,
+                "miny": 0,
+                "maxy": 0
+            }
+        });
+
+    }
+
     const resultOptions = matsDataUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {

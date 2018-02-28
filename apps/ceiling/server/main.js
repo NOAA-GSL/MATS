@@ -96,7 +96,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -156,6 +156,7 @@ const doCurveParams = function () {
                 help: 'label.html'
             }
         );
+    }
 
     if (matsCollections.CurveParams.find({name: 'data-source'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -188,64 +189,63 @@ const doCurveParams = function () {
         }
     }
 
-        if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'region',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'region',
+                type: matsTypes.InputTypes.select,
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                valuesMap: masterRegionValuesMap,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
                     valuesMap: masterRegionValuesMap,
-                    superiorNames: ['data-source'],
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 3,
-                    displayPriority: 1,
-                    displayGroup: 1
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
-            if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-                (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
-                // have to reload model data
-                matsCollections.CurveParams.update({name: 'region'}, {
-                    $set: {
-                        optionsMap: regionModelOptionsMap,
-                        valuesMap: masterRegionValuesMap,
-                        options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
-                    }
-                });
-            }
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-            var optionsMap = {
-                'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+    if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
+        var optionsMap = {
+            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0, group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
+            'Nlow (metars < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-                'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
+            'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-                'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) * 100 as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) * 100 as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', null],
 
-                'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
 
-                'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'Number'],
+            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-                'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100'],
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.ny)*sum(m0.yn)) /((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0', 'x100']
-            };
-        }
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.ny)*sum(m0.yn)) /((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100]
+        };
         matsCollections.CurveParams.insert(
             {// bias and model average are a different formula for wind (element 0 differs from element 1)
                 // but stays the same (element 0 and element 1 are the same) otherwise.

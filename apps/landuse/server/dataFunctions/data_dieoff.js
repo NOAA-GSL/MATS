@@ -63,11 +63,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
-                "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-                "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-                "    {{statistic}} " +
+            var statement = "SELECT m0.fcst_len AS avtime, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
                 "FROM {{model}} AS m0 " +
                 "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
@@ -166,6 +166,7 @@ dataDieOff = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
+    var sub_secs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
@@ -210,11 +211,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 continue;   // not a matching level - skip it
             }
 
-            var sub_secs = data[di][4];
+            sub_secs = data[di][4];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_secs)) {
                 var newSubValues = [];
                 for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
                     var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
@@ -297,6 +298,7 @@ dataDieOff = function (plotParams, plotFunction) {
     dataset.push({
         "yaxis": 1,
         "label": "zero",
+        "annotation": "",
         "color": "rgb(0,0,0)",
         "data": [
             [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],

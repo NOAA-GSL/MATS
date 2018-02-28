@@ -83,6 +83,7 @@ dataProfile = function(plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select -m0.mb10*10 as avVal, " +
+                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
@@ -341,6 +342,7 @@ dataProfile = function(plotParams, plotFunction) {
             "yaxis": 1,
             "label": "zero",
             "color": "rgb(0,0,0)",
+            "annotation": "",
             "data": [
                 [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
                 [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
