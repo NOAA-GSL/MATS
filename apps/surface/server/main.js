@@ -150,9 +150,14 @@ const doCurveParams = function () {
                 }
             };
             sitesLocationMap.push(obj);
-            matsCollections.SiteMap.insert(obj);
 
         }
+        matsCollections.SiteMap.insert(
+            {
+                name: 'sites',
+                optionsMap: sitesLocationMap
+            }
+        );
 
     } catch (err) {
         console.log(err.message);
