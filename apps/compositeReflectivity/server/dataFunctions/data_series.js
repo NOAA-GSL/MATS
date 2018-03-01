@@ -206,7 +206,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;

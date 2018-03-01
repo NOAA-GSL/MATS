@@ -24,6 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
     var cycles = [];
+    var fhrs = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -109,6 +110,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 d = queryResult.data;
                 cycles[curveIndex] = queryResult.cycles;
+                fhrs[curveIndex] = forecastLength;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -186,13 +188,14 @@ dataSeries = function (plotParams, plotFunction) {
                 currentInterval = 0;
                 while (currentInterval < (24*3600*1000)){
                     newCurveBCycles.push(currentInterval);
-                    currentInterval = currentInterval + curveAInterval;
+                    currentInterval = currentInterval + curveBInterval;
                 }
             } else {
                 newCurveBCycles = curveBCylces;
             }
 
             cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+            fhrs[curveIndex] = fhrs[diffedCurveA];
 
         }
 
@@ -216,7 +219,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;
