@@ -86,6 +86,7 @@ export default matsCollections = {
     Credentials:Credentials,
     SavedCredentials:SavedCredentials,
     SiteMap:SiteMap,
+    StationMap:StationMap,
     startInit:startInit,
     stopInit:stopInit,
     dateInitStr: dateInitStr
