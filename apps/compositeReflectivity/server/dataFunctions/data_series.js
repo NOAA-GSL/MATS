@@ -175,7 +175,7 @@ dataSeries = function (plotParams, plotFunction) {
                 currentInterval = 0;
                 while (currentInterval < (24*3600*1000)){
                     newCurveBCycles.push(currentInterval);
-                    currentInterval = currentInterval + curveAInterval;
+                    currentInterval = currentInterval + curveBInterval;
                 }
             } else {
                 newCurveBCycles = curveBCylces;
