@@ -45,6 +45,7 @@ dataSeries = function (plotParams, plotFunction) {
         var average = averageOptionsMap[averageStr][0];
         var scaleStr = curve['scale'];
         var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        const forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
