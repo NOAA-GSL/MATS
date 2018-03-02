@@ -45,7 +45,7 @@ dataSeries = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        const forecastLength = curve['forecast-length'];
+        var forecastLength = curve['forecast-length'];
         const variable = curve['variable'];
         const top = curve['top'];
         const bottom = curve['bottom'];
@@ -93,6 +93,12 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
             dataRequests[curve.label] = statement;
+
+            //math is done on forecastLength later on
+            if (forecastLength === "-99") {
+                forecastLength = "0";
+            }
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;

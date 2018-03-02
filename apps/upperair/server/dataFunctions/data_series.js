@@ -64,7 +64,7 @@ dataSeries = function (plotParams, plotFunction) {
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        const forecastLength = curve['forecast-length'];
+        var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -104,6 +104,12 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{average}}', average);
             dataRequests[curve.label] = statement;
+
+            //math is done on forecastLength later on
+            if (forecastLength === "-99") {
+                forecastLength = "0";
+            }
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
