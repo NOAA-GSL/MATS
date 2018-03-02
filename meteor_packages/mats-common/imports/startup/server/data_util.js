@@ -2748,6 +2748,42 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
     return options;
 };
 
+const generateMapPlotOptions = function (dataset, curves) {
+    const options = {
+        labels: {
+            show: true
+        },
+        map: {
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+        }
+    };
+    return options;
+};
+
 
 const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
     /*
@@ -2988,33 +3024,11 @@ const generateMapCurveOptions = function (curve, curveIndex, dataSeries) {
      curveIndex : Number - the integer index of this curve
      dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
      */
-
+    const label = curve['label'];
+    const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
-    if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
-        }
-        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
-        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
-        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
-        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
-    } else {
-        axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
-            xmin: xmin,
-            xmax: xmax,
-            ymin: ymin,
-            ymax: ymax,
-            // axisLabel: axisKey + " - " + label
-            axisLabel: axisKey
-        };
-    }
+
     const curveOptions = {
-        yaxis: axisMap[axisKey].index,
         label: label,
         curveId: label,
         annotation: annotation,
@@ -3025,14 +3039,7 @@ const generateMapCurveOptions = function (curve, curveIndex, dataSeries) {
             fillColor: curve['color'],
             show: true,
             errorbars: "y",
-            yerr: {
-                show: true,
-                asymmetric: false,
-                upperCap: "squareCap",
-                lowerCap: "squareCap",
-                color: curve['color'],
-                radius: 5
-            }},
+            },
         lines: {show: true, fill: false}
     };
 
@@ -3461,6 +3468,7 @@ export default matsDataUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
+    generateMapPlotOptions: generateMapPlotOptions,
 
     simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
     get_err: get_err,
