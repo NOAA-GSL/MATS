@@ -23,9 +23,11 @@ dataSeries = function (plotParams, plotFunction) {
     var maxValuesPerAvtime = 0;
     var idealValues = [];
     var cycles = [];
+    var fhrs = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var dataSourceStr = curve['data-source'];
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
@@ -86,6 +88,12 @@ dataSeries = function (plotParams, plotFunction) {
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             dataRequests[curve.label] = statement;
+
+            //math is done on forecastLength later on
+            if (forecastLength === "-99") {
+                forecastLength = "0";
+            }
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
@@ -100,6 +108,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 d = queryResult.data;
                 cycles[curveIndex] = queryResult.cycles;
+                fhrs[curveIndex] = forecastLength;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -110,7 +119,12 @@ dataSeries = function (plotParams, plotFunction) {
                     dataFoundForCurve = false;
                 } else {
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('ER_NO_SUCH_TABLE')) {
+                        throw new Error("INFO:  The region/scale combination [" + regionStr + " and " + scaleStr + "] is not supported by the database for the model [" + dataSourceStr + "]. " +
+                            "Choose a different scale to continue using this region.");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             }
 
@@ -173,13 +187,14 @@ dataSeries = function (plotParams, plotFunction) {
                 currentInterval = 0;
                 while (currentInterval < (24*3600*1000)){
                     newCurveBCycles.push(currentInterval);
-                    currentInterval = currentInterval + curveAInterval;
+                    currentInterval = currentInterval + curveBInterval;
                 }
             } else {
                 newCurveBCycles = curveBCylces;
             }
 
             cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+            fhrs[curveIndex] = fhrs[diffedCurveA];
 
         }
 
@@ -203,7 +218,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;
