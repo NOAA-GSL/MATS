@@ -65,6 +65,7 @@ const doPlotParams = function () {
 const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
+        matsCollections.StationMap.remove({});
     }
 
     var rows;
@@ -123,7 +124,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars order by name;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metar_mats_test.desc from metar_mats_test order by name;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
@@ -137,6 +138,7 @@ const doCurveParams = function () {
             //sitesLocationMap[site_name] = {lat: site_lat, lon: site_lon, elev: site_elev};
             var point = [site_lat, site_lon];
             var obj = {
+                name: site_name,
                 point: point,
                 elevation: site_elev,
                 options: {
@@ -150,17 +152,21 @@ const doCurveParams = function () {
                 }
             };
             sitesLocationMap.push(obj);
-
         }
-        matsCollections.SiteMap.insert(
-            {
-                name: 'sites',
-                optionsMap: sitesLocationMap
-            }
-        );
 
     } catch (err) {
         console.log(err.message);
+    }
+    matsCollections.SiteMap.remove({});
+    matsCollections.StationMap.remove({});
+
+    if (matsCollections.StationMap.find({name: 'stations'}).count() == 0) {
+        matsCollections.StationMap.insert(
+            {
+                name: 'stations',
+                optionsMap: sitesLocationMap,
+            }
+        );
     }
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
@@ -724,7 +730,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("sitePool", "madis3", ['metars']);
+    mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
     matsMethods.resetApp(mdr);
 });
 
