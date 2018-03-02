@@ -122,8 +122,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.6.3-2018.03.02.06.29",
-      "buildDate": "2018.03.02.06.29",
+      "version": "1.6.3-2018.03.02.23.35",
+      "buildDate": "2018.03.02.23.35",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -505,8 +505,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.6.2",
-      "buildDate": "2018.02.28.20.58",
+      "version": "1.6.3",
+      "buildDate": "2018.03.02.23.47",
       "last_test_run": "",
       "last_test_status": ""
     }
