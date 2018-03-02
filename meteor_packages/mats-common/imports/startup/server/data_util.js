@@ -3017,7 +3017,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, curveIndex, dataSeries) {
+const generateMapCurveOptions = function (curve, curveIndex, dataSeries, sitePlot) {
     /*
      PARAMETERS:
      curve -  the curve object
@@ -3034,6 +3034,7 @@ const generateMapCurveOptions = function (curve, curveIndex, dataSeries) {
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
+        sites: sitePlot,
         points: {
             symbol: pointSymbol,
             fillColor: curve['color'],
