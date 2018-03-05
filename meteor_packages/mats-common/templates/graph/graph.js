@@ -566,7 +566,7 @@ Template.graph.events({
                 document.getElementById("textMapView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.map:
-                Session.set('graphViewMode',matsTypes.PlotView.textThreshold);
+                Session.set('graphViewMode',matsTypes.PlotView.textMap);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
