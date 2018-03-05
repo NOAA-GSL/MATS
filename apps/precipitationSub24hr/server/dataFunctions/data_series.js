@@ -23,6 +23,7 @@ dataSeries = function (plotParams, plotFunction) {
     var maxValuesPerAvtime = 0;
     var idealValues = [];
     var cycles = [];
+    var fhrs = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -44,6 +45,7 @@ dataSeries = function (plotParams, plotFunction) {
         var average = averageOptionsMap[averageStr][0];
         var scaleStr = curve['scale'];
         var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        const forecastLength = 0; //precip apps have no forecast length, but the query and matching algorithms still need it passed in.
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -59,10 +61,10 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select {{average}} as avtime, " +
-                "{{statistic}} " +
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
+                "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
@@ -96,6 +98,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 d = queryResult.data;
                 cycles[curveIndex] = queryResult.cycles;
+                fhrs[curveIndex] = forecastLength;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -140,6 +143,44 @@ dataSeries = function (plotParams, plotFunction) {
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
+
+            //determine cadence of diff curve
+            var diffedCurveA = diffFrom[0];
+            var diffedCurveB = diffFrom[1];
+
+            var curveACylces = cycles[diffedCurveA];
+            var curveBCylces = cycles[diffedCurveB];
+
+            var newCurveACycles = [];
+            var newCurveBCycles = [];
+
+            var currentInterval;
+
+            if (curveACylces.length === 1) {
+                var curveAInterval = curveACylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveACycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveACycles = curveACylces;
+            }
+
+            if (curveBCylces.length === 1) {
+                var curveBInterval = curveBCylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveBCycles.push(currentInterval);
+                    currentInterval = currentInterval + curveBInterval;
+                }
+            } else {
+                newCurveBCycles = curveBCylces;
+            }
+
+            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+            fhrs[curveIndex] = fhrs[diffedCurveA];
+
         }
 
         const mean = sum / count;
@@ -162,7 +203,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;

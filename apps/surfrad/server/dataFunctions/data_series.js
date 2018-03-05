@@ -22,6 +22,7 @@ dataSeries = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
     var maxValuesPerAvtime = 0;
     var cycles = [];
+    var fhrs = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -119,6 +120,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 d = queryResult.data;
                 cycles[curveIndex] = queryResult.cycles;
+                fhrs[curveIndex] = forecastLength;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -163,6 +165,44 @@ dataSeries = function (plotParams, plotFunction) {
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
+
+            //determine cadence of diff curve
+            var diffedCurveA = diffFrom[0];
+            var diffedCurveB = diffFrom[1];
+
+            var curveACylces = cycles[diffedCurveA];
+            var curveBCylces = cycles[diffedCurveB];
+
+            var newCurveACycles = [];
+            var newCurveBCycles = [];
+
+            var currentInterval;
+
+            if (curveACylces.length === 1) {
+                var curveAInterval = curveACylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveACycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveACycles = curveACylces;
+            }
+
+            if (curveBCylces.length === 1) {
+                var curveBInterval = curveBCylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveBCycles.push(currentInterval);
+                    currentInterval = currentInterval + curveBInterval;
+                }
+            } else {
+                newCurveBCycles = curveBCylces;
+            }
+
+            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+            fhrs[curveIndex] = fhrs[diffedCurveA];
+
         }
 
         const mean = sum / count;
@@ -185,7 +225,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;

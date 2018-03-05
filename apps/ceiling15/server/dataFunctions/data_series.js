@@ -28,6 +28,7 @@ dataSeries = function (plotParams, plotFunction) {
     var maxValuesPerAvtime = 0;
     var idealValues = [];
     var cycles = [];
+    var fhrs = [];
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
@@ -50,8 +51,9 @@ dataSeries = function (plotParams, plotFunction) {
         var averageStr = curve['average'];
         var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         var average = averageOptionsMap[averageStr][0];
-        var forecastLength = Math.floor(Number(curve['forecast-length']));
-        var forecastMinute = (Number(curve['forecast-length']) - forecastLength) * 60;
+        var forecastLength = Number(curve['forecast-length']);
+        var forecastHour = Math.floor(forecastLength);
+        var forecastMinute = (forecastLength - forecastHour) * 60;
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -74,7 +76,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.time >= {{fromSecs}} " +
+                "and m0.time <  {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.fcst_min = {{forecastMinute}} " +
@@ -84,7 +87,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{threshold}}', threshold);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLength}}', forecastHour);
             statement = statement.replace('{{forecastMinute}}', forecastMinute);
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
@@ -110,6 +113,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 d = queryResult.data;
                 cycles[curveIndex] = queryResult.cycles;
+                fhrs[curveIndex] = forecastLength;
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
@@ -154,6 +158,44 @@ dataSeries = function (plotParams, plotFunction) {
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
+
+            //determine cadence of diff curve
+            var diffedCurveA = diffFrom[0];
+            var diffedCurveB = diffFrom[1];
+
+            var curveACylces = cycles[diffedCurveA];
+            var curveBCylces = cycles[diffedCurveB];
+
+            var newCurveACycles = [];
+            var newCurveBCycles = [];
+
+            var currentInterval;
+
+            if (curveACylces.length === 1) {
+                var curveAInterval = curveACylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveACycles.push(currentInterval);
+                    currentInterval = currentInterval + curveAInterval;
+                }
+            } else {
+                newCurveACycles = curveACylces;
+            }
+
+            if (curveBCylces.length === 1) {
+                var curveBInterval = curveBCylces[0];
+                currentInterval = 0;
+                while (currentInterval < (24*3600*1000)){
+                    newCurveBCycles.push(currentInterval);
+                    currentInterval = currentInterval + curveBInterval;
+                }
+            } else {
+                newCurveBCycles = curveBCylces;
+            }
+
+            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
+            fhrs[curveIndex] = fhrs[diffedCurveA];
+
         }
 
         const mean = sum / count;
@@ -176,7 +218,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles);
+        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
     }
 
     var diffFrom;

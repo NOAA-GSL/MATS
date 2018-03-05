@@ -62,15 +62,18 @@ dataDieOff = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             var statement = "SELECT " +
                 "m0.fcst_len AS avtime, " +
+                "count(distinct m0.time) as N_times, " +
+                "min(m0.time) as min_secs, " +
+                "max(m0.time) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0" +
-                " where 1=1" +
-                " {{validTimeClause}}" +
-                " and m0.yy+m0.ny+m0.yn+m0.nn > 0" +
-                " and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
-                " and m0.trsh = {{threshold}} " +
-                " group by avtime" +
-                " order by avtime;";
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
+                "{{validTimeClause}} " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
+                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "group by avtime " +
+                "order by avtime;";
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);

@@ -648,66 +648,68 @@ dataSeries = function (plotParams, plotFunction) {
                 console.log('caught error processing curve - results in no data' + label);
             }
         } else {   // this is a difference curve... we have to use the maximum valid interval
+            normalizedData = [];
             var minuendIndex = 0;
             var subtrahendIndex = 0; // base curve
             var minuendData = dataset[diffFrom[0]].data;
             var subtrahendData = dataset[diffFrom[1]].data;
-            var minuendEndTime = minuendData[minuendData.length - 1][0];
-            var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
-            var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
-            normalizedData = [];
-            // calculate difference curve values
-            // minuend - subtrahend = difference.
-            // the minuend is the curve from which the base curve values will be subtracted
-            while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
-                // if necessary, increment the base index until it catches up
-                subtrahendIndex++;
-            }
-            while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
-                // if necessary, increment the from index until it catches up
-                minuendIndex++;
-            }
-            // now the times should be equal
-            count = 0;
-            sum = 0;
-            try {
-                var diffTime = (minuendData[minuendIndex])[0];
-                while ((diffTime <= diffEndTime) && (subtrahendIndex <= subtrahendData.length - 1) && (minuendIndex <= minuendData.length - 1)) {
-                    while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
-                        // if necessary, increment the base index until it catches up
-                        subtrahendIndex++;
-                    }
-                    while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
-                        // if necessary, increment the from index until it catches up
-                        minuendIndex++;
-                    }
-                    var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
-                    var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
-                    var diffValue = (fromValue == null || baseValue == null) ? null : fromValue - baseValue;
-                    var diffSeconds = diffTime / 1000;
-                    var d = new Date(Number(diffTime)).toUTCString();
-                    var tooltip = label +
-                        "<br>seconds:" + diffSeconds +
-                        "<br>time:" + d +
-                        "<br> diffValue:" + diffValue;
-                    yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
-                    yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
-                    normalizedData.push([diffTime, diffValue, [0], [0], {
-                        seconds: diffSeconds,
-                        date: d,
-                        minuend: fromValue,
-                        subtrahend: baseValue
-                    }, tooltip]);
-                    diffTime = Number(diffTime) + Number(maxValidInterval);
+            if (minuendData.length != 0 && subtrahendData.length != 0) {
+                var minuendEndTime = minuendData[minuendData.length - 1][0];
+                var subtrahendEndTime = subtrahendData[subtrahendData.length - 1][0];
+                var diffEndTime = minuendEndTime < subtrahendEndTime ? minuendEndTime : subtrahendEndTime;
+                // calculate difference curve values
+                // minuend - subtrahend = difference.
+                // the minuend is the curve from which the base curve values will be subtracted
+                while (subtrahendData[subtrahendIndex][0] < minuendData[minuendIndex][0]) {
+                    // if necessary, increment the base index until it catches up
                     subtrahendIndex++;
-                    minuendIndex++;
-                    count++;
-                    sum += diffValue;
                 }
-                average = sum / count;
-            } catch (err) {
-                console.log("caught error");
-                throw( new Error("caught " + err.message));
+                while (minuendData[minuendIndex][0] < subtrahendData[subtrahendIndex][0]) {
+                    // if necessary, increment the from index until it catches up
+                    minuendIndex++;
+                }
+                // now the times should be equal
+                count = 0;
+                sum = 0;
+                try {
+                    var diffTime = (minuendData[minuendIndex])[0];
+                    while ((diffTime <= diffEndTime) && (subtrahendIndex <= subtrahendData.length - 1) && (minuendIndex <= minuendData.length - 1)) {
+                        while ((subtrahendData[subtrahendIndex])[0] < (minuendData[minuendIndex])[0]) {
+                            // if necessary, increment the base index until it catches up
+                            subtrahendIndex++;
+                        }
+                        while ((minuendData[minuendIndex])[0] < (subtrahendData[subtrahendIndex])[0]) {
+                            // if necessary, increment the from index until it catches up
+                            minuendIndex++;
+                        }
+                        var fromValue = minuendData[minuendIndex][1] == undefined ? null : minuendData[minuendIndex][1];
+                        var baseValue = subtrahendData[subtrahendIndex][1] == undefined ? null : subtrahendData[subtrahendIndex][1];
+                        var diffValue = (fromValue == null || baseValue == null) ? null : fromValue - baseValue;
+                        var diffSeconds = diffTime / 1000;
+                        var d = new Date(Number(diffTime)).toUTCString();
+                        var tooltip = label +
+                            "<br>seconds:" + diffSeconds +
+                            "<br>time:" + d +
+                            "<br> diffValue:" + diffValue;
+                        yAxisMins[curveIndex] = diffValue < yAxisMins[curveIndex] ? diffValue : yAxisMins[curveIndex];
+                        yAxisMaxes[curveIndex] = diffValue > yAxisMaxes[curveIndex] ? diffValue : yAxisMaxes[curveIndex];
+                        normalizedData.push([diffTime, diffValue, [0], [0], {
+                            seconds: diffSeconds,
+                            date: d,
+                            minuend: fromValue,
+                            subtrahend: baseValue
+                        }, tooltip]);
+                        diffTime = Number(diffTime) + Number(maxValidInterval);
+                        subtrahendIndex++;
+                        minuendIndex++;
+                        count++;
+                        sum += diffValue;
+                    }
+                    average = sum / count;
+                } catch (err) {
+                    console.log("caught error");
+                    throw( new Error("caught " + err.message));
+                }
             }
         }
 
@@ -839,19 +841,19 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 if (curves[ci].diffFrom == undefined || curves[ci].diffFrom === null) {
                     // not a difference curve
-                    if (dataset[ci].data[dataIndexes[ci]][2]) {
+                    if (dataset[ci].data[dataIndexes[ci]][4]) {
                         if (levelsToMatch.length === 0) {
-                            levelsToMatch = dataset[ci].data[dataIndexes[ci]][2].timeLevels;
+                            levelsToMatch = dataset[ci].data[dataIndexes[ci]][4].timeLevels;
                         } else {
-                            if (dataset[ci].data[dataIndexes[ci]][2].timeLevels) {
-                                levelsToMatch = _.intersection(levelsToMatch, dataset[ci].data[dataIndexes[ci]][2].timeLevels);
+                            if (dataset[ci].data[dataIndexes[ci]][4].timeLevels) {
+                                levelsToMatch = _.intersection(levelsToMatch, dataset[ci].data[dataIndexes[ci]][4].timeLevels);
                             }
                         }
                         if (sitesToMatch.length === 0) {
-                            sitesToMatch = dataset[ci].data[dataIndexes[ci]][2].timeSites;
+                            sitesToMatch = dataset[ci].data[dataIndexes[ci]][4].timeSites;
                         } else {
-                            if (dataset[ci].data[dataIndexes[ci]][2].timeSites) {
-                                sitesToMatch = _.intersection(sitesToMatch, dataset[ci].data[dataIndexes[ci]][2].timeSites);
+                            if (dataset[ci].data[dataIndexes[ci]][4].timeSites) {
+                                sitesToMatch = _.intersection(sitesToMatch, dataset[ci].data[dataIndexes[ci]][4].timeSites);
                             }
                         }
                     }
@@ -873,13 +875,13 @@ dataSeries = function (plotParams, plotFunction) {
                         }
                     }
                     if (matchLevel) {
-                        myLevels = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeLevels : [];
+                        myLevels = dataset[ci].data[dataIndexes[ci]][4] ? dataset[ci].data[dataIndexes[ci]][4].timeLevels : [];
                         if (myLevels !== undefined && matsDataUtils.arrayContainsArray(myLevels, levelsToMatch) == false) {
                             levelsMatches = false;
                         }
                     }
                     if (matchSite) {
-                        mySites = dataset[ci].data[dataIndexes[ci]][2] ? dataset[ci].data[dataIndexes[ci]][2].timeSites : [];
+                        mySites = dataset[ci].data[dataIndexes[ci]][4] ? dataset[ci].data[dataIndexes[ci]][4].timeSites : [];
                         if (mySites !== undefined && matsDataUtils.arrayContainsArray(mySites, sitesToMatch) == false) {
                             sitesMatches = false;
                         }
@@ -904,14 +906,14 @@ dataSeries = function (plotParams, plotFunction) {
                     if (curves[sci].diffFrom == null) {
                         // non diff curve
                         if (matchLevel || matchSite) {
-                            var dataElement = dataset[sci].data[dataIndexes[sci]][2];
+                            var dataElement = dataset[sci].data[dataIndexes[sci]][4];
                             var val = dataset[sci].data[dataIndexes[sci]][1];
                             var timeSum = 0;
                             var sitesValueNum = 0;
                             if (matchSite) {
                                 Object.keys(dataElement.sites).forEach(function (siteId) {
                                     if (sitesToMatch.indexOf(Number(siteId)) === -1) {
-                                        delete dataset[sci].data[dataIndexes[sci]][2].sites[siteId];
+                                        delete dataset[sci].data[dataIndexes[sci]][4].sites[siteId];
                                     }
                                 });
                                 // if level matching is required let it reprocess the statistics otherwise do it here
@@ -930,9 +932,9 @@ dataSeries = function (plotParams, plotFunction) {
                                             }
                                         }
                                     });
-                                    dataset[sci].data[dataIndexes[sci]][2].timeLevels = timeLevels;
+                                    dataset[sci].data[dataIndexes[sci]][4].timeLevels = timeLevels;
                                 }
-                                dataset[sci].data[dataIndexes[sci]][2].timeSites = sitesToMatch;
+                                dataset[sci].data[dataIndexes[sci]][4].timeSites = sitesToMatch;
                             }
                             if (matchLevel) {
                                 // if sites match happened the dataElement will have been modified to reflect site matching
@@ -966,13 +968,13 @@ dataSeries = function (plotParams, plotFunction) {
                             }
 
                             dataElement.timeMean = timeSum / sitesValueNum;
-                            dataset[sci].data[dataIndexes[sci]][2] = dataElement;
+                            dataset[sci].data[dataIndexes[sci]][4] = dataElement;
                             tooltip = curves[sci].label +
                                 "<br>seconds:" + time / 1000 +
                                 "<br>time:" + new Date(Number(time)).toUTCString() +
                                 "<br>statistic:" + curves[sci].statistic +
                                 "<br> matchValue:" + dataElement.timeMean;
-                            dataset[sci].data[dataIndexes[sci]][1] = dataset[sci].data[dataIndexes[sci]][2].timeMean;
+                            dataset[sci].data[dataIndexes[sci]][1] = dataset[sci].data[dataIndexes[sci]][4].timeMean;
                         }
                     } else {
                         // difference curve
@@ -984,8 +986,8 @@ dataSeries = function (plotParams, plotFunction) {
                         var newMinuend = dataset[minuendCurveIndex].data[dataIndexes[minuendCurveIndex]][1];
                         var newSubtrahend = dataset[subtrahendCurveIndex].data[dataIndexes[subtrahendCurveIndex]][1];
                         var newDifference = newMinuend - newSubtrahend;
-                        dataset[sci].data[dataIndexes[sci]][2].minuend = newMinuend;
-                        dataset[sci].data[dataIndexes[sci]][2].subtrahend = newSubtrahend;
+                        dataset[sci].data[dataIndexes[sci]][4].minuend = newMinuend;
+                        dataset[sci].data[dataIndexes[sci]][4].subtrahend = newSubtrahend;
                         dataset[sci].data[dataIndexes[sci]][1] = newMinuend - newSubtrahend;
                         tooltip = curves[sci].label +
                             "<br>seconds:" + time / 1000 +
@@ -993,7 +995,7 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br> matchDiffValue:" + dataset[sci].data[dataIndexes[sci]][1];
                     }
                     // rewrite the tooltip (element[3])
-                    dataset[sci].data[dataIndexes[sci]][3] = tooltip;
+                    dataset[sci].data[dataIndexes[sci]][5] = tooltip;
                     const valueObject = dataset[sci].data[dataIndexes[sci]];
                     const valData = valueObject[1];
                     // have to recalculate mins and maxes - might be throwing away outlier data
@@ -1019,24 +1021,33 @@ dataSeries = function (plotParams, plotFunction) {
             }
             time = Number(time) + Number(maxValidInterval);
         } // while time
+
+        // if curves were empty, newDataSet was never populated. Need to do that here.
+        for (ci = 0; ci < curvesLength; ci++) {
+            newDataSet[ci] = newDataSet[ci] === undefined ? {} : newDataSet[ci];
+            newDataSet[ci].data = newDataSet[ci].data === undefined ? [] : newDataSet[ci].data;
+        }
+
         // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
         for (ci = 0; ci < curvesLength; ci++) {
             if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
                 continue;   // don't do it if there isn't an annotation
             }
-
-            var sum = 0;
-            var count = 0;
+            sum = 0;
+            count = 0;
+            var mean = null;
             d = newDataSet[ci].data;
-            var mean = d[0][1];
-            for (var i = 0; i < d.length; i++) {
-                if (d[i][1] !== null) {
-                    sum = sum + d[i][1];
-                    count++
+            if (d.length > 0) {
+                mean = d[0][1];
+                for (var i = 0; i < d.length; i++) {
+                    if (d[i][1] !== null) {
+                        sum = sum + d[i][1];
+                        count++
+                    }
                 }
-            }
-            if (count > 1) {
-                mean = sum / count;
+                if (count > 1) {
+                    mean = sum / count;
+                }
             }
             const annotationParts = dataset[ci].annotation.split(" = ");
             annotationParts[1] = mean === null ? null : mean.toPrecision(4);
