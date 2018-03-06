@@ -109,7 +109,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool, statement, interval);
+                queryResult = matsDataUtils.queryDieoffWithLevelsDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -154,7 +154,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForDieoffDiffCurve({
+            var diffResult = matsDataUtils.getDataForDieoffWithLevelsDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -185,28 +185,44 @@ dataDieOff = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
-    var sub_secs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
 
-        var subSecs = new Set();
+        var subSecs = [];
+        var subLevs = [];
         var fhrGroups = [];
+        var currFHR;
+
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
             fhrGroups[curveIndex] = [];
+            subSecs[curveIndex] = {};
+            subLevs[curveIndex] = {};
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every fhr
-                sub_secs = data[di][4];
-                fhrGroups[curveIndex].push(data[di][0]);
-                for (var si = 0; si < sub_secs.length; si++) {
-                    var sec = sub_secs[si];
-                    subSecs.add(sec);
-                }
+                currFHR = data[di][0];
+                subSecs[curveIndex][currFHR] = data[di][4];
+                subLevs[curveIndex][currFHR] = data[di][5];
+                fhrGroups[curveIndex].push(currFHR);
             }
         }
         var matchingFhrs = _.intersection.apply(_, fhrGroups);
-        var subSecIntersection = Array.from(subSecs);
+        var subSecIntersection = {};
+        var subLevIntersection = {};
+
+        for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
+            currFHR = matchingFhrs[fi];
+            var currSubSecIntersection = subSecs[0][currFHR];
+            var currSubLevIntersection = subLevs[0][currFHR];
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);
+                currSubLevIntersection = _.intersection(currSubLevIntersection,subLevs[curveIndex][currFHR]);
+            }
+            subSecIntersection[currFHR] = currSubSecIntersection;
+            subLevIntersection[currFHR] = currSubLevIntersection;
+        }
+
     }
 
     var diffFrom;
@@ -227,26 +243,38 @@ dataDieOff = function (plotParams, plotFunction) {
         while (di < data.length) {
             if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingFhrs.indexOf(data[di][0]) === -1) {
                 dataset[curveIndex].data.splice(di, 1);
-                continue;   // not a matching level - skip it
+                continue;   // not a matching fhr - skip it
             }
 
-            sub_secs = data[di][4];
+            var sub_secs = data[di][4];
+            var sub_levs = data[di][5];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_secs)) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0 && sub_levs.length > 0) {
+                currFHR = data[di][0];
                 var newSubValues = [];
-                for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
-                    var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
-                    var newVal = subValues[secsIndex];
-                    if (newVal === undefined || newVal == 0) {
-                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                    } else {
-                        newSubValues.push(newVal);
+                var newSubSecs = [];
+                var newSubLevs = [];
+
+                for (var si = 0; si < sub_secs.length; si++) {
+                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1 && subLevIntersection[currFHR].indexOf(sub_levs[si]) !== -1) {
+                        var newVal = subValues[si];
+                        var newSec = sub_secs[si];
+                        var newLev = sub_levs[si];
+                        if (newVal === undefined || newVal == 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        } else {
+                            newSubValues.push(newVal);
+                            newSubSecs.push(newSec);
+                            newSubLevs.push(newLev);
+                        }
                     }
                 }
+
                 data[di][3] = newSubValues;
-                data[di][4] = subSecIntersection;
+                data[di][4] = newSubSecs;
+                data[di][5] = newSubLevs;
             }
 
             /*
