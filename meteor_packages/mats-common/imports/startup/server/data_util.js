@@ -141,6 +141,7 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
+//this function checks if values of subArray are also in superArray
 const arrayContainsArray = function (superArray, subArray) {
     superArray.sort(function (a, b) {
         return Number(a) - Number(b);
@@ -162,6 +163,20 @@ const arrayContainsArray = function (superArray, subArray) {
     }
     // make sure there are no elements left in sub
     return j == subArray.length;
+};
+
+//this function checks if the entire array subArray is contained in superArray
+const arrayContainsSubArray = function (superArray, subArray) {
+    var i, j, current;
+    for(i = 0; i < superArray.length; ++i){
+        if(subArray.length === superArray[i].length){
+            current = superArray[i];
+            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
+            if(j === subArray.length)
+                return true;
+        }
+    }
+    return false;
 };
 
 const getDieOffMatchedDataSet = function (dataset) {
@@ -3346,6 +3361,7 @@ export default matsDataUtils = {
     sortFunction: sortFunction,
     arraysEqual: arraysEqual,
     arrayContainsArray: arrayContainsArray,
+    arrayContainsSubArray: arrayContainsSubArray,
     areObjectsEqual: areObjectsEqual,
 
     querySeriesDB: querySeriesDB,

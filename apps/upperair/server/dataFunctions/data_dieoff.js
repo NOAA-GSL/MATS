@@ -200,7 +200,7 @@ dataDieOff = function (plotParams, plotFunction) {
             subSecs[curveIndex] = {};
             subLevs[curveIndex] = {};
             var data = dataset[curveIndex].data;
-            for (var di = 0; di < data.length; di++) { // every fhr
+            for (di = 0; di < data.length; di++) { // every fhr
                 currFHR = data[di][0];
                 subSecs[curveIndex][currFHR] = data[di][4];
                 subLevs[curveIndex][currFHR] = data[di][5];
@@ -208,19 +208,25 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         }
         var matchingFhrs = _.intersection.apply(_, fhrGroups);
-        var subSecIntersection = {};
-        var subLevIntersection = {};
-
+        var subIntersections = [];
         for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
             currFHR = matchingFhrs[fi];
-            var currSubSecIntersection = subSecs[0][currFHR];
-            var currSubLevIntersection = subLevs[0][currFHR];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);
-                currSubLevIntersection = _.intersection(currSubLevIntersection,subLevs[curveIndex][currFHR]);
+            subIntersections[currFHR] = [];
+            var currSubIntersections = [];
+            for (si = 0; si < subSecs[0][currFHR].length; si++) {
+                currSubIntersections.push([subSecs[0][currFHR][si],subLevs[0][currFHR][si]]);
             }
-            subSecIntersection[currFHR] = currSubSecIntersection;
-            subLevIntersection[currFHR] = currSubLevIntersection;
+            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+                var tempSubIntersections = [];
+                for (si = 0; si < subSecs[curveIndex][currFHR].length; si++) { // every sub value
+                    var tempPair = [subSecs[curveIndex][currFHR][si], subLevs[curveIndex][currFHR][si]];
+                    if (matsDataUtils.arrayContainsSubArray(currSubIntersections,tempPair)) {
+                        tempSubIntersections.push(tempPair);
+                    }
+                }
+                currSubIntersections = tempSubIntersections;
+            }
+            subIntersections[currFHR] = currSubIntersections;
         }
 
     }
@@ -258,7 +264,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 var newSubLevs = [];
 
                 for (var si = 0; si < sub_secs.length; si++) {
-                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1 && subLevIntersection[currFHR].indexOf(sub_levs[si]) !== -1) {
+                    tempPair = [sub_secs[si],sub_levs[si]];
+                    if (matsDataUtils.arrayContainsSubArray(subIntersections[currFHR],tempPair)) {
                         var newVal = subValues[si];
                         var newSec = sub_secs[si];
                         var newLev = sub_levs[si];
