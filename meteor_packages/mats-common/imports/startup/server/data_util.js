@@ -179,6 +179,20 @@ const arrayContainsSubArray = function (superArray, subArray) {
     return false;
 };
 
+//this function finds the position of the array subArray in superArray
+const findArrayInSubArray = function (superArray, subArray) {
+    var i, j, current;
+    for(i = 0; i < superArray.length; ++i){
+        if(subArray.length === superArray[i].length){
+            current = superArray[i];
+            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
+            if(j === subArray.length)
+                return i;
+        }
+    }
+    return -1;
+};
+
 const getDieOffMatchedDataSet = function (dataset) {
     var curvesLength = dataset.length;
     var dataIndexes = {};
@@ -3362,6 +3376,7 @@ export default matsDataUtils = {
     arraysEqual: arraysEqual,
     arrayContainsArray: arrayContainsArray,
     arrayContainsSubArray: arrayContainsSubArray,
+    findArrayInSubArray: findArrayInSubArray,
     areObjectsEqual: areObjectsEqual,
 
     querySeriesDB: querySeriesDB,
