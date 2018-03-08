@@ -321,6 +321,13 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
+    isNotMap: function() {
+        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
+            return true;
+        } else {
+            return false;
+        }
+    },
     errorBarsAllowed: function () {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries);
     },

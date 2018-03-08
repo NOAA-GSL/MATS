@@ -15,6 +15,7 @@
                 <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button type="button" class="btn spacebutton" id="gc2-spacer"></button>
+                {{#if isNotMap}}
                 <span id="graph-touch-controls">
                     <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
                     <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
@@ -24,6 +25,7 @@
                     <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
                     <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
                 </span>
+                {{/if}}
             </div>
             <div id="sendModal" class="modal" role="dialog">
                 <div class="modal-dialog">
@@ -56,11 +58,13 @@
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
+                {{#if isNotMap}}
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
                     {{#if errorBarsAllowed}}
                         <input type="button" class="errorBars btn btn-primary btn-xs"  value="{{errorBarButtonText}}"  id="{{this.label}}-curve-errorbars"  style= "display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
                     {{/if}}
+                {{/if}}
                 </div><br>
             {{/each}}
             <hr/>
