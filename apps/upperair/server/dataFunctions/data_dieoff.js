@@ -14,11 +14,6 @@ dataDieOff = function (plotParams, plotFunction) {
     // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-
-    var weitemp = fromDate.split("-");
-    var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    weitemp = toDate.split("-");
-    var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -202,31 +197,31 @@ dataDieOff = function (plotParams, plotFunction) {
             var data = dataset[curveIndex].data;
             for (di = 0; di < data.length; di++) { // every fhr
                 currFHR = data[di][0];
-                subSecs[curveIndex][currFHR] = data[di][4];
+                subSecs[curveIndex][currFHR] = data[di][4]; //store raw secs and levels for each forecast hour
                 subLevs[curveIndex][currFHR] = data[di][5];
                 fhrGroups[curveIndex].push(currFHR);
             }
         }
-        var matchingFhrs = _.intersection.apply(_, fhrGroups);
+        var matchingFhrs = _.intersection.apply(_, fhrGroups);  //make sure we're only comparing similar fhrs, although the getDieOffMatchedDataSet should have taken care of this.
         var subIntersections = [];
         for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
             currFHR = matchingFhrs[fi];
             subIntersections[currFHR] = [];
             var currSubIntersections = [];
             for (si = 0; si < subSecs[0][currFHR].length; si++) {
-                currSubIntersections.push([subSecs[0][currFHR][si],subLevs[0][currFHR][si]]);
+                currSubIntersections.push([subSecs[0][currFHR][si],subLevs[0][currFHR][si]]);   //fill current intersection array with sec-lev pairs from the first curve
             }
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
                 var tempSubIntersections = [];
                 for (si = 0; si < subSecs[curveIndex][currFHR].length; si++) { // every sub value
-                    var tempPair = [subSecs[curveIndex][currFHR][si], subLevs[curveIndex][currFHR][si]];
-                    if (matsDataUtils.arrayContainsSubArray(currSubIntersections,tempPair)) {
-                        tempSubIntersections.push(tempPair);
+                    var tempPair = [subSecs[curveIndex][currFHR][si], subLevs[curveIndex][currFHR][si]];    //create an individual sec-lev pair for each index in the subsec and sublev arrays
+                    if (matsDataUtils.arrayContainsSubArray(currSubIntersections,tempPair)) {   //see if the individual sec-lev pair matches a pair from the current intersection array
+                        tempSubIntersections.push(tempPair);    //store matching pairs
                     }
                 }
-                currSubIntersections = tempSubIntersections;
+                currSubIntersections = tempSubIntersections;    //replace current intersection array with array of only pairs that matched from this loop through.
             }
-            subIntersections[currFHR] = currSubIntersections;
+            subIntersections[currFHR] = currSubIntersections;   //store final current intersection array for each forecast hour
         }
 
     }
@@ -240,7 +235,7 @@ dataDieOff = function (plotParams, plotFunction) {
         data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
-        //for (di = 0; di < dataLength; di++) { // every forecast hour
+
         var di = 0;
         var values = [];
         var fhrs = [];
@@ -263,9 +258,9 @@ dataDieOff = function (plotParams, plotFunction) {
                 var newSubSecs = [];
                 var newSubLevs = [];
 
-                for (var si = 0; si < sub_secs.length; si++) {
-                    tempPair = [sub_secs[si],sub_levs[si]];
-                    if (matsDataUtils.arrayContainsSubArray(subIntersections[currFHR],tempPair)) {
+                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
+                    tempPair = [sub_secs[si],sub_levs[si]]; //create sec-lev pair for each sub value
+                    if (matsDataUtils.arrayContainsSubArray(subIntersections[currFHR],tempPair)) {  //store the sub-value only if its sec-lev pair is in the matching array for this fhr
                         var newVal = subValues[si];
                         var newSec = sub_secs[si];
                         var newLev = sub_levs[si];
@@ -325,7 +320,7 @@ dataDieOff = function (plotParams, plotFunction) {
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
                 "<br>" + "fhr: " + data[di][0] +
-                "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
+                "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
@@ -343,7 +338,6 @@ dataDieOff = function (plotParams, plotFunction) {
         stats.miny = miny;
         stats.maxy = maxy;
         dataset[curveIndex]['stats'] = stats;
-        // }
     }
 
 
