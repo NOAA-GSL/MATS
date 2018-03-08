@@ -200,7 +200,7 @@ const getDieOffMatchedDataSet = function (dataset) {
     var sci;
     var hour = 0;
     var hourMax = Number.MIN_VALUE;
-    var dataMaxInterval = Number.MIN_VALUE;
+    var dataMinInterval = Number.MAX_VALUE;
     // set up the indexes and determine the minimum hour for the dataset
     if (curvesLength == 1) {
         return dataset;
@@ -214,6 +214,13 @@ const getDieOffMatchedDataSet = function (dataset) {
             return dataset;
         }
         dataIndexes[ci] = 0;
+        if (dataset[ci].data.length > 1) {
+            var diff;
+            for (var di = 0; di < dataset[ci].data.length - 1; di++) {  // don't go all the way to the end - one shy
+                diff = dataset[ci].data[di + 1][0] - dataset[ci].data[di][0];
+                dataMinInterval = dataMinInterval < diff ? dataMinInterval : diff;
+            }
+        }
         hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
     var done = false;
@@ -286,7 +293,7 @@ const getDieOffMatchedDataSet = function (dataset) {
                 newDataSet[sci].data.push(valueObject);
             }
         }
-        hour = hour + 1;
+        hour = hour + dataMinInterval;
     }// while hour
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
     for (ci = 0; ci < curvesLength; ci++) {
