@@ -10,6 +10,7 @@ var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
 var siteOptionsMap = {};
 var sitesLocationMap = [];
+var siteObjMap = {};
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
 var modelMetarsMap = {};
@@ -125,6 +126,7 @@ const doCurveParams = function () {
     }
 
     try {
+        matsCollections.SiteMap.remove({});
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metar_mats_test.desc from metar_mats_test order by name;");
         for (var i = 0; i < rows.length; i++) {
 
@@ -137,6 +139,9 @@ const doCurveParams = function () {
             siteOptionsMap[site_name] = [site_id];
             //masterSitesMap[site_name] = [site_description];
             //sitesLocationMap[site_name] = {lat: site_lat, lon: site_lon, elev: site_elev};
+
+            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+
             var point = [site_lat, site_lon];
             var obj = {
                 name: site_name,
@@ -158,7 +163,6 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
-    matsCollections.SiteMap.remove({});
     matsCollections.StationMap.remove({});
 
     if (matsCollections.StationMap.find({name: 'stations'}).count() == 0) {
@@ -169,6 +173,8 @@ const doCurveParams = function () {
             }
         );
     }
+
+
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
