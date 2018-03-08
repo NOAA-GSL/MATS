@@ -29,6 +29,7 @@ Template.map.onRendered(function () {
         minZoom: minZoomLevel,
         maxZoom: maxZoomLevel,
         wheelPxPerZoomLevel: 3
+      //  drawControl: true
     }).setView(defaultPoint, defaultZoomLevel);
     // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
 //    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
@@ -45,6 +46,14 @@ Template.map.onRendered(function () {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
         maxZoom: 16
     }).addTo(map);
+    //var drawnItems = new L.FeatureGroup();
+   // map.addLayer(drawnItems);
+   // var drawControl = new L.Control.Draw({
+    //    edit: {
+    //        featureGroup: drawnItems
+    //    }
+   // });
+   // map.addControl(drawControl);
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
     if (!markerFeatures) {
         markerFeatures = {};

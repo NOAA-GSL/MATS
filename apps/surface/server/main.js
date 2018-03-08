@@ -9,7 +9,6 @@ var modelOptionsMap = {};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
 var siteOptionsMap = {};
-var masterSitesMap = {};
 var sitesLocationMap = [];
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
@@ -67,6 +66,8 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
         matsCollections.StationMap.remove({});
     }
+
+    matsCollections.CurveParams.remove({});
 
     var rows;
     try {

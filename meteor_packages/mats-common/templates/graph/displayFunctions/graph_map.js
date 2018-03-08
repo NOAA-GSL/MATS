@@ -10,16 +10,14 @@ graphMap = function(result) {
     var defaultZoomLevel = 4;
     var minZoomLevel = 3;
     var maxZoomLevel = 10;
-    var peerName = dataset.sites.name;
+    var peerName = dataset[0].sites[0].name;
 
-    var targetElement = document.getElementsByName(peerName)[0];
-    if (!targetElement) {
-        return;
-    }
-    var targetId = '#' + targetElement.id;
-    var markers = dataset.sites;   // from app startup and queries
+    var markers = dataset[0].sites;   // from app startup and queries
     var markerFeatures = {};
-    var map = L.map("stationMap-Map", {
+
+    if (map != undefined) { map.remove(); }
+
+    var map = L.map("graphView", {
             doubleClickZoom: false,
             scrollWheelZoom: false,
             trackResize:true,
@@ -48,17 +46,17 @@ graphMap = function(result) {
         markerFeatures = {};
     }
 
-    var createIcon = function (m, color) {
+    var createIcon = function (m, color, label) {
         var options = m.options;
         var icon = L.divIcon({
-            iconSize: new L.point(0, 0),  // get rid of default white box icon
-            html: '<div style="border: none;' +
-            'width:' + options.size + 'px;' +
-            'height:' + options.size + 'px;' +
-            'background-color:' + color + ';' +
-            'border-radius:50%;">' +
+            iconSize: new L.point(0, 0), // get rid of default white box icon
+            html: label,//'<div style="border: none;' +
+            //'width:' + options.size + 'px;' +
+            //'height:' + options.size + 'px;' +
+            //'background-color:' + color + ';' +
+            //'border-radius:50%;">' +
             //'<b style="font-size: large">&nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
-            '</div>',
+            //'</div>',
             options: options
         });
         return icon;
@@ -75,44 +73,58 @@ graphMap = function(result) {
         });
         for (var m = 0; m < markers.length; m++) {
             var markerPeerOption = markers[m].options.peerOption;
-            var markerData = dataset[m];
-            var markerStat = markerData[4];
+            var markerData = dataset[0].data[m];
+            var markerStat = markerData[0][4];
+            var markerInt = Math.round(markerStat);
+            var markerLabel = markerInt.toString();
+            var markerPopUp = markerData[1];
             if (markerStat < 0) {
                 var markerColor = "rgb(0,0,255)"
+                var markerLabelFinal = markerLabel.fontcolor("blue");
             } else if (markerStat > 0) {
                 var markerColor = "rgb(255,0,0)"
+                var markerLabelFinal = markerLabel.fontcolor("red");
             } else {
                 var markerColor = "rgb(0,0,0)"
+                var markerLabelFinal = markerLabel.fontcolor("black");
             }
-            if (_.contains(peerOptions, markerPeerOption)) {
-                var Icon = createIcon(markers[m], markerColor);
-                var markerOptions = markers[m].options;
-                var title = markerOptions.peerOption + ' - ' + markerOptions.title;
-                var point = markers[m].point;
-                var markerId = point[0] + ',' + point[1] + ':' + title;
-                var features = {
-                    Icon: Icon,
-                    markerOptions: markerOptions,
-                    markerPeerOption: markerPeerOption
-                };
 
-                var marker = new L.Marker(markers[m].point, {
-                    icon: Icon,
-                    title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
-                })//.on('click', function (event) {
-                //        // toggle selection of corresponding site option for this marker
-                //        toggleTargetSelection(event);
-                //    }
-                //);
-                markerFeatures[markerId] = features;
-                map.addLayer(marker);
-            }
+            var Icon = createIcon(markers[m], markerColor, markerLabelFinal.bold());
+            var markerOptions = markers[m].options;
+            var title = markerOptions.peerOption + ' - ' + markerOptions.title;
+            var point = markers[m].point;
+            var markerId = point[0] + ',' + point[1] + ':' + title;
+            var features = {
+                Icon: Icon,
+                markerOptions: markerOptions,
+                markerPeerOption: markerPeerOption
+            };
+
+            var marker = new L.Marker(markers[m].point, {
+                icon: Icon,
+                title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
+            })
+            marker.bindPopup(markerPopUp);
+            marker.on('mouseover', function(e) {
+                this.openPopup();
+            });
+            marker.on('mouseout', function(e) {
+                this.closePopup();
+            });
+
+            //.on('click', function (event) {
+            //        // toggle selection of corresponding site option for this marker
+            //        toggleTargetSelection(event);
+            //    }
+            //);
+            markerFeatures[markerId] = features;
+            map.addLayer(marker);
+
         }
     };
 
     var refresh = function () {
         createMarkers();
-        var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
         // iterate through all the makers,
         // set the Icon
         $.each(map._layers, function (ml) {
@@ -140,24 +152,24 @@ graphMap = function(result) {
         //        map.invalidateSize();
         //    }, 10);
         //});
-        var ref = what.data.name + '-' + what.data.type;
+        var ref = 'graphView';
         var elem = document.getElementById(ref);
         //elem.style.height = mapHeight();
         //elem.style.width = mapWidth();
-        elem.style.height = '500px';
-        elem.style.width = '875px';
+        elem.style.height = vph;
+        elem.style.width = vpw;
     };
     // initial resize seems to be necessary
     resizeMap(this);
     // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible
-    var ref = 'stationMap-Map';
+    var ref = 'graphView';
     var elem = document.getElementById(ref);
     elem.addEventListener('resizeMap', function (e) {
         resizeMap(e.detail);
     });
 
     // register an event listener so that the select.js can ask the map div to refresh after a selection
-    var ref = 'stationMap-Map';
+    var ref = 'graphView';
     var elem = document.getElementById(ref);
     elem.addEventListener('refresh', function (e) {
         refresh(e.detail.refElement);

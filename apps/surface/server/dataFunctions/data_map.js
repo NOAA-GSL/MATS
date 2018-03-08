@@ -26,6 +26,7 @@ dataMap = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var dataSource = curve['data-source'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var sitesList = curve['sites'];
         var siteLength = sitesList.length;
@@ -97,6 +98,13 @@ dataMap = function (plotParams, plotFunction) {
                         recordCount: queryResult.data.length
                     }
                     d[siteIndex] = queryResult.data;
+
+                    var tooltips = site +
+                        "<br>" + "variable: " + variable +
+                        "<br>" + "model: " + dataSource +
+                        "<br>" + "model-obs: " + queryResult.data[0][4];
+
+                    d[siteIndex].push(tooltips);
                 } catch (e) {
                     e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                     throw new Error(e.message);
