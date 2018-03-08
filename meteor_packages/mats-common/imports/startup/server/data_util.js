@@ -2601,7 +2601,7 @@ const generateMapPlotOptions = function (dataset, curves) {
         tooltip: true,
         tooltipOpts: {
             // the ct value is the last element of the data series for profiles. This is the tooltip content.
-            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+            content: "<span style='font-size:75%'><strong>%ct</strong></span>"
         }
     };
     return options;
