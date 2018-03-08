@@ -55,6 +55,9 @@ dataMap = function (plotParams, plotFunction) {
         for (var siteIndex = 0; siteIndex < siteLength; siteIndex++) {
             if (diffFrom == null) {
                 var site = sitesList[siteIndex];
+
+                var siteOptions = matsCollections.SiteMap.findOne({siteName: site});
+
                 // this is a database driven curve, not a difference curve
                 var statement = "select s.name as sta_name, " +
                     "count(distinct m0.time) as N_times, " +
@@ -63,13 +66,13 @@ dataMap = function (plotParams, plotFunction) {
                     "sum(m0.{{variable}} - o.{{variable}})/count(distinct m0.time) as model_ob_diff " +
                     "from metars as s, obs as o, {{model}} as m0 " +
                     "where 1=1 " +
-                    "and m0.fcst_len = {{forecastLength}} " +
-                    "and m0.time >= '{{fromSecs}}' " +
-                    "and m0.time <= '{{toSecs}}' " +
-                    "and s.name = '{{station}}' " +
                     "and s.madis_id = m0.sta_id " +
                     "and s.madis_id = o.sta_id " +
                     "and m0.time = o.time " +
+                    "and s.madis_id = '{{station}}' " +
+                    "and m0.fcst_len = {{forecastLength}} " +
+                    "and m0.time >= '{{fromSecs}}' " +
+                    "and m0.time <= '{{toSecs}}' " +
                     ";";
 
                 statement = statement.replace('{{forecastLength}}', forecastLength);
@@ -82,7 +85,7 @@ dataMap = function (plotParams, plotFunction) {
                 }
                 statement = statement.replace('{{variable}}', variable);
                 statement = statement.replace('{{variable}}', variable);
-                statement = statement.replace('{{station}}', site);
+                statement = statement.replace('{{station}}', siteOptions.siteId);
 
                 dataRequests[curve.label + " - " + site] = statement;
                 var queryResult;
