@@ -223,7 +223,7 @@ Template.graph.helpers({
         return Session.get('Curves');
     },
     plotName: function () {
-        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) ? "" :  Session.get('PlotParams').plotAction.toUpperCase();
+        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map ? "" :  Session.get('PlotParams').plotAction.toUpperCase();
     },
     curveText: function () {
         if (this.diffFrom === undefined) {
@@ -274,7 +274,7 @@ Template.graph.helpers({
             } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
                 return "DieOff " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-                return "Map " + p.dates + " : " + format;
+                return "Map " + p.dates + " ";
             } else {
                 return "Scatter: " + p.dates + " : " + format;
             }
