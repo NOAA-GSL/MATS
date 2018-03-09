@@ -1,9 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsDataUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 
 const dateInitStr = matsCollections.dateInitStr();
@@ -359,8 +356,9 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
+
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select D.name as name, min_value, max_value, label from discriminator_range as D, variables as V where D.name = V.name;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select name, minimum_expected AS min_value, maximum_expected AS max_value, label from variables where type = 2;");
         for (var i = 0; i < rows.length; i++) {
             var label = rows[i].label;
             var name = rows[i].name;
@@ -374,7 +372,6 @@ var doCurveParams = function () {
     } catch (err) {
         console.log("Database error:", err.message);
     }
-
     try {
         var all_fcst_lens = new Set();
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +

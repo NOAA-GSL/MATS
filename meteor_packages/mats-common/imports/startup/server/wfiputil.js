@@ -390,7 +390,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
                             interpolationCount++;
                             for (var index = 0; index < values.length; index++) {
-                                valueSums[levels[index]] += values[index];
+                                valueSums[levels[index]] = isNaN(valueSums[levels[index]])? values[index]: valueSums[levels[index]] + values[index];
                                 interpolatedValues[levels[index]] = valueSums[levels[index]] / interpolationCount;
                             }
                         }
