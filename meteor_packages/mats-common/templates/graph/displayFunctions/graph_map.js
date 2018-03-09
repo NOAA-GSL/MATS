@@ -75,8 +75,7 @@ graphMap = function(result) {
             var markerPeerOption = markers[m].options.peerOption;
             var markerData = dataset[0].data[m];
             var markerStat = markerData[0][4];
-            var markerInt = Math.round(markerStat);
-            var markerLabel = markerInt.toString();
+            var markerLabel = markerStat.toFixed(1).toString();
             var markerPopUp = markerData[1];
             if (markerStat < 0) {
                 var markerColor = "rgb(0,0,255)"
@@ -159,6 +158,10 @@ graphMap = function(result) {
         elem.style.height = vph;
         elem.style.width = vpw;
     };
+
+    // hide the spinner
+    document.getElementById("spinner").style.display="none";
+
     // initial resize seems to be necessary
     resizeMap(this);
     // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible

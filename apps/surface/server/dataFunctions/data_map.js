@@ -83,8 +83,13 @@ dataMap = function (plotParams, plotFunction) {
                 } else {
                     statement = statement.replace('{{model}}', model + "qp");
                 }
-                statement = statement.replace('{{variable}}', variable);
-                statement = statement.replace('{{variable}}', variable);
+                if (variable == "temp" || variable == "dp" || variable == "rh" || variable == "press") {
+                    statement = statement.replace('{{variable}}', variable + "/10");
+                    statement = statement.replace('{{variable}}', variable + "/10");
+                } else {
+                    statement = statement.replace('{{variable}}', variable);
+                    statement = statement.replace('{{variable}}', variable);
+                }
                 statement = statement.replace('{{station}}', siteOptions.siteId);
 
                 dataRequests[curve.label + " - " + site] = statement;
@@ -100,12 +105,14 @@ dataMap = function (plotParams, plotFunction) {
                         duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                         recordCount: queryResult.data.length
                     }
+
+
                     d[siteIndex] = queryResult.data;
 
                     var tooltips = site +
                         "<br>" + "variable: " + variable +
                         "<br>" + "model: " + dataSource +
-                        "<br>" + "model-obs: " + queryResult.data[0][4];
+                        "<br>" + "model-obs: " + queryResult.data[0][4] + " " + varUnits;
 
                     d[siteIndex].push(tooltips);
                 } catch (e) {

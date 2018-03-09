@@ -604,19 +604,15 @@ var doCurveTextPatterns = function () {
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.map,
             textPattern: [
-                ['', 'label', ': '],
-                ['', 'data-source', ':'],
-                ['', 'sites', ':'],
-                ['', 'map', ', '],
-                ['', 'statistic', ', '],
+                ['', 'data-source', ': '],
+                ['', 'sites', ': '],
                 ['', 'variable', ', '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                ['avg:', 'average', ' ']
+                ['fcst_len: ', 'forecast-length', ' h ']
             ],
             displayParams: [
-                "label", "data-source", "sites", "statistic", "variable", "forecast-length", "average"
+                "data-source", "sites", "variable", "forecast-length"
             ],
-            groupSize: 7
+            groupSize: 4
         });
     }
 };

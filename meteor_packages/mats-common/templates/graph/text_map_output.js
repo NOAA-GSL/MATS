@@ -116,30 +116,11 @@ Template.textMapOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return false;
         }
-        var line = "<td>" + time + "</td>";
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
-        if (settings === undefined) {
-            return false;
-        }
-        const fillStr = settings.NullFillString;
-        // We must only set data when the times match on a curve.
-        var pdata = fillStr;
-        for (var curveIndex = 0; curveIndex < curves.length; curveIndex++) {
-            pdata = fillStr;
-            try {
-                // see if I have a valid data object for this curve and this time....
-                const dataPointVal = getDataForTime(curveIndex, time);
-                if (dataPointVal !== undefined) {
-                    pdata = dataPointVal.toPrecision(4);
-                }
-            } catch (problem) {
-                console.log("Problem in deriving curve text: " + problem);
-            }
-            // pdata is now either data value or fillStr
-            line += "<td>" + pdata + "</td>";
-        }
+        var line = "<td>" + time[0] + "</td><td>" + time[1] + "</td><td>" + time[2] + "</td><td>" + time[3] + "</td><td>" + time[4] + "</td>";
+
         return line;
     },
+
     stats: function(curve) {
         /*
          This (plotResultsUpDated) is very important.

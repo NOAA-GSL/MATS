@@ -8,30 +8,11 @@
         <table class="table table-condensed table-striped table-bordered">
             <thead>
             <tr>
-                <th>label</th>
-                <th>mean</th>
-                <th>standard deviation</th>
-                <th>n</th>
-                <th>standard error</th>
-                <th>minimum</th>
-                <th>maximum</th>
-            </tr>
-            </thead>
-            <tbody>
-            {{#each curves}}
-                <tr>
-                    {{{stats this}}}
-                </tr>
-            {{/each}}
-            </tbody>
-        </table>
-        <table class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                <th>hour of day</th>
-                {{#each curves}}
-                    <th>{{curveLabel this}}</th>
-                {{/each}}
+                <th>Site Name</th>
+                <th>Number of Times</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Average Difference</th>
             </tr>
             </thead>
             <tbody>
