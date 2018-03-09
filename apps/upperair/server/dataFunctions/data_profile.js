@@ -216,6 +216,7 @@ dataProfile = function(plotParams, plotFunction) {
             var values = [];
             var levels = [];
             var means = [];
+            var errorBars = [];
             while (di < data.length) {
                 if (matching && matchingLevels.indexOf(data[di][1]) === -1) {
                     dataset[curveIndex].data.splice(di, 1);
@@ -266,7 +267,7 @@ dataProfile = function(plotParams, plotFunction) {
                 // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
                 // unmatched curves get no error bars
                 const errorBar = errorResult.stde_betsy * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
+                errorBars.push(errorBar);
                 if (matching) {
                     data[di][2] = errorBar;
                 } else {
@@ -299,6 +300,18 @@ dataProfile = function(plotParams, plotFunction) {
                 }
                 di++;
             }
+
+            var errorBarAvg = matsDataUtils.average(errorBars);
+            var errorBarSquareDiffs = errorBars.map(function(value){
+                var diff = value - errorBarAvg;
+                var sqr = diff * diff;
+                return sqr;
+            });
+            var errorBarStdDev = Math.sqrt(matsDataUtils.average(errorBarSquareDiffs));
+            for (var ei=0; ei < errorBars.length; ei++) {
+                errorMax = errorBars[ei] > errorMax && errorBars[ei] < 2.5 * errorBarStdDev + errorBarAvg ? errorBars[ei] : errorMax;
+            }
+
             // get the overall stats for the text output - this uses the means not the stats. refer to
 
             //const stats = matsDataUtils.get_err(means.reverse(), levels.reverse()); // have to reverse because of data inversion
@@ -318,6 +331,7 @@ dataProfile = function(plotParams, plotFunction) {
             "yaxis": 1,
             "label": "zero",
             "color": "rgb(0,0,0)",
+            "annotation": "",
             "data": [
                 [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
                 [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
