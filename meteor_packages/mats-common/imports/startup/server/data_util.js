@@ -141,6 +141,7 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
+//this function checks if values of subArray are also in superArray
 const arrayContainsArray = function (superArray, subArray) {
     superArray.sort(function (a, b) {
         return Number(a) - Number(b);
@@ -164,7 +165,34 @@ const arrayContainsArray = function (superArray, subArray) {
     return j == subArray.length;
 };
 
-// dieoff plots always have interval 1
+//this function checks if the entire array subArray is contained in superArray
+const arrayContainsSubArray = function (superArray, subArray) {
+    var i, j, current;
+    for(i = 0; i < superArray.length; ++i){
+        if(subArray.length === superArray[i].length){
+            current = superArray[i];
+            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
+            if(j === subArray.length)
+                return true;
+        }
+    }
+    return false;
+};
+
+//this function finds the position of the array subArray in superArray
+const findArrayInSubArray = function (superArray, subArray) {
+    var i, j, current;
+    for(i = 0; i < superArray.length; ++i){
+        if(subArray.length === superArray[i].length){
+            current = superArray[i];
+            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
+            if(j === subArray.length)
+                return i;
+        }
+    }
+    return -1;
+};
+
 const getDieOffMatchedDataSet = function (dataset) {
     var curvesLength = dataset.length;
     var dataIndexes = {};
@@ -172,7 +200,7 @@ const getDieOffMatchedDataSet = function (dataset) {
     var sci;
     var hour = 0;
     var hourMax = Number.MIN_VALUE;
-    var dataMaxInterval = Number.MIN_VALUE;
+    var dataMinInterval = Number.MAX_VALUE;
     // set up the indexes and determine the minimum hour for the dataset
     if (curvesLength == 1) {
         return dataset;
@@ -186,6 +214,13 @@ const getDieOffMatchedDataSet = function (dataset) {
             return dataset;
         }
         dataIndexes[ci] = 0;
+        if (dataset[ci].data.length > 1) {
+            var diff;
+            for (var di = 0; di < dataset[ci].data.length - 1; di++) {  // don't go all the way to the end - one shy
+                diff = dataset[ci].data[di + 1][0] - dataset[ci].data[di][0];
+                dataMinInterval = dataMinInterval < diff ? dataMinInterval : diff;
+            }
+        }
         hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
     }
     var done = false;
@@ -258,7 +293,7 @@ const getDieOffMatchedDataSet = function (dataset) {
                 newDataSet[sci].data.push(valueObject);
             }
         }
-        hour = hour + 1;
+        hour = hour + dataMinInterval;
     }// while hour
     // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
     for (ci = 0; ci < curvesLength; ci++) {
@@ -1271,6 +1306,116 @@ const getDataForDieoffDiffCurve = function (params) {
     };
 };
 
+const getDataForDieoffWithLevelsDiffCurve = function (params) {
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - fhr (plotted against the x axis)
+     data[1] - statValue (ploted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - fhr values
+     data[4] - fhr times
+     data[5] - fhr stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
+    var ymin = params.ymin; // optional - current y axis minimum
+    var ymax = params.ymax;  // optional - current yaxis minimum
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // time values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var largeIntervalCurveData = dataset[diffFrom[0]].data;
+    if (dataset[diffFrom[0]].interval < dataset[diffFrom[1]].interval) {
+        largeIntervalCurveData = dataset[diffFrom[1]].data;
+    }
+    var minuendData = dataset[diffFrom[0]].data;
+    var subtrahendData = dataset[diffFrom[1]].data;
+    var subtrahendIndex = 0;
+    var minuendIndex = 0;
+    var d = [];
+    var count = 0;
+    var sum = 0;
+    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
+        var subtrahendTime = subtrahendData[subtrahendIndex][0];
+        var minuendTime = minuendData[minuendIndex][0];
+        var largeIntervalTime = largeIntervalCurveData[largeIntervalCurveIndex][0];
+
+        var minuendChanged = false;
+        while (largeIntervalTime > minuendTime && minuendIndex < minuendData.length - 1) {
+            minuendTime = minuendData[++minuendIndex][0];
+            minuendChanged = true;
+        }
+        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
+            ++minuendIndex;
+        }
+
+        var subtrahendChanged = false;
+        while (largeIntervalTime > subtrahendTime && subtrahendIndex < subtrahendData.length - 1) {
+            subtrahendTime = subtrahendData[++subtrahendIndex][0];
+            subtrahendChanged = true;
+        }
+        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
+            ++subtrahendIndex;
+        }
+
+        var diffValue = null;
+        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
+            if (minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) {
+                diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
+
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][5] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = diffValue;
+
+                var minuendDataSubValues = minuendData[minuendIndex][3];
+                var minuendDataSubSeconds = minuendData[minuendIndex][4];
+                var minuendDataSubLevels = minuendData[minuendIndex][5];
+                var subtrahendDataSubValues = subtrahendData[subtrahendIndex][3];
+                var subtrahendDataSubSeconds = subtrahendData[subtrahendIndex][4];
+                var subtrahendDataSubLevels = subtrahendData[subtrahendIndex][5];
+
+                for (var mvalIdx = 0; mvalIdx < minuendDataSubValues.length; mvalIdx++) {
+                    for (var svalIdx = 0; svalIdx < subtrahendDataSubValues.length; svalIdx++) {
+                        if (minuendDataSubSeconds[mvalIdx] === subtrahendDataSubSeconds[svalIdx] && minuendDataSubLevels[mvalIdx] === subtrahendDataSubLevels[svalIdx]) {
+
+                            d[largeIntervalCurveIndex][5].push(minuendDataSubLevels[mvalIdx]);
+                            d[largeIntervalCurveIndex][4].push(minuendDataSubSeconds[mvalIdx]);
+                            d[largeIntervalCurveIndex][3].push(minuendDataSubValues[mvalIdx] - subtrahendDataSubValues[svalIdx]);
+
+                        }
+                    }
+                }
+
+                ymin = diffValue < ymin ? diffValue : ymin;
+                ymax = diffValue > ymax ? diffValue : ymax;
+                sum += diffValue;
+                count++;
+            } else {
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][5] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = null;
+            }
+        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
+            break;
+        }
+    }
+    return {
+        sum: sum,
+        count: count,
+        dataset: d,
+        ymin: ymin,
+        ymax: ymax
+    };
+};
+
 const getDataForValidTimeDiffCurve = function (params) {
     const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
     var ymin = params.ymin; // optional - current y axis minimum
@@ -1702,7 +1847,7 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
         error: error,
     };
 };
-const queryDieoffDB = function (pool, statement, interval) {
+const queryDieoffDB = function (pool, statement) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -1761,6 +1906,87 @@ const queryDieoffDB = function (pool, statement, interval) {
                     // d.push([curveFhrs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
                 } else {
                     d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]); // -1 is a placeholder for the stde_betsy value
+                }
+            }
+
+            dFuture['return']();
+        }
+    });
+
+    // wait for future to finish
+    dFuture.wait();
+    return {
+        data: d,
+        error: error,
+        N0: N0,
+        N_times: N_times,
+    };
+};
+
+const queryDieoffWithLevelsDB = function (pool, statement) {
+    var dFuture = new Future();
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var N0 = [];
+    var N_times = [];
+    var ymin;
+    var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+
+    pool.query(statement, function (err, rows) {
+        // query callback - build the curve data from the results - or set an error
+        if (err != undefined) {
+            error = err.message;
+            dFuture['return']();
+        } else if (rows === undefined || rows.length === 0) {
+            error = matsTypes.Messages.NO_DATA_FOUND;
+            // done waiting - error condition
+            dFuture['return']();
+        } else {
+            ymin = Number(rows[0].stat);
+            ymax = Number(rows[0].stat);
+            var curveFhrs = [];
+            var curveStat = [];
+            var curveSubValues = [];
+            var curveSubSecs = [];
+            var curveSubLevs = [];
+
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var fhr = Number(rows[rowIndex].avtime);
+                var stat = rows[rowIndex].stat;
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                var sub_values;
+                var sub_secs;
+                var sub_levs;
+                if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+                    sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                    sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                } else {
+                    sub_values = NaN;
+                    sub_secs = NaN;
+                    sub_levs = NaN;
+                }
+                curveFhrs.push(fhr);
+                curveStat.push(stat);
+                curveSubValues.push(sub_values);
+                curveSubSecs.push(sub_secs);
+                curveSubLevs.push(sub_levs);
+            }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            for (var d_idx = 0; d_idx < curveFhrs.length; d_idx++) {
+                var this_N0 = N0[d_idx];
+                var this_N_times = N_times[d_idx];
+                // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                if (this_N0 < 0.05 * N0_max) {
+                    // d.push([curveFhrs[d_idx], null, -1, NaN, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
+                } else {
+                    d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]); // -1 is a placeholder for the stde_betsy value
                 }
             }
 
@@ -3149,19 +3375,41 @@ const areObjectsEqual = function (o, p) {
     }
 };
 
+// utility for calculating std of errorbars
+const average = function (data){
+    var sum = data.reduce(function(sum, value){
+        return value == null ? sum : sum + value;
+    }, 0);
+    var avg = sum / data.length;
+    return avg;
+};
+
 export default matsDataUtils = {
-    getDateRange: getDateRange,
+    areObjectsEqual: areObjectsEqual,
+    arrayContainsArray: arrayContainsArray,
+    arrayContainsSubArray: arrayContainsSubArray,
+    arraysEqual: arraysEqual,
+    average: average,
     dateConvert: dateConvert,
+    findArrayInSubArray: findArrayInSubArray,
+    getDateRange: getDateRange,
+    get_err: get_err,
+    getPointSymbol: getPointSymbol,
     secsConvert: secsConvert,
     sortFunction: sortFunction,
-    arraysEqual: arraysEqual,
-    arrayContainsArray: arrayContainsArray,
-    areObjectsEqual: areObjectsEqual,
 
+    doColorScheme: doColorScheme,
+    doSettings: doSettings,
+    doCredentials: doCredentials,
+    doAuthorization: doAuthorization,
+    doRoles: doRoles,
+
+    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
     querySeriesDB: querySeriesDB,
     querySeriesWithLevelsDB: querySeriesWithLevelsDB,
     queryProfileDB: queryProfileDB,
     queryDieoffDB: queryDieoffDB,
+    queryDieoffWithLevelsDB: queryDieoffWithLevelsDB,
     queryThresholdDB: queryThresholdDB,
     queryValidTimeDB: queryValidTimeDB,
 
@@ -3170,6 +3418,7 @@ export default matsDataUtils = {
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     getDataForDieoffDiffCurve: getDataForDieoffDiffCurve,
+    getDataForDieoffWithLevelsDiffCurve: getDataForDieoffWithLevelsDiffCurve,
     getDataForThresholdDiffCurve: getDataForThresholdDiffCurve,
     getDataForValidTimeDiffCurve: getDataForValidTimeDiffCurve,
 
@@ -3188,15 +3437,5 @@ export default matsDataUtils = {
     generateProfilePlotOptions: generateProfilePlotOptions,
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
-    generateValidTimePlotOptions: generateValidTimePlotOptions,
-
-    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
-    get_err: get_err,
-    getPointSymbol: getPointSymbol,
-
-    doColorScheme: doColorScheme,
-    doSettings: doSettings,
-    doCredentials: doCredentials,
-    doAuthorization: doAuthorization,
-    doRoles: doRoles
+    generateValidTimePlotOptions: generateValidTimePlotOptions
 }

@@ -662,6 +662,7 @@ dataProfile = function (plotParams, plotFunction) {
             var d = [];
             var values = [];
             var levels = [];
+            var errorBars = [];
             for (var level in levelSums) {
                 var value;
                 switch (statistic) {
@@ -704,8 +705,7 @@ dataProfile = function (plotParams, plotFunction) {
                  */
                 const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
                 const errorBar = errorResult.stde_betsy * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
-
+                errorBars.push(errorBar);
                 var stats = {
                     d_mean: errorResult.d_mean,
                     sd: errorResult.sd,
@@ -776,6 +776,17 @@ dataProfile = function (plotParams, plotFunction) {
         dataset.push(cOptions);
         dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves
+
+    var errorBarAvg = matsDataUtils.average(errorBars);
+    var errorBarSquareDiffs = errorBars.map(function(value){
+        var diff = value - errorBarAvg;
+        var sqr = diff * diff;
+        return sqr;
+    });
+    var errorBarStdDev = Math.sqrt(matsDataUtils.average(errorBarSquareDiffs));
+    for (var ei=0; ei < errorBars.length; ei++) {
+        errorMax = errorBars[ei] > errorMax && errorBars[ei] < 2.5 * errorBarStdDev + errorBarAvg ? errorBars[ei] : errorMax;
+    }
 
     const resultOptions = matsWfipUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
