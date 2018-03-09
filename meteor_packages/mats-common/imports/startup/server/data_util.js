@@ -3375,17 +3375,36 @@ const areObjectsEqual = function (o, p) {
     }
 };
 
+// utility for calculating std of errorbars
+const average = function (data){
+    var sum = data.reduce(function(sum, value){
+        return value == null ? sum : sum + value;
+    }, 0);
+    var avg = sum / data.length;
+    return avg;
+};
+
 export default matsDataUtils = {
-    getDateRange: getDateRange,
-    dateConvert: dateConvert,
-    secsConvert: secsConvert,
-    sortFunction: sortFunction,
-    arraysEqual: arraysEqual,
+    areObjectsEqual: areObjectsEqual,
     arrayContainsArray: arrayContainsArray,
     arrayContainsSubArray: arrayContainsSubArray,
+    arraysEqual: arraysEqual,
+    average: average,
+    dateConvert: dateConvert,
     findArrayInSubArray: findArrayInSubArray,
-    areObjectsEqual: areObjectsEqual,
+    getDateRange: getDateRange,
+    get_err: get_err,
+    getPointSymbol: getPointSymbol,
+    secsConvert: secsConvert,
+    sortFunction: sortFunction,
 
+    doColorScheme: doColorScheme,
+    doSettings: doSettings,
+    doCredentials: doCredentials,
+    doAuthorization: doAuthorization,
+    doRoles: doRoles,
+
+    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
     querySeriesDB: querySeriesDB,
     querySeriesWithLevelsDB: querySeriesWithLevelsDB,
     queryProfileDB: queryProfileDB,
@@ -3418,15 +3437,5 @@ export default matsDataUtils = {
     generateProfilePlotOptions: generateProfilePlotOptions,
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
-    generateValidTimePlotOptions: generateValidTimePlotOptions,
-
-    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
-    get_err: get_err,
-    getPointSymbol: getPointSymbol,
-
-    doColorScheme: doColorScheme,
-    doSettings: doSettings,
-    doCredentials: doCredentials,
-    doAuthorization: doAuthorization,
-    doRoles: doRoles
+    generateValidTimePlotOptions: generateValidTimePlotOptions
 }
