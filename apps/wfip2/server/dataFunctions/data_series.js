@@ -975,6 +975,8 @@ dataSeries = function (plotParams, plotFunction) {
                                 "<br>statistic:" + curves[sci].statistic +
                                 "<br> matchValue:" + dataElement.timeMean;
                             dataset[sci].data[dataIndexes[sci]][1] = dataset[sci].data[dataIndexes[sci]][4].timeMean;
+                            // rewrite the tooltip (element[3])
+                            dataset[sci].data[dataIndexes[sci]][5] = tooltip;
                         }
                     } else {
                         // difference curve
@@ -993,9 +995,9 @@ dataSeries = function (plotParams, plotFunction) {
                             "<br>seconds:" + time / 1000 +
                             "<br>time:" + new Date(Number(time)).toUTCString() +
                             "<br> matchDiffValue:" + dataset[sci].data[dataIndexes[sci]][1];
+                        // rewrite the tooltip (element[3])
+                        dataset[sci].data[dataIndexes[sci]][5] = tooltip;
                     }
-                    // rewrite the tooltip (element[3])
-                    dataset[sci].data[dataIndexes[sci]][5] = tooltip;
                     const valueObject = dataset[sci].data[dataIndexes[sci]];
                     const valData = valueObject[1];
                     // have to recalculate mins and maxes - might be throwing away outlier data
@@ -1016,7 +1018,6 @@ dataSeries = function (plotParams, plotFunction) {
                         // We will add a null if it is a time that satisfies the VALID UTC HOR (matchedValidTimes) criteria - otherwise no data entry at all
                         newDataSet[sci].data.push([time, null]);
                     }
-                    ;
                 }
             }
             time = Number(time) + Number(maxValidInterval);
