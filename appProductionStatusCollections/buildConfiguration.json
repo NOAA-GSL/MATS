@@ -245,8 +245,8 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 15,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     },
     {
       "app": "upperair-previous",
@@ -350,7 +350,7 @@
       "app": "wfip2-previous",
       "displayName": "Wfip2 Previous",
       "displayOrder": 30,
-      "deploymentStatus": "disabled",
+      "deploymentStatus": "enabled",
       "buildStatus": "archive"
     }
   ]
