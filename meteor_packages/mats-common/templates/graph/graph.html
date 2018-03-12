@@ -93,7 +93,12 @@
 
         <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
             <div id="legendContainer" name="legendContainer"></div>
+            {{#if isNotMap}}
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
+            {{/if}}
+            {{#if isMap}}
+            <div id="finalMap" style="float:left;width:{{width}}; height:{{height}};"></div>
+            {{/if}}
         </div>
         {{#if isProfile}}
             <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confidence</h5>

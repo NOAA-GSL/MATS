@@ -328,6 +328,13 @@ Template.graph.helpers({
             return false;
         }
     },
+    isMap: function() {
+        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
+            return false;
+        } else {
+            return true;
+        }
+    },
     errorBarsAllowed: function () {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries);
     },
@@ -343,6 +350,10 @@ Template.graph.events({
         if (document.getElementById('graph-container')) {
             document.getElementById('graph-container').style.display = 'none';
         }
+        //if (Session.get("plotType") === matsTypes.PlotTypes.map && document.getElementById('graphView')) {
+        //    var elem = document.getElementById('graphView');
+        //    elem.remove();
+        //}
         if (document.getElementById('paramList')) {
             document.getElementById('paramList').style.display = 'block';
         }

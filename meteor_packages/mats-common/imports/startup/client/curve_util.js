@@ -317,9 +317,17 @@ const showProfileFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('map-item');
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.profile);
         matsParamUtils.setAllParamsToDefault();
@@ -366,9 +374,17 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('map-item');
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
         matsParamUtils.setAllParamsToDefault();
@@ -416,9 +432,17 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('map-item');
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.dieoff);
         matsParamUtils.setAllParamsToDefault();
@@ -465,9 +489,17 @@ const showValidTimeFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('map-item');
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.validtime);
         matsParamUtils.setAllParamsToDefault();
@@ -514,9 +546,17 @@ const showThresholdFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
-        elem = document.getElementById('map-item');
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.threshold);
         matsParamUtils.setAllParamsToDefault();
@@ -544,6 +584,34 @@ const showMapFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('sitesMap-item');
         if (elem && elem.style) {
             elem.style.display = "block";
         }

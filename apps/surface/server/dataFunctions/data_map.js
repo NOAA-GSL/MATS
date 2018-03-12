@@ -39,7 +39,7 @@ dataMap = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'];
         var variableOption = variableOptionsMap[variableStr];
         var variable = variableOption[2];
-        var statisticSelect = curve['statistic'];
+        var statisticSelect = 'Bias (Model - Obs)';
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
@@ -75,13 +75,14 @@ dataMap = function (plotParams, plotFunction) {
                     "and m0.time <= '{{toSecs}}' " +
                     ";";
 
-                statement = statement.replace('{{forecastLength}}', forecastLength);
                 statement = statement.replace('{{fromSecs}}', fromSecs);
                 statement = statement.replace('{{toSecs}}', toSecs);
                 if (forecastLength == 1) {
                     statement = statement.replace('{{model}}', model + "qp1f");
+                    statement = statement.replace('and m0.fcst_len = {{forecastLength}}', "");
                 } else {
                     statement = statement.replace('{{model}}', model + "qp");
+                    statement = statement.replace('{{forecastLength}}', forecastLength);
                 }
                 if (variable == "temp" || variable == "dp" || variable == "rh" || variable == "press") {
                     statement = statement.replace('{{variable}}', variable + "/10");

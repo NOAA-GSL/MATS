@@ -15,9 +15,13 @@ graphMap = function(result) {
     var markers = dataset[0].sites;   // from app startup and queries
     var markerFeatures = {};
 
-    if (map != undefined) { map.remove(); }
+    //document.getElementById('graphView').innerHTML = "<div id='map'></div>";
+    //document.getElementById('graphView').style.width = vpw;
+    //document.getElementById('graphView').style.height = vph;
 
-    var map = L.map("graphView", {
+
+
+    var map = new L.map('finalMap', {
             doubleClickZoom: false,
             scrollWheelZoom: false,
             trackResize:true,
@@ -151,12 +155,13 @@ graphMap = function(result) {
         //        map.invalidateSize();
         //    }, 10);
         //});
-        var ref = 'graphView';
+        var ref = 'finalMap';
         var elem = document.getElementById(ref);
         //elem.style.height = mapHeight();
         //elem.style.width = mapWidth();
         elem.style.height = vph;
         elem.style.width = vpw;
+        elem.style.display = "block";
     };
 
     // hide the spinner
@@ -165,14 +170,14 @@ graphMap = function(result) {
     // initial resize seems to be necessary
     resizeMap(this);
     // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible
-    var ref = 'graphView';
+    var ref = 'finalMap';
     var elem = document.getElementById(ref);
     elem.addEventListener('resizeMap', function (e) {
         resizeMap(e.detail);
     });
 
     // register an event listener so that the select.js can ask the map div to refresh after a selection
-    var ref = 'graphView';
+    var ref = 'finalMap';
     var elem = document.getElementById(ref);
     elem.addEventListener('refresh', function (e) {
         refresh(e.detail.refElement);

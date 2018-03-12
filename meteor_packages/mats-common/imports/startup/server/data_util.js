@@ -3553,6 +3553,6 @@ export default matsDataUtils = {
     doSettings: doSettings,
     doCredentials: doCredentials,
     doAuthorization: doAuthorization,
-    doRoles: doRoles
+    doRoles: doRoles,
     generateValidTimePlotOptions: generateValidTimePlotOptions
 }
