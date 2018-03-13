@@ -65,7 +65,6 @@ const doPlotParams = function () {
 const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
-        matsCollections.StationMap.remove({});
     }
 
     matsCollections.CurveParams.remove({});
