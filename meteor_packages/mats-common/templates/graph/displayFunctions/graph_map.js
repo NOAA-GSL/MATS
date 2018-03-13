@@ -1,7 +1,17 @@
 graphMap = function(result) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    if (vpw < 400) {
+        vpw = (.9 * vpw).toString() + "px";
+    } else {
+        vpw = (.8 * vpw).toString() + "px";
+    }
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw,vph);
+    if (vph < 400) {
+        vph = (.8 * vph).toString() + "px";
+    } else {
+        vph = (.6 * vph).toString() + "px";
+    }
+
 
     var dataset = result.data;
     var options = result.options
@@ -16,12 +26,13 @@ graphMap = function(result) {
     var markerFeatures = {};
 
     //document.getElementById('graphView').innerHTML = "<div id='map'></div>";
-    //document.getElementById('graphView').style.width = vpw;
-    //document.getElementById('graphView').style.height = vph;
 
 
-
-    var map = new L.map('finalMap', {
+    function buildMap(vpw, vph) {
+        document.getElementById('graphView').innerHTML = "<div id='finalMap' style='float:left;width:0;height:0;'></div>";
+        document.getElementById('finalMap').style.width = vpw;
+        document.getElementById('finalMap').style.height = vph;
+        var map = new L.map('finalMap', {
             doubleClickZoom: false,
             scrollWheelZoom: false,
             trackResize:true,
@@ -29,7 +40,7 @@ graphMap = function(result) {
             minZoom: minZoomLevel,
             maxZoom: maxZoomLevel,
             wheelPxPerZoomLevel: 3
-    }).setView(defaultPoint, defaultZoomLevel);
+        }).setView(defaultPoint, defaultZoomLevel);
         // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
 //    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
 //        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
@@ -41,11 +52,17 @@ graphMap = function(result) {
 //        maxZoom: 20,
 //        ext: 'png'
 //    }).addTo(map);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
             maxZoom: 16
-    }).addTo(map);
-    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+        }).addTo(map);
+        L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+
+        return map;
+    }
+
+    map = buildMap(vpw, vph);
+
     if (!markerFeatures) {
         markerFeatures = {};
     }
