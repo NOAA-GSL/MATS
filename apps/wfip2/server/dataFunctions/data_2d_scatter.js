@@ -130,8 +130,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     // verificationRunInterval is in milliseconds
                     statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                 } else {
                     var qVariable = myVariable;
                     if (windVar) {
@@ -139,8 +139,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     }
                     statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                 }
                 // data source is a model and its JSON
             } else {
@@ -201,8 +201,8 @@ data2dScatter = function (plotParams, plotFunction) {
                     if (truthDataSource_is_json) {
                         truthStatement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                     } else {
                         var qVariable = myVariable;
                         if (windVar) {
@@ -210,8 +210,8 @@ data2dScatter = function (plotParams, plotFunction) {
                         }
                         truthStatement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                             " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                     }
                 } else {
                     if (validTimes.length > 0) {
