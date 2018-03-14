@@ -809,20 +809,24 @@ const rectangleHeight = function () {
 };
 
 const resizeGraph = function(plotType) {
-    //console.log ("resizing graph type is ", plotType );
+    console.log ("resizing graph type is ", plotType );
     switch (plotType) {
         case matsTypes.PlotTypes.profile:
+            break;
         case matsTypes.PlotTypes.scatter2d:
             // set the width square
             document.getElementById('placeholder').style.width = squareWidth();
             document.getElementById('placeholder').style.heigth = squareHeight();
             break;
         case matsTypes.PlotTypes.timeSeries:
+            break;
         case matsTypes.PlotTypes.dieoff:
             // set the width wide
             document.getElementById('placeholder').style.width = rectangleWidth();
             document.getElementById('placeholder').style.heigth = rectangleHeight();
+            break;
         default:
+            break;
 
     }
 }

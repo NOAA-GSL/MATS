@@ -322,11 +322,13 @@ Template.graph.helpers({
         return Session.get(sval);
     },
     isNotMap: function() {
+        var notmap;
         if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
-            return true;
+            notmap = true;
         } else {
-            return false;
+            notmap =false;
         }
+        return notmap;
     },
     isMap: function() {
         if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {

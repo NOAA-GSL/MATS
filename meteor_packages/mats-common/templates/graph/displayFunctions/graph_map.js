@@ -29,7 +29,7 @@ graphMap = function(result) {
 
 
     function buildMap(vpw, vph) {
-        document.getElementById('graphView').innerHTML = "<div id='finalMap' style='float:left;width:0;height:0;'></div>";
+        document.getElementById('graphView').innerHTML = "<div id='finalMap' style='float:left;width:0;height:0;'></div><div id='placeholder' style='float:left;width:0; height:0;display='none'></div>";
         document.getElementById('finalMap').style.width = vpw;
         document.getElementById('finalMap').style.height = vph;
         var map = new L.map('finalMap', {

@@ -201,6 +201,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
+                metars: modelMetarsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "dates"],
                 controlButtonCovered: true,
