@@ -22,16 +22,17 @@ const getDateRange = function (dateRange) {
 
 const getModelCadence = function (pool, dataSource) {
     var rows = [];
+    var cycles;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
             "from mats_common.primary_model_orders " +
             "where model = " +
             "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
+        cycles = JSON.parse(rows[0].cycle_seconds);
     } catch (e) {
         //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
     }
-    var cycles = JSON.parse(rows[0].cycle_seconds);
-    if (cycles !== null && cycles.length > 0) {
+    if (cycles !== null && cycles !== undefined && cycles.length > 0) {
         for (var c = 0; c < cycles.length; c++) {
             cycles[c] = cycles[c] * 1000;         // convert to milliseconds
         }
