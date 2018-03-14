@@ -468,7 +468,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
         } //dataFoundForCurve
         var postQueryFinishMoment = moment();
-        dataRequests["post data retreival (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

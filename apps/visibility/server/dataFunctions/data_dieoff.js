@@ -155,7 +155,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const cOptions = matsDataUtils.generateDieoffCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retreival (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
@@ -197,8 +197,10 @@ dataDieOff = function (plotParams, plotFunction) {
     }
 
     var diffFrom;
-    // calculate stats for each dataset matching to subsec_intersection if matching is specified
+    // calculate stats for each dataset matching to subSecIntersection if matching is specified
+    var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
@@ -257,6 +259,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for fhr ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            data[di][1] = errorResult.d_mean;
             values.push(data[di][1]);
             fhrs.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -297,13 +300,17 @@ dataDieOff = function (plotParams, plotFunction) {
         // get the overall stats for the text output - this uses the means not the stats. refer to
 
         const stats = matsDataUtils.get_err(fhrs, values);
-        const miny = Math.min.apply(null, means);
-        const maxy = Math.max.apply(null, means);
+        const filteredMeans = means.filter(x => x);
+        const miny = Math.min(...filteredMeans);
+        const maxy = Math.max(...filteredMeans);
         stats.miny = miny;
         stats.maxy = maxy;
         dataset[curveIndex]['stats'] = stats;
-    }
 
+        //recalculate axis options after QC and matching
+        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+    }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve

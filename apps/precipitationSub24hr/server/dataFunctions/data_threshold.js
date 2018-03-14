@@ -135,7 +135,7 @@ dataThreshold = function (plotParams, plotFunction) {
         const cOptions = matsDataUtils.generateThresholdCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retreival (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'

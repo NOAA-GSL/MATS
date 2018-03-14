@@ -1,10 +1,10 @@
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsDataUtils } from 'meteor/randyp:mats-common';
-import { mysql } from 'meteor/pcel:mysql';
-import { moment } from 'meteor/momentjs:moment';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {mysql} from 'meteor/pcel:mysql';
+import {moment} from 'meteor/momentjs:moment';
 
-dataProfile = function(plotParams, plotFunction) {
+dataProfile = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
     var totalProecssingStart = moment();
@@ -72,7 +72,7 @@ dataProfile = function(plotParams, plotFunction) {
         // variable and statistic (axisKey) it will use the same axis,
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
-        var axisKey =  varUnits;
+        var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var d = [];
         // create database query statements
@@ -157,22 +157,22 @@ dataProfile = function(plotParams, plotFunction) {
             }
             d = diffResult.dataset;
         }  // end difference curve
-            // get the x min and max
-            for (var di = 0; di < d.length; di++) {
-                xmax = xmax > d[di][0] ? xmax : d[di][0];
-                xmin = xmin < d[di][0] ? xmin : d[di][0];
-                maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
-            }
+        // get the x min and max
+        for (var di = 0; di < d.length; di++) {
+            xmax = xmax > d[di][0] ? xmax : d[di][0];
+            xmin = xmin < d[di][0] ? xmin : d[di][0];
+            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+        }
 
-            // specify these so that the curve options generator has them available
-            // profile plots always go from 0 to 1000 initially
-            curve['annotation'] = "";
-            curve['ymin'] = ymin;
-            curve['ymax'] = ymax;
-            curve['xmin'] = xmin;
-            curve['xmax'] = xmax;
-            const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
-            dataset.push(cOptions);
+        // specify these so that the curve options generator has them available
+        // profile plots always go from 0 to 1000 initially
+        curve['annotation'] = "";
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
+        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        dataset.push(cOptions);
 
     }  // end for curves
 
@@ -193,7 +193,7 @@ dataProfile = function(plotParams, plotFunction) {
                 var sub_secs = data[di][4];
                 levelGroups[curveIndex].push(data[di][1]);
                 for (var sec of sub_secs) {
-                        subSecs.add(sec);
+                    subSecs.add(sec);
                 }
             }
         }
@@ -202,9 +202,11 @@ dataProfile = function(plotParams, plotFunction) {
     }
 
 
-    // calculate stats for each dataset matching to subsec_intersection if matching is specified
+    // calculate stats for each dataset matching to subSecIntersection if matching is specified
     var errorMax = Number.MIN_VALUE;
+    var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
         if (diffFrom === undefined || diffFrom === null || (diffFrom !== null && matching)) {
@@ -216,7 +218,6 @@ dataProfile = function(plotParams, plotFunction) {
             var values = [];
             var levels = [];
             var means = [];
-            var errorBars = [];
             while (di < data.length) {
                 if (matching && matchingLevels.indexOf(data[di][1]) === -1) {
                     dataset[curveIndex].data.splice(di, 1);
@@ -257,6 +258,7 @@ dataProfile = function(plotParams, plotFunction) {
                      */
                     //console.log('Getting errors for level ' + data[di][1]);
                     errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+                    data[di][0] = errorResult.d_mean;
                     values.push(data[di][0]);
                     levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
                     means.push(errorResult.d_mean);
@@ -267,7 +269,7 @@ dataProfile = function(plotParams, plotFunction) {
                 // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
                 // unmatched curves get no error bars
                 const errorBar = errorResult.stde_betsy * 1.96;
-                errorBars.push(errorBar);
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
                 if (matching) {
                     data[di][2] = errorBar;
                 } else {
@@ -301,78 +303,68 @@ dataProfile = function(plotParams, plotFunction) {
                 di++;
             }
 
-            var errorBarAvg = matsDataUtils.average(errorBars);
-            var errorBarSquareDiffs = errorBars.map(function(value){
-                var diff = value - errorBarAvg;
-                var sqr = diff * diff;
-                return sqr;
-            });
-            var errorBarStdDev = Math.sqrt(matsDataUtils.average(errorBarSquareDiffs));
-            for (var ei=0; ei < errorBars.length; ei++) {
-                errorMax = errorBars[ei] > errorMax && errorBars[ei] < 2.5 * errorBarStdDev + errorBarAvg ? errorBars[ei] : errorMax;
-            }
-
             // get the overall stats for the text output - this uses the means not the stats. refer to
-
-            //const stats = matsDataUtils.get_err(means.reverse(), levels.reverse()); // have to reverse because of data inversion
             const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
-            const minx = Math.min.apply(null, means);
-            const maxx = Math.max.apply(null, means);
+            const filteredMeans = means.filter(x => x);
+            const minx = Math.min.apply(null, filteredMeans);
+            const maxx = Math.max.apply(null, filteredMeans);
             stats.minx = minx;
             stats.maxx = maxx;
             dataset[curveIndex]['stats'] = stats;
-            // END if (diffFrom === null || (diffFrom !== null && matching))
-        }
 
+            //recalculate axis options after QC and matching
+            axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+            axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+        }
     }
 
     // add black 0 line curve
     dataset.push({
-            "yaxis": 1,
-            "label": "zero",
-            "color": "rgb(0,0,0)",
-            "annotation": "",
-            "data": [
-                [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-                [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-            ],
-            "points": {
+        "yaxis": 1,
+        "label": "zero",
+        "color": "rgb(0,0,0)",
+        "annotation": "",
+        "data": [
+            [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+            [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "x",
+            "xerr": {
                 "show": false,
-                "errorbars": "x",
-                "xerr": {
-                    "show": false,
-                    "asymmetric": false,
-                    "upperCap": "squareCap",
-                    "lowerCap": "squareCap",
-                    "color": "rgb(0,0,255)",
-                    "radius": 5
-                }
-            },
-            "lines": {
-                "show": true,
-                "fill": false
-            },
-            "stats": {
-                "d_mean": 0,
-                "stde_betsy": 0,
-                "sd": 0,
-                "n_good": 0,
-                "lag1": 0,
-                "min": 50,
-                "max": 1000,
-                "sum": 0,
-                "minx": 0,
-                "maxx": 0
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
             }
-        });
-    const resultOptions = matsDataUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": 50,
+            "max": 1000,
+            "sum": 0,
+            "minx": 0,
+            "maxx": 0
+        }
+    });
+    const resultOptions = matsDataUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     const result = {
         error: error,
         data: dataset,
         options: resultOptions,
-        basis:{
-            plotParams:plotParams,
-            queries:dataRequests
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
         }
     };
     plotFunction(result);
