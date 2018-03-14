@@ -62,7 +62,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textValidTimeView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
-            break;
+                break;
             case matsTypes.PlotView.textDieoff:
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
