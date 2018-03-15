@@ -229,6 +229,8 @@ dataProfile = function (plotParams, plotFunction) {
 
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
     var errorMax = Number.MIN_VALUE;
+    var maxx;
+    var minx;
     var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
@@ -283,7 +285,9 @@ dataProfile = function (plotParams, plotFunction) {
                      */
                     //console.log('Getting errors for level ' + data[di][1]);
                     errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-                    data[di][0] = errorResult.d_mean;
+                    if (matching) {
+                        data[di][0] = errorResult.d_mean;
+                    }
                     values.push(data[di][0]);
                     levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
                     means.push(errorResult.d_mean);
@@ -331,16 +335,30 @@ dataProfile = function (plotParams, plotFunction) {
             // get the overall stats for the text output - this uses the means not the stats. refer to
             const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
             const filteredMeans = means.filter(x => x);
-            const minx = Math.min.apply(null, filteredMeans);
-            const maxx = Math.max.apply(null, filteredMeans);
+            minx = Math.min.apply(null, filteredMeans);
+            maxx = Math.max.apply(null, filteredMeans);
             stats.minx = minx;
             stats.maxx = maxx;
             dataset[curveIndex]['stats'] = stats;
 
-            //recalculate axis options after QC and matching
-            axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
-            axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+        } else if (diffFrom !== undefined && diffFrom !== null){
+            data = dataset[curveIndex].data;
+            di = 0;
+            values = [];
+            levels = [];
+            while (di < data.length) {
+                values.push(data[di][0]);
+                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+                di++;
+            }
+            const filteredMeans = values.filter(x => x);
+            minx = Math.min.apply(null, filteredMeans);
+            maxx = Math.max.apply(null, filteredMeans);
         }
+
+        //recalculate axis options after QC and matching
+        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
     }
 
     // add black 0 line curve
