@@ -162,3 +162,10 @@ Meteor.publish("StationMap", function () {
     }
     return this.ready();
 });
+Meteor.publish("appName", function () {
+    var data = matsCollections.appName.find({});
+    if (data) {
+        return data;
+    }
+    return this.ready();
+});

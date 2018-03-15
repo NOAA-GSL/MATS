@@ -456,6 +456,11 @@ const getOptionsForParam = function(paramName) {
     return param.options;
 };
 
+const getAppName = function() {
+    const app = matsCollections.appName.findOne({name:"appName"});
+    return app.app;
+};
+
 const getCurveItemValueForParamName = function(curveNumber, paramName) {
     //MODEL-curve-0-Item
 //    const id = paramName.toString().toUpperCase() + "-curve-" + curveNumber + "-Item"; // the id of the text span for a curveItem
@@ -512,5 +517,6 @@ export default matsParamUtils = {
     getOptionsForParam:getOptionsForParam,
     getOptionsMapForParam:getOptionsMapForParam,
     getCurveItemValueForParamName:getCurveItemValueForParamName,
-    visibilityControllerForParam:visibilityControllerForParam
+    visibilityControllerForParam:visibilityControllerForParam,
+    getAppName:getAppName
 };

@@ -282,6 +282,7 @@ const showProfileFace = function() {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -314,11 +315,11 @@ const showProfileFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
@@ -339,6 +340,7 @@ const showTimeseriesFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -371,11 +373,11 @@ const showTimeseriesFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
@@ -397,6 +399,7 @@ const showDieOffFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -429,11 +432,11 @@ const showDieOffFace = function() {
             elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
@@ -454,6 +457,7 @@ const showValidTimeFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -486,11 +490,11 @@ const showValidTimeFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
@@ -511,6 +515,7 @@ const showThresholdFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -543,11 +548,11 @@ const showThresholdFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
@@ -568,6 +573,7 @@ const showMapFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.map);
+        var appName = matsParamUtils.getAppName();
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -608,11 +614,11 @@ const showMapFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "block";
         }
         elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style) {
+        if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.map);
