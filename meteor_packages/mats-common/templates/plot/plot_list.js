@@ -229,6 +229,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
                                 break;
+                            case matsTypes.PlotTypes.map:
+                                matsCurveUtils.showMapFace();
+                                break;
                             case matsTypes.PlotTypes.scatter2d:
                                 matsCurveUtils.showScatterFace();
                                 break;

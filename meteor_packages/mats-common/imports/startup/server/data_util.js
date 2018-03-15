@@ -1848,7 +1848,43 @@ const queryProfileDB = function (pool, statement, statisticSelect, label) {
         error: error,
     };
 };
-const queryDieoffDB = function (pool, statement) {
+
+const queryMapDB = function (pool, statement) {
+    var d = [];  // d will contain the curve data
+    var error = "";
+    var pFuture = new Future();
+    pool.query(statement, function (err, rows) {
+            if (err != undefined) {
+                error = err.message;
+                pFuture['return']();
+            } else if (rows === undefined || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+                // done waiting - error condition
+                pFuture['return']();
+            } else {
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var siteName = rows[rowIndex].sta_name;
+                    var N_times = rows[rowIndex].N_times;
+                    var min_time = rows[rowIndex].min_time;
+                    var max_time = rows[rowIndex].max_time;
+                    var model_diff = rows[rowIndex].model_ob_diff;
+                    d.push([siteName, N_times, min_time, max_time, model_diff]);
+                }// end of loop row
+                // done waiting - have results
+                pFuture['return']();
+            }
+        }
+    );
+    // wait for future to finish
+    pFuture.wait();
+    return {
+        data: d,    // [sub_values,sub_secs] as arrays
+        error: error,
+    };
+};
+
+
+const queryDieoffDB = function (pool, statement, interval) {
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -2762,6 +2798,42 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
     return options;
 };
 
+const generateMapPlotOptions = function (dataset, curves) {
+    const options = {
+        labels: {
+            show: true
+        },
+        map: {
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:75%'><strong>%ct</strong></span>"
+        }
+    };
+    return options;
+};
+
 
 const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
     /*
@@ -2991,6 +3063,36 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
                 radius: 5
             }
         },
+        lines: {show: true, fill: false}
+    };
+
+    return curveOptions;
+};
+
+const generateMapCurveOptions = function (curve, curveIndex, dataSeries, sitePlot) {
+    /*
+     PARAMETERS:
+     curve -  the curve object
+     curveIndex : Number - the integer index of this curve
+     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
+     */
+    const label = curve['label'];
+    const annotation = curve['annotation'];
+    const pointSymbol = getPointSymbol(curveIndex);
+
+    const curveOptions = {
+        label: label,
+        curveId: label,
+        annotation: annotation,
+        color: curve['color'],
+        data: dataSeries,
+        sites: sitePlot,
+        points: {
+            symbol: pointSymbol,
+            fillColor: curve['color'],
+            show: true,
+            errorbars: "y",
+            },
         lines: {show: true, fill: false}
     };
 
@@ -3412,6 +3514,8 @@ export default matsDataUtils = {
     queryDieoffDB: queryDieoffDB,
     queryDieoffWithLevelsDB: queryDieoffWithLevelsDB,
     queryThresholdDB: queryThresholdDB,
+    queryValidTimeDB:queryValidTimeDB,
+    queryMapDB:queryMapDB,
     queryValidTimeDB: queryValidTimeDB,
 
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
@@ -3433,10 +3537,23 @@ export default matsDataUtils = {
     generateDieoffCurveOptions: generateDieoffCurveOptions,
     generateThresholdCurveOptions: generateThresholdCurveOptions,
     generateValidTimeCurveOptions: generateValidTimeCurveOptions,
+    generateMapCurveOptions: generateMapCurveOptions,
 
     generateSeriesPlotOptions: generateSeriesPlotOptions,
     generateProfilePlotOptions: generateProfilePlotOptions,
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
+    generateValidTimePlotOptions: generateValidTimePlotOptions,
+    generateMapPlotOptions: generateMapPlotOptions,
+
+    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
+    get_err: get_err,
+    getPointSymbol: getPointSymbol,
+
+    doColorScheme: doColorScheme,
+    doSettings: doSettings,
+    doCredentials: doCredentials,
+    doAuthorization: doAuthorization,
+    doRoles: doRoles,
     generateValidTimePlotOptions: generateValidTimePlotOptions
 }
