@@ -558,6 +558,9 @@ Meteor.startup(function () {
     mdr.addRecord("sumPool", "ceiling_5min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
+
+    matsCollections.appName.insert({name: "appName", app: "ceiling15"});
+
 });
 
 // this object is global so that the reset code can get to it

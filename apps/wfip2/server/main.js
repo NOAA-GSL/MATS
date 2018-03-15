@@ -1162,6 +1162,9 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.host, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
     matsMethods.resetApp(mdr);
+
+    matsCollections.appName.insert({name: "appName", app: "wfip2"});
+
 });
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
