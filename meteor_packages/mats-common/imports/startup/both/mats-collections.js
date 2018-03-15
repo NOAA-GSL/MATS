@@ -30,6 +30,7 @@ var SavedDatabases = new Mongo.Collection("SavedDatabases");
 var Credentials = new Mongo.Collection("Credentials");
 var SavedCredentials = new Mongo.Collection("SavedCredentials");
 var SiteMap = new Mongo.Collection("SiteMap");
+var StationMap = new Mongo.Collection("StationMap");
 //var ServiceConfiguration = new Mongo.Collection("ServiceConfiguration");
 
 
@@ -85,6 +86,7 @@ export default matsCollections = {
     Credentials:Credentials,
     SavedCredentials:SavedCredentials,
     SiteMap:SiteMap,
+    StationMap:StationMap,
     startInit:startInit,
     stopInit:stopInit,
     dateInitStr: dateInitStr

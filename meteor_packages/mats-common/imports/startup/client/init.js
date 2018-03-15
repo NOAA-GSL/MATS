@@ -23,6 +23,7 @@ Meteor.subscribe("CurveTextPatterns");
 Meteor.subscribe("ScatterAxisTextPattern");
 Meteor.subscribe("RangePerDescriptor");
 Meteor.subscribe("SiteMap");
+Meteor.subscribe("StationMap");
 Session.set('Curves',[]);
 Session.set('PlotParams',[]);
 

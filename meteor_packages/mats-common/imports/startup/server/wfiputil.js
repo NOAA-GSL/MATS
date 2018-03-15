@@ -1173,15 +1173,6 @@ const get_err = function (sVals, sSecs) {
     return stats;
 };
 
-// utility for calculating std of errorbars
-const average = function (data){
-    var sum = data.reduce(function(sum, value){
-        return value == null ? sum : sum + value;
-    }, 0);
-    var avg = sum / data.length;
-    return avg;
-}
-
 export default matsWfipUtils = {
     getDatum: getDatum,
     queryWFIP2DB: queryWFIP2DB,
@@ -1189,6 +1180,5 @@ export default matsWfipUtils = {
     getStatValuesByLevel: getStatValuesByLevel,
     getDataForProfileDiffCurve: getDataForProfileDiffCurve,
     generateProfilePlotOptions: generateProfilePlotOptions,
-    get_err: get_err,
-    average:average
+    get_err: get_err
 }
