@@ -141,7 +141,7 @@ var doCurveParams = function () {
     var dataSourceSites = {};
     var dynamicallyAddedModels = {};  // used to update the siteOptionsMap with dynamically added models - due to sample rates or disparate date ranges
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources order by model;");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows.length; i++) {
             var dataSources = [];
@@ -1124,13 +1124,26 @@ Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name: "wfip2Setting",
+            name: "wfip2Setting-wfip2-dmz",
             role: "wfip2_data",
-            status: "active",
+            status: "inactive",
             host: 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user: 'readonly',
             password: 'Readonlyp@$$405',
             database: 'WFIP2_v2',
+            port: 3306,
+            connectionLimit: 10
+        });
+
+        matsCollections.Databases.insert({
+            name: "wfip2Setting-model-vxtest",
+            role: "wfip2_data",
+            status: "active",
+            host: 'model-vxtest.gsd.esrl.noaa.gov',
+            user: 'ambverif',
+            password: 'Pass4ambverif#',
+            database: 'wfip_dev',
+            port: 3308,
             connectionLimit: 10
         });
     }
@@ -1147,7 +1160,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", "WFIP2_v2", ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.host, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
     matsMethods.resetApp(mdr);
 });
 // this object is global so that the reset code can get to it
