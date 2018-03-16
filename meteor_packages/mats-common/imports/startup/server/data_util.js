@@ -4,6 +4,25 @@ import {matsPlotUtils} from 'meteor/randyp:mats-common';
 
 const Future = require('fibers/future');
 
+const getPlotParamsFromStack = function() {
+    var params = {};
+    const err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    const stack = err.stack;
+    const stackElems = stack.split("\n")
+    for (si = 0; si < stackElems.length; si++) {
+        const sElem = stackElems[si];
+        if (sElem.indexOf('dataFunctions') !== -1) {
+            const dataFunctionName = sElem.split(' at ')[1]
+            try {
+                params = global[sElem.split(' at ')[1].split(' ')[0]].arguments[0]
+            } catch (noJoy){}
+            break;
+        }
+    }
+    return params;
+}
+
 const getDateRange = function (dateRange) {
     var dates = dateRange.split(' - ');
     var fromDateStr = dates[0];
@@ -2097,9 +2116,14 @@ const queryThresholdDB = function (pool, statement, interval) {
     };
 };
 
+
+
 const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    const plotParams = getPlotParamsFromStack()
+    //console.log("params are ", plotParams);
+
     var cycles = getModelCadence(pool, dataSource);
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
@@ -3516,7 +3540,6 @@ export default matsDataUtils = {
     queryThresholdDB: queryThresholdDB,
     queryValidTimeDB:queryValidTimeDB,
     queryMapDB:queryMapDB,
-    queryValidTimeDB: queryValidTimeDB,
 
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForSeriesWithLevelsDiffCurve: getDataForSeriesWithLevelsDiffCurve,
