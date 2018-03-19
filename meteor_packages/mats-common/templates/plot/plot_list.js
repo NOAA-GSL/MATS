@@ -383,6 +383,9 @@ Template.plotList.events({
                     document.getElementById("graphView").style.display = "block";
                     document.getElementById("textSeriesView").style.display = "none";
                     document.getElementById("textProfileView").style.display = "none";
+                    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
+                        document.getElementById('graph-touch-controls').style.display = "none";
+                    }
                 });
 
                 break;
