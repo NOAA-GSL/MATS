@@ -24,6 +24,12 @@ var height = function () {
     }
 };
 
+Template.graph.onRendered(function() {
+    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
+        document.getElementById('graph-touch-controls').style.display = "none";
+    }
+});
+
 Template.graph.onCreated(function () {
     $(window).resize(function () {
         //console.log ("graph resizng now");
@@ -184,6 +190,7 @@ Template.graph.onCreated(function () {
         }
     });
 
+
     $(document).keyup(function(event) {
         if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
             document.getElementById('graph-control').style.display = 'block';
@@ -198,6 +205,9 @@ Template.graph.onCreated(function () {
             Session.set("printMode", false);
         }
     });
+    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
+        document.getElementById('graph-touch-controls').style.display = "none";
+    }
 });
 
 
@@ -511,9 +521,8 @@ Template.graph.events({
         document.getElementById("textThresholdView").style.display = "none";
         document.getElementById("textValidTimeView").style.display = "none";
         document.getElementById("textMapView").style.display = "none";
-        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
-            document.getElementById('graph-touch-controls').style.display = "block";
-        }
+        document.getElementById('graph-touch-controls').style.display = "block";
+
 
         var graphView = document.getElementById('graphView');
         Session.set('graphViewMode',matsTypes.PlotView.graph);
@@ -525,9 +534,8 @@ Template.graph.events({
         document.getElementById("textButton").style.display = "none";
         document.getElementById("curves").style.display = "none";
         document.getElementById("graphView").style.display = "none";
-        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
-            document.getElementById('graph-touch-controls').style.display = "none";
-        }
+        document.getElementById('graph-touch-controls').style.display = "none";
+
         switch (matsPlotUtils.getPlotType()) {
             case matsTypes.PlotTypes.timeSeries:
                 Session.set('graphViewMode',matsTypes.PlotView.textSeries);
