@@ -1126,7 +1126,7 @@ Meteor.startup(function () {
         matsCollections.Databases.insert({
             name: "wfip2Setting-wfip2-dmz",
             role: "wfip2_data",
-            status: "inactive",
+            status: "active",
             host: 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user: 'readonly',
             password: 'Readonlyp@$$405',
@@ -1138,7 +1138,7 @@ Meteor.startup(function () {
         matsCollections.Databases.insert({
             name: "wfip2Setting-model-vxtest",
             role: "wfip2_data",
-            status: "active",
+            status: "inactive",
             host: 'model-vxtest.gsd.esrl.noaa.gov',
             user: 'ambverif',
             password: 'Pass4ambverif#',
