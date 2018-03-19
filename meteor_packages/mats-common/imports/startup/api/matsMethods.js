@@ -10,7 +10,6 @@ import { Mongo } from 'meteor/mongo'
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
-const plotParamStash = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
@@ -737,13 +736,10 @@ const getGraphData = new ValidatedMethod({
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
             try {
-                //stash the plot params so that underlying queries can see them
-                const paramId = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
-                plotParamStash.update({name:dataFunction},{name:paramId,params:params.plotParams},{upsert: true});
                 global[dataFunction](params.plotParams, function (results) {
                         results.basis['dataLink'] = saveResultData(results);
                     future["return"](results);
-                },paramId);
+                });
             } catch(dataFunctionError) {
                 //throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
                 if ( dataFunctionError.toLocaleString().indexOf( "INFO:" ) !== -1) {
@@ -973,6 +969,5 @@ export default matsMethods = {
     testGetTables:testGetTables,
     getPlotResult:getPlotResult,
     testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
-    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
-    plotParamStash:plotParamStash
+    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack
 };

@@ -1,4 +1,3 @@
-import {matsMethods} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
@@ -2117,13 +2116,11 @@ const queryThresholdDB = function (pool, statement, interval) {
     };
 };
 
-
-
 const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
-    const plotParams = getPlotParamsFromStack()
-    //console.log("params are ", plotParams);
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
 
     var cycles = getModelCadence(pool, dataSource);
 
@@ -2141,9 +2138,6 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-
-    var params = matsMethods.plotParamStash.find({},{params:1}).fetch();
-    console.log(params)
 
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -2210,7 +2204,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
                     // HIDDEN QC! This needs to be brought out to a notification or status on the gui
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                    if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                         d.push([loopTime, null, -1, NaN, NaN]);
                     } else {
                         d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]);
