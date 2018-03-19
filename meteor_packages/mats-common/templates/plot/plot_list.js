@@ -141,6 +141,8 @@ Template.plotList.events({
                 p[name] = document.getElementById(name + '-' + type).value;
             }
         });
+        p['completeness'] = document.getElementById("completeness").value;
+        p['outliers'] = document.getElementById("outliers").value;
         Session.set("PlotParams", p);
 
         switch (action) {

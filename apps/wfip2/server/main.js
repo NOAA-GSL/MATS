@@ -872,7 +872,7 @@ var doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'bottom'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'top'}) == undefined) {
         optionsMap = {};
         matsCollections.CurveParams.insert(
             {

@@ -1,3 +1,4 @@
+import {matsMethods} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
@@ -2117,6 +2118,8 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
 
+    var params = matsMethods.plotParamStash.find({},{params:1}).fetch();
+    console.log(params)
 
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -3516,7 +3519,6 @@ export default matsDataUtils = {
     queryThresholdDB: queryThresholdDB,
     queryValidTimeDB:queryValidTimeDB,
     queryMapDB:queryMapDB,
-    queryValidTimeDB: queryValidTimeDB,
 
     getDataForSeriesDiffCurve: getDataForSeriesDiffCurve,
     getDataForSeriesWithLevelsDiffCurve: getDataForSeriesWithLevelsDiffCurve,
@@ -3544,16 +3546,5 @@ export default matsDataUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
-    generateMapPlotOptions: generateMapPlotOptions,
-
-    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
-    get_err: get_err,
-    getPointSymbol: getPointSymbol,
-
-    doColorScheme: doColorScheme,
-    doSettings: doSettings,
-    doCredentials: doCredentials,
-    doAuthorization: doAuthorization,
-    doRoles: doRoles,
-    generateValidTimePlotOptions: generateValidTimePlotOptions
+    generateMapPlotOptions: generateMapPlotOptions
 }
