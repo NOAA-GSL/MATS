@@ -1689,8 +1689,8 @@ const get_err = function (sVals, sSecs) {
 
     const plotParams = getPlotParamsFromStack();
     var outlierQCParam;
-    if (plotParams["outliers"] !== "All Data") {
-        outlierQCParam = Number(plotParams["outliers"][0]);
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
     } else {
         outlierQCParam = 100;
     }
