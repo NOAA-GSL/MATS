@@ -21,11 +21,11 @@ dataProfile = function (plotParams, plotFunction) {
     // so just draw the axis negative and change the ticks to positive numbers.
     var ymax = 0;
     var ymin = -1100;
-    var maxValuesPerLevel = 0;
+    var maxValuesPerLevel = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var dataFoundForCurve = true;
         // Determine all the plot params for this curve
-        maxValuesPerLevel = 0;
+        maxValuesPerLevel[curveIndex] = 0;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
@@ -161,7 +161,7 @@ dataProfile = function (plotParams, plotFunction) {
         for (var di = 0; di < d.length; di++) {
             xmax = xmax > d[di][0] ? xmax : d[di][0];
             xmin = xmin < d[di][0] ? xmin : d[di][0];
-            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+            maxValuesPerLevel[curveIndex] = maxValuesPerLevel[curveIndex] > d[di][3].length ? maxValuesPerLevel[curveIndex] : d[di][3].length;
         }
 
         // specify these so that the curve options generator has them available
@@ -207,6 +207,8 @@ dataProfile = function (plotParams, plotFunction) {
     var maxx;
     var minx;
     var axisLimitReprocessed = {};
+    const params = matsDataUtils.getPlotParamsFromStack();
+    const completenessQCParam = Number(params["completeness"])/100;
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
@@ -242,7 +244,7 @@ dataProfile = function (plotParams, plotFunction) {
                     data[di][3] = newSubValues;
                     data[di][4] = subSecIntersection;
                 }
-                if (data[di][3].length < maxValuesPerLevel * 0.75) {
+                if (data[di][3].length < maxValuesPerLevel[curveIndex] * completenessQCParam) {
                     // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
                     errorResult = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};
                     data[di][0] = null; //null out the value
@@ -286,7 +288,8 @@ dataProfile = function (plotParams, plotFunction) {
                     lag1: errorResult.lag1,
                     stde_betsy: errorResult.stde_betsy
                 };
-                if (data[di][3].length < maxValuesPerLevel * 0.75) {
+
+                if (data[di][3].length < maxValuesPerLevel[curveIndex] * completenessQCParam) {
                     // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
                     // this is the tooltip, it is the last element of each dataseries element
                     data[di][6] = label +
