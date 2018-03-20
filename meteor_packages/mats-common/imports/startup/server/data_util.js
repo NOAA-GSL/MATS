@@ -13,7 +13,7 @@ const getPlotParamsFromStack = function() {
     for (si = 0; si < stackElems.length; si++) {
         const sElem = stackElems[si].trim();
         if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
-            const dataFunctionName = sElem.split(' at ')[1];
+            const dataFunctionName = sElem.split('at ')[1];
             try {
                 params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
             } catch (noJoy){}
@@ -2068,17 +2068,18 @@ const queryDieoffWithLevelsDB = function (pool, statement) {
     };
 };
 
-const queryThresholdDB = function (pool, statement, interval) {
+const queryThresholdDB = function (pool, statement) {
+
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
-    var xmax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -2091,25 +2092,31 @@ const queryThresholdDB = function (pool, statement, interval) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveTime = [];
+            var curveTrsh = [];
             var curveStat = [];
-            var N0_max = 0;
-            var N_times_max = 0;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var trsh = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
-                }
-                d.push([trsh, stat]);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                curveTrsh.push(trsh);
+                curveStat.push(stat);
             }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            for (var d_idx = 0; d_idx < curveTrsh.length; d_idx++) {
+                var this_N0 = N0[d_idx];
+                var this_N_times = N_times[d_idx];
+                // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                if (this_N_times < completenessQCParam * N_times_max) {
+                    // d.push([curveTrsh[d_idx], null]);
+                } else {
+                    d.push([curveTrsh[d_idx], curveStat[d_idx]]);
+                }
+            }
+            // done waiting - have results
             dFuture['return']();
         }
     });
