@@ -206,11 +206,11 @@ dataProfile = function (plotParams, plotFunction) {
     var errorMax = Number.MIN_VALUE;
     var maxx;
     var minx;
-    var axisLimitReprocessed = {};
+//    var axisLimitReprocessed = {};
     const params = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(params["completeness"])/100;
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+//        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
         if (diffFrom === undefined || diffFrom === null || (diffFrom !== null && matching)) {
@@ -262,9 +262,9 @@ dataProfile = function (plotParams, plotFunction) {
                      */
                     //console.log('Getting errors for level ' + data[di][1]);
                     errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-                    if (matching) {
-                        data[di][0] = errorResult.d_mean;
-                    }
+//                    if (matching) {
+//                        data[di][0] = errorResult.d_mean;
+//                    }
                     values.push(data[di][0]);
                     levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
                     means.push(errorResult.d_mean);
@@ -318,25 +318,25 @@ dataProfile = function (plotParams, plotFunction) {
             stats.minx = minx;
             stats.maxx = maxx;
             dataset[curveIndex]['stats'] = stats;
-
-        } else if (diffFrom !== undefined && diffFrom !== null){
-            data = dataset[curveIndex].data;
-            di = 0;
-            values = [];
-            levels = [];
-            while (di < data.length) {
-                values.push(data[di][0]);
-                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
-                di++;
-            }
-            const filteredMeans = values.filter(x => x);
-            minx = Math.min.apply(null, filteredMeans);
-            maxx = Math.max.apply(null, filteredMeans);
+//
+//        } else if (diffFrom !== undefined && diffFrom !== null){
+//            data = dataset[curveIndex].data;
+//            di = 0;
+//            values = [];
+//            levels = [];
+//            while (di < data.length) {
+//                values.push(data[di][0]);
+//                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+//                di++;
+//            }
+//            const filteredMeans = values.filter(x => x);
+//            minx = Math.min.apply(null, filteredMeans);
+//            maxx = Math.max.apply(null, filteredMeans);
         }
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
-        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+//        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+//        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
     }
 
     // add black 0 line curve
