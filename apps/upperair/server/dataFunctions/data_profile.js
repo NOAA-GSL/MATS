@@ -109,7 +109,6 @@ dataProfile = function (plotParams, plotFunction) {
             var queryResult;
             var startMoment = moment();
             var finishMoment;
-            console.log("query is: " + statement);
             try {
                 queryResult = matsDataUtils.queryProfileDB(sumPool, statement, statisticSelect, label);
                 finishMoment = moment();

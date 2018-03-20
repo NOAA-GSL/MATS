@@ -1686,6 +1686,15 @@ const get_err = function (sVals, sSecs) {
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
+
+    const plotParams = getPlotParamsFromStack();
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "All Data") {
+        outlierQCParam = Number(plotParams["outliers"][0]);
+    } else {
+        outlierQCParam = 100;
+    }
+
     var subVals = [];
     var subSecs = [];
     var sVals = sVals;
@@ -1708,7 +1717,7 @@ const get_err = function (sVals, sSecs) {
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = 3 * sd;
+    var sd_limit = outlierQCParam * sd;
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1744,8 +1753,8 @@ const get_err = function (sVals, sSecs) {
     var qaCorrected = [];
     for (i = 0; i < subVals.length; i++) {
         if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-            qaCorrected.push("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " + (subVals[i] - d_mean));
-            console.log(qaCorrected.join('\n'));
+            qaCorrected.push("removing datum " + i + " with value " + subVals[i] + " because it exceeds " + outlierQCParam + " standard deviations from the mean - mean: " + d_mean + " " + outlierQCParam + " * sd: " + sd_limit + " delta: " + (subVals[i] - d_mean));
+            // console.log(qaCorrected.join('\n'));
             subVals[i] = null;
         } else {
             n_good++;
