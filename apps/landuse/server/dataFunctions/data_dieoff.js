@@ -22,7 +22,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxValuesPerFhr = 0;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -129,7 +128,6 @@ dataDieOff = function (plotParams, plotFunction) {
                         count++;
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                        maxValuesPerFhr = maxValuesPerFhr > d[i][3].length ? maxValuesPerFhr : d[i][3].length;
                     }
                 }
             }
