@@ -1152,6 +1152,7 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
+        port: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
@@ -1160,7 +1161,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.host, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.database, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "wfip2"});

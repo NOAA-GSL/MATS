@@ -230,7 +230,7 @@ data2dScatter = function (plotParams, plotFunction) {
                     startMoment = moment();
                     rawAxisData[axis + '-truth'] = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
                     finishMoment = moment();
-                    dataRequests["truth data retrieveal (query) time - " + axis + " - " + curve.label] = {
+                    dataRequests["truth data retrieval (query) time - " + axis + " - " + curve.label] = {
                         begin: startMoment.format(),
                         finish: finishMoment.format(),
                         duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds',
