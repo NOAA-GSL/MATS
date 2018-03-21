@@ -71,6 +71,12 @@
             "$date": "2018-03-12T22:17:01.652+0000"
           },
           "hashedToken": "M56+otdy9vz2ac1O9+EfJtnbbS/2D5aIpbPqIBRajSQ="
+        },
+        {
+          "when": {
+            "$date": "2018-03-20T15:41:51.426+0000"
+          },
+          "hashedToken": "Neg+v/XSH/5ZjS/sebzB6QRb8lNY2cJBWi3uHW27kRU="
         }
       ]
     }
