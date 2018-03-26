@@ -611,7 +611,7 @@ const showMapFace = function() {
         }
         elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
