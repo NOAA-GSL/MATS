@@ -97,7 +97,7 @@ dataMap = function (plotParams, plotFunction) {
                 var validTimeClause =" ";
                 if (validTimes.length > 0){
                     validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + ")" +
-                        " OR FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")";
+                        " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + "))";
                 }
                 statement = statement.replace('{{validTimeClause}}', validTimeClause);
 
