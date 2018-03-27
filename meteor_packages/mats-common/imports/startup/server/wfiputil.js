@@ -375,7 +375,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         interpolationCount = {};
                         valueSums = {};
                         interpolatedValues = {};
-                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                        if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
                             //initialize the objects
                             for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = 1;
@@ -387,7 +387,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         previousSiteId = siteid;
                     } else {
                         // subsequent encounter of the same avtime
-                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                        if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
                             for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = isNaN(interpolationCount[levels[levelIndex]]) ? 1 : interpolationCount[levels[levelIndex]] + 1;
                                 valueSums[levels[levelIndex]] = isNaN(valueSums[levels[levelIndex]]) ? values[levelIndex]: valueSums[levels[levelIndex]] + values[levelIndex];
