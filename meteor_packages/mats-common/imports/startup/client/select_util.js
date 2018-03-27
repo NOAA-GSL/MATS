@@ -327,7 +327,12 @@ const refresh = function (event, paramName) {
             }
             $('select[name="' + name + '"]').empty().append(optionsAsString);
             //reset the selected index if it had been set prior (the list may have changed so the index may have changed)
-            var selectedOptionIndex = options.indexOf(selectedText);
+            var selectedOptionIndex;
+            if (selectedText === 'initial') {
+                selectedOptionIndex = options.indexOf(param.default);
+            } else {
+                selectedOptionIndex = options.indexOf(selectedText);
+            }
             var sviText = "";
             if (selectedOptionIndex == -1 && elem.selectedIndex >= 0) {
                 for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {

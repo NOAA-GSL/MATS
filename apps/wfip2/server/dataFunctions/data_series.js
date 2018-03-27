@@ -295,7 +295,7 @@ dataSeries = function (plotParams, plotFunction) {
                         startMoment = moment();
                         truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
                         finishMoment = moment();
-                        dataRequests["truth data retrieveal (query) time - " + curve.label] = {
+                        dataRequests["truth data retrieval (query) time - " + curve.label] = {
                             begin: startMoment.format(),
                             finish: finishMoment.format(),
                             duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds',

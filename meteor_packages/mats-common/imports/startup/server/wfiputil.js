@@ -369,29 +369,29 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (isInstrument && Array.isArray(values)) {
                     var halfCycleBeforeAvtime = time - verificationHalfRunInterval;
                     var halfCycleAfterAvtime = time + verificationHalfRunInterval;
-                    if ((Number(time) > Number(previousTime)) ||
-                        (Number(siteid) > Number(previousSiteId))) {
+                    if ((time > previousTime) || (Number(siteid) > Number(previousSiteId))) {
                         // first encounter of a new avtime (adjusted valid interval)
-                        interpolationCount = 0;
+                        // need to keep an interpolation index for each level because we can have dropouts at a given level for a given site
+                        interpolationCount = {};
                         valueSums = {};
                         interpolatedValues = {};
-                        if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
-                            //initialize the
-                            interpolationCount++;
-                            for (var index = 0; index < values.length; index++) {
-                                valueSums[levels[index]] = values[index];
-                                interpolatedValues[levels[index]] = valueSums[levels[index]] / interpolationCount;
+                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                            //initialize the objects
+                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                                interpolationCount[levels[levelIndex]] = 1;
+                                valueSums[levels[levelIndex]] = values[levelIndex];
+                                interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
                             }
                         }
                         previousTime = time;
                         previousSiteId = siteid;
                     } else {
                         // subsequent encounter of the same avtime
-                        if (utctime > halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
-                            interpolationCount++;
-                            for (var index = 0; index < values.length; index++) {
-                                valueSums[levels[index]] = isNaN(valueSums[levels[index]])? values[index]: valueSums[levels[index]] + values[index];
-                                interpolatedValues[levels[index]] = valueSums[levels[index]] / interpolationCount;
+                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                                interpolationCount[levels[levelIndex]] = isNaN(interpolationCount[levels[levelIndex]]) ? 1 : interpolationCount[levels[levelIndex]] + 1;
+                                valueSums[levels[levelIndex]] = isNaN(valueSums[levels[levelIndex]]) ? values[levelIndex]: valueSums[levels[levelIndex]] + values[levelIndex];
+                                interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
                             }
                         }
                     }

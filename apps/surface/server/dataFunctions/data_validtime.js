@@ -64,6 +64,9 @@ dataValidTime = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             var statement = "select floor((m0.valid_day+3600*m0.hour)%(24*3600)/3600) as hr_of_day, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
@@ -85,7 +88,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryValidTimeDB(sumPool,statement, interval);
+                queryResult = matsDataUtils.queryValidTimeDB(sumPool,statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

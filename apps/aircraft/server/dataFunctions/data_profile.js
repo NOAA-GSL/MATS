@@ -21,11 +21,11 @@ dataProfile = function (plotParams, plotFunction) {
     // so just draw the axis negative and change the ticks to positive numbers.
     var ymax = 0;
     var ymin = -1100;
-    var maxValuesPerLevel = 0;
+    var maxValuesPerLevel = {};
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var dataFoundForCurve = true;
         // Determine all the plot params for this curve
-        maxValuesPerLevel = 0;
+        maxValuesPerLevel[curveIndex] = 0;
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom; // [minuend, subtrahend]
         var label = curve['label'];
@@ -113,7 +113,6 @@ dataProfile = function (plotParams, plotFunction) {
             var queryResult;
             var startMoment = moment();
             var finishMoment;
-            console.log("query is: " + statement);
             try {
                 queryResult = matsDataUtils.queryProfileDB(sumPool, statement, statisticSelect, label);
                 finishMoment = moment();
@@ -186,7 +185,7 @@ dataProfile = function (plotParams, plotFunction) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];
                 xmin = xmin < d[di][0] ? xmin : d[di][0];
             }
-            maxValuesPerLevel = maxValuesPerLevel > d[di][3].length ? maxValuesPerLevel : d[di][3].length;
+            maxValuesPerLevel[curveIndex] = maxValuesPerLevel[curveIndex] > d[di][3].length ? maxValuesPerLevel[curveIndex] : d[di][3].length;
         }
 
         // specify these so that the curve options generator has them available
@@ -231,9 +230,11 @@ dataProfile = function (plotParams, plotFunction) {
     var errorMax = Number.MIN_VALUE;
     var maxx;
     var minx;
-    var axisLimitReprocessed = {};
+//    var axisLimitReprocessed = {};
+    const params = matsDataUtils.getPlotParamsFromStack();
+    const completenessQCParam = Number(params["completeness"])/100;
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+//        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
         if (diffFrom === undefined || diffFrom === null || (diffFrom !== null && matching)) {
@@ -267,7 +268,7 @@ dataProfile = function (plotParams, plotFunction) {
                     data[di][3] = newSubValues;
                     data[di][4] = subSecIntersection;
                 }
-                if (data[di][3].length < maxValuesPerLevel * 0.75) {
+                if (data[di][3].length < maxValuesPerLevel[curveIndex] * completenessQCParam) {
                     // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
                     errorResult = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};
                     data[di][0] = null; //null out the value
@@ -285,9 +286,9 @@ dataProfile = function (plotParams, plotFunction) {
                      */
                     //console.log('Getting errors for level ' + data[di][1]);
                     errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-                    if (matching) {
-                        data[di][0] = errorResult.d_mean;
-                    }
+//                    if (matching) {
+//                        data[di][0] = errorResult.d_mean;
+//                    }
                     values.push(data[di][0]);
                     levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
                     means.push(errorResult.d_mean);
@@ -311,7 +312,8 @@ dataProfile = function (plotParams, plotFunction) {
                     lag1: errorResult.lag1,
                     stde_betsy: errorResult.stde_betsy
                 };
-                if (data[di][3].length < maxValuesPerLevel * 0.75) {
+
+                if (data[di][3].length < maxValuesPerLevel[curveIndex] * completenessQCParam) {
                     // IMPLICIT QUALITY CONTROL - throw away levels that are not at least 75% complete
                     // this is the tooltip, it is the last element of each dataseries element
                     data[di][6] = label +
@@ -340,25 +342,25 @@ dataProfile = function (plotParams, plotFunction) {
             stats.minx = minx;
             stats.maxx = maxx;
             dataset[curveIndex]['stats'] = stats;
-
-        } else if (diffFrom !== undefined && diffFrom !== null){
-            data = dataset[curveIndex].data;
-            di = 0;
-            values = [];
-            levels = [];
-            while (di < data.length) {
-                values.push(data[di][0]);
-                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
-                di++;
-            }
-            const filteredMeans = values.filter(x => x);
-            minx = Math.min.apply(null, filteredMeans);
-            maxx = Math.max.apply(null, filteredMeans);
+//
+//        } else if (diffFrom !== undefined && diffFrom !== null){
+//            data = dataset[curveIndex].data;
+//            di = 0;
+//            values = [];
+//            levels = [];
+//            while (di < data.length) {
+//                values.push(data[di][0]);
+//                levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+//                di++;
+//            }
+//            const filteredMeans = values.filter(x => x);
+//            minx = Math.min.apply(null, filteredMeans);
+//            maxx = Math.max.apply(null, filteredMeans);
         }
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
-        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+//        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+//        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
     }
 
     // add black 0 line curve

@@ -80,7 +80,7 @@ dataThreshold = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryThresholdDB(sumPool,statement, interval);
+                queryResult = matsDataUtils.queryThresholdDB(sumPool,statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

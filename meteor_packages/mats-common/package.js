@@ -138,6 +138,9 @@ Package.onUse(function (api) {
     api.addFiles("templates/plot/plot_param_group.html", "client");
     api.addFiles("templates/plot/plot_param_group.js", "client");
 
+    api.addFiles("templates/plot/QC_param_group.html", "client");
+    api.addFiles("templates/plot/QC_param_group.js", "client");
+
     api.addFiles("templates/error/error.html", "client");
     api.addFiles("templates/error/error.js", "client");
 

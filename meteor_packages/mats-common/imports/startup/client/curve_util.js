@@ -281,8 +281,8 @@ const checkDiffs = function () {
 const showProfileFace = function() {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -339,8 +339,8 @@ const showProfileFace = function() {
 const showTimeseriesFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -398,8 +398,8 @@ const showTimeseriesFace = function() {
 const showDieOffFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -456,8 +456,8 @@ const showDieOffFace = function() {
 const showValidTimeFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -514,8 +514,8 @@ const showValidTimeFace = function() {
 const showThresholdFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -572,8 +572,8 @@ const showThresholdFace = function() {
 const showMapFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.map);
         var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.map);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -611,7 +611,7 @@ const showMapFace = function() {
         }
         elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {

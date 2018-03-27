@@ -398,7 +398,8 @@ const doCurveParams = function () {
                 multiple: true
             });
     }
-}
+
+};
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
  [labelString, localVariableName, delimiterString]  any of which can be null.

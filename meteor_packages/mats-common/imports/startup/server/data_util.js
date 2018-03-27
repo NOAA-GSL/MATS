@@ -11,11 +11,11 @@ const getPlotParamsFromStack = function() {
     const stack = err.stack;
     const stackElems = stack.split("\n")
     for (si = 0; si < stackElems.length; si++) {
-        const sElem = stackElems[si];
-        if (sElem.indexOf('dataFunctions') !== -1) {
-            const dataFunctionName = sElem.split(' at ')[1]
+        const sElem = stackElems[si].trim();
+        if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
+            const dataFunctionName = sElem.split('at ')[1];
             try {
-                params = global[sElem.split(' at ')[1].split(' ')[0]].arguments[0]
+                params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
             } catch (noJoy){}
             break;
         }
@@ -1686,6 +1686,15 @@ const get_err = function (sVals, sSecs) {
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
+
+    const plotParams = getPlotParamsFromStack();
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
+    } else {
+        outlierQCParam = 100;
+    }
+
     var subVals = [];
     var subSecs = [];
     var sVals = sVals;
@@ -1708,7 +1717,7 @@ const get_err = function (sVals, sSecs) {
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = 3 * sd;
+    var sd_limit = outlierQCParam * sd;
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1744,8 +1753,8 @@ const get_err = function (sVals, sSecs) {
     var qaCorrected = [];
     for (i = 0; i < subVals.length; i++) {
         if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-            qaCorrected.push("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " + (subVals[i] - d_mean));
-            console.log(qaCorrected.join('\n'));
+            qaCorrected.push("removing datum " + i + " with value " + subVals[i] + " because it exceeds " + outlierQCParam + " standard deviations from the mean - mean: " + d_mean + " " + outlierQCParam + " * sd: " + sd_limit + " delta: " + (subVals[i] - d_mean));
+            // console.log(qaCorrected.join('\n'));
             subVals[i] = null;
         } else {
             n_good++;
@@ -1904,6 +1913,10 @@ const queryMapDB = function (pool, statement) {
 
 
 const queryDieoffDB = function (pool, statement, interval) {
+
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -1958,7 +1971,7 @@ const queryDieoffDB = function (pool, statement, interval) {
                 var this_N0 = N0[d_idx];
                 var this_N_times = N_times[d_idx];
                 // HIDDEN QC! This needs to be brought out to a notification or status on the gui
-                if (this_N0 < 0.05 * N0_max) {
+                if (this_N0 < 0.05 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                     // d.push([curveFhrs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
                 } else {
                     d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]); // -1 is a placeholder for the stde_betsy value
@@ -1980,6 +1993,10 @@ const queryDieoffDB = function (pool, statement, interval) {
 };
 
 const queryDieoffWithLevelsDB = function (pool, statement) {
+
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -2039,7 +2056,7 @@ const queryDieoffWithLevelsDB = function (pool, statement) {
                 var this_N0 = N0[d_idx];
                 var this_N_times = N_times[d_idx];
                 // HIDDEN QC! This needs to be brought out to a notification or status on the gui
-                if (this_N0 < 0.05 * N0_max) {
+                if (this_N0 < 0.05 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                     // d.push([curveFhrs[d_idx], null, -1, NaN, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
                 } else {
                     d.push([curveFhrs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]); // -1 is a placeholder for the stde_betsy value
@@ -2060,17 +2077,18 @@ const queryDieoffWithLevelsDB = function (pool, statement) {
     };
 };
 
-const queryThresholdDB = function (pool, statement, interval) {
+const queryThresholdDB = function (pool, statement) {
+
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
-    var xmax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -2083,25 +2101,31 @@ const queryThresholdDB = function (pool, statement, interval) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveTime = [];
+            var curveTrsh = [];
             var curveStat = [];
-            var N0_max = 0;
-            var N_times_max = 0;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var trsh = Number(rows[rowIndex].avtime);
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
-                }
-                d.push([trsh, stat]);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                curveTrsh.push(trsh);
+                curveStat.push(stat);
             }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            for (var d_idx = 0; d_idx < curveTrsh.length; d_idx++) {
+                var this_N0 = N0[d_idx];
+                var this_N_times = N_times[d_idx];
+                // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                if (this_N_times < completenessQCParam * N_times_max) {
+                    d.push([curveTrsh[d_idx], null]);
+                } else {
+                    d.push([curveTrsh[d_idx], curveStat[d_idx]]);
+                }
+            }
+            // done waiting - have results
             dFuture['return']();
         }
     });
@@ -2116,13 +2140,11 @@ const queryThresholdDB = function (pool, statement, interval) {
     };
 };
 
-
-
 const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
-    const plotParams = getPlotParamsFromStack()
-    //console.log("params are ", plotParams);
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
 
     var cycles = getModelCadence(pool, dataSource);
 
@@ -2140,7 +2162,6 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-
 
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -2207,7 +2228,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
                     // HIDDEN QC! This needs to be brought out to a notification or status on the gui
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                    if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                         d.push([loopTime, null, -1, NaN, NaN]);
                     } else {
                         d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]);
@@ -2241,6 +2262,9 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
 const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var cycles = getModelCadence(pool, dataSource);
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
@@ -2257,7 +2281,6 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
     var ymax;
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-
 
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -2329,7 +2352,7 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
                     var this_N0 = N0[d_idx];
                     var this_N_times = N_times[d_idx];
                     // HIDDEN QC! This needs to be brought out to a notification or status on the gui
-                    if (this_N0 < 0.1 * N0_max || this_N_times < 0.75 * N_times_max) {
+                    if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                         d.push([loopTime, null, -1, NaN, NaN, NaN]);
                     } else {
                         d.push([loopTime, curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);
@@ -2360,17 +2383,18 @@ const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSourc
     };
 };
 
-const queryValidTimeDB = function (pool, statement, interval) {
+const queryValidTimeDB = function (pool, statement) {
+
+    const plotParams = getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"])/100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    //var ctime = [];
     var ymin;
     var ymax;
-    var xmax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -2383,25 +2407,31 @@ const queryValidTimeDB = function (pool, statement, interval) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveTime = [];
+            var curveVT = [];
             var curveStat = [];
-            var N0_max = 0;
-            var N_times_max = 0;
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var hr_of_day = Number(rows[rowIndex].hr_of_day);
                 var stat = rows[rowIndex].stat;
-                var N0_loop = rows[rowIndex].N0;
-                var N_times_loop = rows[rowIndex].N_times;
-                if (N0_loop > N0) {
-                    N0_max = N0_loop;
-                }
-                if (N_times_loop > N_times) {
-                    N_times_max = N_times_loop;
-                }
-                d.push([hr_of_day, stat]);
-                N0.push(N0_loop);
-                N_times.push(N_times_loop);
+                N0.push(rows[rowIndex].N0);
+                N_times.push(rows[rowIndex].N_times);
+                curveVT.push(hr_of_day);
+                curveStat.push(stat);
             }
+
+            var N0_max = Math.max(...N0);
+            var N_times_max = Math.max(...N_times);
+
+            for (var d_idx = 0; d_idx < curveVT.length; d_idx++) {
+                var this_N0 = N0[d_idx];
+                var this_N_times = N_times[d_idx];
+                // HIDDEN QC! This needs to be brought out to a notification or status on the gui
+                if (this_N_times < completenessQCParam * N_times_max) {
+                    d.push([curveVT[d_idx], null]);
+                } else {
+                    d.push([curveVT[d_idx], curveStat[d_idx]]);
+                }
+            }
+            // done waiting - have results
             dFuture['return']();
         }
     });
@@ -3521,6 +3551,7 @@ export default matsDataUtils = {
     findArrayInSubArray: findArrayInSubArray,
     getDateRange: getDateRange,
     get_err: get_err,
+    getPlotParamsFromStack: getPlotParamsFromStack,
     getPointSymbol: getPointSymbol,
     secsConvert: secsConvert,
     sortFunction: sortFunction,
@@ -3567,16 +3598,5 @@ export default matsDataUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
-    generateMapPlotOptions: generateMapPlotOptions,
-
-    simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
-    get_err: get_err,
-    getPointSymbol: getPointSymbol,
-
-    doColorScheme: doColorScheme,
-    doSettings: doSettings,
-    doCredentials: doCredentials,
-    doAuthorization: doAuthorization,
-    doRoles: doRoles,
-    generateValidTimePlotOptions: generateValidTimePlotOptions
+    generateMapPlotOptions: generateMapPlotOptions
 }
