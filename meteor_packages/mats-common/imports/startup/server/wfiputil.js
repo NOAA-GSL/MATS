@@ -329,7 +329,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                                 }
                             }
                         }
-                        var zVar = 'z'
+                        var zVar = 'z';
                         if (JSON.parse(rows[rowIndex].data)['zmap']) {     // if there is a zmap
                            zVar = JSON.parse(rows[rowIndex].data)['zmap'][myVariable]
                         }
@@ -369,6 +369,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (isInstrument && Array.isArray(values)) {
                     var halfCycleBeforeAvtime = time - verificationHalfRunInterval;
                     var halfCycleAfterAvtime = time + verificationHalfRunInterval;
+                    var levelIndex;
                     if ((time > previousTime) || (Number(siteid) > Number(previousSiteId))) {
                         // first encounter of a new avtime (adjusted valid interval)
                         // need to keep an interpolation index for each level because we can have dropouts at a given level for a given site
@@ -377,7 +378,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         interpolatedValues = {};
                         if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
                             //initialize the objects
-                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                            for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = 1;
                                 valueSums[levels[levelIndex]] = values[levelIndex];
                                 interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
@@ -388,7 +389,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     } else {
                         // subsequent encounter of the same avtime
                         if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
-                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                            for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = isNaN(interpolationCount[levels[levelIndex]]) ? 1 : interpolationCount[levels[levelIndex]] + 1;
                                 valueSums[levels[levelIndex]] = isNaN(valueSums[levels[levelIndex]]) ? values[levelIndex]: valueSums[levels[levelIndex]] + values[levelIndex];
                                 interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
@@ -463,16 +464,43 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 // may have dropped sample in above if
                 numLevels = levels.length;
 
+                //weight by level thickness when taking layer average
+                var maxLev = levels[numLevels-1];
+                var minLev = levels[0];
+                var totalLayerThickness = maxLev-minLev;
+                var thicknessLayerCount = 0;
+                var sum = 0;
+                var mean = 0;
 
                 if (numLevels > 1) {
-                    var sum = values.reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
+                    var currLev;
+                    for (var currLevIdx = 0; currLevIdx < numLevels; currLevIdx++){
+                        currLev = levels[currLevIdx];
+                        var lowerDelta;
+                        var upperDelta;
+                        var avgDelta;
+                        var thicknessFraction;
+
+                        if (currLev === minLev) {
+                            avgDelta = (levels[currLevIdx+1] - currLev) / 2;
+                        } else if (currLev === maxLev) {
+                            avgDelta = (currLev - levels[currLevIdx-1]) / 2;
+                        } else {
+                            lowerDelta = currLev - levels[currLevIdx-1];
+                            upperDelta = levels[currLevIdx+1] - currLev;
+                            avgDelta = (lowerDelta + upperDelta) / 2;
+                        }
+                        thicknessFraction = avgDelta / totalLayerThickness;
+                        sum += values[currLevIdx];
+                        mean += values[currLevIdx] * thicknessFraction;
+                        thicknessLayerCount += thicknessFraction;
+                    }
+                    mean = mean / thicknessFraction;
                 } else {
-                    var sum = values[0];
+                    sum = values[0];
+                    mean = sum;
                 }
 
-                var mean = sum / numLevels;
                 if (resultData[time] === undefined) {
                     resultData[time] = {sites: {}};
                     cumulativeMovingMeanForTime = 0;
