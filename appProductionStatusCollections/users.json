@@ -26,18 +26,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2017-12-22T20:59:42.271+0000"
-          },
-          "hashedToken": "mAytZLIk0yjQ5dsj2C/1ECoDL98FCTXEtbwCpBsbVck="
-        },
-        {
-          "when": {
-            "$date": "2017-12-26T22:25:06.200+0000"
-          },
-          "hashedToken": "HGZR/5YwyQGOd6C6d4zQ7juNr2BNxYe8CZexPj5b9Xk="
-        },
-        {
-          "when": {
             "$date": "2018-01-04T22:10:30.363+0000"
           },
           "hashedToken": "fOy27MzatS/7Wjhoc6v76ETv9jTHK0gLnsRFz3Ug1Fc="
@@ -77,6 +65,12 @@
             "$date": "2018-03-20T15:41:51.426+0000"
           },
           "hashedToken": "Neg+v/XSH/5ZjS/sebzB6QRb8lNY2cJBWi3uHW27kRU="
+        },
+        {
+          "when": {
+            "$date": "2018-03-26T21:31:53.734+0000"
+          },
+          "hashedToken": "Dntf2ynFXAE2FbHmYIyKN8rw6UTPeRqXLPuASfuKEeE="
         }
       ]
     }
@@ -129,6 +123,12 @@
             "$date": "2018-01-04T17:12:54.316+0000"
           },
           "hashedToken": "1+BzpGG5PHPOB6FuSnXxqGBH6t2i4KgraqlrkZ61qow="
+        },
+        {
+          "when": {
+            "$date": "2018-03-26T21:28:10.719+0000"
+          },
+          "hashedToken": "PmKz9KTlsOc4qsyq5iCXlfqWtxJ+LPZ2vkoFqStMF08="
         }
       ]
     }
