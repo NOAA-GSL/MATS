@@ -23,7 +23,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxValuesPerFhr = 0;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -143,7 +142,6 @@ dataDieOff = function (plotParams, plotFunction) {
                         count++;
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                        maxValuesPerFhr = maxValuesPerFhr > d[i][3].length ? maxValuesPerFhr : d[i][3].length;
                     }
                 }
             }
@@ -208,7 +206,7 @@ dataDieOff = function (plotParams, plotFunction) {
             currFHR = matchingFhrs[fi];
             subIntersections[currFHR] = [];
             var currSubIntersections = [];
-            for (si = 0; si < subSecs[0][currFHR].length; si++) {
+            for (var si = 0; si < subSecs[0][currFHR].length; si++) {
                 currSubIntersections.push([subSecs[0][currFHR][si],subLevs[0][currFHR][si]]);   //fill current intersection array with sec-lev pairs from the first curve
             }
             for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
@@ -228,9 +226,9 @@ dataDieOff = function (plotParams, plotFunction) {
 
     var diffFrom;
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
-    var axisLimitReprocessed = {};
+    // var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
@@ -260,7 +258,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 var newSubSecs = [];
                 var newSubLevs = [];
 
-                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
+                for (si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
                     tempPair = [sub_secs[si],sub_levs[si]]; //create sec-lev pair for each sub value
                     if (matsDataUtils.arrayContainsSubArray(subIntersections[currFHR],tempPair)) {  //store the sub-value only if its sec-lev pair is in the matching array for this fhr
                         var newVal = subValues[si];
@@ -295,7 +293,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for fhr ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-            data[di][1] = errorResult.d_mean;
+            // data[di][1] = errorResult.d_mean;
             values.push(data[di][1]);
             fhrs.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -344,8 +342,8 @@ dataDieOff = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
     }
 
     // add black 0 line curve

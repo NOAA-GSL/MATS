@@ -314,9 +314,9 @@ const doCurveParams = function () {
                 unique: false,
                 default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     } else {
         // it is defined but check for necessary update
@@ -355,7 +355,7 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -377,7 +377,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: fcstTypeModelOptionsMap[Object.keys(fcstTypeModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -413,7 +413,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: scaleModelOptionsMap[Object.keys(scaleModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 2
             });

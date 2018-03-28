@@ -26,6 +26,7 @@ Template.select.onRendered( function () {
             // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
             return;
         }
+        elem.options = [];
         elem && elem.addEventListener('refresh', function (event) {
             matsSelectUtils.refresh(event,this.name);
         });

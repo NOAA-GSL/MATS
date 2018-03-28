@@ -43,6 +43,7 @@ dataMap = function (plotParams, plotFunction) {
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable and statistic (axisKey) it will use the same axis,
@@ -73,6 +74,7 @@ dataMap = function (plotParams, plotFunction) {
                     "and m0.fcst_len = {{forecastLength}} " +
                     "and m0.time >= '{{fromSecs}}' " +
                     "and m0.time <= '{{toSecs}}' " +
+                    "{{validTimeClause}}" +
                     ";";
 
                 statement = statement.replace('{{fromSecs}}', fromSecs);
@@ -92,6 +94,12 @@ dataMap = function (plotParams, plotFunction) {
                     statement = statement.replace('{{variable}}', variable);
                 }
                 statement = statement.replace('{{station}}', siteOptions.siteId);
+                var validTimeClause =" ";
+                if (validTimes.length > 0){
+                    validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +
+                        " OR (m0.time%3600>=1800 and FROM_UNIXTIME((m0.time-((m0.time%3600)-3600)),'%H') IN (" + validTimes + ")))";
+                }
+                statement = statement.replace('{{validTimeClause}}', validTimeClause);
 
                 dataRequests[curve.label + " - " + site] = statement;
                 var queryResult;

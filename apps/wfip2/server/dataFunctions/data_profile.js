@@ -261,7 +261,7 @@ dataProfile = function (plotParams, plotFunction) {
                     startMoment = moment();
                     truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
                     finishMoment = moment();
-                    dataRequests["truth data retrieveal (query) time - " + curve.label] = {
+                    dataRequests["truth data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),
                         finish: finishMoment.format(),
                         duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds',
@@ -585,7 +585,7 @@ dataProfile = function (plotParams, plotFunction) {
                             // does this time exist in all the curves at this level? If not throw it away
                             timeLevelExists = true;
                             for (ci = 0; ci < curvesLength; ci++) {
-                                if (curves[ci].diffFrom === undefined && (!curves[ci].partials[time][site][level])) {
+                                if (curves[ci].diffFrom === undefined && (!curves[ci].partials || !curves[ci].partials[time] || !curves[ci].partials[time][site] || !curves[ci].partials[time][site][level])) {
                                     timeLevelExists = false;
                                 }
                             }
@@ -742,15 +742,15 @@ dataProfile = function (plotParams, plotFunction) {
             var diffResult;
             if (matching) {
                 //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
-                //diffResult = matsDataUtils.getDataForProfileMatchingDiffCurve({
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                //diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
+                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
             } else {
                 // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
                 //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });

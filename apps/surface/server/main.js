@@ -613,10 +613,11 @@ var doCurveTextPatterns = function () {
                 ['', 'data-source', ': '],
                 ['', 'sites', ': '],
                 ['', 'variable', ', '],
-                ['fcst_len: ', 'forecast-length', ' h ']
+                ['fcst_len: ', 'forecast-length', ' h '],
+                [' valid-time:', 'valid-time', ' ']
             ],
             displayParams: [
-                "data-source", "sites", "variable", "forecast-length"
+                "data-source", "sites", "variable", "forecast-length", "valid-time"
             ],
             groupSize: 4
         });

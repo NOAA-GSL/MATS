@@ -214,28 +214,82 @@ dataSeries = function (plotParams, plotFunction) {
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
+
+        var subSecs = [];
+        var avTimeGroups = [];
+        var currTime;
+
+        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+            avTimeGroups[curveIndex] = [];
+            subSecs[curveIndex] = {};
+            var data = dataset[curveIndex].data;
+            for (var di = 0; di < data.length; di++) { // every time
+                currTime = data[di][0];
+                subSecs[curveIndex][currTime] = data[di][4]; //store raw secs for each time
+                avTimeGroups[curveIndex].push(currTime);
+            }
+        }
+        var matchingTimes = _.intersection.apply(_, avTimeGroups);  //make sure we're only comparing similar times, although the getSeriesMatchedDataSet should have taken care of this.
+        var subSecIntersection = {};
+
+        for (var fi = 0; fi < matchingTimes.length; fi++) { // every time
+            currTime = matchingTimes[fi];
+            var currSubSecIntersection = subSecs[0][currTime];   //fill current intersection array with secs from the first curve
+            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
+                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currTime]);   //take intersection of current secs and previously matched secs
+            }
+            subSecIntersection[currTime] = currSubSecIntersection;   //store final current intersection array for each forecast hour
+        }
+
     }
 
     var diffFrom;
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
-    var axisLimitReprocessed = {};
+    // var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
-        var data = dataset[curveIndex].data;
+        data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
-        //for (di = 0; di < dataLength; di++) { // every forecast hour
-        var di = 0;
+
+        di = 0;
         var values = [];
         var avtimes = [];
         var means = [];
 
         while (di < dataLength) {
+            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingTimes.indexOf(data[di][0]) === -1) {
+                dataset[curveIndex].data.splice(di, 1);
+                continue;   // not a matching time - skip it
+            }
+
+            var sub_secs = data[di][4];
+            var subValues = data[di][3];
             var errorResult = {};
 
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0) {
+                currTime = data[di][0];
+                var newSubValues = [];
+                var newSubSecs = [];
+
+                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this time
+                    if (subSecIntersection[currTime].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this time
+                        var newVal = subValues[si];
+                        var newSec = sub_secs[si];
+                        if (newVal === undefined || newVal == 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        } else {
+                            newSubValues.push(newVal);
+                            newSubSecs.push(newSec);
+                        }
+                    }
+                }
+
+                data[di][3] = newSubValues;
+                data[di][4] = newSubSecs;
+            }
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
@@ -250,7 +304,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for avtime ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-            data[di][1] = errorResult.d_mean;
+            // data[di][1] = errorResult.d_mean;
             values.push(data[di][1]);
             avtimes.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -299,8 +353,8 @@ dataSeries = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
     }
 
     // add black 0 line curve

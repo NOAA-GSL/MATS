@@ -233,35 +233,57 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     var errorMax = Number.MIN_VALUE;
-    var sub_levs;
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, true);
 
-        var subLevs = new Set();
+        var subSecs = [];
+        var subLevs = [];
         var avTimeGroups = [];
+        var currTime;
+
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
             avTimeGroups[curveIndex] = [];
+            subSecs[curveIndex] = {};
+            subLevs[curveIndex] = {};
             var data = dataset[curveIndex].data;
-            for (var di = 0; di < data.length; di++) { // every fhr
-                sub_levs = data[di][5];
-                avTimeGroups[curveIndex].push(data[di][0]);
-                for (var li = 0; li < sub_levs.length; li++) {
-                    var lev = sub_levs[li];
-                    subLevs.add(lev);
-                }
+            for (di = 0; di < data.length; di++) { // every time
+                currTime = data[di][0];
+                subSecs[curveIndex][currTime] = data[di][4]; //store raw secs and levels for each time
+                subLevs[curveIndex][currTime] = data[di][5];
+                avTimeGroups[curveIndex].push(currTime);
             }
         }
-        var matchingAvTimes = _.intersection.apply(_, avTimeGroups);
-        var subLevIntersection = Array.from(subLevs);
+        var matchingTimes = _.intersection.apply(_, avTimeGroups);  //make sure we're only comparing similar times, although the getSeriesMatchedDataSet should have taken care of this.
+        var subIntersections = [];
+        for (var fi = 0; fi < matchingTimes.length; fi++) { // every fhr
+            currTime = matchingTimes[fi];
+            subIntersections[currTime] = [];
+            var currSubIntersections = [];
+            for (var si = 0; si < subSecs[0][currTime].length; si++) {
+                currSubIntersections.push([subSecs[0][currTime][si],subLevs[0][currTime][si]]);   //fill current intersection array with sec-lev pairs from the first curve
+            }
+            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
+                var tempSubIntersections = [];
+                for (si = 0; si < subSecs[curveIndex][currTime].length; si++) { // every sub value
+                    var tempPair = [subSecs[curveIndex][currTime][si], subLevs[curveIndex][currTime][si]];    //create an individual sec-lev pair for each index in the subsec and sublev arrays
+                    if (matsDataUtils.arrayContainsSubArray(currSubIntersections,tempPair)) {   //see if the individual sec-lev pair matches a pair from the current intersection array
+                        tempSubIntersections.push(tempPair);    //store matching pairs
+                    }
+                }
+                currSubIntersections = tempSubIntersections;    //replace current intersection array with array of only pairs that matched from this loop through.
+            }
+            subIntersections[currTime] = currSubIntersections;   //store final current intersection array for each time
+        }
+
     }
 
     var diffFrom;
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
-    var axisLimitReprocessed = {};
+    // var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         data = dataset[curveIndex].data;
@@ -274,33 +296,41 @@ dataSeries = function (plotParams, plotFunction) {
         var means = [];
 
         while (di < dataLength) {
-            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingAvTimes.indexOf(data[di][0]) === -1) {
+            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingTimes.indexOf(data[di][0]) === -1) {
                 dataset[curveIndex].data.splice(di, 1);
                 continue;   // not a matching time - skip it
             }
 
-            sub_levs = data[di][5];
             var sub_secs = data[di][4];
+            var sub_levs = data[di][5];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && !isNaN(sub_levs)) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0 && sub_levs.length > 0) {
+                currTime = data[di][0];
                 var newSubValues = [];
                 var newSubSecs = [];
-                for (var subLevIntersectionIndex = 0; subLevIntersectionIndex < subLevIntersection.length; subLevIntersectionIndex++) {
-                    var levsIndex = sub_levs.indexOf(subLevIntersection[subLevIntersectionIndex]);
-                    var newVal = subValues[levsIndex];
-                    var newSec = sub_secs[levsIndex];
-                    if (newVal === undefined || newVal == 0) {
-                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                    } else {
-                        newSubValues.push(newVal);
-                        newSubSecs.push(newSec);
+                var newSubLevs = [];
+
+                for (si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
+                    tempPair = [sub_secs[si],sub_levs[si]]; //create sec-lev pair for each sub value
+                    if (matsDataUtils.arrayContainsSubArray(subIntersections[currTime],tempPair)) {  //store the sub-value only if its sec-lev pair is in the matching array for this fhr
+                        var newVal = subValues[si];
+                        var newSec = sub_secs[si];
+                        var newLev = sub_levs[si];
+                        if (newVal === undefined || newVal == 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        } else {
+                            newSubValues.push(newVal);
+                            newSubSecs.push(newSec);
+                            newSubLevs.push(newLev);
+                        }
                     }
                 }
+
                 data[di][3] = newSubValues;
                 data[di][4] = newSubSecs;
-                data[di][5] = subLevIntersection; // we're going to overwrite this later because we don't need it anymore and we need to keep dataset with a similar structure to the rest of the apps
+                data[di][5] = newSubLevs;
             }
 
             /*
@@ -317,7 +347,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for avtime ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-            data[di][1] = errorResult.d_mean;
+            // data[di][1] = errorResult.d_mean;
             values.push(data[di][1]);
             avtimes.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -366,8 +396,8 @@ dataSeries = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
     }
 
     // add black 0 line curve
