@@ -206,7 +206,7 @@ dataDieOff = function (plotParams, plotFunction) {
             currFHR = matchingFhrs[fi];
             subIntersections[currFHR] = [];
             var currSubIntersections = [];
-            for (si = 0; si < subSecs[0][currFHR].length; si++) {
+            for (var si = 0; si < subSecs[0][currFHR].length; si++) {
                 currSubIntersections.push([subSecs[0][currFHR][si],subLevs[0][currFHR][si]]);   //fill current intersection array with sec-lev pairs from the first curve
             }
             for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
@@ -258,7 +258,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 var newSubSecs = [];
                 var newSubLevs = [];
 
-                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
+                for (si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
                     tempPair = [sub_secs[si],sub_levs[si]]; //create sec-lev pair for each sub value
                     if (matsDataUtils.arrayContainsSubArray(subIntersections[currFHR],tempPair)) {  //store the sub-value only if its sec-lev pair is in the matching array for this fhr
                         var newVal = subValues[si];

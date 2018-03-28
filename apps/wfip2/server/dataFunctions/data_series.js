@@ -476,8 +476,12 @@ dataSeries = function (plotParams, plotFunction) {
 
                             var siteLevelNum = 0; // the total number of entries, values for all the qualified levels, for all the qualified sites
                             var siteLevelSum = 0; // the total sum of all the entries (values) for all the  qualified levels for all the qualified sites
-                            var siteLevelBiasSum = 0; //  the total sum of all the bias's for all the qualified levels for all the qualified sites
+                            var siteLevelMean = 0; // the total mean of all the entries (values) for all the  qualified levels for all the qualified sites
                             var siteLevelBiasNum = 0; // the total number of bias values for all the qualified levels in all the qualified sites
+                            var siteLevelBiasSum = 0; //  the total sum of all the biases for all the qualified levels for all the qualified sites
+                            var siteLevelBiasMean = 0; //  the total mean of all the biases for all the qualified levels for all the qualified sites
+                            var siteBiasNum = 0; // the total number of bias values for all the qualified sites
+                            var siteMeanNum = 0; // the total number of mean values for all the qualified sites
                                                       // (some experiment entries may not have had a corresponding truth entry so the  siteLevelBiasNum
                                                       // might not be the same as the siteLevelNum)
 
@@ -498,11 +502,34 @@ dataSeries = function (plotParams, plotFunction) {
                                     // bias, mse, and mae are different calculations for wind direction error. - Have to take into account the direction the truth has to go to get to the forecast.
                                     // i.e. data = 90 and truth = 10 the delta is positive because the truth has to go clockwise toward the data.
 
+                                    var maxLev = sLevels[sLevels.length-1];
+                                    var minLev = sLevels[0];
+                                    var totalLayerThickness = maxLev-minLev;
+                                    var thicknessLayerCount = 0;
+                                    var runningLevelBiasMean = 0;
+                                    var runningLevelMean = 0;
+                                    var currLev;
+
                                     timeObj.sites[sites[si]].levels = [];
                                     if (statistic !== "mean") {
                                         timeObj.sites[sites[si]].values = [];
                                     }
                                     for (var li = 0; li < sLevels.length; li++) {
+                                        currLev = sLevels[li];
+                                        var lowerDelta;
+                                        var upperDelta;
+                                        var avgDelta;
+                                        var thicknessFraction;
+                                        if (currLev === minLev) {
+                                            avgDelta = (sLevels[li+1] - currLev) / 2;
+                                        } else if (currLev === maxLev) {
+                                            avgDelta = (currLev - sLevels[li-1]) / 2;
+                                        } else {
+                                            lowerDelta = currLev - sLevels[li-1];
+                                            upperDelta = sLevels[li+1] - currLev;
+                                            avgDelta = (lowerDelta + upperDelta) / 2;
+                                        }
+                                        thicknessFraction = avgDelta / totalLayerThickness;
                                         var siteLevelValue = sValues[li];
                                         var truthSiteLevelValue = statistic == "mean" ? null : truthSValues[li];
                                         var biasValue;
@@ -530,6 +557,8 @@ dataSeries = function (plotParams, plotFunction) {
                                                         }
                                                     }
                                                     siteLevelBiasSum += biasValue;
+                                                    runningLevelBiasMean += biasValue * thicknessFraction;
+                                                    thicknessLayerCount += thicknessFraction;
                                                     siteLevelBiasNum++;
                                                     timeObj.sites[sites[si]].values[li] = biasValue;
 
@@ -552,6 +581,8 @@ dataSeries = function (plotParams, plotFunction) {
                                                     }
                                                     biasValue = Math.pow(biasValue, 2);  // square the difference
                                                     siteLevelBiasSum += biasValue;
+                                                    runningLevelBiasMean += biasValue * thicknessFraction;
+                                                    thicknessLayerCount += thicknessFraction;
                                                     siteLevelBiasNum++;
                                                     timeObj.sites[sites[si]].values[li] = biasValue;
                                                 } catch (nodata) {
@@ -564,12 +595,23 @@ dataSeries = function (plotParams, plotFunction) {
                                             default:
                                                 try {
                                                     siteLevelSum += siteLevelValue;
+                                                    runningLevelMean += siteLevelValue * thicknessFraction;
+                                                    thicknessLayerCount += thicknessFraction;
                                                     siteLevelNum++;
                                                 } catch (ignore) {
                                                 }
                                                 break;
                                         }
                                         timeObj.sites[sites[si]].levels[li] = sLevels[li];
+                                    }
+                                    runningLevelBiasMean = runningLevelBiasMean / thicknessLayerCount;
+                                    runningLevelMean = runningLevelMean / thicknessLayerCount;
+                                    siteLevelBiasMean += runningLevelBiasMean;
+                                    siteLevelMean += runningLevelMean;
+                                    if (runningLevelBiasMean !== 0) {
+                                        siteBiasNum++;
+                                    } else if (runningLevelMean !== 0) {
+                                        siteMeanNum++;
                                     }
                                 } // else don't count it in - skip over it, it isn't complete enough
                                 // remove mean oriented statistics
@@ -589,7 +631,7 @@ dataSeries = function (plotParams, plotFunction) {
                                 case "mae":
                                     var siteBias = null;
                                     try {
-                                        siteBias = siteLevelBiasSum / siteLevelBiasNum;
+                                        siteBias = siteLevelBiasMean / siteBiasNum;
 
                                         if (isNaN(siteBias)) {
                                             siteBias = null;
@@ -602,7 +644,7 @@ dataSeries = function (plotParams, plotFunction) {
                                 case "rmse":
                                     var siteMse = null;
                                     try {
-                                        siteMse = Math.sqrt(siteLevelBiasSum / siteLevelBiasNum);
+                                        siteMse = Math.sqrt(siteLevelBiasMean / siteBiasNum);
                                         if (isNaN(siteMse)) {
                                             siteMse = null;
                                         }
@@ -614,7 +656,7 @@ dataSeries = function (plotParams, plotFunction) {
                                 case "mean":
                                 default:
                                     try {
-                                        var siteMean = siteLevelSum / siteLevelNum;
+                                        var siteMean = siteLevelMean / siteMeanNum;
                                         if (isNaN(siteMean)) {
                                             siteMean = null;
                                         }

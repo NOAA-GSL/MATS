@@ -742,15 +742,15 @@ dataProfile = function (plotParams, plotFunction) {
             var diffResult;
             if (matching) {
                 //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
-                //diffResult = matsDataUtils.getDataForProfileMatchingDiffCurve({
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                //diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
+                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
             } else {
                 // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
                 //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
+                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
