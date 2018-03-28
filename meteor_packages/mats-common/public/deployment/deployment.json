@@ -82,8 +82,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.6.6-2018.03.27.06.00",
-      "buildDate": "2018.03.27.06.00",
+      "version": "1.6.7-2018.03.28.06.00",
+      "buildDate": "2018.03.28.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -393,112 +393,112 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.26",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.52",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.11",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.43",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.20",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.50",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.14",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.45",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.00",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.33",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.17",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.47",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.6.7",
-      "buildDate": "2018.03.19.20.51",
+      "version": "1.6.8",
+      "buildDate": "2018.03.27.20.31",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.29",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.54",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.03",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.36",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.6.5",
-      "buildDate": "2018.03.12.23.55",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.29",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.6.5",
-      "buildDate": "2018.03.12.23.52",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.6.5",
-      "buildDate": "2018.03.12.23.49",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.06",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.38",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.6.5",
-      "buildDate": "2018.03.13.00.08",
+      "version": "1.6.6",
+      "buildDate": "2018.03.27.20.40",
       "last_test_run": "",
       "last_test_status": ""
     },
