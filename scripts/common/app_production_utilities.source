@@ -116,7 +116,6 @@ setBuildConfigVarsForProductionServer() {
         echo $0 - wrong number of params - usage: $0
         return 1
     fi
-    local server=$1
     openTunnel
     unset data
     local data=$(mongo localhost:27020/appProductionStatus --quiet --eval "db.getCollection('buildConfiguration').find({deployment_environment:'production'},{_id:0}).shellPrint()")

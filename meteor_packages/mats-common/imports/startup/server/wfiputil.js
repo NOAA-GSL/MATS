@@ -180,7 +180,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId, previousCycleAveraging) {
     // verificationRunInterval is only required for instruments.
     // Its purpose is to enable choosing instrument readings that are within +- 1/2 of the instrument cycle time from the cycle time.
     // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
@@ -189,6 +189,15 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     // For a single site or for a group of sites that have the same sampleInterval one query statement suffices, but for
     // a group of sites that have different sampleIntervals the statements must be broken up according to sdampleIntervals.
 
+
+    /*
+        The profilers need to be handled specially.
+        a2e profilers time stamp the start of a 50 minute cycle of wind readings - the fifty minutes of wind readings
+        are averaged for the time stamp. This results in an hourly cycle time that is for the future 50 minutes of readings from the time stamp.
+        To get an approximate correct data point for comparison to a model (which is timestamped at the nearest time) we
+        retrieve the past hourly reading and the current hourly reading and average the two. THe cycle time is an hour starting
+        one hour past and the half interval is really a full interval.
+     */
     var verificationHalfRunInterval = verificationRunInterval / 2;
     var dFuture = new Future();
     var error = "";
@@ -280,6 +289,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 
             var valueSums = {};
             var interpolatedValues = {};
+            var savedValues = {};
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 // avtime is adjusted valid time
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
@@ -301,9 +311,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 var levels = [];
                 var windSpeeds = []; // used for ws quality control toss wd when ws < 3ms
                 if (isJSON) {
+                    var jdata = JSON.parse(rows[rowIndex].data);
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        var discriminator = Number(JSON.parse(rows[rowIndex].data)[myDiscriminator]);
+                        var discriminator = Number(jdata[myDiscriminator]);
                         if (discriminator < disc_lower || discriminator > disc_upper) {
                             continue;
                         }
@@ -311,17 +322,17 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     // if wind direction have to filter for ws < 3ms
                     if (myVariable === "wd") {
                         // have to capture wind speed to filter for ws < 3 mps
-                        windSpeeds = JSON.parse(rows[rowIndex].data)['ws'];
-                        // if ((JSON.parse(rows[rowIndex].data)['ws']) < 3.0) {
+                        windSpeeds = jdata['ws'];
+                        // if ((jdata['ws']) < 3.0) {
                         //     continue;
                         // }
                     }
-                    values = JSON.parse(rows[rowIndex].data)[myVariable];
+                    values = jdata[myVariable];
                     if (values === undefined) {
                         // no data found in this record
                         continue;
                     } else {
-                        const missing_value = JSON.parse(rows[rowIndex].data)['missing_value'];
+                        const missing_value = jdata['missing_value'];
                         if (!(missing_value === undefined)) {
                             for (var vi = 0; vi < values.length; vi++) {
                                 if (values[vi] === missing_value) {
@@ -330,20 +341,55 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                             }
                         }
                         var zVar = 'z';
-                        if (JSON.parse(rows[rowIndex].data)['zmap']) {     // if there is a zmap
-                           zVar = JSON.parse(rows[rowIndex].data)['zmap'][myVariable]
+                        if (jdata['zmap']) {     // if there is a zmap
+                            zVar = jdata['zmap'][myVariable]
                         }
 
                         if ((myVariable === 'allws') || (myVariable === 'allwd')) {
-                            levels = JSON.parse(rows[rowIndex].data)['allz'];
+                            levels = jdata['allz'];
                         } else {
-                            levels = JSON.parse(rows[rowIndex].data)[zVar];
+                            levels = jdata[zVar];
                         }
 
                         if (!(Array.isArray(levels))) {
                             levels = [Number(levels)];
                         }
                     }
+
+                    if (previousCycleAveraging) {
+                        /* have to get the previous values for this site (if it isn't row 0 and
+                        the previous one for this site sexists) and average the previous with this one
+                        */
+                        if (previousTime != Number.MIN_VALUE && savedValues[siteid.toString()] ) {
+                            // save the current values to be used for the next time
+                            // try to average the previous valuse with these values
+                            if (resultData[previousTime]['sites'][siteid.toString()]) { // the previous values for this site did exist but were changed
+                                var ptValues = savedValues[siteid.toString()]; // these are the unchanged ones
+                                savedValues[siteid.toString()] = values.slice(0); // save the unchanged ones - should only be primitives - no need for deep copy
+                                var ptLevels = resultData[previousTime]['sites'][siteid.toString()].levels;
+                                for (var lvIndex = 0; lvIndex < levels.length; lvIndex++) {
+                                    var ptlvlIndex = 0;
+                                    var lvlFound = false;
+                                    for (ptlvlIndex; ptlvlIndex < ptLevels.length; ptlvlIndex++) {
+                                        if (ptLevels[ptlvlIndex] == levels[lvIndex]) {
+                                            lvlFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (lvlFound) {
+                                        var thisValue = values[lvIndex];
+                                        var previousValue = ptValues[ptlvlIndex];
+                                        values[lvIndex] = (thisValue + previousValue) / 2;
+                                    }
+                                }
+                            } else {
+                                savedValues[siteid.toString()] = values.slice(0);
+                            }
+                        } else {
+                            savedValues[siteid.toString()] = values.slice(0);
+                        }
+                    }
+
                 } else {
                     // conventional variable -- stored as text in the DB
                     values = JSON.parse(rows[rowIndex][myVariable]);
@@ -566,6 +612,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     });
     // wait for d future to finish - don't ya love it...
     dFuture.wait();
+
+
 
     return {
         error: error,

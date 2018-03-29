@@ -42,6 +42,9 @@ dataSeries = function (plotParams, plotFunction) {
         curve.dataSource_instrumentId = tmp[3];
         curve.verificationRunInterval = tmp[4];
         curve.dataSource_is_json = parseInt(tmp[5]);
+        curve.dataSourcePreviousCycleAveraging = tmp[7] == "true";
+        curve.dataSourcePreviousCycleRass = tmp[8] == "true";
+
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
         if (curve['statistic'] != "mean") {
             if ((curve['truth-data-source'] === matsTypes.InputTypes.unused || curve['truth-data-source'] === undefined)) {
@@ -54,6 +57,8 @@ dataSeries = function (plotParams, plotFunction) {
             curve.truthDataSource_instrumentId = tmp[3];
             curve.truthRunInterval = tmp[4];
             curve.truthDataSource_is_json = parseInt(tmp[5]);
+            curve.truthDataSourcePreviousCycleAveraging = tmp[7] == "true";
+            curve.truthDataSourcePreviousCycleRass = tmp[8] == "true";
             // might override the datasource assigned max_verificationRunInterval
             max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
         }
@@ -71,6 +76,10 @@ dataSeries = function (plotParams, plotFunction) {
         var verificationRunInterval = curve.verificationRunInterval;
         var halfVerificationInterval = verificationRunInterval / 2;
         var dataSource_is_json = curve.dataSource_is_json;
+        var dataSourcePreviousCycleAveraging = curve.dataSourcePreviousCycleAveraging;
+        var truthDataSourcePreviousCycleAveraging = curve.truthDataSourcePreviousCycleAveraging;
+        var dataSourcePreviousCycleRass = curve.dataSourcePreviousCycleRass;
+        var truthDataSourcePreviousCycleRass = curve.truthDataSourcePreviousCycleRass;
         var statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
         var maxRunInterval = verificationRunInterval;
@@ -182,20 +191,38 @@ dataSeries = function (plotParams, plotFunction) {
 
                         if (dataSource_is_json) {
                             // verificationRunInterval is in milliseconds
-                            statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
-                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            if (dataSourcePreviousCycleRass) {
+                                // previous cycle and half interval - no averaging
+                                statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                // current cycle back half interval and forward half interval averaging
+                                statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         } else {
                             var qVariable = myVariable;
                             if (windVar) {
                                 qVariable = myVariable + ",ws";
                             }
-                            statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            if (dataSourcePreviousCycleRass) {
+                                // previous cycle and half interval - no averaging
+                                statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                statement = "select O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         }
                         // data source is a model and its JSON
                     } else {
@@ -222,7 +249,7 @@ dataSeries = function (plotParams, plotFunction) {
                     // queryWFIP2DB has embedded quality control for windDir
                     // if corresponding windSpeed < 3ms null the windDir
                     startMoment = moment();
-                    queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId);
+                    queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId, dataSourcePreviousCycleAveraging);
                     finishMoment = moment();
                     dataRequests["data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),
@@ -263,19 +290,38 @@ dataSeries = function (plotParams, plotFunction) {
                             matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                         }
                         if (truthDataSource_is_json) {
-                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            if (truthDataSourcePreviousCycleRass) {
+                                // previous cycle and half interval - no averaging
+                                statement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         } else {
                             var qVariable = myVariable;
                             if (windVar) {
                                 qVariable = myVariable + ",ws";
                             }
-                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            if (truthDataSourcePreviousCycleRass) {
+                                statement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
+                                    " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime," +
+                                    " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         }
                     } else {
                         if (validTimes.length > 0) {
@@ -293,7 +339,7 @@ dataSeries = function (plotParams, plotFunction) {
                     dataRequests['truth-' + curve.label] = truthStatement;
                     try {
                         startMoment = moment();
-                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId);
+                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
                         finishMoment = moment();
                         dataRequests["truth data retrieval (query) time - " + curve.label] = {
                             begin: startMoment.format(),
@@ -338,30 +384,30 @@ dataSeries = function (plotParams, plotFunction) {
                  }
                  where ....
                  resultData = {
-                 time0: {
-                 sites: {
-                 site0: {
-                 levels:[],
-                 values:[],
-                 sum: Number,
-                 mean: Number,
-                 numLevels: Number,
-                 max: Number,
-                 min: Number
-                 },
-                 site1: {...},
-                 .
-                 .
-                 siten:{...},
-                 }
-                 timeMean: Number   // cumulativeMovingMean for this time
-                 timeLevels: [],
-                 timeSites:[]
-                 },
-                 time1:{....},
-                 .
-                 .
-                 timen:{....}
+                     time0: {
+                         sites: {
+                             site0: {
+                                 levels:[],
+                                 values:[],
+                                 sum: Number,
+                                 mean: Number,
+                                 numLevels: Number,
+                                 max: Number,
+                                 min: Number
+                             },
+                             site1: {...},
+                             .
+                             .
+                             siten:{...},
+                         }
+                         timeMean: Number   // cumulativeMovingMean for this time
+                         timeLevels: [],
+                         timeSites:[]
+                     },
+                     time1:{....},
+                     .
+                     .
+                     timen:{....}
                  }
                  where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
                  There is at least one real (non null) value for each site.
