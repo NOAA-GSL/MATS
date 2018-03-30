@@ -21,7 +21,7 @@ const getPlotParamsFromStack = function() {
         }
     }
     return params;
-}
+};
 
 const getDateRange = function (dateRange) {
     var dates = dateRange.split(' - ');
@@ -2966,12 +2966,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     const xmax = curve['xmax'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
-        }
+        axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
         axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
@@ -3047,10 +3042,10 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
         if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
+            axisMap[axisKey].axisLabel = axisKey;
         } else {
             // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
+            axisMap[axisKey].axisLabel = axisKey;
         }
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -3124,12 +3119,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
-        }
+        axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
         axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
@@ -3230,12 +3220,7 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
-        }
+        axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
@@ -3289,12 +3274,7 @@ const generateThresholdCurveOptions = function (curve, curveIndex, axisMap, data
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = label;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = label;
-        }
+        axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
