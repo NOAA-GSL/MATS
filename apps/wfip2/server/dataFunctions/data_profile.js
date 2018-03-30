@@ -738,23 +738,10 @@ dataProfile = function (plotParams, plotFunction) {
             // end  if diffFrom == null
         } else {
             // this is a difference curve
-            // calculate the data based on matching or unmatched
-            var diffResult;
-            if (matching) {
-                //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
-                //diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
-                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
+            diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
-            } else {
-                // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
-                //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
-                diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
-                    dataset: dataset,
-                    diffFrom: diffFrom
-                });
-            }
             d = diffResult.dataset;
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {

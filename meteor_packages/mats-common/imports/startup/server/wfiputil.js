@@ -2,6 +2,25 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 
 const Future = require('fibers/future');
 
+const getPlotParamsFromStack = function() {
+    var params = {};
+    const err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    const stack = err.stack;
+    const stackElems = stack.split("\n")
+    for (si = 0; si < stackElems.length; si++) {
+        const sElem = stackElems[si].trim();
+        if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
+            const dataFunctionName = sElem.split('at ')[1];
+            try {
+                params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
+            } catch (noJoy){}
+            break;
+        }
+    }
+    return params;
+};
+
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic) {
     // sum and average all of the means for all of the siteshalfCycleBeforeAvtime is
@@ -1211,6 +1230,15 @@ const get_err = function (sVals, sSecs) {
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
+
+    const plotParams = getPlotParamsFromStack();
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
+    } else {
+        outlierQCParam = 100;
+    }
+
     var subVals = sVals;
     var subSecs = sSecs;
     var n = subVals.length;
@@ -1227,8 +1255,7 @@ const get_err = function (sVals, sSecs) {
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = 3 * sd;
-    //console.log("get_err");
+    var sd_limit = outlierQCParam * sd;
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1261,33 +1288,30 @@ const get_err = function (sVals, sSecs) {
         error = ("Invalid time interval - minDelta: " + minDelta);
         console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
     }
-    /*
-    We arent't doing this QA on WFIP2
-        // remove data more than $sd_limit from mean
-        var qaCorrected = [];
-        for (i=0; i < subVals.length; i++) {
-            if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-                qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
-                console.log(qaCorrected.join('\n'));
-                subVals[i] = null;
-            } else {
-                n_good++;
-                sum += subVals[i];
-                sum2 += subVals[i] * subVals[i];
-            }
+    // remove data more than $sd_limit from mean
+    var qaCorrected = [];
+    for (i=0; i < subVals.length; i++) {
+        if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+            qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds " + sd_limit + " standard deviations from the mean - mean: " + d_mean + " " + sd_limit + " * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
+            console.log(qaCorrected.join('\n'));
+            subVals[i] = null;
+        } else {
+            n_good++;
+            sum += subVals[i];
+            sum2 += subVals[i] * subVals[i];
         }
-        if (n_good < 1) {
-            return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
-        }
+    }
+    if (n_good < 1) {
+        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
+    }
 
-        // recalculate if we threw anything away.
-        d_mean = sum / n_good;
-        sd2 = sum2 / n_good - d_mean * d_mean;
-        sd = 0;
-        if (sd2 > 0) {
-            sd = Math.sqrt(sd2);
-        }
-    */
+    // recalculate if we threw anything away.
+    d_mean = sum / n_good;
+    sd2 = sum2 / n_good - d_mean * d_mean;
+    sd = 0;
+    if (sd2 > 0) {
+        sd = Math.sqrt(sd2);
+    }
 
     //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
     // look for gaps.... per Bill, we only need one gap per series of gaps...

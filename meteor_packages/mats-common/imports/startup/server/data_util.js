@@ -21,7 +21,7 @@ const getPlotParamsFromStack = function() {
         }
     }
     return params;
-}
+};
 
 const getDateRange = function (dateRange) {
     var dates = dateRange.split(' - ');
