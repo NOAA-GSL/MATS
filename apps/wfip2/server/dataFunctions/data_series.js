@@ -230,7 +230,7 @@ dataSeries = function (plotParams, plotFunction) {
                             validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
                             matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                         }
-                        statement = "select cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                        statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                             " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                             " and fcst_utc_offset =" + 3600 * forecastLength +
                             " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
@@ -292,7 +292,7 @@ dataSeries = function (plotParams, plotFunction) {
                         if (truthDataSource_is_json) {
                             if (truthDataSourcePreviousCycleRass) {
                                 // previous cycle and half interval - no averaging
-                                statement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
                                     "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                     " where  obs_recs_obsrecid = O.obsrecid" +
                                     " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
@@ -310,7 +310,7 @@ dataSeries = function (plotParams, plotFunction) {
                                 qVariable = myVariable + ",ws";
                             }
                             if (truthDataSourcePreviousCycleRass) {
-                                statement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
+                                truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
                                     " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                     " where  obs_recs_obsrecid = O.obsrecid" +
                                     " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
@@ -328,7 +328,7 @@ dataSeries = function (plotParams, plotFunction) {
                             validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
                             matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                         }
-                        truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                        truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                             " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                             " and fcst_utc_offset =" + 3600 * forecastLength +
                             " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
@@ -339,7 +339,7 @@ dataSeries = function (plotParams, plotFunction) {
                     dataRequests['truth-' + curve.label] = truthStatement;
                     try {
                         startMoment = moment();
-                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, matsTypes.InputTypes.unused, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
+                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
                         finishMoment = moment();
                         dataRequests["truth data retrieval (query) time - " + curve.label] = {
                             begin: startMoment.format(),

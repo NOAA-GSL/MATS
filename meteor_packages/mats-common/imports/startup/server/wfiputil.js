@@ -541,7 +541,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         mean += values[currLevIdx] * thicknessFraction;
                         thicknessLayerCount += thicknessFraction;
                     }
-                    mean = mean / thicknessFraction;
+                    mean = mean / thicknessLayerCount;
                 } else {
                     sum = values[0];
                     mean = sum;
