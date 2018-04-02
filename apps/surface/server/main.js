@@ -518,7 +518,7 @@ const doCurveParams = function () {
                 will only be visible for matsTypes.PlotTypes.map
                 If this param option is missing or empty then the parameter is visible for all plotTypes.
                  */
-                hiddenForPlotTypes: [matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.threshold,matsTypes.PlotTypes.scatter2d.matsTypes.PlotTypes.profile,matsTypes.PlotTypes.dieoff]
+                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.profile,matsTypes.PlotTypes.scatter2d]
             });
     }
 
