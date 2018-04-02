@@ -59,7 +59,7 @@ const doCurveParams = function () {
     }
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
-    var modelTableMap = {};
+    //var modelTableMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var levelModelOptionsMap = {};
@@ -80,7 +80,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,lev,variable,mindate,maxdate,dbase from regions_per_model_mats_all_categories order by display_category, display_order;");
+        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,levels,variable,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -91,8 +91,8 @@ const doCurveParams = function () {
             var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
-            var dbtable = rows[i].dbase;
-            modelTableMap[model] = dbtable;
+            //var dbtable = rows[i].dbase;
+            //modelTableMap[model] = dbtable;
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -101,7 +101,7 @@ const doCurveParams = function () {
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
-            var levels = rows[i].lev;
+            var levels = rows[i].levels;
             var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < levelArr.length; j++) {
                 levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
@@ -156,7 +156,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
-                tables: modelTableMap,
+                //tables: modelTableMap,
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "dates", "variable"],
                 controlButtonCovered: true,
@@ -479,7 +479,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'anomaly_corr_stats',
+            database: 'anom_corr2',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
@@ -516,7 +516,7 @@ Meteor.startup(function () {
     metadataPool = mysql.createPool(metadataSettings);
 
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anomaly_corr_stats", ['regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anom_corr2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 

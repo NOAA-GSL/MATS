@@ -130,9 +130,25 @@ var doCurveParams = function () {
     var variableFieldsMap = {};
     var variableOptionsMap = {};
     var variableInfoMap = {};
+    var dataSourcePreviousCycleAveragingMap = {}
     variableOptionsMap[matsTypes.PlotTypes.profile] = {};
     variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
     variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
+    /*
+        The profilers and RASS (temp readings on profilers) need to be handled specially.
+        a2e profilers time stamp the start of a 50 minute cycle of wind readings - the fifty minutes of wind readings
+        are averaged for the time stamp. This results in an hourly cycle time that is for the future 50 minutes of readings from the time stamp.
+        To get an approximate correct data point for comparison to a model (which is timestamped at the nearest time) we modify
+        the query to retrieve the past hourly reading and the current hourly reading and average the two. THe cycle time is an hour starting
+        one hour past and the half interval is really a full interval.
+
+        For RASS readings the last ten minutes of an hour is timestamped at the time 50 minutes prior to the reading. That means the data point
+        for a given RASS reading is really more appropriate at the next hourly time stamp. So we modify the query to get the previous hourly reading for a given time.
+        The half interval is still a half interval i.e. 30 minutes.
+     */
+    var previousCycleInstrumentIds = [1,2,13,16,17,22,23,26,27];
+    var previousCycleInstrumentRassIds = [5,21,24,25,28]
+
     // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
@@ -190,7 +206,8 @@ var doCurveParams = function () {
                 var variable_names = rows[i].variable_names.split(',');
                 var is_json = rows[i].isJSON;
                 var color = rows[i].color;
-
+                var dataSourcePreviousCycleAveraging = rows[i].is_instrument == 1 && previousCycleInstrumentIds.includes(rows[i].thisid);
+                var dataSourcePreviousCycleRass = rows[i].is_instrument == 1 && previousCycleInstrumentRassIds.includes(rows[i].thisid);
 
                 var minDate = rows[i].mindate;
                 var maxDate = rows[i].maxdate;
@@ -199,7 +216,7 @@ var doCurveParams = function () {
 
                 var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + actualModel.toString() + "') as hd")[0]['hd'];
                 var valueList = [];
-                valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
+                valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color + "," + dataSourcePreviousCycleAveraging + ',' + dataSourcePreviousCycleRass);
                 modelOptionsMap[model] = valueList;
                 if (model !== actualModel) {
                     modelOptionsMap[actualModel] = valueList;
@@ -234,7 +251,8 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 1:", err.message);
+        console.log (err.stack)
     }
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
@@ -252,7 +270,8 @@ var doCurveParams = function () {
             });
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 2:", err.message);
+        console.log (err.stack)
     }
     var siteIdNameMap = {};// used in added models below
     try {
@@ -354,7 +373,8 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 3:", err.message);
+        console.log (err.stack)
     }
 
     try {
@@ -370,7 +390,8 @@ var doCurveParams = function () {
             lowerOptionsMap[label] = {min: min_value, max: max_value, step: step, default: min_value};
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 4:", err.message);
+        console.log (err.stack)
     }
     try {
         var all_fcst_lens = new Set();
@@ -429,7 +450,8 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 5:", err.message);
+        console.log (err.stack)
     }
 
     try {
@@ -442,7 +464,8 @@ var doCurveParams = function () {
             regionOptionsMap[description] = valueList;
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 6:", err.message);
+        console.log (err.stack)
     }
 
 

@@ -2,6 +2,25 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 
 const Future = require('fibers/future');
 
+const getPlotParamsFromStack = function() {
+    var params = {};
+    const err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    const stack = err.stack;
+    const stackElems = stack.split("\n")
+    for (si = 0; si < stackElems.length; si++) {
+        const sElem = stackElems[si].trim();
+        if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
+            const dataFunctionName = sElem.split('at ')[1];
+            try {
+                params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
+            } catch (noJoy){}
+            break;
+        }
+    }
+    return params;
+};
+
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic) {
     // sum and average all of the means for all of the siteshalfCycleBeforeAvtime is
@@ -180,7 +199,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId, previousCycleAveraging) {
     // verificationRunInterval is only required for instruments.
     // Its purpose is to enable choosing instrument readings that are within +- 1/2 of the instrument cycle time from the cycle time.
     // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
@@ -189,6 +208,15 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     // For a single site or for a group of sites that have the same sampleInterval one query statement suffices, but for
     // a group of sites that have different sampleIntervals the statements must be broken up according to sdampleIntervals.
 
+
+    /*
+        The profilers need to be handled specially.
+        a2e profilers time stamp the start of a 50 minute cycle of wind readings - the fifty minutes of wind readings
+        are averaged for the time stamp. This results in an hourly cycle time that is for the future 50 minutes of readings from the time stamp.
+        To get an approximate correct data point for comparison to a model (which is timestamped at the nearest time) we
+        retrieve the past hourly reading and the current hourly reading and average the two. THe cycle time is an hour starting
+        one hour past and the half interval is really a full interval.
+     */
     var verificationHalfRunInterval = verificationRunInterval / 2;
     var dFuture = new Future();
     var error = "";
@@ -280,6 +308,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 
             var valueSums = {};
             var interpolatedValues = {};
+            var savedValues = {};
             for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 // avtime is adjusted valid time
                 utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
@@ -301,9 +330,10 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 var levels = [];
                 var windSpeeds = []; // used for ws quality control toss wd when ws < 3ms
                 if (isJSON) {
+                    var jdata = JSON.parse(rows[rowIndex].data);
                     // JSON variable -- stored as JSON structure 'data' in the DB
                     if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        var discriminator = Number(JSON.parse(rows[rowIndex].data)[myDiscriminator]);
+                        var discriminator = Number(jdata[myDiscriminator]);
                         if (discriminator < disc_lower || discriminator > disc_upper) {
                             continue;
                         }
@@ -311,17 +341,17 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                     // if wind direction have to filter for ws < 3ms
                     if (myVariable === "wd") {
                         // have to capture wind speed to filter for ws < 3 mps
-                        windSpeeds = JSON.parse(rows[rowIndex].data)['ws'];
-                        // if ((JSON.parse(rows[rowIndex].data)['ws']) < 3.0) {
+                        windSpeeds = jdata['ws'];
+                        // if ((jdata['ws']) < 3.0) {
                         //     continue;
                         // }
                     }
-                    values = JSON.parse(rows[rowIndex].data)[myVariable];
+                    values = jdata[myVariable];
                     if (values === undefined) {
                         // no data found in this record
                         continue;
                     } else {
-                        const missing_value = JSON.parse(rows[rowIndex].data)['missing_value'];
+                        const missing_value = jdata['missing_value'];
                         if (!(missing_value === undefined)) {
                             for (var vi = 0; vi < values.length; vi++) {
                                 if (values[vi] === missing_value) {
@@ -329,21 +359,56 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                                 }
                             }
                         }
-                        var zVar = 'z'
-                        if (JSON.parse(rows[rowIndex].data)['zmap']) {     // if there is a zmap
-                           zVar = JSON.parse(rows[rowIndex].data)['zmap'][myVariable]
+                        var zVar = 'z';
+                        if (jdata['zmap']) {     // if there is a zmap
+                            zVar = jdata['zmap'][myVariable]
                         }
 
                         if ((myVariable === 'allws') || (myVariable === 'allwd')) {
-                            levels = JSON.parse(rows[rowIndex].data)['allz'];
+                            levels = jdata['allz'];
                         } else {
-                            levels = JSON.parse(rows[rowIndex].data)[zVar];
+                            levels = jdata[zVar];
                         }
 
                         if (!(Array.isArray(levels))) {
                             levels = [Number(levels)];
                         }
                     }
+
+                    if (previousCycleAveraging) {
+                        /* have to get the previous values for this site (if it isn't row 0 and
+                        the previous one for this site sexists) and average the previous with this one
+                        */
+                        if (previousTime != Number.MIN_VALUE && savedValues[siteid.toString()] ) {
+                            // save the current values to be used for the next time
+                            // try to average the previous valuse with these values
+                            if (resultData[previousTime]['sites'][siteid.toString()]) { // the previous values for this site did exist but were changed
+                                var ptValues = savedValues[siteid.toString()]; // these are the unchanged ones
+                                savedValues[siteid.toString()] = values.slice(0); // save the unchanged ones - should only be primitives - no need for deep copy
+                                var ptLevels = resultData[previousTime]['sites'][siteid.toString()].levels;
+                                for (var lvIndex = 0; lvIndex < levels.length; lvIndex++) {
+                                    var ptlvlIndex = 0;
+                                    var lvlFound = false;
+                                    for (ptlvlIndex; ptlvlIndex < ptLevels.length; ptlvlIndex++) {
+                                        if (ptLevels[ptlvlIndex] == levels[lvIndex]) {
+                                            lvlFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (lvlFound) {
+                                        var thisValue = values[lvIndex];
+                                        var previousValue = ptValues[ptlvlIndex];
+                                        values[lvIndex] = (thisValue + previousValue) / 2;
+                                    }
+                                }
+                            } else {
+                                savedValues[siteid.toString()] = values.slice(0);
+                            }
+                        } else {
+                            savedValues[siteid.toString()] = values.slice(0);
+                        }
+                    }
+
                 } else {
                     // conventional variable -- stored as text in the DB
                     values = JSON.parse(rows[rowIndex][myVariable]);
@@ -369,15 +434,16 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 if (isInstrument && Array.isArray(values)) {
                     var halfCycleBeforeAvtime = time - verificationHalfRunInterval;
                     var halfCycleAfterAvtime = time + verificationHalfRunInterval;
+                    var levelIndex;
                     if ((time > previousTime) || (Number(siteid) > Number(previousSiteId))) {
                         // first encounter of a new avtime (adjusted valid interval)
                         // need to keep an interpolation index for each level because we can have dropouts at a given level for a given site
                         interpolationCount = {};
                         valueSums = {};
                         interpolatedValues = {};
-                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
+                        if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
                             //initialize the objects
-                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                            for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = 1;
                                 valueSums[levels[levelIndex]] = values[levelIndex];
                                 interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
@@ -387,8 +453,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         previousSiteId = siteid;
                     } else {
                         // subsequent encounter of the same avtime
-                        if (utctime >= halfCycleBeforeAvtime && utctime < halfCycleAfterAvtime) {
-                            for (var levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                        if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
+                            for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
                                 interpolationCount[levels[levelIndex]] = isNaN(interpolationCount[levels[levelIndex]]) ? 1 : interpolationCount[levels[levelIndex]] + 1;
                                 valueSums[levels[levelIndex]] = isNaN(valueSums[levels[levelIndex]]) ? values[levelIndex]: valueSums[levels[levelIndex]] + values[levelIndex];
                                 interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
@@ -463,16 +529,43 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                 // may have dropped sample in above if
                 numLevels = levels.length;
 
+                //weight by level thickness when taking layer average
+                var maxLev = levels[numLevels-1];
+                var minLev = levels[0];
+                var totalLayerThickness = maxLev-minLev;
+                var thicknessLayerCount = 0;
+                var sum = 0;
+                var mean = 0;
 
                 if (numLevels > 1) {
-                    var sum = values.reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
+                    var currLev;
+                    for (var currLevIdx = 0; currLevIdx < numLevels; currLevIdx++){
+                        currLev = levels[currLevIdx];
+                        var lowerDelta;
+                        var upperDelta;
+                        var avgDelta;
+                        var thicknessFraction;
+
+                        if (currLev === minLev) {
+                            avgDelta = (levels[currLevIdx+1] - currLev) / 2;
+                        } else if (currLev === maxLev) {
+                            avgDelta = (currLev - levels[currLevIdx-1]) / 2;
+                        } else {
+                            lowerDelta = currLev - levels[currLevIdx-1];
+                            upperDelta = levels[currLevIdx+1] - currLev;
+                            avgDelta = (lowerDelta + upperDelta) / 2;
+                        }
+                        thicknessFraction = avgDelta / totalLayerThickness;
+                        sum += values[currLevIdx];
+                        mean += values[currLevIdx] * thicknessFraction;
+                        thicknessLayerCount += thicknessFraction;
+                    }
+                    mean = mean / thicknessFraction;
                 } else {
-                    var sum = values[0];
+                    sum = values[0];
+                    mean = sum;
                 }
 
-                var mean = sum / numLevels;
                 if (resultData[time] === undefined) {
                     resultData[time] = {sites: {}};
                     cumulativeMovingMeanForTime = 0;
@@ -538,6 +631,8 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
     });
     // wait for d future to finish - don't ya love it...
     dFuture.wait();
+
+
 
     return {
         error: error,
@@ -892,7 +987,110 @@ const getDataForProfileDiffCurve = function (params) {
         d[i][6] = tooltip;
     }
     return {dataset: d};
-}
+};
+
+const getDataForProfileMatchingDiffCurve = function (params) {
+    // derive the subset data for the difference
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+
+    // do the differencing
+    //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+    const l = minuendData.length < subtrahendData.length ? minuendData.length : subtrahendData.length;
+    for (var i = 0; i < l; i++) { // each pressure level
+        d[i] = [];
+        d[i][3] = [];
+        d[i][4] = [];
+        // pressure level
+        d[i][1] = subtrahendData[i][1];
+        // values diff
+        d[i][0] = minuendData[i][0] - subtrahendData[i][0];
+        // do the subValues
+        var minuendDataSubValues = minuendData[i][3];
+        var minuendDataSubSeconds = minuendData[i][4];
+        var subtrahendDataSubValues = subtrahendData[i][3];
+        var subtrahendDataSubSeconds = subtrahendData[i][4];
+        // find the intersection of the subSeconds
+//        var secondsIntersection = _.intersection(minuendDataSubSeconds,subtrahendDataSubSeconds);
+        const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+            return subtrahendDataSubSeconds.indexOf(n) !== -1;
+        });
+
+        for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+            d[i][4].push(secondsIntersection[siIndex]);
+            d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+        }
+    }
+    return {dataset: d};
+};
+
+const getDataForProfileUnMatchedDiffCurve = function (params) {
+    // just get the level values - not the subset data
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - statValue (ploted against the x axis)
+     data[1] - level (plotted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - level values
+     data[4] - level times
+     data[5] - level stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+    // do the differencing
+    //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+
+    // get the list of pressure levels for the minuendData
+    const mLevels = minuendData.map(function (a) {
+        return a[1];
+    });
+
+    // get the list of pressure levels for the subtrahendData
+    const sLevels = subtrahendData.map(function (a) {
+        return a[1];
+    });
+
+    // get the intersection of the levels
+    const cLevels = mLevels.filter(function (n) {
+        return sLevels.indexOf(n) !== -1;
+    });
+    // itterate all the common levels
+    for (var i = 0; i < cLevels.length; i++) { // each pressure level
+        var cl = cLevels[i];
+        // find the minuend stat for this level
+        const minuendStat = minuendData.filter(function (elem) {
+            return elem[1] == cl;
+        })[0];
+        // find the subtrhend stat for this level
+        const subtrahendStat = subtrahendData.filter(function (elem) {
+            return elem[1] == cl;
+        })[0];
+        d[i] = [];
+        // do the difference
+        d[i][0] = minuendStat[0] - subtrahendStat[0];
+        // pressure level
+        d[i][1] = cl;
+        d[i][2] = -1;
+        d[i][3] = [];
+        d[i][4] = [];
+        d[i][5] = {}; // level stats
+        d[i][6] = "<br>" + cl * -1 + "mb <br> value:" + (d[i][0] === null ? null : d[i][0].toPrecision(4)); //tooltip
+    }
+    return {dataset: d};
+};
 
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
 // generate y-axis
@@ -1032,6 +1230,15 @@ const get_err = function (sVals, sSecs) {
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
+
+    const plotParams = getPlotParamsFromStack();
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
+    } else {
+        outlierQCParam = 100;
+    }
+
     var subVals = sVals;
     var subSecs = sSecs;
     var n = subVals.length;
@@ -1048,8 +1255,7 @@ const get_err = function (sVals, sSecs) {
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = 3 * sd;
-    //console.log("get_err");
+    var sd_limit = outlierQCParam * sd;
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1082,33 +1288,30 @@ const get_err = function (sVals, sSecs) {
         error = ("Invalid time interval - minDelta: " + minDelta);
         console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
     }
-    /*
-    We arent't doing this QA on WFIP2
-        // remove data more than $sd_limit from mean
-        var qaCorrected = [];
-        for (i=0; i < subVals.length; i++) {
-            if (Math.abs(subVals[i] - d_mean) > sd_limit) {
-                qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds 3 standard deviations from the mean - mean: " + d_mean + " 3 * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
-                console.log(qaCorrected.join('\n'));
-                subVals[i] = null;
-            } else {
-                n_good++;
-                sum += subVals[i];
-                sum2 += subVals[i] * subVals[i];
-            }
+    // remove data more than $sd_limit from mean
+    var qaCorrected = [];
+    for (i=0; i < subVals.length; i++) {
+        if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+            qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds " + sd_limit + " standard deviations from the mean - mean: " + d_mean + " " + sd_limit + " * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
+            console.log(qaCorrected.join('\n'));
+            subVals[i] = null;
+        } else {
+            n_good++;
+            sum += subVals[i];
+            sum2 += subVals[i] * subVals[i];
         }
-        if (n_good < 1) {
-            return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
-        }
+    }
+    if (n_good < 1) {
+        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
+    }
 
-        // recalculate if we threw anything away.
-        d_mean = sum / n_good;
-        sd2 = sum2 / n_good - d_mean * d_mean;
-        sd = 0;
-        if (sd2 > 0) {
-            sd = Math.sqrt(sd2);
-        }
-    */
+    // recalculate if we threw anything away.
+    d_mean = sum / n_good;
+    sd2 = sum2 / n_good - d_mean * d_mean;
+    sd = 0;
+    if (sd2 > 0) {
+        sd = Math.sqrt(sd2);
+    }
 
     //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
     // look for gaps.... per Bill, we only need one gap per series of gaps...
@@ -1179,6 +1382,8 @@ export default matsWfipUtils = {
     sumsSquaresByTimeLevel: sumsSquaresByTimeLevel,
     getStatValuesByLevel: getStatValuesByLevel,
     getDataForProfileDiffCurve: getDataForProfileDiffCurve,
+    getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
+    getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
     generateProfilePlotOptions: generateProfilePlotOptions,
     get_err: get_err
 }

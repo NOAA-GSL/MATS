@@ -512,7 +512,13 @@ const doCurveParams = function () {
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4,
-                multiple: true
+                multiple: true,
+                /*
+                hiddenPlotTypes means that this parameter will be hidden for all the PlotTypes listed here. In other words this param
+                will only be visible for matsTypes.PlotTypes.map
+                If this param option is missing or empty then the parameter is visible for all plotTypes.
+                 */
+                hiddenForPlotTypes: [matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.threshold,matsTypes.PlotTypes.scatter2d.matsTypes.PlotTypes.profile,matsTypes.PlotTypes.dieoff]
             });
     }
 
