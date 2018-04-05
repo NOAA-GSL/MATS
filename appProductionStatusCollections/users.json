@@ -26,12 +26,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-01-04T22:10:30.363+0000"
-          },
-          "hashedToken": "fOy27MzatS/7Wjhoc6v76ETv9jTHK0gLnsRFz3Ug1Fc="
-        },
-        {
-          "when": {
             "$date": "2018-01-18T17:58:30.899+0000"
           },
           "hashedToken": "gvI7yvVqdJPXHMSM1uuQv7h9yQ4HVQlGQndMCsZtNWI="
@@ -124,12 +118,6 @@
     },
     "resume": {
       "loginTokens": [
-        {
-          "when": {
-            "$date": "2018-01-04T17:12:54.316+0000"
-          },
-          "hashedToken": "1+BzpGG5PHPOB6FuSnXxqGBH6t2i4KgraqlrkZ61qow="
-        },
         {
           "when": {
             "$date": "2018-03-26T21:28:10.719+0000"
