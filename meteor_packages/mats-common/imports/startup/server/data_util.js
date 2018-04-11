@@ -64,28 +64,29 @@ const getModelCadence = function (pool, dataSource) {
 
 const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
     //have to calculate the time_interval
-    // if the relative time is a modulo of the first cycle time use the first cycle time
     var ti;
     var dayInMilliSeconds = 24 * 60 * 60 * 1000;
+    var minCycleTime = Math.min(...cycles);
 
-    if ((avTime - (foreCastOffset * 3600 * 1000)) % dayInMilliSeconds == cycles[0]) {
-        ti = cycles[1] - cycles[0];
+    var thisCadence = (avTime % dayInMilliSeconds);
+    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) {
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + dayInMilliSeconds);
     } else {
-        // the interval is the next interval
-        for (var ci = 0; ci < cycles.length; ci++) {
-            // find the one we are on
-            if (cycles[ci] == time_interval) {
-                if (ci == cycles.length - 1) {
-                    // if we have already reached the last cycle then make the interval sufficient to take us around to the first one, take 24 hrs and subtract the current intvl and add back on the first invl
-                    ti = dayInMilliSeconds - time_interval + cycles[0];
-                } else {
-                    // just use the difference to the next interval
-                    ti = cycles[ci + 1] - cycles[ci];
-                    break;
-                }
-            }
-        }
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000));
     }
+
+    var thisCadenceIdx = cycles.indexOf(thisCadence);
+    if (thisCadenceIdx !== -1) {
+        var nextCadenceIdx = thisCadenceIdx + 1;
+        if (nextCadenceIdx >= cycles.length) {
+            ti = (dayInMilliSeconds - thisCadence) + minCycleTime;
+        } else {
+            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx];
+        }
+    } else {
+        ti = time_interval;
+    }
+
     return ti;
 };
 
@@ -2200,7 +2201,7 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
     // If averageing the cadence is always regular i.e. its the cadence of the average
-    var regular = averageStr == "None" && (cycles !== null && cycles.length != 0) ? false : true;
+    var regular = !(averageStr == "None" && (cycles !== null && cycles.length != 0));
 
     var time_interval;
     var dFuture = new Future();
