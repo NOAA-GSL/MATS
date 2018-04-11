@@ -11,6 +11,8 @@ dataSeries = function (plotParams, plotFunction) {
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
+    var fromSecs = dateRange.fromSeconds;
+    var toSecs = dateRange.toSeconds;
     // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
@@ -117,7 +119,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, data_source, forecastLength);
+                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, data_source, forecastLength, fromSecs, toSecs);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

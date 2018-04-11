@@ -39,15 +39,61 @@ const getDateRange = function (dateRange) {
     }
 };
 
-const getModelCadence = function (pool, dataSource) {
+const getModelCadence = function (pool, dataSource, startDate, endDate) {
     var rows = [];
     var cycles;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
-            "from mats_common.primary_model_orders " +
+            "from mats_common.primary_model_orders_dev " +
             "where model = " +
             "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
-        cycles = JSON.parse(rows[0].cycle_seconds);
+        var cycles_raw = JSON.parse(rows[0].cycle_seconds);
+        var cycles_keys = Object.keys(cycles_raw).sort();
+        if (cycles_keys.length !== 0) {
+            var newTime;
+            var chosenStartTime;
+            var chosenEndTime;
+            var chosenStartIdx;
+            var chosenEndIdx;
+            var foundStart = false;
+            var foundEnd = false;
+            for (var ti = cycles_keys.length - 1; ti >= 0; ti--) {
+                newTime = cycles_keys[ti];
+                if (startDate >= Number(newTime) && !foundStart) {
+                    chosenStartTime = newTime;
+                    chosenStartIdx = ti;
+                    foundStart = true;
+                }
+                if (endDate >= Number(newTime) && !foundEnd) {
+                    chosenEndTime = newTime;
+                    chosenEndIdx = ti;
+                    foundEnd = true;
+                }
+                if (foundStart && foundEnd) {
+                    break;
+                }
+            }
+            if (chosenStartTime !== undefined && chosenEndTime !== undefined) {
+                if (Number(chosenStartTime) === Number(chosenEndTime)) {
+                    cycles = cycles_raw[chosenStartTime];
+                } else if (chosenEndIdx - chosenStartIdx === 1) {
+                    const startCycles = cycles_raw[chosenStartTime];
+                    const endCycles = cycles_raw[chosenEndTime];
+                    cycles = _.union(startCycles, endCycles);
+                } else {
+                    const idxDiff = chosenEndIdx - chosenStartIdx;
+                    var middleCycles = [];
+                    var currCycles;
+                    for (ti = chosenStartIdx + 1; ti < chosenEndIdx; ti++) {
+                        currCycles = cycles_raw[cycles_keys[ti]];
+                        middleCycles = _.union(middleCycles,currCycles);
+                    }
+                    const startCycles = cycles_raw[chosenStartTime];
+                    const endCycles = cycles_raw[chosenEndTime];
+                    cycles = _.union(startCycles, endCycles, middleCycles);
+                }
+            }
+        }
     } catch (e) {
         //ignore - just a safety check, don't want to exit if there isn't a cycles_per_model entry
     }
@@ -64,28 +110,29 @@ const getModelCadence = function (pool, dataSource) {
 
 const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
     //have to calculate the time_interval
-    // if the relative time is a modulo of the first cycle time use the first cycle time
     var ti;
     var dayInMilliSeconds = 24 * 60 * 60 * 1000;
+    var minCycleTime = Math.min(...cycles);
 
-    if ((avTime - (foreCastOffset * 3600 * 1000)) % dayInMilliSeconds == cycles[0]) {
-        ti = cycles[1] - cycles[0];
+    var thisCadence = (avTime % dayInMilliSeconds);
+    if (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) < 0) {
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000) + dayInMilliSeconds);
     } else {
-        // the interval is the next interval
-        for (var ci = 0; ci < cycles.length; ci++) {
-            // find the one we are on
-            if (cycles[ci] == time_interval) {
-                if (ci == cycles.length - 1) {
-                    // if we have already reached the last cycle then make the interval sufficient to take us around to the first one, take 24 hrs and subtract the current intvl and add back on the first invl
-                    ti = dayInMilliSeconds - time_interval + cycles[0];
-                } else {
-                    // just use the difference to the next interval
-                    ti = cycles[ci + 1] - cycles[ci];
-                    break;
-                }
-            }
-        }
+        thisCadence = (Number(thisCadence) - (Number(foreCastOffset) * 3600 * 1000));
     }
+
+    var thisCadenceIdx = cycles.indexOf(thisCadence);
+    if (thisCadenceIdx !== -1) {
+        var nextCadenceIdx = thisCadenceIdx + 1;
+        if (nextCadenceIdx >= cycles.length) {
+            ti = (dayInMilliSeconds - thisCadence) + minCycleTime;
+        } else {
+            ti = cycles[nextCadenceIdx] - cycles[thisCadenceIdx];
+        }
+    } else {
+        ti = time_interval;
+    }
+
     return ti;
 };
 
@@ -2190,17 +2237,17 @@ const queryThresholdDB = function (pool, statement) {
     };
 };
 
-const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
+const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
     const plotParams = getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"])/100;
 
-    var cycles = getModelCadence(pool, dataSource);
+    var cycles = getModelCadence(pool, dataSource, startDate, endDate);
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
     // If averageing the cadence is always regular i.e. its the cadence of the average
-    var regular = averageStr == "None" && (cycles !== null && cycles.length != 0) ? false : true;
+    var regular = !(averageStr == "None" && (cycles !== null && cycles.length != 0));
 
     var time_interval;
     var dFuture = new Future();
@@ -2309,13 +2356,13 @@ const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCas
     };
 };
 
-const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSource, foreCastOffset) {
+const querySeriesWithLevelsDB = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
     const plotParams = getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"])/100;
 
-    var cycles = getModelCadence(pool, dataSource);
+    var cycles = getModelCadence(pool, dataSource, startDate, endDate);
 
     // regular means regular cadence for model initialization, false is a model that has an irregular cadence
     // If averageing the cadence is always regular i.e. its the cadence of the average
