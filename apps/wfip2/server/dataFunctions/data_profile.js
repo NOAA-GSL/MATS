@@ -748,7 +748,8 @@ dataProfile = function (plotParams, plotFunction) {
                  data[6] - tooltip
                  */
                 const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
-                const errorBar = errorResult.stde_betsy * 1.96;
+                // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+                const errorBar = errorResult.sd * 1.96;
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
 
                 var stats = {
@@ -766,7 +767,8 @@ dataProfile = function (plotParams, plotFunction) {
                     "<br>  n: " + errorResult.n_good + //corrected +
                     "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                     "<br>  stde: " + errorResult.stde_betsy +
-                    "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                    // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+                    "<br>  errorbars: " + Number(value - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.sd * 1.96)).toPrecision(4);
                 if (matching) {
                     d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
                 } else {
