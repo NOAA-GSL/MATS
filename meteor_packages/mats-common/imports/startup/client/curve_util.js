@@ -331,7 +331,7 @@ const showProfileFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.profile);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -389,7 +389,7 @@ const showTimeseriesFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.timeSeries);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -448,7 +448,7 @@ const showDieOffFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.dieoff);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -506,7 +506,7 @@ const showValidTimeFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.validtime);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -564,7 +564,7 @@ const showThresholdFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.threshold);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -622,7 +622,7 @@ const showMapFace = function() {
             elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.map);
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
@@ -643,7 +643,7 @@ const showScatterFace = function() {
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
         Session.set('lastUpdate', Date.now());   // force curveParams to re-render
-        matsParamUtils.setAllParamsToDefault();
+        // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
