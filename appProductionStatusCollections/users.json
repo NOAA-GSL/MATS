@@ -77,6 +77,12 @@
             "$date": "2018-04-12T17:40:33.446+0000"
           },
           "hashedToken": "FeQN9cFgTkwm9ngFhQxqSjdg2WPo107WaSGLF/MEsNc="
+        },
+        {
+          "when": {
+            "$date": "2018-04-16T17:21:39.899+0000"
+          },
+          "hashedToken": "x9bNl/0+yqXfM/fWos0e45emzpSPVMADSfMmxOHYaKg="
         }
       ]
     }
