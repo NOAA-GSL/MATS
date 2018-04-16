@@ -408,7 +408,6 @@ const getValidTimeMatchedDataSet = function (dataset) {
     var vt_vals = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
     var vt = vt_vals.pop();
     var vtMax = Number.MIN_VALUE;
-    var dataMaxInterval = Number.MIN_VALUE;
     // set up the indexes and determine the minimum hour for the dataset
     if (curvesLength == 1) {
         return dataset;
@@ -1614,13 +1613,36 @@ const getDataForValidTimeDiffCurve = function (params) {
         if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // might be a fill value (null)
             if ((minuendData[minuendIndex][1] !== null && subtrahendData[subtrahendIndex][1] !== null) && minuendData[minuendIndex][0] === subtrahendData[subtrahendIndex][0]) {
                 diffValue = minuendData[minuendIndex][1] - subtrahendData[subtrahendIndex][1];
-                d.push([largeIntervalTime, diffValue]);
+
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = diffValue;
+
+                var minuendDataSubValues = minuendData[minuendIndex][3];
+                var minuendDataSubSeconds = minuendData[minuendIndex][4];
+                var subtrahendDataSubValues = subtrahendData[subtrahendIndex][3];
+                var subtrahendDataSubSeconds = subtrahendData[subtrahendIndex][4];
+
+                const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+                    return subtrahendDataSubSeconds.indexOf(n) !== -1;
+                });
+                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                    d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
+                    d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+                }
+
                 ymin = diffValue < ymin ? diffValue : ymin;
                 ymax = diffValue > ymax ? diffValue : ymax;
                 sum += diffValue;
                 count++;
             } else {
-                d.push([largeIntervalTime, null])
+                d[largeIntervalCurveIndex] = [];
+                d[largeIntervalCurveIndex][3] = [];
+                d[largeIntervalCurveIndex][4] = [];
+                d[largeIntervalCurveIndex][0] = largeIntervalTime;
+                d[largeIntervalCurveIndex][1] = null;
             }
         } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
             break;
@@ -2543,6 +2565,9 @@ const queryValidTimeDB = function (pool, statement) {
     var N_times = [];
     var ymin;
     var ymax;
+    var xmax = Number.MIN_VALUE;
+    var xmin = Number.MAX_VALUE;
+
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
         if (err != undefined) {
@@ -2555,28 +2580,42 @@ const queryValidTimeDB = function (pool, statement) {
         } else {
             ymin = Number(rows[0].stat);
             ymax = Number(rows[0].stat);
-            var curveVT = [];
+            var curveVTs = [];
             var curveStat = [];
+            var curveSubValues = [];
+            var curveSubSecs = [];
+
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
                 var hr_of_day = Number(rows[rowIndex].hr_of_day);
                 var stat = rows[rowIndex].stat;
                 N0.push(rows[rowIndex].N0);
                 N_times.push(rows[rowIndex].N_times);
-                curveVT.push(hr_of_day);
+                var sub_values;
+                var sub_secs;
+                if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+                    sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                    sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                } else {
+                    sub_values = NaN;
+                    sub_secs = NaN;
+                }
+                curveVTs.push(hr_of_day);
                 curveStat.push(stat);
+                curveSubValues.push(sub_values);
+                curveSubSecs.push(sub_secs);
             }
 
             var N0_max = Math.max(...N0);
             var N_times_max = Math.max(...N_times);
 
-            for (var d_idx = 0; d_idx < curveVT.length; d_idx++) {
+            for (var d_idx = 0; d_idx < curveVTs.length; d_idx++) {
                 var this_N0 = N0[d_idx];
                 var this_N_times = N_times[d_idx];
                 // HIDDEN QC! This needs to be brought out to a notification or status on the gui
                 if (this_N_times < completenessQCParam * N_times_max) {
-                    d.push([curveVT[d_idx], null]);
+                    d.push([curveVTs[d_idx], null, -1, NaN, NaN]); // -1 is a placeholder for the stde_betsy value
                 } else {
-                    d.push([curveVT[d_idx], curveStat[d_idx]]);
+                    d.push([curveVTs[d_idx], curveStat[d_idx], -1, curveSubValues[d_idx], curveSubSecs[d_idx]]); // -1 is a placeholder for the stde_betsy value
                 }
             }
             // done waiting - have results
@@ -2692,7 +2731,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
     return options;
 };
 
-const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
+const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
     var yaxis = [];
@@ -2702,10 +2741,12 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             continue;
         }
         const axisKey = curves[dsi].axisKey;
-        const ymin = axisMap[axisKey].ymin;
-        const ymax = axisMap[axisKey].ymax;
+        var ymin = axisMap[axisKey].ymin;
+        var ymax = axisMap[axisKey].ymax;
+        ymax = ymax + errorMax;
+        ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const yPad = (ymax - ymin) * 0.2;
+        const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
@@ -2741,7 +2782,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
             axisLabelPadding: 20,
         }],
         xaxis: {
-            zoomRange: [0.01, null],
+            zoomRange: [0.1, null],
             mode: 'xy',
             font: {size: 18}
         },
@@ -2781,10 +2822,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap) {
         },
         tooltip: true,
         tooltipOpts: {
-            content: "<span style='font-size:150%'><strong>%s<br>%x.2:<br>value %y.2</strong></span>",
-            xDateFormat: "%Y-%m-%d %H:%M",
-            onHover: function (flotItem, $tooltipEl) {
-            }
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
         }
     };
     return options;
@@ -3129,12 +3168,7 @@ const generateDieoffCurveOptions = function (curve, curveIndex, axisMap, dataSer
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
-        if (axisMap[axisKey].axisLabel === undefined || axisMap[axisKey].axisLabel == "") {
-            axisMap[axisKey].axisLabel = axisKey;
-        } else {
-            // axisMap[axisKey].axisLabel = axisMap[axisKey].axisLabel + ", " + label;
-            axisMap[axisKey].axisLabel = axisKey;
-        }
+        axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
         axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
@@ -3304,18 +3338,23 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
     const label = curve['label'];
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
     const annotation = curve['annotation'];
     const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
-        axisMap[axisKey].label = axisMap[axisKey].label + " | " + label;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
         axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
             index: curveIndex + 1,
             label: label,
+            xmin: xmin,
+            xmax: xmax,
             ymin: ymin,
             ymax: ymax,
             // axisLabel: axisKey + " - " + label
@@ -3324,14 +3363,28 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
     }
     const curveOptions = {
         yaxis: axisMap[axisKey].index,
-        label: axisMap[axisKey].axisLabel,
-        curveId: curve.label,
+        label: label,
+        curveId: label,
         annotation: annotation,
         color: curve['color'],
         data: dataSeries,
-        points: {symbol: pointSymbol, fillColor: curve['color'], show: true},
+        points: {
+            symbol: pointSymbol,
+            fillColor: curve['color'],
+            show: true,
+            errorbars: "y",
+            yerr: {
+                show: true,
+                asymmetric: false,
+                upperCap: "squareCap",
+                lowerCap: "squareCap",
+                color: curve['color'],
+                radius: 5
+            }
+        },
         lines: {show: true, fill: false}
     };
+
     return curveOptions;
 };
 
