@@ -52,9 +52,13 @@ graphMap = function(result) {
 //        maxZoom: 20,
 //        ext: 'png'
 //    }).addTo(map);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-            maxZoom: 16
+//        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+//            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+//            maxZoom: 16
+//        }).addTo(map);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
+            maxZoom: 13
         }).addTo(map);
         L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
 
@@ -96,12 +100,14 @@ graphMap = function(result) {
             var markerPeerOption = markers[m].options.peerOption;
             var markerData = dataset[0].data[m];
             var markerStat = markerData[0][4];
-            var markerLabel = markerStat.toFixed(1).toString();
+            var markerInt = (markerStat | 0);
+            //var markerStat = markerData[0][4];
+            var markerLabel = markerInt.toString();
             var markerPopUp = markerData[1];
-            if (markerStat < 0) {
+            if (markerStat <= -1) {
                 var markerColor = "rgb(0,0,255)"
                 var markerLabelFinal = markerLabel.fontcolor("blue");
-            } else if (markerStat > 0) {
+            } else if (markerStat >= 1) {
                 var markerColor = "rgb(255,0,0)"
                 var markerLabelFinal = markerLabel.fontcolor("red");
             } else {
