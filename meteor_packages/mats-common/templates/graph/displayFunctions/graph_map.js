@@ -17,7 +17,7 @@ graphMap = function(result) {
     var options = result.options
 
     var defaultPoint = [39.834, -98.604];
-    var defaultZoomLevel = 4;
+    var defaultZoomLevel = 5;
     var minZoomLevel = 3;
     var maxZoomLevel = 10;
     var peerName = dataset[0].sites[0].name;
