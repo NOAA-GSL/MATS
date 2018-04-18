@@ -216,7 +216,6 @@ dataSeries = function (plotParams, plotFunction) {
                     " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
-            //console.log("statement: " + statement);
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
             // queryWFIP2DB has embedded quality control for windDir
