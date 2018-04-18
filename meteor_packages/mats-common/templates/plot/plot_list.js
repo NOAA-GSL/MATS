@@ -141,6 +141,8 @@ Template.plotList.events({
                 p[name] = document.getElementById(name + '-' + type).value;
             }
         });
+        p['completeness'] = document.getElementById("completeness").value;
+        p['outliers'] = document.getElementById("outliers").value;
         Session.set("PlotParams", p);
 
         switch (action) {
@@ -228,6 +230,9 @@ Template.plotList.events({
                                 break;
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
+                                break;
+                            case matsTypes.PlotTypes.map:
+                                matsCurveUtils.showMapFace();
                                 break;
                             case matsTypes.PlotTypes.scatter2d:
                                 matsCurveUtils.showScatterFace();
@@ -380,6 +385,9 @@ Template.plotList.events({
                     document.getElementById("graphView").style.display = "block";
                     document.getElementById("textSeriesView").style.display = "none";
                     document.getElementById("textProfileView").style.display = "none";
+                    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
+                        document.getElementById('graph-touch-controls').style.display = "none";
+                    }
                 });
 
                 break;

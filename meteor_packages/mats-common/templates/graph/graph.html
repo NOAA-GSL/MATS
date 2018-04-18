@@ -56,11 +56,13 @@
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
+                {{#if isNotMap}}
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
                     {{#if errorBarsAllowed}}
                         <input type="button" class="errorBars btn btn-primary btn-xs"  value="{{errorBarButtonText}}"  id="{{this.label}}-curve-errorbars"  style= "display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
                     {{/if}}
+                {{/if}}
                 </div><br>
             {{/each}}
             <hr/>
@@ -83,11 +85,20 @@
         <div id="textValidTimeView" style="display:none;">
         {{>textValidTimeOutput}}
         </div>
-
+        <div id="textMapView" style="display:none;">
+            {{>textMapOutput}}
+        </div>
+        {{#if isNotMap}}
         <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
             <div id="legendContainer" name="legendContainer"></div>
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
         </div>
+        {{/if}}
+        {{#if isMap}}
+        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
+        </div>
+        {{/if}}
         {{#if isProfile}}
             <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confidence</h5>
         {{/if}}

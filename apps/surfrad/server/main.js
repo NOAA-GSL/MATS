@@ -93,7 +93,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,scle,mindate,maxdate from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,scle,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -614,6 +614,9 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions','station_descriptions','regions_per_model_mats_all_categories']);
     matsMethods.resetApp(mdr);
+
+    matsCollections.appName.insert({name: "appName", app: "surfrad"});
+
 });
 
 // this object is global so that the reset code can get to it

@@ -1,9 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsDataUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 
 const dateInitStr = matsCollections.dateInitStr();
@@ -133,9 +130,25 @@ var doCurveParams = function () {
     var variableFieldsMap = {};
     var variableOptionsMap = {};
     var variableInfoMap = {};
+    var dataSourcePreviousCycleAveragingMap = {}
     variableOptionsMap[matsTypes.PlotTypes.profile] = {};
     variableOptionsMap[matsTypes.PlotTypes.scatter2d] = {};
     variableOptionsMap[matsTypes.PlotTypes.timeSeries] = {};
+    /*
+        The profilers and RASS (temp readings on profilers) need to be handled specially.
+        a2e profilers time stamp the start of a 50 minute cycle of wind readings - the fifty minutes of wind readings
+        are averaged for the time stamp. This results in an hourly cycle time that is for the future 50 minutes of readings from the time stamp.
+        To get an approximate correct data point for comparison to a model (which is timestamped at the nearest time) we modify
+        the query to retrieve the past hourly reading and the current hourly reading and average the two. THe cycle time is an hour starting
+        one hour past and the half interval is really a full interval.
+
+        For RASS readings the last ten minutes of an hour is timestamped at the time 50 minutes prior to the reading. That means the data point
+        for a given RASS reading is really more appropriate at the next hourly time stamp. So we modify the query to get the previous hourly reading for a given time.
+        The half interval is still a half interval i.e. 30 minutes.
+     */
+    var previousCycleInstrumentIds = [1,2,13,16,17,22,23,26,27];
+    var previousCycleInstrumentRassIds = [5,21,24,25,28]
+
     // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
@@ -144,7 +157,7 @@ var doCurveParams = function () {
     var dataSourceSites = {};
     var dynamicallyAddedModels = {};  // used to update the siteOptionsMap with dynamically added models - due to sample rates or disparate date ranges
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources order by model;");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows.length; i++) {
             var dataSources = [];
@@ -193,7 +206,8 @@ var doCurveParams = function () {
                 var variable_names = rows[i].variable_names.split(',');
                 var is_json = rows[i].isJSON;
                 var color = rows[i].color;
-
+                var dataSourcePreviousCycleAveraging = rows[i].is_instrument == 1 && previousCycleInstrumentIds.includes(rows[i].thisid);
+                var dataSourcePreviousCycleRass = rows[i].is_instrument == 1 && previousCycleInstrumentRassIds.includes(rows[i].thisid);
 
                 var minDate = rows[i].mindate;
                 var maxDate = rows[i].maxdate;
@@ -202,7 +216,7 @@ var doCurveParams = function () {
 
                 var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + actualModel.toString() + "') as hd")[0]['hd'];
                 var valueList = [];
-                valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color);
+                valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color + "," + dataSourcePreviousCycleAveraging + ',' + dataSourcePreviousCycleRass);
                 modelOptionsMap[model] = valueList;
                 if (model !== actualModel) {
                     modelOptionsMap[actualModel] = valueList;
@@ -237,7 +251,8 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 1:", err.message);
+        console.log (err.stack)
     }
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
@@ -255,7 +270,8 @@ var doCurveParams = function () {
             });
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 2:", err.message);
+        console.log (err.stack)
     }
     var siteIdNameMap = {};// used in added models below
     try {
@@ -357,10 +373,12 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 3:", err.message);
+        console.log (err.stack)
     }
+
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select D.name as name, min_value, max_value, label from discriminator_range as D, variables as V where D.name = V.name;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select name, minimum_expected AS min_value, maximum_expected AS max_value, label from variables where type = 2;");
         for (var i = 0; i < rows.length; i++) {
             var label = rows[i].label;
             var name = rows[i].name;
@@ -372,9 +390,9 @@ var doCurveParams = function () {
             lowerOptionsMap[label] = {min: min_value, max: max_value, step: step, default: min_value};
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 4:", err.message);
+        console.log (err.stack)
     }
-
     try {
         var all_fcst_lens = new Set();
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +
@@ -432,7 +450,8 @@ var doCurveParams = function () {
             }
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 5:", err.message);
+        console.log (err.stack)
     }
 
     try {
@@ -445,7 +464,8 @@ var doCurveParams = function () {
             regionOptionsMap[description] = valueList;
         }
     } catch (err) {
-        console.log("Database error:", err.message);
+        console.log("Database error 6:", err.message);
+        console.log (err.stack)
     }
 
 
@@ -875,7 +895,7 @@ var doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'bottom'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'top'}) == undefined) {
         optionsMap = {};
         matsCollections.CurveParams.insert(
             {
@@ -1127,13 +1147,26 @@ Meteor.startup(function () {
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name: "wfip2Setting",
+            name: "wfip2Setting-wfip2-dmz",
             role: "wfip2_data",
-            status: "active",
+            status: "inactive",
             host: 'wfip2-dmzdb.gsd.esrl.noaa.gov',
             user: 'readonly',
             password: 'Readonlyp@$$405',
             database: 'WFIP2_v2',
+            port: 3306,
+            connectionLimit: 10
+        });
+
+        matsCollections.Databases.insert({
+            name: "wfip2Setting-model-vxtest",
+            role: "wfip2_data",
+            status: "active",
+            host: 'model-vxtest.gsd.esrl.noaa.gov',
+            user: 'ambverif',
+            password: 'Pass4ambverif#',
+            database: 'wfip_dev',
+            port: 3308,
             connectionLimit: 10
         });
     }
@@ -1142,6 +1175,7 @@ Meteor.startup(function () {
         user: 1,
         password: 1,
         database: 1,
+        port: 1,
         connectionLimit: 1
     });
     // the pool is intended to be global
@@ -1150,8 +1184,11 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", "WFIP2_v2", ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.database, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
     matsMethods.resetApp(mdr);
+
+    matsCollections.appName.insert({name: "appName", app: "wfip2"});
+
 });
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params

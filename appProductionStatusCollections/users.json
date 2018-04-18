@@ -8,38 +8,7 @@
       "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2017-11-20T16:31:05.249+0000"
-          },
-          "hashedToken": "YU+BLuNyF21o/K8pOPwGwqrcuBqDQhRuOFuXyYfRkLA="
-        },
-        {
-          "when": {
-            "$date": "2017-11-21T20:50:14.997+0000"
-          },
-          "hashedToken": "We+rSpMxJqEN5Y5muRHwN11eB5Yh5ZdTQCpF3T5yLvo="
-        },
-        {
-          "when": {
-            "$date": "2017-11-29T18:55:08.725+0000"
-          },
-          "hashedToken": "s9hE5U7+js3WIHmHFs0EYsi5cAOx6K01U6Q/Xoj0QYA="
-        },
-        {
-          "when": {
-            "$date": "2017-12-11T16:36:50.757+0000"
-          },
-          "hashedToken": "lOEMh2qRL6VomUtCT2NluCNbVOIh+6wUaXdWNnr3iTM="
-        },
-        {
-          "when": {
-            "$date": "2017-12-13T19:39:49.545+0000"
-          },
-          "hashedToken": "X/UQd0kNCOXkihSoKyc0s8tOnOryKL/dHNsY4mocdDE="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "randy.pierce@noaa.gov"
@@ -57,66 +26,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2017-11-13T22:53:16.140+0000"
-          },
-          "hashedToken": "5Z0WfbR6U1A2HHJQoAFfaS9x4Sm8D+f6SupRWTDi+lw="
-        },
-        {
-          "when": {
-            "$date": "2017-11-15T21:40:06.243+0000"
-          },
-          "hashedToken": "K1B3h9J+pTp1zl4EBV9owZ906dsIqmxYxlMYnnVNm6M="
-        },
-        {
-          "when": {
-            "$date": "2017-11-22T21:17:20.283+0000"
-          },
-          "hashedToken": "ZYxD5TZjjZHVEayDwwuVc8/P5I1RotSlQ1e1mJzaEy0="
-        },
-        {
-          "when": {
-            "$date": "2017-11-30T17:30:53.228+0000"
-          },
-          "hashedToken": "Lmu0Ix1OWpLelgvNuk58zXnWwhT5wfj4EszTdUNrbbA="
-        },
-        {
-          "when": {
-            "$date": "2017-12-06T21:43:52.807+0000"
-          },
-          "hashedToken": "NLdiokQuLmanCSrBFJGfFRAAyx7iz9jmTPTWOdViGfA="
-        },
-        {
-          "when": {
-            "$date": "2017-12-14T23:42:56.081+0000"
-          },
-          "hashedToken": "5SW/h+Z1SspkQM1CSpLpD+quF9qgBj+oJHgEnJATrZU="
-        },
-        {
-          "when": {
-            "$date": "2017-12-15T00:20:31.105+0000"
-          },
-          "hashedToken": "akkW0JeYtXmnoLd8rBeswVuqkrHpdutc9bfg7B4fmJ0="
-        },
-        {
-          "when": {
-            "$date": "2017-12-22T20:59:42.271+0000"
-          },
-          "hashedToken": "mAytZLIk0yjQ5dsj2C/1ECoDL98FCTXEtbwCpBsbVck="
-        },
-        {
-          "when": {
-            "$date": "2017-12-26T22:25:06.200+0000"
-          },
-          "hashedToken": "HGZR/5YwyQGOd6C6d4zQ7juNr2BNxYe8CZexPj5b9Xk="
-        },
-        {
-          "when": {
-            "$date": "2018-01-04T22:10:30.363+0000"
-          },
-          "hashedToken": "fOy27MzatS/7Wjhoc6v76ETv9jTHK0gLnsRFz3Ug1Fc="
-        },
-        {
-          "when": {
             "$date": "2018-01-18T17:58:30.899+0000"
           },
           "hashedToken": "gvI7yvVqdJPXHMSM1uuQv7h9yQ4HVQlGQndMCsZtNWI="
@@ -126,6 +35,54 @@
             "$date": "2018-02-05T23:04:44.638+0000"
           },
           "hashedToken": "uqENqClIZy1cQPn/zCrchvwPQle/PlQ5sMWqht75QRo="
+        },
+        {
+          "when": {
+            "$date": "2018-03-02T19:34:52.986+0000"
+          },
+          "hashedToken": "5kPxbnnFwkFCNZHzxtgf4ewYVpjy0V6bET3JlnVzRFA="
+        },
+        {
+          "when": {
+            "$date": "2018-03-06T23:41:43.116+0000"
+          },
+          "hashedToken": "NCDckRrcSbQoH5cvVVe3PA6VxTf+sXSYL3cuPxny1s8="
+        },
+        {
+          "when": {
+            "$date": "2018-03-12T22:17:01.652+0000"
+          },
+          "hashedToken": "M56+otdy9vz2ac1O9+EfJtnbbS/2D5aIpbPqIBRajSQ="
+        },
+        {
+          "when": {
+            "$date": "2018-03-20T15:41:51.426+0000"
+          },
+          "hashedToken": "Neg+v/XSH/5ZjS/sebzB6QRb8lNY2cJBWi3uHW27kRU="
+        },
+        {
+          "when": {
+            "$date": "2018-03-26T21:31:53.734+0000"
+          },
+          "hashedToken": "Dntf2ynFXAE2FbHmYIyKN8rw6UTPeRqXLPuASfuKEeE="
+        },
+        {
+          "when": {
+            "$date": "2018-03-29T15:56:30.797+0000"
+          },
+          "hashedToken": "COwl1I22GKOrOVL0sfD5qKaAfIBgSWIjjluPEcQbSOg="
+        },
+        {
+          "when": {
+            "$date": "2018-04-12T17:40:33.446+0000"
+          },
+          "hashedToken": "FeQN9cFgTkwm9ngFhQxqSjdg2WPo107WaSGLF/MEsNc="
+        },
+        {
+          "when": {
+            "$date": "2018-04-16T17:21:39.899+0000"
+          },
+          "hashedToken": "x9bNl/0+yqXfM/fWos0e45emzpSPVMADSfMmxOHYaKg="
         }
       ]
     }
@@ -142,14 +99,7 @@
       "bcrypt": "$2a$10$YdohzKtFR0yz7GYPjgymuOhtd5pv9Xlq1SB78NovieFpK/u1YzgLm"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2017-11-28T21:30:06.478+0000"
-          },
-          "hashedToken": "MCz0nJgOMdH7uN9NHqmySLnq11wMqQpak61DUfe/BiY="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "Dave.turner@noaa.gov"
@@ -164,14 +114,7 @@
       "bcrypt": "$2a$10$t8s77nnSOXSfft./JZ9D3uAFLLIpOCktxhNit0HU1ntLp7hb4ovgO"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2017-11-28T21:09:34.536+0000"
-          },
-          "hashedToken": "yogLq8GkCQDuAn89iIdkBN+qdeXXRqf76SroYcPppKY="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "bonny.strong@noaa.gov"
@@ -189,21 +132,15 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2017-11-13T17:14:44.162+0000"
+            "$date": "2018-03-26T21:28:10.719+0000"
           },
-          "hashedToken": "p2O7/7/centLky9e6FYSZwvQjQhHiIPSkNaS6PjIaFU="
+          "hashedToken": "PmKz9KTlsOc4qsyq5iCXlfqWtxJ+LPZ2vkoFqStMF08="
         },
         {
           "when": {
-            "$date": "2017-11-15T22:46:24.110+0000"
+            "$date": "2018-03-29T16:06:16.750+0000"
           },
-          "hashedToken": "6Qxf4JTXhvIqhEf8JiOLeGIyE/pr/zK6XpE5Jr+QH9w="
-        },
-        {
-          "when": {
-            "$date": "2018-01-04T17:12:54.316+0000"
-          },
-          "hashedToken": "1+BzpGG5PHPOB6FuSnXxqGBH6t2i4KgraqlrkZ61qow="
+          "hashedToken": "MPk+uj7EscZ2WKPqbIOKBBsBjXM1iBy9gZaNka5Y0Ek="
         }
       ]
     }

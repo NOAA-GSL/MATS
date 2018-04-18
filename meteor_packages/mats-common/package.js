@@ -138,6 +138,9 @@ Package.onUse(function (api) {
     api.addFiles("templates/plot/plot_param_group.html", "client");
     api.addFiles("templates/plot/plot_param_group.js", "client");
 
+    api.addFiles("templates/plot/QC_param_group.html", "client");
+    api.addFiles("templates/plot/QC_param_group.js", "client");
+
     api.addFiles("templates/error/error.html", "client");
     api.addFiles("templates/error/error.js", "client");
 
@@ -153,6 +156,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/graph/displayFunctions/graph_threshold.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_validtime.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
+    api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
 
     api.addFiles("templates/graph/text_profile_output.html", "client");
     api.addFiles("templates/graph/text_profile_output.js", "client");
@@ -174,6 +178,9 @@ Package.onUse(function (api) {
 
     api.addFiles("templates/graph/text_scatter2d_output.html", "client");
     api.addFiles("templates/graph/text_scatter2d_output.js", "client");
+
+    api.addFiles("templates/graph/text_map_output.html", "client");
+    api.addFiles("templates/graph/text_map_output.js", "client");
 
     api.addFiles("templates/common/select.html", "client");
     api.addFiles("templates/common/select.js", "client");

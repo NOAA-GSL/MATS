@@ -118,6 +118,7 @@ Template.item.events({
                             data: data
                         }
                     });
+                    $("#mapModal").modal('show');
                     m.dispatchEvent(resizeMapEvent);
                 }
             }

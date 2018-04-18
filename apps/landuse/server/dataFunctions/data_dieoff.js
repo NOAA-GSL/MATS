@@ -22,7 +22,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxValuesPerFhr = 0;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
@@ -63,11 +62,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var interval = undefined;
         var d = [];
         if (diffFrom == null) {
-            var statement = "SELECT " +
-                "m0.fcst_len AS avtime, " +
-                "    Count(DISTINCT m0.valid_day + 3600 * m0.hour) AS N_times, " +
-                "    Count(m0.hour) / 1000                         AS Nhrs0, " +
-                "    {{statistic}} " +
+            var statement = "SELECT m0.fcst_len AS avtime, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
+                "{{statistic}} " +
                 "FROM {{model}} AS m0 " +
                 "WHERE 1 = 1 " +
                 "{{validTimeClause}} " +
@@ -94,7 +93,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool, statement, interval);
+                queryResult = matsDataUtils.queryDieoffDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -129,7 +128,6 @@ dataDieOff = function (plotParams, plotFunction) {
                         count++;
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                        maxValuesPerFhr = maxValuesPerFhr > d[i][3].length ? maxValuesPerFhr : d[i][3].length;
                     }
                 }
             }
@@ -158,7 +156,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const cOptions = matsDataUtils.generateDieoffCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
-        dataRequests["post data retreival (query) process time - " + curve.label] = {
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
             begin: postQueryStartMoment.format(),
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
@@ -171,34 +169,46 @@ dataDieOff = function (plotParams, plotFunction) {
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
         dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
 
-        var subSecs = new Set();
+        var subSecs = [];
         var fhrGroups = [];
+        var currFHR;
+
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
             fhrGroups[curveIndex] = [];
+            subSecs[curveIndex] = {};
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every fhr
-                sub_secs = data[di][4];
-                fhrGroups[curveIndex].push(data[di][0]);
-                for (var si = 0; si < sub_secs.length; si++) {
-                    var sec = sub_secs[si];
-                    subSecs.add(sec);
-                }
+                currFHR = data[di][0];
+                subSecs[curveIndex][currFHR] = data[di][4]; //store raw secs for each forecast hour
+                fhrGroups[curveIndex].push(currFHR);
             }
         }
         var matchingFhrs = _.intersection.apply(_, fhrGroups);
-        var subSecIntersection = Array.from(subSecs);
+        var subSecIntersection = {};
+
+        for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
+            currFHR = matchingFhrs[fi];
+            var currSubSecIntersection = subSecs[0][currFHR];   //fill current intersection array with secs from the first curve
+            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
+                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);   //take intersection of current secs and previously matched secs
+            }
+            subSecIntersection[currFHR] = currSubSecIntersection;   //store final current intersection array for each forecast hour
+        }
+
     }
 
     var diffFrom;
-    // calculate stats for each dataset matching to subsec_intersection if matching is specified
+    // calculate stats for each dataset matching to subSecIntersection if matching is specified
+    // var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
         data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
-        //for (di = 0; di < dataLength; di++) { // every forecast hour
+
         var di = 0;
         var values = [];
         var fhrs = [];
@@ -207,26 +217,33 @@ dataDieOff = function (plotParams, plotFunction) {
         while (di < data.length) {
             if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingFhrs.indexOf(data[di][0]) === -1) {
                 dataset[curveIndex].data.splice(di, 1);
-                continue;   // not a matching level - skip it
+                continue;   // not a matching fhr - skip it
             }
 
             var sub_secs = data[di][4];
             var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) {
+            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0) {
+                currFHR = data[di][0];
                 var newSubValues = [];
-                for (var subSecIntersectionIndex = 0; subSecIntersectionIndex < subSecIntersection.length; subSecIntersectionIndex++) {
-                    var secsIndex = sub_secs.indexOf(subSecIntersection[subSecIntersectionIndex]);
-                    var newVal = subValues[secsIndex];
-                    if (newVal === undefined || newVal == 0) {
-                        //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                    } else {
-                        newSubValues.push(newVal);
+                var newSubSecs = [];
+
+                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
+                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this fhr
+                        var newVal = subValues[si];
+                        var newSec = sub_secs[si];
+                        if (newVal === undefined || newVal == 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
+                        } else {
+                            newSubValues.push(newVal);
+                            newSubSecs.push(newSec);
+                        }
                     }
                 }
+
                 data[di][3] = newSubValues;
-                data[di][4] = subSecIntersection;
+                data[di][4] = newSubSecs;
             }
 
             /*
@@ -243,6 +260,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for fhr ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            // data[di][1] = errorResult.d_mean;
             values.push(data[di][1]);
             fhrs.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -270,7 +288,7 @@ dataDieOff = function (plotParams, plotFunction) {
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
                 "<br>" + "fhr: " + data[di][0] +
-                "<br> " + statisticSelect + ":" + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
+                "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
@@ -283,20 +301,24 @@ dataDieOff = function (plotParams, plotFunction) {
         // get the overall stats for the text output - this uses the means not the stats. refer to
 
         const stats = matsDataUtils.get_err(fhrs, values);
-        const miny = Math.min.apply(null, means);
-        const maxy = Math.max.apply(null, means);
+        const filteredMeans = means.filter(x => x);
+        const miny = Math.min(...filteredMeans);
+        const maxy = Math.max(...filteredMeans);
         stats.miny = miny;
         stats.maxy = maxy;
         dataset[curveIndex]['stats'] = stats;
-        // }
-    }
 
+        //recalculate axis options after QC and matching
+        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+    }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     dataset.push({
         "yaxis": 1,
         "label": "zero",
+        "annotation": "",
         "color": "rgb(0,0,0)",
         "data": [
             [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],

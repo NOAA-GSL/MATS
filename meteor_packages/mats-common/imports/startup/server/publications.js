@@ -155,3 +155,17 @@ Meteor.publish("SiteMap", function () {
     }
     return this.ready();
 });
+Meteor.publish("StationMap", function () {
+    var data = matsCollections.StationMap.find({});
+    if (data) {
+        return data;
+    }
+    return this.ready();
+});
+Meteor.publish("appName", function () {
+    var data = matsCollections.appName.find({});
+    if (data) {
+        return data;
+    }
+    return this.ready();
+});

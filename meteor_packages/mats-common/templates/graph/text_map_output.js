@@ -7,25 +7,22 @@ import { matsMathUtils } from 'meteor/randyp:mats-common';
 
 var times = [];
 
-const getDataForTrsh = function(data, time) {
-    for (var i =0; i < data.length; i++) {
-        if (data[i][0] == Number(time)) {
-            return data[i] === null ? undefined : data[i];
+const getDataForTime = function(curveIndex, time) {
+    try {
+        for (var i = 0; i < matsCurveUtils.PlotResult.data[curveIndex].data.length; i++) {
+            if (Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][0]) === Number(time)) {
+                return matsCurveUtils.PlotResult.data[curveIndex].data[i][1] === null ? undefined : Number(matsCurveUtils.PlotResult.data[curveIndex].data[i][1]);
+            }
         }
-    }
-    return undefined;
+        return undefined;
+    } catch (e)
+        {
+            console.log ("getDataForTime error: " + e);
+            return undefined;
+        }
 };
 
-const getDataForCurve = function(curve) {
-    for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
-        if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
-            return matsCurveUtils.PlotResult.data[dataIndex];
-        }
-    }
-    return undefined;
-};
-
-Template.textThresholdOutput.helpers({
+Template.textMapOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
     },
@@ -82,7 +79,7 @@ Template.textThresholdOutput.helpers({
         if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
             return [];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.map) {
             return [];
         }
 
@@ -102,7 +99,8 @@ Template.textThresholdOutput.helpers({
         times.sort((a, b) => (a - b));
         return times;
     },
-    points: function(trsh) {
+
+    points: function(time) {
         const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
@@ -111,42 +109,18 @@ Template.textThresholdOutput.helpers({
             matsCurveUtils.PlotResult.length == 0) {
             return false;
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.map) {
             return false;
         }
-        var curve = Template.parentData();
-        var line = "<td>" + Number(trsh) + "</td>";
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
-        if (settings === undefined) {
+        const curves = Session.get('Curves');
+        if (curves === undefined || curves.length == 0) {
             return false;
         }
-        const fillStr = settings.NullFillString;
-        // We must only set data when the times match on a curve.
-        var pdata = fillStr;
-        var perror = fillStr;
-        var mean = fillStr;
-        var lag1 = fillStr;
-        var n = fillStr;
-        var stddev = fillStr;
-        try {
-            // see if I have a valid data object for this dataIndex and this trsh....
-            const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
-            const dataPointVal = getDataForTrsh(curveData, trsh);
-            if (dataPointVal !== undefined) {
-                pdata = dataPointVal[1] && dataPointVal[1].toPrecision(4);
-                mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
-                perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
-                stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
-                lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
-                n = dataPointVal[5].n_good;
-            }
-        } catch (problem) {
-            console.log("Problem in deriving curve text: " + problem);
-        }
-        // pdata is now either data value or fillStr
-        line += "<td>" + mean + "</td>" + "<td>" + pdata + "</td>" +  "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        var line = "<td>" + time[0] + "</td><td>" + time[1] + "</td><td>" + time[2] + "</td><td>" + time[3] + "</td><td>" + time[4] + "</td>";
+
         return line;
     },
+
     stats: function(curve) {
         /*
          This (plotResultsUpDated) is very important.
@@ -169,7 +143,7 @@ Template.textThresholdOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return[];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.map) {
             return[];
         }
         var cindex;
@@ -193,48 +167,11 @@ Template.textThresholdOutput.helpers({
             "<td>" + (stats.sd ? stats.sd.toPrecision(4) : "undefined").toString() + "</td>" +
             "<td>" + (stats.minVal ? stats.minVal.toPrecision(4) : "undefined").toString() + "</td>" +
             "<td>" + (stats.maxVal ? stats.maxVal.toPrecision(4) : "undefined").toString() + "</td>";
-
-        return line;
-    },
-    trshs: function(curve) {
-        /*
-         This (plotResultsUpDated) is very important.
-         The page is rendered when the graph page comes up, but the data from the data processing callback
-         in plotList.js or curveList.js may not have set the global variable
-         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
-         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
-         (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
-         made that unworkable.
-         */
-        const plotResultsUpDated = Session.get('PlotResultsUpDated');
-        if (plotResultsUpDated === undefined) {
-            return [];
-        }
-
-        if (matsCurveUtils.PlotResult.data === undefined) {
-            return [];
-        }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
-            return [];
-        }
-        const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
-        if (curveData === undefined || curveData.length == 0) {
-            return [];
-        }
-
-        var trshSet = new Set();
-        var di;
-        for (di = 0; di < curveData.length; di++) {
-            curveData[di] && trshSet.add(curveData[di][0]);
-        }
-        var trshs = Array.from (trshSet);
-        trshs.sort((a, b) => (a - b));
-        return trshs;
+        return line;        return line;
     }
 });
 
-Template.textThresholdOutput.events({
+Template.textMapOutput.events({
     'click .export': function() {
         var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {

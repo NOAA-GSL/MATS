@@ -2,13 +2,18 @@ import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
 var forecastLengthOptionsMap = {};
 var regionModelOptionsMap = {};
+var siteOptionsMap = {};
+var sitesLocationMap = [];
+var siteObjMap = {};
 var masterRegionValuesMap = {};
 var modelDateRangeMap = {};
+var modelMetarsMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -62,6 +67,8 @@ const doCurveParams = function () {
         matsCollections.CurveParams.remove({});
     }
 
+    matsCollections.CurveParams.remove({});
+
     var rows;
     try {
         rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
@@ -77,7 +84,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories;");
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,metar_string,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();
@@ -87,6 +94,13 @@ const doCurveParams = function () {
             var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
             var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+
+            var metarStrings = rows[i].metar_string;
+            var metarStringsArr = metarStrings.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < metarStringsArr.length; j++) {
+                metarStringsArr[j] = metarStringsArr[j].replace(/'|\[|\]/g, "");
+            }
+            modelMetarsMap[model] = metarStringsArr;
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -109,6 +123,57 @@ const doCurveParams = function () {
     } catch (err) {
         console.log(err.message);
     }
+
+    try {
+        matsCollections.SiteMap.remove({});
+        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metar_mats_test.desc from metar_mats_test order by name;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var site_name = rows[i].name;
+            var site_description = rows[i].desc;
+            var site_id = rows[i].madis_id;
+            var site_lat = rows[i].lat/100;
+            var site_lon = rows[i].lon/100;
+            var site_elev = rows[i].elev;
+            siteOptionsMap[site_name] = [site_id];
+            //masterSitesMap[site_name] = [site_description];
+            //sitesLocationMap[site_name] = {lat: site_lat, lon: site_lon, elev: site_elev};
+
+            matsCollections.SiteMap.insert({siteName: site_name, siteId: site_id});
+
+            var point = [site_lat, site_lon];
+            var obj = {
+                name: site_name,
+                point: point,
+                elevation: site_elev,
+                options: {
+                    title: site_description,
+                    color: 'red',
+                    size: 5,
+                    network: 'METAR',
+                    peerOption: site_name,
+                    id: site_id,
+                    highLightColor: 'pink'
+                }
+            };
+            sitesLocationMap.push(obj);
+        }
+
+    } catch (err) {
+        console.log(err.message);
+    }
+    matsCollections.StationMap.remove({});
+
+    if (matsCollections.StationMap.find({name: 'stations'}).count() == 0) {
+        matsCollections.StationMap.insert(
+            {
+                name: 'stations',
+                optionsMap: sitesLocationMap,
+            }
+        );
+    }
+
+
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
@@ -136,6 +201,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
+                metars: modelMetarsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["region", "forecast-length", "dates"],
                 controlButtonCovered: true,
@@ -180,18 +246,18 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
-        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+       if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+           (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
             // have to reload model data
-            matsCollections.CurveParams.update({name: 'region'}, {
-                $set: {
+          matsCollections.CurveParams.update({name: 'region'}, {
+               $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
                     options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
                 }
-            });
-        }
-    }
+          });
+       }
+   }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         optionsMap = {
@@ -257,10 +323,10 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
         optionsMap = {
-            'temperature': ['dt', 't'],
-            'RH': ['drh', 'rh'],
-            'dewpoint': ['dTd', 'td'],
-            'wind': ['dw', 'ws'],
+            'temperature': ['dt', 't', 'temp'],
+            'RH': ['drh', 'rh', 'rh'],
+            'dewpoint': ['dTd', 'td', 'dp'],
+            'wind': ['dw', 'ws', 'ws'],
         };
 
         const statVarUnitMap = {
@@ -314,12 +380,22 @@ const doCurveParams = function () {
             }
         };
 
+        const mapVarUnitMap = {
+            'diff': {
+                'temperature': '°C',
+                'RH': 'RH (%)',
+                'dewpoint': '°C',
+                'wind': 'm/s'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 statVarUnitMap: statVarUnitMap,
+                mapVarUnitMap: mapVarUnitMap,
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
@@ -430,6 +506,53 @@ const doCurveParams = function () {
                 multiple: true
             });
     }
+
+    if (matsCollections.CurveParams.find({name: 'sites'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sites',
+                type: matsTypes.InputTypes.select,
+                optionsMap: siteOptionsMap,
+                options: Object.keys(siteOptionsMap),
+                peerName: 'sitesMap',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true,
+                /*
+                hiddenPlotTypes means that this parameter will be hidden for all the PlotTypes listed here. In other words this param
+                will only be visible for matsTypes.PlotTypes.map
+                If this param option is missing or empty then the parameter is visible for all plotTypes.
+                 */
+                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.profile,matsTypes.PlotTypes.scatter2d]
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'Map'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'sitesMap',
+                type: matsTypes.InputTypes.selectMap,
+                optionsMap: sitesLocationMap,
+                options: Object.keys(sitesLocationMap),   // convenience
+                peerName: 'sites',    // name of the select parameter that is going to be set by selecting from this map
+                controlButtonCovered: true,
+                unique: false,
+                //default: siteOptionsMap[Object.keys(siteOptionsMap)[0]],
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 4,
+                multiple: true,
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
+                help: 'map-help.html'
+            });
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -494,6 +617,20 @@ var doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.map,
+            textPattern: [
+                ['', 'data-source', ': '],
+                ['', 'sites', ': '],
+                ['', 'variable', ', '],
+                ['fcst_len: ', 'forecast-length', ' h '],
+                [' valid-time:', 'valid-time', ' ']
+            ],
+            displayParams: [
+                "data-source", "sites", "variable", "forecast-length", "valid-time"
+            ],
+            groupSize: 4
+        });
     }
 };
 
@@ -529,6 +666,12 @@ var doPlotGraph = function () {
             dataFunction: "dataValidTime",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.map,
+            graphFunction: "graphMap",
+            dataFunction: "dataMap",
+            checked: false
+        });
     }
 };
 
@@ -542,7 +685,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'surface_sums',
+            database: 'surface_sums2',
             connectionLimit: 10
         });
     }
@@ -555,6 +698,17 @@ Meteor.startup(function () {
         user: 'readonly',
         password: 'ReadOnly@2016!',
         database: 'mats_common',
+        connectionLimit: 10
+    });
+
+    matsCollections.Databases.insert({
+        name: "siteSetting",
+        role: "site_data",
+        status: "active",
+        host: 'wolphin.fsl.noaa.gov',
+        user: 'readonly',
+        password: 'ReadOnly@2016!',
+        database: 'madis3',
         connectionLimit: 10
     });
 
@@ -581,9 +735,26 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
+    const siteSettings = matsCollections.Databases.findOne({role: "site_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
+    // the pool is intended to be global
+    sitePool = mysql.createPool(siteSettings);
+    sitePool.on('connection', function (connection) {
+        connection.query('set group_concat_max_len = 4294967295')
+    });
+
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
-    mdr.addRecord("sumPool", "surface_sums", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
     matsMethods.resetApp(mdr);
+
+    matsCollections.appName.insert({name: "appName", app: "surface"});
+
 });
 
 // this object is global so that the reset code can get to it --
