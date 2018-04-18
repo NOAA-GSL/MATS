@@ -750,7 +750,6 @@ dataProfile = function (plotParams, plotFunction) {
                 const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
                 // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
                 const errorBar = errorResult.sd * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
 
                 var stats = {
                     d_mean: errorResult.d_mean,
@@ -770,6 +769,7 @@ dataProfile = function (plotParams, plotFunction) {
                     // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
                     "<br>  errorbars: " + Number(value - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.sd * 1.96)).toPrecision(4);
                 if (matching) {
+                    errorMax = errorMax > errorBar ? errorMax : errorBar;
                     d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
                 } else {
                     // no error bars if unmatched
@@ -814,6 +814,45 @@ dataProfile = function (plotParams, plotFunction) {
         dataset.push(cOptions);
         dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves
+
+    dataset.push({
+        "yaxis": 1,
+        "label": "zero",
+        "color": "rgb(0,0,0)",
+        "annotation": "",
+        "data": [
+            [0, ymax, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+            [0, ymin, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "x",
+            "xerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": ymin,
+            "max": ymax,
+            "sum": 0,
+            "minx": 0,
+            "maxx": 0
+        }
+    });
 
     const resultOptions = matsWfipUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
