@@ -39,8 +39,8 @@ dataMap = function (plotParams, plotFunction) {
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 2})['optionsMap'];
         var variableOption = variableOptionsMap[variableStr];
         var variable = variableOption[2];
-        var statisticSelect = 'Bias (Model - Obs)';
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var statisticSelect = 'diff';
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {mapVarUnitMap: 1})['mapVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var forecastLength = curve['forecast-length'];
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
@@ -90,8 +90,8 @@ dataMap = function (plotParams, plotFunction) {
                     statement = statement.replace('{{variable}}', variable + "/10");
                     statement = statement.replace('{{variable}}', variable + "/10");
                 } else {
-                    statement = statement.replace('{{variable}}', variable);
-                    statement = statement.replace('{{variable}}', variable);
+                    statement = statement.replace('{{variable}}', variable + "*0.44704");
+                    statement = statement.replace('{{variable}}', variable + "*0.44704");
                 }
                 statement = statement.replace('{{station}}', siteOptions.siteId);
                 var validTimeClause =" ";

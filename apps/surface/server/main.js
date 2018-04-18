@@ -380,12 +380,22 @@ const doCurveParams = function () {
             }
         };
 
+        const mapVarUnitMap = {
+            'diff': {
+                'temperature': '°F',
+                'RH': 'RH (%)',
+                'dewpoint': '°F',
+                'wind': 'm/s'
+            }
+        };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
                 statVarUnitMap: statVarUnitMap,
+                mapVarUnitMap: mapVarUnitMap,
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
@@ -539,7 +549,7 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true,
-                defaultMapView: {point: [39.834, -98.604], zoomLevel: 4, minZoomLevel: 3, maxZoomLevel: 10},
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
                 help: 'map-help.html'
             });
     }
