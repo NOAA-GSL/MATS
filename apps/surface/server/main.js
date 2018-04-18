@@ -148,12 +148,12 @@ const doCurveParams = function () {
                 elevation: site_elev,
                 options: {
                     title: site_description,
-                    color: 'blue',
+                    color: 'red',
                     size: 5,
                     network: 'METAR',
                     peerOption: site_name,
                     id: site_id,
-                    highLightColor: 'cyan'
+                    highLightColor: 'pink'
                 }
             };
             sitesLocationMap.push(obj);

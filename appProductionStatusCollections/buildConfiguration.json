@@ -119,8 +119,8 @@
       "app": "wfip2",
       "displayName": "Wfip2",
       "displayOrder": 15,
-      "deploymentStatus": "disabled",
-      "buildStatus": "disabled"
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }

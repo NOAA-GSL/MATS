@@ -1029,6 +1029,68 @@ const getDataForProfileMatchingDiffCurve = function (params) {
     return {dataset: d};
 };
 
+const getDataForSeriesUnMatchedDiffCurve = function (params) {
+    // just get the time values - not the subset data
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - time (ploted against the x axis)
+     data[1] - statValue (plotted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - time values
+     data[4] - time times
+     data[5] - time stats
+     data[6] - tooltip
+     */
+
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+    // do the differencing
+    //[avVal,stat,sub_values,sub_secs] -- avVal is time
+
+    // get the list of times for the minuendData
+    const mTimes = minuendData.map(function (a) {
+        return a[0];
+    });
+
+    // get the list of times for the subtrahendData
+    const sTimes = subtrahendData.map(function (a) {
+        return a[0];
+    });
+
+    // get the intersection of the times
+    const cTimes = mTimes.filter(function (n) {
+        return sTimes.indexOf(n) !== -1;
+    });
+    // itterate all the common times
+    for (var i = 0; i < cTimes.length; i++) { // each pressure level
+        var cl = cTimes[i];
+        // find the minuend stat for this level
+        const minuendStat = minuendData.filter(function (elem) {
+            return elem[0] === cl;
+        })[0];
+        // find the subtrhend stat for this level
+        const subtrahendStat = subtrahendData.filter(function (elem) {
+            return elem[0] === cl;
+        })[0];
+        d[i] = [];
+        // do the difference
+        d[i][0] = cl;
+        d[i][1] = minuendStat[1] - subtrahendStat[1];
+        d[i][2] = -1;
+        d[i][3] = [];
+        d[i][4] = [];
+        d[i][5] = {}; // level stats
+        d[i][6] = "<br>" + moment.utc(Number(cl)).format("YYYY-MM-DD HH:mm") + " <br> value:" + (d[i][1] === null ? null : d[i][1].toPrecision(4)); //tooltip
+    }
+    return {dataset: d};
+};
+
 const getDataForProfileUnMatchedDiffCurve = function (params) {
     // just get the level values - not the subset data
     /*
@@ -1384,6 +1446,7 @@ export default matsWfipUtils = {
     getDataForProfileDiffCurve: getDataForProfileDiffCurve,
     getDataForProfileMatchingDiffCurve: getDataForProfileMatchingDiffCurve,
     getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
+    getDataForSeriesUnMatchedDiffCurve: getDataForSeriesUnMatchedDiffCurve,
     generateProfilePlotOptions: generateProfilePlotOptions,
     get_err: get_err
 }

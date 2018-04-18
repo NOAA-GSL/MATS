@@ -348,7 +348,7 @@ Template.graph.helpers({
         }
     },
     errorBarsAllowed: function () {
-        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries);
+        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.scatter2d);
     },
     isProfile: function() {
         return (Session.get('plotType') == matsTypes.PlotTypes.profile);
