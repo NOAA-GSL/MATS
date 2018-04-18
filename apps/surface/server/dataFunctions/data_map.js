@@ -64,7 +64,7 @@ dataMap = function (plotParams, plotFunction) {
                     "count(distinct m0.time) as N_times, " +
                     "min(m0.time) as min_time, " +
                     "max(m0.time) as max_time, " +
-                    "sum(m0.{{variable}} - o.{{variable}})/count(distinct m0.time) as model_ob_diff " +
+                    "sum({{variable}} - {{variable}})/count(distinct m0.time) as model_ob_diff " +
                     "from metars as s, obs as o, {{model}} as m0 " +
                     "where 1=1 " +
                     "and s.madis_id = m0.sta_id " +
@@ -86,12 +86,15 @@ dataMap = function (plotParams, plotFunction) {
                     statement = statement.replace('{{model}}', model + "qp");
                     statement = statement.replace('{{forecastLength}}', forecastLength);
                 }
-                if (variable == "temp" || variable == "dp" || variable == "rh" || variable == "press") {
-                    statement = statement.replace('{{variable}}', variable + "/10");
-                    statement = statement.replace('{{variable}}', variable + "/10");
+                if (variable == "temp" || variable == "dp") {
+                    statement = statement.replace('{{variable}}', "(((m0." + variable + "/10)-32)*(5/9))");
+                    statement = statement.replace('{{variable}}', "(((o." + variable + "/10)-32)*(5/9))");
+                } else if (variable == "rh" || variable == "press") {
+                    statement = statement.replace('{{variable}}', "m0." + variable + "/10");
+                    statement = statement.replace('{{variable}}', "o." + variable + "/10");
                 } else {
-                    statement = statement.replace('{{variable}}', variable + "*0.44704");
-                    statement = statement.replace('{{variable}}', variable + "*0.44704");
+                    statement = statement.replace('{{variable}}', "m0." + variable + "*0.44704");
+                    statement = statement.replace('{{variable}}', "o." + variable + "*0.44704");
                 }
                 statement = statement.replace('{{station}}', siteOptions.siteId);
                 var validTimeClause =" ";

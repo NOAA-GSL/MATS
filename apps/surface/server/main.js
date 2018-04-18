@@ -382,9 +382,9 @@ const doCurveParams = function () {
 
         const mapVarUnitMap = {
             'diff': {
-                'temperature': '°F',
+                'temperature': '°C',
                 'RH': 'RH (%)',
-                'dewpoint': '°F',
+                'dewpoint': '°C',
                 'wind': 'm/s'
             }
         };
