@@ -39,7 +39,6 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var forecastLength = curve['forecast-length'];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
             throw new Error("INFO:  non dieoff curves are not yet supported");
@@ -264,10 +263,11 @@ dataDieOff = function (plotParams, plotFunction) {
 
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
+            // stde_betsy is standard error with auto correlation
+            // errorbars indicate +/- 2 (actually 1.96) standard deviations from the mean
             // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
             // unmatched curves get no error bars
-            const errorBar = errorResult.stde_betsy * 1.96;
+            const errorBar = errorResult.sd * 1.96;
             if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
@@ -291,7 +291,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "<br>  n: " + errorResult.n_good +
                 "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 "<br>  stde: " + errorResult.stde_betsy +
-                "<br>  errorbars: " + Number((data[di][1]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
         }

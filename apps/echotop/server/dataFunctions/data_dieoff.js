@@ -41,7 +41,6 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var forecastLength = curve['forecast-length'];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
             throw new Error("INFO:  non dieoff curves are not yet supported");
