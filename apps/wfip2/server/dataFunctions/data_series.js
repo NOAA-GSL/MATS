@@ -748,7 +748,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 tooltip = label +
                     "<br>" + "time: " + moment.utc(Number(time)).format("YYYY-MM-DD HH:mm") +
-                    "<br> " + statistic + ":" + value.toPrecision(4) +
+                    "<br> " + statistic + ": " + value.toPrecision(4) +
                     "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                     "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                     "<br>  n: " + errorResult.n_good + //corrected +
@@ -780,8 +780,12 @@ dataSeries = function (plotParams, plotFunction) {
             diffResult = matsWfipUtils.getDataForSeriesUnMatchedDiffCurve({
                 dataset: dataset,
                 diffFrom: diffFrom
-            });
+            }, matching);
+
             d = diffResult.dataset;
+            var errorMaxDiff = diffResult.errorMax;
+            errorMax = errorMax > errorMaxDiff ? errorMax : errorMaxDiff;
+
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {
                 ymax = ymax > d[di][1] ? ymax : d[di][1];
