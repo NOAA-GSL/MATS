@@ -1029,7 +1029,7 @@ const getDataForProfileMatchingDiffCurve = function (params) {
     return {dataset: d};
 };
 
-const getDataForSeriesUnMatchedDiffCurve = function (params) {
+const getDataForSeriesUnMatchedDiffCurve = function (params,matching) {
     // just get the time values - not the subset data
     /*
      DATASET ELEMENTS:
@@ -1043,6 +1043,7 @@ const getDataForSeriesUnMatchedDiffCurve = function (params) {
      data[6] - tooltip
      */
 
+    var errorMax = Number.MIN_VALUE;
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     var d = [];
@@ -1087,11 +1088,53 @@ const getDataForSeriesUnMatchedDiffCurve = function (params) {
         d[i][4] = [];
         d[i][5] = {}; // level stats
         d[i][6] = "<br>" + moment.utc(Number(cl)).format("YYYY-MM-DD HH:mm") + " <br> value:" + (d[i][1] === null ? null : d[i][1].toPrecision(4)); //tooltip
+
+        var minuendDataSubValues = minuendStat[3];
+        var minuendDataSubLevels = minuendStat[4];
+        var subtrahendDataSubValues = subtrahendStat[3];
+        var subtrahendDataSubLevels = subtrahendStat[4];
+
+        const levelsIntersection = minuendDataSubLevels.filter(function (n) {
+            return subtrahendDataSubLevels.indexOf(n) !== -1;
+        });
+        for (var siIndex = 0; siIndex < levelsIntersection.length - 1; siIndex++) {
+            d[i][4].push(levelsIntersection[siIndex]);
+            d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+        }
+
+        const errorResult = get_err(d[i][3], d[i][4]);
+        // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+        const errorBar = errorResult.sd * 1.96;
+
+        d[i][5] = {
+            d_mean: errorResult.d_mean,
+            sd: errorResult.sd,
+            n_good: errorResult.n_good,
+            lag1: errorResult.lag1,
+            stde_betsy: errorResult.stde_betsy
+        };
+
+        d[i][6] = "Curve" + diffFrom[0].toString() + "-Curve" + diffFrom[1].toString() +
+            "<br>  time: " + moment.utc(Number(d[i][0])).format("YYYY-MM-DD HH:mm") +
+            "<br>  difference: " + d[i][1].toPrecision(4) +
+            "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+            "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+            "<br>  n: " + errorResult.n_good + //corrected +
+            "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+            "<br>  stde: " + errorResult.stde_betsy +
+            // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+            "<br>  errorbars: " + Number(d[i][1] - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(d[i][1] + (errorResult.sd * 1.96)).toPrecision(4);
+
+        if (matching) {
+            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            d[i][2] = errorBar;
+        }
+
     }
-    return {dataset: d};
+    return {dataset: d, errorMax: errorMax};
 };
 
-const getDataForProfileUnMatchedDiffCurve = function (params) {
+const getDataForProfileUnMatchedDiffCurve = function (params,matching) {
     // just get the level values - not the subset data
     /*
      DATASET ELEMENTS:
@@ -1105,6 +1148,7 @@ const getDataForProfileUnMatchedDiffCurve = function (params) {
      data[6] - tooltip
      */
 
+    var errorMax = Number.MIN_VALUE;
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     var d = [];
@@ -1150,8 +1194,50 @@ const getDataForProfileUnMatchedDiffCurve = function (params) {
         d[i][4] = [];
         d[i][5] = {}; // level stats
         d[i][6] = "<br>" + cl * -1 + "mb <br> value:" + (d[i][0] === null ? null : d[i][0].toPrecision(4)); //tooltip
+
+        var minuendDataSubValues = minuendStat[3];
+        var minuendDataSubSeconds = minuendStat[4];
+        var subtrahendDataSubValues = subtrahendStat[3];
+        var subtrahendDataSubSeconds = subtrahendStat[4];
+
+        const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+            return subtrahendDataSubSeconds.indexOf(n) !== -1;
+        });
+        for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+            d[i][4].push(secondsIntersection[siIndex]);
+            d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+        }
+
+        const errorResult = get_err(d[i][3], d[i][4]);
+        // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+        const errorBar = errorResult.sd * 1.96;
+
+        d[i][5] = {
+            d_mean: errorResult.d_mean,
+            sd: errorResult.sd,
+            n_good: errorResult.n_good,
+            lag1: errorResult.lag1,
+            stde_betsy: errorResult.stde_betsy
+        };
+
+        d[i][6] = "Curve" + diffFrom[0].toString() + "-Curve" + diffFrom[1].toString() +
+            "<br>  " + d[i][1] + "m" +
+            "<br>  difference: " + d[i][0].toPrecision(4) +
+            "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+            "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+            "<br>  n: " + errorResult.n_good + //corrected +
+            "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+            "<br>  stde: " + errorResult.stde_betsy +
+            // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+            "<br>  errorbars: " + Number(d[i][0] - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(d[i][0] + (errorResult.sd * 1.96)).toPrecision(4);
+
+        if (matching) {
+            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            d[i][2] = errorBar;
+        }
+
     }
-    return {dataset: d};
+    return {dataset: d, errorMax: errorMax};
 };
 
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {

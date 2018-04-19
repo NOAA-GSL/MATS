@@ -747,7 +747,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 tooltip = label +
                     "<br>" + level + "m" +
-                    "<br> " + statistic + ":" + value.toPrecision(4) +
+                    "<br> " + statistic + ": " + value.toPrecision(4) +
                     "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                     "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                     "<br>  n: " + errorResult.n_good + //corrected +
@@ -779,8 +779,12 @@ dataProfile = function (plotParams, plotFunction) {
             diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                 dataset: dataset,
                 diffFrom: diffFrom
-            });
+            }, matching);
+
             d = diffResult.dataset;
+            var errorMaxDiff = diffResult.errorMax;
+            errorMax = errorMax > errorMaxDiff ? errorMax : errorMaxDiff;
+
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];
