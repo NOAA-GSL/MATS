@@ -1159,7 +1159,7 @@ const getDataForSeriesDiffCurve = function (params) {
                 const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
                     return subtrahendDataSubSeconds.indexOf(n) !== -1;
                 });
-                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                for (var siIndex = 0; siIndex < secondsIntersection.length; siIndex++) {
                     d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
                     d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
                 }
@@ -1394,7 +1394,7 @@ const getDataForDieoffDiffCurve = function (params) {
                 const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
                     return subtrahendDataSubSeconds.indexOf(n) !== -1;
                 });
-                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                for (var siIndex = 0; siIndex < secondsIntersection.length; siIndex++) {
                     d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
                     d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
                 }
@@ -1628,7 +1628,7 @@ const getDataForValidTimeDiffCurve = function (params) {
                 const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
                     return subtrahendDataSubSeconds.indexOf(n) !== -1;
                 });
-                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                for (var siIndex = 0; siIndex < secondsIntersection.length; siIndex++) {
                     d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
                     d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
                 }
@@ -1747,7 +1747,7 @@ const getDataForThresholdDiffCurve = function (params) {
                 const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
                     return subtrahendDataSubSeconds.indexOf(n) !== -1;
                 });
-                for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+                for (var siIndex = 0; siIndex < secondsIntersection.length; siIndex++) {
                     d[largeIntervalCurveIndex][4].push(secondsIntersection[siIndex]);
                     d[largeIntervalCurveIndex][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
                 }
@@ -1823,7 +1823,7 @@ const get_err = function (sVals, sSecs) {
     var error = "";
     var i;
     for (i = 0; i < n; i++) {
-        if (sVals[i] !== null) {
+        if (sVals[i] !== null && !isNaN(sVals[i])) {
             n_good = n_good + 1;
             sum_d = sum_d + sVals[i];
             sum2_d = sum2_d + sVals[i] * sVals[i];
