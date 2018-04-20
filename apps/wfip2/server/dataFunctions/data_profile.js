@@ -737,8 +737,10 @@ dataProfile = function (plotParams, plotFunction) {
                 const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
                 // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
                 const errorBar = errorResult.sd * 1.96;
-
+                // const rawStat = value;
+                // value = errorResult.d_mean;
                 var stats = {
+                    raw_stat: value,
                     d_mean: errorResult.d_mean,
                     sd: errorResult.sd,
                     n_good: errorResult.n_good,

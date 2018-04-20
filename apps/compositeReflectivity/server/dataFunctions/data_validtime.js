@@ -187,12 +187,11 @@ dataValidTime = function (plotParams, plotFunction) {
 
     var diffFrom;
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
-    // var axisLimitReprocessed = {};
+    var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        // if it is NOT difference curve OR it is a difference curve with matching specified calculate stats
         data = dataset[curveIndex].data;
         const dataLength = data.length;
         const label = dataset[curveIndex].label;
@@ -201,6 +200,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var values = [];
         var vts = [];
         var means = [];
+        var rawStat;
 
         while (di < data.length) {
             if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingVts.indexOf(data[di][0]) === -1) {
@@ -233,7 +233,6 @@ dataValidTime = function (plotParams, plotFunction) {
                 data[di][3] = newSubValues;
                 data[di][4] = newSubSecs;
             }
-
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
@@ -248,7 +247,16 @@ dataValidTime = function (plotParams, plotFunction) {
 
             //console.log('Getting errors for fhr ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-            // data[di][1] = errorResult.d_mean;
+            rawStat = data[di][1];
+            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                data[di][1] = errorResult.d_mean;
+            } else {
+                if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                    data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+                } else {
+                    data[di][1] = null;
+                }
+            }
             values.push(data[di][1]);
             vts.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -267,6 +275,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 data[di][2] = -1;
             }
             data[di][5] = {
+                raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
                 n_good: errorResult.n_good,
@@ -287,8 +296,8 @@ dataValidTime = function (plotParams, plotFunction) {
 
             di++;
         }
-        // get the overall stats for the text output - this uses the means not the stats. refer to
 
+        // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(vts, values);
         const filteredMeans = means.filter(x => x);
         const miny = Math.min(...filteredMeans);
@@ -298,8 +307,8 @@ dataValidTime = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
     }
 
     // add black 0 line curve
