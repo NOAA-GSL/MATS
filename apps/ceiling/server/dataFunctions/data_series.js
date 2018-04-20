@@ -312,7 +312,15 @@ dataSeries = function (plotParams, plotFunction) {
             //console.log('Getting errors for avtime ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
             rawStat = data[di][1];
-            data[di][1] = errorResult.d_mean;
+            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                data[di][1] = errorResult.d_mean;
+            } else {
+                if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                    data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+                } else {
+                    data[di][1] = null;
+                }
+            }
             values.push(data[di][1]);
             avtimes.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -352,6 +360,7 @@ dataSeries = function (plotParams, plotFunction) {
 
             di++;
         }
+
         // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(avtimes, values);
         const filteredMeans = means.filter(x => x);

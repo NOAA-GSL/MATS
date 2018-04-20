@@ -978,6 +978,7 @@ const getDataForSeriesUnMatchedDiffCurve = function (params,matching) {
         const errorBar = errorResult.sd * 1.96;
 
         d[i][5] = {
+            raw_stat: d[i][1].toPrecision(4),
             d_mean: errorResult.d_mean,
             sd: errorResult.sd,
             n_good: errorResult.n_good,
@@ -1084,6 +1085,7 @@ const getDataForProfileUnMatchedDiffCurve = function (params,matching) {
         const errorBar = errorResult.sd * 1.96;
 
         d[i][5] = {
+            raw_stat: d[i][0].toPrecision(4),
             d_mean: errorResult.d_mean,
             sd: errorResult.sd,
             n_good: errorResult.n_good,
