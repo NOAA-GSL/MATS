@@ -186,7 +186,7 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
                 }
             });
         }
