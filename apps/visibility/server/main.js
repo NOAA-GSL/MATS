@@ -192,12 +192,12 @@ const doCurveParams = function () {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
-                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]],   // convenience
+                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
                 valuesMap: masterRegionValuesMap,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]][0],
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
@@ -213,7 +213,7 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[3]]
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
                 }
             });
         }

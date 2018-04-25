@@ -496,7 +496,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'ceiling_15_sums',
+            database: 'ceiling_5min_sums',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
@@ -506,7 +506,7 @@ Meteor.startup(function () {
             host: 'wolphin.fsl.noaa.gov',
             user: 'readonly',
             password: 'ReadOnly@2016!',
-            database: 'ceiling_15',
+            database: 'ceiling_5min',
             connectionLimit: 10
         });
         matsCollections.Databases.insert({
