@@ -375,7 +375,7 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "aircraft",
@@ -411,7 +411,7 @@
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 7,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "landuse",
@@ -423,7 +423,7 @@
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 9,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
