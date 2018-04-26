@@ -178,8 +178,8 @@ Template.textSeriesOutput.helpers({
             const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
             const dataPointVal = getDataForTime(curveData, time);
             if (dataPointVal !== undefined) {
-                pdata = dataPointVal[1] && dataPointVal[1].toPrecision(4);
-                mean = dataPointVal[5].d_mean && dataPointVal[5].d_mean.toPrecision(4);
+                pdata = dataPointVal[5].raw_stat && dataPointVal[5].raw_stat.toPrecision(4);
+                mean = dataPointVal[1] && dataPointVal[1].toPrecision(4);
                 perror = dataPointVal[5].stde_betsy && dataPointVal[5].stde_betsy.toPrecision(4);
                 stddev = dataPointVal[5].sd && dataPointVal[5].sd.toPrecision(4);
                 lag1 = dataPointVal[5].lag1 && dataPointVal[5].lag1.toPrecision(4);
@@ -189,7 +189,7 @@ Template.textSeriesOutput.helpers({
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + mean + "</td>" + "<td>" + pdata + "</td>" +  "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     },
     stats: function(curve) {

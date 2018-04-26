@@ -607,10 +607,6 @@ dataProfile = function (plotParams, plotFunction) {
         var time = 0;
         var site = 0;
         var level = 0;
-        var curvePartials = null;
-        var matchedTimesByLevel = [];
-        var ci;
-        var timeLevelExists;
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             curve = curves[curveIndex];
             var partials = curve['partials'];
@@ -625,17 +621,8 @@ dataProfile = function (plotParams, plotFunction) {
                         if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
                             continue;  // skip this site, it doesn't match
                         }
-                        var levelTimes = {};
                         for (level in partials[time][site]) {
-                            // does this time exist in all the curves at this level? If not throw it away
-                            timeLevelExists = true;
-                            for (ci = 0; ci < curvesLength; ci++) {
-                                if (curves[ci].diffFrom === undefined && (!curves[ci].partials || !curves[ci].partials[time] || !curves[ci].partials[time][site] || !curves[ci].partials[time][site][level])) {
-                                    timeLevelExists = false;
-                                }
-                            }
-                            // timeLevelExists - throw away this time because it doesn't exist at all the levels
-                            if (!timeLevelExists || (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1))) {
+                            if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
                                 continue;  // skip this level, it doesn't match
                             }
                             if (filteredPartials[time] === undefined) {
@@ -750,8 +737,10 @@ dataProfile = function (plotParams, plotFunction) {
                 const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
                 // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
                 const errorBar = errorResult.sd * 1.96;
-
+                // const rawStat = value;
+                // value = errorResult.d_mean;
                 var stats = {
+                    raw_stat: value,
                     d_mean: errorResult.d_mean,
                     sd: errorResult.sd,
                     n_good: errorResult.n_good,
@@ -760,7 +749,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
                 tooltip = label +
                     "<br>" + level + "m" +
-                    "<br> " + statistic + ":" + value.toPrecision(4) +
+                    "<br> " + statistic + ": " + value.toPrecision(4) +
                     "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                     "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                     "<br>  n: " + errorResult.n_good + //corrected +
@@ -792,8 +781,12 @@ dataProfile = function (plotParams, plotFunction) {
             diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
                 dataset: dataset,
                 diffFrom: diffFrom
-            });
+            }, matching);
+
             d = diffResult.dataset;
+            var errorMaxDiff = diffResult.errorMax;
+            errorMax = errorMax > errorMaxDiff ? errorMax : errorMaxDiff;
+
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];

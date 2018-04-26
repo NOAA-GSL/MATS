@@ -214,9 +214,9 @@ dataProfile = function (plotParams, plotFunction) {
     var errorMax = Number.MIN_VALUE;
     var maxx;
     var minx;
-    // var axisLimitReprocessed = {};
+    var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        //axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         data = dataset[curveIndex].data;
         const dataLength = data.length;
@@ -226,6 +226,7 @@ dataProfile = function (plotParams, plotFunction) {
         var values = [];
         var levels = [];
         var means = [];
+        var rawStat;
 
         while (di < data.length) {
             if ((matching && curvesLength > 1) && matchingLevels.indexOf(data[di][1]) === -1) {
@@ -278,24 +279,35 @@ dataProfile = function (plotParams, plotFunction) {
                  */
             //console.log('Getting errors for level ' + data[di][1]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-            // data[di][1] = errorResult.d_mean;
+            rawStat = data[di][0];
+            if ((diffFrom === null || diffFrom === undefined) || !matching) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                data[di][0] = errorResult.d_mean;
+            } else {
+                if (dataset[diffFrom[0]].data[di][0] !== null && dataset[diffFrom[1]].data[di][0] !== null) {
+                    data[di][0] = dataset[diffFrom[0]].data[di][0] - dataset[diffFrom[1]].data[di][0];
+                } else {
+                    data[di][0] = null;
+                }
+            }
             values.push(data[di][0]);
             levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
 
             // already have [stat,pl,subval,subsec]
             // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            // stde_betsy is standard error with auto correlation - errorbars indicate +/- 2 (actually 1.96) standard errors from the mean
+            // stde_betsy is standard error with auto correlation
+            // errorbars indicate +/- 2 (actually 1.96) standard deviations from the mean
             // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
             // unmatched curves get no error bars
-            const errorBar = errorResult.stde_betsy * 1.96;
-            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            const errorBar = errorResult.sd * 1.96;
             if (matching) {
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
                 data[di][2] = -1;
             }
             data[di][5] = {
+                raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
                 n_good: errorResult.n_good,
@@ -306,18 +318,18 @@ dataProfile = function (plotParams, plotFunction) {
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
                 "<br>" + -data[di][1] + "mb" +
-                "<br> " + statisticSelect + ":" + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
+                "<br> " + statisticSelect + ": " + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
                 "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 "<br>  stde: " + errorResult.stde_betsy +
-                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
+                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
         }
 
-        // get the overall stats for the text output - this uses the means not the stats. refer to
+        // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
         const filteredMeans = means.filter(x => x);
         minx = Math.min.apply(null, filteredMeans);
@@ -327,8 +339,8 @@ dataProfile = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        // axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
-        // axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
     }
 
     // add black 0 line curve
