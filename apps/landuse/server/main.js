@@ -3,7 +3,7 @@ import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
-
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
@@ -64,7 +64,7 @@ const doCurveParams = function () {
     var masterVgtypValuesMap = {};
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT vgtyp,description FROM vgtyp_descriptions;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT vgtyp,description FROM vgtyp_descriptions;");
         var masterDescription;
         var masterVgtyp;
         for (var j = 0; j < rows.length; j++) {
@@ -77,7 +77,7 @@ const doCurveParams = function () {
     }
 
     try {
-        const rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
+        const rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,display_text,fcst_lens,vgtyp,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();

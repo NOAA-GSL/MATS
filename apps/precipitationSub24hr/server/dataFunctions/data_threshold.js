@@ -1,6 +1,11 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -80,7 +85,7 @@ dataThreshold = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryThresholdDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryThresholdDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -120,7 +125,7 @@ dataThreshold = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForThresholdDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForThresholdDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -140,7 +145,7 @@ dataThreshold = function (plotParams, plotFunction) {
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateThresholdCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateThresholdCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -154,7 +159,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getThresholdMatchedDataSet(dataset);
+        dataset = matsDataMatchUtils.getThresholdMatchedDataSet(dataset);
 
         var subSecs = [];
         var threshGroups = [];
@@ -395,7 +400,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
     }
 
-    const resultOptions = matsDataUtils.generateThresholdPlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

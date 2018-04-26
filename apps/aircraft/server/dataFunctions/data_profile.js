@@ -1,6 +1,11 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
 
@@ -112,7 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryProfileDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryProfileDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -140,7 +145,7 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForProfileDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForProfileDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 });
@@ -179,7 +184,7 @@ dataProfile = function (plotParams, plotFunction) {
         curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
-        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
 
     }  // end for curves
@@ -406,7 +411,7 @@ dataProfile = function (plotParams, plotFunction) {
             "maxx": 0
         }
     });
-    const resultOptions = matsDataUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     const result = {
         error: error,
         data: dataset,

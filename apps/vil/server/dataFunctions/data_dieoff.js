@@ -1,6 +1,11 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -90,7 +95,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryDieoffDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -130,7 +135,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForDieoffDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForDieoffDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -150,7 +155,7 @@ dataDieOff = function (plotParams, plotFunction) {
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateDieoffCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateDieoffCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -164,7 +169,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
+        dataset = matsDataMatchUtils.getDieOffMatchedDataSet(dataset);
 
         var subSecs = [];
         var fhrGroups = [];
@@ -405,7 +410,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
     }
 
-    const resultOptions = matsDataUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

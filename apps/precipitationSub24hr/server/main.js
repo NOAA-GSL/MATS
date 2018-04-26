@@ -3,6 +3,7 @@ import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
 var modelOptionsMap = {};
 var modelDateRangeMap = {};
@@ -69,7 +70,7 @@ const doCurveParams = function () {
 
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
         var masterRegDescription;
         var masterShortName;
         for (var j = 0; j < rows.length; j++) {
@@ -82,7 +83,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT trsh,description FROM threshold_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT trsh,description FROM threshold_descriptions;");
         var masterDescription;
         var masterTrsh;
         for (var j = 0; j < rows.length; j++) {
@@ -95,7 +96,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scle,description FROM scale_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT scle,description FROM scale_descriptions;");
         var masterScaleDescription;
         var masterScale;
         for (var j = 0; j < rows.length; j++) {
@@ -108,7 +109,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT fcst_type,description FROM fcst_type_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT fcst_type,description FROM fcst_type_descriptions;");
         var masterFcstTypeDescription;
         var masterFcstType;
         for (var j = 0; j < rows.length; j++) {
@@ -121,7 +122,7 @@ const doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_types,trsh,scle,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_types,trsh,scle,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
             var model_value = rows[i].model.trim();

@@ -1,6 +1,7 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
@@ -803,7 +804,7 @@ dataProfile = function (plotParams, plotFunction) {
         curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
-        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves

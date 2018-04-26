@@ -3,6 +3,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 import {regression} from 'meteor/randyp:mats-common';
 
@@ -480,7 +481,7 @@ data2dScatter = function (plotParams, plotFunction) {
             }
             normalizedAxisData.sort(matsDataUtils.sortFunction);
 
-            var pointSymbol = matsDataUtils.getPointSymbol(curveIndex);
+            var pointSymbol = matsDataCurveOpsUtils.getPointSymbol(curveIndex);
             var options;
 
             // sort these by x axis

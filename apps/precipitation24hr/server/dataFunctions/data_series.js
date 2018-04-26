@@ -1,6 +1,11 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -89,7 +94,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // on 24 hour precip I am not sure that forecastLength is relevant - assuming 0
-                queryResult = matsDataUtils.querySeriesDB(sumPool, statement, averageStr, data_source, 0, fromSecs, toSecs);
+                queryResult = matsDataQueryUtils.querySeriesDB(sumPool, statement, averageStr, data_source, 0, fromSecs, toSecs);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -132,7 +137,7 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForSeriesDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForSeriesDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -190,7 +195,7 @@ dataSeries = function (plotParams, plotFunction) {
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -204,7 +209,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
+        dataset = matsDataMatchUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, false);
 
         var subSecs = [];
         var avTimeGroups = [];
@@ -445,7 +450,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     }
 
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

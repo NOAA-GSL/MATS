@@ -1,6 +1,11 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -97,7 +102,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryValidTimeDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryValidTimeDB(sumPool, statement);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -137,7 +142,7 @@ dataValidTime = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataUtils.getDataForValidTimeDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForValidTimeDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -157,7 +162,7 @@ dataValidTime = function (plotParams, plotFunction) {
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateValidTimeCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateValidTimeCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -171,7 +176,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
     //if matching
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getValidTimeMatchedDataSet(dataset);
+        dataset = matsDataMatchUtils.getValidTimeMatchedDataSet(dataset);
 
         var subSecs = [];
         var vtGroups = [];
@@ -249,7 +254,6 @@ dataValidTime = function (plotParams, plotFunction) {
                 data[di][3] = newSubValues;
                 data[di][4] = newSubSecs;
             }
-
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
@@ -369,7 +373,7 @@ dataValidTime = function (plotParams, plotFunction) {
         }
     });
 
-    const resultOptions = matsDataUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

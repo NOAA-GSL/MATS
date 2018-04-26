@@ -4,6 +4,7 @@ import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 import  { matsDataUtils }   from 'meteor/randyp:mats-common';
+import  { matsDataQueryUtils }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import { Mongo } from 'meteor/mongo'
@@ -325,7 +326,7 @@ const checkMetaDataRefresh = function() {
             var updatedEpoch = Number.MAX_VALUE;
             for (var ti = 0; ti < tableNames.length; ti++) {
                 var tName = tableNames[ti];
-                var rows = matsDataUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
                     "    FROM   information_schema.tables" +
                     "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
                     "    AND TABLE_NAME = '" + tName + "'");

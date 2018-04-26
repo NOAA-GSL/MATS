@@ -63,6 +63,11 @@ Package.onUse(function (api) {
     api.export("matsMathUtils", ['client', 'server']);
     api.export("matsPlotUtils", ['client', 'server']);
     api.export("matsDataUtils", ['server']);
+    api.export("matsDataQueryUtils", ['server']);
+    api.export("matsDataDiffUtils", ['server']);
+    api.export("matsDataMatchUtils", ['server']);
+    api.export("matsDataCurveOpsUtils", ['server']);
+    api.export("matsDataPlotOpsUtils", ['server']);
     api.export("regression", ['client', 'server']);
     api.export("matsWfipUtils", ['server']);
 
@@ -87,11 +92,14 @@ Package.onUse(function (api) {
 
     //server
     api.addFiles('imports/startup/server/data_util.js');
+    api.addFiles('imports/startup/server/data_query_util.js');
+    api.addFiles('imports/startup/server/data_diff_util.js');
+    api.addFiles('imports/startup/server/data_match_util.js');
+    api.addFiles('imports/startup/server/data_curve_ops_util.js');
+    api.addFiles('imports/startup/server/data_plot_ops_util.js');
     api.addFiles('imports/startup/server/index.js');
     api.addFiles('imports/startup/server/publications.js');
     api.addFiles('imports/startup/server/wfiputil.js');
-    api.addFiles('imports/startup/server/wfiputil.js');
-
 
     // top level
     api.addFiles('footer.html', "client");
