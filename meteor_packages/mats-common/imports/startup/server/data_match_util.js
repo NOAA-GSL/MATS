@@ -645,6 +645,6 @@ export default matsDataMatchUtils = {
     getSeriesMatchedDataSet: getSeriesMatchedDataSet,
     getDieOffMatchedDataSet: getDieOffMatchedDataSet,
     getThresholdMatchedDataSet: getThresholdMatchedDataSet,
-    getValidTimeMatchedDataSet: getValidTimeMatchedDataSet,
+    getValidTimeMatchedDataSet: getValidTimeMatchedDataSet
 
 }

@@ -1,6 +1,9 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -109,7 +112,7 @@ dataMap = function (plotParams, plotFunction) {
                 var startMoment = moment();
                 var finishMoment;
                 try {
-                    queryResult = matsDataUtils.queryMapDB(sitePool, statement);
+                    queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement);
                     finishMoment = moment();
                     dataRequests["data retrieval (query) time - " + curve.label + " - " + site] = {
                         begin: startMoment.format(),
@@ -190,7 +193,7 @@ dataMap = function (plotParams, plotFunction) {
         //curve['axisKey'] = axisKey;
 
 
-        const cOptions = matsDataUtils.generateMapCurveOptions(curve, curveIndex, d, sitePlot);  // generate map with site data
+        const cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, curveIndex, d, sitePlot);  // generate map with site data
         dataset.push(cOptions);
 
         //var postQueryFinishMoment = moment();
@@ -210,7 +213,7 @@ dataMap = function (plotParams, plotFunction) {
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
     //dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
-    const resultOptions = matsDataUtils.generateMapPlotOptions( dataset, curves );
+    const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions( dataset, curves );
     var totalProecssingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProecssingStart.format(),

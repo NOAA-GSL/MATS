@@ -121,7 +121,7 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 const querySeriesDB = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate) {
     //Expects statistic passed in as stat, not stat0, and epoch time passed in as avtime.
     // have to get the optional model_cycle_times_ for this data source. If it isn't available then we will assume a regular interval
-    const plotParams = matsDataUtils.matsDataUtils.getPlotParamsFromStack();
+    const plotParams = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"])/100;
 
     var cycles = getModelCadence(pool, dataSource, startDate, endDate);
