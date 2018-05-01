@@ -41,11 +41,11 @@ const arrayContainsArray = function (superArray, subArray) {
 //this function checks if the entire array subArray is contained in superArray
 const arrayContainsSubArray = function (superArray, subArray) {
     var i, j, current;
-    for(i = 0; i < superArray.length; ++i){
-        if(subArray.length === superArray[i].length){
+    for (i = 0; i < superArray.length; ++i) {
+        if (subArray.length === superArray[i].length) {
             current = superArray[i];
-            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
-            if(j === subArray.length)
+            for (j = 0; j < subArray.length && subArray[j] === current[j]; ++j) ;
+            if (j === subArray.length)
                 return true;
         }
     }
@@ -64,8 +64,8 @@ const arraysEqual = function (a, b) {
 };
 
 //utility for calculating the average of an array
-const average = function (data){
-    var sum = data.reduce(function(sum, value){
+const average = function (data) {
+    var sum = data.reduce(function (sum, value) {
         return value == null ? sum : sum + value;
     }, 0);
     var avg = sum / data.length;
@@ -211,11 +211,11 @@ const doSettings = function (title, version, buildDate) {
 //this function finds the position of the array subArray in superArray
 const findArrayInSubArray = function (superArray, subArray) {
     var i, j, current;
-    for(i = 0; i < superArray.length; ++i){
-        if(subArray.length === superArray[i].length){
+    for (i = 0; i < superArray.length; ++i) {
+        if (subArray.length === superArray[i].length) {
             current = superArray[i];
-            for(j = 0; j < subArray.length && subArray[j] === current[j]; ++j);
-            if(j === subArray.length)
+            for (j = 0; j < subArray.length && subArray[j] === current[j]; ++j) ;
+            if (j === subArray.length)
                 return i;
         }
     }
@@ -242,7 +242,7 @@ const getDateRange = function (dateRange) {
 
 //Utility for transferring client-side parameters to the server-side methods via the "PlotParams" object in the stack.
 //Add values to this object in the 'click .submit-params' event handler in plot_list.js
-const getPlotParamsFromStack = function() {
+const getPlotParamsFromStack = function () {
     var params = {};
     const err = new Error;
     Error.captureStackTrace(err, arguments.callee);
@@ -254,7 +254,8 @@ const getPlotParamsFromStack = function() {
             const dataFunctionName = sElem.split('at ')[1];
             try {
                 params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
-            } catch (noJoy){}
+            } catch (noJoy) {
+            }
             break;
         }
     }

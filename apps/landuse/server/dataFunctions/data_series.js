@@ -108,7 +108,7 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataQueryUtils.querySeriesDB(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

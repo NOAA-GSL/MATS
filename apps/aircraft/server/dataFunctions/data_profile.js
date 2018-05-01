@@ -117,7 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataQueryUtils.queryProfileDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'profile', true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

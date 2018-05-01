@@ -94,7 +94,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // on 24 hour precip I am not sure that forecastLength is relevant - assuming 0
-                queryResult = matsDataQueryUtils.querySeriesDB(sumPool, statement, averageStr, data_source, 0, fromSecs, toSecs);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, data_source, 0, fromSecs, toSecs, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

@@ -102,7 +102,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataQueryUtils.queryValidTimeDB(sumPool, statement);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'validTime', false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

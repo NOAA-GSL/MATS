@@ -384,7 +384,12 @@ const doCurveParams = function () {
             '90m': ['ceil(5400*floor(m0.secs/5400)+5400/2)'],
             '2h': ['ceil(7200*floor(m0.secs/7200)+7200/2)'],
             '3h': ['ceil(10800*floor(m0.secs/10800)+10800/2)'],
-            '6h': ['ceil(21600*floor(m0.secs/21600)+21600/2)']
+            '6h': ['ceil(21600*floor(m0.secs/21600)+21600/2)'],
+            '1D': ['ceil(86400*floor(m0.secs/86400)+86400/2)'],
+            '3D': ['ceil(259200*floor(m0.secs/259200)+259200/2)'],
+            '7D': ['ceil(604800*floor(m0.secs/604800)+604800/2)'],
+            '30D': ['ceil(2592000*floor(m0.secs/2592000)+2592000/2)'],
+            '60D': ['ceil(5184000*floor(m0.secs/5184000)+5184000/2)']
         };
 
         matsCollections.CurveParams.insert(
