@@ -262,9 +262,9 @@ dataSeries = function (plotParams, plotFunction) {
 
     var diffFrom;
     // calculate stats for each dataset matching to subSecIntersection if matching is specified
-    var axisLimitReprocessed = {};
+    // var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
         data = dataset[curveIndex].data;
@@ -323,15 +323,15 @@ dataSeries = function (plotParams, plotFunction) {
             //console.log('Getting errors for avtime ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
             rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                data[di][1] = errorResult.d_mean;
-            } else {
-                if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
-                    data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
-                } else {
-                    data[di][1] = null;
-                }
-            }
+            // if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+            //     data[di][1] = errorResult.d_mean;
+            // } else {
+            //     if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+            //         data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+            //     } else {
+            //         data[di][1] = null;
+            //     }
+            // }
             values.push(data[di][1]);
             avtimes.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
@@ -382,8 +382,8 @@ dataSeries = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         //recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
     }
 
     // add black 0 line curve
