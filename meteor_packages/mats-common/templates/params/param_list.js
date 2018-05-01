@@ -96,6 +96,7 @@ Template.paramList.events({
                 return;
             }
             var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
+            var isMap = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map;
             var curves = Session.get('Curves');
             var p = {};
             var elems = event.target.valueOf().elements;
@@ -214,37 +215,44 @@ Template.paramList.events({
                     }
                 }
             } else {
-                for (var i = 0; i < l; i++) {
-                    if ((paramElems[i] instanceof Element) === false) { // isn't really an element - must be a date field - these are only strings
-                        p[paramElems[i]] = matsParamUtils.getValueForParamName(paramElems[i]);
-                    } else if (paramElems[i].type === "select-multiple") {
-                        p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function(){return(this.value)}).get();
-                    } else {
-                        if (paramElems[i].type === "radio") {
-                            if (paramElems[i].checked){
-                                p[paramElems[i].name] = paramElems[i].value;
-                            }
-                        } else if (paramElems[i].type === "checkbox") {
-                            if (paramElems[i].checked){
-                                if (p[paramElems[i].name] === undefined) {
-                                    p[paramElems[i].name] = [];
-                                }
-                                p[paramElems[i].name].push(paramElems[i].value);
-                            }
-                        } else if (paramElems[i].type === "button") {
-                            p[paramElems[i].id] = paramElems[i].value;
+                if (isMap && curves.length >= 1) {
+                    setError(new Error('ERROR: Map plot-type can only have one curve!'));
+                    return false;
+                } else {
+                    for (var i = 0; i < l; i++) {
+                        if ((paramElems[i] instanceof Element) === false) { // isn't really an element - must be a date field - these are only strings
+                            p[paramElems[i]] = matsParamUtils.getValueForParamName(paramElems[i]);
+                        } else if (paramElems[i].type === "select-multiple") {
+                            p[paramElems[i].name] = $(paramElems[i].selectedOptions).map(function () {
+                                return (this.value)
+                            }).get();
                         } else {
-                            if (isScatter) {
-                                p[paramElems[i].name] = (paramElems[i]).value;
+                            if (paramElems[i].type === "radio") {
+                                if (paramElems[i].checked) {
+                                    p[paramElems[i].name] = paramElems[i].value;
+                                }
+                            } else if (paramElems[i].type === "checkbox") {
+                                if (paramElems[i].checked) {
+                                    if (p[paramElems[i].name] === undefined) {
+                                        p[paramElems[i].name] = [];
+                                    }
+                                    p[paramElems[i].name].push(paramElems[i].value);
+                                }
+                            } else if (paramElems[i].type === "button") {
+                                p[paramElems[i].id] = paramElems[i].value;
                             } else {
-                                p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                                if (isScatter) {
+                                    p[paramElems[i].name] = (paramElems[i]).value;
+                                } else {
+                                    p[paramElems[i].name] = matsParamUtils.getValueForParamName(paramElems[i].name)
+                                }
                             }
                         }
-                    }
-                    if (paramElems[i].name && paramElems[i].name === 'label') {
-                        if (_.indexOf(matsCurveUtils.getUsedLabels(), (paramElems[i]).value) != -1) {
-                            setError(new Error('labels need to be unique - change ' + (paramElems[i]).value + " to something else"));
-                            return false;
+                        if (paramElems[i].name && paramElems[i].name === 'label') {
+                            if (_.indexOf(matsCurveUtils.getUsedLabels(), (paramElems[i]).value) != -1) {
+                                setError(new Error('labels need to be unique - change ' + (paramElems[i]).value + " to something else"));
+                                return false;
+                            }
                         }
                     }
                 }
