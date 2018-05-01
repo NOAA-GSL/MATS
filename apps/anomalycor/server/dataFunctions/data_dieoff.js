@@ -329,83 +329,12 @@ dataDieOff = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    dataset.push({
-        "yaxis": 1,
-        "label": "zero",
-        "annotation": "",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-            [xmax, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 0,
-            "max": 0,
-            "sum": 0,
-            "miny": 0,
-            "maxy": 0
-        }
-    });
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,0);
+    dataset.push(zeroLine);
 
-    dataset.push({
-        "yaxis": 1,
-        "label": "100",
-        "annotation": "",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [xmin, 100, 100, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "100"],
-            [xmax, 100, 100, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "100"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 0,
-            "max": 0,
-            "sum": 0,
-            "miny": 0,
-            "maxy": 0
-        }
-    });
+    //add ideal value lines, if any
+    const highLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,100);
+    dataset.push(highLine);
 
     const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProecssingFinish = moment();

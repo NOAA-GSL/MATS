@@ -373,44 +373,10 @@ dataProfile = function (plotParams, plotFunction) {
     }
 
     // add black 0 line curve
-    dataset.push({
-        "yaxis": 1,
-        "label": "zero",
-        "color": "rgb(0,0,0)",
-        "annotation": "",
-        "data": [
-            [0, -1000, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-            [0, -50, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "x",
-            "xerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 50,
-            "max": 1000,
-            "sum": 0,
-            "minx": 0,
-            "maxx": 0
-        }
-    });
+    // need to define the minimum and maximum x value for making the zero curve
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050,50,0);
+    dataset.push(zeroLine);
+
     const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     const result = {
         error: error,

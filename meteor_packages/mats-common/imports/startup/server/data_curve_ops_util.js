@@ -20,6 +20,96 @@ const getPointSymbol = function (curveIndex) {
     return pointSymbol;
 };
 
+//adds a horizontal black line along a specific y value
+const getHorizontalValueLine = function(xmax,xmin,yValue) {
+
+    const valueLine = {
+        "yaxis": 1,
+        "label": yValue.toString(),
+        "annotation": "",
+        "color": "rgb(0,0,0)",
+        "data": [
+            [xmin, yValue, yValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, yValue.toString()],
+            [xmax, yValue, yValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, yValue.toString()]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "y",
+            "yerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": xmax,
+            "max": xmin,
+            "sum": 0,
+            "miny": yValue,
+            "maxy": yValue
+        }
+    };
+
+    return valueLine
+};
+
+//adds a vartical black line along a specific x value
+const getVerticalValueLine = function(ymax,ymin,xValue) {
+
+    const valueLine = {
+        "yaxis": 1,
+        "label": xValue.toString(),
+        "color": "rgb(0,0,0)",
+        "annotation": "",
+        "data": [
+            [xValue, -ymax, xValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, xValue.toString()],
+            [xValue, -ymin, xValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, xValue.toString()]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "x",
+            "xerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": ymin,
+            "max": ymax,
+            "sum": 0,
+            "minx": xValue,
+            "maxx": xValue
+        }
+    };
+
+    return valueLine
+};
+
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
     /*
      some curves will share an axis based on the axis map key.
@@ -418,6 +508,8 @@ const generateValidTimeCurveOptions = function (curve, curveIndex, axisMap, data
 export default matsDataCurveOpsUtils = {
 
     getPointSymbol: getPointSymbol,
+    getHorizontalValueLine: getHorizontalValueLine,
+    getVerticalValueLine: getVerticalValueLine,
 
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,
