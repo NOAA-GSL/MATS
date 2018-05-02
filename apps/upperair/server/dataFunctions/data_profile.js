@@ -141,12 +141,14 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForProfileDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
-                });
+                }, 'profile', true);
+
             d = diffResult.dataset;
         }  // end difference curve
+
         // get the x min and max
         for (var di = 0; di < d.length; di++) {
             xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];

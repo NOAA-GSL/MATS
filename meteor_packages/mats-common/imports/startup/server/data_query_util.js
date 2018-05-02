@@ -129,6 +129,9 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 //this method queries the database for timeseries plots
 const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate, hasLevels) {
 
+    const plotParams = matsDataUtils.getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -143,7 +146,7 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
         } else if (rows === undefined || rows === null || rows.length === 0) {
             error = matsTypes.Messages.NO_DATA_FOUND;
         } else {
-            const parsedData = parseQueryDataTimeSeries(pool, rows, d, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate);
+            const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate);
             d = parsedData.d;
             N0 = parsedData.N0;
             N_times = parsedData.N_times;
@@ -168,6 +171,9 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
 //this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
 const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
 
+    const plotParams = matsDataUtils.getPlotParamsFromStack();
+    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
@@ -181,7 +187,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
         } else if (rows === undefined || rows === null || rows.length === 0) {
             error = matsTypes.Messages.NO_DATA_FOUND;
         } else {
-            const parsedData = parseQueryDataSpecialtyCurve(rows, d, plotType, hasLevels);
+            const parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
             d = parsedData.d;
             N0 = parsedData.N0;
             N_times = parsedData.N_times;
@@ -232,10 +238,7 @@ const queryMapDB = function (pool, statement) {
 };
 
 //this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate) {
-
-    const plotParams = matsDataUtils.getPlotParamsFromStack();
-    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate) {
 
     var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
     var regular = !(averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
@@ -351,10 +354,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, hasLevels, averageStr,
 };
 
 //this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const parseQueryDataSpecialtyCurve = function (rows, d, plotType, hasLevels) {
-
-    const plotParams = matsDataUtils.getPlotParamsFromStack();
-    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, hasLevels) {
 
     var N0 = [];
     var N_times = [];

@@ -126,12 +126,12 @@ dataValidTime = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForValidTimeDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'validTime', false);
 
             d = diffResult.dataset;
             ymin = diffResult.ymin;

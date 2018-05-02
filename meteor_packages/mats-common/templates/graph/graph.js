@@ -384,6 +384,16 @@ Template.graph.events({
         if (document.getElementById("scatter2d")) {
             document.getElementById("scatter2d").style.display = "block";
         }
+        //this fixes a bug that was causing text to remain displayed on the graph page if
+        //the back button was clicked and then plot matched/unmatched was clicked.
+        document.getElementById("textSeriesView").style.display = "none";
+        document.getElementById("textProfileView").style.display = "none";
+        document.getElementById("textScatter2dView").style.display = "none";
+        document.getElementById("textDieOffView").style.display = "none";
+        document.getElementById("textThresholdView").style.display = "none";
+        document.getElementById("textValidTimeView").style.display = "none";
+        document.getElementById("textMapView").style.display = "none";
+
         return false;
     },
     'click .new': function () {

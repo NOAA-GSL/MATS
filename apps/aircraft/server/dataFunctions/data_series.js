@@ -171,12 +171,12 @@ dataSeries = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForSeriesWithLevelsDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'timeseries', true);
 
             d = diffResult.dataset;
             ymin = diffResult.ymin;

@@ -245,9 +245,9 @@ const getDateRange = function (dateRange) {
 const getPlotParamsFromStack = function () {
     var params = {};
     const err = new Error;
-    Error.captureStackTrace(err, arguments.callee);
+    Error.captureStackTrace(err, arguments.callee.arguments.callee);
     const stack = err.stack;
-    const stackElems = stack.split("\n")
+    const stackElems = stack.split("\n");
     for (si = 0; si < stackElems.length; si++) {
         const sElem = stackElems[si].trim();
         if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {

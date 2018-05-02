@@ -152,12 +152,12 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForDieoffWithLevelsDiffCurve({
+            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'dieOff', true);
 
             d = diffResult.dataset;
             ymin = diffResult.ymin;

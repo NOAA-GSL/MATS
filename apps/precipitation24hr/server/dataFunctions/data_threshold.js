@@ -125,12 +125,12 @@ dataThreshold = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForThresholdDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'threshold', false);
 
             d = diffResult.dataset;
             ymin = diffResult.ymin;

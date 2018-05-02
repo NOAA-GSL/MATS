@@ -145,13 +145,13 @@ dataProfile = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForProfileDiffCurve({
-                    dataset: dataset,
-                    diffFrom: diffFrom
-                });
+            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
+                dataset: dataset,
+                diffFrom: diffFrom
+            }, 'profile', true);
+
             d = diffResult.dataset;
         }  // end difference curve
-        // get the x min and max
 
         //make sure outliers don't skew axis scale
         var d_n = d.length;
