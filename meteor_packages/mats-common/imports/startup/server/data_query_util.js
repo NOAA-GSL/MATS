@@ -132,12 +132,14 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
     const plotParams = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
+    var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
+    const regular = !(averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
+
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
     var error = "";
     var N0 = [];
     var N_times = [];
-    var cycles = [];
 
     pool.query(statement, function (err, rows) {
         // query callback - build the curve data from the results - or set an error
@@ -146,7 +148,7 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
         } else if (rows === undefined || rows === null || rows.length === 0) {
             error = matsTypes.Messages.NO_DATA_FOUND;
         } else {
-            const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate);
+            const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular);
             d = parsedData.d;
             N0 = parsedData.N0;
             N_times = parsedData.N_times;
@@ -238,10 +240,7 @@ const queryMapDB = function (pool, statement) {
 };
 
 //this method parses the returned query data for timeseries plots
-const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, dataSource, startDate, endDate) {
-
-    var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
-    var regular = !(averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
+const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular) {
 
     var N0 = [];
     var N_times = [];

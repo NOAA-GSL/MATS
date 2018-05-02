@@ -24,7 +24,7 @@ const getLargeIntervalCurveData = function (dataset, diffFrom, curvesLength, ind
         }
     }
     return largeIntervalCurveData;
-}
+};
 
 //generates diff curves for all plot types that have diff curves.
 const getDataForDiffCurve = function (params, plotType, hasLevels) {
