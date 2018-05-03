@@ -12,10 +12,9 @@ import {moment} from 'meteor/momentjs:moment'
 dataDieOff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
+    var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProecssingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
     var error = "";
@@ -31,23 +30,20 @@ dataDieOff = function (plotParams, plotFunction) {
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var metarString = matsCollections.CurveParams.findOne({name: 'data-source'}).metars[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
-        if (variableStr == 'temperature' || variableStr == 'dewpoint' ) {
+        if (variableStr === 'temperature' || variableStr === 'dewpoint' ) {
             statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr == 'wind'  ) {
+        } else if (variableStr === 'wind'  ) {
             statistic = statisticOptionsMap[statisticSelect][2];
         } else {
             statistic = statisticOptionsMap[statisticSelect][1];
@@ -63,12 +59,11 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
+        // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var interval = undefined;
+
         var d = [];
         if (diffFrom == null) {
             var statement = "SELECT m0.fcst_len AS avtime, " +
@@ -145,7 +140,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
@@ -178,46 +173,16 @@ dataDieOff = function (plotParams, plotFunction) {
     var errorMax = Number.MIN_VALUE;
 
     //if matching
-    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataMatchUtils.getDieOffMatchedDataSet(dataset);
-
-        var subSecs = [];
-        var fhrGroups = [];
-        var currFHR;
-
-        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-            fhrGroups[curveIndex] = [];
-            subSecs[curveIndex] = {};
-            var data = dataset[curveIndex].data;
-            for (var di = 0; di < data.length; di++) { // every fhr
-                currFHR = data[di][0];
-                subSecs[curveIndex][currFHR] = data[di][4]; //store raw secs for each forecast hour
-                fhrGroups[curveIndex].push(currFHR);
-            }
-        }
-        var matchingFhrs = _.intersection.apply(_, fhrGroups);
-        var subSecIntersection = {};
-
-        for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
-            currFHR = matchingFhrs[fi];
-            var currSubSecIntersection = subSecs[0][currFHR];   //fill current intersection array with secs from the first curve
-            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
-                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);   //take intersection of current secs and previously matched secs
-            }
-            subSecIntersection[currFHR] = currSubSecIntersection;   //store final current intersection array for each forecast hour
-        }
-
+    if (curvesLength > 1 && (matching)) {
+        dataset = matsDataMatchUtils.getSpecialtyCurveMatchedDataSet(dataset, curvesLength);
     }
 
-    var diffFrom;
-    // calculate stats for each dataset matching to subSecIntersection if matching is specified
     var axisLimitReprocessed = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
-        var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        data = dataset[curveIndex].data;
-        const dataLength = data.length;
+        statisticSelect = curves[curveIndex]['statistic'];
+        var data = dataset[curveIndex].data;
         const label = dataset[curveIndex].label;
 
         var di = 0;
@@ -227,36 +192,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var rawStat;
 
         while (di < data.length) {
-            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingFhrs.indexOf(data[di][0]) === -1) {
-                dataset[curveIndex].data.splice(di, 1);
-                continue;   // not a matching fhr - skip it
-            }
 
-            var sub_secs = data[di][4];
-            var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0) {
-                currFHR = data[di][0];
-                var newSubValues = [];
-                var newSubSecs = [];
-
-                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
-                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this fhr
-                        var newVal = subValues[si];
-                        var newSec = sub_secs[si];
-                        if (newVal === undefined || newVal == 0) {
-                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                        } else {
-                            newSubValues.push(newVal);
-                            newSubSecs.push(newSec);
-                        }
-                    }
-                }
-
-                data[di][3] = newSubValues;
-                data[di][4] = newSubSecs;
-            }
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
@@ -269,7 +207,6 @@ dataDieOff = function (plotParams, plotFunction) {
              data[6] - tooltip
              */
 
-            //console.log('Getting errors for fhr ' + data[di][0]);
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
             rawStat = data[di][1];
             if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
@@ -285,14 +222,8 @@ dataDieOff = function (plotParams, plotFunction) {
             fhrs.push(data[di][0]);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
 
-            // already have [stat,pl,subval,subsec]
-            // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            // stde_betsy is standard error with auto correlation
-            // errorbars indicate +/- 2 (actually 1.96) standard deviations from the mean
-            // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
-            // unmatched curves get no error bars
             const errorBar = errorResult.sd * 1.96;
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+            if (matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
@@ -333,6 +264,8 @@ dataDieOff = function (plotParams, plotFunction) {
         //recalculate axis options after QC and matching
         axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
         axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+
+        axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
     }
 
     // add black 0 line curve

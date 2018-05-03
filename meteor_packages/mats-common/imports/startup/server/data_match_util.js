@@ -234,417 +234,89 @@ const getSeriesMatchedDataSet = function (dataset, cycles, fhrs, levelMatching) 
     return newDataSet;
 };
 
-const getDieOffMatchedDataSet = function (dataset) {
-    var curvesLength = dataset.length;
-    var dataIndexes = {};
-    var ci;
-    var sci;
-    var hour = 0;
-    var hourMax = Number.MIN_VALUE;
-    var dataMinInterval = Number.MAX_VALUE;
-    // set up the indexes and determine the minimum hour for the dataset
-    if (curvesLength == 1) {
-        return dataset;
-    }
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
-            // one of the curves has no data. No match possible
-            for (sci = 0; sci < curvesLength; sci++) {
-                dataset[sci].data = [];
-            }
-            return dataset;
-        }
-        dataIndexes[ci] = 0;
-        if (dataset[ci].data.length > 1) {
-            var diff;
-            for (var di = 0; di < dataset[ci].data.length - 1; di++) {  // don't go all the way to the end - one shy
-                diff = dataset[ci].data[di + 1][0] - dataset[ci].data[di][0];
-                dataMinInterval = dataMinInterval < diff ? dataMinInterval : diff;
-            }
-        }
-        hourMax = hourMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? hourMax : dataset[ci].data[dataset[ci].data.length - 1][0];
-    }
-    var done = false;
-    // find the first common start point (by hour).
-    // if there is none then there is no matched data
-    while (!done) {
-        var same = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            if (dataIndexes[ci] >= dataset[ci].data.length) {
-                same = false;
-                done = true; // I went past the end - no coinciding points
-                break;
-            }
-            if (ci == curvesLength - 1) {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
-                    dataIndexes[0]++;
-                    same = false;
-                }
-            } else {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
-                    dataIndexes[ci + 1]++;
-                    same = false;
-                }
-            }
-        }
-        if (same) {
-            done = true;
-            // since they are the same just use the hour
-            // belonging to the current dataindex of the 0th curve
-            // that will be our common start hour
-            hour = dataset[0].data[dataIndexes[0]][0];
-        }
-    }
-    var hourMatches;
-    var newDataSet = [];
-    while (hour <= hourMax) {
-        hourMatches = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            // move this curves index to equal or exceed the new hour
-            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < hour) {
-                dataIndexes[ci]++;
-            }
-            // if the hour isn't right or the data is null it doesn't match
-            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != hour) {
-                hourMatches = false;
-                break;
-            } else {
-                // if there is no data entry here at this hour it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
-                    hourMatches = false;
-                }
-            }
-        }   // for all the curves
-        if (hourMatches) {
-            for (sci = 0; sci < curvesLength; sci++) {
-                if (!newDataSet[sci]) {
-                    newDataSet[sci] = {};
-                    var keys = Object.keys(dataset[sci]);
-                    for (var k = 0; k < keys.length; k++) {
-                        var key = keys[k];
-                        if (key == "data") {
-                            newDataSet[sci][key] = [];
-                        } else {
-                            newDataSet[sci][key] = dataset[sci][key];
-                        }
-                    }
-                }
-                const valueObject = dataset[sci].data[dataIndexes[sci]];
-                // push the data
-                newDataSet[sci].data.push(valueObject);
-            }
-        }
-        hour = hour + dataMinInterval;
-    }// while hour
-    // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
-            continue;   // don't do it if there isn't an annotation
-        }
-        var sum = 0;
-        var count = 0;
-        d = newDataSet[ci].data;
-        var mean = d[0][1];
-        for (var i = 0; i < d.length; i++) {
-            if (d[i][1] !== null) {
-                sum = sum + d[i][1];
-                count++
-            }
-        }
-        if (count > 1) {
-            mean = sum / count;
-        }
-        const annotationParts = dataset[ci].annotation.split(" = ");
-        annotationParts[1] = mean === null ? null : mean.toPrecision(4);
-        const annotation = annotationParts.join(" = ");
-        var optionsKeys = Object.keys(dataset[ci]);
-        var index = optionsKeys.indexOf('data');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        index = optionsKeys.indexOf('annotation');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        optionsKeys.forEach(function (item) {
-            newDataSet[ci][item] = dataset[ci][item];
-        });
-        newDataSet[ci]['annotation'] = annotation;
-    }
-    return newDataSet;
-};
+const getSpecialtyCurveMatchedDataSet = function (dataset, curvesLength) {
 
-const getThresholdMatchedDataSet = function (dataset) {
-    var curvesLength = dataset.length;
-    var dataIndexes = {};
-    var ci;
-    var sci;
-    var trsh_vals = [3.00, 2.00, 1.50, 1.00, 0.50, 0.25, 0.10, 0.01];
-    var trsh = trsh_vals.pop();
-    var trshMax = Number.MIN_VALUE;
-    // set up the indexes and determine the minimum hour for the dataset
-    if (curvesLength == 1) {
-        return dataset;
-    }
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
-            // one of the curves has no data. No match possible
-            for (sci = 0; sci < curvesLength; sci++) {
-                dataset[sci].data = [];
-            }
-            return dataset;
-        }
-        dataIndexes[ci] = 0;
-        trshMax = trshMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? trshMax : dataset[ci].data[dataset[ci].data.length - 1][0];
-    }
-    var done = false;
-    // find the first common start point (by trsh).
-    // if there is none then there is no matched data
-    while (!done) {
-        var same = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            if (dataIndexes[ci] >= dataset[ci].data.length) {
-                same = false;
-                done = true; // I went past the end - no coinciding points
-                break;
-            }
-            if (ci == curvesLength - 1) {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
-                    dataIndexes[0]++;
-                    same = false;
-                }
-            } else {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
-                    dataIndexes[ci + 1]++;
-                    same = false;
-                }
-            }
-        }
-        if (same) {
-            done = true;
-            // since they are the same just use the trsh
-            // belonging to the current dataindex of the 0th curve
-            // that will be our common start trsh
-            trsh = dataset[0].data[dataIndexes[0]][0];
-        }
-    }
-    var trshMatches;
-    var newDataSet = [];
-    while (trsh <= trshMax) {
-        trshMatches = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            // move this curves index to equal or exceed the new trsh
-            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < trsh) {
-                dataIndexes[ci]++;
-            }
-            // if the trsh isn't right or the data is null it doesn't match
-            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != trsh) {
-                trshMatches = false;
-                break;
-            } else {
-                // if there is no data entry here at this trsh it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
-                    trshMatches = false;
-                }
-            }
-        }   // for all the curves
-        if (trshMatches) {
-            for (sci = 0; sci < curvesLength; sci++) {
-                if (!newDataSet[sci]) {
-                    newDataSet[sci] = {};
-                    var keys = Object.keys(dataset[sci]);
-                    for (var k = 0; k < keys.length; k++) {
-                        var key = keys[k];
-                        if (key == "data") {
-                            newDataSet[sci][key] = [];
-                        } else {
-                            newDataSet[sci][key] = dataset[sci][key];
-                        }
-                    }
-                }
-                const valueObject = dataset[sci].data[dataIndexes[sci]];
-                // push the data
-                newDataSet[sci].data.push(valueObject);
-            }
-        }
-        trsh = trsh_vals.pop();
-    }// while trsh
-    // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
-            continue;   // don't do it if there isn't an annotation
-        }
-        var sum = 0;
-        var count = 0;
-        d = newDataSet[ci].data;
-        var mean = d[0][1];
-        for (var i = 0; i < d.length; i++) {
-            if (d[i][1] !== null) {
-                sum = sum + d[i][1];
-                count++
-            }
-        }
-        if (count > 1) {
-            mean = sum / count;
-        }
-        const annotationParts = dataset[ci].annotation.split(" = ");
-        annotationParts[1] = mean === null ? null : mean.toPrecision(4);
-        const annotation = annotationParts.join(" = ");
-        var optionsKeys = Object.keys(dataset[ci]);
-        var index = optionsKeys.indexOf('data');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        index = optionsKeys.indexOf('annotation');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        optionsKeys.forEach(function (item) {
-            newDataSet[ci][item] = dataset[ci][item];
-        });
-        newDataSet[ci]['annotation'] = annotation;
-    }
-    return newDataSet;
-};
+    var subSecs = [];
+    var subValues = [];
+    var newSubSecs = [];
+    var newSubValues = [];
+    var independentVarGroups = [];
+    var dataToSplice = [];
+    var currIndependentVar;
+    var curveIndex;
+    var data;
+    var di;
+    var fi;
+    var si;
 
-const getValidTimeMatchedDataSet = function (dataset) {
-    var curvesLength = dataset.length;
-    var dataIndexes = {};
-    var ci;
-    var sci;
-    var vt_vals = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-    var vt = vt_vals.pop();
-    var vtMax = Number.MIN_VALUE;
-    // set up the indexes and determine the minimum hour for the dataset
-    if (curvesLength == 1) {
-        return dataset;
-    }
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].data === undefined || dataset[ci].data.length === 0) {
-            // one of the curves has no data. No match possible
-            for (sci = 0; sci < curvesLength; sci++) {
-                dataset[sci].data = [];
-            }
-            return dataset;
-        }
-        dataIndexes[ci] = 0;
-        vtMax = vtMax > dataset[ci].data[dataset[ci].data.length - 1][0] ? vtMax : dataset[ci].data[dataset[ci].data.length - 1][0];
-    }
-    var done = false;
-    // find the first common start point (by vt).
-    // if there is none then there is no matched data
-    while (!done) {
-        var same = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            if (dataIndexes[ci] >= dataset[ci].data.length) {
-                same = false;
-                done = true; // I went past the end - no coinciding points
-                break;
-            }
-            if (ci == curvesLength - 1) {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[0].data[dataIndexes[0]][0]) {
-                    dataIndexes[0]++;
-                    same = false;
-                }
-            } else {
-                if (dataset[ci].data[dataIndexes[ci]][0] > dataset[ci + 1].data[dataIndexes[ci + 1]][0]) {
-                    dataIndexes[ci + 1]++;
-                    same = false;
-                }
-            }
-        }
-        if (same) {
-            done = true;
-            // since they are the same just use the vt
-            // belonging to the current dataindex of the 0th curve
-            // that will be our common start vt
-            vt = dataset[0].data[dataIndexes[0]][0];
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        independentVarGroups[curveIndex] = [];
+        subSecs[curveIndex] = {};
+        data = dataset[curveIndex].data;
+        for (di = 0; di < data.length; di++) { // every independentVar
+            currIndependentVar = data[di][0];
+            subSecs[curveIndex][currIndependentVar] = data[di][4]; //store raw secs for each valid time
+            independentVarGroups[curveIndex].push(currIndependentVar);
         }
     }
-    var vtMatches;
-    var newDataSet = [];
-    while (vt <= vtMax) {
-        vtMatches = true;
-        for (ci = 0; ci < curvesLength; ci++) {
-            // move this curves index to equal or exceed the new trsh
-            while (dataset[ci].data[dataIndexes[ci]] && dataset[ci].data[dataIndexes[ci]][0] < vt) {
-                dataIndexes[ci]++;
+    var matchingIndependentVars = _.intersection.apply(_, independentVarGroups);
+    var subSecIntersection = {};
+
+    for (fi = 0; fi < matchingIndependentVars.length; fi++) { // every independentVar
+        currIndependentVar = matchingIndependentVars[fi];
+        var currSubSecIntersection = subSecs[0][currIndependentVar];   //fill current intersection array with secs from the first curve
+        for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
+            currSubSecIntersection = _.intersection(currSubSecIntersection, subSecs[curveIndex][currIndependentVar]);   //take intersection of current secs and previously matched secs
+        }
+        subSecIntersection[currIndependentVar] = currSubSecIntersection;   //store final current intersection array for each independentVar
+    }
+
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+        data = dataset[curveIndex].data;
+
+        // need to loop backwards through the data array so that we can splice indices
+        // while still having the remaining indices in the correct order
+        for (di = data.length - 1; di >= 0 ; di--) {
+            if (matchingIndependentVars.indexOf(data[di][0]) === -1) {
+                data.splice(di, 1);
+                continue;   // not a matching independentVar - skip it
             }
-            // if the vt isn't right or the data is null it doesn't match
-            if (dataset[ci].data[dataIndexes[ci]] == undefined || dataset[ci].data[dataIndexes[ci]][0] != vt) {
-                vtMatches = false;
-                break;
-            } else {
-                // if there is no data entry here at this vt it doesn't match
-                if (!(dataset[ci].data[dataIndexes[ci]] !== undefined && dataset[ci].data[dataIndexes[ci]][0] !== undefined && dataset[ci].data[dataIndexes[ci]][1] !== undefined )) {
-                    vtMatches = false;
-                }
-            }
-        }   // for all the curves
-        if (vtMatches) {
-            for (sci = 0; sci < curvesLength; sci++) {
-                if (!newDataSet[sci]) {
-                    newDataSet[sci] = {};
-                    var keys = Object.keys(dataset[sci]);
-                    for (var k = 0; k < keys.length; k++) {
-                        var key = keys[k];
-                        if (key == "data") {
-                            newDataSet[sci][key] = [];
+
+            subSecs = data[di][4];
+            subValues = data[di][3];
+
+            if (subSecs.length > 0) {
+                currIndependentVar = data[di][0];
+                newSubValues = [];
+                newSubSecs = [];
+
+                for (si = 0; si < subSecs.length; si++) {  //loop over all sub values for this independentVar
+                    if (subSecIntersection[currIndependentVar].indexOf(subSecs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this independentVar
+                        var newVal = subValues[si];
+                        var newSec = subSecs[si];
+                        if (newVal === undefined || newVal === 0) {
+                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
                         } else {
-                            newDataSet[sci][key] = dataset[sci][key];
+                            newSubValues.push(newVal);
+                            newSubSecs.push(newSec);
                         }
                     }
                 }
-                const valueObject = dataset[sci].data[dataIndexes[sci]];
-                // push the data
-                newDataSet[sci].data.push(valueObject);
+
+                data[di][3] = newSubValues;
+                data[di][4] = newSubSecs;
             }
         }
-        vt = vt_vals.pop();
-    }// while vt
-    // have to fix options - specifically annotations because the mean may have changed due to dropping unmatched data
-    for (ci = 0; ci < curvesLength; ci++) {
-        if (dataset[ci].annotation === undefined || dataset[ci].annotation == null || dataset[ci].annotation == "") {
-            continue;   // don't do it if there isn't an annotation
-        }
-        var sum = 0;
-        var count = 0;
-        d = newDataSet[ci].data;
-        var mean = d[0][1];
-        for (var i = 0; i < d.length; i++) {
-            if (d[i][1] !== null) {
-                sum = sum + d[i][1];
-                count++
-            }
-        }
-        if (count > 1) {
-            mean = sum / count;
-        }
-        const annotationParts = dataset[ci].annotation.split(" = ");
-        annotationParts[1] = mean === null ? null : mean.toPrecision(4);
-        const annotation = annotationParts.join(" = ");
-        var optionsKeys = Object.keys(dataset[ci]);
-        var index = optionsKeys.indexOf('data');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        index = optionsKeys.indexOf('annotation');
-        if (index > -1) {
-            optionsKeys.splice(index, 1);
-        }
-        optionsKeys.forEach(function (item) {
-            newDataSet[ci][item] = dataset[ci][item];
-        });
-        newDataSet[ci]['annotation'] = annotation;
+
+        dataset[curveIndex].data = data;
     }
-    return newDataSet;
+
+    return dataset;
 };
 
 export default matsDataMatchUtils = {
 
     getSeriesMatchedDataSet: getSeriesMatchedDataSet,
-    getDieOffMatchedDataSet: getDieOffMatchedDataSet,
-    getThresholdMatchedDataSet: getThresholdMatchedDataSet,
-    getValidTimeMatchedDataSet: getValidTimeMatchedDataSet
+    getSpecialtyCurveMatchedDataSet: getSpecialtyCurveMatchedDataSet
 
 }
