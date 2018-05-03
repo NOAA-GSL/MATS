@@ -13,7 +13,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
@@ -41,9 +41,9 @@ dataDieOff = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
-        if (variableStr === 'temperature' || variableStr === 'dewpoint' ) {
+        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
             statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === 'wind'  ) {
+        } else if (variableStr === 'wind') {
             statistic = statisticOptionsMap[statisticSelect][2];
         } else {
             statistic = statisticOptionsMap[statisticSelect][1];
@@ -66,6 +66,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
         var d = [];
         if (diffFrom == null) {
+            // this is a database driven curve, not a difference curve
             var statement = "SELECT m0.fcst_len AS avtime, " +
                 "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
                 "min(m0.valid_day+3600*m0.hour) as min_secs, " +
@@ -83,10 +84,10 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model + "_" + metarString + "_"+ region);
+            statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTimeClause =" ";
-            if (validTimes.length > 0){
+            var validTimeClause = " ";
+            if (validTimes.length > 0) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
@@ -209,7 +210,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
             rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+            if ((diffFrom === null || diffFrom === undefined) || !matching) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                 data[di][1] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
@@ -270,15 +271,15 @@ dataDieOff = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
     dataset.push(zeroLine);
 
     const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
 
     var result = {

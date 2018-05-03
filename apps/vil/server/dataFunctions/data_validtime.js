@@ -12,7 +12,7 @@ import {moment} from 'meteor/momentjs:moment'
 dataValidTime = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
@@ -330,11 +330,11 @@ dataValidTime = function (plotParams, plotFunction) {
     }
 
     const resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
 
     var result = {

@@ -12,7 +12,7 @@ import {moment} from 'meteor/momentjs:moment'
 dataDieOff = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -195,8 +195,8 @@ dataDieOff = function (plotParams, plotFunction) {
             var data = dataset[curveIndex].data;
             for (var di = 0; di < data.length; di++) { // every fhr
                 currFHR = data[di][0];
-                subSecs[curveIndex][currFHR] = data[di][4]; //store raw secs for each forecast hour
-                fhrGroups[curveIndex].push(currFHR);
+                subSecs[curveIndex][currIndependentVar] = data[di][4]; //store raw secs for each forecast hour
+                fhrGroups[curveIndex].push(currIndependentVar);
             }
         }
         var matchingFhrs = _.intersection.apply(_, fhrGroups);
@@ -204,11 +204,11 @@ dataDieOff = function (plotParams, plotFunction) {
 
         for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
             currFHR = matchingFhrs[fi];
-            var currSubSecIntersection = subSecs[0][currFHR];   //fill current intersection array with secs from the first curve
+            var currSubSecIntersection = subSecs[0][currIndependentVar];   //fill current intersection array with secs from the first curve
             for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
-                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);   //take intersection of current secs and previously matched secs
+                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currIndependentVar]);   //take intersection of current secs and previously matched secs
             }
-            subSecIntersection[currFHR] = currSubSecIntersection;   //store final current intersection array for each forecast hour
+            subSecIntersection[currIndependentVar] = currSubSecIntersection;   //store final current intersection array for each forecast hour
         }
 
     }
@@ -246,7 +246,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 var newSubSecs = [];
 
                 for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
-                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this fhr
+                    if (subSecIntersection[currIndependentVar].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this fhr
                         var newVal = subValues[si];
                         var newSec = sub_secs[si];
                         if (newVal === undefined || newVal == 0) {
@@ -352,11 +352,11 @@ dataDieOff = function (plotParams, plotFunction) {
     }
 
     const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
 
     var result = {

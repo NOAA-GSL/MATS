@@ -12,7 +12,7 @@ import {moment} from 'meteor/momentjs:moment';
 dataProfile = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;

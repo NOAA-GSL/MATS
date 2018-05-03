@@ -10,7 +10,7 @@ import {moment} from 'meteor/momentjs:moment'
 dataMap = function (plotParams, plotFunction) {
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -214,11 +214,11 @@ dataMap = function (plotParams, plotFunction) {
     // need to define the minimum and maximum x value for making the zero curve
     //dataset.push({color:'black',points:{show:false},annotation:"",data:[[xmin,0,"zero"],[xmax,0,"zero"]]});
     const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions( dataset, curves );
-    var totalProecssingFinish = moment();
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
     var result = {
         error: error,

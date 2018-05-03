@@ -12,7 +12,7 @@ const Future = require('fibers/future');
 data2dScatter = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {};
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
     var fromDate = matsDataUtils.dateConvert(fromDateStr);
@@ -640,11 +640,11 @@ data2dScatter = function (plotParams, plotFunction) {
     };
 
     dataset = dataset.concat(bf);
-    var totalProecssingFinish = moment();
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
     var result = {
         error: error,
