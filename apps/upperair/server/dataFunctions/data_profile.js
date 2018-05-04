@@ -10,6 +10,7 @@ import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataProfile = function (plotParams, plotFunction) {
+    // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
@@ -28,6 +29,7 @@ dataProfile = function (plotParams, plotFunction) {
     var ymin = -1100;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
@@ -79,6 +81,7 @@ dataProfile = function (plotParams, plotFunction) {
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
+            // prepare the query from the above parameters
             var statement = "select  -m0.mb10*10 as avVal, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
@@ -104,12 +107,13 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-
             dataRequests[curve.label] = statement;
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
+                // send the query statement to the query function
                 queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'profile', true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
@@ -117,17 +121,20 @@ dataProfile = function (plotParams, plotFunction) {
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                     recordCount: queryResult.data.length
-                }
+                };
+                // get the data back from the query
                 d = queryResult.data;
             } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // This is NOT an error just a no data condition
+                    // this is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
+                    // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
                         throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
@@ -141,21 +148,22 @@ dataProfile = function (plotParams, plotFunction) {
 
         } else {
             // this is a difference curve
-            var diffResult = matsDataDiffUtils.getDataForDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                     dataset: dataset,
                     diffFrom: diffFrom
                 }, 'profile', true);
 
             d = diffResult.dataset;
-        }  // end difference curve
+        }
 
-        // get the x min and max
+        // set axis limits based on returned data
         for (var di = 0; di < d.length; di++) {
             xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
             xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
         }
 
-        // specify these so that the curve options generator has them available
+        // set curve annotation to be the curve mean -- may be recalculated later
+        // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
         curve['ymin'] = ymin;
@@ -172,17 +180,21 @@ dataProfile = function (plotParams, plotFunction) {
         }
     }  // end for curves
 
+    // variable to store maximum error bar length
     var errorMax = Number.MIN_VALUE;
 
-    //if matching
+    // if matching, pare down dataset to only matching data
     if (curvesLength > 1 && (matching)) {
-        dataset = matsDataMatchUtils.getSpecialtyCurveMatchedDataSetWithLevels(dataset, curvesLength, 'profile');
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, 'profile');
     }
 
+    // we may need to recalculate the axis limits after unmatched data and outliers are removed
     var maxx;
     var minx;
     var axisLimitReprocessed = {};
-    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+
+    // calculate data statistics (including error bars) for each curve
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         statisticSelect = curves[curveIndex]['statistic'];
@@ -204,21 +216,27 @@ dataProfile = function (plotParams, plotFunction) {
                  series: [data,data,data ...... ]   each data is itself an array
                  data[0] - statValue (ploted against the x axis)
                  data[1] - level (plotted against the y axis)
-                 data[2] - errorBar (stde_betsy * 1.96)
+                 data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
                  data[3] - level values
                  data[4] - level times
                  data[5] - level stats
                  data[6] - tooltip
                  */
 
+            // errorResult holds all the calculated curve stats like mean, sd, etc.
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][0];
             if ((diffFrom === null || diffFrom === undefined) || !matching) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data[di][0] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].data[di][0] !== null && dataset[diffFrom[1]].data[di][0] !== null) {
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                     data[di][0] = dataset[diffFrom[0]].data[di][0] - dataset[diffFrom[1]].data[di][0];
                 } else {
+                    // keep the null for no data at this point
                     data[di][0] = null;
                 }
             }
@@ -226,6 +244,7 @@ dataProfile = function (plotParams, plotFunction) {
             levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
             means.push(errorResult.d_mean);
 
+            // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
             if (matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
@@ -233,6 +252,8 @@ dataProfile = function (plotParams, plotFunction) {
             } else {
                 data[di][2] = -1;
             }
+
+            // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -265,11 +286,14 @@ dataProfile = function (plotParams, plotFunction) {
         stats.maxx = maxx;
         dataset[curveIndex]['stats'] = stats;
 
-        //recalculate axis options after QC and matching
+        // recalculate axis options after QC and matching
         axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
         axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
 
-        axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        // recalculate curve annotation after QC and matching
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
     }
 
     // add black 0 line curve
@@ -277,15 +301,17 @@ dataProfile = function (plotParams, plotFunction) {
     const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050,50,0);
     dataset.push(zeroLine);
 
+    // generate plot options
     const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),
         finish: totalProcessingFinish.format(),
         duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
-    }
+    };
 
-    const result = {
+    // pass result to client-side plotting functions
+    var result = {
         error: error,
         data: dataset,
         options: resultOptions,
