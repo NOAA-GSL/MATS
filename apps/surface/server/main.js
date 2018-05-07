@@ -551,6 +551,7 @@ const doCurveParams = function () {
                 displayGroup: 4,
                 multiple: true,
                 defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
+                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.profile,matsTypes.PlotTypes.scatter2d],
                 help: 'map-help.html'
             });
     }
