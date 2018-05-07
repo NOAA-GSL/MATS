@@ -58,7 +58,7 @@ const getMatchedDataSet = function (dataset, curvesLength) {
         for (di = data.length - 1; di >= 0; di--) {
 
             if (matchingIndependentVars.indexOf(data[di][0]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
-                if (matchingIndependentHasPoint.indexOf(data[di][0]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value, just drop this independentVar
+                if (matchingIndependentHasPoint.indexOf(data[di][0]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
                     data.splice(di, 1);
                 } else {    // if all of the curves have either data or nulls at this independentVar, and there is at least one null, ensure all of the curves are null
                     data[di][1] = null;
@@ -184,7 +184,7 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
         for (di = data.length - 1; di >= 0; di--) {
 
             if (matchingIndependentVars.indexOf(data[di][independentVarIndex]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
-                if (matchingIndependentHasPoint.indexOf(data[di][independentVarIndex]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value, just drop this independentVar
+                if (matchingIndependentHasPoint.indexOf(data[di][independentVarIndex]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
                     data.splice(di, 1);
                 } else {    // if all of the curves have either data or nulls at this independentVar, and there is at least one null, ensure all of the curves are null
                     data[di][statValueIndex] = null;

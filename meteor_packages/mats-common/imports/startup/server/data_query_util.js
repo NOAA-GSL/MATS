@@ -82,7 +82,7 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
 const getTimeInterval = function (avTime, time_interval, foreCastOffset, cycles) {
     //have to calculate the time_interval
     var ti;
-    var dayInMilliSeconds = 24 * 60 * 60 * 1000;
+    var dayInMilliSeconds = 24 * 3600 * 1000;
     var minCycleTime = Math.min(...cycles);
 
     var thisCadence = (avTime % dayInMilliSeconds); //current hour of day (valid time)
