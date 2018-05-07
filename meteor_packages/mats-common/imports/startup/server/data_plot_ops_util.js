@@ -1,3 +1,4 @@
+// sets plot options for timeseries graphs
 const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
@@ -96,6 +97,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
     return options;
 };
 
+// sets plot options for profile graphs
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
@@ -224,6 +226,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
     return options;
 };
 
+// sets plot options for dieoff graphs
 const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
@@ -322,6 +325,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
     return options;
 };
 
+// sets plot options for threshold graphs
 const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
@@ -424,6 +428,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
     return options;
 };
 
+// sets plot options for valid time graphs
 const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMax) {
     // generate y-axis
     var yaxes = [];
@@ -522,6 +527,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
     return options;
 };
 
+// sets plot options for map graphs
 const generateMapPlotOptions = function (dataset, curves) {
     const options = {
         labels: {
