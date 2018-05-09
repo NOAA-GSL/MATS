@@ -298,6 +298,7 @@ Template.paramList.onRendered(function () {
             elem.style.display = "none";
         }
     }
+
     //hide sites and sitesMap selectors for anything that isn't a map plot or wfip2
     var ptype = matsPlotUtils.getPlotType();
     elem = document.getElementById('sites-item');
@@ -306,8 +307,7 @@ Template.paramList.onRendered(function () {
         if (sitesParamHidden) {
             if (sitesParamHidden.indexOf(ptype) === -1) {
                 elem.style.display = "block";
-            }
-            else {
+            } else {
                 elem.style.display = "none";
             }
         }
@@ -316,7 +316,7 @@ Template.paramList.onRendered(function () {
     if (elem && elem.style) {
         sitesParamHidden = matsCollections.CurveParams.find({name: 'sitesMap'}).hiddenForPlotTypes;
         if (sitesParamHidden) {
-            if (sitesParamHidden && sitesParamHidden.indexOf(ptype) === -1) {
+            if (sitesParamHidden.indexOf(ptype) === -1) {
                 elem.style.display = "block";
             } else {
                 elem.style.display = "none";
