@@ -533,7 +533,7 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'Map'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'sitesMap'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'sitesMap',

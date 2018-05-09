@@ -303,7 +303,7 @@ Template.paramList.onRendered(function () {
     var ptype = matsPlotUtils.getPlotType();
     elem = document.getElementById('sites-item');
     if (elem && elem.style) {
-        sitesParamHidden = matsCollections.CurveParams.find({name: 'sites'}).hiddenForPlotTypes;
+        sitesParamHidden = matsCollections.CurveParams.findOne({name: 'sites'}).hiddenForPlotTypes;
         if (sitesParamHidden) {
             if (sitesParamHidden.indexOf(ptype) === -1) {
                 elem.style.display = "block";
@@ -314,7 +314,7 @@ Template.paramList.onRendered(function () {
     }
     elem = document.getElementById('sitesMap-item');
     if (elem && elem.style) {
-        sitesParamHidden = matsCollections.CurveParams.find({name: 'sitesMap'}).hiddenForPlotTypes;
+        sitesParamHidden = matsCollections.CurveParams.findOne({name: 'sitesMap'}).hiddenForPlotTypes;
         if (sitesParamHidden) {
             if (sitesParamHidden.indexOf(ptype) === -1) {
                 elem.style.display = "block";
