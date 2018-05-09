@@ -959,9 +959,9 @@ const getReleaseNotes = new ValidatedMethod({
             console.log(process.env.PWD);
             var file;
             if (process.env.NODE_ENV === "development") {
-                file = process.env.PWD + "/../../meteor_packages/mats-common/imports/startup/api/MATSReleaseNotes.html";
+                file = process.env.PWD + "/../../meteor_packages/mats-common/public/MATSReleaseNotes.html";
             } else {
-                file = process.env.PWD + "/../../meteor_packages/mats-common/imports/startup/api/MATSReleaseNotes.html";
+                file = process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html";
             }
             try {
                 fs.readFile(file, 'utf8', function (err, data) {
