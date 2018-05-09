@@ -4,9 +4,11 @@ import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 import  { matsDataUtils }   from 'meteor/randyp:mats-common';
+import  { matsDataQueryUtils }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import { Mongo } from 'meteor/mongo'
+
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
@@ -135,9 +137,9 @@ const readFunctionFile = new ValidatedMethod({
             fs.readFile(path, function (err, data) {
                 if (err) throw err;
                 fData = data.toString();
+                future["return"](fData);
             });
-            future.wait();
-            return fData;
+            return future.wait();
         }
     }
 });
@@ -325,7 +327,7 @@ const checkMetaDataRefresh = function() {
             var updatedEpoch = Number.MAX_VALUE;
             for (var ti = 0; ti < tableNames.length; ti++) {
                 var tName = tableNames[ti];
-                var rows = matsDataUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
                     "    FROM   information_schema.tables" +
                     "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
                     "    AND TABLE_NAME = '" + tName + "'");
@@ -942,6 +944,47 @@ const testGetMetaDataTableUpdates = new ValidatedMethod({
     }
 });
 
+const getReleaseNotes = new ValidatedMethod({
+    name: 'matsMethods.getReleaseNotes',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+    //     return Assets.getText('public/MATSReleaseNotes.html');
+    // }
+         if (Meteor.isServer) {
+            var future = require('fibers/future');
+            var fs = require('fs');
+            var dFuture = new future();
+            var fData;
+            console.log(process.env.PWD);
+            var file;
+            if (process.env.NODE_ENV === "development") {
+                file = process.env.PWD + "/../../meteor_packages/mats-common/public/MATSReleaseNotes.html";
+            } else {
+                file = process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html";
+            }
+            try {
+                fs.readFile(file, 'utf8', function (err, data) {
+                    if (err) {
+                        fData = err.message;
+                        dFuture["return"]();
+                    } else {
+                        fData = data;
+                        dFuture["return"]();
+                    }
+                });
+            } catch (e) {
+                fData = e.message;
+                dFuture["return"]();
+            }
+            dFuture.wait();
+            return fData;
+        }
+    }
+});
+
+
+
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
     getGraphFunctionFileList:getGraphFunctionFileList,
@@ -969,5 +1012,6 @@ export default matsMethods = {
     testGetTables:testGetTables,
     getPlotResult:getPlotResult,
     testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
-    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack
+    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
+    getReleaseNotes:getReleaseNotes
 };

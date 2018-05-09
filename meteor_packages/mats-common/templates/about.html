@@ -1,23 +1,33 @@
 <template name="About">
-    <div class="modal modal-dialog fade" id="modal-display-about"  role="dialog"
-         aria-labelledby="displayAboutDialog" aria-hidden="true" style="background-color: cornflowerblue">
-        <div class="modal-dialog">
+    <div class="modal fade" id="modal-display-about" role="dialog"
+         aria-labelledby="displayAboutDialog" aria-hidden="true">
+        <div class="modal-dialog" style="background-color: cornflowerblue; overflow-y: initial">
             <div class="modal-content"><i class="fa fa-2x fa-question" style="color:cornflowerblue"></i>
-                <h2 class="modal-title" style="text-align: center; color: red;">About MATS</h2>
-                <div class="modal-body">
-                    <h4>MATS - Model Analysis Tool Suite</h4>
-                    {{{version}}}
-                    <h4><a target="_blank" href='https://mats.gsd.esrl.noaa.gov/release_notes/'> Release Notes (pdf version)</a></h4>
-                    <p>
-                        <a target="_blank" href="https://vlab.ncep.noaa.gov/redmine/projects/emb-mats/issues?query_id=1156"> Visit the vlab issues page that generated this query.</a>
-                        Be sure to expand the filter option and change the date appropriately.
-                    </p>
-                    <p>
-                        (Authentication and access are required)
-                    </p>
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" style="text-align: center; color: red;">About MATS</h2>
+                    </div>
+                    <div>
+                        <h3 style="text-align:center">MATS - Model Analysis Tool Suite</h3>
+                        {{{version}}}
+                    </div>
+                </div>
+                <div class="modal-body" style="height:30%">
+                    <div id="releaseNotes" style="display:none; overflow-y: auto">
+                        <h3>RELEASE NOTES</h3>
+                        {{{releaseNotes}}}
+                    </div>
                 </div>
                 <div class="modal-footer btn-group">
-                    <button data-dismiss="modal" class="clear-info btn btn-success btn-xs"><i class="fa fa-eraser"></i>&nbsp;&nbsp;Close</button>
+                    <button class="clear-info btn btn-success btn-xs show-release-notes">
+                        <i class="fa fa-file-alt"></i>&nbsp;&nbsp;Show Release Notes
+                    </button>
+                    <button class="clear-info btn btn-success btn-xs hide-release-notes">
+                        <i class="fa fa-file-excel"></i>&nbsp;&nbsp;Hide Release Notes
+                    </button>
+                    <button data-dismiss="modal" class="clear-info btn btn-success btn-xs"><i class="fa fa-eraser">
+                        </i>&nbsp;&nbsp;Close
+                    </button>
                 </div>
             </div>
         </div>

@@ -1,6 +1,8 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
@@ -9,7 +11,7 @@ import {moment} from 'meteor/momentjs:moment';
 dataSeries = function (plotParams, plotFunction) {
     //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
-    var totalProecssingStart = moment();
+    var totalProcessingStart = moment();
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var curveDates = plotParams.dates.split(' - ');
     var fromDateStr = curveDates[0];
@@ -804,7 +806,7 @@ dataSeries = function (plotParams, plotFunction) {
         curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
-        const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves
@@ -849,12 +851,12 @@ dataSeries = function (plotParams, plotFunction) {
         }
     });
 
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
+    const resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
     }
     var result = {
         error: error,

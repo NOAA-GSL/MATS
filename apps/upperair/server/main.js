@@ -3,6 +3,7 @@ import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
@@ -69,7 +70,7 @@ const doCurveParams = function () {
 
     var rows;
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select id,description from region_descriptions;");
         var masterRegDescription;
         var masterId;
         for (var j = 0; j < rows.length; j++) {
@@ -82,7 +83,7 @@ const doCurveParams = function () {
     }
     // all the rest
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool, "select id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories order by display_category, display_order;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "select id,model,display_text,table_name_prefix,regions,fcst_lens,display_order,display_category,mindate,minhour,maxdate,maxhour,numrecs from regions_per_model_mats_all_categories order by display_category, display_order;");
 
         var label = "";
         for (var i = 0; i < rows.length; i++) {

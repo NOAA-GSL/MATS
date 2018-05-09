@@ -274,9 +274,8 @@ Template.paramList.events({
 Template.paramList.onRendered(function(){
     Session.set('displayPriority', 1);
     Session.set('editMode', '');
-    if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== undefined) &&
-        (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff) !== null) &&
-        document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
+    //hide dieoff-forecast-length selector for anything that isn't a dieoff curve
+    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff) {
         elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
@@ -292,6 +291,26 @@ Template.paramList.onRendered(function(){
         }
         elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+    }
+    //hide sites and sitesMap selectors for anything that isn't a map plot or wfip2
+    var ptype = matsPlotUtils.getPlotType();
+    elem = document.getElementById('sites-item');
+    if (elem && elem.style) {
+        sitesParamHidden = matsCollections.CurveParams.find({name: 'sites'}).hiddenForPlotTypes;
+        if (sitesParamHidden && sitesParamHidden.indexOf(ptype) === -1) {
+            elem.style.display = "block";
+        } else {
+            elem.style.display = "none";
+        }
+    }
+    elem = document.getElementById('sitesMap-item');
+    if (elem && elem.style) {
+        sitesParamHidden = matsCollections.CurveParams.find({name: 'sitesMap'}).hiddenForPlotTypes;
+        if (sitesParamHidden && sitesParamHidden.indexOf(ptype) === -1) {
+            elem.style.display = "block";
+        } else {
             elem.style.display = "none";
         }
     }

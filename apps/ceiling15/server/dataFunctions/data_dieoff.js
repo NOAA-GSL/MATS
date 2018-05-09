@@ -1,26 +1,23 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataDieOff = function (plotParams, plotFunction) {
+    // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var totalProecssingStart = moment();
+    var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-
-    // var weitemp = fromDate.split("-");
-    // var qxmin = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
-    // weitemp = toDate.split("-");
-    // var qxmax = Date.UTC(weitemp[0], weitemp[1] - 1, weitemp[2]);
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -33,40 +30,34 @@ dataDieOff = function (plotParams, plotFunction) {
     var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-        var label = curve['label'];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var color = curve['color'];
-
         var statisticSelect = curve['statistic'];
-        // formula depends on stats (rms vs bias), also variables like temperature and dew points need convert from f to c
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        statistic = statisticOptionsMap[statisticSelect][0];
+        var statistic = statisticOptionsMap[statisticSelect][0];
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {
             throw new Error("INFO:  non dieoff curves are not yet supported");
         }
         // axisKey is used to determine which axis a curve should use.
-        // This axisMap object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
-        // The axis number is assigned to the axisMap value, which is the axisKey.
+        // This axisKeySet object is used like a set and if a curve has the same
+        // units (axisKey) it will use the same axis.
+        // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var axisKey =  statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
-        var interval;
+
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -87,8 +78,6 @@ dataDieOff = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{region}}', region);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
@@ -98,35 +87,40 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
             dataRequests[curve.label] = statement;
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.queryDieoffDB(sumPool, statement);
+                // send the query statement to the query function
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dieOff', false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                     recordCount: queryResult.data.length
-                }
+                };
+                // get the data back from the query
                 d = queryResult.data;
             } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // This is NOT an error just a no data condition
+                    // this is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
+                    // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     throw (new Error(error));
                 }
             }
 
+            // set axis limits based on returned data
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
@@ -144,13 +138,14 @@ dataDieOff = function (plotParams, plotFunction) {
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForDieoffDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'dieOff', false);
 
+            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
@@ -158,13 +153,15 @@ dataDieOff = function (plotParams, plotFunction) {
             count = diffResult.count;
         }
 
+        // set curve annotation to be the curve mean -- may be recalculated later
+        // also pass previously calculated axis stats to curve options
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateDieoffCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -174,49 +171,23 @@ dataDieOff = function (plotParams, plotFunction) {
         }
     }  // end for curves
 
+    // variable to store maximum error bar length
     var errorMax = Number.MIN_VALUE;
 
-    //if matching
-    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getDieOffMatchedDataSet(dataset);
-
-        var subSecs = [];
-        var fhrGroups = [];
-        var currFHR;
-
-        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-            fhrGroups[curveIndex] = [];
-            subSecs[curveIndex] = {};
-            var data = dataset[curveIndex].data;
-            for (var di = 0; di < data.length; di++) { // every fhr
-                currFHR = data[di][0];
-                subSecs[curveIndex][currFHR] = data[di][4]; //store raw secs for each forecast hour
-                fhrGroups[curveIndex].push(currFHR);
-            }
-        }
-        var matchingFhrs = _.intersection.apply(_, fhrGroups);
-        var subSecIntersection = {};
-
-        for (var fi = 0; fi < matchingFhrs.length; fi++) { // every fhr
-            currFHR = matchingFhrs[fi];
-            var currSubSecIntersection = subSecs[0][currFHR];   //fill current intersection array with secs from the first curve
-            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
-                currSubSecIntersection = _.intersection(currSubSecIntersection,subSecs[curveIndex][currFHR]);   //take intersection of current secs and previously matched secs
-            }
-            subSecIntersection[currFHR] = currSubSecIntersection;   //store final current intersection array for each forecast hour
-        }
-
+    // if matching, pare down dataset to only matching data
+    if (curvesLength > 1 && (matching)) {
+        dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curvesLength);
     }
 
-    var diffFrom;
-    // calculate stats for each dataset matching to subSecIntersection if matching is specified
+    // we may need to recalculate the axis limits after unmatched data and outliers are removed
     var axisLimitReprocessed = {};
-    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+
+    // calculate data statistics (including error bars) for each curve
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
-        var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        data = dataset[curveIndex].data;
-        const dataLength = data.length;
+        statisticSelect = curves[curveIndex]['statistic'];
+        var data = dataset[curveIndex].data;
         const label = dataset[curveIndex].label;
 
         var di = 0;
@@ -226,77 +197,52 @@ dataDieOff = function (plotParams, plotFunction) {
         var rawStat;
 
         while (di < data.length) {
-            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingFhrs.indexOf(data[di][0]) === -1) {
-                dataset[curveIndex].data.splice(di, 1);
-                continue;   // not a matching fhr - skip it
-            }
 
-            var sub_secs = data[di][4];
-            var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0) {
-                currFHR = data[di][0];
-                var newSubValues = [];
-                var newSubSecs = [];
-
-                for (var si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
-                    if (subSecIntersection[currFHR].indexOf(sub_secs[si]) !== -1) { //store the sub-value only if its associated sec is in the matching array for this fhr
-                        var newVal = subValues[si];
-                        var newSec = sub_secs[si];
-                        if (newVal === undefined || newVal == 0) {
-                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                        } else {
-                            newSubValues.push(newVal);
-                            newSubSecs.push(newSec);
-                        }
-                    }
-                }
-
-                data[di][3] = newSubValues;
-                data[di][4] = newSubSecs;
-            }
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
              data[0] - fhr (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
-             data[2] - errorBar (stde_betsy * 1.96)
+             data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
              data[3] - fhr values
              data[4] - fhr times
              data[5] - fhr stats
              data[6] - tooltip
              */
 
-            //console.log('Getting errors for fhr ' + data[di][0]);
+            // errorResult holds all the calculated curve stats like mean, sd, etc.
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+            if ((diffFrom === null || diffFrom === undefined) || !matching) {
+                // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data[di][1] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                     data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
                 } else {
+                    // keep the null for no data at this point
                     data[di][1] = null;
                 }
             }
             values.push(data[di][1]);
-            fhrs.push(data[di][0]);  // inverted data for graphing - remember?
+            fhrs.push(data[di][0]);
             means.push(errorResult.d_mean);
 
-            // already have [stat,pl,subval,subsec]
-            // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            // stde_betsy is standard error with auto correlation
-            // errorbars indicate +/- 2 (actually 1.96) standard deviations from the mean
-            // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
-            // unmatched curves get no error bars
+            // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+            if (matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
                 data[di][2] = -1;
             }
+
+            // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -329,104 +275,38 @@ dataDieOff = function (plotParams, plotFunction) {
         stats.maxy = maxy;
         dataset[curveIndex]['stats'] = stats;
 
-        //recalculate axis options after QC and matching
+        // recalculate axis options after QC and matching
         axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
         axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+
+        // recalculate curve annotation after QC and matching
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    dataset.push({
-        "yaxis": 1,
-        "label": "zero",
-        "annotation": "",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-            [xmax, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 0,
-            "max": 0,
-            "sum": 0,
-            "miny": 0,
-            "maxy": 0
-        }
-    });
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    dataset.push(zeroLine);
 
     //add ideal value lines, if any
+    var idealValueLine;
     for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
-
-        dataset.push({
-            "yaxis": 1,
-            "label": idealValues[ivIdx].toString(),
-            "annotation": "",
-            "color": "rgb(0,0,0)",
-            "data": [
-                [xmin, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()],
-                [xmax, idealValues[ivIdx], idealValues[ivIdx], [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, idealValues[ivIdx].toString()]
-            ],
-            "points": {
-                "show": false,
-                "errorbars": "y",
-                "yerr": {
-                    "show": false,
-                    "asymmetric": false,
-                    "upperCap": "squareCap",
-                    "lowerCap": "squareCap",
-                    "color": "rgb(0,0,255)",
-                    "radius": 5
-                }
-            },
-            "lines": {
-                "show": true,
-                "fill": false
-            },
-            "stats": {
-                "d_mean": 0,
-                "stde_betsy": 0,
-                "sd": 0,
-                "n_good": 0,
-                "lag1": 0,
-                "min": 0,
-                "max": 0,
-                "sum": 0,
-                "miny": 0,
-                "maxy": 0
-            }
-        });
-
+        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,idealValues[ivIdx]);
+        dataset.push(idealValueLine);
     }
 
-    const resultOptions = matsDataUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
+    // generate plot options
+    const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
+    var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
-    }
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+    };
 
+    // pass result to client-side plotting functions
     var result = {
         error: error,
         data: dataset,

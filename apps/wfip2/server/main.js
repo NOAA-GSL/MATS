@@ -1,6 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
-import {matsCollections, matsDataUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections, matsDataUtils, matsDataQueryUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 
 const dateInitStr = matsCollections.dateInitStr();
@@ -157,7 +157,7 @@ var doCurveParams = function () {
     var dataSourceSites = {};
     var dynamicallyAddedModels = {};  // used to update the siteOptionsMap with dynamically added models - due to sample rates or disparate date ranges
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources order by model;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select * from data_sources order by model;");
         matsCollections.Models.remove({});
         for (var i = 0; i < rows.length; i++) {
             var dataSources = [];
@@ -214,7 +214,7 @@ var doCurveParams = function () {
                 var minutc = rows[i].minutc;
                 var maxutc = rows[i].maxutc;
 
-                var dataSource_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + actualModel.toString() + "') as hd")[0]['hd'];
+                var dataSource_has_discriminator = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + actualModel.toString() + "') as hd")[0]['hd'];
                 var valueList = [];
                 valueList.push(dataSource_has_discriminator + ',' + is_instrument + ',' + tablename + ',' + thisid + ',' + cycle_interval + ',' + is_json + "," + color + "," + dataSourcePreviousCycleAveraging + ',' + dataSourcePreviousCycleRass);
                 modelOptionsMap[model] = valueList;
@@ -229,7 +229,7 @@ var doCurveParams = function () {
 
                 var labels = [];
                 for (var j = 0; j < variable_names.length; j++) {
-                    const rows2 = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select getVariableInfo('" + variable_names[j] + "') as info;");
+                    const rows2 = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select getVariableInfo('" + variable_names[j] + "') as info;");
                     var infostring = rows2[0].info.split('|');
                     labels.push(infostring[1]);
                     variableFieldsMap[infostring[1]] = variable_names[j];
@@ -255,7 +255,7 @@ var doCurveParams = function () {
         console.log (err.stack)
     }
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
         matsCollections.Instruments.remove({});
         for (var i = 0; i < rows.length; i++) {
             var instrid = rows[i].instrid;
@@ -275,7 +275,7 @@ var doCurveParams = function () {
     }
     var siteIdNameMap = {};// used in added models below
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT siteid, name,description,lat,lon,elev,instruments_instrid FROM sites, instruments_per_site where sites.siteid = instruments_per_site.sites_siteid;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT siteid, name,description,lat,lon,elev,instruments_instrid FROM sites, instruments_per_site where sites.siteid = instruments_per_site.sites_siteid;");
         siteMarkerOptionsMap = [];
         siteOptionsMap.model = [];
         var instrumentNames = matsCollections.Instruments.find({}, {
@@ -378,7 +378,7 @@ var doCurveParams = function () {
     }
 
     try {
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select name, minimum_expected AS min_value, maximum_expected AS max_value, label from variables where type = 2;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select name, minimum_expected AS min_value, maximum_expected AS max_value, label from variables where type = 2;");
         for (var i = 0; i < rows.length; i++) {
             var label = rows[i].label;
             var name = rows[i].name;
@@ -395,7 +395,7 @@ var doCurveParams = function () {
     }
     try {
         var all_fcst_lens = new Set();
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +
                         "from nwps " +
                         "union select short_name, 0, description  " +
                         "from instruments as U " +
@@ -429,13 +429,13 @@ var doCurveParams = function () {
                 forecastLengthOptionsMap[description].push(matsTypes.InputTypes.forecastMultiCycle);
             }
             statement = "select has_discriminator('" + description.toString() + "') as hd";
-            var model_has_discriminator = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + description.toString() + "') as hd;")[0]['hd'];
+            var model_has_discriminator = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select has_discriminator('" + description.toString() + "') as hd;")[0]['hd'];
             if (model_has_discriminator == 1) {
                 var discriminators = Object.keys(discriminatorOptionsMap);
                 var labels = [];
                 for (var j = 0; j < discriminators.length; j++) {
                     var statement2 = "select getVariableInfo('" + discriminatorOptionsMap[discriminators[j]] + "') as info;";
-                    var infostring = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, statement2)[0].info.split('|');
+                    var infostring = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, statement2)[0].info.split('|');
                     labels.push(infostring[1]);
                     variableFieldsMap[infostring[1]] = discriminatorOptionsMap[discriminators[j]];
                     variableInfoMap[discriminatorOptionsMap[discriminators[j]]] = {
@@ -456,7 +456,7 @@ var doCurveParams = function () {
 
     try {
         matsCollections.RegionDescriptions.remove({});
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select description from region_descriptions_mats;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select description from region_descriptions_mats;");
         for (var i = 0; i < rows.length; i++) {
             var description = rows[i].description;
             var valueList = [];

@@ -1,13 +1,20 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
+    // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var totalProecssingStart = moment();
+    var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromDate = dateRange.fromDate;
     var toDate = dateRange.toDate;
@@ -25,22 +32,20 @@ dataSeries = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var maxValuesPerAvtime = 0;
-    var cycles = [];
-    var fhrs = [];
+
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        // initialize variables specific to each curve
         var curve = curves[curveIndex];
-        const diffFrom = curve.diffFrom;
+        var diffFrom = curve.diffFrom;
+        const label = curve['label'];
         const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        const label = curve['label'];
-        const top = curve['top'];
-        const bottom = curve['bottom'];
-        const color = curve['color'];
         const variableStr = curve['variable'];
         const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         const variable = variableOptionsMap[variableStr];
+        const top = curve['top'];
+        const bottom = curve['bottom'];
         var statisticSelect = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
@@ -73,21 +78,22 @@ dataSeries = function (plotParams, plotFunction) {
         const phase = phaseOptionsMap[phaseStr];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
+        // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        //CHANGED TO PLOT ON THE SAME AXIS IF SAME STATISTIC, REGARDLESS OF THRESHOLD
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
+            // prepare the query from the above parameters
             var statement = "select {{average}} as avtime, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
-                "where 1=1 "+
+                "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
@@ -107,10 +113,9 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{bottom}}', bottom);
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
-
             dataRequests[curve.label] = statement;
 
-            //math is done on forecastLength later on
+            // math is done on forecastLength later on -- set all analyses to 0
             if (forecastLength === "-99") {
                 forecastLength = "0";
             }
@@ -119,35 +124,38 @@ dataSeries = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataUtils.querySeriesWithLevelsDB(sumPool, statement, averageStr, data_source, forecastLength, fromSecs, toSecs);
+                // send the query statement to the query function
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, data_source, forecastLength, fromSecs, toSecs, true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                     recordCount: queryResult.data.length
-                }
+                };
+                // get the data back from the query
                 d = queryResult.data;
-                cycles[curveIndex] = queryResult.cycles;
-                fhrs[curveIndex] = forecastLength;
             } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
                 throw new Error(e.message);
             }
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
-                    // This is NOT an error just a no data condition
+                    // this is NOT an error just a no data condition
                     dataFoundForCurve = false;
                 } else {
+                    // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + data_source + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }
                 }
             }
 
+            // set axis limits based on returned data
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
@@ -160,71 +168,35 @@ dataSeries = function (plotParams, plotFunction) {
                         count++;
                         ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                        maxValuesPerAvtime = maxValuesPerAvtime > d[i][3].length ? maxValuesPerAvtime : d[i][3].length;
                     }
                 }
             }
         } else {
             // this is a difference curve
-            var diffResult = matsDataUtils.getDataForSeriesWithLevelsDiffCurve({
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            });
+            }, 'timeseries', true);
 
+            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
             ymin = diffResult.ymin;
             ymax = diffResult.ymax;
             sum = diffResult.sum;
             count = diffResult.count;
-
-            //determine cadence of diff curve
-            var diffedCurveA = diffFrom[0];
-            var diffedCurveB = diffFrom[1];
-
-            var curveACylces = cycles[diffedCurveA];
-            var curveBCylces = cycles[diffedCurveB];
-
-            var newCurveACycles = [];
-            var newCurveBCycles = [];
-
-            var currentInterval;
-
-            if (curveACylces.length === 1) {
-                var curveAInterval = curveACylces[0];
-                currentInterval = 0;
-                while (currentInterval < (24*3600*1000)){
-                    newCurveACycles.push(currentInterval);
-                    currentInterval = currentInterval + curveAInterval;
-                }
-            } else {
-                newCurveACycles = curveACylces;
             }
 
-            if (curveBCylces.length === 1) {
-                var curveBInterval = curveBCylces[0];
-                currentInterval = 0;
-                while (currentInterval < (24*3600*1000)){
-                    newCurveBCycles.push(currentInterval);
-                    currentInterval = currentInterval + curveBInterval;
-                }
-            } else {
-                newCurveBCycles = curveBCylces;
-            }
-
-            cycles[curveIndex] = _.intersection(newCurveACycles,newCurveBCycles);
-            fhrs[curveIndex] = fhrs[diffedCurveA];
-
-        }
-
+        // set curve annotation to be the curve mean -- may be recalculated later
+        // also pass previously calculated axis stats to curve options
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
         dataRequests["post data retrieval (query) process time - " + curve.label] = {
@@ -234,62 +206,23 @@ dataSeries = function (plotParams, plotFunction) {
         }
     }  // end for curves
 
+    // variable to store maximum error bar length
     var errorMax = Number.MIN_VALUE;
 
-    //if matching
-    if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched)) {
-        dataset = matsDataUtils.getSeriesMatchedDataSet(dataset, cycles, fhrs, true);
-
-        var subSecs = [];
-        var subLevs = [];
-        var avTimeGroups = [];
-        var currTime;
-
-        for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
-            avTimeGroups[curveIndex] = [];
-            subSecs[curveIndex] = {};
-            subLevs[curveIndex] = {};
-            var data = dataset[curveIndex].data;
-            for (di = 0; di < data.length; di++) { // every time
-                currTime = data[di][0];
-                subSecs[curveIndex][currTime] = data[di][4]; //store raw secs and levels for each time
-                subLevs[curveIndex][currTime] = data[di][5];
-                avTimeGroups[curveIndex].push(currTime);
-            }
-        }
-        var matchingTimes = _.intersection.apply(_, avTimeGroups);  //make sure we're only comparing similar times, although the getSeriesMatchedDataSet should have taken care of this.
-        var subIntersections = [];
-        for (var fi = 0; fi < matchingTimes.length; fi++) { // every fhr
-            currTime = matchingTimes[fi];
-            subIntersections[currTime] = [];
-            var currSubIntersections = [];
-            for (var si = 0; si < subSecs[0][currTime].length; si++) {
-                currSubIntersections.push([subSecs[0][currTime][si],subLevs[0][currTime][si]]);   //fill current intersection array with sec-lev pairs from the first curve
-            }
-            for (curveIndex = 1; curveIndex < curvesLength; curveIndex++) { // every curve
-                var tempSubIntersections = [];
-                for (si = 0; si < subSecs[curveIndex][currTime].length; si++) { // every sub value
-                    var tempPair = [subSecs[curveIndex][currTime][si], subLevs[curveIndex][currTime][si]];    //create an individual sec-lev pair for each index in the subsec and sublev arrays
-                    if (matsDataUtils.arrayContainsSubArray(currSubIntersections,tempPair)) {   //see if the individual sec-lev pair matches a pair from the current intersection array
-                        tempSubIntersections.push(tempPair);    //store matching pairs
-                    }
-                }
-                currSubIntersections = tempSubIntersections;    //replace current intersection array with array of only pairs that matched from this loop through.
-            }
-            subIntersections[currTime] = currSubIntersections;   //store final current intersection array for each time
+    // if matching, pare down dataset to only matching data
+    if (curvesLength > 1 && (matching)) {
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, 'timeseries');
         }
 
-    }
-
-    var diffFrom;
-    // calculate stats for each dataset matching to subSecIntersection if matching is specified
+    // we may need to recalculate the axis limits after unmatched data and outliers are removed
     var axisLimitReprocessed = {};
-    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
+
+    // calculate data statistics (including error bars) for each curve
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
-        var statisticSelect = curves[curveIndex]['statistic'];
         diffFrom = curves[curveIndex].diffFrom;
-        data = dataset[curveIndex].data;
-        const dataLength = data.length;
+        statisticSelect = curves[curveIndex]['statistic'];
+        var data = dataset[curveIndex].data;
         const label = dataset[curveIndex].label;
 
         var di = 0;
@@ -298,84 +231,53 @@ dataSeries = function (plotParams, plotFunction) {
         var means = [];
         var rawStat;
 
-        while (di < dataLength) {
-            if ((plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1) && matchingTimes.indexOf(data[di][0]) === -1) {
-                dataset[curveIndex].data.splice(di, 1);
-                continue;   // not a matching time - skip it
-            }
+        while (di < data.length) {
 
-            var sub_secs = data[di][4];
-            var sub_levs = data[di][5];
-            var subValues = data[di][3];
             var errorResult = {};
 
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched && curvesLength > 1 && sub_secs.length > 0 && sub_levs.length > 0) {
-                currTime = data[di][0];
-                var newSubValues = [];
-                var newSubSecs = [];
-                var newSubLevs = [];
-
-                for (si = 0; si < sub_secs.length; si++) {  //loop over all sub values for this fhr
-                    tempPair = [sub_secs[si],sub_levs[si]]; //create sec-lev pair for each sub value
-                    if (matsDataUtils.arrayContainsSubArray(subIntersections[currTime],tempPair)) {  //store the sub-value only if its sec-lev pair is in the matching array for this fhr
-                        var newVal = subValues[si];
-                        var newSec = sub_secs[si];
-                        var newLev = sub_levs[si];
-                        if (newVal === undefined || newVal == 0) {
-                            //console.log ("found undefined at level: " + di + " curveIndex:" + curveIndex + " and secsIndex:" + subSecIntersection[subSecIntersectionIndex] + " subSecIntersectionIndex:" + subSecIntersectionIndex );
-                        } else {
-                            newSubValues.push(newVal);
-                            newSubSecs.push(newSec);
-                            newSubLevs.push(newLev);
-                        }
-                    }
-                }
-
-                data[di][3] = newSubValues;
-                data[di][4] = newSubSecs;
-                data[di][5] = newSubLevs;
-            }
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
              data[0] - avtime (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
-             data[2] - errorBar (stde_betsy * 1.96)
+             data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
              data[3] - avtime values
              data[4] - avtime times
              data[5] - avtime stats
              data[6] - tooltip
              */
 
-            //console.log('Getting errors for avtime ' + data[di][0]);
+            // errorResult holds all the calculated curve stats like mean, sd, etc.
             errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || plotParams['plotAction'] !== matsTypes.PlotActions.matched) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+            if ((diffFrom === null || diffFrom === undefined) || !matching) {
+                // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data[di][1] = errorResult.d_mean;
             } else {
                 if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                     data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
                 } else {
+                    // keep the null for no data at this point
                     data[di][1] = null;
                 }
             }
             values.push(data[di][1]);
-            avtimes.push(data[di][0]);  // inverted data for graphing - remember?
+            avtimes.push(data[di][0]);
             means.push(errorResult.d_mean);
 
-            // already have [stat,pl,subval,subsec]
-            // want - [stat,pl,subval,{subsec,std_betsy,d_mean,n_good,lag1},tooltiptext
-            // stde_betsy is standard error with auto correlation
-            // errorbars indicate +/- 2 (actually 1.96) standard deviations from the mean
-            // errorbar values are stored in the dataseries element position 2 i.e. data[di][2] for plotting by flot error bar extension
-            // unmatched curves get no error bars
+            // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
-            if (plotParams['plotAction'] === matsTypes.PlotActions.matched) {
+            if (matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
                 data[di][2] = -1;
             }
+
+            // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -408,59 +310,31 @@ dataSeries = function (plotParams, plotFunction) {
         stats.maxy = maxy;
         dataset[curveIndex]['stats'] = stats;
 
-        //recalculate axis options after QC and matching
+        // recalculate axis options after QC and matching
         axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
         axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+
+        // recalculate curve annotation after QC and matching
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    dataset.push({
-        "yaxis": 1,
-        "label": "zero",
-        "annotation": "",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [xmin, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
-            [xmax, 0, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": 0,
-            "max": 0,
-            "sum": 0,
-            "miny": 0,
-            "maxy": 0
-        }
-    });
-    const resultOptions = matsDataUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProecssingFinish = moment();
-    dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProecssingStart.format(),
-        finish: totalProecssingFinish.format(),
-        duration: moment.duration(totalProecssingFinish.diff(totalProecssingStart)).asSeconds() + ' seconds'
-    }
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    dataset.push(zeroLine);
 
+    // generate plot options
+    const resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
+    var totalProcessingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
     var result = {
         error: error,
         data: dataset,
