@@ -1,6 +1,6 @@
 Package.describe({
     name: 'randyp:mats-common',
-    version: '1.6.0',
+    version: '1.7.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
@@ -287,6 +287,7 @@ Package.onUse(function (api) {
     api.addAssets('public/img/subtle_grunge_@2X.png', "client");
     api.addAssets('public/img/underConstruction.jpg', "client");
     api.addAssets('public/deployment/deployment.json', "server");
+
 });
 
 Package.onTest(function (api) {

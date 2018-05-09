@@ -9,6 +9,7 @@ import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import { Mongo } from 'meteor/mongo'
 
+
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
@@ -136,9 +137,9 @@ const readFunctionFile = new ValidatedMethod({
             fs.readFile(path, function (err, data) {
                 if (err) throw err;
                 fData = data.toString();
+                future["return"](fData);
             });
-            future.wait();
-            return fData;
+            return future.wait();
         }
     }
 });
@@ -943,6 +944,47 @@ const testGetMetaDataTableUpdates = new ValidatedMethod({
     }
 });
 
+const getReleaseNotes = new ValidatedMethod({
+    name: 'matsMethods.getReleaseNotes',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+    //     return Assets.getText('public/MATSReleaseNotes.html');
+    // }
+         if (Meteor.isServer) {
+            var future = require('fibers/future');
+            var fs = require('fs');
+            var dFuture = new future();
+            var fData;
+            console.log(process.env.PWD);
+            var file;
+            if (process.env.NODE_ENV === "development") {
+                file = process.env.PWD + "/../../meteor_packages/mats-common/imports/startup/api/MATSReleaseNotes.html";
+            } else {
+                file = process.env.PWD + "/../../meteor_packages/mats-common/imports/startup/api/MATSReleaseNotes.html";
+            }
+            try {
+                fs.readFile(file, 'utf8', function (err, data) {
+                    if (err) {
+                        fData = err.message;
+                        dFuture["return"]();
+                    } else {
+                        fData = data;
+                        dFuture["return"]();
+                    }
+                });
+            } catch (e) {
+                fData = e.message;
+                dFuture["return"]();
+            }
+            dFuture.wait();
+            return fData;
+        }
+    }
+});
+
+
+
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
     getGraphFunctionFileList:getGraphFunctionFileList,
@@ -970,5 +1012,6 @@ export default matsMethods = {
     testGetTables:testGetTables,
     getPlotResult:getPlotResult,
     testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
-    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack
+    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
+    getReleaseNotes:getReleaseNotes
 };
