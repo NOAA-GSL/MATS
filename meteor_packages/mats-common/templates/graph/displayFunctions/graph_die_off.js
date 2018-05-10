@@ -21,6 +21,21 @@ graphDieOff = function (result) {
     }
 
     var options = result.options;
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw, vph);
+    if (min < 400) {
+        options.series && options.series.points && (options.series.points.radius = 1);
+    } else {
+        options.series && options.series.points && (options.series.points.radius = 2);
+    }
+
+    var annotation = "";
+    for (var i = 0; i < dataset.length; i++) {
+        annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+    }
+
+
     var placeholder = $("#placeholder");
 
     // bind to the pan, zoom, and redraw buttons
@@ -59,6 +74,7 @@ graphDieOff = function (result) {
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
         plot = $.plot(placeholder, dataset, options);
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
     var errorbars = Session.get('errorbars');
@@ -144,6 +160,9 @@ graphDieOff = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     });
 
     // add show/hide points buttons
@@ -166,7 +185,16 @@ graphDieOff = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     });
+
+    var drawGraph = function (ranges, dOptions) {
+        var zOptions = $.extend(true, {}, dOptions, matsGraphUtils.normalizeYAxis(ranges, dOptions));
+        plot = $.plot(placeholder, dataset, zOptions);
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    };
 
     var zooming = false;
     // selection zooming
@@ -176,11 +204,13 @@ graphDieOff = function (result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        matsGraphUtils.drawGraphByRanges(ranges, dataset, options);
+        drawGraph(ranges, plot.getOptions());
     });
 
     matsGraphUtils.setNoDataLabels(dataset);
     var plot = $.plot(placeholder, dataset, options);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     // hide the spinner
     document.getElementById("spinner").style.display = "none";
 
