@@ -43,8 +43,11 @@ dataSeries = function (plotParams, plotFunction) {
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         var dbtable = data_source + "_anomcorr_" + region;
         const variable = curve['variable'];
-        const top = curve['top'];
-        const bottom = curve['bottom'];
+        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levelClause = " ";
+        if (levels.length > 0) {
+            levelClause = " and  m0.level IN(" + levels + ")";
+        }
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];
@@ -78,8 +81,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "and m0.variable = '{{variable}}' " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.level >= {{top}} " +
-                "and m0.level <= {{bottom}} " +
+                "{{levelClause}} " +
                 "and m0.valid_date >= '{{fromDate}}' " +
                 "and m0.valid_date <= '{{toDate}}' " +
                 "group by avtime " +
@@ -93,8 +95,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
+            statement = statement.replace('{{levelClause}}', levelClause);
             statement = statement.replace('{{fromDate}}', fromDate);
             statement = statement.replace('{{toDate}}', toDate);
             dataRequests[curve.label] = statement;

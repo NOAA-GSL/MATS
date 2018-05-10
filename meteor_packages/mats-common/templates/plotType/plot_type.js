@@ -101,7 +101,6 @@ Template.plotType.events({
             matsCurveUtils.showDieOffFace();
             var curves = Session.get("Curves");
             if (curves.length > 0) {
-                // the average may not have been carried over from a dieoff so let it default
                 for (var ci = 0; ci < curves.length; ci++) {
                     if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name: 'validtime'}) && matsCollections.CurveParams.findOne({name: 'validtime'}).default) {
                         curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name: 'validtime'}).default;

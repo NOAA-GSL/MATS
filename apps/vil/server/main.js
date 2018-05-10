@@ -475,14 +475,14 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ', '],
+                ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "average", "forecast-length", "valid-time"
@@ -497,10 +497,10 @@ const doCurveTextPatterns = function () {
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'statistic', ', '],
-                ['', 'threshold', ', '],
-                ['', 'scale', ' '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ' '],
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "valid-time", "dieoff-forecast-length"
@@ -511,12 +511,12 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'region', ', '],
-                ['', 'threshold', ', '],
+                ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'forecast-length', 'h ']
+                ['fcst_len: ', 'forecast-length', 'h, ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length"

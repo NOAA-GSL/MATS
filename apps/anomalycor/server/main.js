@@ -59,10 +59,9 @@ const doCurveParams = function () {
     }
     var modelOptionsMap = {};
     var modelDateRangeMap = {};
-    //var modelTableMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-    var levelModelOptionsMap = {};
+    var levelVariableOptionsMap = {};
     var variableModelOptionsMap = {};
     var masterRegionValuesMap = {};
 
@@ -91,22 +90,12 @@ const doCurveParams = function () {
             var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
             modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
 
-            //var dbtable = rows[i].dbase;
-            //modelTableMap[model] = dbtable;
-
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < forecastLengthArr.length; j++) {
                 forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
-
-            var levels = rows[i].levels;
-            var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
-            for (var j = 0; j < levelArr.length; j++) {
-                levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
-            }
-            levelModelOptionsMap[model] = levelArr;
 
             var variables = rows[i].variable;
             var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -125,6 +114,11 @@ const doCurveParams = function () {
             }
             regionModelOptionsMap[model] = regionsArr;
         }
+
+        //levels are fixed per variable
+        levelVariableOptionsMap['HGT'] = ['500'];
+        levelVariableOptionsMap['UGRD'] = ['250','850'];
+        levelVariableOptionsMap['VGRD'] = ['250','850'];
 
     } catch (err) {
         console.log(err.message);
@@ -222,6 +216,7 @@ const doCurveParams = function () {
                 optionsMap: variableModelOptionsMap,
                 options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],   // convenience
                 superiorNames: ['data-source'],
+                dependentNames: ['pres-level'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -344,47 +339,40 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'top'}) == undefined) {
+    if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'top',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: 1,
-                max: 1000,
-                step: 'any',
+                name: 'pres-level',
+                type: matsTypes.InputTypes.select,
+                optionsMap: levelVariableOptionsMap,
+                options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
+                superiorNames: ['variable'],
+                selected: [],
                 controlButtonCovered: true,
                 unique: false,
-                default: 1,
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "Pressure Level",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
-                help: 'top-help.html'
+                multiple: true
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'pres-level'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelVariableOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'pres-level'}, {
+                $set: {
+                    optionsMap: levelVariableOptionsMap,
+                    options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],
+                    default: matsTypes.InputTypes.unused
+                }
+            });
+        }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'bottom'}) == undefined) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'bottom',
-                type: matsTypes.InputTypes.numberSpinner,
-                optionsMap: {},
-                options: [],
-                min: 100,
-                max: 1050,
-                step: 'any',
-                controlButtonCovered: true,
-                unique: false,
-                default: 1050,
-                controlButtonVisibility: 'block',
-                displayOrder: 9,
-                displayPriority: 1,
-                displayGroup: 3,
-                help: 'bottom-help.html'
-            });
-    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -404,17 +392,16 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', 'in '],
                 ['', 'regionName', ', '],
-                ['', 'variable', ': '],
-                ['level ', 'top', ' '],
-                ['to ', 'bottom', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['', 'variable', ', '],
+                ['level: ', 'pres-level', ' hPa, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "top", "bottom"
+                "label", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "pres-level"
             ],
             groupSize: 6
 
@@ -423,16 +410,15 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', 'in '],
                 ['', 'regionName', ', '],
-                ['', 'variable', ': '],
-                ['level ', 'top', ' '],
-                ['to ', 'bottom', ' '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['', 'variable', ', '],
+                ['level: ', 'pres-level', ' hPa, '],
+                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "dieoff-forecast-length", "top", "bottom"
+                "label", "data-source", "region", "variable", "valid-time", "dieoff-forecast-length", "pres-level"
             ],
             groupSize: 6
         });

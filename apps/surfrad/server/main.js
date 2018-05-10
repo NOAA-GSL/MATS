@@ -502,14 +502,14 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
+                ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['', 'variable', ', '],
-                ['fcst_len: ', 'forecast-length', ' h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "scale", "average", "forecast-length", "valid-time"
@@ -538,12 +538,12 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'scale', ', '],
+                ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['', 'variable', ', '],
-                ['fcst_len: ', 'forecast-length', ' h ']
+                ['fcst_len: ', 'forecast-length', 'h, ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length"

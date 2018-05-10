@@ -418,13 +418,13 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'threshold', ' '],
-                ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time"
@@ -438,10 +438,10 @@ const doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
+                ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'threshold', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ' '],
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "valid-time", "dieoff-forecast-length"

@@ -452,13 +452,13 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'threshold', ' '],
-                ['', 'statistic', ' '],
-                ['', 'forecast-type', ' '],
-                ['', 'scale', ' '],
-                ['avg:', 'average', ' ']
+                ['', 'statistic', ', '],
+                ['fcst_type: ', 'forecast-type', ', '],
+                ['', 'scale', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "threshold", "average", "forecast-type", "scale"
@@ -470,10 +470,10 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.threshold,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
-                ['', 'statistic', ' '],
-                ['', 'forecast-type', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_type: ', 'forecast-type', ', '],
                 ['', 'scale', ' ']
             ],
             displayParams: [

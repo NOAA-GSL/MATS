@@ -574,13 +574,13 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['', 'variable', ' '],
-                ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time"
@@ -593,10 +593,10 @@ var doCurveTextPatterns = function () {
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
                 ['', 'regionName', ', '],
-                ['', 'variable', ': '],
+                ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
+                ['fcst_len:', 'dieoff-forecast-length', ', '],
+                ['valid-time:', 'valid-time', ', '],
                 ['avg:', 'average', ' ']
             ],
             displayParams: [
@@ -608,11 +608,11 @@ var doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ':'],
+                ['', 'data-source', ' in '],
                 ['', 'region', ', '],
+                ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['', 'variable', ', '],
-                ['fcst_len:', 'forecast-length', 'h ']
+                ['fcst_len: ', 'forecast-length', 'h, ']
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "forecast-length"
