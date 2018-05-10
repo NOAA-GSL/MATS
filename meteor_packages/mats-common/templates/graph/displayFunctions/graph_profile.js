@@ -24,6 +24,12 @@ graphProfile = function (result) {
     }
 
     var options = result.options;
+
+    var annotation = "";
+    for (var i = 0; i < dataset.length; i++) {
+        annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+    }
+
     var placeholder = $("#placeholder");
 
     // bind to the pan, zoom, and redraw buttons
@@ -62,6 +68,7 @@ graphProfile = function (result) {
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
         plot = $.plot(placeholder, dataset, options);
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
     var errorbars = Session.get('errorbars');
@@ -147,6 +154,9 @@ graphProfile = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     });
 
     // add show/hide points buttons
@@ -169,6 +179,8 @@ graphProfile = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
     // add show/hide grid buttons
@@ -202,9 +214,11 @@ graphProfile = function (result) {
         plot.getOptions().zoom.interactive = false;
         matsGraphUtils.drawGraph(ranges, dataset, plot.getOptions());
     });
-
     matsGraphUtils.setNoDataLabels(dataset);
+
     var plot = $.plot(placeholder, dataset, options);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     // hide the spinner
     document.getElementById("spinner").style.display = "none";
 
