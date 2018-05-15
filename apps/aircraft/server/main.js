@@ -313,7 +313,7 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 6,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true
@@ -417,7 +417,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -571,6 +571,24 @@ const doCurveTextPatterns = function () {
         //     ],
         //     groupSize: 6
         // });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'regionName', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'top', ' '],
+                ['to ', 'bottom', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['phase: ', 'phase', ' '],
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -604,6 +622,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphProfile",
             dataFunction: "dataProfile",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
             checked: false
         });
     }
