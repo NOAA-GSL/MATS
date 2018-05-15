@@ -206,9 +206,9 @@ const normalizeYAxisByRanges = function (ranges) {
     return axis;
 };
 
-const drawGraphByRanges = function(ranges, dataset, options) {
-    var zOptions = $.extend(true, {}, options, normalizeYAxisByRanges(ranges));
-    plot = $.plot(placeholder, dataset, zOptions);
+const drawGraphByRanges = function(ranges, dataset, dOptions,placeholder) {
+    var zOptions = $.extend(true, {}, dOptions, normalizeYAxisByRanges(ranges));
+    return $.plot(placeholder, dataset, zOptions);
 };
 
 const normalize2dYAxis = function (ranges) {

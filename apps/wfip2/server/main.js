@@ -533,9 +533,10 @@ var doCurveParams = function () {
                 hideOtherFor: {'upper': [matsTypes.InputTypes.unused], 'lower': [matsTypes.InputTypes.unused]},
                 controlButtonCovered: true,
                 unique: false,
-                default: -1,   // -1 means selection is optional - enables clear selection button
+                default: matsTypes.InputTypes.unused,   // means selection is optional - enables clear selection button
                 controlButtonVisibility: 'block',
                 multiple: false,
+                selectionOptional: true,
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2,
@@ -663,7 +664,7 @@ var doCurveParams = function () {
                 options: Object.keys(modelOptionsMap),   // convenience
                 dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: 'HRRR NCEP',
+                default: modelOptionsMap[Object.keys(modelOptionsMap)[0]][0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,

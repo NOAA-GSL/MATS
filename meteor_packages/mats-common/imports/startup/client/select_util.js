@@ -202,9 +202,11 @@ const refresh = function (event, paramName) {
 
     if (elem && elem.options) {
         if (elem.selectedIndex === undefined || elem.selectedIndex === -1) {
-            elem.selectedIndex = 0;
+            if (param.default !== matsTypes.InputTypes.unused) {
+                elem.selectedIndex = 0;
+            }
         }
-        const selectedText = elem.selectedIndex >= 0 ? elem.options[elem.selectedIndex].text : "";
+        const selectedText = elem.selectedIndex >= 0 ? elem.options[elem.selectedIndex].text : matsTypes.InputTypes.unused;
         var brothers = [];
         for (var i = 0; i < elems.length; i++) {
             if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
@@ -348,13 +350,20 @@ const refresh = function (event, paramName) {
             }
             // if the selectedText existed in the new options list then the selectedOptionIndex won't be -1 and we have to choose the default option
             if (selectedOptionIndex === -1) {
-                // just choose the 0th element in the element options. default?
-                elem.selectedIndex = 0;
+                // if the param default is unused set it to unused
+                // else just choose the 0th element in the element options. default?
+                if (param.default === matsTypes.InputTypes.unused) {
+                    matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
+                } else {
+                    elem.selectedIndex = 0;
+                    elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
+                    elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
+                }
             } else {
                 elem.selectedIndex = selectedOptionIndex;
+                elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
+                elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
             }
-            elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
-            elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
             for (var i = 0; i < brothers.length; i++) {
                 const belem = brothers[i];
                 const belemSelectedOptions = $(belem.selectedOptions).map(function () {

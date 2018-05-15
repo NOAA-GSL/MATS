@@ -35,8 +35,7 @@ Template.select.onRendered( function () {
         setError(e);
     }
     try {
-        matsSelectUtils.checkDisableOther(this.data);
-        matsSelectUtils.checkHideOther(this.data);
+        matsSelectUtils.checkHideOther(this.data); // calls checkDisable
         matsSelectUtils.refresh(null,this.data.name);
     } catch (e) {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
@@ -101,11 +100,7 @@ Template.select.helpers({
         return this.multiple === true;
     },
     selectionIsOptional: function () {
-        if (this.default === -1) {
-            return true;
-        } else {
-            return false;
-        }
+        return this.selectionOptional === true;
     }
 });
 
@@ -141,7 +136,6 @@ Template.select.events({
         // These need to be done in the right order!
         // always check to see if an "other" needs to be hidden or disabled before refreshing
         matsSelectUtils.checkHideOther(this);
-        matsSelectUtils.checkDisableOther(this);
         matsSelectUtils.refreshPeer(event, this);
         document.getElementById("element-" + this.name).style.display = "none"; // be sure to hide the element div
         const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));

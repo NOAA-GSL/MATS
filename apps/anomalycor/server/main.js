@@ -347,7 +347,7 @@ const doCurveParams = function () {
                 optionsMap: levelVariableOptionsMap,
                 options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
                 superiorNames: ['variable'],
-                selected: [],
+                selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: matsTypes.InputTypes.unused,
@@ -358,19 +358,6 @@ const doCurveParams = function () {
                 displayGroup: 3,
                 multiple: true
             });
-    } else {
-        // it is defined but check for necessary update
-        var currentParam = matsCollections.CurveParams.findOne({name: 'pres-level'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, levelVariableOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'pres-level'}, {
-                $set: {
-                    optionsMap: levelVariableOptionsMap,
-                    options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],
-                    default: matsTypes.InputTypes.unused
-                }
-            });
-        }
     }
 
 };

@@ -190,12 +190,6 @@ graphSeries = function (result) {
 
     });
 
-    var drawGraph = function (ranges, options) {
-        var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges, options));
-        plot = $.plot(placeholder, dataset, zOptions);
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-    };
-
     var zooming = false;
     // selection zooming
     placeholder.bind("plotselected", function (event, ranges) {
@@ -204,7 +198,8 @@ graphSeries = function (result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges, plot.getOptions());
+        plot = matsGraphUtils.drawGraphByRanges(ranges, dataset, options, placeholder);
+        zooming = false;
     });
     matsGraphUtils.setNoDataLabels(dataset);
 
