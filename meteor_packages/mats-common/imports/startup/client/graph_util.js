@@ -87,7 +87,7 @@ const drawMap = function () {
     }
 }
 
-const normalizeYAxis = function (ranges, options) {
+const normalizeYAxis = function (ranges, nOptions) {
     /*
      The range object will have one or more yaxis values.
      For 1 curve it will have ranges.yaxis
@@ -113,20 +113,20 @@ const normalizeYAxis = function (ranges, options) {
                 continue; // this is duplicated with yaxis
             }
         }
-        if (ranges[yaxisRangesKeys[i]] && options.yaxes[i]) {
-            options.yaxes[i].min = ranges[yaxisRangesKeys[i]].from;
-            options.yaxes[i].max = ranges[yaxisRangesKeys[i]].to;
+        if (ranges[yaxisRangesKeys[i]] && nOptions.yaxes[i]) {
+            nOptions.yaxes[i].min = ranges[yaxisRangesKeys[i]].from;
+            nOptions.yaxes[i].max = ranges[yaxisRangesKeys[i]].to;
         }
     }
-    options.xaxes[0].min = ranges.xaxis.from;
-    options.xaxes[0].max = ranges.xaxis.to;
-
-    return options;
+    nOptions.xaxes[0].min = ranges.xaxis.from;
+    nOptions.xaxes[0].max = ranges.xaxis.to;
+    return nOptions;
 };
 
-const drawGraph = function(ranges, dataset, options) {
-    var zOptions = $.extend(true, {}, options, matsGraphUtils.normalizeYAxis(ranges,options));
-    plot = $.plot(placeholder, dataset, zOptions);
+const drawGraph = function(ranges, dataset, options, placeholder) {
+    var dOptions = $.extend(true, {}, options);
+    var zOptions = $.extend(true, {}, dOptions, normalizeYAxis(ranges,dOptions));
+    return $.plot(placeholder, dataset, zOptions);
 };
 
 const drawXErrorCaps = function (ctx, lowerx, upperx, y, radius) {
