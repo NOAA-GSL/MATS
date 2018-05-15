@@ -195,7 +195,7 @@ graphThreshold = function (result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        plot = matsGraphUtils.drawGraphByRanges(ranges, dataset, options, placeholder);
+        plot = matsGraphUtils.drawGraph(ranges, dataset, options, placeholder);
         zooming = false;
     });
     matsGraphUtils.setNoDataLabels(dataset);

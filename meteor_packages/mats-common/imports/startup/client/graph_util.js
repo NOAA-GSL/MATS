@@ -190,27 +190,6 @@ var uYSquareCap = function (ctx, x, y, radius) {
     uppery = y;
 };
 
-const normalizeYAxisByRanges = function (ranges) {
-    /*
-     The way the axis work, if there is only one yaxis the yaxis must be an object
-     but if there are multiple yaxis the yaxis must be an array.
-     */
-    var axis = {};
-    var axisKeys = _.keys(ranges);
-    for (var i = 0; i < axisKeys.length; i++) {
-        var axisKey = axisKeys[i];
-        axis[axisKey] = {};
-        axis[axisKey].min = ranges[axisKey].from;
-        axis[axisKey].max = ranges[axisKey].to;
-    }
-    return axis;
-};
-
-const drawGraphByRanges = function(ranges, dataset, dOptions,placeholder) {
-    var zOptions = $.extend(true, {}, dOptions, normalizeYAxisByRanges(ranges));
-    return $.plot(placeholder, dataset, zOptions);
-};
-
 const normalize2dYAxis = function (ranges) {
     /*
      The way the axis work, if there is only one yaxis the yaxis must be an object
@@ -245,8 +224,6 @@ export default matsGraphUtils = {
     drawMap:drawMap,
     drawXErrorCaps:drawXErrorCaps,
     drawYErrorCaps:drawYErrorCaps,
-    normalizeYAxisByRanges:normalizeYAxis,
-    drawGraphByRanges:drawGraphByRanges,
     lXSquareCap:lXSquareCap,
     uXSquareCap:uXSquareCap,
     lYSquareCap:lYSquareCap,
