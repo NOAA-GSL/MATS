@@ -21,9 +21,6 @@ graphDieOff = function (result) {
     }
 
     var options = result.options;
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
@@ -172,10 +169,10 @@ graphDieOff = function (result) {
         const label = id.replace('-curve-show-hide-points', '');
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
+                dataset[c].points.show = !dataset[c].points.show;
                 if (dataset[c].data.length === 0) {
                     Session.set(label + "pointsButtonText", 'NO DATA');
                 } else {
-                    dataset[c].points.show = !dataset[c].points.show;
                     if (dataset[c].points.show == true) {
                         Session.set(label + "pointsButtonText", 'hide points');
                     } else {
@@ -190,12 +187,6 @@ graphDieOff = function (result) {
 
     });
 
-    var drawGraph = function (ranges, dOptions) {
-        var zOptions = $.extend(true, {}, dOptions, matsGraphUtils.normalizeYAxis(ranges, dOptions));
-        plot = $.plot(placeholder, dataset, zOptions);
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-    };
-
     var zooming = false;
     // selection zooming
     placeholder.bind("plotselected", function (event, ranges) {
@@ -204,10 +195,11 @@ graphDieOff = function (result) {
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        drawGraph(ranges, plot.getOptions());
+        plot = matsGraphUtils.drawGraphByRanges(ranges, dataset, options, placeholder);
+        zooming = false;
     });
-
     matsGraphUtils.setNoDataLabels(dataset);
+
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
