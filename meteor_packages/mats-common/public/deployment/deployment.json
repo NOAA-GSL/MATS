@@ -505,8 +505,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.7.0",
-      "buildDate": "2018.05.09.22.33",
+      "version": "1.7.1",
+      "buildDate": "2018.05.16.22.45",
       "last_test_run": "",
       "last_test_status": ""
     }
