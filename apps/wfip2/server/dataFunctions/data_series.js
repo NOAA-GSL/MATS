@@ -1,6 +1,7 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
@@ -138,9 +139,8 @@ dataSeries = function (plotParams, plotFunction) {
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
         var forecastLength = curve['forecast-length'] === undefined ? matsTypes.InputTypes.unused : curve['forecast-length'];
-        if (forecastLength === matsTypes.InputTypes.forecastMultiCycle || forecastLength === matsTypes.InputTypes.forecastSingleCycle) {
-            throw (new Error("INFO: You cannot use this forecast length for a profile: " + forecastLength));
-        }
+
+        var allForecast = forecastLength;
         forecastLength = forecastLength === matsTypes.InputTypes.unused ? Number(0) : Number(forecastLength);
         statistic = curve['statistic'];
         // maxRunInterval is used for determining maxValidInterval which is used for differencing and matching
@@ -154,6 +154,40 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
+            if (allForecast === matsTypes.InputTypes.forecastMultiCycle) {
+                throw new Error("INFO: Multi cycle all-forecast series are not yet implemented");
+                // not implemented
+                forecastLength = 0;
+            }
+            if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                forecastLength = 0;
+                var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
+                var forecastLengths = fcOptionsMap.optionsMap[curve['data-source']];
+                if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
+                    // there must be a truth data source with forecastlen options
+                    var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
+                    forecastLengths = _.intersection(forecastLengths, truthForecastLengths);
+                }
+                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
+                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
+                var utcOffsets = forecastLengths.map(function (item) {
+                    return (parseFloat(item) * 3600);
+                });
+                // get the first valid cycle_utc for the time/date range specified
+
+                var s1 = "select cycle_utc from nwp_recs as N , " +
+                    dataSource_tablename +
+                    " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
+                    matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
+
+                const validFirstCycleUtc = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1)[0].cycle_utc;
+
+                // / this is an all forecasts curve. It cannot be an instrument.
+                statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                    " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                    " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
+                    " and cycle_utc = " + validFirstCycleUtc;
+            } else {
             const utcOffset = Number(forecastLength * 3600);
             if (dataSource_is_instrument) {
                 /*
@@ -216,6 +250,7 @@ dataSeries = function (plotParams, plotFunction) {
                     " and fcst_utc_offset =" + 3600 * forecastLength +
                     " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
                     " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
+            }
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
             // save the query for the data lineage
