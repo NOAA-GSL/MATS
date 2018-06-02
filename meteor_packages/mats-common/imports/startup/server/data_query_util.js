@@ -12,7 +12,7 @@ const getModelCadence = function (pool, dataSource, startDate, endDate) {
         //this query should only return data if the model cadence is irregular.
         //otherwise, the cadence will be calculated later by the query function.
         rows = simplePoolQueryWrapSynchronous(pool, "select cycle_seconds " +
-            "from mats_common.primary_model_orders_dev " +
+            "from mats_common.primary_model_orders " +
             "where model = " +
             "(select new_model as display_text from mats_common.standardized_model_list where old_model = '" + dataSource + "');");
         var cycles_raw = JSON.parse(rows[0].cycle_seconds);
@@ -127,13 +127,14 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 };
 
 //this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate, hasLevels) {
+const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate, hasLevels, forceRegularCadence) {
+    //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
 
     const plotParams = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
     var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
-    const regular = !(averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
+    const regular = !(!forceRegularCadence && averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
 
     var dFuture = new Future();
     var d = [];  // d will contain the curve data

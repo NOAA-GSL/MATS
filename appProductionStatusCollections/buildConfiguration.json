@@ -447,7 +447,7 @@
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 13,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "vil",
