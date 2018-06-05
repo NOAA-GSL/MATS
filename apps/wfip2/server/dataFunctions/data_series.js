@@ -159,6 +159,7 @@ dataSeries = function (plotParams, plotFunction) {
                 // not implemented
                 forecastLength = 0;
             }
+            var utcOffsets;
             if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
                 forecastLength = 0;
                 var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
@@ -170,7 +171,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
                 forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
-                var utcOffsets = forecastLengths.map(function (item) {
+                utcOffsets = forecastLengths.map(function (item) {
                     return (parseFloat(item) * 3600);
                 });
                 // get the first valid cycle_utc for the time/date range specified
@@ -180,7 +181,11 @@ dataSeries = function (plotParams, plotFunction) {
                     " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
                     matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
 
-                const validFirstCycleUtc = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1)[0].cycle_utc;
+                const cycleUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
+                if (cycleUtcs === undefined || cycleUtcs.length == 0) {
+                    throw new Error(matsTypes.Messages.NO_DATA_FOUND);
+                }
+                const validFirstCycleUtc = cycleUtcs[0].cycle_utc;
 
                 // / this is an all forecasts curve. It cannot be an instrument.
                 statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
@@ -188,69 +193,69 @@ dataSeries = function (plotParams, plotFunction) {
                     " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
                     " and cycle_utc = " + validFirstCycleUtc;
             } else {
-            const utcOffset = Number(forecastLength * 3600);
-            if (dataSource_is_instrument) {
-                /*
-                 this is the select format for averaging instrument data
-                 select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
-                 cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
-                 where  obs_recs_obsrecid = O.obsrecid
-                 and valid_utc>=1491177600 - 450 and
-                 valid_utc<=1491436800 - 450
-                 and sites_siteid in (4)  order by avtime;
-                 */
-                if (validTimes.length > 0) {
-                    validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600  in (" + validTimes + ")";
-                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
-                }
-                if (dataSource_is_json) {
-                    // verificationRunInterval is in milliseconds
-                    if (dataSourcePreviousCycleRass) {
-                        // previous cycle and half interval - no averaging
-                        statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
-                            "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                const utcOffset = Number(forecastLength * 3600);
+                if (dataSource_is_instrument) {
+                    /*
+                     this is the select format for averaging instrument data
+                     select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
+                     cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
+                     where  obs_recs_obsrecid = O.obsrecid
+                     and valid_utc>=1491177600 - 450 and
+                     valid_utc<=1491436800 - 450
+                     and sites_siteid in (4)  order by avtime;
+                     */
+                    if (validTimes.length > 0) {
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600  in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                    }
+                    if (dataSource_is_json) {
+                        // verificationRunInterval is in milliseconds
+                        if (dataSourcePreviousCycleRass) {
+                            // previous cycle and half interval - no averaging
+                            statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                        } else {
+                            // current cycle back half interval and forward half interval averaging
+                            statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                        }
                     } else {
-                        // current cycle back half interval and forward half interval averaging
-                        statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
-                            "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                        var qVariable = myVariable;
+                        if (windVar) {
+                            qVariable = myVariable + ",ws";
+                        }
+                        if (dataSourcePreviousCycleRass) {
+                            // previous cycle and half interval - no averaging
+                            statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                        } else {
+                            statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                        }
                     }
-                } else {
-                    var qVariable = myVariable;
-                    if (windVar) {
-                        qVariable = myVariable + ",ws";
-                    }
-                    if (dataSourcePreviousCycleRass) {
-                        // previous cycle and half interval - no averaging
-                        statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
-                    } else {
-                        statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
-                    }
-                }
 
-                // data source is a model and its JSON format
-            } else {
-                if (validTimes.length > 0) {
-                    validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
-                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                    // data source is a model and its JSON format
+                } else {
+                    if (validTimes.length > 0) {
+                        validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                    }
+                    statement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset =" + 3600 * forecastLength +
+                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
+                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
                 }
-                statement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
-                    " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                    " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                    " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
-            }
             }
             statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
             // save the query for the data lineage
@@ -287,55 +292,75 @@ dataSeries = function (plotParams, plotFunction) {
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
-                if (truthDataSource_is_instrument) {
-                    if (validTimes.length > 0) {
-                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                    var s1 = "select cycle_utc from nwp_recs as N , " +
+                        truthDataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
+                        matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
+                    const truthCycleUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
+                    if (truthCycleUtcs === undefined || truthCycleUtcs.length == 0) {
+                        throw new Error(matsTypes.Messages.NO_DATA_FOUND);
                     }
+                    const truthValidFirstCycleUtc = truthCycleUtcs[0].cycle_utc;
+                    // this is an all forecasts curve. It cannot be an instrument.
+                    // utcOffsets were derived in the datasource section
 
-                    if (truthDataSource_is_json) {
-                        if (truthDataSourcePreviousCycleRass) {
-                            // previous cycle and half interval - no averaging
-                            truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
-                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                    truthStatement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                        " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
+                        " and cycle_utc = " + truthValidFirstCycleUtc;
+                } else {
+                    const utcOffset = Number(forecastLength * 3600);
+                    if (truthDataSource_is_instrument) {
+                        if (validTimes.length > 0) {
+                            validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
+                            matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                        }
+
+                        if (truthDataSource_is_json) {
+                            if (truthDataSourcePreviousCycleRass) {
+                                // previous cycle and half interval - no averaging
+                                truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                    "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         } else {
-                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
-                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            var qVariable = myVariable;
+                            if (windVar) {
+                                qVariable = myVariable + ",ws";
+                            }
+                            if (truthDataSourcePreviousCycleRass) {
+                                truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
+                                    " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            } else {
+                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " where  obs_recs_obsrecid = O.obsrecid" +
+                                    " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
+                                    " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
+                            }
                         }
                     } else {
-                        var qVariable = myVariable;
-                        if (windVar) {
-                            qVariable = myVariable + ",ws";
+                        if (validTimes.length > 0) {
+                            validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                            matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
                         }
-                        if (truthDataSourcePreviousCycleRass) {
-                            truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
-                                " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
-                        } else {
-                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                                " where  obs_recs_obsrecid = O.obsrecid" +
-                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
-                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
-                        }
+                        truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
+                            " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+                            " and fcst_utc_offset =" + 3600 * forecastLength +
+                            " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
+                            " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
                     }
-                } else {
-                    if (validTimes.length > 0) {
-                        validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
-                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
-                    }
-                    truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
-                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                        " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(fromDate) - utcOffset) +
-                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(toDate) - utcOffset);
                 }
                 truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
                 //console.log("statement: " + truthStatement);
