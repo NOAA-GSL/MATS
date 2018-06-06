@@ -75,6 +75,73 @@ dataSeries = function (plotParams, plotFunction) {
     var errorMax = Number.MIN_VALUE;
     var maxValuesPerLevel = 0;
     var matchedValidTimes = [];
+    const getNwpForecastSingleCycleStatement = function (curve, table) {
+        forecastLength = 0;
+        var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
+        var forecastLengths = fcOptionsMap.optionsMap[curve['data-source']];
+        if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
+            // there must be a truth data source with forecastlen options
+            var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
+            forecastLengths = _.intersection(forecastLengths, truthForecastLengths);
+        }
+        forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
+        forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
+        var utcOffsets = forecastLengths.map(function (item) {
+            return (parseFloat(item) * 3600);
+        });
+        // get the first valid cycle_utc for the time/date range specified
+
+        var s1 = "select cycle_utc from nwp_recs as N , " +
+            table +
+            " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
+            matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
+
+        const cycleUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
+        if (cycleUtcs === undefined || cycleUtcs.length == 0) {
+            throw new Error(matsTypes.Messages.NO_DATA_FOUND);
+        }
+        const validFirstCycleUtc = cycleUtcs[0].cycle_utc;
+
+        // / this is an all forecasts curve. It cannot be an instrument.
+        var statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + table +
+            " as D where D.nwp_recs_nwprecid = N.nwprecid" +
+            " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
+            " and cycle_utc = " + validFirstCycleUtc;
+        //return {fcOptionsMap, forecastLengths, truthForecastLengths, s1, cycleUtcs, validFirstCycleUtc};
+        return statement;
+    };
+
+    const getObsForecastSingleCycleStatement = function (curve, table) {
+        forecastLength = 0;
+        var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
+        var forecastLengths = fcOptionsMap.optionsMap[curve['data-source']];
+        if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
+            // there must be a truth data source with forecastlen options
+            var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
+            forecastLengths = _.intersection(forecastLengths, truthForecastLengths);
+        }
+        forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
+        forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
+        var utcOffsets = forecastLengths.map(function (item) {
+            return (parseFloat(item) * 3600);
+        });
+        // get the first valid cycle_utc's for the time/date range specified through the last utcOffset
+        var s1 = "select valid_utc from obs_recs as N , " +
+            table +
+            " as D where D.obs_recs_obsrecid = N.obsrecid and  valid_utc >= " +
+            matsDataUtils.secsConvert(fromDate) + " order by valid_utc limit 1;"
+        const validUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
+        if (validUtcs === undefined || validUtcs.length == 0) {
+            throw new Error(matsTypes.Messages.NO_DATA_FOUND);
+        }
+        const firstValidUtc = validUtcs[0].valid_utc;
+        const lastValidUtc = firstValidUtc + utcOffsets[utcOffsets.length - 1];
+        var statement = "select valid_utc as valid_utc, valid_utc as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as N , " + table +
+            " as D where D.obs_recs_obsrecid = N.obsrecid" +
+            " and valid_utc >= " + firstValidUtc + " and valid_utc <= " + lastValidUtc;
+        return statement;
+    };
+
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         var dataFoundForCurve = true;
         // Determine all the plot params for this curve
@@ -122,6 +189,9 @@ dataSeries = function (plotParams, plotFunction) {
         windVar = myVariable.startsWith('wd');
         // stash this in the curve for post processing
         curve['windVar'] = windVar;
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
+        var variable = variableOptionsMap[dataSource][variableStr];
+
         var region = matsCollections.CurveParams.findOne({name: 'region'}).optionsMap[curve['region']][0];
         var siteNames = curve['sites'];
         var siteIds = [];
@@ -133,8 +203,6 @@ dataSeries = function (plotParams, plotFunction) {
         var top = Number(curve['top']);
         var bottom = Number(curve['bottom']);
         var color = curve['color'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
-        var variable = variableOptionsMap[dataSource][variableStr];
         var discriminator = variableMap[curve['discriminator']] === undefined ? matsTypes.InputTypes.unused : variableMap[curve['discriminator']];
         var disc_upper = curve['upper'];
         var disc_lower = curve['lower'];
@@ -154,56 +222,21 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
-            if (allForecast === matsTypes.InputTypes.forecastMultiCycle) {
-                throw new Error("INFO: Multi cycle all-forecast series are not yet implemented");
-                // not implemented
-                forecastLength = 0;
-            }
             var utcOffsets;
-            if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
-                forecastLength = 0;
-                var fcOptionsMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {optionsMap: 1});
-                var forecastLengths = fcOptionsMap.optionsMap[curve['data-source']];
-                if (curve['truth-data-source'] && fcOptionsMap.optionsMap[curve['truth-data-source']] !== matsTypes.InputTypes.unused) {
-                    // there must be a truth data source with forecastlen options
-                    var truthForecastLengths = fcOptionsMap.optionsMap[curve['truth-data-source']];
-                    forecastLengths = _.intersection(forecastLengths, truthForecastLengths);
-                }
-                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastSingleCycle), 1);
-                forecastLengths.splice(forecastLengths.indexOf(matsTypes.InputTypes.forecastMultiCycle), 1);
-                utcOffsets = forecastLengths.map(function (item) {
-                    return (parseFloat(item) * 3600);
-                });
-                // get the first valid cycle_utc for the time/date range specified
-
-                var s1 = "select cycle_utc from nwp_recs as N , " +
-                    dataSource_tablename +
-                    " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
-                    matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
-
-                const cycleUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
-                if (cycleUtcs === undefined || cycleUtcs.length == 0) {
-                    throw new Error(matsTypes.Messages.NO_DATA_FOUND);
-                }
-                const validFirstCycleUtc = cycleUtcs[0].cycle_utc;
-
-                // / this is an all forecasts curve. It cannot be an instrument.
-                statement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
-                    " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                    " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
-                    " and cycle_utc = " + validFirstCycleUtc;
-            } else {
-                const utcOffset = Number(forecastLength * 3600);
-                if (dataSource_is_instrument) {
-                    /*
-                     this is the select format for averaging instrument data
-                     select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
-                     cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
-                     where  obs_recs_obsrecid = O.obsrecid
-                     and valid_utc>=1491177600 - 450 and
-                     valid_utc<=1491436800 - 450
-                     and sites_siteid in (4)  order by avtime;
-                     */
+            const utcOffset = Number(forecastLength * 3600);
+            if (dataSource_is_instrument) {
+                /*
+                 this is the select format for averaging instrument data
+                 select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
+                 cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
+                 where  obs_recs_obsrecid = O.obsrecid
+                 and valid_utc>=1491177600 - 450 and
+                 valid_utc<=1491436800 - 450
+                 and sites_siteid in (4)  order by avtime;
+                 */
+                if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                    statement = getObsForecastSingleCycleStatement(curve, dataSource_tablename);
+                } else {
                     if (validTimes.length > 0) {
                         validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600  in (" + validTimes + ")";
                         matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
@@ -243,8 +276,11 @@ dataSeries = function (plotParams, plotFunction) {
                                 " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                         }
                     }
-
-                    // data source is a model and its JSON format
+                }
+                // data source is a model and its JSON format
+            } else {
+                if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                    statement = getNwpForecastSingleCycleStatement(curve, dataSource_tablename);
                 } else {
                     if (validTimes.length > 0) {
                         validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
@@ -284,6 +320,7 @@ dataSeries = function (plotParams, plotFunction) {
             // for mean calulations we do not have a truth curve.
             if (statistic != "mean") {
                 // need a truth data source for statistic
+                var truthDataSource = curve['truth-data-source'];
                 var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
                 var truthDataSource_tablename = curve.truthDataSource_tablename;
                 var truthDataSource_instrumentId = curve.truthDataSource_instrumentId;
@@ -291,27 +328,35 @@ dataSeries = function (plotParams, plotFunction) {
                 var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
-                var truthStatement = '';
-                if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
-                    var s1 = "select cycle_utc from nwp_recs as N , " +
-                        truthDataSource_tablename +
-                        " as D where D.nwp_recs_nwprecid = N.nwprecid and  cycle_utc >= " +
-                        matsDataUtils.secsConvert(fromDate) + " order by cycle_utc limit 1;"
-                    const truthCycleUtcs = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, s1);
-                    if (truthCycleUtcs === undefined || truthCycleUtcs.length == 0) {
-                        throw new Error(matsTypes.Messages.NO_DATA_FOUND);
-                    }
-                    const truthValidFirstCycleUtc = truthCycleUtcs[0].cycle_utc;
-                    // this is an all forecasts curve. It cannot be an instrument.
-                    // utcOffsets were derived in the datasource section
+                var truthVariableParam = matsCollections.CurveParams.findOne({name: 'truth-variable'});
+                var truthVariableMap = truthVariableParam.variableMap;
+                var truthVariableStr = curve['truth-variable'];
+                var myTruthVariable = truthVariableMap[truthVariableStr];
+                if (myTruthVariable === undefined) {
+                    throw new Error("truth variable " + truthVariableStr + " is not in truthVariableMap");
+                }
+                var truthVariableInfoMap = truthVariableParam.infoMap[myTruthVariable];
+                // stash the variableInfoMap in the curves for use in determinig the y axis labels
+                curves[curveIndex].truthVariableInfoMap = truthVariableInfoMap === undefined ? {} : truthVariableInfoMap;
+                var myTruthVariable_isDiscriminator = false;
+                if (myTruthVariable === undefined) {
+                    myTruthVariable = curve['truth-variable'];
+                    myTruthVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
+                }
+                // need to know if it is a wind direction variable because we need to retrieve wind speed
+                // and filter out any values that are coinciding with a wind speed less than 3mps
+                var truthWindVar = myTruthVariable.startsWith('wd');
+                // stash this in the curve for post processing
+                curve['truthWindVar'] = truthWindVar;
+                var truthVariableOptionsMap = matsCollections.CurveParams.findOne({name: 'truth-variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
+                var truthVariable = truthVariableOptionsMap[truthDataSource][truthVariableStr];
 
-                    truthStatement = "select cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
-                        " as D where D.nwp_recs_nwprecid = N.nwprecid" +
-                        " and fcst_utc_offset in (" + utcOffsets.join(',') + ")" +
-                        " and cycle_utc = " + truthValidFirstCycleUtc;
-                } else {
-                    const utcOffset = Number(forecastLength * 3600);
-                    if (truthDataSource_is_instrument) {
+                var truthStatement = '';
+                const utcOffset = Number(forecastLength * 3600);
+                if (truthDataSource_is_instrument) {
+                    if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                        truthStatement = getObsForecastSingleCycleStatement(curve, truthDataSource_tablename);
+                    } else {
                         if (validTimes.length > 0) {
                             validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
                             matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
@@ -333,23 +378,27 @@ dataSeries = function (plotParams, plotFunction) {
                                     " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                             }
                         } else {
-                            var qVariable = myVariable;
-                            if (windVar) {
-                                qVariable = myVariable + ",ws";
+                            var qTruthVariable = myTruthVariable;
+                            if (truthWindVar) {
+                                qTruthVariable = myTruthVariable + ",ws";
                             }
                             if (truthDataSourcePreviousCycleRass) {
                                 truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
-                                    " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                    " z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                     " where  obs_recs_obsrecid = O.obsrecid" +
                                     " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
                                     " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                             } else {
-                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                     " where  obs_recs_obsrecid = O.obsrecid" +
                                     " and valid_utc>=" + Number(matsDataUtils.secsConvert(fromDate)) +
                                     " and valid_utc<=" + Number(matsDataUtils.secsConvert(toDate));
                             }
                         }
+                    }
+                } else {
+                    if (allForecast === matsTypes.InputTypes.forecastSingleCycle) {
+                        truthStatement = getNwpForecastSingleCycleStatement(curve, truthDataSource_tablename);
                     } else {
                         if (validTimes.length > 0) {
                             validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
@@ -367,7 +416,7 @@ dataSeries = function (plotParams, plotFunction) {
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     startMoment = moment();
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
+                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myTruthVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
                     finishMoment = moment();
                     dataRequests["truth data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),

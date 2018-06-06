@@ -261,7 +261,7 @@ const doCurveParams = function () {
 
             'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat, group_concat(((m0.ny)/(m0.ny+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
 
-            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 100],
+            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 1],
 
             'N in average (to nearest 100)': ['sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
