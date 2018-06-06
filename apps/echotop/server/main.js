@@ -253,7 +253,7 @@ const doCurveParams = function () {
 
             'Ntot (total metars, avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.yn+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) * 100 as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny+m0.yn+m0.nn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', null],
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.yn+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny+m0.yn+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
 
             'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
@@ -261,15 +261,16 @@ const doCurveParams = function () {
 
             'FAR (False Alarm Ratio)': ['((sum(m0.ny)+0.00)/sum(m0.ny+m0.yy)) * 100 as stat, group_concat(((m0.ny)/(m0.ny+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
 
-            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn)) * 100 as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'Bias (Forecast low cigs/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 100],
 
             'N in average (to nearest 100)': ['sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.yn+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.yn+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.yn*m0.ny) / ((m0.nn+m0.ny)*(m0.ny+m0.yy) + (m0.nn+m0.yn)*(m0.yn+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100]
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.yn)*sum(m0.ny))/((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.yn*m0.ny) / ((m0.nn+m0.ny)*(m0.ny+m0.yy) + (m0.nn+m0.yn)*(m0.yn+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+
+            'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn)))/(sum(m0.yy+m0.ny+m0.yn)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.ny)*(m0.yy+m0.yn)/(m0.yy+m0.ny+m0.yn+m0.nn)))/((m0.yy+m0.ny+m0.yn)-((m0.yy+m0.ny)*(m0.yy+m0.yn)/(m0.yy+m0.ny+m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100]
         };
-
         matsCollections.CurveParams.insert(
             {// bias and model average are a different formula for wind (element 0 differs from element 1)
                 // but stays the same (element 0 and element 1 are the same) otherwise.
