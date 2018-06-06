@@ -74,24 +74,24 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.7.3-2018.06.06.17.15",
-      "buildDate": "2018.06.06.17.15",
+      "version": "1.7.3-2018.06.06.19.45",
+      "buildDate": "2018.06.06.19.45",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.7.3-2018.06.06.17.12",
-      "buildDate": "2018.06.06.17.12",
+      "version": "1.7.3-2018.06.06.19.43",
+      "buildDate": "2018.06.06.19.43",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.7.3-2018.06.06.17.27",
-      "buildDate": "2018.06.06.17.27",
+      "version": "1.7.3-2018.06.06.19.41",
+      "buildDate": "2018.06.06.19.41",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -481,8 +481,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.21.55",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.19.48",
       "last_test_run": "",
       "last_test_status": ""
     },
