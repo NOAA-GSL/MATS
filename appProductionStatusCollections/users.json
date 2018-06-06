@@ -33,12 +33,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-03-06T23:41:43.116+0000"
-          },
-          "hashedToken": "NCDckRrcSbQoH5cvVVe3PA6VxTf+sXSYL3cuPxny1s8="
-        },
-        {
-          "when": {
             "$date": "2018-03-12T22:17:01.652+0000"
           },
           "hashedToken": "M56+otdy9vz2ac1O9+EfJtnbbS/2D5aIpbPqIBRajSQ="
