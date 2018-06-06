@@ -122,8 +122,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.7.5-2018.06.06.17.42",
-      "buildDate": "2018.06.06.17.42",
+      "version": "1.7.5-2018.06.06.22.28",
+      "buildDate": "2018.06.06.22.28",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -393,32 +393,32 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.27",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.17",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.14",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.22",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.15",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.17",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.10",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -433,8 +433,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.19",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.13",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -449,16 +449,16 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.30",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.20",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.07",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -489,16 +489,16 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.09",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.03",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.12",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.05",
       "last_test_run": "",
       "last_test_status": ""
     },
