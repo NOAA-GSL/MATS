@@ -345,7 +345,7 @@ dataSeries = function (plotParams, plotFunction) {
                 }
                 // need to know if it is a wind direction variable because we need to retrieve wind speed
                 // and filter out any values that are coinciding with a wind speed less than 3mps
-                truthWindVar = myTruthVariable.startsWith('wd');
+                var truthWindVar = myTruthVariable.startsWith('wd');
                 // stash this in the curve for post processing
                 curve['truthWindVar'] = truthWindVar;
                 var truthVariableOptionsMap = matsCollections.CurveParams.findOne({name: 'truth-variable'}, {optionsMap: 1})['optionsMap'][matsTypes.PlotTypes.timeSeries];
@@ -379,7 +379,7 @@ dataSeries = function (plotParams, plotFunction) {
                             }
                         } else {
                             var qTruthVariable = myTruthVariable;
-                            if (turthWindVar) {
+                            if (truthWindVar) {
                                 qTruthVariable = myTruthVariable + ",ws";
                             }
                             if (truthDataSourcePreviousCycleRass) {
