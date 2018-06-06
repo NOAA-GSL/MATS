@@ -134,6 +134,8 @@ if [ "${build_env}" == "int" ]; then
     cv=$(date +%Y.%m.%d)
     echo -e "${GRN}setting build date to $cv for /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html${NC}"
     /usr/bin/sed -i -e "s/\(<x-bd>\).*\(<\/x-bd>\)/<x-bd>$cv<\/x-bd>/g" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git commit -m "Build automatically updated release notes" /builds/buildArea/MATS_for_EMB/meteor_packages/mats-common/public/MATSReleaseNotes.html
+    git push
 fi
 
 unset apps
