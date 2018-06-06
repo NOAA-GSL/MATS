@@ -34,8 +34,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.7.3-2018.06.06.17.35",
-      "buildDate": "2018.06.06.17.35",
+      "version": "1.7.3-2018.06.06.19.58",
+      "buildDate": "2018.06.06.19.58",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -457,8 +457,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.7.2",
-      "buildDate": "2018.05.17.22.07",
+      "version": "1.7.3",
+      "buildDate": "2018.06.06.20.00",
       "last_test_run": "",
       "last_test_status": ""
     },
