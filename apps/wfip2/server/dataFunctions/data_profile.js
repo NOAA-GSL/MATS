@@ -250,6 +250,27 @@ dataProfile = function (plotParams, plotFunction) {
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
+                var TruthVariableParam = matsCollections.CurveParams.findOne({name: 'truth-variable'});
+                var TruthVariableMap = TruthVariableParam.variableMap;
+                var TruthVariableStr = curve['truth-variable'];
+                var myTruthVariable = TruthVariableMap[TruthVariableStr];
+                if (myTruthVariable === undefined) {
+                    throw new Error("TruthVariable " + TruthVariableStr + " is not in TruthVariableMap");
+                }
+                var TruthVariableInfoMap = TruthVariableParam.infoMap[myTruthVariable];
+                // stash the TruthVariableInfoMap in the curves for use in determinig the y axis labels
+                curves[curveIndex].TruthVariableInfoMap = TruthVariableInfoMap === undefined ? {} : TruthVariableInfoMap;
+                var myTruthVariable_isDiscriminator = false;
+                if (myTruthVariable === undefined) {
+                    myTruthVariable = curve['truth-variable'];
+                    myTruthVariable_isDiscriminator = true; // truth-variable is mapped, discriminators are not, this is a discriminator
+                }
+                // need to know if it is a wind direction truth-variable because we need to retrieve wind speed
+                // and filter out any values that are coinciding with a wind speed less than 3mps
+                windTruthVar = myTruthVariable.startsWith('wd');
+                // stash this in the curve for post processing
+                curve['windTruthVar'] = windTruthVar;
+
                 if (truthDataSource_is_instrument) {
                     if (validTimes.length > 0) {
                         validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
@@ -272,18 +293,18 @@ dataProfile = function (plotParams, plotFunction) {
                                 " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
                             }
                     } else {
-                        var qVariable = myVariable;
-                        if (windVar) {
-                            qVariable = myVariable + ",ws";
+                        var qTruthVariable = myTruthVariable;
+                        if (windTruthVar) {
+                            qTruthVariable = myTruthVariable + ",ws";
                         }
                         if (truthDataSourcePreviousCycleRass) {
                             truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
-                                " z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                " z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                 " where  obs_recs_obsrecid = O.obsrecid" +
                                 " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
                                 " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
                         } else {
-                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
                                 " where  obs_recs_obsrecid = O.obsrecid" +
                                 " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
                                 " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
@@ -305,7 +326,7 @@ dataProfile = function (plotParams, plotFunction) {
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     startMoment = moment();
-                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
+                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myTruthVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
                     finishMoment = moment();
                     dataRequests["truth data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),
