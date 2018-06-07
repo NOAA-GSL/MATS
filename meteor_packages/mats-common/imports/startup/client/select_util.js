@@ -231,9 +231,9 @@ const refresh = function (event, paramName) {
                  matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null
                  ....
                  it has been hidden
-                 because it has a visibility dependency on another param i.e. truth-data-source
-                 is dependent upon statistic such that if the statistic is "mean" the truth-data-source
-                 is hidden. See the wfip2 main.js statistic param as an example....
+                 because it has a visibility dependency on another param i.e. truth-data-source and truth-variable
+                 are dependent upon statistic such that if the statistic is "mean" the truth-data-source and truth-variable
+                 are hidden. See the wfip2 main.js statistic param as an example....
                  "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
                  and
                  "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"

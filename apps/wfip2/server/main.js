@@ -642,9 +642,9 @@ var doCurveParams = function () {
                 optionsMap: statisticOptionsMap,
                 options: Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
-                dependentNames: ["sites", "forecast-length", "variable"],
-                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean},
-                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean},
+                dependentNames: ["sites", "forecast-length", "variable", "truth-variable"],
+                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean, 'truth-variable': statisticOptionsMap.mean},
+                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean,  'truth-variable': statisticOptionsMap.mean},
                 unique: false,
                 default: Object.keys(statisticOptionsMap)[0],
                 controlButtonVisibility: 'block',
@@ -662,7 +662,7 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["sites", "forecast-length", "variable", "dates", "curve-dates"],
+                dependentNames: ["sites", "forecast-length", "truth-variable", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: modelOptionsMap[Object.keys(modelOptionsMap)[0]][0],
                 unique: false,
@@ -829,12 +829,11 @@ var doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                //variableMap: {wind_speed:'ws', wind_direction:'wd'}, // used to facilitate the select
                 variableMap: variableFieldsMap,
                 optionsMap: variableOptionsMap,
                 infoMap: variableInfoMap,
                 options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
-                superiorNames: ['data-source', 'truth-data-source'],
+                superiorNames: ['data-source'],
                 plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
                 controlButtonCovered: true,
                 unique: false,
@@ -863,6 +862,44 @@ var doCurveParams = function () {
         }
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'truth-variable'}) == undefined) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'truth-variable',
+                type: matsTypes.InputTypes.select,
+                variableMap: variableFieldsMap,
+                optionsMap: variableOptionsMap,
+                infoMap: variableInfoMap,
+                options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]],   // convenience
+                superiorNames: ['truth-data-source'],
+                plotTypeDependent: true,       // causes this param to refresh whenever plotType changes
+                controlButtonCovered: true,
+                unique: false,
+                default: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'truth-variable'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.variableMap, variableFieldsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, variableOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.infoMap, variableInfoMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'truth-variable'}, {
+                $set: {
+                    variableMap: variableFieldsMap,
+                    optionsMap: variableOptionsMap,
+                    infoMap: variableInfoMap,
+                    options: variableOptionsMap[matsTypes.PlotTypes.timeSeries][Object.keys(variableOptionsMap[matsTypes.PlotTypes.timeSeries])[0]]
+                }
+            });
+        }
+    }
+
+
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         optionsMap = {};
         matsCollections.CurveParams.insert(
@@ -871,14 +908,14 @@ var doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]),   // convenience
-                superiorNames: ['data-source', 'truth-data-source'],
+                superiorNames: ['data-source'],
                 //selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: Object.keys(forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]])[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 5
             });
@@ -1005,7 +1042,8 @@ var doCurveTextPatterns = function () {
                 ['verified by ', 'truth-data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['sites:', 'sites', ', '],
-                ['', 'variable', ' '],
+                ['', 'variable', ', '],
+                ['', 'truth-variable', ' '],
                 ['(', 'units', '), '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', 'm '],
@@ -1017,7 +1055,7 @@ var doCurveTextPatterns = function () {
                 ['valid-time: ', 'valid-time', ' '],
             ],
             displayParams: [
-                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "forecast-length", "top", "bottom", "level-completeness", "valid-time"
+                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "truth-variable", "forecast-length", "top", "bottom", "level-completeness", "valid-time"
             ],
             groupSize: 6
         });
@@ -1030,7 +1068,8 @@ var doCurveTextPatterns = function () {
                 ['verified by ', 'truth-data-source', ' in '],
                 ['', 'regionName', ', '],
                 ['sites:', 'sites', ', '],
-                ['', 'variable', ' '],
+                ['', 'variable', ', '],
+                ['', 'truth-variable', ' '],
                 ['(', 'units', '), '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', 'm '],
@@ -1043,7 +1082,7 @@ var doCurveTextPatterns = function () {
                 ['', 'curve-dates', ''],
             ],
             displayParams: [
-                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "forecast-length", "top", "bottom", "level-completeness", "curve-dates", "valid-time"
+                "label", "data-source", "truth-data-source", "discriminator", "upper", "lower", "statistic", "region", "sites", "site-completeness", "variable", "truth-variable", "forecast-length", "top", "bottom", "level-completeness", "curve-dates", "valid-time"
             ],
             groupSize: 6
         });
@@ -1057,6 +1096,7 @@ var doCurveTextPatterns = function () {
                 ['', 'xaxis-region', ', '],
                 ['', 'xaxis-sites', ', '],
                 ['', 'xaxis-variable', ', '],
+                ['', 'xaxis-truth-variable', ', '],
                 ['', 'xaxis-statistic', ':'],
                 ['fcst_len:', 'xaxis-forecast-length', ', '],
                 ['', 'xaxis-discriminator', ', '],
@@ -1068,6 +1108,7 @@ var doCurveTextPatterns = function () {
                 ['', 'yaxis-region', ', '],
                 ['', 'yaxis-sites', ', '],
                 ['', 'yaxis-variable', ', '],
+                ['', 'yaxis-truth-variable', ', '],
                 ['', 'yaxis-statistic', ':'],
                 ['fcst_len:', 'yaxis-forecast-length', ', '],
                 ['', 'yaxis-discriminator', ', '],
@@ -1081,11 +1122,11 @@ var doCurveTextPatterns = function () {
                 "Fit-Type",
                 "xaxis", "xaxis-data-source", "xaxis-truth-data-source", "xaxis-discriminator",
                 "xaxis-upper", "xaxis-lower", "xaxis-statistic", "xaxis-region", "xaxis-sites",
-                "xaxis-site-completeness", "xaxis-variable", "xaxis-forecast-length", "xaxis-top", "xaxis-bottom", "xaxis-level-completeness", "xaxis-valid-time",
+                "xaxis-site-completeness", "xaxis-variable", "xaxis-truth-variable","xaxis-forecast-length", "xaxis-top", "xaxis-bottom", "xaxis-level-completeness", "xaxis-valid-time",
 
                 "yaxis", "yaxis-data-source", "yaxis-truth-data-source", "yaxis-discriminator",
                 "yaxis-upper", "yaxis-lower", "yaxis-statistic", "yaxis-region", "yaxis-sites",
-                "yaxis-site-completeness", "yaxis-variable", "yaxis-forecast-length", "yaxis-top", "yaxis-bottom", "yaxis-level-completeness", "yaxis-valid-time"
+                "yaxis-site-completeness", "yaxis-variable","yaxis-truth-variable", "yaxis-forecast-length", "yaxis-top", "yaxis-bottom", "yaxis-level-completeness", "yaxis-valid-time"
             ],
             groupSize: 6
         });
@@ -1124,7 +1165,7 @@ var doPlotGraph = function () {
             textViewId: "textSeriesView",
             graphViewId: "graphSeriesView",
             checked: true,
-            dependents: ['variable']
+            dependents: ['variable','truth-variable']
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -1133,7 +1174,7 @@ var doPlotGraph = function () {
             textViewId: "textProfileView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependents: ['variable']
+            dependents: ['variable','truth-variable']
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.scatter2d,
@@ -1142,7 +1183,7 @@ var doPlotGraph = function () {
             textViewId: "textScatter2dView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependents: ['variable']
+            dependents: ['variable','truth-variable']
         });
     }
 };
