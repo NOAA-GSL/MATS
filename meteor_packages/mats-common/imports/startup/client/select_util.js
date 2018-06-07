@@ -78,7 +78,7 @@ const refreshDependents = function (event, param) {
     }
 };
 
-const checkDisableOther = function (param) {
+const checkDisableOther = function (param, firstRender) {
 // check for enable controlled - This select might have control of another selector
     try {
         if (param.disableOtherFor !== undefined) {
@@ -92,7 +92,8 @@ const checkDisableOther = function (param) {
                 }
                 const selectedOptions = elem.selectedOptions;
                 const selectedText = selectedOptions && selectedOptions.length > 0 ? selectedOptions[0].text : "";
-                if ((param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
+                if ((firstRender == true && param.default == param.hideOtherFor[controlledSelectors[i]]) ||
+                    (param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.disableOtherFor[controlledSelectors[i]]) !== -1) {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
                     matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
@@ -107,7 +108,7 @@ const checkDisableOther = function (param) {
     }
 };
 
-const checkHideOther = function (param) {
+const checkHideOther = function (param, firstRender) {
 // check for hide controlled - This select might have control of another selectors visibility
     try {
         if (param.hideOtherFor !== undefined) {
@@ -126,7 +127,8 @@ const checkHideOther = function (param) {
                 var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
                 var otherValueElement = matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
 
-                if ((param.hideOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
+                if ((firstRender == true && param.default == param.hideOtherFor[controlledSelectors[i]]) ||
+                    (param.hideOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.hideOtherFor[controlledSelectors[i]]) !== -1) {
                     otherControlElem.style.display = 'none';
                     otherInputElement.style.display = 'none';
@@ -148,7 +150,7 @@ const checkHideOther = function (param) {
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
-            matsSelectUtils.checkDisableOther(param);
+            matsSelectUtils.checkDisableOther(param), firstRender;
         }
     } catch (e) {
         e.message = "INFO: Error in select.js checkHideOther: " + e.message;
