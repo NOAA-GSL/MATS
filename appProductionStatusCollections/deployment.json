@@ -82,8 +82,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.7.4-2018.06.07.06.00",
-      "buildDate": "2018.06.07.06.00",
+      "version": "1.7.4-2018.06.08.06.00",
+      "buildDate": "2018.06.08.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -374,8 +374,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.7.6",
-      "buildDate": "2018.06.07.18.55",
+      "version": "1.7.7",
+      "buildDate": "2018.06.07.21.12",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -505,8 +505,8 @@
     {
       "app": "wfip2",
       "title": "WFIP2",
-      "version": "1.7.6",
-      "buildDate": "2018.06.07.18.55",
+      "version": "1.7.7",
+      "buildDate": "2018.06.07.21.12",
       "last_test_run": "",
       "last_test_status": ""
     }
