@@ -252,9 +252,6 @@ Template.plotType.events({
             if (curves.length > 0) {
                 // the average may not have been carried over from a dieoff so let it default
                 for (var ci = 0; ci < curves.length; ci++) {
-                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
-                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
-                    }
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }

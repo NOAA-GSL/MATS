@@ -22,6 +22,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
@@ -59,10 +60,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var averageStr = curve['average'];
-        var averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        var average = averageOptionsMap[averageStr][0];
         var utcCycleStart = Number(curve['utc-cycle-start']);
+        utcCycleStarts[curveIndex] = utcCycleStart;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -74,7 +73,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select {{average}} as avtime, " +
+            var statement = "select m0.secs as avtime, " +
                 "count(distinct m0.secs) as N_times, " +
                 "min(m0.secs) as min_secs, " +
                 "max(m0.secs) as max_secs, " +
@@ -93,7 +92,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{data_source}}', data_source);
@@ -273,15 +271,20 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 stde_betsy: errorResult.stde_betsy
             };
 
+            // determine forecast hour for tooltip
+            var fhr = ((data[di][0]/1000) % (24 * 3600)) / 3600 - utcCycleStarts[curveIndex];
+            fhr = fhr < 0 ? fhr + 24 : fhr;
+
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
                 "<br>" + "time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm") +
+                "<br>" + "forecast hour: " + fhr +
                 "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
                 "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;

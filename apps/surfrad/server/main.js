@@ -486,7 +486,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 
-        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 
         matsCollections.CurveParams.insert(
             {
@@ -580,11 +580,10 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['start utc: ', 'utc-cycle-start', ', '],
-                ['avg: ', 'average', ' ']
+                ['start utc: ', 'utc-cycle-start', ', ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "average", "utc-cycle-start"
+                "label", "data-source", "region", "statistic", "variable", "scale", "utc-cycle-start"
             ],
             groupSize: 6
 

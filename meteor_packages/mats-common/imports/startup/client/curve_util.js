@@ -626,7 +626,7 @@ const showDailyModelCycleFace = function() {
         }
         elem = document.getElementById('average-item');
         if (elem && elem.style) {
-            elem.style.display = "block";
+            elem.style.display = "none";
         }
         elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
