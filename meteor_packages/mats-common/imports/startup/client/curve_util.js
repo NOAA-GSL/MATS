@@ -278,64 +278,6 @@ const checkDiffs = function () {
     }
 };
 
-const showProfileFace = function() {
-    // move dates selector to curve parameters - one date range for each curve
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
-        var appName = matsParamUtils.getAppName();
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('curve-dates-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dates-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('average-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('valid-time-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('sites-item');
-        if (elem && elem.style && appName !== "wfip2") {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style && appName !== "wfip2") {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('region-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('statistic-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.profile);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
-};
-
 const showTimeseriesFace = function() {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
@@ -352,6 +294,26 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('average-item');
         if (elem && elem.style) {
             elem.style.display = "block";
@@ -360,15 +322,7 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
+        elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -380,6 +334,28 @@ const showTimeseriesFace = function() {
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
+        Session.set('plotType', matsTypes.PlotTypes.timeSeries);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showProfileFace = function() {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
+        var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('region-item');
         if (elem && elem.style) {
             elem.style.display = "block";
@@ -388,12 +364,43 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
-        Session.set('plotType', matsTypes.PlotTypes.timeSeries);
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sitesMap-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.profile);
         // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
-
 
 const showDieOffFace = function() {
     // move dates selector to plot parameters - one date range for all curves
@@ -411,6 +418,26 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('average-item');
         if (elem && elem.style) {
             elem.style.display = "none";
@@ -419,17 +446,9 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
-        elem = document.getElementById('forecast-length-item');
+        elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
@@ -438,74 +457,8 @@ const showDieOffFace = function() {
         elem = document.getElementById('sitesMap-item');
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
-        }
-        elem = document.getElementById('region-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('statistic-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
         }
         Session.set('plotType', matsTypes.PlotTypes.dieoff);
-        // matsParamUtils.setAllParamsToDefault();
-        Session.set('lastUpdate', Date.now());
-    }
-};
-
-const showValidTimeFace = function() {
-    // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
-        var appName = matsParamUtils.getAppName();
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('curve-dates-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('dates-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('average-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('valid-time-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('sites-item');
-        if (elem && elem.style && appName !== "wfip2") {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('sitesMap-item');
-        if (elem && elem.style && appName !== "wfip2") {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('region-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('statistic-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        Session.set('plotType', matsTypes.PlotTypes.validtime);
         // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
@@ -527,6 +480,26 @@ const showThresholdFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('average-item');
         if (elem && elem.style) {
             elem.style.display = "none";
@@ -535,15 +508,7 @@ const showThresholdFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('threshold-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
+        elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -555,25 +520,17 @@ const showThresholdFace = function() {
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
         }
-        elem = document.getElementById('region-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('statistic-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
         Session.set('plotType', matsTypes.PlotTypes.threshold);
         // matsParamUtils.setAllParamsToDefault();
         Session.set('lastUpdate', Date.now());
     }
 };
 
-const showMapFace = function() {
+const showValidTimeFace = function() {
     // move dates selector to plot parameters - one date range for all curves
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
         var appName = matsParamUtils.getAppName();
-        var elem = document.getElementById(matsTypes.PlotTypes.map);
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "none";
         }
@@ -585,21 +542,129 @@ const showMapFace = function() {
         if (elem && elem.style) {
             elem.style.display = "block";
         }
-        elem = document.getElementById('average-item');
+        elem = document.getElementById('region-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "block";
         }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sitesMap-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.validtime);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showDailyModelCycleFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) {
+        var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
         }
         elem = document.getElementById('dieoff-forecast-length-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sitesMap-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.dailyModelCycle);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+const showMapFace = function() {
+    // move dates selector to plot parameters - one date range for all curves
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
+        var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('region-item');
         if (elem && elem.style) {
@@ -609,9 +674,29 @@ const showMapFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('valid-time-item');
         if (elem && elem.style) {
             elem.style.display = "block";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
@@ -841,7 +926,7 @@ const resizeGraph = function(plotType) {
             break;
 
     }
-}
+};
 
 export default matsCurveUtils = {
     resetScatterApply:resetScatterApply,
@@ -861,8 +946,9 @@ export default matsCurveUtils = {
     showProfileFace:showProfileFace,
     showDieOffFace:showDieOffFace,
     showThresholdFace:showThresholdFace,
-    showMapFace:showMapFace,
     showValidTimeFace:showValidTimeFace,
+    showDailyModelCycleFace:showDailyModelCycleFace,
+    showMapFace:showMapFace,
     get_err:get_err,
     PlotResult:PlotResult,
     showSpinner:showSpinner,

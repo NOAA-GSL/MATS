@@ -214,9 +214,9 @@ Template.textProfileOutput.events({
         const curveNums = matsCurveUtils.PlotResult.data.length;
         const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][0])).format('YYYY-MM-DD:HH:mm');
+            var line = Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][1]);
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][0] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][0])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             lineData.push(line);

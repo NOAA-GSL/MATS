@@ -464,7 +464,7 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
 
         const optionsArrRaw = [...Array(96).keys()].map(x => x / 4);
-        const optionsArr = optionsArrRaw.map(String);
+        var optionsArr = optionsArrRaw.map(String);
 
         matsCollections.CurveParams.insert(
             {
@@ -480,7 +480,28 @@ const doCurveParams = function () {
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 3,
-                multiple: true
+                multiple: true,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: optionsArr[12],
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3,
             });
     }
 };
@@ -550,6 +571,24 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'scale', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
+                ['avg: ', 'average', ' ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "scale", "average", "utc-cycle-start"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
@@ -583,6 +622,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphValidTime",
             dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            graphFunction: "graphDailyModelCycle",
+            dataFunction: "dataDailyModelCycle",
             checked: false
         });
     }

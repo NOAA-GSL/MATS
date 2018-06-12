@@ -1,13 +1,13 @@
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common'; 
+import { matsTypes } from 'meteor/randyp:mats-common';
 import { moment } from 'meteor/momentjs:moment';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsMathUtils } from 'meteor/randyp:mats-common';
 
 var times = [];
 
-const getDataForTrsh = function(data, time) {
+const getDataForTimes = function(data, time) {
     for (var i =0; i < data.length; i++) {
         if (data[i][0] == Number(time)) {
             return data[i] === null ? undefined : data[i];
@@ -25,7 +25,7 @@ const getDataForCurve = function(curve) {
     return undefined;
 };
 
-Template.textThresholdOutput.helpers({
+Template.textDailyModelCycleOutput.helpers({
     plotName: function() {
         return Session.get('plotName');
     },
@@ -47,7 +47,7 @@ Template.textThresholdOutput.helpers({
         return Session.get('Curves');
     },
     curveLabel: function (curve) {
-      return curve.label;
+        return curve.label;
     },
     curveText: function () {
         if (this.regionName) {
@@ -82,7 +82,7 @@ Template.textThresholdOutput.helpers({
         if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
             return [];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
             return [];
         }
 
@@ -102,7 +102,7 @@ Template.textThresholdOutput.helpers({
         times.sort((a, b) => (a - b));
         return times;
     },
-    points: function(trsh) {
+    points: function(time) {
         const plotResultsUpDated = Session.get('PlotResultsUpDated');
         if (plotResultsUpDated === undefined) {
             return [];
@@ -111,11 +111,11 @@ Template.textThresholdOutput.helpers({
             matsCurveUtils.PlotResult.length == 0) {
             return false;
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
             return false;
         }
         var curve = Template.parentData();
-        var line = "<td>" + Number(trsh) + "</td>";
+        var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD HH:mm') + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
@@ -129,9 +129,9 @@ Template.textThresholdOutput.helpers({
         var n = fillStr;
         var stddev = fillStr;
         try {
-            // see if I have a valid data object for this dataIndex and this trsh....
+            // see if I have a valid data object for this dataIndex and this time....
             const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
-            const dataPointVal = getDataForTrsh(curveData, trsh);
+            const dataPointVal = getDataForTimes(curveData, time);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[5].raw_stat && dataPointVal[5].raw_stat.toPrecision(4);
                 mean = dataPointVal[1] && dataPointVal[1].toPrecision(4);
@@ -169,7 +169,7 @@ Template.textThresholdOutput.helpers({
         if (curves === undefined || curves.length == 0) {
             return[];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
             return[];
         }
         var cindex;
@@ -196,7 +196,7 @@ Template.textThresholdOutput.helpers({
 
         return line;
     },
-    trshs: function(curve) {
+    times: function(curve) {
         /*
          This (plotResultsUpDated) is very important.
          The page is rendered when the graph page comes up, but the data from the data processing callback
@@ -215,7 +215,7 @@ Template.textThresholdOutput.helpers({
         if (matsCurveUtils.PlotResult.data === undefined) {
             return [];
         }
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
             return [];
         }
         const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
@@ -223,18 +223,18 @@ Template.textThresholdOutput.helpers({
             return [];
         }
 
-        var trshSet = new Set();
+        var timeSet = new Set();
         var di;
         for (di = 0; di < curveData.length; di++) {
-            curveData[di] && trshSet.add(curveData[di][0]);
+            curveData[di] && timeSet.add(curveData[di][0]);
         }
-        var trshs = Array.from (trshSet);
-        trshs.sort((a, b) => (a - b));
-        return trshs;
+        var times = Array.from (timeSet);
+        times.sort((a, b) => (a - b));
+        return times;
     }
 });
 
-Template.textThresholdOutput.events({
+Template.textDailyModelCycleOutput.events({
     'click .export': function() {
         var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
@@ -254,7 +254,7 @@ Template.textThresholdOutput.events({
         const curveNums = matsCurveUtils.PlotResult.data.length - 1;
         const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = matsCurveUtils.PlotResult.data[0].data[rowIndex][0];
+            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
                 const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
