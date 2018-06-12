@@ -146,8 +146,16 @@ var doCurveParams = function () {
         for a given RASS reading is really more appropriate at the next hourly time stamp. So we modify the query to get the previous hourly reading for a given time.
         The half interval is still a half interval i.e. 30 minutes.
      */
-    var previousCycleInstrumentIds = [1,2,13,16,17,22,23,26,27];
-    var previousCycleInstrumentRassIds = [5,21,24,25,28]
+    var pci10rows= matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev10min'");
+    var previousCycleInstrumentRassIds = [];
+    for (var pci = 0; pci < pci10rows.length; pci++) {
+        previousCycleInstrumentRassIds.push(pci10rows[pci].instrid);
+    }
+    var pci50rows= matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev50min'");
+    var previousCycleInstrumentIds = [];
+    for (var pci = 0; pci < pci50rows.length; pci++) {
+        previousCycleInstrumentIds.push(pci50rows[pci].instrid);
+    }
 
     // force a reset if requested - simply remove all the existing params to force a reload
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -168,7 +176,7 @@ var doCurveParams = function () {
             var cycle_interval_sampleRates = Object.keys(cycle_intervals);
 
             // var cycle_interval = rows[i].cycle_interval * 1000;   // seconds to ms
-            // cycle interval is a map - indexed by sample rate with valuse being a list of siteIds valid for the sample interval.
+            // cycle interval is a map - indexed by sample rate with values being a list of siteIds valid for the sample interval.
             // If there are different sample rates the reuslt will be different data sources with different valid sites. An empty list indicates all sites are valid (like for a model.
             // e.g. {'900': ['9', '7', '4', '1'], '600': ['17', '18', '19', '20']} would result in three different datasources, datasource-1800, datasource-600, and datasource-900
             // where datasource-1800 is the least common multiple of 600 and 900 and has valid sites [1,2,7,9,17,18,19,20],

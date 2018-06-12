@@ -199,7 +199,7 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId, previousCycleAveraging) {
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId, previousCycleAveraging, dataSourcePreviousCycleRass) {
     // verificationRunInterval is only required for instruments.
     // Its purpose is to enable choosing instrument readings that are within +- 1/2 of the instrument cycle time from the cycle time.
     // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
@@ -375,7 +375,7 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         }
                     }
 
-                    if (previousCycleAveraging) {
+                    if (previousCycleAveraging || dataSourcePreviousCycleRass) {
                         /* have to get the previous values for this site (if it isn't row 0 and
                         the previous one for this site sexists) and average the previous with this one
                         */
@@ -491,6 +491,17 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
                         return Number(a);
                     });
                 }
+                // HACK!!!! The RASS profilers are reporting in degress celsius and what we really want is K (kelvin)
+                // if it is a RASS profiler curve.dataSourcePreviousCycleRass will be true. Add 273.15 to each value.
+                if (dataSourcePreviousCycleRass) {
+                    // This is a RASS we have to convert the values celsius to kelvin.
+                    for (var i = 0; i < values.length; i++) {
+                        if (values[i] !== null) {
+                            values[i] = values[i] = values[i] + 273.15;
+                        }
+                    }
+                }
+
                 // quality control for windDir
                 // if corresponding windSpeed < 3ms null the windDir
                 if (myVariable === "wd") {
@@ -1300,8 +1311,8 @@ const get_err = function (sVals, sSecs) {
 
     var data_wg = [];
     var n_gaps = 0;
-    //n_good = 0;  //NOT doing the QA for WFIP2
-    n_good = subVals.length;
+    n_good = 0;  //NOT doing the QA for WFIP2
+    //n_good = subVals.length;
     var sum = 0;
     var sum2 = 0;
     var loopTime = minSecs;
