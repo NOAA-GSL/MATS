@@ -9,7 +9,7 @@ import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataThreshold = function (plotParams, plotFunction) {
+dataDailyModelCycle = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -22,6 +22,7 @@ dataThreshold = function (plotParams, plotFunction) {
     var curves = plotParams.curves;
     var curvesLength = curves.length;
     var dataset = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
@@ -34,21 +35,22 @@ dataThreshold = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
+        var dataSourceStr = curve['data-source'];
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var thresholdStr = curve['threshold'];
+        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
-        var forecastTypeStr = curve['forecast-type'];
-        var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
-        var scaleStr = curve['scale'];
-        var scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
+        var utcCycleStart = Number(curve['utc-cycle-start']);
+        utcCycleStarts[curveIndex] = utcCycleStart;
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey =  statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
@@ -59,7 +61,7 @@ dataThreshold = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.trsh as avtime, " +
+            var statement = "select m0.time as avtime, " +
                 "count(distinct m0.time) as N_times, " +
                 "min(m0.time) as min_secs, " +
                 "max(m0.time) as max_secs, " +
@@ -67,18 +69,21 @@ dataThreshold = function (plotParams, plotFunction) {
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.time >= '{{fromSecs}}' " +
-                "and m0.time <= '{{toSecs}}' " +
-                "and m0.accum_len = '{{forecastType}}' " +
+                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.trsh = {{threshold}} " +
+                "and m0.fcst_len <= 24 " +
+                "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
+            statement = statement.replace('{{data_source}}', data_source + '_' + region);
+            statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
-            statement = statement.replace('{{forecastType}}', forecastType);
+            statement = statement.replace('{{utcCycleStart}}', utcCycleStart);
+
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -86,7 +91,7 @@ dataThreshold = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'threshold', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dailyModelCycle', false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -135,7 +140,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'threshold', false);
+            }, 'dailyModelCycle', false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -184,7 +189,7 @@ dataThreshold = function (plotParams, plotFunction) {
 
         var di = 0;
         var values = [];
-        var threshs = [];
+        var avtimes = [];
         var means = [];
         var rawStat;
 
@@ -195,12 +200,12 @@ dataThreshold = function (plotParams, plotFunction) {
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
-             data[0] - thresh (plotted against the x axis)
+             data[0] - avtime (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - thresh values
-             data[4] - thresh times
-             data[5] - thresh stats
+             data[3] - avtime values
+             data[4] - avtime times
+             data[5] - avtime stats
              data[6] - tooltip
              */
 
@@ -222,7 +227,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 }
             }
             values.push(data[di][1]);
-            threshs.push(data[di][0]);
+            avtimes.push(data[di][0]);
             means.push(errorResult.d_mean);
 
             // store error bars if matching
@@ -244,9 +249,14 @@ dataThreshold = function (plotParams, plotFunction) {
                 stde_betsy: errorResult.stde_betsy
             };
 
+            // determine forecast hour for tooltip
+            var fhr = ((data[di][0]/1000) % (24 * 3600)) / 3600 - utcCycleStarts[curveIndex];
+            fhr = fhr < 0 ? fhr + 24 : fhr;
+
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
-                "<br>" + "threshold: " + data[di][0] +
+                "<br>" + "time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm") +
+                "<br>" + "forecast hour: " + fhr +
                 "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
@@ -259,7 +269,7 @@ dataThreshold = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(threshs, values);
+        const stats = matsDataUtils.get_err(avtimes, values);
         const filteredMeans = means.filter(x => x);
         const miny = Math.min(...filteredMeans);
         const maxy = Math.max(...filteredMeans);
@@ -290,7 +300,7 @@ dataThreshold = function (plotParams, plotFunction) {
     }
 
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),

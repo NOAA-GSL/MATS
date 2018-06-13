@@ -227,14 +227,14 @@ const doCurveParams = function () {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
-            'RMS': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0, group_concat(sqrt(pow({{variable0}},2)) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
+            'MAE': ['avg(abs({{variable0}})) as stat, count({{variable0}}) as N0, group_concat(abs({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Bias (Obs - Model)': ['avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'N': ['count({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(count({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Model average': ['avg({{variable1}}) as stat, count({{variable1}}) as N0, group_concat(({{variable1}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Obs average': ['avg({{variable2}}) as stat, count({{variable2}}) as N0, group_concat(({{variable2}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Std deviation (do not plot matched)': ['std(-1*{{variable0}}) as stat, count({{variable0}}) as N0'],
-            'MAE': ['avg(abs({{variable0}})) as stat, count({{variable0}}) as N0, group_concat(abs({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0']
+            'RMS (do not plot matched)': ['sqrt(avg(pow({{variable0}},2))) as stat, count({{variable0}}) as N0']
 
         };
 
@@ -249,7 +249,7 @@ const doCurveParams = function () {
             options: Object.keys(optionsMap),   // convenience
             controlButtonCovered: true,
             unique: false,
-            default: 'RMS',
+            default: Object.keys(optionsMap)[0],
             controlButtonVisibility: 'block',
             displayOrder: 4,
             displayPriority: 1,
@@ -267,7 +267,7 @@ const doCurveParams = function () {
         };
 
         const statVarUnitMap = {
-            'RMS': {
+            'MAE': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',
@@ -316,13 +316,14 @@ const doCurveParams = function () {
                 '15 min avg dswrf (experimental HRRR only)': 'W/m2',
                 '15 min avg direct (experimental HRRR only)': 'W/m2'
             },
-            'MAE': {
+            'RMS (do not plot matched)': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',
                 '15 min avg dswrf (experimental HRRR only)': 'W/m2',
                 '15 min avg direct (experimental HRRR only)': 'W/m2'
             }
+
         };
 
         matsCollections.CurveParams.insert(
@@ -547,7 +548,7 @@ const doCurveTextPatterns = function () {
         //         ['', 'statistic', ', '],
         //         ['', 'variable', ', '],
         //         ['', 'scale', ' '],
-        //         ['fcst_len :', 'dieoff-forecast-length', ' h '],
+        //         ['fcst_len :', 'dieoff-forecast-length', ', '],
         //         [' valid-time:', 'valid-time', ' '],
         //     ],
         //     displayParams: [

@@ -226,12 +226,6 @@ const doCurveParams = function () {
             var optionsMap = {
                 'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0, group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'Nlow (obs < threshold, avg per 15 min)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
-
-                'Ntot (total obs, avg per 15 min)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
-
-                'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
-
                 'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
                 'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
@@ -240,13 +234,23 @@ const doCurveParams = function () {
 
                 'Bias (forecast/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 1],
 
-                'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
-
                 'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
                 'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100]
+                'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+
+                'Nlow (obs < threshold, avg per 15 min)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+
+                'Nhigh (obs > threshold, avg per 15 min)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Number', null],
+
+                'Ntot (total obs, avg per 15 min)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+
+                'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
+
+                'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Ratio', null],
+
+                'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null]
             };
             matsCollections.CurveParams.insert(
                 {// bias and model average are a different formula for wind (element 0 differs from element 1)
@@ -266,7 +270,6 @@ const doCurveParams = function () {
                     displayGroup: 2
                 });
         }
-
 
         if (matsCollections.CurveParams.find({name: 'threshold'}).count() == 0) {
             matsCollections.CurveParams.insert(
@@ -405,7 +408,28 @@ const doCurveParams = function () {
                     multiple: true
                 });
         }
-}
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: optionsArr[12],
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3,
+            });
+    }
+};
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
  [labelString, localVariableName, delimiterString]  any of which can be null.
@@ -425,7 +449,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
@@ -443,7 +467,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'dieoff-forecast-length', ', '],
@@ -453,6 +477,22 @@ const doCurveTextPatterns = function () {
                 "label", "data-source", "region", "statistic", "threshold", "valid-time", "dieoff-forecast-length"
             ],
             groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['start utc: ', 'utc-cycle-start', ', ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start"
+            ],
+            groupSize: 6
+
         });
     }
 };
@@ -481,6 +521,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            graphFunction: "graphDailyModelCycle",
+            dataFunction: "dataDailyModelCycle",
             checked: false
         });
     }
