@@ -104,6 +104,12 @@ dataProfile = function (plotParams, plotFunction) {
         }
         var variableInfoMap = variableParam.infoMap[myVariable];
         // stash the variableInfoMap in the curves for use in determinig the y axis labels
+        // The only instrument temperature wfip2 sees is from these RASS profilers. So we make a decision to change the units
+        // if it is a RASS profiler.
+        if (dataSourcePreviousCycleRass === true && variableInfoMap.units.toUpperCase().endsWith("CELSIUS")) {
+            // This is a RASS we have to convert the units.
+            variableInfoMap.units = "K";
+        }
         curves[curveIndex].variableInfoMap = variableInfoMap === undefined ? {} : variableInfoMap;
         var myVariable_isDiscriminator = false;
         if (myVariable === undefined) {
@@ -221,7 +227,7 @@ dataProfile = function (plotParams, plotFunction) {
             // queryWFIP2DB has embedded quality control for windDir
             // if corresponding windSpeed < 3ms null the windDir
             var startMoment = moment();
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId, dataSourcePreviousCycleAveraging);
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId, dataSourcePreviousCycleAveraging, dataSourcePreviousCycleRass);
             var finishMoment = moment();
             dataRequests["data retrieval (query) time - " + curve.label] = {
                 begin: startMoment.format(),
@@ -257,9 +263,6 @@ dataProfile = function (plotParams, plotFunction) {
                 if (myTruthVariable === undefined) {
                     throw new Error("TruthVariable " + TruthVariableStr + " is not in TruthVariableMap");
                 }
-                var TruthVariableInfoMap = TruthVariableParam.infoMap[myTruthVariable];
-                // stash the TruthVariableInfoMap in the curves for use in determinig the y axis labels
-                curves[curveIndex].TruthVariableInfoMap = TruthVariableInfoMap === undefined ? {} : TruthVariableInfoMap;
                 var myTruthVariable_isDiscriminator = false;
                 if (myTruthVariable === undefined) {
                     myTruthVariable = curve['truth-variable'];
@@ -326,7 +329,7 @@ dataProfile = function (plotParams, plotFunction) {
                 dataRequests['truth-' + curve.label] = truthStatement;
                 try {
                     startMoment = moment();
-                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myTruthVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging);
+                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myTruthVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging, truthDataSourcePreviousCycleRass);
                     finishMoment = moment();
                     dataRequests["truth data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),
@@ -720,7 +723,11 @@ dataProfile = function (plotParams, plotFunction) {
                 var value;
                 switch (statistic) {
                     case "bias":
+                        value = Number(levelSums[level].sum / levelSums[level].count);
+                        break;
                     case "mae":
+                        value = Number(levelSums[level].sum / levelSums[level].count);
+                        break;
                     case "mean":
                         // mean, bias and mae are the same, we divide sum by n
                         value = Number(levelSums[level].sum / levelSums[level].count);
