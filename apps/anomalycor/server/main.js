@@ -262,7 +262,7 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
-            'None': ['ceil(3600*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/3600))'],
+            'None': ['unix_timestamp(m0.valid_date)+3600*m0.valid_hour'],
             '1D': ['ceil(86400*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/86400)+86400/2)'],
             '3D': ['ceil(259200*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/259200)+259200/2)'],
             '7D': ['ceil(604800*floor((unix_timestamp(m0.valid_date)+3600*m0.valid_hour)/604800)+604800/2)'],
@@ -379,8 +379,8 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', 'in '],
-                ['', 'regionName', ', '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
                 ['', 'variable', ', '],
                 ['level: ', 'pres-level', ' hPa, '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
@@ -397,8 +397,8 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', 'in '],
-                ['', 'regionName', ', '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
                 ['', 'variable', ', '],
                 ['level: ', 'pres-level', ' hPa, '],
                 ['fcst_len: ', 'dieoff-forecast-length', ', '],

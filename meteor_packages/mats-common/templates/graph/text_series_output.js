@@ -95,12 +95,12 @@ Template.textSeriesOutput.helpers({
     dataRows: function() {
         /*
          This (plotResultsUpDated) is very important.
-         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         The page is rendered when the graph page comes up, but the data from the data processing callback
          in plotList.js or curveList.js may not have set the global variable
          PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
          Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
          (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         was contained in the session, but some unknown ddp behavior having to do with the amount of plot data
          made that unworkable.
          */
 
@@ -161,7 +161,7 @@ Template.textSeriesOutput.helpers({
             return false;
         }
         var curve = Template.parentData();
-        var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD:HH:mm') + "</td>";
+        var line = "<td>" + moment.utc(Number(time)).format('YYYY-MM-DD HH:mm') + "</td>";
         const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
         if (settings === undefined) {
             return false;
@@ -174,7 +174,7 @@ Template.textSeriesOutput.helpers({
         var n = fillStr;
         var stddev = fillStr;
         try {
-            // see if I have a valid data object for this dataIndex and this level....
+            // see if I have a valid data object for this dataIndex and this time....
             const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
             const dataPointVal = getDataForTime(curveData, time);
             if (dataPointVal !== undefined) {
@@ -264,7 +264,7 @@ Template.textSeriesOutput.events({
         const curveNums = matsCurveUtils.PlotResult.data.length - 1;
         const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
                 const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;

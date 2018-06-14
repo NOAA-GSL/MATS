@@ -322,7 +322,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
-                default: 'temperature',
+                default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -428,6 +428,27 @@ const doCurveParams = function () {
                 multiple: true
             });
     }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: optionsArr[12],
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3,
+            });
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -447,7 +468,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'data-source', ' for '],
+                ['', 'data-source', ' in '],
                 ['', 'vgtyp', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
@@ -468,14 +489,44 @@ const doCurveTextPatterns = function () {
                 ['', 'vgtyp', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', ', '],
-                ['valid-time:', 'valid-time', ', '],
-                ['avg:', 'average', ' ']
+                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "dieoff-forecast-length", "valid-time"
             ],
             groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'vgtyp', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, ']
+            ],
+            displayParams: [
+                "label", "data-source", "vgtyp", "statistic", "variable", "forecast-length"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'vgtyp', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['start utc: ', 'utc-cycle-start', ', ']
+            ],
+            displayParams: [
+                "label", "data-source", "vgtyp", "statistic", "variable", "utc-cycle-start"
+            ],
+            groupSize: 6
+
         });
     }
 };
@@ -504,6 +555,18 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            graphFunction: "graphDailyModelCycle",
+            dataFunction: "dataDailyModelCycle",
             checked: false
         });
     }

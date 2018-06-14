@@ -50,12 +50,13 @@ dataValidTime = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey =  statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
             idealValues.push(idealVal);
         }
+
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
@@ -111,7 +112,12 @@ dataValidTime = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('ER_NO_SUCH_TABLE')) {
+                        throw new Error("INFO:  The region/scale combination [" + regionStr + " and " + scaleStr + "] is not supported by the database for the model [" + dataSourceStr + "]. " +
+                            "Choose a different scale to continue using this region.");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             }
 
@@ -254,8 +260,8 @@ dataValidTime = function (plotParams, plotFunction) {
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
                 "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
@@ -292,6 +298,7 @@ dataValidTime = function (plotParams, plotFunction) {
         dataset.push(idealValueLine);
     }
 
+    // generate plot options
     const resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {

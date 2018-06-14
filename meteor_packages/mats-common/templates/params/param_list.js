@@ -299,6 +299,27 @@ Template.paramList.onRendered(function () {
         }
     }
 
+    //hide utc-cycle-start selector for anything that isn't a dailyModelCycle curve
+    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dailyModelCycle) {
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+    } else {
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+    }
+
     //hide sites and sitesMap selectors for anything that isn't a map plot or wfip2
     var ptype = matsPlotUtils.getPlotType();
     elem = document.getElementById('sites-item');

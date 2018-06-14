@@ -230,18 +230,20 @@ dataValidTime = function (plotParams, plotFunction) {
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            // if ((diffFrom === null || diffFrom === undefined) || !matching) {
-            //     // assign recalculated statistic to data[di][1], which is the value to be plotted
-            //     data[di][1] = errorResult.d_mean;
-            // } else {
-            //     if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
-            //         // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-            //         data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
-            //     } else {
-            //         // keep the null for no data at this point
-            //         data[di][1] = null;
-            //     }
-            // }
+            if ( !( (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !matching) ) {
+                if ((diffFrom === null || diffFrom === undefined) || !matching) {
+                    // assign recalculated statistic to data[di][1], which is the value to be plotted
+                    data[di][1] = errorResult.d_mean;
+                } else {
+                    if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                        data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+                    } else {
+                        // keep the null for no data at this point
+                        data[di][1] = null;
+                    }
+                }
+            }
             values.push(data[di][1]);
             vts.push(data[di][0]);
             means.push(errorResult.d_mean);
@@ -272,8 +274,8 @@ dataValidTime = function (plotParams, plotFunction) {
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
                 "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
@@ -293,9 +295,9 @@ dataValidTime = function (plotParams, plotFunction) {
         // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
 
         // recalculate curve annotation after QC and matching
-        // if (stats.d_mean !== undefined && stats.d_mean !== null) {
-        //     axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
-        // }
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
     }
 
     // add black 0 line curve

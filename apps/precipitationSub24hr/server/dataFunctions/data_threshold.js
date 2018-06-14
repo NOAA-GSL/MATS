@@ -48,7 +48,7 @@ dataThreshold = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey =  statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
@@ -79,6 +79,7 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{data_source}}', data_source + '_' + scale + '_' + region);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{forecastType}}', forecastType);
+
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -251,8 +252,8 @@ dataThreshold = function (plotParams, plotFunction) {
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
                 "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;

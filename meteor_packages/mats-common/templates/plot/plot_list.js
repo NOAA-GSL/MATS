@@ -216,11 +216,11 @@ Template.plotList.events({
                         // We have to set up the display without using click events because that would cause
                         // the restored curves to be removed
                         switch (ptElem.value) {
-                            case matsTypes.PlotTypes.profile:
-                                matsCurveUtils.showProfileFace();
-                                break;
                             case matsTypes.PlotTypes.timeSeries:
                                 matsCurveUtils.showTimeseriesFace();
+                                break;
+                            case matsTypes.PlotTypes.profile:
+                                matsCurveUtils.showProfileFace();
                                 break;
                             case matsTypes.PlotTypes.dieoff:
                                 matsCurveUtils.showDieOffFace();
@@ -230,6 +230,9 @@ Template.plotList.events({
                                 break;
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
+                                break;
+                            case matsTypes.PlotTypes.dailyModelCycle:
+                                matsCurveUtils.showDailyModelCycleFace();
                                 break;
                             case matsTypes.PlotTypes.map:
                                 matsCurveUtils.showMapFace();
