@@ -65,7 +65,7 @@ if [ "X" == "X${requestedApp}" ]; then
     for pa in "${publishApps[@]}"; do
 	    cv=$(date +%Y.%m.%d)
         echo -e "${GRN}setting pub date to $cv for /web/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html${NC}"
-	    /usr/bin/sed -i -e "s/\(<x-cr>\).*\(<\/x-cr>\)/<x-cr>$cv<\/x-cr>/g" /web/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html
+	    /usr/bin/sed -i -e "s/\(<x-cr>\).*\(<\/x-cr>\)/$cv/g" /web/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html
         echo -e "${GRN}rsyncing ${pa}${NC}"
         /usr/bin/rsync -ralW -P --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
         # promote the app (make versions and dates match integration)
