@@ -71,9 +71,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.time >= {{fromSecs}} " +
+                "and m0.time <= {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
-                "and m0.fcst_len <= 24 " +
+                "and m0.fcst_len < 24 " +
                 "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
                 "group by avtime " +
                 "order by avtime" +
@@ -115,7 +116,12 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('ER_NO_SUCH_TABLE')) {
+                        throw new Error("INFO:  The region/scale combination [" + regionStr + " and " + scaleStr + "] is not supported by the database for the model [" + dataSourceStr + "]. " +
+                            "Choose a different scale to continue using this region.");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             }
 

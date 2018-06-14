@@ -74,8 +74,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "min(m0.valid_day+3600*m0.hour) as min_secs, " +
                 "max(m0.valid_day+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                "FROM {{model}} AS m0 " +
-                "WHERE 1 = 1 " +
+                "from {{model}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.vgtyp IN({{vgtyp}}) "+
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
@@ -94,6 +94,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+
             dataRequests[curve.label] = statement;
 
             var queryResult;

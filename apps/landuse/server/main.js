@@ -489,12 +489,26 @@ const doCurveTextPatterns = function () {
                 ['', 'vgtyp', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', ', '],
-                ['valid-time:', 'valid-time', ', '],
-                ['avg:', 'average', ' ']
+                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
             ],
             displayParams: [
                 "label", "data-source", "vgtyp", "statistic", "variable", "dieoff-forecast-length", "valid-time"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'vgtyp', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, ']
+            ],
+            displayParams: [
+                "label", "data-source", "vgtyp", "statistic", "variable", "forecast-length"
             ],
             groupSize: 6
         });
@@ -541,6 +555,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

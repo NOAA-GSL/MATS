@@ -71,7 +71,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
-                "and m0.fcst_len <= 24 " +
+                "and m0.fcst_len < 24 " +
                 "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
                 "group by avtime " +
                 "order by avtime" +

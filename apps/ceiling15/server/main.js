@@ -314,7 +314,14 @@ const doCurveParams = function () {
                 '90m': ['ceil(5400*floor(m0.time/5400)+5400/2)'],
                 '2h': ['ceil(7200*floor(m0.time/7200)+7200/2)'],
                 '3h': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
-                '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)']
+                '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
+                '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
+                '3D': ['ceil(259200*floor(m0.time/259200)+259200/2)'],
+                '7D': ['ceil(604800*floor(m0.time/604800)+604800/2)'],
+                '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
+                '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)'],
+                '90D': ['ceil(7776000*floor(m0.time/7776000)+7776000/2)'],
+                '180D': ['ceil(15552000*floor(m0.time/15552000)+15552000/2)']
             };
 
             matsCollections.CurveParams.insert(
@@ -479,6 +486,21 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
             textPattern: [
                 ['', 'label', ': '],
@@ -521,6 +543,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({

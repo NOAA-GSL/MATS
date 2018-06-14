@@ -77,7 +77,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
                 "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
-                "and m0.fcst_len <= 24 " +
+                "and m0.fcst_len < 24 " +
                 "and (m0.valid_day+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
                 "group by avtime " +
                 "order by avtime" +
@@ -186,11 +186,11 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
-    // var axisLimitReprocessed = {};
+    var axisLimitReprocessed = {};
 
     // calculate data statistics (including error bars) for each curve
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        // axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
         diffFrom = curves[curveIndex].diffFrom;
         statisticSelect = curves[curveIndex]['statistic'];
         var data = dataset[curveIndex].data;
@@ -223,7 +223,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if ( !( (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !matching) ) {
                 if ((diffFrom === null || diffFrom === undefined) || !matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data[di][1] = errorResult.d_mean;
@@ -236,7 +235,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                         data[di][1] = null;
                     }
                 }
-            }
             values.push(data[di][1]);
             avtimes.push(data[di][0]);
             means.push(errorResult.d_mean);
@@ -289,8 +287,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         dataset[curveIndex]['stats'] = stats;
 
         // recalculate axis options after QC and matching
-        // axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        // axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {

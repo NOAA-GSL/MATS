@@ -84,7 +84,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "and ob0.id = m0.id " +
                 "and m0.secs >= '{{fromSecs}}' " +
                 "and m0.secs <= '{{toSecs}}' " +
-                "and m0.fcst_len <= 24*60 " +
+                "and m0.fcst_len < 24*60 " +
                 "and (m0.secs - 60*m0.fcst_len)%(24*3600)/3600 IN({{utcCycleStart}}) " +
                 "and m0.scale = '{{scale}}' " +
                 "{{regionClause}} " +

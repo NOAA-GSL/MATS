@@ -51,7 +51,7 @@ dataDieOff = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey =  statisticOptionsMap[statisticSelect][1];
+        var axisKey = statisticOptionsMap[statisticSelect][1];
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         var idealVal = statisticOptionsMap[statisticSelect][2];
         if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
@@ -71,7 +71,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= {{fromSecs}} " +
-                "and m0.time <  {{toSecs}} " +
+                "and m0.time <= {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
                 "group by avtime " +
                 "order by avtime;";

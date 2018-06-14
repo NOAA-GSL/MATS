@@ -122,7 +122,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw new Error(error);
+                    throw (new Error(error));
                 }
             }
 

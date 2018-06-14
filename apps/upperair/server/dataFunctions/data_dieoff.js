@@ -86,17 +86,17 @@ dataDieOff = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                "FROM {{model}} AS m0 " +
-                "WHERE 1 = 1 " +
+                "from {{model}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
-                "AND m0.fcst_len >= 0 " +
-                "AND m0.mb10 >= {{top}} / 10 " +
-                "AND m0.mb10 <= {{bottom}} / 10 " +
-                "AND m0.date >= '{{fromDate}}' " +
-                "AND m0.date <= '{{toDate}}' " +
-                "AND m0.N_dt IS NOT NULL " +
-                "GROUP BY avtime " +
-                "ORDER BY avtime";
+                "and m0.fcst_len >= 0 " +
+                "and m0.mb10 >= {{top}}/10 " +
+                "and m0.mb10 <= {{bottom}}/10 " +
+                "and m0.date >= '{{fromDate}}' " +
+                "and m0.date <= '{{toDate}}' " +
+                "group by avtime " +
+                "order by avtime" +
+                ";";
 
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);

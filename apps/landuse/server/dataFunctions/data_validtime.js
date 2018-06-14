@@ -9,7 +9,7 @@ import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataDieOff = function (plotParams, plotFunction) {
+dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
@@ -27,7 +27,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -35,59 +34,58 @@ dataDieOff = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var thresholdStr = curve['threshold'];
-        var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
+        var vgtypStr = curve['vgtyp'];
+        var vgtyp = Object.keys(matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'vgtyp'}).valuesMap[key] === vgtypStr);
+        var variableStr = curve['variable'];
+        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+        var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic = statisticOptionsMap[statisticSelect][0];
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
+        var statistic;
+        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
+            statistic = statisticOptionsMap[statisticSelect][0];
+        } else if (variableStr === 'wind') {
+            statistic = statisticOptionsMap[statisticSelect][2];
+        } else {
+            statistic = statisticOptionsMap[statisticSelect][1];
         }
+        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
+        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+        var varUnits = statVarUnitMap[statisticSelect][variableStr];
+        var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = statisticOptionsMap[statisticSelect][1];
+        var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var idealVal = statisticOptionsMap[statisticSelect][2];
-        if (idealVal !== null && idealValues.indexOf(idealVal) === -1) {
-            idealValues.push(idealVal);
-        }
 
         var d = [];
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "SELECT m0.fcst_len AS avtime, " +
-                "count(distinct m0.time) as N_times, " +
-                "min(m0.time) as min_secs, " +
-                "max(m0.time) as max_secs, " +
+            var statement = "select m0.hour as hr_of_day, " +
+                "count(distinct m0.valid_day+3600*m0.hour) as N_times, " +
+                "min(m0.valid_day+3600*m0.hour) as min_secs, " +
+                "max(m0.valid_day+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                "from {{model}}_{{region}} as m0 " +
+                "from {{model}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.time >= {{fromSecs}} " +
-                "and m0.time <= {{toSecs}} " +
-                "and m0.trsh = {{threshold}} " +
-                "group by avtime " +
-                "order by avtime;";
+                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
+                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "and m0.vgtyp IN({{vgtyp}}) "+
+                "and m0.fcst_len = '{{forecastLength}}' " +
+                "group by hr_of_day " +
+                "order by hr_of_day" +
+                ";";
 
-            statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
-            statement = statement.replace('{{threshold}}', threshold);
-            var validTimeClause = " ";
-            if (validTimes.length != 0) {
-                validTimeClause = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")"
-            }
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{vgtyp}}', vgtyp);
+            statement = statement.replace('{{forecastLength}}', forecastLength);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -95,7 +93,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dieOff', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'validTime', false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -117,7 +115,11 @@ dataDieOff = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    throw (new Error(error));
+                    if (error.includes('Unknown column')) {
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/vgtyp [" + model + " and " + vgtypStr + "].");
+                    } else {
+                        throw new Error(error);
+                    }
                 }
             }
 
@@ -144,7 +146,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'dieOff', false);
+            }, 'validTime', false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -193,7 +195,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
         var di = 0;
         var values = [];
-        var fhrs = [];
+        var vts = [];
         var means = [];
         var rawStat;
 
@@ -204,12 +206,12 @@ dataDieOff = function (plotParams, plotFunction) {
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
-             data[0] - fhr (plotted against the x axis)
+             data[0] - vt (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - fhr values
-             data[4] - fhr times
-             data[5] - fhr stats
+             data[3] - vt values
+             data[4] - vt times
+             data[5] - vt stats
              data[6] - tooltip
              */
 
@@ -231,7 +233,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 }
             }
             values.push(data[di][1]);
-            fhrs.push(data[di][0]);
+            vts.push(data[di][0]);
             means.push(errorResult.d_mean);
 
             // store error bars if matching
@@ -255,7 +257,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label +
-                "<br>" + "fhr: " + data[di][0] +
+                "<br>" + "hour of day: " + data[di][0] +
                 "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
@@ -268,7 +270,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(fhrs, values);
+        const stats = matsDataUtils.get_err(vts, values);
         const filteredMeans = means.filter(x => x);
         const miny = Math.min(...filteredMeans);
         const maxy = Math.max(...filteredMeans);
@@ -291,15 +293,8 @@ dataDieOff = function (plotParams, plotFunction) {
     const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
     dataset.push(zeroLine);
 
-    //add ideal value lines, if any
-    var idealValueLine;
-    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,idealValues[ivIdx]);
-        dataset.push(idealValueLine);
-    }
-
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),

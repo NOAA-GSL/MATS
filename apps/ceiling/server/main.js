@@ -475,6 +475,21 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
             textPattern: [
                 ['', 'label', ': '],
@@ -517,6 +532,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             graphFunction: "graphDieOff",
             dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphValidTime",
+            dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
