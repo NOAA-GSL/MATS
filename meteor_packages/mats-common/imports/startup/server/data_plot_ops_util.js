@@ -14,6 +14,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
+        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -26,7 +27,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 1,
+            tickDecimals: axisPrecision,
             min: ymin - yPad,
             max: ymax + yPad,
             font: {size: 18}
@@ -242,6 +243,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
+        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -254,7 +256,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 1,
+            tickDecimals: axisPrecision,
             min: ymin - yPad,
             max: ymax + yPad,
             font: {size: 18}
@@ -341,6 +343,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
+        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -353,7 +356,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 1,
+            tickDecimals: axisPrecision,
             min: ymin - yPad,
             max: ymax + yPad,
             font: {size: 18}
@@ -444,6 +447,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
+        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -456,7 +460,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 1,
+            tickDecimals: axisPrecision,
             min: ymin - yPad,
             max: ymax + yPad,
             font: {size: 18}

@@ -49,6 +49,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "block";
                 break;
@@ -66,23 +67,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                break;
-            case matsTypes.PlotView.textDieoff:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "block";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
@@ -100,10 +85,11 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
-            case matsTypes.PlotView.textScatter:
+            case matsTypes.PlotView.textDieoff:
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("plotButton").style.display = "block";
@@ -113,10 +99,11 @@ Template.graph.onCreated(function () {
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
-                document.getElementById("textDieOffView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "block";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
@@ -134,10 +121,11 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "block";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
-            case matsTypes.PlotView.textValidTime:
+            case matsTypes.PlotView.textDailyModelCycle:
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("plotButton").style.display = "block";
@@ -150,7 +138,8 @@ Template.graph.onCreated(function () {
                 document.getElementById("textScatter2dView").style.display = "none";
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "block";
+                document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "block";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
@@ -168,7 +157,26 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "block";
+                document.getElementById('graph-touch-controls').style.display = "none";
+                break;
+            case matsTypes.PlotView.textScatter:
+                document.getElementById('placeholder').style.width = width();
+                document.getElementById('placeholder').style.heigth = height();
+                document.getElementById("plotButton").style.display = "block";
+                document.getElementById("textButton").style.display = "none";
+                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("curves").style.display = "none";
+                document.getElementById("graphView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "block";
+                document.getElementById("textDieOffView").style.display = "none";
+                document.getElementById("textThresholdView").style.display = "none";
+                document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
+                document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "none";
                 break;
             default:
@@ -185,6 +193,7 @@ Template.graph.onCreated(function () {
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 document.getElementById('graph-touch-controls').style.display = "block";
         }
@@ -277,12 +286,14 @@ Template.graph.helpers({
                 return "TimeSeries " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
                 return "Profile: " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
+                return "DieOff " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
                 return "Threshold " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
                 return "ValidTime " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff " + p.dates + " : " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
+                return "DailyModelCycle " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
                 return "Map " + p.dates + " ";
             } else {
@@ -332,26 +343,16 @@ Template.graph.helpers({
         return Session.get(sval);
     },
     isNotMap: function() {
-        var notmap;
-        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
-            notmap = true;
-        } else {
-            notmap =false;
-        }
-        return notmap;
+        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map)
     },
     isMap: function() {
-        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.profile || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.timeSeries || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.threshold || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.validtime) {
-            return false;
-        } else {
-            return true;
-        }
+        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
     },
     errorBarsAllowed: function () {
         return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.scatter2d);
     },
     isProfile: function() {
-        return (Session.get('plotType') == matsTypes.PlotTypes.profile);
+        return (Session.get('plotType') === matsTypes.PlotTypes.profile);
     }
 });
 
@@ -388,10 +389,11 @@ Template.graph.events({
         //the back button was clicked and then plot matched/unmatched was clicked.
         document.getElementById("textSeriesView").style.display = "none";
         document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
         document.getElementById("textDieOffView").style.display = "none";
         document.getElementById("textThresholdView").style.display = "none";
         document.getElementById("textValidTimeView").style.display = "none";
+        document.getElementById("textDailyModelCycleView").style.display = "none";
+        document.getElementById("textScatter2dView").style.display = "none";
         document.getElementById("textMapView").style.display = "none";
 
         return false;
@@ -530,6 +532,7 @@ Template.graph.events({
         document.getElementById("textDieOffView").style.display = "none";
         document.getElementById("textThresholdView").style.display = "none";
         document.getElementById("textValidTimeView").style.display = "none";
+        document.getElementById("textDailyModelCycleView").style.display = "none";
         document.getElementById("textMapView").style.display = "none";
         document.getElementById('graph-touch-controls').style.display = "block";
 
@@ -552,6 +555,7 @@ Template.graph.events({
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "block";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -562,19 +566,10 @@ Template.graph.events({
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "block";
                 document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.scatter2d:
-                Session.set('graphViewMode',matsTypes.PlotView.textScatter);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
                 document.getElementById("textMapView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.dieoff:
@@ -585,6 +580,7 @@ Template.graph.events({
                 document.getElementById("textDieOffView").style.display = "block";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.threshold:
@@ -595,16 +591,29 @@ Template.graph.events({
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "block";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.validtime:
-                Session.set('graphViewMode',matsTypes.PlotView.textThreshold);
+                Session.set('graphViewMode',matsTypes.PlotView.textValidTime);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "block";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
+                document.getElementById("textMapView").style.display = "none";
+                break;
+            case matsTypes.PlotTypes.dailyModelCycle:
+                Session.set('graphViewMode',matsTypes.PlotView.textDailyModelCycle);
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "none";
+                document.getElementById("textDieOffView").style.display = "none";
+                document.getElementById("textThresholdView").style.display = "none";
+                document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "block";
                 document.getElementById("textMapView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.map:
@@ -615,7 +624,19 @@ Template.graph.events({
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
                 document.getElementById("textMapView").style.display = "block";
+                break;
+            case matsTypes.PlotTypes.scatter2d:
+                Session.set('graphViewMode',matsTypes.PlotView.textScatter);
+                document.getElementById("textDieOffView").style.display = "none";
+                document.getElementById("textThresholdView").style.display = "none";
+                document.getElementById("textValidTimeView").style.display = "none";
+                document.getElementById("textDailyModelCycleView").style.display = "none";
+                document.getElementById("textSeriesView").style.display = "none";
+                document.getElementById("textProfileView").style.display = "none";
+                document.getElementById("textScatter2dView").style.display = "block";
+                document.getElementById("textMapView").style.display = "none";
                 break;
             default:
                 console.log("Error: no plot type detected");

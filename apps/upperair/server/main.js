@@ -556,7 +556,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -576,7 +576,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
@@ -596,7 +596,7 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],

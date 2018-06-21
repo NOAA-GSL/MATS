@@ -50,6 +50,47 @@ Template.plotType.events({
         const ref = "#plot-type-" + plotChangeType;   //NOTE: this assumes that the id of the associated plotType is following a convention defined by matsTypes.PlotTypes
         $(ref).trigger('click');
     },
+    'click .plot-type-TimeSeries': function (event) {
+        if (Session.get("confirmPlotChange")) {
+            matsCurveUtils.showTimeseriesFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0) {
+                // the average may not have been carried over from a dieoff so let it default
+                for (var ci = 0; ci < curves.length; ci++) {
+                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
+                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
+                    }
+                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name: 'validtime'}) && matsCollections.CurveParams.findOne({name: 'validtime'}).default) {
+                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name: 'validtime'}).default;
+                    }
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+            }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
+            Session.set("confirmPlotChange", "");
+            Session.set('plotChangeType', "");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0) {
+                Session.set('plotChangeType', matsTypes.PlotTypes.timeSeries);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showTimeseriesFace();
+            }
+        }
+    },
     'click .plot-type-Profile': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
@@ -170,6 +211,75 @@ Template.plotType.events({
             }
         }
     },
+    'click .plot-type-ValidTime': function (event) {
+        if (Session.get("confirmPlotChange")) {
+            matsCurveUtils.showValidTimeFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0) {
+                for (var ci = 0; ci < curves.length; ci++) {
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
+                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+            }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
+            Session.set("confirmPlotChange", "");
+            Session.set('plotChangeType', "");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0) {
+                Session.set('plotChangeType', matsTypes.PlotTypes.validtime);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showValidTimeFace();
+            }
+        }
+    },
+    'click .plot-type-DailyModelCycle': function (event) {
+        if (Session.get("confirmPlotChange")) {
+            matsCurveUtils.showDailyModelCycleFace();
+            var curves = Session.get("Curves");
+            if (curves.length > 0) {
+                // the average may not have been carried over from a dieoff so let it default
+                for (var ci = 0; ci < curves.length; ci++) {
+                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
+                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
+                    }
+                    if (!curves[ci]['utc-cycle-start'] && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default) {
+                        curves[ci]['utc-cycle-start'] = matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default;
+                    }
+                }
+                Session.set("Curves", curves);
+            }
+            matsMethods.refreshMetaData.call({}, function (error, result) {
+                if (error !== undefined) {
+                    setError(new Error(error.message));
+                }
+                matsParamUtils.setAllParamsToDefault();
+                Session.set("lastUpdate", Date.now());
+            });
+            Session.set("confirmPlotChange", "");
+            Session.set('plotChangeType', "");
+            return false;
+        } else {
+            if (Session.get("Curves").length > 0) {
+                Session.set('plotChangeType', matsTypes.PlotTypes.dailyModelCycle);
+                $("#modal-change-plot-type").modal();
+            } else {
+                matsCurveUtils.showDailyModelCycleFace();
+            }
+        }
+    },
     'click .plot-type-Map': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
@@ -203,81 +313,6 @@ Template.plotType.events({
                 $("#modal-change-plot-type").modal();
             } else {
                 matsCurveUtils.showMapFace();
-            }
-        }
-    },
-    'click .plot-type-TimeSeries': function (event) {
-        if (Session.get("confirmPlotChange")) {
-            matsCurveUtils.showTimeseriesFace();
-            var curves = Session.get("Curves");
-            if (curves.length > 0) {
-                // the average may not have been carried over from a dieoff so let it default
-                for (var ci = 0; ci < curves.length; ci++) {
-                    if (!curves[ci]['average'] && matsCollections.CurveParams.findOne({name: 'average'}) && matsCollections.CurveParams.findOne({name: 'average'}).default) {
-                        curves[ci]['average'] = matsCollections.CurveParams.findOne({name: 'average'}).default;
-                    }
-                    if (!curves[ci]['validtime'] && matsCollections.CurveParams.findOne({name: 'validtime'}) && matsCollections.CurveParams.findOne({name: 'validtime'}).default) {
-                        curves[ci]['validtime'] = matsCollections.CurveParams.findOne({name: 'validtime'}).default;
-                    }
-                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
-                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
-                    }
-                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
-                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
-                    }
-                }
-                Session.set("Curves", curves);
-            }
-            matsMethods.refreshMetaData.call({}, function (error, result) {
-                if (error !== undefined) {
-                    setError(new Error(error.message));
-                }
-                matsParamUtils.setAllParamsToDefault();
-                Session.set("lastUpdate", Date.now());
-            });
-            Session.set("confirmPlotChange", "");
-            Session.set('plotChangeType', "");
-            return false;
-        } else {
-            if (Session.get("Curves").length > 0) {
-                Session.set('plotChangeType', matsTypes.PlotTypes.timeSeries);
-                $("#modal-change-plot-type").modal();
-            } else {
-                matsCurveUtils.showTimeseriesFace();
-            }
-        }
-    },
-    'click .plot-type-ValidTime': function (event) {
-        if (Session.get("confirmPlotChange")) {
-            matsCurveUtils.showValidTimeFace();
-            var curves = Session.get("Curves");
-            if (curves.length > 0) {
-                for (var ci = 0; ci < curves.length; ci++) {
-                    if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
-                        curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
-                    }
-                    if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
-                        curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
-                    }
-                }
-                Session.set("Curves", curves);
-            }
-            matsMethods.refreshMetaData.call({}, function (error, result) {
-                if (error !== undefined) {
-                    setError(new Error(error.message));
-                }
-                matsParamUtils.setAllParamsToDefault();
-                Session.set("lastUpdate", Date.now());
-            });
-            Session.set("confirmPlotChange", "");
-            Session.set('plotChangeType', "");
-            return false;
-        } else {
-            if (Session.get("Curves").length > 0) {
-                Session.set('plotChangeType', matsTypes.PlotTypes.validtime);
-                $("#modal-change-plot-type").modal();
-            } else {
-                matsCurveUtils.showValidTimeFace();
             }
         }
     },

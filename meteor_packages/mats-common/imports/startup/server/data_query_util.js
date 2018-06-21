@@ -372,6 +372,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             independentVar = Number(rows[rowIndex].hr_of_day);
         } else if (plotType === 'profile') {
             independentVar = Number(rows[rowIndex].avVal);
+        } else if (plotType === 'dailyModelCycle') {
+            independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
             independentVar = Number(rows[rowIndex].avtime);
         }
@@ -396,6 +398,21 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                 sub_levs = NaN;
             }
         }
+
+        //deal with missing forecast cycles for dailyModelCycle plot type
+        if (plotType === 'dailyModelCycle' && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex-1].avtime*1000)) > 3600 * 24 * 1000) {
+            const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex-1].avtime*1000))/(3600 * 24 * 1000));
+            for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
+                curveIndependentVars.push(independentVar - 3600 * 24 * 1000 * missingIdx);
+                curveStat.push(null);
+                curveSubStats.push(NaN);
+                curveSubSecs.push(NaN);
+                if (hasLevels) {
+                    curveSubLevs.push(NaN);
+                }
+            }
+        }
+
         curveIndependentVars.push(independentVar);
         curveStat.push(stat);
         curveSubStats.push(sub_stats);

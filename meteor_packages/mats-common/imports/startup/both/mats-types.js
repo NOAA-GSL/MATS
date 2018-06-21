@@ -26,6 +26,7 @@ var  PlotTypes = {
     dieoff : "DieOff",
     threshold : "Threshold",
     validtime : "ValidTime",
+    dailyModelCycle : "DailyModelCycle",
     map : "Map"
 };
 
@@ -75,7 +76,8 @@ var PlotView = {
     textScatter: "textScatter",
     textDieoff: "textDieoff",
     textThreshold: "textThreshold",
-    textValidTime: "testValidTime",
+    textValidTime: "textValidTime",
+    textDailyModelCycle : "textDailyModelCycle",
     textMap: "textMap"
 };
 

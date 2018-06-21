@@ -163,6 +163,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/graph/displayFunctions/graph_die_off.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_threshold.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_validtime.js", "client");
+    api.addFiles("templates/graph/displayFunctions/graph_daily_model_cycle.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
 
@@ -183,6 +184,9 @@ Package.onUse(function (api) {
 
     api.addFiles("templates/graph/text_validtime_output.html", "client");
     api.addFiles("templates/graph/text_validtime_output.js", "client");
+
+    api.addFiles("templates/graph/text_daily_model_cycle_output.html", "client");
+    api.addFiles("templates/graph/text_daily_model_cycle_output.js", "client");
 
     api.addFiles("templates/graph/text_scatter2d_output.html", "client");
     api.addFiles("templates/graph/text_scatter2d_output.js", "client");

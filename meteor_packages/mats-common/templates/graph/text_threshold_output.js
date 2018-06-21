@@ -254,7 +254,7 @@ Template.textThresholdOutput.events({
         const curveNums = matsCurveUtils.PlotResult.data.length - 1;
         const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD:HH');
+            var line = matsCurveUtils.PlotResult.data[0].data[rowIndex][0];
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
                 const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;

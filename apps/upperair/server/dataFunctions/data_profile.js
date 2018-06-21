@@ -91,14 +91,14 @@ dataProfile = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 > {{top}}/10 " +
+                "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
-            // build the query
+
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
@@ -144,6 +144,7 @@ dataProfile = function (plotParams, plotFunction) {
                 }
             }
 
+            // set axis limits based on returned data
             var postQueryStartMoment = moment();
 
         } else {
@@ -153,6 +154,7 @@ dataProfile = function (plotParams, plotFunction) {
                     diffFrom: diffFrom
                 }, 'profile', true);
 
+            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
         }
 
@@ -270,8 +272,8 @@ dataProfile = function (plotParams, plotFunction) {
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
-                "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                "<br>  stde: " + errorResult.stde_betsy +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
                 "<br>  errorbars: " + Number((data[di][0]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
