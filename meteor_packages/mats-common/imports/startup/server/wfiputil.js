@@ -1287,7 +1287,12 @@ const get_err = function (sVals, sSecs) {
     var d_mean = sum_d / n_good;
     var sd2 = sum2_d / n_good - d_mean * d_mean;
     var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
-    var sd_limit = outlierQCParam * sd;
+
+    // RIGHT NOW WE HAVE OUTLIER FILTERING DISABLED FOR WFIP2, SO SD_LIMIT IS HARDCODED TO 100 STANDARD DEVIATIONS.
+    // TO CHANGE THIS, UNCOMMENT THE FOLLOWING LINE AND COMMENT THE ONE WHERE SD_LIMIT IS SET TO 100 STANDARD DEVIATIONS.
+    // var sd_limit = outlierQCParam * sd;
+    var sd_limit = 100 * sd;
+
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
     // find minimum delta_time, if any value missing, set null
     var last_secs = Number.MIN_VALUE;
@@ -1321,6 +1326,8 @@ const get_err = function (sVals, sSecs) {
         console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
     }
     // remove data more than $sd_limit from mean
+    // RIGHT NOW WE HAVE OUTLIER FILTERING DISABLED FOR WFIP2, SO SD_LIMIT IS HARDCODED TO 100 STANDARD DEVIATIONS.
+    // THIS CAN BE UNDONE ABOVE, WHERE SD_LIMIT IS DECLARED.
     var qaCorrected = [];
     for (i=0; i < subVals.length; i++) {
         if (Math.abs(subVals[i] - d_mean) > sd_limit) {

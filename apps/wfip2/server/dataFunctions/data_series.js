@@ -495,13 +495,13 @@ dataSeries = function (plotParams, plotFunction) {
              For matching we need ...
              1) match by time - requires the subset(intersection) of all the times for each curve - timesBasis
              2) match by site - requires the subset of all the sites for each curve - sitesBasis
-             3) match by level - requires the subset of all the levels that are present for all the sites for each curve - levelsBasis
+             3) match by level - requires the subset of all the levels that are present  for each curve - levelsBasis
              These subsets should be created on the fly in the query for each curve.
              The overall subsets can be calculated by intersecting the curve subsets after the first pass and only if matching is requested.
              Matching should occur in this order
              if match by time requested do that first. Toss out any times that are not present in all the curves
              if match by site requested do that second. Toss out any sites that are not present in all the curves
-             if match by level is requested do that last. Toss out any levels that are not present in each site for each curve
+             if match by level is requested do that last. Toss out any levels that are not present  for each curve
 
              For example if level matching is requested we need to use intersection of all the levelsBasis (allLevelsBasis) for all the curves
              and only include data that has levels that are in allLevelsBasis. It is the same for times and siteids.
@@ -668,7 +668,7 @@ dataSeries = function (plotParams, plotFunction) {
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
         }
 
-    } // end for curves
+    } // end for curves`````48666666666666666666666666666666666666666666666666666666666666666
 
     // matching goes here
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (matchLevel || matchSite || matchTime)) {
