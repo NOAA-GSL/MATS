@@ -196,10 +196,10 @@ var doCurveParams = function () {
                         dataSources.push(addedModel);
                         dataSourceCycleIntervals.push(Number(cycle_interval_sampleRates[ci]));
                         // either a single sampleRate source or the first of multisampleRate source
-                        dataSourceSites[model] = dataSourceSites[model].concat(cycle_intervals[cycle_interval_sampleRates[ci]]);
-                        dataSourceSites[addedModel] = cycle_intervals[cycle_interval_sampleRates[ci]];
+                        dataSourceSites[model] = Array.from(new Set(dataSourceSites[model].concat(cycle_intervals[cycle_interval_sampleRates[ci]])));
+                        dataSourceSites[addedModel] = Array.from(new Set(cycle_intervals[cycle_interval_sampleRates[ci]]));
                     }
-                    dataSourceSites[model + "-LCM-" + lcm] = dataSourceSites[model];
+                    dataSourceSites[model + "-LCM-" + lcm] = Array.from(new Set(dataSourceSites[model]));
             }
 
             //loop through the datasources - most of which will only be one, but multi-sample datasources will have more
@@ -422,7 +422,7 @@ var doCurveParams = function () {
             }
             var is_instrument = modelOptionsMap[description][0].split(',')[1];
             var forecastLengths = [];
-            forecastLengths.push.apply(forecastLengths, rows[i].fcst_hours.split(','));
+            forecastLengths.push.apply(forecastLengths, Array.from(new Set(rows[i].fcst_hours.split(','))));
             forecastLengthOptionsMap[description] = forecastLengthOptionsMap[description] === undefined ? [] : forecastLengthOptionsMap[description];
             if (is_instrument == 1) {
                 forecastLengthOptionsMap[description] = matsTypes.InputTypes.unused;
