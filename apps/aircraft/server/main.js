@@ -194,13 +194,11 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
-        optionsMap = {
+        const statOptionsMap = {
             'RMS': ['sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0',
                 'sqrt(sum(m0.sum2_{{variable0}})/sum(m0.N_{{variable0}})) as stat, sum(m0.N_{{variable0}}) as N0'],
             'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
                 'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
-            'OmF (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
-                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
             'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0',
                 'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0'],
             'Model average': ['sum(m0.sum_ob_{{variable1}} - m0.sum_{{variable0}})/sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as stat, sum(if(m0.sum_ob_{{variable1}} is null,0,m0.N_{{variable0}})) as N0',
@@ -214,8 +212,6 @@ const doCurveParams = function () {
             'RMS-other': 'group_concat(sqrt((m0.sum2_{{variable0}})/m0.N_{{variable0}})  order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0 ,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
             'Bias (Model - Obs)-winds': 'group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
             'Bias (Model - Obs)-other': 'group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
-            'OmF (Obs - Model)-winds': 'group_concat((m0.sum_ob_{{variable1}} - m0.sum_model_{{variable1}})/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
-            'OmF (Obs - Model)-other': 'group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat( unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
             'N-winds': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
             'N-other': 'group_concat(m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0,group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
             'Model average-winds': 'group_concat(m0.sum_model_{{variable1}}/m0.N_{{variable0}} order by unix_timestamp(m0.date)+3600*m0.hour) as sub_values0, group_concat(unix_timestamp(m0.date)+3600*m0.hour order by unix_timestamp(m0.date)+3600*m0.hour) as sub_secs0 ,group_concat( m0.mb10 * 10 order by unix_timestamp(m0.date)+3600*m0.hour) as sub_levs0',
@@ -225,18 +221,15 @@ const doCurveParams = function () {
         };
 
         matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                statAuxMap:statAuxMap,
-                options: ['RMS', 'Bias (Model - Obs)', 'OmF (Obs - Model)', 'N', 'Model average', 'Obs average'],   // convenience
+                optionsMap: statOptionsMap,
+                statAuxMap: statAuxMap,
+                options: Object.keys(statOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: 'RMS',
+                default: Object.keys(statOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 4,
                 displayPriority: 1,
@@ -245,7 +238,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'variable'}) == undefined) {
-        optionsMap = {
+        const statVarOptionsMap = {
             temperature: ['dt', 't'],
             RH: ['dR', 'R'],
             winds: ['dw', 'ws']
@@ -258,11 +251,6 @@ const doCurveParams = function () {
                 'winds': 'm/s'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'winds': 'm/s'
-            },
-            'OmF (Obs - Model)': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
                 'winds': 'm/s'
@@ -288,12 +276,12 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
+                optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: ['temperature', 'RH', 'winds'],   // convenience
+                options: Object.keys(statVarOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: 'winds',
+                default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -401,10 +389,10 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'phase'}) == undefined) {
         optionsMap = {
-            "All" : "and m0.up_dn = 2 ",
-            "EnR" : "and m0.up_dn = 0 ",
-            "Up" : "and m0.up_dn = 1 ",
-            "Dn" : "and m0.up_dn = -1 "
+            "All": "and m0.up_dn = 2 ",
+            "EnR": "and m0.up_dn = 0 ",
+            "Up": "and m0.up_dn = 1 ",
+            "Dn": "and m0.up_dn = -1 "
 //            "R" : ""
         };
         matsCollections.CurveParams.insert(

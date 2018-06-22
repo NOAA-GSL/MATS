@@ -117,8 +117,8 @@ const doCurveParams = function () {
 
         //levels are fixed per variable
         levelVariableOptionsMap['HGT'] = ['500'];
-        levelVariableOptionsMap['UGRD'] = ['250','850'];
-        levelVariableOptionsMap['VGRD'] = ['250','850'];
+        levelVariableOptionsMap['UGRD'] = ['250', '850'];
+        levelVariableOptionsMap['VGRD'] = ['250', '850'];
 
     } catch (err) {
         console.log(err.message);

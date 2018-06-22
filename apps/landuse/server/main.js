@@ -196,7 +196,7 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-        optionsMap = {
+        const statOptionsMap = {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
@@ -207,10 +207,6 @@ const doCurveParams = function () {
             'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
-            ],
-            'Bias (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
-                'sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
-                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((-m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
             ],
             'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
@@ -235,27 +231,24 @@ const doCurveParams = function () {
 
         };
 
-        matsCollections.CurveParams.insert({
-            // bias and model average are a different formula for wind (element 0 differs from element 1)
-            // but stays the same (element 0 and element 1 are the same) otherwise.
-            // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-            // time series we never append element 2. Element 3 is used to give us error values for error bars.
-            name: 'statistic',
-            type: matsTypes.InputTypes.select,
-            optionsMap: optionsMap,
-            options: Object.keys(optionsMap),   // convenience
-            controlButtonCovered: true,
-            unique: false,
-            default: 'RMS',
-            controlButtonVisibility: 'block',
-            displayOrder: 4,
-            displayPriority: 1,
-            displayGroup: 2
-        });
+        matsCollections.CurveParams.insert(
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statOptionsMap,
+                options: Object.keys(statOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
     }
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
-        optionsMap = {
+        const statVarOptionsMap = {
             'temperature': ['dt', 't'],
             'RH': ['drh', 'rh'],
             'dewpoint': ['dTd', 'td'],
@@ -270,12 +263,6 @@ const doCurveParams = function () {
                 'wind': 'm/s'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
-            },
-            'Bias (Obs - Model)': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
                 'dewpoint': '°C',
@@ -317,12 +304,12 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
+                optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: Object.keys(statVarOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -601,7 +588,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories','vgtyp_descriptions']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "landuse"});

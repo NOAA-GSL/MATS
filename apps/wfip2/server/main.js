@@ -9,16 +9,18 @@ const startInit = dateInitStrParts[0];
 const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
-const LCM = function(A)  // A is an integer array (e.g. [-50,25,-45,-18,90,447])
+const LCM = function (A)  // A is an integer array (e.g. [-50,25,-45,-18,90,447])
 {
     var n = A.length, a = Math.abs(A[0]);
-    for (var i = 1; i < n; i++)
-    { var b = Math.abs(A[i]), c = a;
-        while (a && b){ a > b ? a %= b : b %= a; }
-        a = Math.abs(c*A[i])/(a+b);
+    for (var i = 1; i < n; i++) {
+        var b = Math.abs(A[i]), c = a;
+        while (a && b) {
+            a > b ? a %= b : b %= a;
+        }
+        a = Math.abs(c * A[i]) / (a + b);
     }
     return a;
-}
+};
 
 var doScatter2dParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -146,12 +148,12 @@ var doCurveParams = function () {
         for a given RASS reading is really more appropriate at the next hourly time stamp. So we modify the query to get the previous hourly reading for a given time.
         The half interval is still a half interval i.e. 30 minutes.
      */
-    var pci10rows= matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev10min'");
+    var pci10rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev10min'");
     var previousCycleInstrumentRassIds = [];
     for (var pci = 0; pci < pci10rows.length; pci++) {
         previousCycleInstrumentRassIds.push(pci10rows[pci].instrid);
     }
-    var pci50rows= matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev50min'");
+    var pci50rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select instrid from instruments where cycle_average_type = 'prev50min'");
     var previousCycleInstrumentIds = [];
     for (var pci = 0; pci < pci50rows.length; pci++) {
         previousCycleInstrumentIds.push(pci50rows[pci].instrid);
@@ -186,20 +188,20 @@ var doCurveParams = function () {
             dataSourceCycleIntervals[0] = Number(cycle_interval_sampleRates[0]);
             dataSourceSites[model] = cycle_intervals[cycle_interval_sampleRates[0]];
             if (cycle_interval_sampleRates.length > 1) {
-                    var lcm = LCM(cycle_interval_sampleRates);
-                    dataSources.push( model + "-LCM-" + lcm );
-                    dataSourceCycleIntervals.push(lcm);
-                    dynamicallyAddedModels[model] = [model + "-LCM-" + lcm];
-                    for (ci = 0; ci < cycle_interval_sampleRates.length; ci++) {
-                        var addedModel = model + "-" + cycle_interval_sampleRates[ci];
-                        dynamicallyAddedModels[model].push(addedModel);
-                        dataSources.push(addedModel);
-                        dataSourceCycleIntervals.push(Number(cycle_interval_sampleRates[ci]));
-                        // either a single sampleRate source or the first of multisampleRate source
-                        dataSourceSites[model] = Array.from(new Set(dataSourceSites[model].concat(cycle_intervals[cycle_interval_sampleRates[ci]])));
-                        dataSourceSites[addedModel] = Array.from(new Set(cycle_intervals[cycle_interval_sampleRates[ci]]));
-                    }
-                    dataSourceSites[model + "-LCM-" + lcm] = Array.from(new Set(dataSourceSites[model]));
+                var lcm = LCM(cycle_interval_sampleRates);
+                dataSources.push(model + "-LCM-" + lcm);
+                dataSourceCycleIntervals.push(lcm);
+                dynamicallyAddedModels[model] = [model + "-LCM-" + lcm];
+                for (ci = 0; ci < cycle_interval_sampleRates.length; ci++) {
+                    var addedModel = model + "-" + cycle_interval_sampleRates[ci];
+                    dynamicallyAddedModels[model].push(addedModel);
+                    dataSources.push(addedModel);
+                    dataSourceCycleIntervals.push(Number(cycle_interval_sampleRates[ci]));
+                    // either a single sampleRate source or the first of multisampleRate source
+                    dataSourceSites[model] = Array.from(new Set(dataSourceSites[model].concat(cycle_intervals[cycle_interval_sampleRates[ci]])));
+                    dataSourceSites[addedModel] = Array.from(new Set(cycle_intervals[cycle_interval_sampleRates[ci]]));
+                }
+                dataSourceSites[model + "-LCM-" + lcm] = Array.from(new Set(dataSourceSites[model]));
             }
 
             //loop through the datasources - most of which will only be one, but multi-sample datasources will have more
@@ -260,7 +262,7 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 1:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
     try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "SELECT instrid, short_name, description, color, highlight FROM instruments;");
@@ -279,7 +281,7 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 2:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
     var siteIdNameMap = {};// used in added models below
     try {
@@ -367,13 +369,13 @@ var doCurveParams = function () {
 
         // Now, we may have added datasources due to disparate sample rates or time frames etc.. If so, we have to also add the modified site lists
         var dynamicallyAddedRootModelNames = Object.keys(dynamicallyAddedModels);
-        for (var darmni=0; darmni< dynamicallyAddedRootModelNames.length; darmni++) {
+        for (var darmni = 0; darmni < dynamicallyAddedRootModelNames.length; darmni++) {
             var newModels = dynamicallyAddedModels[dynamicallyAddedRootModelNames[darmni]]; // new models added for this root
-            for (var nmi=0; nmi < newModels.length; nmi++) {
+            for (var nmi = 0; nmi < newModels.length; nmi++) {
                 var newModel = newModels[nmi];
                 var sitesIdsForNewModel = dataSourceSites[newModel];
                 siteOptionsMap[newModel] = [];
-                for (var sifnmi=0; sifnmi<sitesIdsForNewModel.length; sifnmi++) {
+                for (var sifnmi = 0; sifnmi < sitesIdsForNewModel.length; sifnmi++) {
                     var siteId = sitesIdsForNewModel[sifnmi];
                     var siteName = siteIdNameMap[siteId];
                     siteOptionsMap[newModel].push(siteName);
@@ -382,7 +384,7 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 3:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
 
     try {
@@ -399,15 +401,15 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 4:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
     try {
         var all_fcst_lens = new Set();
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(wfip2Pool, "select short_name, fcst_hours, description " +
-                        "from nwps " +
-                        "union select short_name, 0, description  " +
-                        "from instruments as U " +
-                        "where exists ( select model from data_sources where model = U.short_name) order by upper(short_name);");
+            "from nwps " +
+            "union select short_name, 0, description  " +
+            "from instruments as U " +
+            "where exists ( select model from data_sources where model = U.short_name) order by upper(short_name);");
         for (var i = 0; i < rows.length; i++) {
             const these_lengths = rows[i].fcst_hours.split(',');
             for (var j = 0; j < these_lengths.length; j++) {
@@ -459,7 +461,7 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 5:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
 
     try {
@@ -473,7 +475,7 @@ var doCurveParams = function () {
         }
     } catch (err) {
         console.log("Database error 6:", err.message);
-        console.log (err.stack)
+        console.log(err.stack)
     }
 
 
@@ -651,8 +653,14 @@ var doCurveParams = function () {
                 options: Object.keys(statisticOptionsMap),   // convenience
                 controlButtonCovered: true,
                 dependentNames: ["sites", "forecast-length", "variable", "truth-variable"],
-                disableOtherFor: {'truth-data-source': statisticOptionsMap.mean, 'truth-variable': statisticOptionsMap.mean},
-                hideOtherFor: {'truth-data-source': statisticOptionsMap.mean,  'truth-variable': statisticOptionsMap.mean},
+                disableOtherFor: {
+                    'truth-data-source': statisticOptionsMap.mean,
+                    'truth-variable': statisticOptionsMap.mean
+                },
+                hideOtherFor: {
+                    'truth-data-source': statisticOptionsMap.mean,
+                    'truth-variable': statisticOptionsMap.mean
+                },
                 unique: false,
                 default: Object.keys(statisticOptionsMap)[0],
                 controlButtonVisibility: 'block',
@@ -1130,11 +1138,11 @@ var doCurveTextPatterns = function () {
                 "Fit-Type",
                 "xaxis", "xaxis-data-source", "xaxis-truth-data-source", "xaxis-discriminator",
                 "xaxis-upper", "xaxis-lower", "xaxis-statistic", "xaxis-region", "xaxis-sites",
-                "xaxis-site-completeness", "xaxis-variable", "xaxis-truth-variable","xaxis-forecast-length", "xaxis-top", "xaxis-bottom", "xaxis-level-completeness", "xaxis-valid-time",
+                "xaxis-site-completeness", "xaxis-variable", "xaxis-truth-variable", "xaxis-forecast-length", "xaxis-top", "xaxis-bottom", "xaxis-level-completeness", "xaxis-valid-time",
 
                 "yaxis", "yaxis-data-source", "yaxis-truth-data-source", "yaxis-discriminator",
                 "yaxis-upper", "yaxis-lower", "yaxis-statistic", "yaxis-region", "yaxis-sites",
-                "yaxis-site-completeness", "yaxis-variable","yaxis-truth-variable", "yaxis-forecast-length", "yaxis-top", "yaxis-bottom", "yaxis-level-completeness", "yaxis-valid-time"
+                "yaxis-site-completeness", "yaxis-variable", "yaxis-truth-variable", "yaxis-forecast-length", "yaxis-top", "yaxis-bottom", "yaxis-level-completeness", "yaxis-valid-time"
             ],
             groupSize: 6
         });
@@ -1173,7 +1181,7 @@ var doPlotGraph = function () {
             textViewId: "textSeriesView",
             graphViewId: "graphSeriesView",
             checked: true,
-            dependents: ['variable','truth-variable']
+            dependents: ['variable', 'truth-variable']
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
@@ -1182,7 +1190,7 @@ var doPlotGraph = function () {
             textViewId: "textProfileView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependents: ['variable','truth-variable']
+            dependents: ['variable', 'truth-variable']
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.scatter2d,
@@ -1191,7 +1199,7 @@ var doPlotGraph = function () {
             textViewId: "textScatter2dView",
             graphViewId: "graphSeriesView",
             checked: false,
-            dependents: ['variable','truth-variable']
+            dependents: ['variable', 'truth-variable']
         });
     }
 };
@@ -1249,7 +1257,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.database, ['data_sources', 'discriminator_range', 'region_descriptions_mats','variables','instruments_per_site','sites']);
+    const mdr = new matsTypes.MetaDataDBRecord("wfip2Pool", wfip2Settings.database, ['data_sources', 'discriminator_range', 'region_descriptions_mats', 'variables', 'instruments_per_site', 'sites']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "wfip2"});

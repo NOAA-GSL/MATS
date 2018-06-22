@@ -110,7 +110,7 @@ const doCurveParams = function () {
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, ""))/60).toString();
+                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, "")) / 60).toString();
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
@@ -189,90 +189,87 @@ const doCurveParams = function () {
         }
     }
 
-        if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'region',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'region',
+                type: matsTypes.InputTypes.select,
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                valuesMap: masterRegionValuesMap,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 1
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
                     optionsMap: regionModelOptionsMap,
-                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
                     valuesMap: masterRegionValuesMap,
-                    superiorNames: ['data-source'],
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 3,
-                    displayPriority: 1,
-                    displayGroup: 1
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
-            if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-                (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
-                // have to reload model data
-                matsCollections.CurveParams.update({name: 'region'}, {
-                    $set: {
-                        optionsMap: regionModelOptionsMap,
-                        valuesMap: masterRegionValuesMap,
-                        options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
-                    }
-                });
-            }
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-            var optionsMap = {
-                'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0, group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+    if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
+        var optionsMap = {
+            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0, group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
+            'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
 
-                'Bias (forecast/actual)': ['((sum(m0.yy+m0.ny)+0.00)/sum(m0.yy+m0.yn)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 1],
+            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 1],
 
-                'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+            'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-                'Nlow (obs < threshold, avg per 15 min)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+            'Nlow (obs < threshold, avg per 15 min)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-                'Nhigh (obs > threshold, avg per 15 min)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Number', null],
+            'Nhigh (obs > threshold, avg per 15 min)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Number', null],
 
-                'Ntot (total obs, avg per 15 min)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+            'Ntot (total obs, avg per 15 min)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
 
-                'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
 
-                'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Ratio', null],
+            'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Ratio', null],
 
-                'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null]
-            };
-            matsCollections.CurveParams.insert(
-                {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                    // but stays the same (element 0 and element 1 are the same) otherwise.
-                    // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                    // time series we never append element 2. Element 3 is used to give us error values for error bars.
-                    name: 'statistic',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: optionsMap,
-                    options: Object.keys(optionsMap),   // convenience
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: Object.keys(optionsMap)[0],
-                    controlButtonVisibility: 'block',
-                    displayOrder: 4,
-                    displayPriority: 1,
-                    displayGroup: 2
-                });
-        }
+            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+    }
 
-        if (matsCollections.CurveParams.find({name: 'threshold'}).count() == 0) {
-            matsCollections.CurveParams.insert(
+    if (matsCollections.CurveParams.find({name: 'threshold'}).count() == 0) {
+        matsCollections.CurveParams.insert(
             {
                 name: 'threshold',
                 type: matsTypes.InputTypes.select,
@@ -288,133 +285,133 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
-            if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
-                (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
-                // have to reload model data
-                matsCollections.CurveParams.update({name: 'threshold'}, {
-                    $set: {
-                        optionsMap: thresholdsModelOptionsMap,
-                        valuesMap: masterThresholdValuesMap,
-                        options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
-                        default:thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0]
-                    }
-                });
-            }
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'threshold'}, {
+                $set: {
+                    optionsMap: thresholdsModelOptionsMap,
+                    valuesMap: masterThresholdValuesMap,
+                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+                    default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0]
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-            optionsMap = {
-                'None': ['m0.time'],
-                '15m': ['ceil(900*floor(m0.time/900)+900/2)'],
-                '30m': ['ceil(1800*floor(m0.time/1800)+1800/2)'],
-                '1h': ['ceil(3600*floor(m0.time/3600)+3600/2)'],
-                '90m': ['ceil(5400*floor(m0.time/5400)+5400/2)'],
-                '2h': ['ceil(7200*floor(m0.time/7200)+7200/2)'],
-                '3h': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
-                '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
-                '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
-                '3D': ['ceil(259200*floor(m0.time/259200)+259200/2)'],
-                '7D': ['ceil(604800*floor(m0.time/604800)+604800/2)'],
-                '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
-                '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)'],
-                '90D': ['ceil(7776000*floor(m0.time/7776000)+7776000/2)'],
-                '180D': ['ceil(15552000*floor(m0.time/15552000)+15552000/2)']
-            };
+    if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
+        optionsMap = {
+            'None': ['m0.time'],
+            '15m': ['ceil(900*floor(m0.time/900)+900/2)'],
+            '30m': ['ceil(1800*floor(m0.time/1800)+1800/2)'],
+            '1h': ['ceil(3600*floor(m0.time/3600)+3600/2)'],
+            '90m': ['ceil(5400*floor(m0.time/5400)+5400/2)'],
+            '2h': ['ceil(7200*floor(m0.time/7200)+7200/2)'],
+            '3h': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
+            '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
+            '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
+            '3D': ['ceil(259200*floor(m0.time/259200)+259200/2)'],
+            '7D': ['ceil(604800*floor(m0.time/604800)+604800/2)'],
+            '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
+            '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)'],
+            '90D': ['ceil(7776000*floor(m0.time/7776000)+7776000/2)'],
+            '180D': ['ceil(15552000*floor(m0.time/15552000)+15552000/2)']
+        };
 
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'average',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: optionsMap,
-                    options: Object.keys(optionsMap),   // convenience
-                    controlButtonCovered: true,
-                    unique: false,
-                    selected: 'None',
-                    default: 'None',
-                    controlButtonVisibility: 'block',
-                    displayOrder: 6,
-                    displayPriority: 1,
-                    displayGroup: 3
-                });
-        }
+        matsCollections.CurveParams.insert(
+            {
+                name: 'average',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                selected: 'None',
+                default: 'None',
+                controlButtonVisibility: 'block',
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
 
-        if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'dieoff-forecast-length',
-                    type: matsTypes.InputTypes.select,
-                    optionsMap: {},
-                    options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                    superiorNames: [],
-                    selected: '',
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: matsTypes.ForecastTypes.dieoff,
-                    controlButtonVisibility: 'block',
-                    controlButtonText: 'forecast-length',
-                    displayOrder: 7,
-                    displayPriority: 1,
-                    displayGroup: 3
-                });
-        }
+    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: {},
+                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
+                superiorNames: [],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.ForecastTypes.dieoff,
+                controlButtonVisibility: 'block',
+                controlButtonText: 'forecast-length',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
 
-        if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'forecast-length',
-                    type: matsTypes.InputTypes.select,
+    if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: forecastLengthOptionsMap,
+                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                superiorNames: ['data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
+                controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
                     optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
-                    superiorNames: ['data-source'],
-                    selected: '',
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
-                    controlButtonVisibility: 'block',
-                    controlButtonText: "forecast lead time",
-                    displayOrder: 7,
-                    displayPriority: 1,
-                    displayGroup: 3
-                });
-        } else {
-            // it is defined but check for necessary update
-            var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
-            if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
-                // have to reload model data
-                matsCollections.CurveParams.update({name: 'forecast-length'}, {
-                    $set: {
-                        optionsMap: forecastLengthOptionsMap,
-                        options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]
-                    }
-                });
-            }
+                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]
+                }
+            });
         }
+    }
 
-        if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
 
-            const optionsArrRaw = [...Array(96).keys()].map(x => x / 4);
-            const optionsArr = optionsArrRaw.map(String);
+        const optionsArrRaw = [...Array(96).keys()].map(x => x / 4);
+        const optionsArr = optionsArrRaw.map(String);
 
-            matsCollections.CurveParams.insert(
-                {
-                    name: 'valid-time',
-                    type: matsTypes.InputTypes.select,
-                    options: optionsArr,
-                    selected: [],
-                    controlButtonCovered: true,
-                    unique: false,
-                    default: matsTypes.InputTypes.unused,
-                    controlButtonVisibility: 'block',
-                    controlButtonText: "valid utc hour",
-                    displayOrder: 8,
-                    displayPriority: 1,
-                    displayGroup: 3,
-                    multiple: true
-                });
-        }
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 8,
+                displayPriority: 1,
+                displayGroup: 3,
+                multiple: true
+            });
+    }
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
 

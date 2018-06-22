@@ -107,7 +107,7 @@ const doCurveParams = function () {
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < forecastLengthArr.length; j++) {
-                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, ""))/60).toString();
+                forecastLengthArr[j] = (Number(forecastLengthArr[j].replace(/'|\[|\]/g, "")) / 60).toString();
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
@@ -223,13 +223,12 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-        optionsMap = {
+        const statOptionsMap = {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
             'MAE': ['avg(abs({{variable0}})) as stat, count({{variable0}}) as N0, group_concat(abs({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Bias (Model - Obs)': ['-1 * avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(-1 * ({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
-            'Bias (Obs - Model)': ['avg({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'N': ['count({{variable0}}) as stat, count({{variable0}}) as N0, group_concat(count({{variable0}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Model average': ['avg({{variable1}}) as stat, count({{variable1}}) as N0, group_concat(({{variable1}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
             'Obs average': ['avg({{variable2}}) as stat, count({{variable2}}) as N0, group_concat(({{variable2}}) order by m0.secs) as sub_values0 ,group_concat(m0.secs order by m0.secs) as sub_secs0'],
@@ -238,32 +237,29 @@ const doCurveParams = function () {
 
         };
 
-        matsCollections.CurveParams.insert({
-            // bias and model average are a different formula for wind (element 0 differs from element 1)
-            // but stays the same (element 0 and element 1 are the same) otherwise.
-            // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-            // time series we never append element 2. Element 3 is used to give us error values for error bars.
-            name: 'statistic',
-            type: matsTypes.InputTypes.select,
-            optionsMap: optionsMap,
-            options: Object.keys(optionsMap),   // convenience
-            controlButtonCovered: true,
-            unique: false,
-            default: Object.keys(optionsMap)[0],
-            controlButtonVisibility: 'block',
-            displayOrder: 4,
-            displayPriority: 1,
-            displayGroup: 2
-        });
+        matsCollections.CurveParams.insert(
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statOptionsMap,
+                options: Object.keys(statOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
     }
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
-        optionsMap = {
-            'dswrf': ['ob0.direct + ob0.diffuse - m0.dswrf','m0.dswrf','ob0.direct + ob0.diffuse'],
-            'direct (experimental HRRR only)': ['ob0.direct - m0.direct','m0.direct','ob0.direct'],
-            'diffuse (experimental HRRR only)': ['ob0.diffuse - m0.diffuse','m0.diffuse','ob0.diffuse'],
-            '15 min avg dswrf (experimental HRRR only)': ['ob0.direct + ob0.diffuse - m0.dswrf15','m0.dswrf15','ob0.direct + ob0.diffuse'],
-            '15 min avg direct (experimental HRRR only)': ['ob0.direct - m0.direct15','m0.direct15','ob0.direct']
+        const statVarOptionsMap = {
+            'dswrf': ['ob0.direct + ob0.diffuse - m0.dswrf', 'm0.dswrf', 'ob0.direct + ob0.diffuse'],
+            'direct (experimental HRRR only)': ['ob0.direct - m0.direct', 'm0.direct', 'ob0.direct'],
+            'diffuse (experimental HRRR only)': ['ob0.diffuse - m0.diffuse', 'm0.diffuse', 'ob0.diffuse'],
+            '15 min avg dswrf (experimental HRRR only)': ['ob0.direct + ob0.diffuse - m0.dswrf15', 'm0.dswrf15', 'ob0.direct + ob0.diffuse'],
+            '15 min avg direct (experimental HRRR only)': ['ob0.direct - m0.direct15', 'm0.direct15', 'ob0.direct']
         };
 
         const statVarUnitMap = {
@@ -275,13 +271,6 @@ const doCurveParams = function () {
                 '15 min avg direct (experimental HRRR only)': 'W/m2'
             },
             'Bias (Model - Obs)': {
-                'dswrf': 'W/m2',
-                'direct (experimental HRRR only)': 'W/m2',
-                'diffuse (experimental HRRR only)': 'W/m2',
-                '15 min avg dswrf (experimental HRRR only)': 'W/m2',
-                '15 min avg direct (experimental HRRR only)': 'W/m2'
-            },
-            'Bias (Obs - Model)': {
                 'dswrf': 'W/m2',
                 'direct (experimental HRRR only)': 'W/m2',
                 'diffuse (experimental HRRR only)': 'W/m2',
@@ -330,12 +319,12 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
+                optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: Object.keys(statVarOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -662,7 +651,7 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions','station_descriptions','regions_per_model_mats_all_categories']);
+    const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "surfrad"});

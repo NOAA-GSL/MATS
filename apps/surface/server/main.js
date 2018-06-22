@@ -133,8 +133,8 @@ const doCurveParams = function () {
             var site_name = rows[i].name;
             var site_description = rows[i].desc;
             var site_id = rows[i].madis_id;
-            var site_lat = rows[i].lat/100;
-            var site_lon = rows[i].lon/100;
+            var site_lat = rows[i].lat / 100;
+            var site_lon = rows[i].lon / 100;
             var site_elev = rows[i].elev;
             siteOptionsMap[site_name] = [site_id];
             //masterSitesMap[site_name] = [site_description];
@@ -173,7 +173,6 @@ const doCurveParams = function () {
             }
         );
     }
-
 
 
     if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
@@ -247,21 +246,21 @@ const doCurveParams = function () {
     } else {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
-       if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
-           (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
             // have to reload model data
-          matsCollections.CurveParams.update({name: 'region'}, {
-               $set: {
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
                     optionsMap: regionModelOptionsMap,
                     valuesMap: masterRegionValuesMap,
                     options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
                 }
-          });
-       }
-   }
+            });
+        }
+    }
 
     if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
-        optionsMap = {
+        const statOptionsMap = {
             //The original RMS query for temp in rucstats ends with 'avg(m0.N_{{variable0}})/1000', not 'sum(m0.N_{{variable0}})/1000'
             //as is used in MATS. For the added queries, I am using the rucstats syntax.
 
@@ -272,10 +271,6 @@ const doCurveParams = function () {
             'Bias (Model - Obs)': ['-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 '-sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(-m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sum(m0.sum_model_{{variable1}}-m0.sum_ob_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
-            ],
-            'Bias (Obs - Model)': ['sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}})/1.8 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}}/1.8 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
-                'sum(m0.sum_{{variable0}})/sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat(m0.sum_{{variable0}}/m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
-                'sum(m0.sum_ob_{{variable1}}-m0.sum_model_{{variable1}})/sum(m0.N_{{variable0}})/2.23693629 as stat, sum(m0.N_{{variable0}})/1000 as N0, group_concat((-m0.sum_model_{{variable1}} - m0.sum_ob_{{variable1}})/m0.N_{{variable0}}/2.23693629 order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0'
             ],
             'N': ['sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
                 'sum(m0.N_{{variable0}}) as stat, sum(m0.N_{{variable0}}) as N0, group_concat(m0.N_{{variable0}} order by (m0.valid_day)+3600*m0.hour) as sub_values0 ,group_concat( (m0.valid_day)+3600*m0.hour order by (m0.valid_day)+3600*m0.hour) as sub_secs0',
@@ -300,27 +295,24 @@ const doCurveParams = function () {
 
         };
 
-        matsCollections.CurveParams.insert({
-            // bias and model average are a different formula for wind (element 0 differs from element 1)
-            // but stays the same (element 0 and element 1 are the same) otherwise.
-            // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-            // time series we never append element 2. Element 3 is used to give us error values for error bars.
-            name: 'statistic',
-            type: matsTypes.InputTypes.select,
-            optionsMap: optionsMap,
-            options: Object.keys(optionsMap),   // convenience
-            controlButtonCovered: true,
-            unique: false,
-            default: 'RMS',
-            controlButtonVisibility: 'block',
-            displayOrder: 4,
-            displayPriority: 1,
-            displayGroup: 2
-        });
+        matsCollections.CurveParams.insert(
+            {// bias and model average are a different formula with wind than with other variables, so element 0 differs from element 1 in statOptionsMap, and different clauses in statAuxMap are needed.
+                name: 'statistic',
+                type: matsTypes.InputTypes.select,
+                optionsMap: statOptionsMap,
+                options: Object.keys(statOptionsMap),
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(statOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
     }
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
-        optionsMap = {
+        const statVarOptionsMap = {
             'temperature': ['dt', 't', 'temp'],
             'RH': ['drh', 'rh', 'rh'],
             'dewpoint': ['dTd', 'td', 'dp'],
@@ -335,12 +327,6 @@ const doCurveParams = function () {
                 'wind': 'm/s'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
-            },
-            'Bias (Obs - Model)': {
                 'temperature': '°C',
                 'RH': 'RH (%)',
                 'dewpoint': '°C',
@@ -391,13 +377,13 @@ const doCurveParams = function () {
             {
                 name: 'variable',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
+                optionsMap: statVarOptionsMap,
                 statVarUnitMap: statVarUnitMap,
                 mapVarUnitMap: mapVarUnitMap,
-                options: Object.keys(optionsMap),   // convenience
+                options: Object.keys(statVarOptionsMap),
                 controlButtonCovered: true,
                 unique: false,
-                default: 'temperature',
+                default: Object.keys(statVarOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
@@ -547,7 +533,7 @@ const doCurveParams = function () {
                 will only be visible for matsTypes.PlotTypes.map
                 If this param option is missing or empty then the parameter is visible for all plotTypes.
                  */
-                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.profile,matsTypes.PlotTypes.scatter2d]
+                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d]
             });
     }
 
@@ -569,7 +555,7 @@ const doCurveParams = function () {
                 displayGroup: 4,
                 multiple: true,
                 defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
-                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff,matsTypes.PlotTypes.timeSeries,matsTypes.PlotTypes.validtime,matsTypes.PlotTypes.profile,matsTypes.PlotTypes.scatter2d],
+                hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d],
                 help: 'map-help.html'
             });
     }
