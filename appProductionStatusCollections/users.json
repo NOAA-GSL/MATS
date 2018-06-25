@@ -14,6 +14,18 @@
             "$date": "2018-06-02T23:26:38.815+0000"
           },
           "hashedToken": "1Am0S0j52xgWghARafd/e4T6PEAmHixYBBh/rTL7cWA="
+        },
+        {
+          "when": {
+            "$date": "2018-06-22T20:20:31.115+0000"
+          },
+          "hashedToken": "o3LUpXLSAvlwNQmfx4MkZNM8trNNkqctBG2XJ7Ss4PQ="
+        },
+        {
+          "when": {
+            "$date": "2018-06-22T20:20:38.207+0000"
+          },
+          "hashedToken": "P6ZhcokgZvUkIKezxsBl1WpzQ1g1CgPflW5VxxIdY3k="
         }
       ]
     }
@@ -31,24 +43,6 @@
     },
     "resume": {
       "loginTokens": [
-        {
-          "when": {
-            "$date": "2018-03-12T22:17:01.652+0000"
-          },
-          "hashedToken": "M56+otdy9vz2ac1O9+EfJtnbbS/2D5aIpbPqIBRajSQ="
-        },
-        {
-          "when": {
-            "$date": "2018-03-20T15:41:51.426+0000"
-          },
-          "hashedToken": "Neg+v/XSH/5ZjS/sebzB6QRb8lNY2cJBWi3uHW27kRU="
-        },
-        {
-          "when": {
-            "$date": "2018-03-26T21:31:53.734+0000"
-          },
-          "hashedToken": "Dntf2ynFXAE2FbHmYIyKN8rw6UTPeRqXLPuASfuKEeE="
-        },
         {
           "when": {
             "$date": "2018-03-29T15:56:30.797+0000"
@@ -119,12 +113,6 @@
     },
     "resume": {
       "loginTokens": [
-        {
-          "when": {
-            "$date": "2018-03-26T21:28:10.719+0000"
-          },
-          "hashedToken": "PmKz9KTlsOc4qsyq5iCXlfqWtxJ+LPZ2vkoFqStMF08="
-        },
         {
           "when": {
             "$date": "2018-03-29T16:06:16.750+0000"
