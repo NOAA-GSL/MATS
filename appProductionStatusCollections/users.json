@@ -45,12 +45,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-03-29T15:56:30.797+0000"
-          },
-          "hashedToken": "COwl1I22GKOrOVL0sfD5qKaAfIBgSWIjjluPEcQbSOg="
-        },
-        {
-          "when": {
             "$date": "2018-04-12T17:40:33.446+0000"
           },
           "hashedToken": "FeQN9cFgTkwm9ngFhQxqSjdg2WPo107WaSGLF/MEsNc="
@@ -112,14 +106,7 @@
       "bcrypt": "$2a$10$z3Tfd7LwbbOJ5C.gUcbWGuj7R.p4tYb/CpgNbh0wC5XhaYVOBbLhW"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2018-03-29T16:06:16.750+0000"
-          },
-          "hashedToken": "MPk+uj7EscZ2WKPqbIOKBBsBjXM1iBy9gZaNka5Y0Ek="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "Jeffrey.A.Hamilton@noaa.gov"
