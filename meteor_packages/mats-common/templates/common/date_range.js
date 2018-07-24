@@ -12,6 +12,7 @@ Template.dateRange.onRendered(function () {
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
     if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) ||
+        (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) ||
         (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true)) {
         if (document.getElementById('curve-dates-item')) {
             document.getElementById('curve-dates-item').style.display = "none";
