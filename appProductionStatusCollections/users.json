@@ -45,24 +45,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-04-12T17:40:33.446+0000"
-          },
-          "hashedToken": "FeQN9cFgTkwm9ngFhQxqSjdg2WPo107WaSGLF/MEsNc="
-        },
-        {
-          "when": {
-            "$date": "2018-04-16T17:21:39.899+0000"
-          },
-          "hashedToken": "x9bNl/0+yqXfM/fWos0e45emzpSPVMADSfMmxOHYaKg="
-        },
-        {
-          "when": {
-            "$date": "2018-04-18T16:10:44.082+0000"
-          },
-          "hashedToken": "a2bflCpfbRHfk7IW/jzIxmR+8yoxzZtr38f43SklxUY="
-        },
-        {
-          "when": {
             "$date": "2018-07-27T23:00:14.104+0000"
           },
           "hashedToken": "+7GTtGo1yQqYvMBwe5RcefDyBeTtW2rByD6gryOElAY="
