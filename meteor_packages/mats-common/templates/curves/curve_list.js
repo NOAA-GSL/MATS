@@ -52,7 +52,7 @@ Template.curveList.helpers({
     },
     averagesdisabled: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "";
         }
         var average = curves[0].average;
@@ -64,7 +64,7 @@ Template.curveList.helpers({
     },
     disabledPlotsHidden: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "none";
         }
         var average = curves[0].average;

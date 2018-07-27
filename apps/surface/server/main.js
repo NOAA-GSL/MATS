@@ -203,7 +203,7 @@ const doCurveParams = function () {
                 dates: modelDateRangeMap,
                 metars: modelMetarsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "dates"],
+                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -512,6 +512,36 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
+            });
+    }
+
     if (matsCollections.CurveParams.find({name: 'sites'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
@@ -601,10 +631,10 @@ var doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len:', 'dieoff-forecast-length', ', '],
                 ['valid-time:', 'valid-time', ', '],
-                ['avg:', 'average', ' ']
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });
@@ -616,10 +646,11 @@ var doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });

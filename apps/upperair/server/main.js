@@ -601,9 +601,10 @@ const doCurveTextPatterns = function () {
                 ['fcst_len: ', 'dieoff-forecast-length', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['clouds: ', 'cloud-coverage', ', '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });

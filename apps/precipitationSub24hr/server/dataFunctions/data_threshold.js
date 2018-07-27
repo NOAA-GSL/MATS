@@ -15,9 +15,6 @@ dataThreshold = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -40,6 +37,9 @@ dataThreshold = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var forecastTypeStr = curve['forecast-type'];
         var forecastType = Object.keys(matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'forecast-type'}).valuesMap[key] === forecastTypeStr);
         var scaleStr = curve['scale'];

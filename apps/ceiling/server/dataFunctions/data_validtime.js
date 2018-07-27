@@ -15,9 +15,6 @@ dataValidTime = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -42,6 +39,9 @@ dataValidTime = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same

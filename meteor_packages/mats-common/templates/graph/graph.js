@@ -287,11 +287,11 @@ Template.graph.helpers({
             } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
                 return "Profile: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff " + p.dates + " : " + format;
+                return "DieOff: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
-                return "Threshold " + p.dates + " : " + format;
+                return "Threshold: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
-                return "ValidTime " + p.dates + " : " + format;
+                return "ValidTime: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
                 return "DailyModelCycle " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {

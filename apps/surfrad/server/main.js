@@ -166,7 +166,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "scale", "dates"],
+                dependentNames: ["region", "forecast-length", "scale", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -494,6 +494,36 @@ const doCurveParams = function () {
                 displayGroup: 3,
             });
     }
+
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
+            });
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -539,9 +569,10 @@ const doCurveTextPatterns = function () {
         //         ['', 'scale', ' '],
         //         ['fcst_len :', 'dieoff-forecast-length', ', '],
         //         [' valid-time:', 'valid-time', ' '],
+        //         ['', 'curve-dates', '']
         //     ],
         //     displayParams: [
-        //         "label", "data-source", "region", "statistic", "variable", "scale", "valid-time", "dieoff-forecast-length"
+        //         "label", "data-source", "region", "statistic", "variable", "scale", "valid-time", "dieoff-forecast-length", "curve-dates"
         //     ],
         //     groupSize: 6
         // });
@@ -554,10 +585,11 @@ const doCurveTextPatterns = function () {
                 ['', 'scale', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, ']
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length"
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });

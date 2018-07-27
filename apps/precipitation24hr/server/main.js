@@ -205,7 +205,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "threshold", "scale", "forecast-type", "dates"],
+                dependentNames: ["region", "threshold", "scale", "forecast-type", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -438,6 +438,36 @@ const doCurveParams = function () {
             });
         }
     }
+
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
+            });
+    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -479,10 +509,11 @@ const doCurveTextPatterns = function () {
                 ['', 'regionName', ', '],
                 ['', 'statistic', ', '],
                 ['fcst_type: ', 'forecast-type', ', '],
-                ['', 'scale', ' ']
+                ['', 'scale', ' '],
+                ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "forecast-type", "scale"
+                "label", "data-source", "region", "statistic", "forecast-type", "scale", "curve-dates"
             ],
             groupSize: 6
         });

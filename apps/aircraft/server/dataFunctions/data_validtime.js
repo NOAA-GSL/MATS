@@ -15,14 +15,6 @@ dataValidTime = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
-    // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -64,6 +56,11 @@ dataValidTime = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromDate = dateRange.fromDate;
+        var toDate = dateRange.toDate;
+        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
+        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var forecastLength = curve['forecast-length'];
         const phaseStr = curve['phase'];
         const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];

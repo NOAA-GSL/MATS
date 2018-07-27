@@ -20,7 +20,6 @@ dataSeries = function (plotParams, plotFunction) {
     var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    // convert dates for sql
     fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
     toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";

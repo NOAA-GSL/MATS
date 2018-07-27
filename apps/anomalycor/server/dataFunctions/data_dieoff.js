@@ -15,12 +15,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
-    // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -46,6 +40,11 @@ dataDieOff = function (plotParams, plotFunction) {
         if (levels.length > 0) {
             levelClause = " and  m0.level IN(" + levels + ")";
         }
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromDate = dateRange.fromDate;
+        var toDate = dateRange.toDate;
+        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
+        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         const validTimeStr = curve['valid-time'];
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];

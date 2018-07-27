@@ -15,9 +15,6 @@ dataDieOff = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -53,6 +50,9 @@ dataDieOff = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         const forecastLength = curve['dieoff-forecast-length'];
         if (forecastLength !== "dieoff") {

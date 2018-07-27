@@ -403,7 +403,7 @@ const showProfileFace = function() {
 };
 
 const showDieOffFace = function() {
-    // move dates selector to plot parameters - one date range for all curves
+    // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
         var appName = matsParamUtils.getAppName();
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -412,11 +412,11 @@ const showDieOffFace = function() {
         }
         elem = document.getElementById('curve-dates-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
         }
         elem = document.getElementById('dates-item');
         if (elem && elem.style) {
-            elem.style.display = "block";
+            elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
         if (elem && elem.style) {
@@ -465,7 +465,7 @@ const showDieOffFace = function() {
 };
 
 const showThresholdFace = function() {
-    // move dates selector to plot parameters - one date range for all curves
+    // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
         var appName = matsParamUtils.getAppName();
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -474,11 +474,11 @@ const showThresholdFace = function() {
         }
         elem = document.getElementById('curve-dates-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
         }
         elem = document.getElementById('dates-item');
         if (elem && elem.style) {
-            elem.style.display = "block";
+            elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
         if (elem && elem.style) {
@@ -527,7 +527,7 @@ const showThresholdFace = function() {
 };
 
 const showValidTimeFace = function() {
-    // move dates selector to plot parameters - one date range for all curves
+    // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
         var appName = matsParamUtils.getAppName();
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -536,11 +536,11 @@ const showValidTimeFace = function() {
         }
         elem = document.getElementById('curve-dates-item');
         if (elem && elem.style) {
-            elem.style.display = "none";
+            elem.style.display = "block";
         }
         elem = document.getElementById('dates-item');
         if (elem && elem.style) {
-            elem.style.display = "block";
+            elem.style.display = "none";
         }
         elem = document.getElementById('region-item');
         if (elem && elem.style) {
