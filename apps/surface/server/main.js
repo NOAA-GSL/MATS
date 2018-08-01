@@ -13,8 +13,9 @@ var siteOptionsMap = {};
 var sitesLocationMap = [];
 var siteObjMap = {};
 var masterRegionValuesMap = {};
+var masterMETARValuesMap = {};
 var modelDateRangeMap = {};
-var modelMetarsMap = {};
+var metarModelOptionsMap = {};
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -85,6 +86,19 @@ const doCurveParams = function () {
     }
 
     try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "SELECT metar_string,description FROM metar_string_descriptions;");
+        var masterMETARDescription;
+        var masterMETARString;
+        for (var j = 0; j < rows.length; j++) {
+            masterMETARDescription = rows[j].description.trim();
+            masterMETARString = rows[j].metar_string.trim();
+            masterMETARValuesMap[masterMETARString] = masterMETARDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,metar_string,regions,display_text,fcst_lens,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
         for (var i = 0; i < rows.length; i++) {
 
@@ -98,10 +112,13 @@ const doCurveParams = function () {
 
             var metarStrings = rows[i].metar_string;
             var metarStringsArr = metarStrings.split(',').map(Function.prototype.call, String.prototype.trim);
+            var metarArr = [];
+            var dummyMETAR;
             for (var j = 0; j < metarStringsArr.length; j++) {
-                metarStringsArr[j] = metarStringsArr[j].replace(/'|\[|\]/g, "");
+                dummyMETAR = metarStringsArr[j].replace(/'|\[|\]/g, "");
+                metarArr.push(masterMETARValuesMap[dummyMETAR]);
             }
-            modelMetarsMap[model] = metarStringsArr;
+            metarModelOptionsMap[model] = metarArr;
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -201,9 +218,8 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
-                metars: modelMetarsMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "dates", "curve-dates"],
+                dependentNames: ["region", "forecast-length", "truth", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -512,6 +528,39 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections.CurveParams.find({name: 'truth'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'truth',
+                type: matsTypes.InputTypes.select,
+                optionsMap: metarModelOptionsMap,
+                options: metarModelOptionsMap[Object.keys(metarModelOptionsMap)[0]],
+                valuesMap: masterMETARValuesMap,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'METAR',
+                controlButtonVisibility: 'block',
+                displayOrder: 3,
+                displayPriority: 1,
+                displayGroup: 4
+            });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'truth'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, metarModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterMETARValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'truth'}, {
+                $set: {
+                    optionsMap: metarModelOptionsMap,
+                    valuesMap: masterMETARValuesMap,
+                    options: metarModelOptionsMap[Object.keys(metarModelOptionsMap)[0]]
+                }
+            });
+        }
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {
             '1 day': ['1 day'],
@@ -614,10 +663,11 @@ var doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['avg: ', 'average', ' ']
+                ['avg: ', 'average', ', '],
+                ['', 'truth', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 4
         });
@@ -631,10 +681,11 @@ var doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len:', 'dieoff-forecast-length', ', '],
                 ['valid-time:', 'valid-time', ', '],
+                ['', 'truth', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -647,10 +698,11 @@ var doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'truth', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -662,10 +714,11 @@ var doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['start utc: ', 'utc-cycle-start', ', ']
+                ['start utc: ', 'utc-cycle-start', ', '],
+                ['', 'truth', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start"
+                "label", "data-source", "region", "statistic", "variable", "utc-cycle-start", "truth"
             ],
             groupSize: 6
 
@@ -677,10 +730,11 @@ var doCurveTextPatterns = function () {
                 ['', 'sites', ': '],
                 ['', 'variable', ', '],
                 ['fcst_len: ', 'forecast-length', ' h '],
-                [' valid-time:', 'valid-time', ' ']
+                [' valid-time:', 'valid-time', ' '],
+                ['', 'truth', ' ']
             ],
             displayParams: [
-                "data-source", "sites", "variable", "forecast-length", "valid-time"
+                "data-source", "sites", "variable", "forecast-length", "valid-time", "truth"
             ],
             groupSize: 4
         });
