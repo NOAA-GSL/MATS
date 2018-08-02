@@ -44,7 +44,7 @@ Template.dateRange.onRendered(function () {
             "parentEL": $('#' + idref),
             "timePicker": true,
             "timePicker24Hour": true,
-            "timePickerIncrement": 15,
+            "timePickerIncrement": 1,
             "startDate": startInit,
             "endDate": stopInit,
             "showDropdowns": true,
@@ -68,7 +68,11 @@ Template.dateRange.onRendered(function () {
 
     $('#' + idref).on('apply.daterangepicker', function (ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
-            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range!"));
+            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range! This is " +
+                "because METARs and other obs can come in at slightly different times, so selecting only one time might " +
+                "leave you with very few (or no) valid obs. Instead, try using a small range. For example, if you're " +
+                "targeting the top-of-the-hour METARs at 2:00 am, set your time range from 1:45 am to 2:00 am, because " +
+                "METARs often come in early."));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
