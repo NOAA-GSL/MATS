@@ -172,10 +172,16 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
 };
 
 //this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
+const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels, optionalBinNum) {
 
     const plotParams = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"]) / 100;
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
+    } else {
+        outlierQCParam = 100;
+    }
 
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -190,7 +196,14 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
         } else if (rows === undefined || rows === null || rows.length === 0) {
             error = matsTypes.Messages.NO_DATA_FOUND;
         } else {
-            const parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
+            var parsedData;
+            if (plotType !== 'histogram') {
+                parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
+            } else {
+                // use the completeness parameter to pass in the outlier threshold
+                const binNum = (optionalBinNum === undefined || optionalBinNum === null) ? 8 : optionalBinNum; // make sure binNum was passed in
+                parsedData = parseQueryDataHistogram(rows, d, outlierQCParam, hasLevels, binNum);
+            }
             d = parsedData.d;
             N0 = parsedData.N0;
             N_times = parsedData.N_times;
@@ -400,8 +413,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         }
 
         //deal with missing forecast cycles for dailyModelCycle plot type
-        if (plotType === 'dailyModelCycle' && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex-1].avtime*1000)) > 3600 * 24 * 1000) {
-            const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex-1].avtime*1000))/(3600 * 24 * 1000));
+        if (plotType === 'dailyModelCycle' && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) > 3600 * 24 * 1000) {
+            const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000));
             for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
                 curveIndependentVars.push(independentVar - 3600 * 24 * 1000 * missingIdx);
                 curveStat.push(null);
@@ -461,6 +474,51 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         d: d,
         N0: N0,
         N_times: N_times
+    };
+};
+
+// this method parses the returned query data for histograms
+const parseQueryDataHistogram = function (rows, d, outlierQCParam, hasLevels, binNum) {
+
+    // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
+    var curveSubStatsRaw = [];
+    var curveSubSecsRaw = [];
+    var curveSubLevsRaw = [];
+
+    // parse the data returned from the query
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+
+        var stat = rows[rowIndex].stat;
+        var sub_stats;
+        var sub_secs;
+        var sub_levs;
+
+        if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+            sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+            curveSubStatsRaw.push(sub_stats);
+            sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+            curveSubSecsRaw.push(sub_secs);
+            if (hasLevels) {
+                sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                curveSubLevsRaw.push(sub_levs);
+            }
+        }
+    }
+
+    const curveSubStats = [].concat(...curveSubStatsRaw);
+    const curveSubSecs = [].concat(...curveSubSecsRaw);
+    var curveSubLevs;
+    if (hasLevels) {
+        curveSubLevs = [].concat(...curveSubLevsRaw);
+    }
+
+    const histParams = matsDataUtils.calculateAndSortHistogramBins(curveSubStats, curveSubSecs, curveSubLevs, binNum, outlierQCParam, hasLevels, d);
+    const glob_n = histParams.glob_n;
+
+    return {
+        d: d,
+        N0: glob_n,
+        N_times: curveSubSecs.length
     };
 };
 

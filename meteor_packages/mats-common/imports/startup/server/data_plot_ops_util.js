@@ -569,6 +569,104 @@ const generateMapPlotOptions = function (dataset, curves) {
     return options;
 };
 
+// sets plot options for valid time graphs
+const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBins) {
+    // generate y-axis
+    var yaxes = [];
+    var yaxis = [];
+    var axisLabel;
+    for (var dsi = 0; dsi < dataset.length; dsi++) {
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
+            continue;
+        }
+        const axisKey = curves[dsi].axisKey;
+        var ymin = axisMap[axisKey].ymin;
+        var ymax = axisMap[axisKey].ymax;
+        axisLabel = axisMap[axisKey].axisLabel;
+        const yPad = (ymax - ymin) * 0.05;
+        const position = dsi === 0 ? "left" : "right";
+        const yaxesOptions = {
+            position: position,
+            color: 'grey',
+            axisLabel: axisLabel,
+            axisLabelColour: "black",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 22,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 3,
+            alignTicksWithAxis: 1,
+            tickDecimals: 0,
+            min: ymin - yPad,
+            max: ymax + yPad,
+            font: {size: 18}
+        };
+        const yaxisOptions = {   // used for zooming
+            zoomRange: [0.1, 10]
+        };
+        yaxes.push(yaxesOptions);
+        yaxis.push(yaxisOptions);
+    }
+    const options = {
+        axisLabels: {
+            show: true
+        },
+        xaxes: [{
+            axisLabel: 'Bin (sd from mean)',
+            color: 'grey',
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 22,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 20,
+        }],
+        xaxis: {
+            zoomRange: [0.1, null],
+            ticks: plotBins,
+            mode: 'xy',
+            font: {size: 18}
+        },
+        yaxes: yaxes,
+        yaxis: yaxis,
+        legend: {
+            show: false,
+            container: "#legendContainer",
+            noColumns: 0,
+            position: 'ne'
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
+            },
+            points: {
+                show: true
+            },
+            shadowSize: 0
+        },
+        zoom: {
+            interactive: false
+        },
+        pan: {
+            interactive: false
+        },
+        selection: {
+            mode: "xy"
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 3,
+            mouseActiveRadius: 50,
+            backgroundColor: "white",
+            axisMargin: 20
+        },
+        tooltip: true,
+        tooltipOpts: {
+            // the ct value is the last element of the data series for profiles. This is the tooltip content.
+            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
+        }
+    };
+    return options;
+};
+
 export default matsDataPlotOpsUtils = {
 
     generateSeriesPlotOptions: generateSeriesPlotOptions,
@@ -576,6 +674,7 @@ export default matsDataPlotOpsUtils = {
     generateDieoffPlotOptions: generateDieoffPlotOptions,
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
-    generateMapPlotOptions: generateMapPlotOptions
+    generateMapPlotOptions: generateMapPlotOptions,
+    generateHistogramPlotOptions: generateHistogramPlotOptions
 
 }

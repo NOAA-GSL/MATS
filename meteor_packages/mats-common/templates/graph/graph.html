@@ -54,7 +54,7 @@
         </div>
         <div id="curves" class="row container-fluid">
             {{#each curves}}
-                <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
+                <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
                 {{#if isNotMap}}
                     <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
@@ -87,6 +87,9 @@
         </div>
         <div id="textMapView" style="display:none;">
             {{>textMapOutput}}
+        </div>
+        <div id="textHistogramView" style="display:none;">
+            {{>textHistogramOutput}}
         </div>
         <div id="textScatter2dView" style="display:none;">
             {{>textScatter2dOutput}}

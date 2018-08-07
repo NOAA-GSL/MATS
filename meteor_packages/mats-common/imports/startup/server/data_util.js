@@ -72,6 +72,131 @@ const average = function (data) {
     return avg;
 };
 
+// utility that takes arrays of seconds, values, and optionally levels, and produces a data structure for histogram data
+// processing. Used in the initial histogram DB query and in matching.
+const calculateAndSortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, binNum, outlierQCParam, hasLevels, d) {
+
+    // need maps to hold the sub values and seconds (and levels) for each bin, after the bin bounds are calculated.
+    var binSubStats = {};
+    var binSubSecs = {};
+    var binSubLevs = {};
+
+    for (var b_idx = 0; b_idx < binNum; b_idx++) {
+        binSubStats[b_idx] = [];
+        binSubSecs[b_idx] = [];
+        binSubLevs[b_idx] = [];
+    }
+
+    // calculate the global stats across all of the data
+    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const glob_mean = globalStats.d_mean;
+    const glob_sd = globalStats.sd;
+    const glob_n = globalStats.n_good;
+    const glob_max = Math.max(...curveSubStats);
+    const glob_min = Math.min(...curveSubStats);
+
+    // use the global stats to determine the bin bounds -- should be based on dividing up +/- 3*sd from the mean into requested number of bins
+    const fullLowBound = glob_mean - 3 * glob_sd;
+    const fullUpBound = glob_mean + 3 * glob_sd;
+    const fullRange = 6 * glob_sd;
+    const binInterval = fullRange / (binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
+
+    //store an array of the upper bounding value for each bin.
+    var binUpBounds = [];
+    binUpBounds[0] = fullLowBound; // the first upper bound should be exactly - 3*sd from the mean, or the previously calculated fullLowBound
+    for (b_idx = 1; b_idx < binNum - 1; b_idx++) {
+        binUpBounds[b_idx] = binUpBounds[b_idx - 1] + binInterval; // increment from fullLowBound to get the rest of the bin upper limits
+    }
+    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
+
+    for (var d_idx = 0; d_idx < curveSubStats.length; d_idx++) {
+
+        // discard values outside of the specified outlier QC param control (using this control will make the outer bins empty, but that might be the user's desire)
+        if (Math.abs(curveSubStats[d_idx] - glob_mean) > outlierQCParam * glob_sd) {
+            continue;
+        }
+        // iterate through all of the bins until we find one where the upper limit is greater than our datum.
+        for (b_idx = 0; b_idx < binNum; b_idx++) {
+            if (curveSubStats[d_idx] <= binUpBounds[b_idx]) {
+                binSubStats[b_idx].push(curveSubStats[d_idx]);
+                binSubSecs[b_idx].push(curveSubSecs[d_idx]);
+                if (hasLevels) {
+                    binSubLevs[b_idx].push(curveSubLevs[d_idx]);
+                }
+                break;
+            }
+        }
+    }
+
+    // calculate the statistics for each bin
+    // we are especially interested in the number of values in each bin, as that is the plotted stat in a histogram
+    var binStats;
+    var bin_mean;
+    var bin_sd;
+    var bin_n;
+    var binLowBound;
+    var binUpBound;
+    var binLabel;
+    var lowSdFromMean;
+    var upSdFromMean;
+
+    for (b_idx = 0; b_idx < binNum; b_idx++) {
+        binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
+        bin_mean = binStats.d_mean;
+        bin_sd = binStats.sd;
+        bin_n = binStats.n_good;
+        binUpBound = binUpBounds[b_idx];
+        if (b_idx !== 0) {
+            binLowBound = binUpBounds[b_idx - 1];
+        } else {
+            binLowBound = Number.MIN_VALUE;
+        }
+        lowSdFromMean = ((binLowBound - glob_mean) / glob_sd).toFixed(1);
+        upSdFromMean = ((binUpBound - glob_mean) / glob_sd).toFixed(1);
+        // get the bin label for the graph x-axis later
+        if (b_idx === 0) {
+            binLabel = "< -3.0";
+        } else if (b_idx === binNum - 1) {
+            binLabel = "> 3.0";
+        } else {
+            binLabel = lowSdFromMean + " to " + upSdFromMean;
+        }
+
+        if (hasLevels) {
+            d.push([b_idx, bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
+                'bin_mean': bin_mean,
+                'bin_sd': bin_sd,
+                'bin_n': bin_n,
+                'binLowBound': binLowBound,
+                'binUpBound': binUpBound,
+                'binLabel': binLabel
+            }, {
+                'glob_mean': glob_mean,
+                'glob_sd': glob_sd,
+                'glob_n': glob_n,
+                'glob_max': glob_max,
+                'glob_min': glob_min
+            }, null]);
+        } else {
+            d.push([b_idx, bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], null, {
+                'bin_mean': bin_mean,
+                'bin_sd': bin_sd,
+                'bin_n': bin_n,
+                'binLowBound': binLowBound,
+                'binUpBound': binUpBound,
+                'binLabel': binLabel
+            }, {
+                'glob_mean': glob_mean,
+                'glob_sd': glob_sd,
+                'glob_n': glob_n,
+                'glob_max': glob_max,
+                'glob_min': glob_min
+            }, null]);
+        }
+    }
+    return {glob_n, d};
+};
+
 //this function makes sure date strings are in the correct format
 const dateConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
@@ -465,6 +590,7 @@ export default matsDataUtils = {
     arrayContainsSubArray: arrayContainsSubArray,
     arraysEqual: arraysEqual,
     average: average,
+    calculateAndSortHistogramBins: calculateAndSortHistogramBins,
     dateConvert: dateConvert,
     doAuthorization: doAuthorization,
     doColorScheme: doColorScheme,

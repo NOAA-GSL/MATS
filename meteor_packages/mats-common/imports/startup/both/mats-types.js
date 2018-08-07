@@ -27,7 +27,8 @@ var  PlotTypes = {
     threshold : "Threshold",
     validtime : "ValidTime",
     dailyModelCycle : "DailyModelCycle",
-    map : "Map"
+    map : "Map",
+    histogram : "Histogram"
 };
 
 var ForecastTypes = {
@@ -78,7 +79,8 @@ var PlotView = {
     textThreshold: "textThreshold",
     textValidTime: "textValidTime",
     textDailyModelCycle : "textDailyModelCycle",
-    textMap: "textMap"
+    textMap: "textMap",
+    textHistogram: "textHistogram"
 };
 
 var Messages = {

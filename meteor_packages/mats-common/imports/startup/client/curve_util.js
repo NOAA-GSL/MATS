@@ -712,6 +712,68 @@ const showMapFace = function() {
     }
 };
 
+const showHistogramFace = function() {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.histogram).checked === true) {
+        var appName = matsParamUtils.getAppName();
+        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('curve-dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dates-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('region-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('statistic-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('threshold-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('dieoff-forecast-length-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('average-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('valid-time-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sites-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        elem = document.getElementById('sitesMap-item');
+        if (elem && elem.style && appName !== "wfip2") {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.histogram);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 const showScatterFace = function() {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -949,6 +1011,7 @@ export default matsCurveUtils = {
     showValidTimeFace:showValidTimeFace,
     showDailyModelCycleFace:showDailyModelCycleFace,
     showMapFace:showMapFace,
+    showHistogramFace:showHistogramFace,
     get_err:get_err,
     PlotResult:PlotResult,
     showSpinner:showSpinner,

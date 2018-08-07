@@ -237,6 +237,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.map:
                                 matsCurveUtils.showMapFace();
                                 break;
+                            case matsTypes.PlotTypes.histogram:
+                                matsCurveUtils.showHistogramFace();
+                                break;
                             case matsTypes.PlotTypes.scatter2d:
                                 matsCurveUtils.showScatterFace();
                                 break;
