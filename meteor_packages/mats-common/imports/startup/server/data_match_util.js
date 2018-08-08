@@ -228,7 +228,7 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
 // function for removing unmatched data from a dataset containing multiple curves for a histogram *without* levels.
 // separate matching functions are needed for histograms because you have to take all of the data out of the bins, then
 // match it, then recalculate the bins. For other plot types, you can just leave the data in its already-sorted fhr, level, etc.
-const getMatchedDataSetHistogram = function (dataset, curvesLength) {
+const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
 
     var subStatsRaw = {};
     var subSecsRaw = {};
@@ -252,8 +252,8 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength) {
             subStatsRaw[curveIndex].push(data[di][3]);
             subSecsRaw[curveIndex].push(data[di][4]);
         }
-        subStats[curveIndex] = [].concat(...subStatsRaw[curveIndex]);
-        subSecs[curveIndex] = [].concat(...subSecsRaw[curveIndex]);
+        subStats[curveIndex] = [].concat.apply([], subStatsRaw[curveIndex]);
+        subSecs[curveIndex] = [].concat.apply([], subSecsRaw[curveIndex]);
     }
 
     // determine which seconds are present in all curves
@@ -279,8 +279,8 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength) {
                     }
                 }
             }
-            // recalculate all of the histogram stats and regain the histogram data structure
-            newCurveData = matsDataUtils.calculateAndSortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.length, 1000, false, []);
+            // re-sort all of the data into histogram bins
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.length, binStats, false, []);
             dataset[curveIndex].data = newCurveData.d;
         } else {
             // if there are no matching values, set data to an empty array
@@ -293,7 +293,7 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength) {
 // function for removing unmatched data from a dataset containing multiple curves for a histogram *with* levels.
 // separate matching functions are needed for histograms because you have to take all of the data out of the bins, then
 // match it, then recalculate the bins. For other plot types, you can just leave the data in its already-sorted fhr, level, etc.
-const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength) {
+const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, binStats) {
 
     var subStatsRaw = {};
     var subSecsRaw = {};
@@ -323,9 +323,9 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength) {
             subSecsRaw[curveIndex].push(data[di][4]);
             subLevsRaw[curveIndex].push(data[di][5]);
         }
-        subStats[curveIndex] = [].concat(...subStatsRaw[curveIndex]);
-        subSecs[curveIndex] = [].concat(...subSecsRaw[curveIndex]);
-        subLevs[curveIndex] = [].concat(...subLevsRaw[curveIndex]);
+        subStats[curveIndex] = [].concat.apply([], subStatsRaw[curveIndex]);
+        subSecs[curveIndex] = [].concat.apply([], subSecsRaw[curveIndex]);
+        subLevs[curveIndex] = [].concat.apply([], subLevsRaw[curveIndex]);
     }
 
     // determine which seconds and levels are present in all curves
@@ -366,8 +366,8 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength) {
                     }
                 }
             }
-            // recalculate all of the histogram stats and regain the histogram data structure
-            newCurveData = matsDataUtils.calculateAndSortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.length, 1000, true, []);
+            // re-sort all of the data into histogram bins
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.length, binStats, true, []);
             dataset[curveIndex].data = newCurveData.d;
         } else {
             // if there are no matching values, set data to an empty array

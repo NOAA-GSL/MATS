@@ -171,17 +171,11 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
     };
 };
 
-//this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels, optionalBinNum) {
+//this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
+const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
 
     const plotParams = matsDataUtils.getPlotParamsFromStack();
     const completenessQCParam = Number(plotParams["completeness"]) / 100;
-    var outlierQCParam;
-    if (plotParams["outliers"] !== "all") {
-        outlierQCParam = Number(plotParams["outliers"]);
-    } else {
-        outlierQCParam = 100;
-    }
 
     var dFuture = new Future();
     var d = [];  // d will contain the curve data
@@ -200,9 +194,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels, op
             if (plotType !== 'histogram') {
                 parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
             } else {
-                // use the completeness parameter to pass in the outlier threshold
-                const binNum = (optionalBinNum === undefined || optionalBinNum === null) ? 8 : optionalBinNum; // make sure binNum was passed in
-                parsedData = parseQueryDataHistogram(rows, d, outlierQCParam, hasLevels, binNum);
+                parsedData = parseQueryDataHistogram(rows, hasLevels);
             }
             d = parsedData.d;
             N0 = parsedData.N0;
@@ -478,7 +470,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 };
 
 // this method parses the returned query data for histograms
-const parseQueryDataHistogram = function (rows, d, outlierQCParam, hasLevels, binNum) {
+const parseQueryDataHistogram = function (rows, hasLevels) {
 
     // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
     var curveSubStatsRaw = [];
@@ -505,19 +497,21 @@ const parseQueryDataHistogram = function (rows, d, outlierQCParam, hasLevels, bi
         }
     }
 
-    const curveSubStats = [].concat(...curveSubStatsRaw);
-    const curveSubSecs = [].concat(...curveSubSecsRaw);
+    // we don't have bins yet, so we want all of the data in one array
+    const curveSubStats = [].concat.apply([], curveSubStatsRaw);
+    const curveSubSecs = [].concat.apply([], curveSubSecsRaw);
     var curveSubLevs;
     if (hasLevels) {
-        curveSubLevs = [].concat(...curveSubLevsRaw);
+        curveSubLevs = [].concat.apply([], curveSubLevsRaw);
     }
 
-    const histParams = matsDataUtils.calculateAndSortHistogramBins(curveSubStats, curveSubSecs, curveSubLevs, binNum, outlierQCParam, hasLevels, d);
-    const glob_n = histParams.glob_n;
-
     return {
-        d: d,
-        N0: glob_n,
+        d: {
+            'curveSubStats': curveSubStats,
+            'curveSubSecs': curveSubSecs,
+            'curveSubLevs': curveSubLevs
+        },
+        N0: curveSubStats.length,
         N_times: curveSubSecs.length
     };
 };

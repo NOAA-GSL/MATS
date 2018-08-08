@@ -12,7 +12,7 @@ import {moment} from 'meteor/momentjs:moment'
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     var dataRequests = {}; // used to store data queries
-    var dataFoundForCurve = true;
+    var dataFoundForCurve = [];
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var alreadyMatched = false;
     var totalProcessingStart = moment();
@@ -21,16 +21,20 @@ dataHistogram = function (plotParams, plotFunction) {
     var curvesLength = curves.length;
     var curvesLengthSoFar = 0;
     var dataset = [];
+    var allReturnedSubStats = [];
+    var allReturnedSubSecs = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
+    const binNum = 8;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
+        dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
         var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
@@ -92,7 +96,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'histogram', false, 8); // after hasLevels, use an optional parameter to pass in number of bins for the histogram
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'histogram', false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -102,6 +106,8 @@ dataHistogram = function (plotParams, plotFunction) {
                 };
                 // get the data back from the query
                 d = queryResult.data;
+                allReturnedSubStats.push(d.curveSubStats); // save returned data so that we can calculate histogram stats once all the queries are done
+                allReturnedSubSecs.push(d.curveSubSecs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -110,17 +116,38 @@ dataHistogram = function (plotParams, plotFunction) {
             if (queryResult.error !== undefined && queryResult.error !== "") {
                 if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
                     // this is NOT an error just a no data condition
-                    dataFoundForCurve = false;
+                    dataFoundForCurve[curveIndex] = false;
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     throw (new Error(error));
                 }
             }
+        }
+    }
 
-            // set axis limits based on returned data
+    // flatten all the returned data into one stats array and one secs array in order to calculate histogram bins over the whole range.
+    const curveSubStats = [].concat.apply([], allReturnedSubStats);
+    const curveSubSecs = [].concat.apply([], allReturnedSubSecs);
+    const binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum).binStats;
+
+    // store bin labels and x-axis positions of those labels for later when we set up the plot options
+    var plotBins = [];
+    for (var b_idx = 0; b_idx < binStats.binMeans.length; b_idx++) {
+        plotBins.push([binStats.binMeans[b_idx], binStats.binLabels[b_idx]]);
+    }
+
+    var sortedData;
+    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        curve = curves[curveIndex];
+        diffFrom = curve.diffFrom;
+        if (diffFrom == null) {
             var postQueryStartMoment = moment();
-            if (dataFoundForCurve) {
+            if (dataFoundForCurve[curveIndex]) {
+                // sort queried data into the full set of histogram bins
+                sortedData = matsDataUtils.sortHistogramBins(allReturnedSubStats[curveIndex], allReturnedSubSecs[curveIndex], [], binNum, binStats, false, []);
+                d = sortedData.d;
+                // set axis limits based on returned data
                 xmin = xmin < d[0][0] ? xmin : d[0][0];
                 xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
                 var sum = 0;
@@ -133,12 +160,14 @@ dataHistogram = function (plotParams, plotFunction) {
                         ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
                     }
                 }
+            } else {
+                d = [];
             }
         } else {
             // this is a difference curve, so we're done with regular curves.
             // do any matching that needs to be done.
             if (matching && !alreadyMatched) {
-                dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLengthSoFar);
+                dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLengthSoFar, binStats);
                 alreadyMatched = true;
             }
 
@@ -179,7 +208,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
     // if matching, pare down dataset to only matching data. Only do this if we didn't already do it while calculating diffs.
     if (curvesLength > 1 && (matching && !alreadyMatched)) {
-        dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLength);
+        dataset = matsDataMatchUtils.getMatchedDataSetHistogram(dataset, curvesLength, binStats);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
@@ -196,7 +225,6 @@ dataHistogram = function (plotParams, plotFunction) {
         var di = 0;
         var values = [];
         var bins = [];
-        var plotBins = [];
 
         while (di < data.length) {
 
@@ -216,16 +244,13 @@ dataHistogram = function (plotParams, plotFunction) {
 
             values.push(data[di][1]);
             bins.push(data[di][0]);
-            plotBins.push([data[di][0],data[di][6].binLabel]);
 
             // // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +
-                "<br>" + "bin " + data[di][0] + ": " + data[di][6].binLabel + " sd from mean" +
-                "<br> " + "number in bin" + ": " + (data[di][1] === null ? null : data[di][1]) +
-                "<br>  bin lower bound: " + statisticSelect + " = " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) +
-                "<br>  bin upper bound: " + statisticSelect + " = " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) +
-                "<br>  bin mean: " + statisticSelect + " = " + (data[di][6].bin_mean === null ? null : data[di][6].bin_mean.toPrecision(4)) +
-                "<br>  bin sd: " + statisticSelect + " = " + (data[di][6].bin_sd === null ? null : data[di][6].bin_sd.toPrecision(4));
+                "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
+                "<br> " + "number in bin for this curve: " + (data[di][1] === null ? null : data[di][1]) +
+                "<br>  bin mean for this curve: " + statisticSelect + " = " + (data[di][6].bin_mean === null ? null : data[di][6].bin_mean.toPrecision(4)) +
+                "<br>  bin sd  for this curve: " + statisticSelect + " = " + (data[di][6].bin_sd === null ? null : data[di][6].bin_sd.toPrecision(4));
 
             di++;
         }
@@ -251,7 +276,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax,xmin,0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
     dataset.push(zeroLine);
 
     // generate plot options

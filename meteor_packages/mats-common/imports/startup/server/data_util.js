@@ -63,6 +63,20 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
+//this function finds the position of the array subArray in superArray
+const findArrayInSubArray = function (superArray, subArray) {
+    var i, j, current;
+    for (i = 0; i < superArray.length; ++i) {
+        if (subArray.length === superArray[i].length) {
+            current = superArray[i];
+            for (j = 0; j < subArray.length && subArray[j] === current[j]; ++j) ;
+            if (j === subArray.length)
+                return i;
+        }
+    }
+    return -1;
+};
+
 //utility for calculating the average of an array
 const average = function (data) {
     var sum = data.reduce(function (sum, value) {
@@ -70,131 +84,6 @@ const average = function (data) {
     }, 0);
     var avg = sum / data.length;
     return avg;
-};
-
-// utility that takes arrays of seconds, values, and optionally levels, and produces a data structure for histogram data
-// processing. Used in the initial histogram DB query and in matching.
-const calculateAndSortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, binNum, outlierQCParam, hasLevels, d) {
-
-    // need maps to hold the sub values and seconds (and levels) for each bin, after the bin bounds are calculated.
-    var binSubStats = {};
-    var binSubSecs = {};
-    var binSubLevs = {};
-
-    for (var b_idx = 0; b_idx < binNum; b_idx++) {
-        binSubStats[b_idx] = [];
-        binSubSecs[b_idx] = [];
-        binSubLevs[b_idx] = [];
-    }
-
-    // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs);
-    const glob_mean = globalStats.d_mean;
-    const glob_sd = globalStats.sd;
-    const glob_n = globalStats.n_good;
-    const glob_max = Math.max(...curveSubStats);
-    const glob_min = Math.min(...curveSubStats);
-
-    // use the global stats to determine the bin bounds -- should be based on dividing up +/- 3*sd from the mean into requested number of bins
-    const fullLowBound = glob_mean - 3 * glob_sd;
-    const fullUpBound = glob_mean + 3 * glob_sd;
-    const fullRange = 6 * glob_sd;
-    const binInterval = fullRange / (binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
-
-    //store an array of the upper bounding value for each bin.
-    var binUpBounds = [];
-    binUpBounds[0] = fullLowBound; // the first upper bound should be exactly - 3*sd from the mean, or the previously calculated fullLowBound
-    for (b_idx = 1; b_idx < binNum - 1; b_idx++) {
-        binUpBounds[b_idx] = binUpBounds[b_idx - 1] + binInterval; // increment from fullLowBound to get the rest of the bin upper limits
-    }
-    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
-
-    for (var d_idx = 0; d_idx < curveSubStats.length; d_idx++) {
-
-        // discard values outside of the specified outlier QC param control (using this control will make the outer bins empty, but that might be the user's desire)
-        if (Math.abs(curveSubStats[d_idx] - glob_mean) > outlierQCParam * glob_sd) {
-            continue;
-        }
-        // iterate through all of the bins until we find one where the upper limit is greater than our datum.
-        for (b_idx = 0; b_idx < binNum; b_idx++) {
-            if (curveSubStats[d_idx] <= binUpBounds[b_idx]) {
-                binSubStats[b_idx].push(curveSubStats[d_idx]);
-                binSubSecs[b_idx].push(curveSubSecs[d_idx]);
-                if (hasLevels) {
-                    binSubLevs[b_idx].push(curveSubLevs[d_idx]);
-                }
-                break;
-            }
-        }
-    }
-
-    // calculate the statistics for each bin
-    // we are especially interested in the number of values in each bin, as that is the plotted stat in a histogram
-    var binStats;
-    var bin_mean;
-    var bin_sd;
-    var bin_n;
-    var binLowBound;
-    var binUpBound;
-    var binLabel;
-    var lowSdFromMean;
-    var upSdFromMean;
-
-    for (b_idx = 0; b_idx < binNum; b_idx++) {
-        binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
-        bin_mean = binStats.d_mean;
-        bin_sd = binStats.sd;
-        bin_n = binStats.n_good;
-        binUpBound = binUpBounds[b_idx];
-        if (b_idx !== 0) {
-            binLowBound = binUpBounds[b_idx - 1];
-        } else {
-            binLowBound = Number.MIN_VALUE;
-        }
-        lowSdFromMean = ((binLowBound - glob_mean) / glob_sd).toFixed(1);
-        upSdFromMean = ((binUpBound - glob_mean) / glob_sd).toFixed(1);
-        // get the bin label for the graph x-axis later
-        if (b_idx === 0) {
-            binLabel = "< -3.0";
-        } else if (b_idx === binNum - 1) {
-            binLabel = "> 3.0";
-        } else {
-            binLabel = lowSdFromMean + " to " + upSdFromMean;
-        }
-
-        if (hasLevels) {
-            d.push([b_idx, bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'binLowBound': binLowBound,
-                'binUpBound': binUpBound,
-                'binLabel': binLabel
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
-        } else {
-            d.push([b_idx, bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], null, {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'binLowBound': binLowBound,
-                'binUpBound': binUpBound,
-                'binLabel': binLabel
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
-        }
-    }
-    return {glob_n, d};
 };
 
 //this function makes sure date strings are in the correct format
@@ -222,6 +111,52 @@ const dateConvert = function (dStr) {
         minute = timeArray[1];
     }
     return month + "/" + day + '/' + yr + ' ' + hour + ":" + minute;
+};
+
+//splits the date range string from the date selector into standardized fromDate/toDate strings,
+// plus the epochs for the fromDate and toDate
+const getDateRange = function (dateRange) {
+    var dates = dateRange.split(' - ');
+    var fromDateStr = dates[0];
+    var fromDate = dateConvert(fromDateStr);
+    var toDateStr = dates[1];
+    var toDate = dateConvert(toDateStr);
+    var fromSecs = secsConvert(fromDateStr);
+    var toSecs = secsConvert(toDateStr);
+    return {
+        fromDate: fromDate,
+        toDate: toDate,
+        fromSeconds: fromSecs,
+        toSeconds: toSecs
+    }
+};
+
+//this function converts a date string into an epoch
+const secsConvert = function (dStr) {
+    if (dStr === undefined || dStr === " ") {
+        var now = new Date();
+        return now.getTime() / 1000;
+    }
+    else {
+        var dateParts = dStr.split(' ');
+        var dateArray = dateParts[0].split(/[\-\/]/);  // split on - or /    01-01-2017 OR 01/01/2017
+        var month = dateArray[0];
+        var day = dateArray[1];
+        var yr = dateArray[2];
+        var hour = 0;
+        var minute = 0;
+        if (dateParts[1]) {
+            var timeArray = dateParts[1].split(":");
+            hour = timeArray[0];
+            minute = timeArray[1];
+        }
+        var my_date = new Date(Date.UTC(yr, month - 1, day, hour, minute, 0));
+        // to UTC time, not local time
+        var date_in_secs = my_date.getTime();
+    }
+    // to UTC time, not local time
+    //return date_in_secs/1000 -3600*6;
+    return date_in_secs / 1000;
 };
 
 //function to manage authorized logins for MATS
@@ -331,38 +266,6 @@ const doSettings = function (title, version, buildDate) {
     settings['hostname'] = hostname;
     settings['deploymentRoles'] = JSON.stringify(deploymentRoles);
     matsCollections.Settings.update(settingsId, {$set: settings});
-};
-
-//this function finds the position of the array subArray in superArray
-const findArrayInSubArray = function (superArray, subArray) {
-    var i, j, current;
-    for (i = 0; i < superArray.length; ++i) {
-        if (subArray.length === superArray[i].length) {
-            current = superArray[i];
-            for (j = 0; j < subArray.length && subArray[j] === current[j]; ++j) ;
-            if (j === subArray.length)
-                return i;
-        }
-    }
-    return -1;
-};
-
-//splits the date range string from the date selector into standardized fromDate/toDate strings,
-// plus the epochs for the fromDate and toDate
-const getDateRange = function (dateRange) {
-    var dates = dateRange.split(' - ');
-    var fromDateStr = dates[0];
-    var fromDate = dateConvert(fromDateStr);
-    var toDateStr = dates[1];
-    var toDate = dateConvert(toDateStr);
-    var fromSecs = secsConvert(fromDateStr);
-    var toSecs = secsConvert(toDateStr);
-    return {
-        fromDate: fromDate,
-        toDate: toDate,
-        fromSeconds: fromSecs,
-        toSeconds: toSecs
-    }
 };
 
 //Utility for transferring client-side parameters to the server-side methods via the "PlotParams" object in the stack.
@@ -545,32 +448,154 @@ const get_err = function (sVals, sSecs) {
     return stats;
 };
 
-//this function converts a date string into an epoch
-const secsConvert = function (dStr) {
-    if (dStr === undefined || dStr === " ") {
-        var now = new Date();
-        return now.getTime() / 1000;
+// utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
+const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
+
+    var binStats = {};
+
+    // calculate the global stats across all of the data
+    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const glob_mean = globalStats.d_mean;
+    const glob_sd = globalStats.sd;
+
+    // use the global stats to determine the bin bounds -- should be based on dividing up +/- 3*sd from the mean into requested number of bins
+    const fullLowBound = glob_mean - 3 * glob_sd;
+    const fullUpBound = glob_mean + 3 * glob_sd;
+    const fullRange = 6 * glob_sd;
+    const binInterval = fullRange / (binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
+
+    //store an array of the upper and lower bounding values for each bin.
+    var binUpBounds = [];
+    var binLowBounds = [];
+    var binMeans = [];
+    binUpBounds[0] = fullLowBound; // the first upper bound should be exactly - 3*sd from the mean, or the previously calculated fullLowBound
+    binLowBounds[0] = -1 * Number.MAX_VALUE;
+    binMeans[0] = fullLowBound - binInterval / 2;
+    for (var b_idx = 1; b_idx < binNum - 1; b_idx++) {
+        binUpBounds[b_idx] = binUpBounds[b_idx - 1] + binInterval; // increment from fullLowBound to get the rest of the bin upper limits
+        binLowBounds[b_idx] = binUpBounds[b_idx - 1];
+        binMeans[b_idx] = binUpBounds[b_idx - 1] + binInterval / 2;
     }
-    else {
-        var dateParts = dStr.split(' ');
-        var dateArray = dateParts[0].split(/[\-\/]/);  // split on - or /    01-01-2017 OR 01/01/2017
-        var month = dateArray[0];
-        var day = dateArray[1];
-        var yr = dateArray[2];
-        var hour = 0;
-        var minute = 0;
-        if (dateParts[1]) {
-            var timeArray = dateParts[1].split(":");
-            hour = timeArray[0];
-            minute = timeArray[1];
+    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
+    binLowBounds[binNum - 1] = fullUpBound;
+    binMeans[binNum - 1] = fullUpBound + binInterval / 2;
+
+    // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
+    var binLabels = [];
+    var lowSdFromMean;
+    var upSdFromMean;
+
+    for (b_idx = 0; b_idx < binNum; b_idx++) {
+        lowSdFromMean = (binLowBounds[b_idx]).toFixed(1);
+        upSdFromMean = (binUpBounds[b_idx]).toFixed(1);
+        if (b_idx === 0) {
+            binLabels[b_idx] = "< " + upSdFromMean;
+        } else if (b_idx === binNum - 1) {
+            binLabels[b_idx] = "> " + lowSdFromMean;
+        } else {
+            binLabels[b_idx] = lowSdFromMean + " to " + upSdFromMean;
         }
-        var my_date = new Date(Date.UTC(yr, month - 1, day, hour, minute, 0));
-        // to UTC time, not local time
-        var date_in_secs = my_date.getTime();
     }
-    // to UTC time, not local time
-    //return date_in_secs/1000 -3600*6;
-    return date_in_secs / 1000;
+
+    binStats['glob_mean'] = glob_mean;
+    binStats['glob_sd'] = glob_sd;
+    binStats['binUpBounds'] = binUpBounds;
+    binStats['binLowBounds'] = binLowBounds;
+    binStats['binMeans'] = binMeans;
+    binStats['binLabels'] = binLabels;
+
+    return {'binStats': binStats};
+};
+
+// utility that takes arrays of seconds, values, and optionally levels, and produces a data structure for histogram data
+// processing. Used in the initial histogram DB query and in matching.
+const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, binNum, masterBinStats, hasLevels, d) {
+
+    // need maps to hold the sub values and seconds (and levels) for each bin, after the bin bounds are calculated.
+    var binSubStats = {};
+    var binSubSecs = {};
+    var binSubLevs = {};
+
+    for (var b_idx = 0; b_idx < binNum; b_idx++) {
+        binSubStats[b_idx] = [];
+        binSubSecs[b_idx] = [];
+        binSubLevs[b_idx] = [];
+    }
+
+    // calculate the global stats across all of the data
+    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const glob_mean = globalStats.d_mean;
+    const glob_sd = globalStats.sd;
+    const glob_n = globalStats.n_good;
+    const glob_max = Math.max(...curveSubStats);
+    const glob_min = Math.min(...curveSubStats);
+
+    // sort data into bins
+    const binUpBounds = masterBinStats.binUpBounds;
+    const binLowBounds = masterBinStats.binLowBounds;
+    const binMeans = masterBinStats.binMeans;
+    const binLabels = masterBinStats.binLabels;
+
+    for (var d_idx = 0; d_idx < curveSubStats.length; d_idx++) {
+        // iterate through all of the bins until we find one where the upper limit is greater than our datum.
+        for (b_idx = 0; b_idx < binNum; b_idx++) {
+            if (curveSubStats[d_idx] <= binUpBounds[b_idx]) {
+                binSubStats[b_idx].push(curveSubStats[d_idx]);
+                binSubSecs[b_idx].push(curveSubSecs[d_idx]);
+                if (hasLevels) {
+                    binSubLevs[b_idx].push(curveSubLevs[d_idx]);
+                }
+                break;
+            }
+        }
+    }
+
+    // calculate the statistics for each bin
+    // we are especially interested in the number of values in each bin, as that is the plotted stat in a histogram
+    var binStats;
+    var bin_mean;
+    var bin_sd;
+    var bin_n;
+
+    for (b_idx = 0; b_idx < binNum; b_idx++) {
+        binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
+        bin_mean = binStats.d_mean;
+        bin_sd = binStats.sd;
+        bin_n = binStats.n_good;
+
+        if (hasLevels) {
+            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
+                'bin_mean': bin_mean,
+                'bin_sd': bin_sd,
+                'bin_n': bin_n,
+                'binLowBound': binLowBounds[b_idx],
+                'binUpBound': binUpBounds[b_idx],
+                'binLabel': binLabels[b_idx]
+            }, {
+                'glob_mean': glob_mean,
+                'glob_sd': glob_sd,
+                'glob_n': glob_n,
+                'glob_max': glob_max,
+                'glob_min': glob_min
+            }, null]);
+        } else {
+            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], null, {
+                'bin_mean': bin_mean,
+                'bin_sd': bin_sd,
+                'bin_n': bin_n,
+                'binLowBound': binLowBounds[b_idx],
+                'binUpBound': binUpBounds[b_idx],
+                'binLabel': binLabels[b_idx]
+            }, {
+                'glob_mean': glob_mean,
+                'glob_sd': glob_sd,
+                'glob_n': glob_n,
+                'glob_max': glob_max,
+                'glob_min': glob_min
+            }, null]);
+        }
+    }
+    return {d: d};
 };
 
 //used for sorting arrays
@@ -589,19 +614,20 @@ export default matsDataUtils = {
     arrayContainsArray: arrayContainsArray,
     arrayContainsSubArray: arrayContainsSubArray,
     arraysEqual: arraysEqual,
+    findArrayInSubArray: findArrayInSubArray,
     average: average,
-    calculateAndSortHistogramBins: calculateAndSortHistogramBins,
     dateConvert: dateConvert,
+    getDateRange: getDateRange,
+    secsConvert: secsConvert,
     doAuthorization: doAuthorization,
     doColorScheme: doColorScheme,
     doCredentials: doCredentials,
     doRoles: doRoles,
     doSettings: doSettings,
-    findArrayInSubArray: findArrayInSubArray,
-    getDateRange: getDateRange,
     get_err: get_err,
     getPlotParamsFromStack: getPlotParamsFromStack,
-    secsConvert: secsConvert,
-    sortFunction: sortFunction
+    calculateHistogramBins: calculateHistogramBins,
+    sortHistogramBins: sortHistogramBins,
+    sortFunction: sortFunction,
 
 }

@@ -611,7 +611,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             show: true
         },
         xaxes: [{
-            axisLabel: 'Bin (sd from mean)',
+            axisLabel: 'Bin',
             color: 'grey',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,

@@ -77,12 +77,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
         var ymax = params.ymax;  // optional - current y axis maximum
     }
 
-    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
-    // independentVar values of whichever has the largest interval
-    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
-    var curvesLength = dataset.length;
-    var largeIntervalCurveData = getLargeIntervalCurveData(dataset, diffFrom, curvesLength, independentVarIndex);
-
+    // initialize variables
     var minuendData = dataset[diffFrom[0]].data;
     var subtrahendData = dataset[diffFrom[1]].data;
     var subtrahendIndex = 0;
@@ -90,7 +85,29 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
     var d = [];
     var count = 0;
     var sum = 0;
-    //calculate the differences
+
+    // make sure neither curve is empty
+    if (minuendData.length === 0 || subtrahendData.length === 0) {
+        if (plotType !== 'profile') {
+            return {
+                sum: sum,
+                count: count,
+                dataset: d,
+                ymin: ymin,
+                ymax: ymax
+            };
+        } else {
+            return {dataset: d};
+        }
+    }
+
+    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
+    // independentVar values of whichever has the largest interval
+    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
+    var curvesLength = dataset.length;
+    var largeIntervalCurveData = getLargeIntervalCurveData(dataset, diffFrom, curvesLength, independentVarIndex);
+
+    // calculate the differences
     for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
 
         //make sure that we are actually on the same independentVar value for each curve
@@ -161,8 +178,21 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                         }
                     }
                 } else {
-                    d[largeIntervalCurveIndex][6] = {'bin_mean': null, 'bin_sd': null, 'bin_n': diffValue, 'binLowBound': minuendData[minuendIndex][6].binLowBound, 'binUpBound': minuendData[minuendIndex][6].binUpBound, 'binLabel': minuendData[minuendIndex][6].binLabel};
-                    d[largeIntervalCurveIndex][7] = {'glob_mean': null, 'glob_sd': null, 'glob_n': null, 'glob_max': null, 'glob_min': null};
+                    d[largeIntervalCurveIndex][6] = {
+                        'bin_mean': null,
+                        'bin_sd': null,
+                        'bin_n': diffValue,
+                        'binLowBound': minuendData[minuendIndex][6].binLowBound,
+                        'binUpBound': minuendData[minuendIndex][6].binUpBound,
+                        'binLabel': minuendData[minuendIndex][6].binLabel
+                    };
+                    d[largeIntervalCurveIndex][7] = {
+                        'glob_mean': null,
+                        'glob_sd': null,
+                        'glob_n': null,
+                        'glob_max': null,
+                        'glob_min': null
+                    };
                 }
 
                 if (plotType !== 'profile') {
@@ -184,8 +214,21 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                     d[largeIntervalCurveIndex][5] = [];
                 }
                 if (plotType === 'histogram') {
-                    d[largeIntervalCurveIndex][6] = {'bin_mean': null, 'bin_sd': null, 'bin_n': null, 'binLowBound': minuendData[minuendIndex][6].binLowBound, 'binUpBound': minuendData[minuendIndex][6].binUpBound, 'binLabel': minuendData[minuendIndex][6].binLabel};
-                    d[largeIntervalCurveIndex][7] = {'glob_mean': null, 'glob_sd': null, 'glob_n': null, 'glob_max': null, 'glob_min': null};
+                    d[largeIntervalCurveIndex][6] = {
+                        'bin_mean': null,
+                        'bin_sd': null,
+                        'bin_n': null,
+                        'binLowBound': minuendData[minuendIndex][6].binLowBound,
+                        'binUpBound': minuendData[minuendIndex][6].binUpBound,
+                        'binLabel': minuendData[minuendIndex][6].binLabel
+                    };
+                    d[largeIntervalCurveIndex][7] = {
+                        'glob_mean': null,
+                        'glob_sd': null,
+                        'glob_n': null,
+                        'glob_max': null,
+                        'glob_min': null
+                    };
                 }
 
             }
@@ -205,126 +248,6 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
     } else {
         return {dataset: d};
     }
-};
-
-//generates diff curves for all plot types that have diff curves.
-const getDataForDiffCurveHistogram = function (params, hasLevels) {
-    /*
-         DATASET ELEMENTS:
-         series: [data,data,data ...... ]   each data is itself an array
-         data[0] - bin number (plotted against the x axis)
-         data[1] - number in bin (ploted against the y axis)
-         data[2] - -1 (no error bars for histograms)
-         data[3] - bin values -- not calculated for histogram diffs, as it doesn't make sense to diff individual values sorted into bins
-         data[4] - bin times -- not calculated for histogram diffs, as it doesn't make sense to diff individual values sorted into bins
-         data[5] - reserved for if there are bin levels -- not calculated for histogram diffs, as it doesn't make sense to diff individual values sorted into bins
-         data[6] - bin stats
-         data[7] - global stats
-         data[8] - tooltip
-     */
-
-    //determine whether data[0] or data[1] is the independent variable, and which is the stat value
-    const independentVarIndex = 0;
-    var statValueIndex = 1;
-
-    const dataset = params.dataset;  // existing dataset - should contain the difference curve and the base curve
-    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
-
-    var ymin = params.ymin; // optional - current y axis minimum
-    var ymax = params.ymax;  // optional - current y axis maximum
-
-    // this is a difference curve - we are differencing diffFrom[0] - diffFrom[1] based on the
-    // independentVar values of whichever has the largest interval
-    // find the largest interval between diffFrom[0] curve and diffFrom[1] curve
-    var curvesLength = dataset.length;
-    var largeIntervalCurveData = getLargeIntervalCurveData(dataset, diffFrom, curvesLength, independentVarIndex);
-
-    var minuendData = dataset[diffFrom[0]].data;
-    var subtrahendData = dataset[diffFrom[1]].data;
-    var subtrahendIndex = 0;
-    var minuendIndex = 0;
-    var d = [];
-    var count = 0;
-    var sum = 0;
-    //calculate the differences
-    for (var largeIntervalCurveIndex = 0; largeIntervalCurveIndex < largeIntervalCurveData.length; largeIntervalCurveIndex++) {
-
-        //make sure that we are actually on the same independentVar value for each curve
-        var subtrahendIndependentVar = subtrahendData[subtrahendIndex][independentVarIndex];
-        var minuendIndependentVar = minuendData[minuendIndex][independentVarIndex];
-        var largeIntervalIndependentVar = largeIntervalCurveData[largeIntervalCurveIndex][independentVarIndex];
-
-        //increment the minuendIndex until it reaches this iteration's largeIntervalIndependentVar
-        var minuendChanged = false;
-        while (largeIntervalIndependentVar > minuendIndependentVar && minuendIndex < minuendData.length - 1) {
-            minuendIndependentVar = minuendData[++minuendIndex][independentVarIndex];
-            minuendChanged = true;
-        }
-        //if the end of the curve was reached without finding the largeIntervalIndependentVar, increase the minuendIndex to trigger the end conditions.
-        if (!minuendChanged && minuendIndex >= minuendData.length - 1) {
-            ++minuendIndex;
-        }
-
-        //increment the subtrahendIndex until it reaches this iteration's largeIntervalIndependentVar
-        var subtrahendChanged = false;
-        while (largeIntervalIndependentVar > subtrahendIndependentVar && subtrahendIndex < subtrahendData.length - 1) {
-            subtrahendIndependentVar = subtrahendData[++subtrahendIndex][independentVarIndex];
-            subtrahendChanged = true;
-        }
-        //if the end of the curve was reached without finding the largeIntervalIndependentVar, increase the subtrahendIndex to trigger the end conditions.
-        if (!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) {
-            ++subtrahendIndex;
-        }
-
-        var diffValue = null;
-        if (minuendData[minuendIndex] !== undefined && subtrahendData[subtrahendIndex] !== undefined) {  // make sure both curves actually have data at this index
-            if ((minuendData[minuendIndex][statValueIndex] !== null && subtrahendData[subtrahendIndex][statValueIndex] !== null) && minuendData[minuendIndex][independentVarIndex] === subtrahendData[subtrahendIndex][independentVarIndex]) { // make sure data is not null at this point and the independentVars actually match
-
-                diffValue = minuendData[minuendIndex][statValueIndex] - subtrahendData[subtrahendIndex][statValueIndex];
-                d[largeIntervalCurveIndex] = [];
-                d[largeIntervalCurveIndex][independentVarIndex] = largeIntervalIndependentVar;
-                d[largeIntervalCurveIndex][statValueIndex] = diffValue;
-                d[largeIntervalCurveIndex][2] = -1;
-                d[largeIntervalCurveIndex][3] = [];
-                d[largeIntervalCurveIndex][4] = [];
-                if (hasLevels) {
-                    d[largeIntervalCurveIndex][5] = [];
-                }
-                d[largeIntervalCurveIndex][6] = {'bin_mean': null, 'bin_sd': null, 'bin_n': diffValue, 'binLowBound': minuendData[minuendIndex][6].binLowBound, 'binUpBound': minuendData[minuendIndex][6].binUpBound, 'binLabel': minuendData[minuendIndex][6].binLabel};
-                d[largeIntervalCurveIndex][7] = {'glob_mean': null, 'glob_sd': null, 'glob_n': null, 'glob_max': null, 'glob_min': null};
-
-                ymin = diffValue < ymin ? diffValue : ymin;
-                ymax = diffValue > ymax ? diffValue : ymax;
-                sum += diffValue;
-                count++;
-
-            } else {
-                //no match for this independentVar
-                d[largeIntervalCurveIndex] = [];
-                d[largeIntervalCurveIndex][independentVarIndex] = largeIntervalIndependentVar;
-                d[largeIntervalCurveIndex][statValueIndex] = null;
-                d[largeIntervalCurveIndex][2] = -1;
-                d[largeIntervalCurveIndex][3] = [];
-                d[largeIntervalCurveIndex][4] = [];
-                if (hasLevels) {
-                    d[largeIntervalCurveIndex][5] = [];
-                }
-                d[largeIntervalCurveIndex][6] = {'bin_mean': null, 'bin_sd': null, 'bin_n': null, 'binLowBound': minuendData[minuendIndex][6].binLowBound, 'binUpBound': minuendData[minuendIndex][6].binUpBound, 'binLabel': minuendData[minuendIndex][6].binLabel};
-                d[largeIntervalCurveIndex][7] = {'glob_mean': null, 'glob_sd': null, 'glob_n': null, 'glob_max': null, 'glob_min': null};
-
-            }
-        } else if ((!subtrahendChanged && subtrahendIndex >= subtrahendData.length - 1) || (!minuendChanged && minuendIndex >= minuendData.length - 1)) {
-            //we've reached the end of at least one curve, so end the diffing.
-            break;
-        }
-    }
-    return {
-        sum: sum,
-        count: count,
-        dataset: d,
-        ymin: ymin,
-        ymax: ymax
-    };
 };
 
 export default matsDataDiffUtils = {
