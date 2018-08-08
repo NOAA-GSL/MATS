@@ -335,26 +335,6 @@ const doCurveParams = function () {
             });
     }
 
-    // if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-    //     matsCollections.CurveParams.insert(
-    //         {
-    //             name: 'dieoff-forecast-length',
-    //             type: matsTypes.InputTypes.select,
-    //             optionsMap: {},
-    //             options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-    //             superiorNames: [],
-    //             selected: '',
-    //             controlButtonCovered: true,
-    //             unique: false,
-    //             default: matsTypes.ForecastTypes.dieoff,
-    //             controlButtonVisibility: 'block',
-    //             controlButtonText: 'forecast-length',
-    //             displayOrder: 7,
-    //             displayPriority: 1,
-    //             displayGroup: 3
-    //         });
-    // }
-
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
@@ -539,26 +519,6 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
-        // matsCollections.CurveTextPatterns.insert({
-        //     plotType: matsTypes.PlotTypes.dieoff,
-        //     textPattern: [
-        //         ['', 'label', ': '],
-        //         ['', 'data-source', ' in '],
-        //         ['', 'region', ', '],
-        //         ['', 'variable', ': '],
-        //         ['', 'statistic', ', '],
-        //         ['level ', 'top', ' '],
-        //         ['to', 'bottom', ' '],
-        //         ['fcst_len:', 'dieoff-forecast-length', 'h '],
-        //         ['valid-time:', 'valid-time', ' '],
-        //         ['phase:', 'phase', ' '],
-        //         ['', 'curve-dates', '']
-        //     ],
-        //     displayParams: [
-        //         "label", "data-source", "region", "statistic", "variable", "valid-time", "dieoff-forecast-length", "phase", "top", "bottom"
-        //     ],
-        //     groupSize: 6
-        // });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
@@ -575,6 +535,26 @@ const doCurveTextPatterns = function () {
             ],
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "forecast-length", "phase", "top", "bottom", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['level: ', 'top', ' '],
+                ['to ', 'bottom', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['phase: ', 'phase', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "phase", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
@@ -601,12 +581,6 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
-        // matsCollections.PlotGraphFunctions.insert({
-        //     plotType: matsTypes.PlotTypes.dieoff,
-        //     graphFunction: "graphDieOff",
-        //     dataFunction: "dataDieOff",
-        //     checked: false
-        // });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphProfile",
@@ -617,6 +591,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphValidTime",
             dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
             checked: false
         });
     }

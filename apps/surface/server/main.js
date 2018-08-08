@@ -456,7 +456,6 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
-        optionsMap = {};
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
@@ -738,6 +737,24 @@ var doCurveTextPatterns = function () {
             ],
             groupSize: 4
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ' '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "forecast-length", "valid-time", "truth", "curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -783,6 +800,12 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.map,
             graphFunction: "graphMap",
             dataFunction: "dataMap",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
             checked: false
         });
     }

@@ -399,26 +399,6 @@ const doCurveParams = function () {
             });
     }
 
-    // if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-    //     matsCollections.CurveParams.insert(
-    //         {
-    //             name: 'dieoff-forecast-length',
-    //             type: matsTypes.InputTypes.select,
-    //             optionsMap: {},
-    //             options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-    //             superiorNames: [],
-    //             selected: '',
-    //             controlButtonCovered: true,
-    //             unique: false,
-    //             default: matsTypes.ForecastTypes.dieoff,
-    //             controlButtonVisibility: 'block',
-    //             controlButtonText: 'forecast-length',
-    //             displayOrder: 8,
-    //             displayPriority: 1,
-    //             displayGroup: 3
-    //         });
-    // }
-
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
@@ -558,24 +538,6 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
-        // matsCollections.CurveTextPatterns.insert({
-        //     plotType: matsTypes.PlotTypes.dieoff,
-        //     textPattern: [
-        //         ['', 'label', ': '],
-        //         ['', 'data-source', ' in '],
-        //         ['', 'region', ', '],
-        //         ['', 'statistic', ', '],
-        //         ['', 'variable', ', '],
-        //         ['', 'scale', ' '],
-        //         ['fcst_len :', 'dieoff-forecast-length', ', '],
-        //         [' valid-time:', 'valid-time', ' '],
-        //         ['', 'curve-dates', '']
-        //     ],
-        //     displayParams: [
-        //         "label", "data-source", "region", "statistic", "variable", "scale", "valid-time", "dieoff-forecast-length", "curve-dates"
-        //     ],
-        //     groupSize: 6
-        // });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
@@ -610,6 +572,25 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'scale', ', '],
+                ['', 'variable', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'truth', ' '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "variable", "scale", "forecast-length", "valid-time", "curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -633,12 +614,6 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             checked: true
         });
-        // matsCollections.PlotGraphFunctions.insert({
-        //     plotType: matsTypes.PlotTypes.dieoff,
-        //     graphFunction: "graphDieOff",
-        //     dataFunction: "dataDieOff",
-        //     checked: false
-        // });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
             graphFunction: "graphValidTime",
@@ -651,9 +626,14 @@ const doPlotGraph = function () {
             dataFunction: "dataDailyModelCycle",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
+            checked: false
+        });
     }
 };
-
 
 Meteor.startup(function () {
     matsCollections.Databases.remove({});

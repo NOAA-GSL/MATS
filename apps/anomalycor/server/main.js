@@ -417,7 +417,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "average", "forecast-length", "pres-level"
+                "label", "data-source", "region", "variable", "pres-level", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
@@ -435,7 +435,24 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "valid-time", "dieoff-forecast-length", "pres-level", "curve-dates"
+                "label", "data-source", "region", "variable", "pres-level", "valid-time", "dieoff-forecast-length", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ', '],
+                ['level: ', 'pres-level', ' hPa, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "variable", "pres-level", "forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });
@@ -468,6 +485,12 @@ const doPlotGraph = function () {
             dataFunction: "dataDieOff",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
+            checked: false
+        });
     }
 };
 
@@ -496,6 +519,7 @@ Meteor.startup(function () {
             connectionLimit: 10
         });
     }
+
     var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
         user: 1,
@@ -508,6 +532,7 @@ Meteor.startup(function () {
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
+
     const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
         host: 1,
         user: 1,

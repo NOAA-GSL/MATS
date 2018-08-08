@@ -591,6 +591,24 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-length", "valid-time", "curve-dates"
+            ],
+            groupSize: 6
+        });
     }
 };
 
@@ -630,6 +648,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.dailyModelCycle,
             graphFunction: "graphDailyModelCycle",
             dataFunction: "dataDailyModelCycle",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
             checked: false
         });
     }

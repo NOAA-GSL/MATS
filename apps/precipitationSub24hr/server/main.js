@@ -488,15 +488,15 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
                 ['', 'threshold', ' '],
+                ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['fcst_type: ', 'forecast-type', ', '],
-                ['', 'scale', ', '],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-type", "scale"
+                "label", "data-source", "region", "statistic", "threshold", "scale", "average", "forecast-type"
             ],
             groupSize: 6
 
@@ -506,14 +506,31 @@ const doCurveTextPatterns = function () {
             textPattern: [
                 ['', 'label', ': '],
                 ['', 'data-source', ' in '],
-                ['', 'regionName', ', '],
+                ['', 'region', ', '],
+                ['', 'scale', ', '],
                 ['', 'statistic', ', '],
                 ['fcst_type: ', 'forecast-type', ', '],
-                ['', 'scale', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "forecast-type", "scale", "curve-dates"
+                "label", "data-source", "region", "statistic", "scale", "forecast-type", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'scale', ', '],
+                ['', 'statistic', ', '],
+                ['fcst_type: ', 'forecast-type', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "scale", "forecast-type", "curve-dates"
             ],
             groupSize: 6
         });
@@ -544,6 +561,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.threshold,
             graphFunction: "graphThreshold",
             dataFunction: "dataThreshold",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
             checked: false
         });
     }
