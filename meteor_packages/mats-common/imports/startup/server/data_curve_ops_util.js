@@ -260,6 +260,66 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
     return curveOptions;
 };
 
+// provides curve options for all plot types with an independent x axis and a dependent y axis
+const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
+    /*
+     some curves will share an axis based on the axis map key.
+     for example all the curves that have the same variable and statistic might share an axis.
+     The axis key might be different for different apps.
+     These axis have parameters that have been stashed in the axisMap
+     PARAMETERS:
+     curve -  the curve object
+     curveIndex : Number - the integer index of this curve
+     axisMap: object - a map of axis params ....
+     required curve params for generating an axisMap are:
+     label : String - that is the label of an axis
+     ymin : Number - the minimum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     ymax : the maximum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
+     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
+     optional params in an axisMap:
+     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
+
+     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
+     */
+    const label = curve['label'];
+    const ymin = curve['ymin'];
+    const ymax = curve['ymax'];
+    const xmin = curve['xmin'];
+    const xmax = curve['xmax'];
+    const axisKey = curve['axisKey'];
+    const annotation = curve['annotation'];
+    if (axisKey in axisMap) {
+        axisMap[axisKey].axisLabel = axisKey;
+        axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
+        axisMap[axisKey].ymax = ymax > axisMap[axisKey].ymax ? ymax : axisMap[axisKey].ymax;
+        axisMap[axisKey].xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
+        axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
+    } else {
+        axisMap[axisKey] = {
+            index: curveIndex + 1,
+            label: label,
+            xmin: xmin,
+            xmax: xmax,
+            ymin: ymin,
+            ymax: ymax,
+            axisLabel: axisKey
+        };
+    }
+    const curveOptions = {
+        yaxis: axisMap[axisKey].index,
+        label: label,
+        curveId: label,
+        annotation: annotation,
+        color: curve['color'],
+        data: dataSeries,
+        points: {show: false,},
+        lines: {show: false, fill: false},
+        bars: {show: true}
+    };
+
+    return curveOptions;
+};
+
 const generateMapCurveOptions = function (curve, curveIndex, dataSeries, sitePlot) {
     /*
      PARAMETERS:
@@ -298,6 +358,7 @@ export default matsDataCurveOpsUtils = {
 
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,
+    generateBarChartCurveOptions:generateBarChartCurveOptions,
     generateMapCurveOptions: generateMapCurveOptions
 
 }

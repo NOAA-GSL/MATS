@@ -43,6 +43,26 @@ graphProfile = function (result) {
         event.preventDefault();
         plot.zoom();
     });
+    // add horizontal zoom out button
+    $("#zoom-out-left-right").click(function (event) {
+        event.preventDefault();
+        plot.zoomOutHorizontal();
+    });
+    // add horizontal zoom in button
+    $("#zoom-in-left-right").click(function (event) {
+        event.preventDefault();
+        plot.zoomHorizontal();
+    });
+    // add vertical zoom out button
+    $("#zoom-out-up-down").click(function (event) {
+        event.preventDefault();
+        plot.zoomOutVertical();
+    });
+    // add vertical zoom in button
+    $("#zoom-in-up-down").click(function (event) {
+        event.preventDefault();
+        plot.zoomVertical();
+    });
     // pan-left
     $("#pan-left").click(function (event) {
         event.preventDefault();

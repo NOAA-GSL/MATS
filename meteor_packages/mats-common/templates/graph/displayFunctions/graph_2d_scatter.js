@@ -1,10 +1,10 @@
-graph2dScatter = function(result) {
+graph2dScatter = function (result) {
     Session.set("spinner_img", "spinner.gif");
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw,vph);
+    var min = Math.min(vpw, vph);
     var dataset = result.data;
-    for (var i  =0; i < dataset.length; i++){
+    for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
         if (min < 400) {
             o.points && (o.points.radius = 1);
@@ -15,91 +15,111 @@ graph2dScatter = function(result) {
     var options = result.options;
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw,vph);
+    var min = Math.min(vpw, vph);
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
         options.series && options.series.points && (options.series.points.radius = 2);
     }
-    var annotation ="";
-    for (var i=0;i<dataset.length;i++) {
-        annotation = annotation+"<div style='color:"+dataset[i].color+"'>"+ dataset[i].annotation + " </div>";
+    var annotation = "";
+    for (var i = 0; i < dataset.length; i++) {
+        annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
     }
     var placeholder = $("#placeholder");
 
-        // bind to the pan, zoom, and redraw buttons
-        // add zoom out button
-        $("#zoom-out").click(function (event) {
-                event.preventDefault();
-                plot.zoomOut();
-            });
-        // add zoom in button
-        $("#zoom-in").click(function (event) {
-                event.preventDefault();
-                plot.zoom();
-            });
-        // pan-left
-        $("#pan-left").click(function (event) {
-            event.preventDefault();
-            plot.pan({left:-100});
-        });
-        // pan-right
-        $("#pan-right").click(function (event) {
-            event.preventDefault();
-            plot.pan({left:100});
-        });
-        // pan-up
-        $("#pan-up").click(function (event) {
-            event.preventDefault();
-            plot.pan({top:100});
-        });
-        // pan-down
-        $("#pan-down").click(function (event) {
-            event.preventDefault();
-            plot.pan({top:-100});
-        });
+    // bind to the pan, zoom, and redraw buttons
+    // add zoom out button
+    $("#zoom-out").click(function (event) {
+        event.preventDefault();
+        plot.zoomOut();
+    });
+    // add zoom in button
+    $("#zoom-in").click(function (event) {
+        event.preventDefault();
+        plot.zoom();
+    });
+    // add horizontal zoom out button
+    $("#zoom-out-left-right").click(function (event) {
+        event.preventDefault();
+        plot.zoomOutHorizontal();
+    });
+    // add horizontal zoom in button
+    $("#zoom-in-left-right").click(function (event) {
+        event.preventDefault();
+        plot.zoomHorizontal();
+    });
+    // add vertical zoom out button
+    $("#zoom-out-up-down").click(function (event) {
+        event.preventDefault();
+        plot.zoomOutVertical();
+    });
+    // add vertical zoom in button
+    $("#zoom-in-up-down").click(function (event) {
+        event.preventDefault();
+        plot.zoomVertical();
+    });
+    // pan-left
+    $("#pan-left").click(function (event) {
+        event.preventDefault();
+        plot.pan({left: -100});
+    });
+    // pan-right
+    $("#pan-right").click(function (event) {
+        event.preventDefault();
+        plot.pan({left: 100});
+    });
+    // pan-up
+    $("#pan-up").click(function (event) {
+        event.preventDefault();
+        plot.pan({top: 100});
+    });
+    // pan-down
+    $("#pan-down").click(function (event) {
+        event.preventDefault();
+        plot.pan({top: -100});
+    });
 
-        // add replot button
-        $("#refresh-plot").click(function (event) {
-            event.preventDefault();
-            plot = $.plot(placeholder, dataset, options);
-           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
-            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    // add replot button
+    $("#refresh-plot").click(function (event) {
+        event.preventDefault();
+        plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
-        });
+    });
 
-        // add show/hide buttons
-        $( "input[id$='-curve-show-hide']" ).click(function (event) {
-            event.preventDefault();
-            var id = event.target.id;
-            var curveLabel = id.replace('-curve-show-hide','');
-            var label = curveLabel +'-best fit';
-            for (var c = 0; c < dataset.length; c++) {
-                // find the bestfit line - if it exists
-                if (dataset[c].label && (dataset[c].label).search(label) > -1) {
-                    if (dataset[c].data.length === 0) {
-                        Session.set(label + "hideButtonText", 'NO DATA');
+    // add show/hide buttons
+    $("input[id$='-curve-show-hide']").click(function (event) {
+        event.preventDefault();
+        var id = event.target.id;
+        var curveLabel = id.replace('-curve-show-hide', '');
+        var label = curveLabel + '-best fit';
+        for (var c = 0; c < dataset.length; c++) {
+            // find the bestfit line - if it exists
+            if (dataset[c].label && (dataset[c].label).search(label) > -1) {
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "hideButtonText", 'NO DATA');
+                } else {
+                    dataset[c].lines.show = !dataset[c].lines.show;
+                    if (dataset[c].lines.show == true) {
+                        Session.set(curveLabel + "hideButtonText", 'hide curve');
                     } else {
-                        dataset[c].lines.show = !dataset[c].lines.show;
-                        if (dataset[c].lines.show == true) {
-                            Session.set(curveLabel + "hideButtonText", 'hide curve');
-                        } else {
-                            Session.set(curveLabel + "hideButtonText", 'show curve');
-                        }
+                        Session.set(curveLabel + "hideButtonText", 'show curve');
                     }
                 }
             }
-            plot = $.plot(placeholder, dataset, options);
-           // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
-            placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        }
+        plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
-        });
+    });
 
     // add show/hide points buttons
-    $( "input[id$='-curve-show-hide-points']" ).click(function (event) {
+    $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
         var id = event.target.id;
-        var label = id.replace('-curve-show-hide-points','');
+        var label = id.replace('-curve-show-hide-points', '');
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
                 dataset[c].points.show = !dataset[c].points.show;
@@ -137,15 +157,15 @@ graph2dScatter = function(result) {
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     // hide the spinner
     Session.set("spinner_img", "spinner.gif");
-    document.getElementById("spinner").style.display="none";
+    document.getElementById("spinner").style.display = "none";
 
-    $("#placeholder").bind('plotclick', function(event,pos,item) {
+    $("#placeholder").bind('plotclick', function (event, pos, item) {
         if (zooming) {
-            zooming= false;
+            zooming = false;
             return;
         }
         if (item && item.series.data[item.dataIndex][2]) {
-            Session.set("data",item.series.data[item.dataIndex][2]);
+            Session.set("data", item.series.data[item.dataIndex][2]);
             $("#dataModal").modal('show');
         }
     });

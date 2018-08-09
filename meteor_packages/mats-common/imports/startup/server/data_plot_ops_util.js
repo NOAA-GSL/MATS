@@ -580,10 +580,14 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             continue;
         }
         const axisKey = curves[dsi].axisKey;
+        const binNum = curves[dsi].binNum;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
+        var xmin = axisMap[axisKey].xmin;
+        var xmax = axisMap[axisKey].xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
+        var binWidth = (xmax - xmin) / binNum;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
@@ -622,7 +626,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             zoomRange: [0.1, null],
             ticks: plotBins,
             mode: 'xy',
-            font: {size: 18}
+            font: {size: 14}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -633,14 +637,14 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             position: 'ne'
         },
         series: {
-            lines: {
+            bars: {
                 show: true,
-                lineWidth: matsCollections.Settings.findOne({}, {fields: {lineWidth: 1}}).lineWidth
-            },
-            points: {
-                show: true
             },
             shadowSize: 0
+        },
+        bars: {
+            align: "center",
+            barWidth: binWidth
         },
         zoom: {
             interactive: false

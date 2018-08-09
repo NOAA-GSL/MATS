@@ -11,18 +11,22 @@
                 <button type="button" class="preview btn btn-primary fa fa-eye">&nbsp;Preview</button>
                 <button type="button" class="publish btn btn-primary fa fa-print">&nbsp;Publish</button>
                 <button type="button" class="btn spacebutton" id="gc1-spacer"></button>
-                <button id = "textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style= "display:block;">&nbsp;Text</button>
-                <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
+                <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="display:block;">&nbsp;Text</button>
+                <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button type="button" class="btn spacebutton" id="gc2-spacer"></button>
                 <span id="graph-touch-controls">
-                    <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
-                    <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
-                    <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
-                    <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-left fa-lg" id="pan-left" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-up fa-lg" id="pan-up" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-down fa-lg" id="pan-down" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-right fa-lg" id="pan-right" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-refresh fa-lg" id="refresh-plot" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
                 </span>
             </div>
             <div id="sendModal" class="modal" role="dialog">
@@ -56,14 +60,27 @@
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
-                {{#if isNotMap}}
-                    <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
-                    {{#if errorBarsAllowed}}
-                        <input type="button" class="errorBars btn btn-primary btn-xs"  value="{{errorBarButtonText}}"  id="{{this.label}}-curve-errorbars"  style= "display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
+                    {{#if isNotMap}}
+                        {{#if isNotHistogram}}
+                            <input type="button" class="curveVisibility btn btn-primary btn-xs"
+                                   value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
+                                   style="display:block;background-color: {{this.color}}">
+                            <input type="button" class="points btn btn-primary btn-xs" value="{{pointsButtonText}}"
+                                   id="{{this.label}}-curve-show-hide-points"
+                                   style="display:block;background-color: {{this.color}}">
+                            {{#if errorBarsAllowed}}
+                                <input type="button" class="errorBars btn btn-primary btn-xs"
+                                       value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
+                                       style="display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
+                            {{/if}}
+                        {{else}}
+                            <input type="button" class="barVisibility btn btn-primary btn-xs"
+                                   value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
+                                   style="display:block;background-color: {{this.color}}">
+                        {{/if}}
                     {{/if}}
-                {{/if}}
-                </div><br>
+                </div>
+                <br>
             {{/each}}
             <hr/>
         </div>
@@ -94,19 +111,21 @@
         <div id="textScatter2dView" style="display:none;">
             {{>textScatter2dOutput}}
         </div>
-        {{#if isNotMap}}
-        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-            <div id="legendContainer" name="legendContainer"></div>
-            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
-        </div>
-        {{/if}}
         {{#if isMap}}
-        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
-        </div>
+            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+                <div id="placeholder" class="row" name="placeholder"
+                     style="float:left;width:{{width}}; height:{{height}};"></div>
+            </div>
+        {{else}}
+            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+                <div id="legendContainer" name="legendContainer"></div>
+                <div id="placeholder" class="row" name="placeholder"
+                     style="float:left;width:{{width}}; height:{{height}};"></div>
+            </div>
         {{/if}}
         {{#if isProfile}}
-            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confidence</h5>
+            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error
+                Bars show 95% confidence</h5>
         {{/if}}
     </div>
 </template>

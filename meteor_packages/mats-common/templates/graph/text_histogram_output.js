@@ -213,14 +213,33 @@ Template.textHistogramOutput.helpers({
         if (matsCurveUtils.PlotResult.data[cindex] === undefined) {
             return [];
         }
+
         const resultData = matsCurveUtils.PlotResult.data[cindex].data;
         const stats = resultData[0][7];
+
+        const fillStr = settings.NullFillString;
+        var glob_mean = fillStr;
+        var glob_sd = fillStr;
+        var glob_n = fillStr;
+        var glob_min = fillStr;
+        var glob_max = fillStr;
+
+        try {
+            glob_mean = (stats.glob_mean ? stats.glob_mean.toPrecision(4) : "undefined").toString();
+            glob_sd = (stats.glob_sd ? stats.glob_sd.toPrecision(4) : "undefined").toString();
+            glob_n = (stats.glob_n).toString();
+            glob_min = ((stats.glob_min || stats.glob_min === 0) ? stats.glob_min.toPrecision(4) : "undefined").toString();
+            glob_max = (stats.glob_max ? stats.glob_max.toPrecision(4) : "undefined").toString();
+        } catch (problem) {
+            console.log("Problem in deriving global stats text: " + problem);
+        }
+
         const line = "<td>" + curve.label + "</td>" +
-            "<td>" + (stats.glob_mean ? stats.glob_mean.toPrecision(4) : "undefined").toString() + "</td>" +
-            "<td>" + (stats.glob_sd ? stats.glob_sd.toPrecision(4) : "undefined").toString() + "</td>" +
-            "<td>" + (stats.glob_n).toString() + "</td>" +
-            "<td>" + ((stats.glob_min || stats.glob_min === 0) ? stats.glob_min.toPrecision(4) : "undefined").toString() + "</td>" +
-            "<td>" + (stats.glob_max ? stats.glob_max.toPrecision(4) : "undefined").toString() + "</td>";
+            "<td>" + glob_mean + "</td>" +
+            "<td>" + glob_sd + "</td>" +
+            "<td>" + glob_n + "</td>" +
+            "<td>" + glob_min + "</td>" +
+            "<td>" + glob_max + "</td>";
 
         return line;
     }

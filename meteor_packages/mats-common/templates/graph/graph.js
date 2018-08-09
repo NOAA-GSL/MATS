@@ -372,14 +372,24 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
-    isNotMap: function() {
-        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map)
+    barChartButtonText: function () {
+        var sval = this.label + "barChartButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'hide bars');
+        }
+        return Session.get(sval);
+    },
+    errorBarsAllowed: function () {
+        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.scatter2d && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.histogram);
     },
     isMap: function() {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
     },
-    errorBarsAllowed: function () {
-        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.scatter2d && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.histogram);
+    isNotMap: function() {
+        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map)
+    },
+    isNotHistogram: function() {
+        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.histogram)
     },
     isProfile: function() {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile);

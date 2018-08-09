@@ -195,40 +195,174 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
             }
         }
 
-        plot.zoomOut = function (args) {
+        // method added 9 Aug 2018 by MBS
+        plot.zoomOutHorizontal = function (args) {
             if (!args)
                 args = {};
-            
-            if (!args.amount)
-                args.amount = plot.getOptions().zoom.amount;
 
-            args.amount = 1 / args.amount;
-            plot.zoom(args);
-        };
-        
-        plot.zoom = function (args) {
-            if (!args)
-                args = {};
-            
             var c = args.center,
                 amount = args.amount || plot.getOptions().zoom.amount,
                 w = plot.width(), h = plot.height();
 
+            amount = 1 / amount;
+
             if (!c)
                 c = { left: w / 2, top: h / 2 };
-                
+
             var xf = c.left / w,
-                yf = c.top / h,
                 minmax = {
                     x: {
                         min: c.left - xf * w / amount,
                         max: c.left + (1 - xf) * w / amount
                     },
                     y: {
+                        min: c.top - h / 2,
+                        max: c.top + h / 2
+                    }
+                };
+
+            args.center = c;
+            args.amount = amount;
+            args.minmax = minmax;
+
+            plot.zoom(args);
+        };
+
+        // method added 9 Aug 2018 by MBS
+        plot.zoomHorizontal = function (args) {
+            if (!args)
+                args = {};
+
+            var c = args.center,
+                amount = args.amount || plot.getOptions().zoom.amount,
+                w = plot.width(), h = plot.height();
+
+            if (!c)
+                c = { left: w / 2, top: h / 2 };
+
+            var xf = c.left / w,
+                minmax = {
+                    x: {
+                        min: c.left - xf * w / amount,
+                        max: c.left + (1 - xf) * w / amount
+                    },
+                    y: {
+                        min: c.top - h / 2,
+                        max: c.top + h / 2
+                    }
+                };
+
+            args.center = c;
+            args.amount = amount;
+            args.minmax = minmax;
+
+            plot.zoom(args);
+        };
+
+        // method added 9 Aug 2018 by MBS
+        plot.zoomOutVertical = function (args) {
+            if (!args)
+                args = {};
+
+            var c = args.center,
+                amount = args.amount || plot.getOptions().zoom.amount,
+                w = plot.width(), h = plot.height();
+
+            amount = 1 / amount;
+
+            if (!c)
+                c = { left: w / 2, top: h / 2 };
+
+            var yf = c.top / h,
+                minmax = {
+                    x: {
+                        min: c.left - w / 2,
+                        max: c.left + w / 2
+                    },
+                    y: {
                         min: c.top - yf * h / amount,
                         max: c.top + (1 - yf) * h / amount
                     }
                 };
+
+            args.center = c;
+            args.amount = amount;
+            args.minmax = minmax;
+
+            plot.zoom(args);
+        };
+
+        // method added 9 Aug 2018 by MBS
+        plot.zoomVertical = function (args) {
+            if (!args)
+                args = {};
+
+            var c = args.center,
+                amount = args.amount || plot.getOptions().zoom.amount,
+                w = plot.width(), h = plot.height();
+
+            if (!c)
+                c = { left: w / 2, top: h / 2 };
+
+            var yf = c.top / h,
+                minmax = {
+                    x: {
+                        min: c.left - w / 2,
+                        max: c.left + w / 2
+                    },
+                    y: {
+                        min: c.top - yf * h / amount,
+                        max: c.top + (1 - yf) * h / amount
+                    }
+                };
+
+            args.center = c;
+            args.amount = amount;
+            args.minmax = minmax;
+
+            plot.zoom(args);
+        };
+
+        plot.zoomOut = function (args) {
+            if (!args)
+                args = {};
+
+            if (!args.amount)
+                args.amount = plot.getOptions().zoom.amount;
+
+            args.amount = 1 / args.amount;
+            plot.zoom(args);
+        };
+
+        // method modified 9 Aug 2018 by MBS
+        plot.zoom = function (args) {
+            if (!args)
+                args = {};
+
+            if (!args.minmax) {
+                var c = args.center,
+                    amount = args.amount || plot.getOptions().zoom.amount,
+                    w = plot.width(), h = plot.height();
+
+                if (!c)
+                    c = { left: w / 2, top: h / 2 };
+
+                var xf = c.left / w,
+                    yf = c.top / h,
+                    minmax = {
+                        x: {
+                            min: c.left - xf * w / amount,
+                            max: c.left + (1 - xf) * w / amount
+                        },
+                        y: {
+                            min: c.top - yf * h / amount,
+                            max: c.top + (1 - yf) * h / amount
+                        }
+                    };
+            } else {
+                minmax = args.minmax;
+                amount = args.amount;
+            }
 
             $.each(plot.getAxes(), function(_, axis) {
                 var opts = axis.options,

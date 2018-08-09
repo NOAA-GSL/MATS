@@ -493,7 +493,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
         } else if (b_idx === binNum - 1) {
             binLabels[b_idx] = "> " + lowSdFromMean;
         } else {
-            binLabels[b_idx] = lowSdFromMean + " to " + upSdFromMean;
+            binLabels[b_idx] = lowSdFromMean + "-" + upSdFromMean;
         }
     }
 

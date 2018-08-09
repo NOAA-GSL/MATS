@@ -28,7 +28,7 @@ dataHistogram = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    const binNum = 8;
+    const binNum = 12;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -83,6 +83,7 @@ dataHistogram = function (plotParams, plotFunction) {
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
         var axisKey = "Number";
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
+        curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
         var d = [];
         if (diffFrom == null) {
@@ -223,8 +224,10 @@ dataHistogram = function (plotParams, plotFunction) {
         curve['annotation'] = annotation;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['axisKey'] = axisKey;
-        const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         curvesLengthSoFar++;
         var postQueryFinishMoment = moment();
