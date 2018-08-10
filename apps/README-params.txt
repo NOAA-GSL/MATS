@@ -69,6 +69,16 @@ name: String (required) - The name of the parameter, how it is referred to by ot
         Names are strings, and will be used to identify a parameter in its mongodb collection.
 type: matsTypes.InputTypes.nnnn (required) - The type of selector, usually self-explanatory. e.g. ‘select’, ‘textInput’, daterange
         Valid mats types are contained in a list that resides in the matsTypes,InputTypes collection . This collection resides in the mats-common package.
+displayOrder: integer (required) - The order in which the selectors are displayed on the website, from left to right. E.g. 1 will be displayed
+                       in the top left, with 2 to the right of it.
+displayPriority: integer (required) - When set to 1 the selector will be displayed when the page loads. When set to 2 the selector will be
+             hidden until another selector with the lesser priority has been changed by the user, after which it will appear on the web
+             page at its default value.
+displayGroup: integer (required) - Increasing the displayGroup number will move the selector down on the website. Essentially,
+             parameters in higher display groups (1 is higher than 2) will display further up on the web page.
+             displayGroup also dominates displayOrder i.e. a parameter with displayOrder=1 and displayGroup=3
+             will be appear below a parameter with displayOrder=3 and displayGroup=1.
+
 optionsMap: Object (required for matsTypes.InputTypes.select)- This defines the list of options that a "select" selector will
         offer the user on the web page.
 options: Array of Strings (optional: usually the keys of the optionsMap) - Selects what is shown to the user from the options map. Usually written Object.keys(optionsMap), which
@@ -86,6 +96,8 @@ dependentNames: (optional) - Defines the names of any parameters that are depend
 superiorName: string (optional) - The name of any parameter on which this selection is dependent (e.g. data source is a superior of forecast length), written as a string.
 controlButtonCovered: boolean (required). When false that name of the selector will be hidden and the selection will be
             open and cannot be closed. When false the name is displayed and the selection opens up when the name is clicked on.
+controlButtonVisibility: "block | none" Written as a string. Determines the manner in which the selector will be displayed. ‘Block’
+             displays the selector as a block type element, ‘none’ will not display the element.
 disableOtherFor: array of strings (optional) - Disables another selector, graying out all of its values and not allowing any to be selected. Written
             as an array of objects, with the key as the name of the selector to be disabled and the following
             being the conditions under which it is disabled. For example: {'truth_data_source':[statisticOptionsMap.none][0]} disable the ‘truth data source’
@@ -97,17 +109,6 @@ default:string (optional) - Determines what the default selection will be when t
              selected and it will disappear from the selector if anything else is selected.
 unique: boolean (optional) - Parameters with true will limit the number of curves that can be added
              with that exact parameter to one. Parameters with false have no such limitation.
-controlButtonVisibility: "block | none" Written as a string. Determines the manner in which the selector will be displayed. ‘Block’
-             displays the selector as a block type element, ‘none’ will not display the element.
-displayOrder: integer (optional) - The order in which the selectors are displayed on the website, from left to right. E.g. 1 will be displayed
-                       in the top left, with 2 to the right of it.
-displayPriority: integer (optional) - When set to 1 the selector will be displayed when the page loads. When set to 2 the selector will be
-             hidden until another selector has been changed by the user, after which it will appear on the web
-             page at its default value.
-displayGroup: integer (optional) - Increasing the displayGroup number will move the selector down on the website. Essentially,
-             parameters in higher display groups (1 is higher than 2) will display further up on the web page.
-             displayGroup also dominates displayOrder i.e. a parameter with displayOrder=1 and displayGroup=3
-             will be appear below a parameter with displayOrder=3 and displayGroup=1.
 multiple: boolean (optional). When true allows multiple options to be selected at once. Otherwise
               only one option may be selected at a time. defaults to false - single select
 defaultMapView: {point:[x, y], zoomLevel: n, minZoomLevel: n, maxZoomLevel: n} (optional)- Sets the starting position of the map
