@@ -326,6 +326,10 @@ const showTimeseriesFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
@@ -387,6 +391,10 @@ const showProfileFace = function() {
         elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
@@ -450,6 +458,10 @@ const showDieOffFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
@@ -511,6 +523,10 @@ const showThresholdFace = function() {
         elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
@@ -574,6 +590,10 @@ const showValidTimeFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "none";
@@ -633,6 +653,10 @@ const showDailyModelCycleFace = function() {
             elem.style.display = "none";
         }
         elem = document.getElementById('utc-cycle-start-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
+        }
+        elem = document.getElementById('truth-item');
         if (elem && elem.style) {
             elem.style.display = "block";
         }
@@ -698,6 +722,10 @@ const showMapFace = function() {
         if (elem && elem.style) {
             elem.style.display = "none";
         }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {
             elem.style.display = "block";
@@ -759,6 +787,10 @@ const showHistogramFace = function() {
         elem = document.getElementById('utc-cycle-start-item');
         if (elem && elem.style) {
             elem.style.display = "none";
+        }
+        elem = document.getElementById('truth-item');
+        if (elem && elem.style) {
+            elem.style.display = "block";
         }
         elem = document.getElementById('sites-item');
         if (elem && elem.style && appName !== "wfip2") {

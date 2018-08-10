@@ -99,7 +99,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dieOff', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.dieoff, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -148,7 +148,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'dieOff', false);
+            }, matsTypes.PlotTypes.dieoff, false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;

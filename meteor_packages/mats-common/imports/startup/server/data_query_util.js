@@ -191,7 +191,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
             error = matsTypes.Messages.NO_DATA_FOUND;
         } else {
             var parsedData;
-            if (plotType !== 'histogram') {
+            if (plotType !== matsTypes.PlotTypes.histogram) {
                 parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
             } else {
                 parsedData = parseQueryDataHistogram(rows, hasLevels);
@@ -373,11 +373,11 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
 
         var independentVar;
-        if (plotType === 'validTime') {
+        if (plotType === matsTypes.PlotTypes.validtime) {
             independentVar = Number(rows[rowIndex].hr_of_day);
-        } else if (plotType === 'profile') {
+        } else if (plotType === matsTypes.PlotTypes.profile) {
             independentVar = Number(rows[rowIndex].avVal);
-        } else if (plotType === 'dailyModelCycle') {
+        } else if (plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
             independentVar = Number(rows[rowIndex].avtime);
@@ -405,7 +405,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         }
 
         //deal with missing forecast cycles for dailyModelCycle plot type
-        if (plotType === 'dailyModelCycle' && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) > 3600 * 24 * 1000) {
+        if (plotType === matsTypes.PlotTypes.dailyModelCycle && rowIndex > 0 && (Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) > 3600 * 24 * 1000) {
             const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000));
             for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
                 curveIndependentVars.push(independentVar - 3600 * 24 * 1000 * missingIdx);
@@ -436,11 +436,11 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         // Make sure that we don't have any points with far less data than the rest of the graph, and that
         // we don't have any points with a smaller completeness value than specified by the user.
         if (this_N0 < 0.05 * N0_max || this_N_times < completenessQCParam * N_times_max) {
-            if (plotType === 'profile') {
+            if (plotType === matsTypes.PlotTypes.profile) {
                 // profile has the stat first, and then the independent var. The others have independent var and then stat.
                 // this is in the pattern of x-plotted-variable, y-plotted-variable.
                 d.push([null, curveIndependentVars[d_idx], -1, NaN, NaN, NaN]);
-            } else if (plotType !== 'dieOff') {
+            } else if (plotType !== matsTypes.PlotTypes.dieoff) {
                 // for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
                 if (hasLevels) {
                     d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN, NaN]);
@@ -450,7 +450,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             }
         } else {
             // else add the real data
-            if (plotType === 'profile') {
+            if (plotType === matsTypes.PlotTypes.profile) {
                 // profile has the stat first, and then the independent var. The others have independent var and then stat.
                 // this is in the pattern of x-plotted-variable, y-plotted-variable.
                 d.push([curveStat[d_idx], curveIndependentVars[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);

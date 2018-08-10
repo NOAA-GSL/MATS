@@ -87,7 +87,7 @@ dataThreshold = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'threshold', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.threshold, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -136,7 +136,7 @@ dataThreshold = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'threshold', false);
+            }, matsTypes.PlotTypes.threshold, false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;

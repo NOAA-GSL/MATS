@@ -93,7 +93,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dailyModelCycle', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.dailyModelCycle, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -147,7 +147,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'dailyModelCycle', false);
+            }, matsTypes.PlotTypes.dailyModelCycle, false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
