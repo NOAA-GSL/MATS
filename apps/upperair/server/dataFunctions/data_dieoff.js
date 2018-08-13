@@ -111,7 +111,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'dieOff', true);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.dieoff, true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -164,7 +164,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'dieOff', true);
+            }, matsTypes.PlotTypes.dieoff, true);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -197,7 +197,7 @@ dataDieOff = function (plotParams, plotFunction) {
 
     // if matching, pare down dataset to only matching data
     if (curvesLength > 1 && (matching)) {
-        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, 'dieOff');
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, matsTypes.PlotTypes.dieoff);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed

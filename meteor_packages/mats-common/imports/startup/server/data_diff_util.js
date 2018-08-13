@@ -60,7 +60,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
     //determine whether data[0] or data[1] is the independent variable, and which is the stat value
     var independentVarIndex;
     var statValueIndex;
-    if (plotType !== 'profile') {
+    if (plotType !== matsTypes.PlotTypes.profile) {
         independentVarIndex = 0;
         statValueIndex = 1;
     } else {
@@ -72,7 +72,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
 
     //profile diff curves don't bother recalculating the ymax and ymin
-    if (plotType !== 'profile') {
+    if (plotType !== matsTypes.PlotTypes.profile) {
         var ymin = params.ymin; // optional - current y axis minimum
         var ymax = params.ymax;  // optional - current y axis maximum
     }
@@ -88,7 +88,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
 
     // make sure neither curve is empty
     if (minuendData.length === 0 || subtrahendData.length === 0) {
-        if (plotType !== 'profile') {
+        if (plotType !== matsTypes.PlotTypes.profile) {
             return {
                 sum: sum,
                 count: count,
@@ -152,7 +152,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                     d[largeIntervalCurveIndex][5] = [];
                 }
 
-                if (plotType !== 'histogram') {
+                if (plotType !== matsTypes.PlotTypes.histogram) {
                     var minuendDataSubValues = minuendData[minuendIndex][3];
                     var minuendDataSubSeconds = minuendData[minuendIndex][4];
                     if (hasLevels) {
@@ -195,7 +195,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                     };
                 }
 
-                if (plotType !== 'profile') {
+                if (plotType !== matsTypes.PlotTypes.profile) {
                     ymin = diffValue < ymin ? diffValue : ymin;
                     ymax = diffValue > ymax ? diffValue : ymax;
                     sum += diffValue;
@@ -213,7 +213,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                 if (hasLevels) {
                     d[largeIntervalCurveIndex][5] = [];
                 }
-                if (plotType === 'histogram') {
+                if (plotType === matsTypes.PlotTypes.histogram) {
                     d[largeIntervalCurveIndex][6] = {
                         'bin_mean': null,
                         'bin_sd': null,
@@ -237,7 +237,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
             break;
         }
     }
-    if (plotType !== 'profile') {
+    if (plotType !== matsTypes.PlotTypes.profile) {
         return {
             sum: sum,
             count: count,

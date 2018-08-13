@@ -118,7 +118,7 @@ dataHistogram = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'histogram', true);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.histogram, true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -203,7 +203,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'histogram', true);
+            }, matsTypes.PlotTypes.histogram, true);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;

@@ -112,7 +112,7 @@ dataProfile = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'profile', true);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.profile, true);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -148,9 +148,9 @@ dataProfile = function (plotParams, plotFunction) {
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                    dataset: dataset,
-                    diffFrom: diffFrom
-                }, 'profile', true);
+                dataset: dataset,
+                diffFrom: diffFrom
+            }, matsTypes.PlotTypes.profile, true);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -185,7 +185,7 @@ dataProfile = function (plotParams, plotFunction) {
 
     // if matching, pare down dataset to only matching data
     if (curvesLength > 1 && (matching)) {
-        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, 'profile');
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, matsTypes.PlotTypes.profile);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed

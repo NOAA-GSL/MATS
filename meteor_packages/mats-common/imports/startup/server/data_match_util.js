@@ -1,4 +1,5 @@
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
 
 // function for removing unmatched data from a dataset containing multiple curves *without* levels
 const getMatchedDataSet = function (dataset, curvesLength) {
@@ -122,7 +123,7 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
     //determine whether data[0] or data[1] is the independent variable, and which is the stat value
     var independentVarIndex;
     var statValueIndex;
-    if (plotType !== 'profile') {
+    if (plotType !== matsTypes.PlotTypes.profile) {
         independentVarIndex = 0;
         statValueIndex = 1;
     } else {

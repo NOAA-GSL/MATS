@@ -173,7 +173,7 @@ dataSeries = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'timeseries', true);
+            }, matsTypes.PlotTypes.timeSeries, true);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -206,7 +206,7 @@ dataSeries = function (plotParams, plotFunction) {
 
     // if matching, pare down dataset to only matching data
     if (curvesLength > 1 && (matching)) {
-        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, 'timeseries');
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, matsTypes.PlotTypes.timeSeries);
         }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed

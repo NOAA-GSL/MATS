@@ -583,7 +583,6 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['', 'truth', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [

@@ -153,7 +153,7 @@ dataSeries = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'timeseries', false);
+            }, matsTypes.PlotTypes.timeSeries, false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;

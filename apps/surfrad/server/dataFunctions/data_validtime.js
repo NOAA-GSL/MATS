@@ -107,7 +107,7 @@ dataValidTime = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, 'validTime', false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.validtime, false);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -156,7 +156,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, 'validTime', false);
+            }, matsTypes.PlotTypes.validtime, false);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
