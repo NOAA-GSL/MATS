@@ -329,63 +329,63 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
         const statVarOptionsMap = {
-            'temperature': ['dt', 't', 'temp'],
-            'RH': ['drh', 'rh', 'rh'],
-            'dewpoint': ['dTd', 'td', 'dp'],
-            'wind': ['dw', 'ws', 'ws'],
+            '2m temperature': ['dt', 't', 'temp'],
+            '2m RH': ['drh', 'rh', 'rh'],
+            '2m dewpoint': ['dTd', 'td', 'dp'],
+            '10m wind': ['dw', 'ws', 'ws'],
         };
 
         const statVarUnitMap = {
             'RMS': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'N': {
-                'temperature': 'Number',
-                'RH': 'Number',
-                'dewpoint': 'Number',
-                'wind': 'Number'
+                '2m temperature': 'Number',
+                '2m RH': 'Number',
+                '2m dewpoint': 'Number',
+                '10m wind': 'Number'
             },
             'Model average': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Obs average': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Std deviation': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'MAE': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             }
         };
 
         const mapVarUnitMap = {
             'diff': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             }
         };
 
