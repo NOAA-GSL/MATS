@@ -344,13 +344,6 @@ Template.graph.helpers({
         }
         return addresses;
     },
-    displayErrorBarButton: function () {
-        if (Session.get("plotType") === undefined) {
-            return "none";
-        } else {
-            return "block";
-        }
-    },
     hideButtonText: function () {
         var sval = this.label + "hideButtonText";
         if (Session.get(sval) === undefined) {
@@ -379,17 +372,8 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
-    errorBarsAllowed: function () {
-        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.scatter2d && matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.histogram);
-    },
     isMap: function() {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
-    },
-    isNotMap: function() {
-        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.map)
-    },
-    isNotHistogram: function() {
-        return (matsPlotUtils.getPlotType() !== matsTypes.PlotTypes.histogram)
     },
     isProfile: function() {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile);
@@ -578,10 +562,10 @@ Template.graph.events({
         document.getElementById("textHistogramView").style.display = "none";
         document.getElementById('graph-touch-controls').style.display = "block";
 
-
         var graphView = document.getElementById('graphView');
         Session.set('graphViewMode',matsTypes.PlotView.graph);
         Blaze.render(Template.graph, graphView);
+
     },
     'click .textButton': function () {
         document.getElementById("plot-buttons-grp").style.display = "block";

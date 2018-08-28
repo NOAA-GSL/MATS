@@ -127,6 +127,8 @@ graphThreshold = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
     // add show/hide buttons
@@ -179,7 +181,6 @@ graphThreshold = function (result) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
     });
 
     // add show/hide points buttons
@@ -204,7 +205,6 @@ graphThreshold = function (result) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
     });
 
     var zooming = false;

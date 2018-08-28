@@ -60,25 +60,18 @@
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
-                    {{#if isNotMap}}
-                        {{#if isNotHistogram}}
-                            <input type="button" class="curveVisibility btn btn-primary btn-xs"
-                                   value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
-                                   style="display:block;background-color: {{this.color}}">
-                            <input type="button" class="points btn btn-primary btn-xs" value="{{pointsButtonText}}"
-                                   id="{{this.label}}-curve-show-hide-points"
-                                   style="display:block;background-color: {{this.color}}">
-                            {{#if errorBarsAllowed}}
-                                <input type="button" class="errorBars btn btn-primary btn-xs"
-                                       value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
-                                       style="display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
-                            {{/if}}
-                        {{else}}
-                            <input type="button" class="barVisibility btn btn-primary btn-xs"
-                                   value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
-                                   style="display:block;background-color: {{this.color}}">
-                        {{/if}}
-                    {{/if}}
+                    <input type="button" class="curveVisibility btn btn-primary btn-xs"
+                           value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="points btn btn-primary btn-xs" value="{{pointsButtonText}}"
+                           id="{{this.label}}-curve-show-hide-points"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="errorBars btn btn-primary btn-xs"
+                           value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="barVisibility btn btn-primary btn-xs"
+                           value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
+                           style="display:block;background-color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}

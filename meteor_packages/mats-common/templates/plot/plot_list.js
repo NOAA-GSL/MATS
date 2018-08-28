@@ -394,6 +394,36 @@ Template.plotList.events({
                     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
                         document.getElementById('graph-touch-controls').style.display = "none";
                     }
+
+                    // makes sure that the appropriate show/hide buttons are displayed for each plot type
+                    var curveHideElems = $('*[id$="-curve-show-hide"]');
+                    var pointHideElems = $('*[id$="-curve-show-hide-points"]');
+                    var errorHideElems = $('*[id$="-curve-errorbars"]');
+                    var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
+                    var plotType = matsPlotUtils.getPlotType();
+                    for (var i=0; i < curveHideElems.length; i++){
+                        if (plotType === matsTypes.PlotTypes.map) {
+                            curveHideElems[i].style.display = 'none';
+                            pointHideElems[i].style.display = 'none';
+                            errorHideElems[i].style.display = 'none';
+                            barChHideElems[i].style.display = 'none';
+                        } else if (plotType === matsTypes.PlotTypes.histogram) {
+                            curveHideElems[i].style.display = 'none';
+                            pointHideElems[i].style.display = 'none';
+                            errorHideElems[i].style.display = 'none';
+                            barChHideElems[i].style.display = 'block';
+                        } else {
+                            curveHideElems[i].style.display = 'block';
+                            pointHideElems[i].style.display = 'block';
+                            if (plotType !== matsTypes.PlotTypes.scatter2d) {
+                                errorHideElems[i].style.display = 'block';
+                            } else {
+                                errorHideElems[i].style.display = 'none';
+                            }
+                            barChHideElems[i].style.display = 'none';
+                        }
+                    }
+
                 });
 
                 break;
