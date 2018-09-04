@@ -396,23 +396,31 @@ Template.plotList.events({
                     }
 
                     // makes sure that the appropriate show/hide buttons are displayed for each plot type
+                    // also determine if it is appropriate to display axis label button
                     var curveHideElems = $('*[id$="-curve-show-hide"]');
                     var pointHideElems = $('*[id$="-curve-show-hide-points"]');
                     var errorHideElems = $('*[id$="-curve-errorbars"]');
                     var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
                     var plotType = matsPlotUtils.getPlotType();
-                    for (var i=0; i < curveHideElems.length; i++){
-                        if (plotType === matsTypes.PlotTypes.map) {
+                    if (plotType === matsTypes.PlotTypes.map) {
+                        document.getElementById('axisLimitButton').style.display = "none";
+                        for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'none';
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'none';
-                        } else if (plotType === matsTypes.PlotTypes.histogram) {
+                        }
+                    } else if (plotType === matsTypes.PlotTypes.histogram) {
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'none';
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'block';
-                        } else {
+                        }
+                    } else {
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'block';
                             pointHideElems[i].style.display = 'block';
                             if (plotType !== matsTypes.PlotTypes.scatter2d) {
