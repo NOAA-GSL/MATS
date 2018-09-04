@@ -189,10 +189,10 @@ dataProfile = function (plotParams, plotFunction) {
         // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
