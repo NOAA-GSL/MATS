@@ -402,6 +402,7 @@ Template.plotList.events({
                     var errorHideElems = $('*[id$="-curve-errorbars"]');
                     var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
                     var plotType = matsPlotUtils.getPlotType();
+                    var isMatched = Session.get('plotParameter') === "matched";
                     if (plotType === matsTypes.PlotTypes.map) {
                         document.getElementById('axisLimitButton').style.display = "none";
                         for (var i=0; i < curveHideElems.length; i++){
@@ -423,7 +424,7 @@ Template.plotList.events({
                         for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'block';
                             pointHideElems[i].style.display = 'block';
-                            if (plotType !== matsTypes.PlotTypes.scatter2d) {
+                            if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
                                 errorHideElems[i].style.display = 'block';
                             } else {
                                 errorHideElems[i].style.display = 'none';
