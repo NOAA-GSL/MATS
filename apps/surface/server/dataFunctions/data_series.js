@@ -44,9 +44,9 @@ dataSeries = function (plotParams, plotFunction) {
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic;
-        if (variableStr === 'temperature' || variableStr === 'dewpoint') {
+        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
             statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === 'wind') {
+        } else if (variableStr === '10m wind') {
             statistic = statisticOptionsMap[statisticSelect][2];
         } else {
             statistic = statisticOptionsMap[statisticSelect][1];
@@ -178,6 +178,8 @@ dataSeries = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;

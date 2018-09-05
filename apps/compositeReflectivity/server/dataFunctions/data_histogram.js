@@ -201,10 +201,10 @@ dataHistogram = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
