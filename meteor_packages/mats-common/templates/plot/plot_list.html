@@ -88,7 +88,6 @@
                     <h3>Select axis limits and labels: </h3>
                     <h4>* Leave a field blank to preserve its original value. </h4>
                     <h4>* Only data from your original time range has been queried and is available to plot. </h4>
-                    <h4>* When plotting a timeseries, give x_min and x_max in epoch seconds. </h4>
                 </div>
                 <div class="modal-body">
                     <div id="xAxisCustomControls" style="display:block;">
@@ -96,13 +95,27 @@
                             <label>X label: </label>
                             <input id="xAxisLabel" class="y-axis-label data-input textInput" type="text" value="" name="xAxisLabel"/>
                         </div>
-                        <div>
-                            <label>X_min: </label>
-                            <input id="xAxisMin" class="x-axis-min data-input numberInput" type="number" value="" name="xAxisMin"/>
+                        <div id="xAxisControlsNumber" style="display:none;">
+                            <div>
+                                <label>X_min: </label>
+                                <input id="xAxisMin" class="x-axis-min data-input numberInput" type="number" value="" name="xAxisMin"/>
+                            </div>
+                            <div>
+                                <label>X_max: </label>
+                                <input id="xAxisMax" class="x-axis-max data-input numberInput" type="number" value="" name="xAxisMax"/>
+                            </div>
                         </div>
-                        <div>
-                            <label>X_max: </label>
-                            <input id="xAxisMax" class="x-axis-max data-input numberInput" type="number" value="" name="xAxisMax"/>
+                        <div id="xAxisControlsText" style="display:block;">
+                            <div>
+                                <label>X_min: </label>
+                                <input id="xAxisMinText" class="x-axis-min data-input textInput" type="text" value="" name="xAxisMinText"/>
+                                <span>YYYY-MM-DD HH:MM format</span>
+                            </div>
+                            <div>
+                                <label>X_max: </label>
+                                <input id="xAxisMaxText" class="x-axis-max data-input textInput" type="text" value="" name="xAxisMaxText"/>
+                                <span>YYYY-MM-DD HH:MM format</span>
+                            </div>
                         </div>
                     </div>
                     {{#each yAxis in yAxes}}
@@ -112,13 +125,15 @@
                                 <label>Y{{yAxis}} label: </label>
                                 <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput" type="text" value="" name="y{{yAxis}}AxisLabel"/>
                             </div>
-                            <div>
-                                <label>Y{{yAxis}}_min: </label>
-                                <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput" type="number" value="" name="y{{yAxis}}AxisMin"/>
-                            </div>
-                            <div>
-                                <label>Y{{yAxis}}_max: </label>
-                                <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                            <div id="yAxisControlsNumber" style="display:block;">
+                                <div>
+                                    <label>Y{{yAxis}}_min: </label>
+                                    <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                </div>
+                                <div>
+                                    <label>Y{{yAxis}}_max: </label>
+                                    <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                </div>
                             </div>
                         </div>
                     {{/each}}

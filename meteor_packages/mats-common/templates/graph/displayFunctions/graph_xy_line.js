@@ -42,6 +42,7 @@ graphXYLine = function (result) {
     var yidx;
     var currentAxisKey;
     var axisKeys = [];
+    var axisTranslate = {};
     var yAxisNumber = 0;
     for (yidx = 0; yidx < yAxisLength; yidx++) {
         currentAxisKey = options.yaxes[yidx].axisLabel;
@@ -49,6 +50,7 @@ graphXYLine = function (result) {
             axisKeys.push(currentAxisKey);
             yAxisNumber++;
         }
+        axisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
     }
     Session.set('yAxisNumber', yAxisNumber);
 
@@ -64,7 +66,7 @@ graphXYLine = function (result) {
         originalXaxisMin = options.xaxes[0].min;
         originalXaxisMax = options.xaxes[0].max;
     }
-    for (yidx = 0; yidx < yAxisNumber; yidx++) {
+    for (yidx = 0; yidx < yAxisLength; yidx++) {
         if (options.yaxes && options.yaxes[yidx]) {
             originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
             originalYaxisMins[yidx] = options.yaxes[yidx].min;
@@ -140,7 +142,7 @@ graphXYLine = function (result) {
         if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
             options.xaxes[0].max = originalXaxisMax;
         }
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
             if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
             }
@@ -167,16 +169,12 @@ graphXYLine = function (result) {
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
-            ylabels.push(document.getElementById("y" + yidx + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidx + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidx + "AxisMax").value);
-        }
-
-        // time axis needs limits to be in milliseconds
-        if (options.xaxes[0].axisLabel === "Time") {
-            xmin = xmin === "" ? "" : xmin * 1000;
-            xmax = xmax === "" ? "" : xmax * 1000;
+        var yidxTranslated;
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            yidxTranslated = axisTranslate[yidx];
+            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
+            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
         }
 
         // set new limits and labels in options map
@@ -189,7 +187,7 @@ graphXYLine = function (result) {
         if (xmax !== "" && options.xaxes && options.xaxes[0]) {
             options.xaxes[0].max = xmax;
         }
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
             if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].axisLabel = ylabels[yidx];
             }

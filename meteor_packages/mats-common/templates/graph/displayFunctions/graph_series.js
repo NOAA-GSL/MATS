@@ -1,3 +1,5 @@
+import {moment} from 'meteor/momentjs:moment'
+
 graphSeries = function (result) {
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -42,6 +44,7 @@ graphSeries = function (result) {
     var yidx;
     var currentAxisKey;
     var axisKeys = [];
+    var axisTranslate = {};
     var yAxisNumber = 0;
     for (yidx = 0; yidx < yAxisLength; yidx++) {
         currentAxisKey = options.yaxes[yidx].axisLabel;
@@ -49,6 +52,7 @@ graphSeries = function (result) {
             axisKeys.push(currentAxisKey);
             yAxisNumber++;
         }
+        axisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
     }
     Session.set('yAxisNumber', yAxisNumber);
 
@@ -64,7 +68,7 @@ graphSeries = function (result) {
         originalXaxisMin = options.xaxes[0].min;
         originalXaxisMax = options.xaxes[0].max;
     }
-    for (yidx = 0; yidx < yAxisNumber; yidx++) {
+    for (yidx = 0; yidx < yAxisLength; yidx++) {
         if (options.yaxes && options.yaxes[yidx]) {
             originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
             originalYaxisMins[yidx] = options.yaxes[yidx].min;
@@ -140,7 +144,7 @@ graphSeries = function (result) {
         if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
             options.xaxes[0].max = originalXaxisMax;
         }
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
             if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
             }
@@ -161,23 +165,23 @@ graphSeries = function (result) {
         event.preventDefault();
 
         // get input axis limits and labels
-        var xlabel = document.getElementById("xAxisLabel").value;
-        var xmin = document.getElementById("xAxisMin").value;
-        var xmax = document.getElementById("xAxisMax").value;
+        const xlabel = document.getElementById("xAxisLabel").value;
+        const xminRaw = document.getElementById("xAxisMinText").value;
+        const xmaxRaw = document.getElementById("xAxisMaxText").value;
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
-            ylabels.push(document.getElementById("y" + yidx + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidx + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidx + "AxisMax").value);
+        var yidxTranslated;
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            yidxTranslated = axisTranslate[yidx];
+            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
+            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
         }
 
         // time axis needs limits to be in milliseconds
-        if (options.xaxes[0].axisLabel === "Time") {
-            xmin = xmin === "" ? "" : xmin * 1000;
-            xmax = xmax === "" ? "" : xmax * 1000;
-        }
+        var xmin = moment.utc(xminRaw).valueOf();
+        var xmax = moment.utc(xmaxRaw).valueOf();
 
         // set new limits and labels in options map
         if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
@@ -189,7 +193,7 @@ graphSeries = function (result) {
         if (xmax !== "" && options.xaxes && options.xaxes[0]) {
             options.xaxes[0].max = xmax;
         }
-        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
             if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].axisLabel = ylabels[yidx];
             }
