@@ -160,10 +160,7 @@ Package.onUse(function (api) {
 
     api.addFiles("templates/graph/displayFunctions/graph_series.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_die_off.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_threshold.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_validtime.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_daily_model_cycle.js", "client");
+    api.addFiles("templates/graph/displayFunctions/graph_xy_line.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_histogram.js", "client");

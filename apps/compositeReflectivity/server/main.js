@@ -634,19 +634,19 @@ const doPlotGraph = function () {
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
+            graphFunction: "graphXYLine",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphValidTime",
+            graphFunction: "graphXYLine",
             dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphDailyModelCycle",
+            graphFunction: "graphSeries",
             dataFunction: "dataDailyModelCycle",
             checked: false
         });

@@ -33,10 +33,22 @@ graphProfile = function (result) {
         annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
     }
 
-    // store information about the axes, for use when redrawing the plot
-    const yAxisNumber = options.yaxes.length;
-    Session.set('yAxisNumber', yAxisNumber);
+    // figure out how many y axes there are
+    const yAxisLength = options.yaxes.length;
     var yidx;
+    var currentAxisKey;
+    var axisKeys = [];
+    var yAxisNumber = 0;
+    for (yidx = 0; yidx < yAxisLength; yidx++) {
+        currentAxisKey = options.yaxes[yidx].axisLabel;
+        if (axisKeys.indexOf(currentAxisKey) === -1) {
+            axisKeys.push(currentAxisKey);
+            yAxisNumber++;
+        }
+    }
+    Session.set('yAxisNumber', yAxisNumber);
+
+    // store information about the axes, for use when redrawing the plot
     var originalXaxisLabel = "";
     var originalXaxisMin = "";
     var originalXaxisMax = "";
