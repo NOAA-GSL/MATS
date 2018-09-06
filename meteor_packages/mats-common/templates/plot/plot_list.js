@@ -51,6 +51,14 @@ Template.plotList.helpers({
     },
     isOwner: function() {
         return  this.owner === Meteor.userId();
+    },
+    yAxes: function() {
+        const yAxisNumber = Session.get("yAxisNumber");
+        var yAxes = [];
+        for (var yidx = 0; yidx < yAxisNumber; yidx++){
+            yAxes.push(yidx);
+        }
+        return yAxes;
     }
 });
 
@@ -375,6 +383,7 @@ Template.plotList.events({
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
+
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";
                     }

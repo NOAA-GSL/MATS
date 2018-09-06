@@ -1,8 +1,19 @@
 graphSeries = function (result) {
+    // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
+
+    // get dataset info
     var dataset = result.data;
+    var options = result.options;
+    if (min < 400) {
+        options.series && options.series.points && (options.series.points.radius = 1);
+    } else {
+        options.series && options.series.points && (options.series.points.radius = 2);
+    }
+
+    // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
         if (min < 400) {
@@ -20,16 +31,33 @@ graphSeries = function (result) {
         }
     }
 
-    var options = result.options;
-    if (min < 400) {
-        options.series && options.series.points && (options.series.points.radius = 1);
-    } else {
-        options.series && options.series.points && (options.series.points.radius = 2);
-    }
-
+    // build annotation to stick on plot
     var annotation = "";
     for (var i = 0; i < dataset.length; i++) {
         annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+    }
+
+    // store information about the axes, for use when redrawing the plot
+    const yAxisNumber = options.yaxes.length;
+    Session.set('yAxisNumber', yAxisNumber);
+    var yidx;
+    var originalXaxisLabel = "";
+    var originalXaxisMin = "";
+    var originalXaxisMax = "";
+    var originalYaxisLabels = [];
+    var originalYaxisMins = [];
+    var originalYaxisMaxs = [];
+    if (options.xaxes && options.xaxes[0]) {
+        originalXaxisLabel = options.xaxes[0].axisLabel;
+        originalXaxisMin = options.xaxes[0].min;
+        originalXaxisMax = options.xaxes[0].max;
+    }
+    for (yidx = 0; yidx < yAxisNumber; yidx++) {
+        if (options.yaxes && options.yaxes[yidx]) {
+            originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
+            originalYaxisMins[yidx] = options.yaxes[yidx].min;
+            originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
+        }
     }
 
     var placeholder = $("#placeholder");
@@ -89,18 +117,49 @@ graphSeries = function (result) {
     // add replot button
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
+
+        // restore original axis limits and labels to options map
+        if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = originalXaxisLabel;
+        }
+        if (originalXaxisMin !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].min = originalXaxisMin;
+        }
+        if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].max = originalXaxisMax;
+        }
+        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+            if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
+            }
+            if (originalYaxisMins[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = originalYaxisMins[yidx];
+            }
+            if (originalYaxisMaxs[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = originalYaxisMaxs[yidx];
+            }
+        }
+
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    // add event for axis customization modal submit button
+    // add axis customization modal submit button
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
-        // get input axis limits
+
+        // get input axis limits and labels
+        var xlabel = document.getElementById("xAxisLabel").value;
         var xmin = document.getElementById("xAxisMin").value;
         var xmax = document.getElementById("xAxisMax").value;
-        const ymin = document.getElementById("yAxisMin").value;
-        const ymax = document.getElementById("yAxisMax").value;
+        var ylabels = [];
+        var ymins = [];
+        var ymaxs = [];
+        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+            ylabels.push(document.getElementById("y" + yidx + "AxisLabel").value);
+            ymins.push(document.getElementById("y" + yidx + "AxisMin").value);
+            ymaxs.push(document.getElementById("y" + yidx + "AxisMax").value);
+        }
 
         // time axis needs limits to be in milliseconds
         if (options.xaxes[0].axisLabel === "Time") {
@@ -108,115 +167,38 @@ graphSeries = function (result) {
             xmax = xmax === "" ? "" : xmax * 1000;
         }
 
-        // store original axis limits in case the user wants to reset the plot later
-        var oldXmin;
-        var oldXmax;
-        var oldYmin;
-        var oldYmax;
-
-        // set new limits in options map
+        // set new limits and labels in options map
+        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = xlabel;
+        }
         if (xmin !== "" && options.xaxes && options.xaxes[0]) {
-            oldXmin = options.xaxes[0].min;
             options.xaxes[0].min = xmin;
         }
         if (xmax !== "" && options.xaxes && options.xaxes[0]) {
-            oldXmax = options.xaxes[0].max;
             options.xaxes[0].max = xmax;
         }
-        if (ymin !== "" && options.yaxes && options.yaxes[0]) {
-            oldYmin = options.yaxes[0].min;
-            options.yaxes[0].min = ymin;
-        }
-        if (ymax !== "" && options.yaxes && options.yaxes[0]) {
-            oldYmax = options.yaxes[0].max;
-            options.yaxes[0].max = ymax;
-        }
-
-        // get new axis labels
-        const xlabel = document.getElementById("xAxisLabel").value;
-        const ylabel = document.getElementById("yAxisLabel").value;
-
-        // store original axis labels in case the user wants to reset the plot later
-        var oldXlabel;
-        var oldYlabel;
-
-        // set new labels in options map
-        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
-            oldXlabel = options.xaxes[0].axisLabel;
-            options.xaxes[0].axisLabel = xlabel;
-        }
-        if (ylabel !== "" && options.yaxes && options.yaxes[0]) {
-            oldYlabel = options.yaxes[0].axisLabel;
-            options.yaxes[0].axisLabel = ylabel;
+        for (yidx = 0; yidx < yAxisNumber; yidx++) {
+            if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = ylabels[yidx];
+            }
+            if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = ymins[yidx];
+            }
+            if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = ymaxs[yidx];
+            }
         }
 
         // redraw plot
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
-        // restore original axis limits to options map
-        if (oldXmin !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].min = oldXmin;
-        }
-        if (oldXmax !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].max = oldXmax;
-        }
-        if (oldYmin !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].min = oldYmin;
-        }
-        if (oldYmax !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].max = oldYmax;
-        }
-
-        // restore original axis labels to options map
-        if (oldXlabel !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].axisLabel = oldXlabel;
-        }
-        if (oldYlabel !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].axisLabel = oldYlabel;
-        }
-
         $("#axisLimitModal").modal('hide');
     });
 
     var errorbars = Session.get('errorbars');
-    // add errorbar buttons
-    $("input[id$='-curve-errorbars']").click(function (event) {
-        event.preventDefault();
-        const id = event.target.id;
-        const label = id.replace('-curve-errorbars', '');
-        for (var c = 0; c < dataset.length; c++) {
-            if (dataset[c].curveId == label) {
-                // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
-                if (errorbars[c] === undefined) {
-                    errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
-                }
-                if (dataset[c].points.errorbars == undefined) {
-                    dataset[c].points.errorbars = errorbars[c];
-                } else {
-                    dataset[c].points.errorbars = undefined;
-                }
-                if (dataset[c].points.errorbars !== undefined) {
-                    if (dataset[c].data.length === 0) {
-                        Session.set(label + "errorBarButtonText", 'NO DATA');
-                    } else {
-                        Session.set(label + "errorBarButtonText", 'hide error bars');
-                    }
-                } else {
-                    Session.set(label + "errorBarButtonText", 'show error bars');
-                }
-            }
-        }
-        plot = $.plot(placeholder, dataset, options);
-        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
-        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-    });
 
-    // add show/hide buttons
+    // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
         var id = event.target.id;
@@ -268,7 +250,7 @@ graphSeries = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    // add show/hide points buttons
+    // add points show/hide buttons
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
         const id = event.target.id;
@@ -292,8 +274,44 @@ graphSeries = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    var zooming = false;
+    // add errorbars show/hide buttons
+    $("input[id$='-curve-errorbars']").click(function (event) {
+        event.preventDefault();
+        const id = event.target.id;
+        const label = id.replace('-curve-errorbars', '');
+        for (var c = 0; c < dataset.length; c++) {
+            if (dataset[c].curveId == label) {
+                // save the errorbars
+                if (errorbars === undefined) {
+                    errorbars = [];
+                }
+                if (errorbars[c] === undefined) {
+                    errorbars[c] = dataset[c].points.errorbars;
+                    Session.set('errorbars', errorbars);
+                }
+                if (dataset[c].points.errorbars == undefined) {
+                    dataset[c].points.errorbars = errorbars[c];
+                } else {
+                    dataset[c].points.errorbars = undefined;
+                }
+                if (dataset[c].points.errorbars !== undefined) {
+                    if (dataset[c].data.length === 0) {
+                        Session.set(label + "errorBarButtonText", 'NO DATA');
+                    } else {
+                        Session.set(label + "errorBarButtonText", 'hide error bars');
+                    }
+                } else {
+                    Session.set(label + "errorBarButtonText", 'show error bars');
+                }
+            }
+        }
+        plot = $.plot(placeholder, dataset, options);
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    });
+
     // selection zooming
+    var zooming = false;
     placeholder.bind("plotselected", function (event, ranges) {
         zooming = true;
         event.preventDefault();
@@ -305,6 +323,7 @@ graphSeries = function (result) {
     });
     matsGraphUtils.setNoDataLabels(dataset);
 
+    // draw the plot for the first time
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
