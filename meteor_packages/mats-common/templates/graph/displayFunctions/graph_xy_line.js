@@ -1,6 +1,4 @@
-import {moment} from 'meteor/momentjs:moment'
-
-graphSeries = function (result) {
+graphXYLine = function (result) {
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -167,9 +165,9 @@ graphSeries = function (result) {
         event.preventDefault();
 
         // get input axis limits and labels
-        const xlabel = document.getElementById("xAxisLabel").value;
-        const xminRaw = document.getElementById("xAxisMinText").value;
-        const xmaxRaw = document.getElementById("xAxisMaxText").value;
+        var xlabel = document.getElementById("xAxisLabel").value;
+        var xmin = document.getElementById("xAxisMin").value;
+        var xmax = document.getElementById("xAxisMax").value;
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
@@ -180,10 +178,6 @@ graphSeries = function (result) {
             ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
             ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
         }
-
-        // time axis needs limits to be in milliseconds
-        var xmin = moment.utc(xminRaw).valueOf();
-        var xmax = moment.utc(xmaxRaw).valueOf();
 
         // set new limits and labels in options map
         if (xlabel !== "" && options.xaxes && options.xaxes[0]) {

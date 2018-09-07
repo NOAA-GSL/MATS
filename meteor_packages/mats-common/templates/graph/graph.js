@@ -383,6 +383,13 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
+    annotateButtonText: function () {
+        var sval = this.label + "annotateButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'hide annotation');
+        }
+        return Session.get(sval);
+    },
     isMap: function() {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
     },

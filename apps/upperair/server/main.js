@@ -659,7 +659,7 @@ const doPlotGraph = function () {
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
+            graphFunction: "graphXYLine",
             dataFunction: "dataDieOff",
             checked: false
         });

@@ -55,52 +55,6 @@
                 </div>
                 <!-- /.modal-dialog -->
             </div>
-            <div id="axisLimitModal" class="modal" role="dialog">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Select axis limits and labels: </h3>
-                            <h4>* Leave a field blank to preserve its original value. </h4>
-                            <h4>* Only data from your original time range has been queried and is available to plot. </h4>
-                            <h4>* When plotting a timeseries, give x_min and x_max in epoch seconds. </h4>
-                        </div>
-                        <div class="modal-body">
-                            <div>
-                                <label>X label: </label>
-                                <input id="xAxisLabel" class="y-axis-label data-input textInput" type="text" value="" name="xAxisLabel"/>
-                            </div>
-                            <div>
-                                <label>X_min: </label>
-                                <input id="xAxisMin" class="x-axis-min data-input numberInput" type="number" value="" name="xAxisMin"/>
-                            </div>
-                            <div>
-                                <label>X_max: </label>
-                                <input id="xAxisMax" class="x-axis-max data-input numberInput" type="number" value="" name="xAxisMax"/>
-                            </div>
-                            <div><br></div>
-                            <div>
-                                <label>Y label: </label>
-                                <input id="yAxisLabel" class="y-axis-label data-input textInput" type="text" value="" name="yAxisLabel"/>
-                            </div>
-                            <div>
-                                <label>Y_min: </label>
-                                <input id="yAxisMin" class="y-axis-min data-input numberInput" type="number" value="" name="yAxisMin"/>
-                            </div>
-                            <div>
-                                <label>Y_max: </label>
-                                <input id="yAxisMax" class="y-axis-max data-input numberInput" type="number" value="" name="yAxisMax"/>
-                            </div>
-                        </div>
-                        <div class="modal-footer btn-group">
-                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
-                            <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
-                            </button>
-                        </div>
-                    </div>
-                    <!-- /.modal-content -->
-                </div>
-                <!-- /.modal-dialog -->
-            </div>
         </div>
         <div id="curves" class="row container-fluid">
             {{#each curves}}
@@ -117,6 +71,9 @@
                            style="display:block;background-color: {{this.color}}">
                     <input type="button" class="barVisibility btn btn-primary btn-xs"
                            value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="annotateVisibility btn btn-primary btn-xs"
+                           value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="display:block;background-color: {{this.color}}">
                 </div>
                 <br>

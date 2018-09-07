@@ -559,7 +559,7 @@ const doPlotGraph = function () {
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.threshold,
-            graphFunction: "graphThreshold",
+            graphFunction: "graphXYLine",
             dataFunction: "dataThreshold",
             checked: false
         });

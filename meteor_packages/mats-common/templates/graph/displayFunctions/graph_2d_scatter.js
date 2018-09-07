@@ -1,30 +1,63 @@
 graph2dScatter = function (result) {
-    Session.set("spinner_img", "spinner.gif");
+    // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
+
+    // get dataset info
     var dataset = result.data;
-    for (var i = 0; i < dataset.length; i++) {
-        var o = dataset[i];
-        if (min < 400) {
-            o.points && (o.points.radius = 1);
-        } else {
-            o.points && (o.points.radius = 2);
-        }
-    }
     var options = result.options;
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
         options.series && options.series.points && (options.series.points.radius = 2);
     }
+
+    // build annotation to stick on plot
     var annotation = "";
+    var annotateShowHide = {};
     for (var i = 0; i < dataset.length; i++) {
+        annotateShowHide[i] = "show";
         annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
     }
+
+    // figure out how many y axes there are
+    const yAxisLength = options.yaxes.length;
+    var yidx;
+    var currentAxisKey;
+    var axisKeys = [];
+    var axisTranslate = {};
+    var yAxisNumber = 0;
+    for (yidx = 0; yidx < yAxisLength; yidx++) {
+        currentAxisKey = options.yaxes[yidx].axisLabel;
+        if (axisKeys.indexOf(currentAxisKey) === -1) {
+            axisKeys.push(currentAxisKey);
+            yAxisNumber++;
+        }
+        axisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
+    }
+    Session.set('yAxisNumber', yAxisNumber);
+
+    // store information about the axes, for use when redrawing the plot
+    var originalXaxisLabel = "";
+    var originalXaxisMin = "";
+    var originalXaxisMax = "";
+    var originalYaxisLabels = [];
+    var originalYaxisMins = [];
+    var originalYaxisMaxs = [];
+    if (options.xaxes && options.xaxes[0]) {
+        originalXaxisLabel = options.xaxes[0].axisLabel;
+        originalXaxisMin = options.xaxes[0].min;
+        originalXaxisMax = options.xaxes[0].max;
+    }
+    for (yidx = 0; yidx < yAxisLength; yidx++) {
+        if (options.yaxes && options.yaxes[yidx]) {
+            originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
+            originalYaxisMins[yidx] = options.yaxes[yidx].min;
+            originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
+        }
+    }
+
     var placeholder = $("#placeholder");
 
     // bind to the pan, zoom, and redraw buttons
@@ -82,98 +115,82 @@ graph2dScatter = function (result) {
     // add replot button
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
+
+        // restore original axis limits and labels to options map
+        if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = originalXaxisLabel;
+        }
+        if (originalXaxisMin !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].min = originalXaxisMin;
+        }
+        if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].max = originalXaxisMax;
+        }
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
+            }
+            if (originalYaxisMins[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = originalYaxisMins[yidx];
+            }
+            if (originalYaxisMaxs[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = originalYaxisMaxs[yidx];
+            }
+        }
+
         plot = $.plot(placeholder, dataset, options);
-        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    // add event for axis customization modal submit button
+    // add axis customization modal submit button
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
-        // get input axis limits
+
+        // get input axis limits and labels
+        var xlabel = document.getElementById("xAxisLabel").value;
         var xmin = document.getElementById("xAxisMin").value;
         var xmax = document.getElementById("xAxisMax").value;
-        const ymin = document.getElementById("yAxisMin").value;
-        const ymax = document.getElementById("yAxisMax").value;
-
-        // time axis needs limits to be in milliseconds
-        if (options.xaxes[0].axisLabel === "Time") {
-            xmin = xmin === "" ? "" : xmin * 1000;
-            xmax = xmax === "" ? "" : xmax * 1000;
+        var ylabels = [];
+        var ymins = [];
+        var ymaxs = [];
+        var yidxTranslated;
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            yidxTranslated = axisTranslate[yidx];
+            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
+            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
         }
 
-        // store original axis limits in case the user wants to reset the plot later
-        var oldXmin;
-        var oldXmax;
-        var oldYmin;
-        var oldYmax;
-
-        // set new limits in options map
+        // set new limits and labels in options map
+        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = xlabel;
+        }
         if (xmin !== "" && options.xaxes && options.xaxes[0]) {
-            oldXmin = options.xaxes[0].min;
             options.xaxes[0].min = xmin;
         }
         if (xmax !== "" && options.xaxes && options.xaxes[0]) {
-            oldXmax = options.xaxes[0].max;
             options.xaxes[0].max = xmax;
         }
-        if (ymin !== "" && options.yaxes && options.yaxes[0]) {
-            oldYmin = options.yaxes[0].min;
-            options.yaxes[0].min = ymin;
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = ylabels[yidx];
         }
-        if (ymax !== "" && options.yaxes && options.yaxes[0]) {
-            oldYmax = options.yaxes[0].max;
-            options.yaxes[0].max = ymax;
+            if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = ymins[yidx];
         }
-
-        // get new axis labels
-        const xlabel = document.getElementById("xAxisLabel").value;
-        const ylabel = document.getElementById("yAxisLabel").value;
-
-        // store original axis labels in case the user wants to reset the plot later
-        var oldXlabel;
-        var oldYlabel;
-
-        // set new labels in options map
-        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
-            oldXlabel = options.xaxes[0].axisLabel;
-            options.xaxes[0].axisLabel = xlabel;
+            if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = ymaxs[yidx];
         }
-        if (ylabel !== "" && options.yaxes && options.yaxes[0]) {
-            oldYlabel = options.yaxes[0].axisLabel;
-            options.yaxes[0].axisLabel = ylabel;
         }
 
         // redraw plot
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
-        // restore original axis limits to options map
-        if (oldXmin !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].min = oldXmin;
-        }
-        if (oldXmax !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].max = oldXmax;
-        }
-        if (oldYmin !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].min = oldYmin;
-        }
-        if (oldYmax !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].max = oldYmax;
-        }
-
-        // restore original axis labels to options map
-        if (oldXlabel !== undefined && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].axisLabel = oldXlabel;
-        }
-        if (oldYlabel !== undefined && options.yaxes && options.yaxes[0]) {
-            options.yaxes[0].axisLabel = oldYlabel;
-        }
-
         $("#axisLimitModal").modal('hide');
     });
 
-    // add show/hide buttons
+    // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
         var id = event.target.id;
@@ -199,7 +216,7 @@ graph2dScatter = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    // add show/hide points buttons
+    // add points show/hide buttons
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
         var id = event.target.id;
@@ -207,10 +224,14 @@ graph2dScatter = function (result) {
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
                 dataset[c].points.show = !dataset[c].points.show;
-                if (dataset[c].points.show == true) {
-                    Session.set(label + "pointsButtonText", 'hide points');
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "pointsButtonText", 'NO DATA');
                 } else {
-                    Session.set(label + "pointsButtonText", 'show points');
+                    if (dataset[c].points.show == true) {
+                        Session.set(label + "pointsButtonText", 'hide points');
+                    } else {
+                        Session.set(label + "pointsButtonText", 'show points');
+                    }
                 }
             }
         }
@@ -219,18 +240,46 @@ graph2dScatter = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
-    var zooming = false;
-    // selection zooming
-    placeholder.bind("plotselected", function (event, ranges) {
+    // add annotation show/hide buttons
+    $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
-        event.stopPropagation();
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-annotate', '');
+        var annotation = "";
+        for (var c = 0; c < dataset.length; c++) {
+            if (dataset[c].curveId == label) {
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "annotateButtonText", 'NO DATA');
+                } else {
+                    if (annotateShowHide[c] === "hide") {
+                        annotateShowHide[c] = "show";
+                        Session.set(label + "annotateButtonText", 'hide annotation');
+                    } else {
+                        annotateShowHide[c] = "hide";
+                        Session.set(label + "annotateButtonText", 'show annotation');
+                    }
+                }
+            }
+            if (annotateShowHide[c] === "show") {
+                annotation = annotation + "<div style='color:" + dataset[c].color + "'>" + dataset[c].annotation + " </div>";
+            }
+        }
+        plot = $.plot(placeholder, dataset, options);
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    });
+
+    // selection zooming
+    var zooming = false;
+    placeholder.bind("plotselected", function (event, ranges) {
         zooming = true;
+        event.preventDefault();
         plot.getOptions().selection.mode = 'xy';
         plot.getOptions().pan.interactive = false;
         plot.getOptions().zoom.interactive = false;
-        matsGraphUtils.draw2dGraph(ranges);
+        plot = matsGraphUtils.drawGraph(ranges, dataset, options, placeholder);
+        zooming = false;
     });
-
 
     // draw initial plot - we do this a little funky,
     // we essentially create a range that is the size of the max data, then do what the zoom (plotSelected) would do
@@ -238,8 +287,8 @@ graph2dScatter = function (result) {
     matsGraphUtils.setNoDataLabels(dataset);
     var plot = $.plot(placeholder, dataset, options);
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
     // hide the spinner
-    Session.set("spinner_img", "spinner.gif");
     document.getElementById("spinner").style.display = "none";
 
     $("#placeholder").bind('plotclick', function (event, pos, item) {

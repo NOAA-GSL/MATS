@@ -589,7 +589,7 @@ const doPlotGraph = function () {
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphValidTime",
+            graphFunction: "graphXYLine",
             dataFunction: "dataValidTime",
             checked: false
         });

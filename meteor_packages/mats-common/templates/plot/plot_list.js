@@ -51,6 +51,14 @@ Template.plotList.helpers({
     },
     isOwner: function() {
         return  this.owner === Meteor.userId();
+    },
+    yAxes: function() {
+        const yAxisNumber = Session.get("yAxisNumber");
+        var yAxes = [];
+        for (var yidx = 0; yidx < yAxisNumber; yidx++){
+            yAxes.push(yidx);
+        }
+        return yAxes;
     }
 });
 
@@ -375,6 +383,7 @@ Template.plotList.events({
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
+
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";
                     }
@@ -395,43 +404,57 @@ Template.plotList.events({
                         document.getElementById('graph-touch-controls').style.display = "none";
                     }
 
+                    var plotType = matsPlotUtils.getPlotType();
+                    var isMatched = Session.get('plotParameter') === "matched";
+
                     // makes sure that the appropriate show/hide buttons are displayed for each plot type
-                    // also determine if it is appropriate to display axis label button
                     var curveHideElems = $('*[id$="-curve-show-hide"]');
                     var pointHideElems = $('*[id$="-curve-show-hide-points"]');
                     var errorHideElems = $('*[id$="-curve-errorbars"]');
                     var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
-                    var plotType = matsPlotUtils.getPlotType();
+                    var annotateHideElems = $('*[id$="-curve-show-hide-annotate"]');
                     if (plotType === matsTypes.PlotTypes.map) {
-                        document.getElementById('axisLimitButton').style.display = "none";
                         for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'none';
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'none';
+                            annotateHideElems[i].style.display = 'none';
                         }
                     } else if (plotType === matsTypes.PlotTypes.histogram) {
-                        document.getElementById('axisLimitButton').style.display = "block";
                         for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'none';
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'block';
+                            annotateHideElems[i].style.display = 'none';
                         }
                     } else {
-                        document.getElementById('axisLimitButton').style.display = "block";
                         for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'block';
                             pointHideElems[i].style.display = 'block';
-                            if (plotType !== matsTypes.PlotTypes.scatter2d) {
+                            if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
                                 errorHideElems[i].style.display = 'block';
                             } else {
                                 errorHideElems[i].style.display = 'none';
                             }
                             barChHideElems[i].style.display = 'none';
+                            annotateHideElems[i].style.display = 'block';
                         }
                     }
 
+                    // makes sure that the appropriate axis customization fields are displayed for each plot type
+                    if (plotType === matsTypes.PlotTypes.map) {
+                        document.getElementById('axisLimitButton').style.display = "none";
+                    } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle){
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        document.getElementById('xAxisControlsNumber').style.display = "none";
+                        document.getElementById('xAxisControlsText').style.display = "block";
+                    } else {
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        document.getElementById('xAxisControlsNumber').style.display = "block";
+                        document.getElementById('xAxisControlsText').style.display = "none";
+                    }
                 });
 
                 break;
