@@ -412,12 +412,14 @@ Template.plotList.events({
                     var pointHideElems = $('*[id$="-curve-show-hide-points"]');
                     var errorHideElems = $('*[id$="-curve-errorbars"]');
                     var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
+                    var annotateHideElems = $('*[id$="-curve-show-hide-annotate"]');
                     if (plotType === matsTypes.PlotTypes.map) {
                         for (var i=0; i < curveHideElems.length; i++){
                             curveHideElems[i].style.display = 'none';
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'none';
+                            annotateHideElems[i].style.display = 'none';
                         }
                     } else if (plotType === matsTypes.PlotTypes.histogram) {
                         for (var i=0; i < curveHideElems.length; i++){
@@ -425,6 +427,7 @@ Template.plotList.events({
                             pointHideElems[i].style.display = 'none';
                             errorHideElems[i].style.display = 'none';
                             barChHideElems[i].style.display = 'block';
+                            annotateHideElems[i].style.display = 'none';
                         }
                     } else {
                         for (var i=0; i < curveHideElems.length; i++){
@@ -436,6 +439,7 @@ Template.plotList.events({
                                 errorHideElems[i].style.display = 'none';
                             }
                             barChHideElems[i].style.display = 'none';
+                            annotateHideElems[i].style.display = 'block';
                         }
                     }
 

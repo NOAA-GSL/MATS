@@ -29,7 +29,9 @@ graphProfile = function (result) {
 
     // build annotation to stick on plot
     var annotation = "";
+    var annotateShowHide = {};
     for (var i = 0; i < dataset.length; i++) {
+        annotateShowHide[i] = "show";
         annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
     }
 
@@ -313,6 +315,35 @@ graphProfile = function (result) {
         }
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    });
+
+    // add annotation show/hide buttons
+    $("input[id$='-curve-show-hide-annotate']").click(function (event) {
+        event.preventDefault();
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-annotate', '');
+        var annotation = "";
+        for (var c = 0; c < dataset.length; c++) {
+            if (dataset[c].curveId == label) {
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "annotateButtonText", 'NO DATA');
+                } else {
+                    if (annotateShowHide[c] === "hide") {
+                        annotateShowHide[c] = "show";
+                        Session.set(label + "annotateButtonText", 'hide annotation');
+                    } else {
+                        annotateShowHide[c] = "hide";
+                        Session.set(label + "annotateButtonText", 'show annotation');
+                    }
+                }
+            }
+            if (annotateShowHide[c] === "show") {
+                annotation = annotation + "<div style='color:" + dataset[c].color + "'>" + dataset[c].annotation + " </div>";
+            }
+        }
+        plot = $.plot(placeholder, dataset, options);
+        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
