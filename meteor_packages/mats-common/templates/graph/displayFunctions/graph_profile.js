@@ -323,7 +323,7 @@ graphProfile = function (result) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
-        var annotation = "";
+        annotation = "";
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
                 if (dataset[c].data.length === 0) {
