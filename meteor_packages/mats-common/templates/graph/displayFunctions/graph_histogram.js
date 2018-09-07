@@ -2,10 +2,6 @@ import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
 
 graphHistogram = function (result) {
-    // figure out what type of graph we have
-    var plotType = Session.get('plotType');
-    var graphType = plotType;
-
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -22,28 +18,22 @@ graphHistogram = function (result) {
 
     // build annotation to stick on plot
     var annotation = "";
-    // var annotateShowHide = {};
-    // for (var i = 0; i < dataset.length; i++) {
-    //     annotateShowHide[i] = "show";
-    //     annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
-    // }
+    var annotateShowHide = {};
+    for (var i = 0; i < dataset.length; i++) {
+        annotateShowHide[i] = "show";
+        // annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+    }
 
-    // figure out how many y axes there are
+    // histograms always have just the one y axis
     const yAxisLength = options.yaxes.length;
+    const yAxisNumber = 1;
     var yidx;
-    var currentAxisKey;
-    var axisKeys = [];
-    var axisTranslate = {};
-    var yAxisNumber = 0;
+    var yAxisTranslate = {};
     for (yidx = 0; yidx < yAxisLength; yidx++) {
-        currentAxisKey = options.yaxes[yidx].axisLabel;
-        if (axisKeys.indexOf(currentAxisKey) === -1) {
-            axisKeys.push(currentAxisKey);
-            yAxisNumber++;
-        }
-        axisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
+        yAxisTranslate[yidx] = 0;
     }
     Session.set('yAxisNumber', yAxisNumber);
+    Session.set('yAxisTranslate', yAxisTranslate);
 
     // store information about the axes, for use when redrawing the plot
     var originalXaxisLabel = "";
@@ -158,10 +148,11 @@ graphHistogram = function (result) {
         var ymins = [];
         var ymaxs = [];
         var yidxTranslated;
+        const yAxisTranslate = Session.get('yAxisTranslate');
         for (yidx = 0; yidx < yAxisLength; yidx++) {
-            yidxTranslated = axisTranslate[yidx];
+            yidxTranslated = yAxisTranslate[yidx];
             ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            if (graphType === matsTypes.PlotTypes.profile) {
+            if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
                 // the actual y ticks are from 0 to -1100
                 ymins.push(document.getElementById("y" + yidxTranslated + "AxisMax").value * -1);
                 ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMin").value * -1);
@@ -174,11 +165,11 @@ graphHistogram = function (result) {
         var xlabel = document.getElementById("xAxisLabel").value;
         var xmin;
         var xmax;
-        if (graphType === "timeGraph") {
+        if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
             const xminRaw = document.getElementById("xAxisMinText").value;
             const xmaxRaw = document.getElementById("xAxisMaxText").value;
-            xmin = moment.utc(xminRaw).valueOf();
-            xmax = moment.utc(xmaxRaw).valueOf();
+            xmin = xminRaw !== "" ? moment.utc(xminRaw).valueOf() : "";
+            xmax = xmaxRaw !== "" ? moment.utc(xmaxRaw).valueOf() : "";
         } else {
             xmin = document.getElementById("xAxisMin").value;
             xmax = document.getElementById("xAxisMax").value;
