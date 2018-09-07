@@ -38,15 +38,23 @@ graphProfile = function (result) {
         annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
     }
 
-    // profiles always have just the one y axis
+    // figure out how many y axes there are
     const yAxisLength = options.yaxes.length;
-    const yAxisNumber = 1;
     var yidx;
+    var currentAxisKey;
+    var axisKeys = [];
     var yAxisTranslate = {};
+    var yAxisNumber = 0;
     for (yidx = 0; yidx < yAxisLength; yidx++) {
-        yAxisTranslate[yidx] = 0;
+        currentAxisKey = options.yaxes[yidx].axisLabel;
+        if (axisKeys.indexOf(currentAxisKey) === -1) {
+            axisKeys.push(currentAxisKey);
+            yAxisNumber++;
+        }
+        yAxisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
     }
     Session.set('yAxisNumber', yAxisNumber);
+    Session.set('yAxisLength', yAxisLength);
     Session.set('yAxisTranslate', yAxisTranslate);
 
     // store information about the axes, for use when redrawing the plot
@@ -68,6 +76,8 @@ graphProfile = function (result) {
             originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
         }
     }
+
+    Session.set('options',options);
 
     var placeholder = $("#placeholder");
 
@@ -115,17 +125,19 @@ graphProfile = function (result) {
     // pan-up
     $("#pan-up").click(function (event) {
         event.preventDefault();
-        plot.pan({top: 100});
+        plot.pan({top: -100});
     });
     // pan-down
     $("#pan-down").click(function (event) {
         event.preventDefault();
-        plot.pan({top: -100});
+        plot.pan({top: 100});
     });
 
     // add replot button
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+        const yAxisLength = Session.get('yAxisLength');
 
         // restore original axis limits and labels to options map
         if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
@@ -151,25 +163,32 @@ graphProfile = function (result) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add axis customization modal submit button
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
 
         // get input axis limits and labels
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
         var yidxTranslated;
+        const yAxisLength = Session.get('yAxisLength');
         const yAxisTranslate = Session.get('yAxisTranslate');
         for (yidx = 0; yidx < yAxisLength; yidx++) {
             yidxTranslated = yAxisTranslate[yidx];
             ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
             if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
                 // the actual y ticks are from 0 to -1100
-                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMax").value * -1);
-                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMin").value * -1);
+                var yminRaw = document.getElementById("y" + yidxTranslated + "AxisMax").value;
+                var ymaxRaw = document.getElementById("y" + yidxTranslated + "AxisMin").value;
+                var ymin = yminRaw !== "" ? yminRaw * -1 : "";
+                var ymax = ymaxRaw !== "" ? ymaxRaw * -1 : "";
+                ymins.push(ymin);
+                ymaxs.push(ymax);
             } else {
                 ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
                 ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
@@ -216,6 +235,7 @@ graphProfile = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
+        Session.set('options',options);
     });
 
     var errorbars = Session.get('errorbars');
@@ -223,6 +243,8 @@ graphProfile = function (result) {
     // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         var id = event.target.id;
         var label = id.replace('-curve-show-hide', '');
         for (var c = 0; c < dataset.length; c++) {
@@ -270,11 +292,14 @@ graphProfile = function (result) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add points show/hide buttons
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points', '');
         for (var c = 0; c < dataset.length; c++) {
@@ -294,11 +319,14 @@ graphProfile = function (result) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add errorbars show/hide buttons
     $("input[id$='-curve-errorbars']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         const id = event.target.id;
         const label = id.replace('-curve-errorbars', '');
         for (var c = 0; c < dataset.length; c++) {
@@ -330,11 +358,14 @@ graphProfile = function (result) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add annotation show/hide buttons
     $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
         annotation = "";
@@ -359,6 +390,7 @@ graphProfile = function (result) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add grid show/hide buttons
