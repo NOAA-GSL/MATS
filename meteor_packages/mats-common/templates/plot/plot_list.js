@@ -439,7 +439,11 @@ Template.plotList.events({
                                 errorHideElems[i].style.display = 'none';
                             }
                             barChHideElems[i].style.display = 'none';
-                            annotateHideElems[i].style.display = 'block';
+                            if (plotType !== matsTypes.PlotTypes.profile) {
+                                annotateHideElems[i].style.display = 'block';
+                            } else {
+                                annotateHideElems[i].style.display = 'none';
+                            }
                         }
                     }
 

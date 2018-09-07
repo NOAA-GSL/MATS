@@ -1,4 +1,16 @@
+import {moment} from 'meteor/momentjs:moment'
+import {matsTypes} from 'meteor/randyp:mats-common';
+
 graphXYLine = function (result) {
+    // figure out what type of graph we have
+    var plotType = Session.get('plotType');
+    var graphType;
+    if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        graphType = "timeGraph";
+    } else {
+        graphType = "xyLine";
+    }
+
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -16,6 +28,7 @@ graphXYLine = function (result) {
     // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
+        var capRadius = 10;
         if (min < 400) {
             o.points && (o.points.radius = 1);
             capRadius = 5;
@@ -165,9 +178,6 @@ graphXYLine = function (result) {
         event.preventDefault();
 
         // get input axis limits and labels
-        var xlabel = document.getElementById("xAxisLabel").value;
-        var xmin = document.getElementById("xAxisMin").value;
-        var xmax = document.getElementById("xAxisMax").value;
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
@@ -175,8 +185,27 @@ graphXYLine = function (result) {
         for (yidx = 0; yidx < yAxisLength; yidx++) {
             yidxTranslated = axisTranslate[yidx];
             ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            if (graphType === matsTypes.PlotTypes.profile) {
+                // the actual y ticks are from 0 to -1100
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMax").value * -1);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMin").value * -1);
+            } else {
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            }
+        }
+
+        var xlabel = document.getElementById("xAxisLabel").value;
+        var xmin;
+        var xmax;
+        if (graphType === "timeGraph") {
+            const xminRaw = document.getElementById("xAxisMinText").value;
+            const xmaxRaw = document.getElementById("xAxisMaxText").value;
+            xmin = moment.utc(xminRaw).valueOf();
+            xmax = moment.utc(xmaxRaw).valueOf();
+        } else {
+            xmin = document.getElementById("xAxisMin").value;
+            xmax = document.getElementById("xAxisMax").value;
         }
 
         // set new limits and labels in options map

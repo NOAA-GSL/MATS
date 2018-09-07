@@ -553,7 +553,7 @@ const doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphSeries",
+            graphFunction: "graphXYLine",
             dataFunction: "dataSeries",
             checked: true
         });

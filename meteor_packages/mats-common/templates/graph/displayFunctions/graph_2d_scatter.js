@@ -1,4 +1,11 @@
+import {moment} from 'meteor/momentjs:moment'
+import {matsTypes} from 'meteor/randyp:mats-common';
+
 graph2dScatter = function (result) {
+    // figure out what type of graph we have
+    var plotType = Session.get('plotType');
+    var graphType = plotType;
+
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -147,9 +154,6 @@ graph2dScatter = function (result) {
         event.preventDefault();
 
         // get input axis limits and labels
-        var xlabel = document.getElementById("xAxisLabel").value;
-        var xmin = document.getElementById("xAxisMin").value;
-        var xmax = document.getElementById("xAxisMax").value;
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
@@ -157,8 +161,27 @@ graph2dScatter = function (result) {
         for (yidx = 0; yidx < yAxisLength; yidx++) {
             yidxTranslated = axisTranslate[yidx];
             ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            if (graphType === matsTypes.PlotTypes.profile) {
+                // the actual y ticks are from 0 to -1100
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMax").value * -1);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMin").value * -1);
+            } else {
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            }
+        }
+
+        var xlabel = document.getElementById("xAxisLabel").value;
+        var xmin;
+        var xmax;
+        if (graphType === "timeGraph") {
+            const xminRaw = document.getElementById("xAxisMinText").value;
+            const xmaxRaw = document.getElementById("xAxisMaxText").value;
+            xmin = moment.utc(xminRaw).valueOf();
+            xmax = moment.utc(xmaxRaw).valueOf();
+        } else {
+            xmin = document.getElementById("xAxisMin").value;
+            xmax = document.getElementById("xAxisMax").value;
         }
 
         // set new limits and labels in options map
@@ -174,13 +197,13 @@ graph2dScatter = function (result) {
         for (yidx = 0; yidx < yAxisLength; yidx++) {
             if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].axisLabel = ylabels[yidx];
-        }
+            }
             if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].min = ymins[yidx];
-        }
+            }
             if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
                 options.yaxes[yidx].max = ymaxs[yidx];
-        }
+            }
         }
 
         // redraw plot
@@ -236,7 +259,7 @@ graph2dScatter = function (result) {
             }
         }
         plot = $.plot(placeholder, dataset, options);
-        //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
+        // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     });
 
