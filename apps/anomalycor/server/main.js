@@ -240,23 +240,24 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
-        optionsMap = {both: [''], '0-UTC': ['and m0.valid_hour = 0'], '12-UTC': ['and m0.valid_hour = 12']};
+    if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'valid-time',
+                name: 'pres-level',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: ['both', '0-UTC', '12-UTC',],
+                optionsMap: levelVariableOptionsMap,
+                options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
+                superiorNames: ['variable'],
+                selected: '',
                 controlButtonCovered: true,
-                selected: 'both',
                 unique: false,
-                default: 'both',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                displayOrder: 7,
+                controlButtonText: "Pressure Level",
+                displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 2,
+                multiple: true
             });
     }
 
@@ -288,19 +289,27 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'dieoff-forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
+                default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
+                controlButtonText: 'dieoff type',
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -339,24 +348,44 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.find({name: 'pres-level'}).count() == 0) {
+    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
+        optionsMap = {both: [''], '0-UTC': ['and m0.valid_hour = 0'], '12-UTC': ['and m0.valid_hour = 12']};
         matsCollections.CurveParams.insert(
             {
-                name: 'pres-level',
+                name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                optionsMap: levelVariableOptionsMap,
-                options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
-                superiorNames: ['variable'],
+                optionsMap: optionsMap,
+                options: ['both', '0-UTC', '12-UTC',],
+                controlButtonCovered: true,
+                selected: 'both',
+                unique: false,
+                default: 'both',
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 8,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        const optionsArr = ['0', '12'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.InputTypes.unused,
+                default: optionsArr[1],
                 controlButtonVisibility: 'block',
-                controlButtonText: "Pressure Level",
-                displayOrder: 8,
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 3,
-                multiple: true
             });
     }
 
@@ -430,12 +459,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ', '],
                 ['level: ', 'pres-level', ' hPa, '],
-                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['', 'dieoff-forecast-length', ', '],
                 ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "variable", "pres-level", "valid-time", "dieoff-forecast-length", "curve-dates"
+                "label", "data-source", "region", "variable", "pres-level", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });

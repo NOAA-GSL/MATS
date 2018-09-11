@@ -53,10 +53,24 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
+        var forecastLengthStr = curve['dieoff-forecast-length'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}, {optionsMap: 1})['optionsMap'];
+        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var validTimes;
+        var validTimeClause = "";
+        var utcCycleStart;
+        var utcCycleStartClause = "";
+        var dateRangeClause = "and m0.valid_day+3600*m0.hour >= " + fromSecs + " and m0.valid_day+3600*m0.hour <= " + toSecs;
+        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+            validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+            if (validTimes.length !== 0) {
+                validTimeClause = "and floor((m0.valid_day+3600*m0.hour)%(24*3600)/3600) IN(" + validTimes + ")";
+            }
+        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+            utcCycleStart = Number(curve['utc-cycle-start']);
+            utcCycleStartClause = "and (m0.valid_day+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        } else {
+            dateRangeClause = "and (m0.valid_day+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -76,25 +90,19 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
+                "{{dateRangeClause}} " +
                 "{{validTimeClause}} " +
                 "and m0.vgtyp IN({{vgtyp}}) "+
-                "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
-                "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "{{utcCycleStartClause}} " +
                 "group by avtime " +
-                "order by avtime" +
-                ";";
+                "order by avtime;";
 
             statement = statement.replace('{{vgtyp}}', vgtyp);
-            statement = statement.replace('{{fromSecs}}', fromSecs);
-            statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{model}}', model);
             statement = statement.replace('{{statistic}}', statistic);
-            var validTimeClause = " ";
-            if (validTimes.length > 0) {
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
-            }
+            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-
+            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             dataRequests[curve.label] = statement;
 
             var queryResult;

@@ -436,19 +436,27 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'dieoff-forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
+                default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
+                controlButtonText: 'dieoff type',
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -678,13 +686,14 @@ var doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', ', '],
-                ['valid-time:', 'valid-time', ', '],
+                ['', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'truth', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "truth", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "truth", "curve-dates"
             ],
             groupSize: 6
         });

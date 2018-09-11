@@ -62,12 +62,24 @@ dataDieOff = function (plotParams, plotFunction) {
         var toDate = dateRange.toDate;
         fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
         toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var forecastLengthStr = curve['dieoff-forecast-length'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}, {optionsMap: 1})['optionsMap'];
+        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var validTimeClause = "";
+        var utcCycleStart;
+        var utcCycleStartClause = "";
+        var dateRangeClause = "and unix_timestamp(m0.date)+3600*m0.hour >= '" + fromSecs + "' and unix_timestamp(m0.date)+3600*m0.hour <= '" + toSecs + "' ";
+        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+            const validTimeStr = curve['valid-time'];
+            const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+            validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+            utcCycleStart = Number(curve['utc-cycle-start']);
+            utcCycleStartClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        } else {
+            dateRangeClause = "and (unix_timestamp(m0.date)+3600*m0.hour - m0.fcst_len*3600) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -87,23 +99,22 @@ dataDieOff = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
+                "{{dateRangeClause}} " +
                 "{{validTimeClause}} " +
+                "{{utcCycleStartClause}} " +
                 "and m0.fcst_len >= 0 " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
                 "group by avtime " +
-                "order by avtime" +
-                ";";
+                "order by avtime;";
 
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
+            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             dataRequests[curve.label] = statement;
 
             var queryResult;
