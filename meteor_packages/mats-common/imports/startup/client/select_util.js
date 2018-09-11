@@ -122,29 +122,21 @@ const checkHideOther = function (param, firstRender) {
                 const selectedOptions = elem.selectedOptions;
                 const selectedText = selectedOptions && selectedOptions.length > 0 ? selectedOptions[0].text : "";
 
-                var otherControlElem = matsParamUtils.getControlElementForParamName(controlledSelectors[i]);
-                var otherControlElemParent = otherControlElem.parentNode;
                 var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
-                var otherValueElement = matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
 
+                var selectorControlElem;
                 if ((firstRender == true && param.default == param.hideOtherFor[controlledSelectors[i]]) ||
                     (param.hideOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.hideOtherFor[controlledSelectors[i]]) !== -1) {
-                    otherControlElem.style.display = 'none';
-                    otherInputElement.style.display = 'none';
-                    otherValueElement.style.display = 'none';
-                    if (otherControlElemParent)
-                    {
-                        otherControlElemParent.style.display = "none;";
+                    selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
+                    if (selectorControlElem && selectorControlElem.style) {
+                        selectorControlElem.style.display = "none";
                     }
                     matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
                 } else {
-                    otherControlElem.style.display = 'block';
-                    otherInputElement.style.display = 'block';
-                    otherValueElement.style.display = 'block';
-                    if (otherControlElemParent)
-                    {
-                        otherControlElemParent.style.display = "block";
+                    selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
+                    if (selectorControlElem && selectorControlElem.style) {
+                        selectorControlElem.style.display = "block";
                     }
                     otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();

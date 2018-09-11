@@ -33,6 +33,7 @@ var  PlotTypes = {
 
 var ForecastTypes = {
     dieoff: "dieoff",
+    utcCycle: "utc cycle",
     singleCycle: "single cycle"
 };
 

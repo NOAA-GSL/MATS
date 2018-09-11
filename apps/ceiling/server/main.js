@@ -332,17 +332,26 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'dieoff-forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                dependentNames: ["valid-time", "utc-cycle-start"],
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
+                default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'forecast-length',
                 displayOrder: 7,
@@ -384,11 +393,18 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+        dieoffOptionsMap = {
+            "Dieoff" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+            "Dieoff for a specific UTC cycle start time" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+            "Single cycle forecast" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                optionsMap: dieoffOptionsMap,
+                options: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]],   // convenience
+                superiorNames: ['dieoff-forecast-length'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -403,18 +419,22 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
-
-        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
-
+        dieoffOptionsMap = {
+            "Dieoff" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+            "Dieoff for a specific UTC cycle start time" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+            "Single cycle forecast" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                options: optionsArr,
+                optionsMap: dieoffOptionsMap,
+                options: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]],   // convenience
+                superiorNames: ['dieoff-forecast-length'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: optionsArr[12],
+                default: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]][12],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
                 displayOrder: 9,
