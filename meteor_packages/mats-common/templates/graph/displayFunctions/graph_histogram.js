@@ -1,3 +1,6 @@
+import {moment} from 'meteor/momentjs:moment'
+import {matsTypes} from 'meteor/randyp:mats-common';
+
 graphHistogram = function (result) {
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -15,18 +18,18 @@ graphHistogram = function (result) {
 
     // build annotation to stick on plot
     var annotation = "";
-    // var annotateShowHide = {};
-    // for (var i = 0; i < dataset.length; i++) {
-    //     annotateShowHide[i] = "show";
-    //     annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
-    // }
+    var annotateShowHide = {};
+    for (var i = 0; i < dataset.length; i++) {
+        annotateShowHide[i] = "show";
+        // annotation = annotation + "<div style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+    }
 
     // figure out how many y axes there are
     const yAxisLength = options.yaxes.length;
     var yidx;
     var currentAxisKey;
     var axisKeys = [];
-    var axisTranslate = {};
+    var yAxisTranslate = {};
     var yAxisNumber = 0;
     for (yidx = 0; yidx < yAxisLength; yidx++) {
         currentAxisKey = options.yaxes[yidx].axisLabel;
@@ -34,9 +37,11 @@ graphHistogram = function (result) {
             axisKeys.push(currentAxisKey);
             yAxisNumber++;
         }
-        axisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
+        yAxisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
     }
     Session.set('yAxisNumber', yAxisNumber);
+    Session.set('yAxisLength', yAxisLength);
+    Session.set('yAxisTranslate', yAxisTranslate);
 
     // store information about the axes, for use when redrawing the plot
     var originalXaxisLabel = "";
@@ -57,6 +62,8 @@ graphHistogram = function (result) {
             originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
         }
     }
+
+    Session.set('options',options);
 
     var placeholder = $("#placeholder");
 
@@ -104,17 +111,19 @@ graphHistogram = function (result) {
     // pan-up
     $("#pan-up").click(function (event) {
         event.preventDefault();
-        plot.pan({top: 100});
+        plot.pan({top: -100});
     });
     // pan-down
     $("#pan-down").click(function (event) {
         event.preventDefault();
-        plot.pan({top: -100});
+        plot.pan({top: 100});
     });
 
     // add replot button
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+        const yAxisLength = Session.get('yAxisLength');
 
         // restore original axis limits and labels to options map
         if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
@@ -140,25 +149,49 @@ graphHistogram = function (result) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add axis customization modal submit button
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
 
         // get input axis limits and labels
-        var xlabel = document.getElementById("xAxisLabel").value;
-        var xmin = document.getElementById("xAxisMin").value;
-        var xmax = document.getElementById("xAxisMax").value;
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
         var yidxTranslated;
+        const yAxisLength = Session.get('yAxisLength');
+        const yAxisTranslate = Session.get('yAxisTranslate');
         for (yidx = 0; yidx < yAxisLength; yidx++) {
-            yidxTranslated = axisTranslate[yidx];
+            yidxTranslated = yAxisTranslate[yidx];
             ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
+                // the actual y ticks are from 0 to -1100
+                var yminRaw = document.getElementById("y" + yidxTranslated + "AxisMax").value;
+                var ymaxRaw = document.getElementById("y" + yidxTranslated + "AxisMin").value;
+                var ymin = yminRaw !== "" ? yminRaw * -1 : "";
+                var ymax = ymaxRaw !== "" ? ymaxRaw * -1 : "";
+                ymins.push(ymin);
+                ymaxs.push(ymax);
+            } else {
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            }
+        }
+
+        var xlabel = document.getElementById("xAxisLabel").value;
+        var xmin;
+        var xmax;
+        if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
+            const xminRaw = document.getElementById("xAxisMinText").value;
+            const xmaxRaw = document.getElementById("xAxisMaxText").value;
+            xmin = xminRaw !== "" ? moment.utc(xminRaw).valueOf() : "";
+            xmax = xmaxRaw !== "" ? moment.utc(xmaxRaw).valueOf() : "";
+        } else {
+            xmin = document.getElementById("xAxisMin").value;
+            xmax = document.getElementById("xAxisMax").value;
         }
 
         // set new limits and labels in options map
@@ -188,11 +221,14 @@ graphHistogram = function (result) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
+        Session.set('options',options);
     });
 
     // add bars show/hide buttons
     $("input[id$='-curve-show-hide-bar']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-bar', '');
         for (var c = 0; c < dataset.length; c++) {
@@ -212,14 +248,17 @@ graphHistogram = function (result) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // add annotation show/hide buttons
     $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
+        const options = Session.get('options');
+
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
-        var annotation = "";
+        annotation = "";
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
                 if (dataset[c].data.length === 0) {
@@ -241,6 +280,7 @@ graphHistogram = function (result) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Session.set('options',options);
     });
 
     // selection zooming
