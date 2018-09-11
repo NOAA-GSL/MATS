@@ -343,7 +343,6 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: dieoffOptionsMap,
                 options: Object.keys(dieoffOptionsMap),
-                dependentNames: ["valid-time", "utc-cycle-start"],
                 hideOtherFor: {
                     'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
                     'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
@@ -353,7 +352,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
+                controlButtonText: 'dieoff type',
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -393,18 +392,11 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
-        dieoffOptionsMap = {
-            "Dieoff" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-            "Dieoff for a specific UTC cycle start time" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-            "Single cycle forecast" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
-        };
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                optionsMap: dieoffOptionsMap,
-                options: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]],   // convenience
-                superiorNames: ['dieoff-forecast-length'],
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                 selected: [],
                 controlButtonCovered: true,
                 unique: false,
@@ -419,22 +411,18 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
-        dieoffOptionsMap = {
-            "Dieoff" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-            "Dieoff for a specific UTC cycle start time" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-            "Single cycle forecast" : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
-        };
+
+        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
         matsCollections.CurveParams.insert(
             {
                 name: 'utc-cycle-start',
                 type: matsTypes.InputTypes.select,
-                optionsMap: dieoffOptionsMap,
-                options: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]],   // convenience
-                superiorNames: ['dieoff-forecast-length'],
+                options: optionsArr,
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: dieoffOptionsMap[Object.keys(dieoffOptionsMap)[0]][12],
+                default: optionsArr[12],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
                 displayOrder: 9,
@@ -513,12 +501,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len: ', 'dieoff-forecast-length', ', '],
-                ['valid-time: ', 'valid-time', ' '],
+                ['', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "valid-time", "dieoff-forecast-length", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });

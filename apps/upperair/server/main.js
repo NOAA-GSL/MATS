@@ -359,6 +359,67 @@ const doCurveParams = function () {
             });
     }
 
+    if (matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) == undefined) {
+        var dieoffOptionsMap = {
+            "Dieoff": [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(dieoffOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: 'dieoff type',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+        optionsMap = {};
+        matsCollections.CurveParams.insert(
+            {
+                name: 'forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: forecastLengthOptionsMap,
+                options: forecastLengthOptionsMap[myModels[0]],
+                superiorNames: ['data-source'],
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: forecastLengthOptionsMap[myModels[0]][0],
+                controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    } else {
+        // it is defined but check for necessary updates to forecastLengthOptionsMap
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
+                    optionsMap: forecastLengthOptionsMap,
+                    options: forecastLengthOptionsMap[myModels[0]]
+                }
+            });
+        }
+    }
+
     if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
         optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
         matsCollections.CurveParams.insert(
@@ -373,9 +434,30 @@ const doCurveParams = function () {
                 default: 'both',
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 7,
+                displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: optionsArr[12],
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3,
             });
     }
 
@@ -401,63 +483,10 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 10,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
-    }
-
-    if (matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) == undefined) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
-                controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
-                displayOrder: 9,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
-
-    if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
-        optionsMap = {};
-        matsCollections.CurveParams.insert(
-            {
-                name: 'forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[myModels[0]],
-                superiorNames: ['data-source'],
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: forecastLengthOptionsMap[myModels[0]][0],
-                controlButtonVisibility: 'block',
-                controlButtonText: "forecast lead time",
-                displayOrder: 9,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    } else {
-        // it is defined but check for necessary updates to forecastLengthOptionsMap
-        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
-        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
-            // have to reload model data
-            matsCollections.CurveParams.update({name: 'forecast-length'}, {
-                $set: {
-                    optionsMap: forecastLengthOptionsMap,
-                    options: forecastLengthOptionsMap[myModels[0]]
-                }
-            });
-        }
     }
 
     if (matsCollections.CurveParams.findOne({name: 'top'}) == undefined) {
@@ -475,7 +504,7 @@ const doCurveParams = function () {
                 default: 1,
                 controlButtonVisibility: 'block',
                 controlButtonText: 'top (hPa)',
-                displayOrder: 10,
+                displayOrder: 11,
                 displayPriority: 1,
                 displayGroup: 4,
                 help: 'top-help.html'
@@ -497,7 +526,7 @@ const doCurveParams = function () {
                 default: 1050,
                 controlButtonVisibility: 'block',
                 controlButtonText: 'bottom (hPa)',
-                displayOrder: 11,
+                displayOrder: 12,
                 displayPriority: 1,
                 displayGroup: 4,
                 help: 'bottom-help.html'
@@ -598,13 +627,14 @@ const doCurveTextPatterns = function () {
                 ['', 'statistic', ', '],
                 ['level: ', 'top', ' '],
                 ['to ', 'bottom', ', '],
-                ['fcst_len: ', 'dieoff-forecast-length', ', '],
+                ['', 'dieoff-forecast-length', ', '],
                 ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
                 ['clouds: ', 'cloud-coverage', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "dieoff-forecast-length", "top", "bottom", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "cloud-coverage", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "top", "bottom", "curve-dates"
             ],
             groupSize: 6
         });
