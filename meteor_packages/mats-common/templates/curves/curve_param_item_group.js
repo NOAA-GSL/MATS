@@ -21,11 +21,29 @@ Template.curveParamItemGroup.helpers({
         var pValues = [];
         var pattern;
         switch (plotType) {
-            case matsTypes.PlotTypes.scatter2d:
-                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.scatter2d});
-                break;
             case matsTypes.PlotTypes.profile:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.profile});
+                break;
+            case matsTypes.PlotTypes.dieoff:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dieoff});
+                break;
+            case matsTypes.PlotTypes.threshold:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.threshold});
+                break;
+            case matsTypes.PlotTypes.validtime:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.validtime});
+                break;
+            case matsTypes.PlotTypes.dailyModelCycle:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.dailyModelCycle});
+                break;
+            case matsTypes.PlotTypes.map:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.map});
+                break;
+            case matsTypes.PlotTypes.histogram:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.histogram});
+                break;
+            case matsTypes.PlotTypes.scatter2d:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.scatter2d});
                 break;
             case matsTypes.PlotTypes.timeSeries:
             default:
@@ -37,24 +55,29 @@ Template.curveParamItemGroup.helpers({
         for (var di=0; di < displayParams.length;di++) {
             pValues.push({name: displayParams[di], value: c[displayParams[di]], color:c.color, curve:c.label, index:index});
         }
+
         // create array of parameter value display groups each of groupSize
         var pGroups = [];
-        var gi = 0;
-        const groupsLength = Math.floor(pValues.length / groupSize) + 1;
-        while (gi < groupsLength) {
-            var groupParams = [];
-            var pi = gi * groupSize;
-            const piend = pi + groupSize;
-            while (pi < piend && pi < pValues.length) {
-                if (pValues[pi]) {
-                    groupParams.push(pValues[pi]);
+        var groupParams = [];
+        var pvi = 0;
+        while (pvi < pValues.length) {
+            if (pValues[pvi] && (pValues[pvi].name == 'xaxis' || pValues[pvi].name == 'yaxis')) {
+                if (groupParams.length > 0) {
+                    // finish the old group and make a new group for 'xaxis' or 'yaxis'
+                    pGroups.push(groupParams);
                 }
-                pi++;
+                groupParams = [];
             }
-            if (groupParams.length > 0) {
+            pValues[pvi] && groupParams.push(pValues[pvi]);
+            if (groupParams.length >= groupSize) {
                 pGroups.push(groupParams);
+                groupParams = [];
             }
-            gi++;
+            pvi++;
+        }
+        // check for a partial last group
+        if (groupParams.length > 0) {
+            pGroups.push(groupParams);
         }
         allGroups[c.label] = pGroups;
         return pGroups;
@@ -66,6 +89,28 @@ Template.curveParamItemGroup.helpers({
       return paramGroup;
     },
     label: function(elem) {
+        if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d) {
+            const pNameArr = elem.name.match(/([xy]axis-)(.*)/);
+            if (pNameArr === null) {
+                return elem.name.toUpperCase();
+            }
+            const prefix = pNameArr[1];
+            const pName = pNameArr[2];
+            const p = matsCollections.CurveParams.findOne({name:pName});
+            if (p.controlButtonText) {
+                return (prefix + p.controlButtonText).toUpperCase();
+            } else {
+                return elem.name.toUpperCase();
+            }
+        } else {
+            const p = matsCollections.CurveParams.findOne({name:elem.name});
+            if (p.controlButtonText) {
+                return p.controlButtonText.toUpperCase();
+            } else {
+                return elem.name.toUpperCase();
+            }
+        }
+        // should never get here
         return elem.name.toUpperCase();
     },
     name: function(elem){
@@ -132,11 +177,19 @@ Template.curveParamItemGroup.helpers({
         if (elem.name === "label") {
             return "none";
         }
-         if (matsParamUtils.isControlButtonVisible(elem.name)) {
-             return "block";
-         } else {
-             return "none";
-         }
+        // it isn't good enough to just check the item control button. Need to evaluate the hideOtherFor functionality with
+        // respect to this particular curve item
+        // First - determine if my visibility is controlled by another
+        const visibilityControllingParam = matsParamUtils.visibilityControllerForParam(elem.name);
+        // Second - Check the hide/show state based on the parameter hideOtherFor map in the parameter nad the state of this particular curve
+        if (visibilityControllingParam !== undefined) {
+            const curve = Session.get("Curves")[elem.index];
+            const hideOtherFor = visibilityControllingParam.hideOtherFor[elem.name][0];
+            if (visibilityControllingParam !== undefined && (curve[visibilityControllingParam.name] === undefined || curve[visibilityControllingParam.name] === hideOtherFor)) {
+                return "none";
+            }
+        }
+        return "block";
     }
 });
 

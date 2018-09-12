@@ -9,6 +9,7 @@
             max-width: 100%;
         }
     </style>
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script type='text/javascript' src="js/jquery.min.js"></script>
@@ -103,7 +104,7 @@
                         <ul class="nav navbar-nav">
                             <li>
                                 <div>
-                                    <a href="http://esrl.noaa.gov/gsd/emb"><span style="color:white;font-size: large;">Earth System Research Laboratory</span></a><br>
+                                    <a href="http://esrl.noaa.gov/"><span style="color:white;font-size: large;">Earth System Research Laboratory</span></a><br>
                                     <a href="/"><span
                                             style="color:white;font-size: small;">Model Analysis Tool Suite (MATS)</span></a><br>
                                 </div>
@@ -122,10 +123,10 @@
             <div style="background-color: #dddddd;height:100%;margin-bottom:0;margin-top:0;padding-left:1em;padding-right: 0"
                  class="container-fluid">
                 <ul class="nav navbar-nav navbar-left">
-                <li><a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/emb/">GSD Modeling</a>
+                <li><a style="font-size:large;font-weight: bold" href="http://esrl.noaa.gov/gsd/">GSD Modeling</a>
                 </li>
-                <li><p class="navbar-text" style="font-size:large;font-weight: bold">Applications ...</p>
-                </li>
+                <!--<li><p class="navbar-text" style="font-size:large;font-weight: bold">Applications ...</p>-->
+                <!--</li>-->
                 <li ng-repeat="item in items"><a class="btn btn-primary" style="font-size:large;font-weight: bold"
                            href="/{{item.app}}">{{item.displayName}}</a>
                 </li>

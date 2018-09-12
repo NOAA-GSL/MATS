@@ -1,14 +1,16 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsWfipUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
 
 
 dataProfile = function (plotParams, plotFunction) {
-    console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
+    //console.log("plotParams: ", JSON.stringify(plotParams, null, 2));
     var dataRequests = {}; // used to store data queries
+    var totalProcessingStart = moment();
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
     var curves = plotParams.curves;
@@ -39,8 +41,11 @@ dataProfile = function (plotParams, plotFunction) {
         const tmp = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0].split(',');
         curve.dataSource_is_instrument = parseInt(tmp[1]);
         curve.dataSource_tablename = tmp[2];
+        curve.dataSource_instrumentId = tmp[3];
         curve.verificationRunInterval = tmp[4];
         curve.dataSource_is_json = parseInt(tmp[5]);
+        curve.dataSourcePreviousCycleAveraging = tmp[7] == "true";
+        curve.dataSourcePreviousCycleRass = tmp[8] == "true";
         max_verificationRunInterval = Number(curve.verificationRunInterval) > Number(max_verificationRunInterval) ? curve.verificationRunInterval : max_verificationRunInterval;
         if (curve['statistic'] != "mean") {
             // need a truth data source for statistic
@@ -50,8 +55,11 @@ dataProfile = function (plotParams, plotFunction) {
             const tmp = matsCollections.CurveParams.findOne({name: 'truth-data-source'}).optionsMap[curve['truth-data-source']][0].split(',');
             curve.truthDataSource_is_instrument = parseInt(tmp[1]);
             curve.truthDataSource_tablename = tmp[2];
+            curve.truthDataSource_instrumentId = tmp[3];
             curve.truthRunInterval = tmp[4];
             curve.truthDataSource_is_json = parseInt(tmp[5]);
+            curve.truthDataSourcePreviousCycleAveraging = tmp[7] == "true";
+            curve.truthDataSourcePreviousCycleRass = tmp[8] == "true";
             // might override the datasource assigned max_verificationRunInterval
             max_verificationRunInterval = Number(curve.truthRunInterval) > Number(max_verificationRunInterval) ? curve.truthRunInterval : max_verificationRunInterval;
         }
@@ -59,7 +67,9 @@ dataProfile = function (plotParams, plotFunction) {
     }
     var errorMax = Number.MIN_VALUE;
     var maxValuesPerLevel = 0;
+    var matchedValidTimes = [];
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        var dataFoundForCurve = true;
         // Determine all the plot params for this curve
         maxValuesPerLevel = 0;
         curve = curves[curveIndex];
@@ -69,17 +79,39 @@ dataProfile = function (plotParams, plotFunction) {
         var dataSource = curve['data-source'];
         var dataSource_is_instrument = curve.dataSource_is_instrument;
         var dataSource_tablename = curve.dataSource_tablename;
+        var dataSource_instrumentId = curve.dataSource_instrumentId;
         var verificationRunInterval = curve.verificationRunInterval;
+        var halfVerificationInterval = verificationRunInterval / 2;
+
+        var truthRunInterval = curve.truthRunInterval;
+        var halfTruthInterval = truthRunInterval / 2;
+
         var dataSource_is_json = curve.dataSource_is_json;
+        var dataSourcePreviousCycleAveraging = curve.dataSourcePreviousCycleAveraging;
+        var truthDataSourcePreviousCycleAveraging = curve.truthDataSourcePreviousCycleAveraging;
+        var dataSourcePreviousCycleRass = curve.dataSourcePreviousCycleRass;
+        var truthDataSourcePreviousCycleRass = curve.truthDataSourcePreviousCycleRass;
         var curveStatValues = [];
-        var myVariable;
         // variables can be conventional or discriminators. Conventional variables are listed in the variableMap.
         // discriminators are not.
         // we are using existence in variableMap to decide if a variable is conventional or a discriminator.
-        var variableMap = matsCollections.CurveParams.findOne({name: 'variable'}).variableMap;
-        var myVariable_isDiscriminator = false;
+        var variableParam = matsCollections.CurveParams.findOne({name: 'variable'});
+        var variableMap = variableParam.variableMap;
         var variableStr = curve['variable'];
-        myVariable = variableMap[variableStr];
+        var myVariable = variableMap[variableStr];
+        if (myVariable === undefined) {
+            throw new Error("variable " + variableStr + " is not in variableMap");
+        }
+        var variableInfoMap = variableParam.infoMap[myVariable];
+        // stash the variableInfoMap in the curves for use in determinig the y axis labels
+        // The only instrument temperature wfip2 sees is from these RASS profilers. So we make a decision to change the units
+        // if it is a RASS profiler.
+        if (dataSourcePreviousCycleRass === true && variableInfoMap.units.toUpperCase().endsWith("CELSIUS")) {
+            // This is a RASS we have to convert the units.
+            variableInfoMap.units = "K";
+        }
+        curves[curveIndex].variableInfoMap = variableInfoMap === undefined ? {} : variableInfoMap;
+        var myVariable_isDiscriminator = false;
         if (myVariable === undefined) {
             myVariable = curve['variable'];
             myVariable_isDiscriminator = true; // variable is mapped, discriminators are not, this is a discriminator
@@ -118,48 +150,99 @@ dataProfile = function (plotParams, plotFunction) {
         var maxRunInterval = verificationRunInterval;
         maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
         // create database query statements - wfip2 has source AND truth data for statistics other than mean
+        var validTimeClause = " ";
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+
         var statement;
         if (diffFrom === null || diffFrom === undefined) {
             // this is a database driven curve, not a difference curve - do those after Matching ..
             // wfip2 also has different queries for instruments verses model data
+            const utcOffset = Number(forecastLength * 3600);
             if (dataSource_is_instrument) {
-                const utcOffset = Number(forecastLength * 3600);
+                /*
+                 this is the select format for averaging instrument data
+                 select  O.valid_utc as valid_utc, (O.valid_utc - ((O.valid_utc - 450) % 900)) + 450 as avtime,
+                 cast(data AS JSON) as data, sites_siteid from obs_recs as O , surfrad_radflux_recs
+                 where  obs_recs_obsrecid = O.obsrecid
+                 and valid_utc>=1491177600 - 450 and
+                 valid_utc<=1491436800 - 450
+                 and sites_siteid in (4)  order by avtime;
+                 */
+                if (validTimes.length > 0) {
+                    validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600  in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                }
                 if (dataSource_is_json) {
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            // verificationRunInterval is in milliseconds
+                    if (dataSourcePreviousCycleRass) {
+                        // previous cycle and half interval - no averaging
+                        statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                            "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                    } else {
+                     // current cycle back half interval and forward half interval averaging
+                        statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, " +
+                        "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + dataSource_tablename +
                         " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
+                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                    }
                 } else {
                     var qVariable = myVariable;
                     if (windVar) {
                         qVariable = myVariable + ",ws";
                     }
-                    statement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + verificationRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
-                        " where  obs_recs_obsrecid = O.obsrecid" +
-                        " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
-                        " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset)
+                    if (dataSourcePreviousCycleRass) {
+                        // previous cycle and half interval - no averaging
+                        statement = "select O.valid_utc + " + verificationRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + verificationRunInterval / 1000 + "-  ((O.valid_utc  + " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                    } else {
+                        statement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + " as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + dataSource_tablename +
+                            " where  obs_recs_obsrecid = O.obsrecid" +
+                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                    }
                 }
+
                 // data source is a model and its JSON format
             } else {
-                statement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
+                if (validTimes.length > 0) {
+                    validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                    matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                }
+                statement = "select  cycle_utc as valid_utc, (cycle_utc + " + 3600 * forecastLength + ") as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + dataSource_tablename +
                     " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                     " and fcst_utc_offset =" + 3600 * forecastLength +
-                    " and cycle_utc >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                    " and cycle_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                    " and cycle_utc >=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) - utcOffset) +
+                    " and cycle_utc <=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) - utcOffset);
             }
-            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")  order by avtime";
+            statement = statement + "  and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
             //console.log("statement: " + statement);
             // save the query for the data lineage
             dataRequests[curve.label] = statement;
             // queryWFIP2DB has embedded quality control for windDir
             // if corresponding windSpeed < 3ms null the windDir
-            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper);
-            //if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-            //    continue;
-            //}
+            var startMoment = moment();
+            var queryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, statement, top, bottom, myVariable, dataSource_is_json, discriminator, disc_lower, disc_upper, dataSource_is_instrument, verificationRunInterval, siteIds, dataSource_instrumentId, dataSourcePreviousCycleAveraging, dataSourcePreviousCycleRass);
+            var finishMoment = moment();
+            dataRequests["data retrieval (query) time - " + curve.label] = {
+                begin: startMoment.format(),
+                finish: finishMoment.format(),
+                duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                recordCount: queryResult.data.length
+            }
             if (queryResult.error !== undefined && queryResult.error !== "") {
-                error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
+                if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                    // This is NOT an error just a no data condition
+                    dataFoundForCurve = false;
+                } else {
+                    error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
+                    throw (new Error(error));
+                }
             }
             var truthQueryResult = queryResult;
             // for mean calulations we do not have a truth curve.
@@ -167,50 +250,104 @@ dataProfile = function (plotParams, plotFunction) {
                 // need a truth data source for statistic
                 var truthDataSource_is_instrument = curve.truthDataSource_is_instrument;
                 var truthDataSource_tablename = curve.truthDataSource_tablename;
+                var truthDataSource_instrumentId = curve.truthDataSource_instrumentId;
                 var truthRunInterval = curve.truthRunInterval;
                 var truthDataSource_is_json = curve.truthDataSource_is_json;
                 maxRunInterval = truthRunInterval > verificationRunInterval ? truthRunInterval : verificationRunInterval;
                 maxValidInterval = maxValidInterval > maxRunInterval ? maxValidInterval : maxRunInterval;
                 var truthStatement = '';
+                var TruthVariableParam = matsCollections.CurveParams.findOne({name: 'truth-variable'});
+                var TruthVariableMap = TruthVariableParam.variableMap;
+                var TruthVariableStr = curve['truth-variable'];
+                var myTruthVariable = TruthVariableMap[TruthVariableStr];
+                if (myTruthVariable === undefined) {
+                    throw new Error("TruthVariable " + TruthVariableStr + " is not in TruthVariableMap");
+                }
+                var myTruthVariable_isDiscriminator = false;
+                if (myTruthVariable === undefined) {
+                    myTruthVariable = curve['truth-variable'];
+                    myTruthVariable_isDiscriminator = true; // truth-variable is mapped, discriminators are not, this is a discriminator
+                }
+                // need to know if it is a wind direction truth-variable because we need to retrieve wind speed
+                // and filter out any values that are coinciding with a wind speed less than 3mps
+                windTruthVar = myTruthVariable.startsWith('wd');
+                // stash this in the curve for post processing
+                curve['windTruthVar'] = windTruthVar;
+
                 if (truthDataSource_is_instrument) {
-                    const utcOffset = Number(forecastLength * 3600);
+                    if (validTimes.length > 0) {
+                        validTimeClause = " and ( (((O.valid_utc -  ((O.valid_utc - " + halfVerificationInterval / 1000 + ") % " + verificationRunInterval / 1000 + ")) + " + halfVerificationInterval / 1000 + ") % 86400 ) ) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                    }
+
                     if (truthDataSource_is_json) {
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
+                        if (truthDataSourcePreviousCycleRass) {
+                            // previous cycle and half interval - no averaging
+                            truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                        } else {
+                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, " +
+                                "cast(data AS JSON) as data, sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                            }
                     } else {
-                        var qVariable = myVariable;
-                        if (windVar) {
-                            qVariable = myVariable + ",ws";
+                        var qTruthVariable = myTruthVariable;
+                        if (windTruthVar) {
+                            qTruthVariable = myTruthVariable + ",ws";
                         }
-                        truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc - (O.valid_utc %  " + truthRunInterval / 1000 + ")) as avtime, z," + qVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
-                            " where  obs_recs_obsrecid = O.obsrecid" +
-                            " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) + utcOffset) +
-                            " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) + utcOffset);
+                        if (truthDataSourcePreviousCycleRass) {
+                            truthStatement = "select O.valid_utc + " + truthRunInterval / 1000 + " as valid_utc, (O.valid_utc  + " + truthRunInterval / 1000 + "-  ((O.valid_utc  + " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime,  " +
+                                " z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                        } else {
+                            truthStatement = "select  O.valid_utc as valid_utc, (O.valid_utc -  ((O.valid_utc - " + halfTruthInterval / 1000 + ") % " + truthRunInterval / 1000 + ")) + " + halfTruthInterval / 1000 + " as avtime, z," + qTruthVariable + ", sites_siteid from obs_recs as O , " + truthDataSource_tablename +
+                                " where  obs_recs_obsrecid = O.obsrecid" +
+                                " and valid_utc>=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom)) +
+                                " and valid_utc<=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo));
+                        }
                     }
                 } else {
+                    if (validTimes.length > 0) {
+                        validTimeClause = "  and ((cycle_utc + " + 3600 * forecastLength + ") % 86400) / 3600 in (" + validTimes + ")";
+                        matchedValidTimes = matchedValidTimes.length === 0 ? validTimes : _.intersection(matchedValidTimes, validTimes);
+                    }
                     truthStatement = "select  cycle_utc as valid_utc, (cycle_utc + fcst_utc_offset) as avtime, cast(data AS JSON) as data, sites_siteid from nwp_recs as N , " + truthDataSource_tablename +
                         " as D where D.nwp_recs_nwprecid = N.nwprecid" +
                         " and fcst_utc_offset =" + 3600 * forecastLength +
-                        " and cycle_utc >=" + matsDataUtils.secsConvert(curveDatesDateRangeFrom) +
-                        " and cycle_utc <=" + matsDataUtils.secsConvert(curveDatesDateRangeTo);
+                        " and cycle_utc >=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeFrom) - utcOffset) +
+                        " and cycle_utc <=" + Number(matsDataUtils.secsConvert(curveDatesDateRangeTo) - utcOffset);
                 }
-                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ") order by avtime";
+                truthStatement = truthStatement + " and sites_siteid in (" + siteIds.toString() + ")" + validTimeClause + " order by avtime";
                 //console.log("statement: " + truthStatement);
-                dataRequests[curve.label] = truthStatement;
+                dataRequests['truth-' + curve.label] = truthStatement;
                 try {
-                    truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper);
-                    //if (truthQueryResult.error === matsTypes.Messages.NO_DATA_FOUND ) {
-                    //    continue;
-                    //}
+                    startMoment = moment();
+                        truthQueryResult = matsWfipUtils.queryWFIP2DB(wfip2Pool, truthStatement, top, bottom, myTruthVariable, truthDataSource_is_json, discriminator, disc_lower, disc_upper, truthDataSource_is_instrument, truthRunInterval, siteIds, truthDataSource_instrumentId, truthDataSourcePreviousCycleAveraging, truthDataSourcePreviousCycleRass);
+                    finishMoment = moment();
+                    dataRequests["truth data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + ' seconds',
+                        recordCount: truthQueryResult.data.length
+                    }
                 } catch (e) {
                     e.message = "Error in queryWIFP2DB: " + e.message + " for statement: " + truthStatement;
                     throw e;
                 }
                 if (truthQueryResult.error !== undefined && truthQueryResult.error !== "") {
-                    //error += "Error from truth query: <br>" + truthQueryResult.error + " <br>" + " query: <br>" + truthStatement + " <br>";
-                    throw ( new Error(truthQueryResult.error) );
+                    if (queryResult.error === matsTypes.Messages.NO_DATA_FOUND) {
+                        // This is NOT an error just a no data condition
+                        dataFoundForCurve = false;
+                    } else {
+                        throw ( new Error(truthQueryResult.error) );
+                    }
                 }
             }  // if statistic is not mean
 
@@ -309,35 +446,37 @@ dataProfile = function (plotParams, plotFunction) {
              where each site has been filled (nulls where missing) with all the times available for the data set, based on the minimum time interval.
              There is at least one real (non null) value for each site.
              */
-
-            var levelCompleteness = curve['level-completeness'];
-            var siteCompleteness = curve['site-completeness'];
-            var levelBasis = queryResult.levelsBasis;
-            var siteBasis = queryResult.sitesBasis;
-            if (statistic != "mean") {
-                // have to consider the truth curve when determining the basis if we are doing stats other than mean
-                var truthLevelBasis = truthQueryResult.levelsBasis;
-                var truthSiteBasis = truthQueryResult.sitesBasis;
-                levelBasis = _.union(levelBasis, truthLevelBasis);
-                siteBasis = _.union(siteBasis, truthSiteBasis);
-            }
-            var verificationLevelValues = {};
-            var truthLevelValues = {};
-            var allTimes;
-            var timeSubset = [];
-            var siteSubset = [];
-            var levelSubset = [];
-            if (statistic == "mean") {
-                allTimes = queryResult.allTimes;
-            } else {
-                allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
-            }
-            // filter for sites and levels and calculate partial sums
-            for (t = 0; t < allTimes.length; t++) {
-                /*
-                 If statistic is not "mean" then we need a set of truth values to diff from the verification values.
-                 The sites and levels have to match for the truth to make any sense.
-                 */
+            var normalizedData = [];
+            var postQueryStartMoment = moment();
+            if (dataFoundForCurve) {
+                var levelCompleteness = curve['level-completeness'];
+                var siteCompleteness = curve['site-completeness'];
+                var levelBasis = queryResult.levelsBasis;
+                var siteBasis = queryResult.sitesBasis;
+                if (statistic != "mean") {
+                    // have to consider the truth curve when determining the basis if we are doing stats other than mean
+                    var truthLevelBasis = truthQueryResult.levelsBasis;
+                    var truthSiteBasis = truthQueryResult.sitesBasis;
+                    levelBasis = _.union(levelBasis, truthLevelBasis);
+                    siteBasis = _.union(siteBasis, truthSiteBasis);
+                }
+                var verificationLevelValues = {};
+                var truthLevelValues = {};
+                var allTimes;
+                var timeSubset = [];
+                var siteSubset = [];
+                var levelSubset = [];
+                if (statistic == "mean") {
+                    allTimes = queryResult.allTimes;
+                } else {
+                    allTimes = _.intersection(queryResult.allTimes, truthQueryResult.allTimes)
+                }
+                // filter for sites and levels and calculate partial sums
+                for (t = 0; t < allTimes.length; t++) {
+                    /*
+                     If statistic is not "mean" then we need a set of truth values to diff from the verification values.
+                     The sites and levels have to match for the truth to make any sense.
+                     */
                     time = allTimes[t];
                     timeObj = queryResult.data[time];
                     var verificationSites = Object.keys(timeObj.sites).map(Number);
@@ -392,14 +531,14 @@ dataProfile = function (plotParams, plotFunction) {
                                     }
                                     switch (statistic) {
                                         case "bias":
-                                            partials[time][site][level] = truthValues[level] - verificationValues[level];
+                                            partials[time][site][level] = verificationValues[level] - truthValues[level];
                                             break;
                                         case "mae":
                                             // bias and mae are almost the same.... mae just absolutes the difference
-                                            partials[time][site][level] = Math.abs(truthValues[level] - verificationValues[level]);
+                                            partials[time][site][level] = Math.abs(verificationValues[level] - truthValues[level]);
                                             break;
                                         case "rmse":
-                                            partials[time][site][level] = Math.pow(truthValues[level] - verificationValues[level], 2);  // square the difference
+                                            partials[time][site][level] = Math.pow(verificationValues[level] - truthValues[level], 2);  // square the difference
                                             break;
                                         case "mean":
                                             partials[time][site][level] = verificationValues[level]; // just the verification value - no truth
@@ -414,92 +553,120 @@ dataProfile = function (plotParams, plotFunction) {
                 curves[curveIndex]['timeSubset'] = timeSubset;
                 curves[curveIndex]['siteSubset'] = siteSubset;
                 curves[curveIndex]['levelSubset'] = levelSubset;
-            // now we have partial sums that are qualified by site and level completeness
-            // we also have time subset, site subset and level subset to be used in matching
+                // now we have partial sums that are qualified by site and level completeness
+                // we also have time subset, site subset and level subset to be used in matching
+            } //dataFoundForCurve
         } else { // end if not diff curve//
             // difference curve
             // difference curves always come after data derived curves so we know that we are done with calculating partials after the first diff curve
             break; // stop for curves
         }
+        var postQueryFinishMoment = moment();
+        dataRequests["post data retrieval (query) process time - " + curve.label] = {
+            begin: postQueryStartMoment.format(),
+            finish: postQueryFinishMoment.format(),
+            duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
+        }
+
     } // end for curves
 
     // matching goes here
     if (curvesLength > 1 && (plotParams['plotAction'] === matsTypes.PlotActions.matched) && (matchLevel || matchSite || matchTime)) {
-/*
-        For matching we need ...
-        1) match by time - requires the subset(intersection) of all the times for all curves
-        2) match by site - requires the subset of all the sites for all curves
-        3) match by level - requires the subset of all the levels that are present for all the sites for all curves
-*/
+        /*
+         For matching we need ...
+         1) match by time - requires the subset(intersection) of all the times for all curves
+         2) match by site - requires the subset of all the sites for all curves
+         3) match by level - requires the subset of all the levels that are present for all the sites for all curves
+         */
         // intersect the subsets for all the curves depending on which matching criteria
         var allTimeSubset = [];
         var allSiteSubset = [];
         var allLevelSubset = [];
         var tmp;
         if (matchTime) {
-            tmp =[];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['timeSubset']);
+            tmp = [];
+            try {
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['timeSubset']);
+                    }
                 }
+                allTimeSubset = _.intersection.apply(_, tmp);
+            } catch (e) {
+                console.log("matchTime", e);
             }
-            allTimeSubset = _.intersection.apply(_, tmp);
         }
         if (matchSite) {
-            tmp = [];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['siteSubset']);
+            try {
+                tmp = [];
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['siteSubset']);
+                    }
                 }
+                allSiteSubset = _.intersection.apply(_, tmp);
+            } catch (e) {
+                console.log("matchSite", e);
             }
-            allSiteSubset = _.intersection.apply(_, tmp);
         }
         if (matchLevel) {
-            tmp = [];
-            for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-                const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
-                // only subset real data curves - not diff curves
-                if (dataCurve) {
-                    tmp.push(curves[curveIndex]['levelSubset']);
+            try {
+                tmp = [];
+                for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+                    const dataCurve = (curves[curveIndex]['diffFrom'] === null || curves[curveIndex]['diffFrom'] === undefined);
+                    // only subset real data curves - not diff curves
+                    if (dataCurve) {
+                        tmp.push(curves[curveIndex]['levelSubset']);
+                    }
                 }
+                allLevelSubset = _.intersection.apply(_, tmp);
+            } catch (e) {
+                console.log("matchLevel", e);
             }
-            allLevelSubset = _.intersection.apply(_, tmp);
         }
+        var pci = 0;
+        var time = 0;
+        var site = 0;
+        var level = 0;
         for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
             curve = curves[curveIndex];
             var partials = curve['partials'];
             var filteredPartials = {};
             //filter the partials by time, site, and level as requested
-            for (var time in partials) {
-                if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
-                    continue;  // skip this time, it doesn't match
-                }
-                for (var site in partials[time]) {
-                    if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
-                        continue;  // skip this site, it doesn't match
+            try {
+                for (time in partials) {
+                    if (matchTime && (allTimeSubset.indexOf(time) === -1)) {
+                        continue;  // skip this time, it doesn't match
                     }
-                    for (var level in partials[time][site]) {
-                        if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
-                            continue;  // skip this level, it doesn't match
+                    for (site in partials[time]) {
+                        if (matchSite && (allSiteSubset.indexOf(Number(site)) === -1)) {
+                            continue;  // skip this site, it doesn't match
                         }
-                        if (filteredPartials[time] === undefined) {
-                            filteredPartials[time] = {};
-                        }
-                        if (filteredPartials[time][site] === undefined) {
-                            filteredPartials[time][site] = {};
-                        }
-                        if (filteredPartials[time][site][level] === undefined) {
-                            filteredPartials[time][site][level] = partials[time][site][level];
+                        for (level in partials[time][site]) {
+                            if (matchLevel && (allLevelSubset.indexOf(Number(level)) === -1)) {
+                                continue;  // skip this level, it doesn't match
+                            }
+                            if (filteredPartials[time] === undefined) {
+                                filteredPartials[time] = {};
+                            }
+                            if (filteredPartials[time][site] === undefined) {
+                                filteredPartials[time][site] = {};
+                            }
+                            if (filteredPartials[time][site][level] === undefined) {
+                                filteredPartials[time][site][level] = partials[time][site][level];
+                            }
                         }
                     }
                 }
+                delete curve.partials;
+                curve['partials'] = filteredPartials;
+            } catch (e) {
+                console.log("for time in partials", e);
             }
-            delete curve.partials;
-            curve['partials'] = filteredPartials;
         }
     }  // end if matching
 
@@ -509,21 +676,22 @@ dataProfile = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymax = Number.MIN_VALUE;
     var ymin = Number.MAX_VALUE;
+    var axisMap = {};
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         curve = curves[curveIndex];
         var partials = curve['partials'];
         var diffFrom = curve.diffFrom;
         var statistic = curve['statistic'];
         var windVar = curve['windVar'];
-
+        var label = curve.label;
         // axisKey is used to determine which axis a curve should use.
         // This axisMap object is used like a set and if a curve has the same
-        // variable and statistic (axisKey) it will use the same axis,
+        // units (axisKey) it will use the same axis,
         // The axis number is assigned to the axisMap value, which is the axisKey.
-        var axisKey = variableStr + ":" + statistic;
+        var axisKey = curve.variableInfoMap === undefined ? variableStr : curve.variableInfoMap.units;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
-        var axisMap = {};
         var levelSums = {};
+        var curveStats = {d_mean: 0, stde_betsy: 0, sd: 0, n_good: 0, lag1: 0, min: 0, max: 0, sum: 0};
         if (diffFrom === null || diffFrom === undefined) {  // don't calculate differences.
             // create a summary list of the partials ordered by level
             for (var time in partials) {
@@ -531,7 +699,14 @@ dataProfile = function (plotParams, plotFunction) {
                     for (var level in partials[time][site]) {
                         if (partials[time][site][level] !== undefined && partials[time][site][level] !== null) {
                             if (levelSums[level] === undefined) {
-                                levelSums[level] = {sum:0,count:0,statistic:statistic,level:level,values:[],times:[]};
+                                levelSums[level] = {
+                                    sum: 0,
+                                    count: 0,
+                                    statistic: statistic,
+                                    level: level,
+                                    values: [],
+                                    times: []
+                                };
                             }
                             levelSums[level]['sum'] += partials[time][site][level];
                             levelSums[level]['count']++;
@@ -544,11 +719,15 @@ dataProfile = function (plotParams, plotFunction) {
             var d = [];
             var values = [];
             var levels = [];
-            for (var level in levelSums ) {
+            for (var level in levelSums) {
                 var value;
                 switch (statistic) {
                     case "bias":
+                        value = Number(levelSums[level].sum / levelSums[level].count);
+                        break;
                     case "mae":
+                        value = Number(levelSums[level].sum / levelSums[level].count);
+                        break;
                     case "mean":
                         // mean, bias and mae are the same, we divide sum by n
                         value = Number(levelSums[level].sum / levelSums[level].count);
@@ -567,52 +746,56 @@ dataProfile = function (plotParams, plotFunction) {
                 ymin = Number(ymin) < Number(level) ? Number(ymin) : Number(level);
                 ymax = Number(ymax) > Number(level) ? Number(ymax) : Number(level);
                 /*
-                DATASET ELEMENTS:
-                    series: [data,data,data ...... ]   each data is itself an array
-                data[0] - statValue (ploted against the x axis)
-                data[1] - level (plotted against the y axis)
-                data[2] - errorBar (stde_betsy * 1.96)
-                data[3] - level values  [v0,v1 ..., vn]
-                data[4] - level times   [t0,t1 ....,tn]
-                data[5] - level stats]
-                      like   {
-                             d_mean: errorResult.d_mean,
-                             sd: errorResult.sd,
-                             n_good: errorResult.n_good,
-                             lag1: errorResult.lag1,
-                             stde_betsy: errorResult.stde_betsy
-                             }
-                data[6] - tooltip
-                */
-                const errorResult = matsDataUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
-                const errorBar = errorResult.stde_betsy * 1.96;
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
-
+                 DATASET ELEMENTS:
+                 series: [data,data,data ...... ]   each data is itself an array
+                 data[0] - statValue (ploted against the x axis)
+                 data[1] - level (plotted against the y axis)
+                 data[2] - errorBar (stde_betsy * 1.96)
+                 data[3] - level values  [v0,v1 ..., vn]
+                 data[4] - level times   [t0,t1 ....,tn]
+                 data[5] - level stats]
+                 like   {
+                 d_mean: errorResult.d_mean,
+                 sd: errorResult.sd,
+                 n_good: errorResult.n_good,
+                 lag1: errorResult.lag1,
+                 stde_betsy: errorResult.stde_betsy
+                 }
+                 data[6] - tooltip
+                 */
+                const errorResult = matsWfipUtils.get_err(levelSums[level]['values'], levelSums[level]['times']);
+                // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+                const errorBar = errorResult.sd * 1.96;
+                // const rawStat = value;
+                // value = errorResult.d_mean;
                 var stats = {
+                    raw_stat: value,
                     d_mean: errorResult.d_mean,
                     sd: errorResult.sd,
                     n_good: errorResult.n_good,
                     lag1: errorResult.lag1,
-                    stde_betsy: errorResult.stde_betsy
+                    stde_betsy: errorResult.stde_betsy,
                 }
                 tooltip = label +
-                    "<br>" + level + "mb" +
-                    "<br> " + statistic + ":" + value.toPrecision(4) +
+                    "<br>" + level + "m" +
+                    "<br> " + statistic + ": " + value.toPrecision(4) +
                     "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                     "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
-                    "<br>  n: " + errorResult.n_good +
+                    "<br>  n: " + errorResult.n_good + //corrected +
                     "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                     "<br>  stde: " + errorResult.stde_betsy +
-                    "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4);
-                 if (matching) {
-                     d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
-                 } else {
+                    // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+                    "<br>  errorbars: " + Number(value - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.sd * 1.96)).toPrecision(4);
+                if (matching) {
+                    errorMax = errorMax > errorBar ? errorMax : errorBar;
+                    d.push([value, level, errorBar, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
+                } else {
                     // no error bars if unmatched
                     d.push([value, level, 0, levelSums[level]['values'], levelSums[level]['times'], stats, tooltip]);
                 }
             }
             // get the overall stats for the text output
-            var curveStats = matsDataUtils.get_err(values, levels);
+            curveStats = matsWfipUtils.get_err(values, levels);
             const minx = Math.min.apply(null, values);
             const maxx = Math.max.apply(null, values);
             curveStats.minx = minx;
@@ -622,22 +805,17 @@ dataProfile = function (plotParams, plotFunction) {
             // this is a difference curve
             // calculate the data based on matching or unmatched
             var diffResult;
-            if (matching) {
-                //console.log("curve: " + curveIndex + " getDataForProfileMatchingDiffCurve");
-                //diffResult = matsDataUtils.getDataForProfileMatchingDiffCurve({
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
-                    dataset: dataset,
-                    diffFrom: diffFrom
-                });
-            } else {
-                // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
-                //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
-                diffResult = matsDataUtils.getDataForProfileUnMatchedDiffCurve({
-                    dataset:dataset,
-                    diffFrom:diffFrom
-                });
-            }
+            // an unmatched difference curve. In this case we just difference the plot points, we don't calculate stats
+            //console.log ("curve: " + curveIndex + " getDataForProfileUnMatchedDiffCurve");
+            diffResult = matsWfipUtils.getDataForProfileUnMatchedDiffCurve({
+                dataset: dataset,
+                diffFrom: diffFrom
+            }, matching);
+
             d = diffResult.dataset;
+            var errorMaxDiff = diffResult.errorMax;
+            errorMax = errorMax > errorMaxDiff ? errorMax : errorMaxDiff;
+
             // recalculate the x min and max after difference
             for (var di = 0; di < d.length; di++) {
                 xmax = xmax > d[di][0] ? xmax : d[di][0];
@@ -654,18 +832,65 @@ dataProfile = function (plotParams, plotFunction) {
         curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
-        const cOptions = matsDataUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
+        const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
+        dataset[curveIndex]['stats'] = curveStats;
     }  // end for curves
 
-    const resultOptions = matsWfipUtils.generateProfilePlotOptions( dataset, curves, axisMap, errorMax );
+    dataset.push({
+        "yaxis": 1,
+        "label": "zero",
+        "color": "rgb(0,0,0)",
+        "annotation": "",
+        "data": [
+            [0, ymax, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"],
+            [0, ymin, 0, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "zero"]
+        ],
+        "points": {
+            "show": false,
+            "errorbars": "x",
+            "xerr": {
+                "show": false,
+                "asymmetric": false,
+                "upperCap": "squareCap",
+                "lowerCap": "squareCap",
+                "color": "rgb(0,0,255)",
+                "radius": 5
+            }
+        },
+        "lines": {
+            "show": true,
+            "fill": false
+        },
+        "stats": {
+            "d_mean": 0,
+            "stde_betsy": 0,
+            "sd": 0,
+            "n_good": 0,
+            "lag1": 0,
+            "min": ymin,
+            "max": ymax,
+            "sum": 0,
+            "minx": 0,
+            "maxx": 0
+        }
+    });
+
+    const resultOptions = matsWfipUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
+    var totalProcessingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+    }
     var result = {
         error: error,
         data: dataset,
         options: resultOptions,
         basis: {
             plotParams: plotParams,
-            queries: dataRequests
+            queries: dataRequests,
+            //qaCorrections: qaCorrections
         }
     };
     plotFunction(result);

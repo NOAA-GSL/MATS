@@ -1,4 +1,5 @@
 import { matsCollections } from 'meteor/randyp:mats-common';
+import { plotParamHandler } from 'meteor/randyp:mats-common';
 Template.plotParamGroup.helpers({
     PlotParams: function (num) {
             var params = matsCollections.PlotParams.find({displayGroup:num},{sort:["displayOrder", "asc"]}).fetch();
@@ -14,8 +15,7 @@ Template.plotParamGroup.helpers({
 
 Template.plotParamGroup.events({
     'click': function(event) {
-        //console.log('plotParamGroup click on ', event.currentTarget.id);
-        if (plotParamHandler) {
+        if (plotParamHandler !== undefined) {
             plotParamHandler (event);  // call app specific handler with event.
         }
     }

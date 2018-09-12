@@ -25,7 +25,8 @@ const getControlElementForParamName = function(paramName) {
 const getValueElementForParamName = function(paramName) {
     // scatter axis don't really exist in matsCollections.CurveParams but they are elements
     const pname = paramName.replace(/^.axis-/, '');
-    return document.getElementById(getValueIdForParamName(pname));
+    const val = getValueIdForParamName(pname);
+    return document.getElementById(val);
 };
 
 // get the current selected value in the document element that corresponds to the param name
@@ -375,16 +376,47 @@ const setAllParamsToDefault = function() {
     const nonDependents = matsCollections.CurveParams.find({"superiorNames" : { "$exists" : true }}).fetch();
     nonDependents.forEach(function(param) {
         setDefaultForParamName(param);
-        matsSelectUtils.refresh(null,param.name);
-        // remove from params list - actually rewrite params list NOT with this param
-        params = params.filter(function( obj ) {
-            return obj.name !== param.name;
-        });
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            matsSelectUtils.refresh(null, param.name);
+            // remove from params list - actually rewrite params list NOT with this param
+            params = params.filter(function (obj) {
+                return obj.name !== param.name;
+            });
+        }
     });
     // reset everything else
     params.forEach(function(param) {
-        setDefaultForParamName(param);
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            setDefaultForParamName(param);
+        }
     });
+    matsCollections.PlotParams.find({}).fetch().forEach(function(param){
+        if (param.type === matsTypes.InputTypes.dateRange) {
+            const dateInitStr = matsCollections.dateInitStr();
+            const dateInitStrParts = dateInitStr.split(' - ');
+            const startInit = dateInitStrParts[0];
+            const stopInit = dateInitStrParts[1];
+            const dstr = startInit + ' - ' + stopInit;
+            matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else {
+            setDefaultForParamName(param);
+        }
+    });
+
 };
 // is the input element displaying? used by curve_param_item_group
 const isInputElementVisible = function(paramName) {
@@ -424,6 +456,11 @@ const getOptionsForParam = function(paramName) {
     return param.options;
 };
 
+const getAppName = function() {
+    const app = matsCollections.appName.findOne({name:"appName"});
+    return app.app;
+};
+
 const getCurveItemValueForParamName = function(curveNumber, paramName) {
     //MODEL-curve-0-Item
 //    const id = paramName.toString().toUpperCase() + "-curve-" + curveNumber + "-Item"; // the id of the text span for a curveItem
@@ -434,6 +471,25 @@ const getCurveItemValueForParamName = function(curveNumber, paramName) {
     //     text = elem.text();
     // }
 };
+const visibilityControllerForParam = function(paramName) {
+    /*
+    Need to iterate all the params looking for one that has this paramName as a key in its
+    hideOtherFor map.
+    If it exists, that param is returned. Otherwise return undefined.
+     */
+    var params = matsCollections.CurveParams.find({}).fetch();
+    var found = undefined;
+    params.some(function(param){
+        if (param.hideOtherFor){
+            const pKeys = Object.keys(param.hideOtherFor);
+            if (pKeys.indexOf(paramName) !== -1) {
+                found = param;
+                return;
+            }
+        }
+    });
+    return found;
+}
 
 export default matsParamUtils = {
     getDisabledOptionsForParamName: getDisabledOptionsForParamName,
@@ -460,5 +516,7 @@ export default matsParamUtils = {
     setInputValueForParamAndtriggerChange:setInputValueForParamAndtriggerChange,
     getOptionsForParam:getOptionsForParam,
     getOptionsMapForParam:getOptionsMapForParam,
-    getCurveItemValueForParamName:getCurveItemValueForParamName
+    getCurveItemValueForParamName:getCurveItemValueForParamName,
+    visibilityControllerForParam:visibilityControllerForParam,
+    getAppName:getAppName
 };

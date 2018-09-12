@@ -14,7 +14,7 @@ const setAxisText = function(axis) {
 
 Template.scatter2d.helpers({
     modeText: function() {
-        return isEditing() ? "Editing the curve " + Session.get('editMode') : "Creating a new curve";
+        return isEditing() ? "Editing the curve " + Session.get('editMode') + " (" + Session.get('axis') + ")": "Creating a new curve";
     },
     creating: function() {
         if (isEditing()) {
@@ -280,3 +280,4 @@ Template.scatter2d.events({
         $("#helpModal").modal('show');
     }
 });
+

@@ -3,11 +3,19 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { fs } from 'fs';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
+import  { matsDataUtils }   from 'meteor/randyp:mats-common';
+import  { matsDataQueryUtils }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
+import {url} from 'url';
+import { Mongo } from 'meteor/mongo'
+
+
+// local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
+const metaDataTableUpdates = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     var publicDir = "/web/static/";
-    var graphDataDir = ".graphData/";
+    var graphDataDir = "graphData/";
     var publicGraphDir = publicDir + "/" + graphDataDir;
     var fs = require('fs');
     try {
@@ -19,10 +27,15 @@ const saveResultData = function(result){
         return "Error creating directory " + publicGraphDir + " <br>" + e;
     }
     var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
-    var tStamp = moment(new Date()).utc().format();
+    var tStamp = moment(new Date()).utc().format("YYYY-MM-DD_hh_mm_ss");
     var datFileName = user + "-" + tStamp +".json";
     var fName = publicGraphDir + datFileName;
-    var link = "file:///web/static/" + graphDataDir + datFileName;
+    var link;
+    if (process.env.NODE_ENV === "development") {
+        link = "file:///web/static/" + graphDataDir + datFileName;
+    } else {
+        link =  Meteor.absoluteUrl() + "/static/" + graphDataDir + datFileName;
+    }
     var files = fs.readdirSync(publicGraphDir);
     files.sort(function(a, b) {
         return fs.statSync(publicGraphDir + a).mtime.getTime() -
@@ -124,10 +137,19 @@ const readFunctionFile = new ValidatedMethod({
             fs.readFile(path, function (err, data) {
                 if (err) throw err;
                 fData = data.toString();
+                future["return"](fData);
             });
-            future.wait();
-            return fData;
+            return future.wait();
         }
+    }
+});
+
+const getPlotResult = new ValidatedMethod({
+    // UNFINISHED - placeholder for retrieving plotresult data for data lineage button without cramming it into the session
+    name:'matsMethods.getPlotResult',
+    validate:  new SimpleSchema({}).validator(),
+    run (){
+            return "";
     }
 });
 
@@ -283,10 +305,124 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
-const resetApp = function(params) {
-    const appName = params.appName;
-    const appVersion = params.appVersion;
-// if the metadata has changed ----
+const checkMetaDataRefresh = function() {
+    // This routine compares the current last modified time of the tables used for curveParameter metadata
+    // with the last update time to determine if an update is necessary. We really only do this for Curveparams
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
+    var refresh = false;
+    const tableUpdates = metaDataTableUpdates.find({}).fetch();
+     for (var tui = 0; tui < tableUpdates.length; tui++) {
+            var id = tableUpdates[tui]._id;
+            var poolName = tableUpdates[tui].pool;
+            var dbName = tableUpdates[tui].name;
+            var tableNames = tableUpdates[tui].tables;
+            var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
+            var updatedEpoch = Number.MAX_VALUE;
+            for (var ti = 0; ti < tableNames.length; ti++) {
+                var tName = tableNames[ti];
+                var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                    "    FROM   information_schema.tables" +
+                    "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
+                    "    AND TABLE_NAME = '" + tName + "'");
+                for (var i = 0; i < rows.length; i++) {
+                    try {
+                        updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                        break;
+                    } catch (e) {
+                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
+                    }
+                    if (updatedEpoch === Number.MAX_VALUE) {
+                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
+                    }
+                }
+                const lastRefreshedEpoch = moment(lastRefreshed).valueOf()/1000;
+                if (lastRefreshedEpoch < updatedEpoch) {
+                    refresh = true;
+                    break;
+                }
+            }
+            if (refresh === true) {
+                // refresh the app metadata
+                // app specific routines
+                const asrKeys = Object.keys(appSpecificResetRoutines);
+                for (var ai = 0; ai < asrKeys.length; ai++) {
+                    global.appSpecificResetRoutines[asrKeys[ai]]();
+                }
+                // remember that we updated ALL the metadata tables just now
+                metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: moment().format()}});
+            }
+        }
+        return true;
+};
+
+const resetApp = function(metaDataTableRecords) {
+    var deployment;
+    var deploymentText = Assets.getText('public/deployment/deployment.json');
+    if (deploymentText === undefined || deploymentText == null) {
+    }
+    deployment = JSON.parse(deploymentText);
+    const myUrlStr = Meteor.absoluteUrl();
+    var url = require('url');
+    var path = require('path');
+    //console.log("delimiter is "+path.sep);
+    var myUrl = url.parse(myUrlStr);
+    const hostName = myUrl.hostname.trim();
+    //console.log("url path is "+myUrl.pathname);
+    //console.log("PWD is "+process.env.PWD);
+    //console.log("CWD is "+process.cwd());
+    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
+    const urlPathParts = urlPath.split(path.sep);
+    //console.log("path parts are "+urlPathParts);
+    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length -6].trim() : urlPathParts[urlPathParts.length -1];
+    var developmentApp = {};
+    var app = {};
+    for (var ai = 0; ai < deployment.length; ai++) {
+        var dep = deployment[ai];
+        if (dep.deployment_environment == "development") {
+            developmentApp = dep.apps.filter(function(app){return app.app === appReference})[0];
+        }
+        if (dep.servers.indexOf(hostName) > -1) {
+            app = dep.apps.filter(function(app){ return app.app === appReference })[0];
+            break;
+        }
+    }
+    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
+        app = developmentApp;
+    }
+    const appVersion = app ? app.version : "unknown";
+    const appTitle = app ? app.title : "unknown";
+    const buildDate = app ? app.buildDate : "unknown";
+
+    // remember that we updated the metadata tables just now - create metaDataTableUpdates
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
+    // only create metadata tables if the resetApp was called with a real metaDataTables object
+    if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
+        var metaDataTables = metaDataTableRecords.getRecords();
+        for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
+            const metaDataRef =  metaDataTables[mdti];
+            metaDataRef.lastRefreshed = moment().format();
+            if (metaDataTableUpdates.find({name:metaDataRef.name}).count() == 0) {
+                metaDataTableUpdates.update({name:metaDataRef.name},metaDataRef, {upsert:true});
+            }
+        }
+    } else {
+        throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
+    }
+
     matsCollections.Roles.remove({});
     matsDataUtils.doRoles();
     matsCollections.Authorization.remove({});
@@ -297,7 +433,7 @@ const resetApp = function(params) {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appName, appVersion);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
@@ -308,16 +444,19 @@ const resetApp = function(params) {
     }
 };
 
-const reset = new ValidatedMethod({
-    name: 'matsMethods.reset',
-    validate: new SimpleSchema({
-        appName: {type: String},
-        appVersion: {type: String}
-    }).validator(),
-    run (params){
+const refreshMetaData = new ValidatedMethod({
+    name: 'matsMethods.refreshMetaData',
+    validate: new SimpleSchema({}).validator(),
+    run (){
         if (Meteor.isServer) {
-            resetApp(params);
+            try {
+                checkMetaDataRefresh();
+            } catch (e) {
+                console.log (e);
+                throw new Meteor.Error("Server error: ", e.message);
+            }
         }
+        return metaDataTableUpdates.find({}).fetch();
     }
 });
 
@@ -600,9 +739,7 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             try {
                 global[dataFunction](params.plotParams, function (results) {
-                    if (process.env.NODE_ENV === "development") {
                         results.basis['dataLink'] = saveResultData(results);
-                    }
                     future["return"](results);
                 });
             } catch(dataFunctionError) {
@@ -762,28 +899,95 @@ const testGetTables = new ValidatedMethod({
             password:{type: String},
             database:{type: String}
         }).validator(),
-    run (params){
-        var Future = require('fibers/future');
-        const queryWrap = Future.wrap(function(callback) {
-            const connection = mysql.createConnection({
-                host: params.host,
-                user: params.user,
-                password: params.password,
-                database: params.database
+    run (params) {
+        if (Meteor.isServer) {
+            var Future = require('fibers/future');
+            const queryWrap = Future.wrap(function (callback) {
+                const connection = mysql.createConnection({
+                    host: params.host,
+                    user: params.user,
+                    password: params.password,
+                    database: params.database
+                });
+                connection.query("show tables;", function (err, result) {
+                    const tables = result.map(function (a) {
+                        return a.Tables_in_ruc_ua_sums2;
+                    });
+                    return callback(err, tables);
+                });
+                connection.end(function (err) {
+                    if (err) {
+                        console.log("testGetTables cannot end connection");
+                    }
+                });
             });
-            connection.query("show tables;", function (err, result) {
-                const tables = result.map(function(a) {return a.Tables_in_ruc_ua_sums2;});
-                return callback(err, tables);
-            });
-            connection.end(function (err) {
-                if (err) {
-                    console.log("testGetTables cannot end connection");
-                }
-            });
-        });
-        return queryWrap().wait();
+            return queryWrap().wait();
+        }
     }
 });
+
+const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
+    name: 'matsMethods.testSetMetaDataTableUpdatesLastRefreshedBack',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+        var mtu = metaDataTableUpdates.find({}).fetch();
+        var id = mtu[0]._id;
+        metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: 0}});
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
+
+
+const testGetMetaDataTableUpdates = new ValidatedMethod({
+    name: 'matsMethods.testGetMetaDataTableUpdates',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
+
+const getReleaseNotes = new ValidatedMethod({
+    name: 'matsMethods.getReleaseNotes',
+    validate: new SimpleSchema({
+    }).validator(),
+    run (){
+    //     return Assets.getText('public/MATSReleaseNotes.html');
+    // }
+         if (Meteor.isServer) {
+            var future = require('fibers/future');
+            var fs = require('fs');
+            var dFuture = new future();
+            var fData;
+            console.log(process.env.PWD);
+            var file;
+            if (process.env.NODE_ENV === "development") {
+                file = process.env.PWD + "/../../meteor_packages/mats-common/public/MATSReleaseNotes.html";
+            } else {
+                file = process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html";
+            }
+            try {
+                fs.readFile(file, 'utf8', function (err, data) {
+                    if (err) {
+                        fData = err.message;
+                        dFuture["return"]();
+                    } else {
+                        fData = data;
+                        dFuture["return"]();
+                    }
+                });
+            } catch (e) {
+                fData = e.message;
+                dFuture["return"]();
+            }
+            dFuture.wait();
+            return fData;
+        }
+    }
+});
+
+
 
 export default matsMethods = {
     getDataFunctionFileList:getDataFunctionFileList,
@@ -793,7 +997,7 @@ export default matsMethods = {
     restoreFromFile:restoreFromFile,
     restoreFromParameterFile:restoreFromParameterFile,
     getUserAddress:getUserAddress,
-    reset:reset,
+    refreshMetaData:refreshMetaData,
     applyDatabaseSettings:applyDatabaseSettings,
     removeDatabase:removeDatabase,
     insertColor:insertColor,
@@ -809,5 +1013,9 @@ export default matsMethods = {
     addSentAddress:addSentAddress,
     emailImage:emailImage,
     resetApp:resetApp,
-    testGetTables:testGetTables
+    testGetTables:testGetTables,
+    getPlotResult:getPlotResult,
+    testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
+    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
+    getReleaseNotes:getReleaseNotes
 };

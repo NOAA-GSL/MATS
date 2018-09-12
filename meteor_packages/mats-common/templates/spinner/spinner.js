@@ -13,5 +13,6 @@ Template.spinner.helpers({
 Template.spinner.events({
     'click .cancel': function () {
         document.getElementById("spinner").style.display = "none";
+        matsPlotUtils.enableActionButtons();
     }
 });

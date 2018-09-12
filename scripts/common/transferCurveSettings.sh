@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Used to export CurveSettings from a remote mats server and import them into the local one
 # most commonly used to export the CurveSettings collection on mats.gsd.esrl.noaa.gov
@@ -11,10 +11,10 @@
 
 remoteServer=$1
 app=$2
-remotetmpfile=`ssh ${remoteServer} /bin/mktemp`
-localtmpfile=`/bin/mktemp`
-ssh ${remoteServer} /bin/mongoexport -d ${app} -c CurveSettings -o ${remotetmpfile}
-scp ${remoteServer}:{$remotetmpfile} ${localtmpfile}
-ssh ${remoteServer} /bin/rm ${remotetmpfile}
-/bin/mongoimport -d ${app} -c CurveSettings --file /tmp/CurveSettings.json --upsert
+remotetmpfile=`ssh ${remoteServer} /usr/bin/mktemp`
+localtmpfile=`/usr/bin/mktemp`
+ssh ${remoteServer} "/bin/mongoexport -d ${app} -c CurveSettings -o ${remotetmpfile}"
+scp ${remoteServer}:"${remotetmpfile}" "${localtmpfile}"
+ssh ${remoteServer} "/bin/rm ${remotetmpfile}"
+/bin/mongoimport -d ${app} -c CurveSettings --file ${localtmpfile} --upsert
 /bin/rm ${localtmpfile}

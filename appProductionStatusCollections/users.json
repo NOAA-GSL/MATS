@@ -1,0 +1,101 @@
+{
+  "_id": "ESRFZ7K5QSMRDLeus",
+  "createdAt": {
+    "$date": "2017-11-20T16:31:05.224+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2018-06-22T20:20:31.115+0000"
+          },
+          "hashedToken": "o3LUpXLSAvlwNQmfx4MkZNM8trNNkqctBG2XJ7Ss4PQ="
+        },
+        {
+          "when": {
+            "$date": "2018-06-22T20:20:38.207+0000"
+          },
+          "hashedToken": "P6ZhcokgZvUkIKezxsBl1WpzQ1g1CgPflW5VxxIdY3k="
+        },
+        {
+          "when": {
+            "$date": "2018-09-11T21:28:49.862+0000"
+          },
+          "hashedToken": "sgFtG2CwOvxH9Asv95BBcJt0KL17Ktg0/pDfrb2nTW4="
+        }
+      ]
+    }
+  },
+  "username": "randy.pierce@noaa.gov"
+}
+{
+  "_id": "GXf6nRFToiLsW5xNG",
+  "createdAt": {
+    "$date": "2017-11-13T22:53:16.114+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$MMIcStDMQ.a9ah3S9exage/5rbSXsXsHKXeSqk0jF4NNEB6Q5HCR."
+    },
+    "resume": {
+      "loginTokens": [
+        {
+          "when": {
+            "$date": "2018-07-27T23:00:14.104+0000"
+          },
+          "hashedToken": "+7GTtGo1yQqYvMBwe5RcefDyBeTtW2rByD6gryOElAY="
+        }
+      ]
+    }
+  },
+  "username": "molly.b.smith@noaa.gov"
+}
+{
+  "_id": "b3LPmRRWa3q44aL34",
+  "createdAt": {
+    "$date": "2017-11-28T21:15:19.298+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$YdohzKtFR0yz7GYPjgymuOhtd5pv9Xlq1SB78NovieFpK/u1YzgLm"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "Dave.turner@noaa.gov"
+}
+{
+  "_id": "nrqM8L4rKSom6yLqx",
+  "createdAt": {
+    "$date": "2017-11-28T21:09:34.508+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$t8s77nnSOXSfft./JZ9D3uAFLLIpOCktxhNit0HU1ntLp7hb4ovgO"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "bonny.strong@noaa.gov"
+}
+{
+  "_id": "zw5gFAgaj5LGgRkjt",
+  "createdAt": {
+    "$date": "2017-11-13T17:14:44.135+0000"
+  },
+  "services": {
+    "password": {
+      "bcrypt": "$2a$10$z3Tfd7LwbbOJ5C.gUcbWGuj7R.p4tYb/CpgNbh0wC5XhaYVOBbLhW"
+    },
+    "resume": {
+      "loginTokens": []
+    }
+  },
+  "username": "Jeffrey.A.Hamilton@noaa.gov"
+}

@@ -26,6 +26,7 @@ Template.select.onRendered( function () {
             // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
             return;
         }
+        elem.options = [];
         elem && elem.addEventListener('refresh', function (event) {
             matsSelectUtils.refresh(event,this.name);
         });
@@ -34,8 +35,7 @@ Template.select.onRendered( function () {
         setError(e);
     }
     try {
-        matsSelectUtils.checkDisableOther(this.data);
-        matsSelectUtils.checkHideOther(this.data);
+        matsSelectUtils.checkHideOther(this.data,true); // calls checkDisable
         matsSelectUtils.refresh(null,this.data.name);
     } catch (e) {
         e.message = "Error in select.js rendered function checking to hide or disable other elements: " + e.message;
@@ -49,8 +49,23 @@ Template.select.helpers({
         if (!this.options) {
             return 10;
         }
-        const longest = (this.options).reduce(function (a, b) { return a.length > b.length ? a : b; });
-        const ret = longest.length < 8 ? 8 : Math.round(longest.length * 0.6);
+        const longest = (this.options).reduce(function (a, b) {
+            if (a === null && b === null) {
+                return  null;
+            }
+            if (a === null) {
+                return b;
+            }
+            if (b === null) {
+                return a;
+            }
+            return a.length > b.length ? a : b;
+        });
+        if (!longest) {
+            return 10;
+        }
+        const ret = longest.length <= 10 ? 10 : Math.round(longest.length * 0.8);
+
         return ret;
     },
 
@@ -85,11 +100,7 @@ Template.select.helpers({
         return this.multiple === true;
     },
     selectionIsOptional: function () {
-        if (this.default === -1) {
-            return true;
-        } else {
-            return false;
-        }
+        return this.selectionOptional === true;
     }
 });
 
@@ -124,8 +135,7 @@ Template.select.events({
         }
         // These need to be done in the right order!
         // always check to see if an "other" needs to be hidden or disabled before refreshing
-        matsSelectUtils.checkHideOther(this);
-        matsSelectUtils.checkDisableOther(this);
+        matsSelectUtils.checkHideOther(this, false);
         matsSelectUtils.refreshPeer(event, this);
         document.getElementById("element-" + this.name).style.display = "none"; // be sure to hide the element div
         const curveItem = document.getElementById("curveItem-" + Session.get("editMode"));
@@ -135,6 +145,7 @@ Template.select.events({
             return true; // prevents the select 2 from closing on multiple selectors
         }
         $('#' + this.name + "-" + this.type).select2('close');
+        matsSelectUtils.refreshDependents(event, this);
         Session.set('lastUpdate', Date.now());
         return false;
     },

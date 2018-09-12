@@ -4,13 +4,8 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
-var modelOptionsMap = {};
-var myModels = [];
-var regionModelOptionsMap = {};
-var modelTableMap = {};
-var forecastLengthOptionsMap = {};
-var forecastLengthModels = [];
 const dateInitStr = matsCollections.dateInitStr();
 const dateInitStrParts = dateInitStr.split(' - ');
 const startInit = dateInitStrParts[0];
@@ -18,7 +13,7 @@ const stopInit = dateInitStrParts[1];
 const dstr = startInit + ' - ' + stopInit;
 
 const doPlotParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotParams.remove({});
     }
     if (matsCollections.PlotParams.find().count() == 0) {
@@ -29,6 +24,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -47,7 +43,7 @@ const doPlotParams = function () {
                 name: 'plotFormat',
                 type: matsTypes.InputTypes.radioGroup,
                 optionsMap: plotFormats,
-                options: [matsTypes.PlotFormats.matching,matsTypes.PlotFormats.pairwise,matsTypes.PlotFormats.none],
+                options: [matsTypes.PlotFormats.matching, matsTypes.PlotFormats.pairwise, matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
@@ -59,10 +55,91 @@ const doPlotParams = function () {
 };
 
 const doCurveParams = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
     }
-    if (matsCollections.CurveParams.find().count() == 0) {
+    var modelOptionsMap = {};
+    var modelDateRangeMap = {};
+    var myModels = [];
+    var regionModelOptionsMap = {};
+    var modelTableMap = {};
+    var forecastLengthOptionsMap = {};
+    var forecastLengthModels = [];
+    var thresholdsModelOptionsMap = {};
+    var masterRegionValuesMap = {};
+    var masterThresholdValuesMap = {};
+    var rows;
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
+        var masterRegDescription;
+        var masterShortName;
+        for (var j = 0; j < rows.length; j++) {
+            masterRegDescription = rows[j].description.trim();
+            masterShortName = rows[j].short_name.trim();
+            masterRegionValuesMap[masterShortName] = masterRegDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT trsh,description FROM threshold_descriptions;");
+        var masterDescription;
+        var masterTrsh;
+        for (var j = 0; j < rows.length; j++) {
+            masterDescription = rows[j].description.trim();
+            masterTrsh = rows[j].trsh.trim();
+            masterThresholdValuesMap[masterTrsh] = masterDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sumPool, "select model,regions,display_text,fcst_lens,trsh,mindate,maxdate from regions_per_model_mats_all_categories order by display_category, display_order;");
+        for (var i = 0; i < rows.length; i++) {
+
+            var model_value = rows[i].model.trim();
+            var model = rows[i].display_text.trim();
+            modelOptionsMap[model] = [model_value];
+
+            var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+
+            var forecastLengths = rows[i].fcst_lens;
+            var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < forecastLengthArr.length; j++) {
+                forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+            }
+            forecastLengthOptionsMap[model] = forecastLengthArr;
+
+            var thresholds = rows[i].trsh;
+            var thresholdsArrRaw = thresholds.split(',').map(Function.prototype.call, String.prototype.trim);
+            var thresholdsArr = [];
+            var dummyThresh;
+            for (var j = 0; j < thresholdsArrRaw.length; j++) {
+                dummyThresh = thresholdsArrRaw[j].replace(/'|\[|\]/g, "");
+                thresholdsArr.push(masterThresholdValuesMap[dummyThresh]);
+            }
+            thresholdsModelOptionsMap[model] = thresholdsArr;
+
+            var regions = rows[i].regions;
+            var regionsArrRaw = regions.split(',').map(Function.prototype.call, String.prototype.trim);
+            var regionsArr = [];
+            var dummyRegion;
+            for (var j = 0; j < regionsArrRaw.length; j++) {
+                dummyRegion = regionsArrRaw[j].replace(/'|\[|\]/g, "");
+                regionsArr.push(masterRegionValuesMap[dummyRegion]);
+            }
+            regionModelOptionsMap[model] = regionsArr;
+        }
+
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    if (matsCollections.CurveParams.find({name: 'label'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'label',
@@ -79,28 +156,48 @@ const doCurveParams = function () {
                 help: 'label.html'
             }
         );
+    }
+
+    if (matsCollections.CurveParams.find({name: 'data-source'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'model',
+                name: 'data-source',
                 type: matsTypes.InputTypes.select,
-                optionsMap:modelOptionsMap,
-                options:Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length"],
+                optionsMap: modelOptionsMap,
+                dates: modelDateRangeMap,
+                options: Object.keys(modelOptionsMap),   // convenience
+                dependentNames: ["region", "forecast-length", "threshold", "dates", "curve-dates"],
                 controlButtonCovered: true,
-                default: 'HRRR',
+                default: Object.keys(modelOptionsMap)[0],
                 unique: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 1
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, modelOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'data-source'}, {
+                $set: {
+                    optionsMap: modelOptionsMap,
+                    options: Object.keys(modelOptionsMap)
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'region'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'region',
                 type: matsTypes.InputTypes.select,
-                optionsMap:regionModelOptionsMap,
-                options:regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
-                superiorNames: ['model'],
+                optionsMap: regionModelOptionsMap,
+                options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]],   // convenience
+                valuesMap: masterRegionValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]][0],
@@ -109,41 +206,58 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 1
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'region'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, regionModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterRegionValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'region'}, {
+                $set: {
+                    optionsMap: regionModelOptionsMap,
+                    valuesMap: masterRegionValuesMap,
+                    options: regionModelOptionsMap[Object.keys(regionModelOptionsMap)[0]]
+                }
+            });
+        }
+    }
 
+    if (matsCollections.CurveParams.find({name: 'statistic'}).count() == 0) {
         var optionsMap = {
+            'TSS (True Skill Score)': ['((sum(m0.yy)*sum(m0.nn) - sum(m0.yn)*sum(m0.ny))/((sum(m0.yy)+sum(m0.ny))*(sum(m0.yn)+sum(m0.nn)))) * 100 as stat, group_concat(((m0.yy*m0.nn - m0.yn*m0.ny)/((m0.yy+m0.ny)*(m0.yn+m0.nn))) * 100 order by m0.time) as sub_values0, group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-            'TSS (True Skill Score)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) +(sum(m0.nn)+0.00)/sum(m0.nn+m0.yn) - 1. as stat,' +
-            'count(m0.nn)/1000 as N0, avg(m0.yy+m0.ny+0.000)/1000 as Nlow0, avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+            'PODy (POD of ceiling < threshold)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
+            'PODn (POD of ceiling > threshold)': ['((sum(m0.nn)+0.00)/sum(m0.nn+m0.yn)) * 100 as stat, group_concat(((m0.nn)/(m0.nn+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-            'Bias (Model - RAOB)': ['(sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny) as stat,'+'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+            'FAR (False Alarm Ratio)': ['((sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)) * 100 as stat, group_concat(((m0.yn)/(m0.yn+m0.yy)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 0],
 
-            'Nlow(metars<thresh,avg per hr)': ['avg(m0.yy+m0.ny+0.000)/1000 as stat,'+'count(m0.nn)/1000 as N0,avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as N_times'],
+            'Bias (forecast/actual)': ['((sum(m0.yy+m0.yn)+0.00)/sum(m0.yy+m0.ny)) as stat, group_concat(((m0.yy+m0.yn)/(m0.yy+m0.ny)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', 1],
 
-            'Ntot(total metars,avg per hr)': ['avg(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/1000 as stat,'+'count(m0.nn)/1000 as N0'],
+            'CSI (Critical Success Index)': ['((sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)) * 100 as stat, group_concat(((m0.yy)/(m0.yy+m0.ny+m0.yn)) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
-            'Ratio(Nlow/Ntot)': ['sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat,'+'count(m0.nn)/1000 as N0'],
-            'PODy (POD of ceil< thresh)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny) as stat,count(m0.nn)/1000 as N0'],
-            'PODn (POD of ceil< thresh)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.yn) as stat,count(m0.nn)/1000 as N0'],
-            'FAR(False Alarm Ratio)':['(sum(m0.yn)+0.00)/sum(m0.yn+m0.yy)  as stat,count(m0.nn)/1000 as N0'],
-            'N_in_avg(to nearest 100)':['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000)/100000  as stat,count(m0.nn)/1000 as N0'],
-            'ETS (Equitable Treat Score)':[' (sum(m0.yy)-(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))+0.00)/(sum(m0.yy+m0.ny+m0.yn) -(sum(m0.yy+m0.ny)*sum(m0.yy+m0.yn)/sum(m0.yy+m0.ny+m0.yn+m0.nn))) as stat,'+
-            'count(m0.nn)/1000 as N0'],
-            'CSI(Critical Success Index)':['(sum(m0.yy)+0.00)/sum(m0.yy+m0.ny+m0.yn)  as stat,count(m0.nn)/1000 as N0'],
-            'HSS(Heidke Skill Score)':['2*(sum(m0.nn+0.00)*sum(m0.yy) - sum(m0.yn)*sum(m0.ny)) /((sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)) +(sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))) as stat,'+
-            'count(m0.nn)/1000 as N0'],
+            'HSS (Heidke Skill Score)': ['(2*(sum(m0.nn+0.00)*sum(m0.yy)-sum(m0.ny)*sum(m0.yn))/((sum(m0.nn+0.00)+sum(m0.yn))*(sum(m0.yn)+sum(m0.yy))+(sum(m0.nn+0.00)+sum(m0.ny))*(sum(m0.ny)+sum(m0.yy)))) * 100 as  stat, group_concat((2*(m0.nn*m0.yy - m0.ny*m0.yn) / ((m0.nn+m0.yn)*(m0.yn+m0.yy) + (m0.nn+m0.ny)*(m0.ny+m0.yy))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
 
+            'ETS (Equitable Threat Score)': ['(sum(m0.yy)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn)))/(sum(m0.yy+m0.yn+m0.ny)-(sum(m0.yy+m0.yn)*sum(m0.yy+m0.ny)/sum(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 as stat, group_concat((m0.yy-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)))/((m0.yy+m0.yn+m0.ny)-((m0.yy+m0.yn)*(m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn))) * 100 order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'x100', 100],
+
+            'Nlow (obs < threshold, avg per hr)': ['avg(m0.yy+m0.ny+0.000) as stat, group_concat((m0.yy+m0.ny) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+
+            'Nhigh (obs > threshold, avg per hr)': ['avg(m0.nn+m0.yn+0.000) as stat, group_concat((m0.nn+m0.yn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Number', null],
+
+            'Ntot (total obs, avg per hr)': ['avg(m0.yy+m0.yn+m0.ny+m0.nn+0.000) as stat, group_concat((m0.yy+m0.yn+m0.ny+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null],
+
+            'Ratio (Nlow / Ntot)': ['(sum(m0.yy+m0.ny+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.yy+m0.ny)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Ratio', null],
+
+            'Ratio (Nhigh / Ntot)': ['(sum(m0.nn+m0.yn+0.000)/sum(m0.yy+m0.yn+m0.ny+m0.nn+0.000)) as stat, group_concat(((m0.nn+m0.yn)/(m0.yy+m0.yn+m0.ny+m0.nn)) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.nn) as N0', 'Ratio', null],
+
+            'N in average (to nearest 100)': ['sum(m0.yy+m0.ny+m0.yn+m0.nn+0.000) as stat, group_concat((m0.yy+m0.ny+m0.yn+m0.nn) order by m0.time) as sub_values0 ,group_concat(m0.time order by m0.time) as sub_secs0, count(m0.yy) as N0', 'Number', null]
         };
-
         matsCollections.CurveParams.insert(
-            {// bias and model average are a different formula for wind (element 0 differs from element 1)
-                // but stays the same (element 0 and element 1 are the same) otherwise.
-                // When plotting profiles we append element 2 to whichever element was chosen (for wind variable). For
-                // time series we never append element 2. Element 3 is used to give us error values for error bars.
+            {
                 name: 'statistic',
                 type: matsTypes.InputTypes.select,
-                optionsMap:optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 default: Object.keys(optionsMap)[0],
@@ -152,31 +266,45 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 2
             });
+    }
 
-
-
-        optionsMap = {
-            '60000 (any cloud)': ['6000'],
-            '500 (ceiling<500 feet)': ['50'],
-            '3000 (ceiling <3000 feet)': ['300'],
-            '1000 (ceiling <1000 feet)': ['100']
-        };
+    if (matsCollections.CurveParams.find({name: 'threshold'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
-                name: 'threshHold',
+                name: 'threshold',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                optionsMap: thresholdsModelOptionsMap,
+                options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],   // convenience
+                valuesMap: masterThresholdValuesMap,
+                superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: Object.keys(optionsMap)[0],
+                default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'threshold'});
+        if ((!matsDataUtils.areObjectsEqual(currentParam.optionsMap, thresholdsModelOptionsMap)) ||
+            (!matsDataUtils.areObjectsEqual(currentParam.valuesMap, masterThresholdValuesMap))) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'threshold'}, {
+                $set: {
+                    optionsMap: thresholdsModelOptionsMap,
+                    valuesMap: masterThresholdValuesMap,
+                    options: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]],
+                    default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0]
+                }
+            });
+        }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
-            'None': ['ceil(3600*floor(m0.time/3600))'],
+            'None': ['m0.time'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor(((m0.time))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(((m0.time))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
             '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(((m0.time))/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
@@ -185,12 +313,13 @@ const doCurveParams = function () {
             '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor(((m0.time))/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
             '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor(((m0.time))/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
         };
+
         matsCollections.CurveParams.insert(
             {
                 name: 'average',
                 type: matsTypes.InputTypes.select,
                 optionsMap: optionsMap,
-                options:Object.keys(optionsMap),   // convenience
+                options: Object.keys(optionsMap),   // convenience
                 controlButtonCovered: true,
                 unique: false,
                 selected: 'None',
@@ -200,39 +329,135 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 3
             });
+    }
 
+    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(dieoffOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: 'dieoff type',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap:forecastLengthOptionsMap,
-                options:forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
-                superiorNames: ['model'],
+                optionsMap: forecastLengthOptionsMap,
+                options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]],   // convenience
+                superiorNames: ['data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
+                controlButtonText: "forecast lead time",
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
             });
+    } else {
+        // it is defined but check for necessary update
+        var currentParam = matsCollections.CurveParams.findOne({name: 'forecast-length'});
+        if (!matsDataUtils.areObjectsEqual(currentParam.optionsMap, forecastLengthOptionsMap)) {
+            // have to reload model data
+            matsCollections.CurveParams.update({name: 'forecast-length'}, {
+                $set: {
+                    optionsMap: forecastLengthOptionsMap,
+                    options: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]]
+                }
+            });
+        }
+    }
 
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                options: ['All', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                selected: 'All',
+                options: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                selected: [],
                 controlButtonCovered: true,
                 unique: false,
-                //default: Object.keys(optionsMap)[0],
-                default: 'All',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
                 displayOrder: 8,
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'utc-cycle-start'}).count() == 0) {
+
+        const optionsArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'utc-cycle-start',
+                type: matsTypes.InputTypes.select,
+                options: optionsArr,
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: optionsArr[12],
+                controlButtonVisibility: 'block',
+                controlButtonText: "utc cycle start time",
+                displayOrder: 9,
+                displayPriority: 1,
+                displayGroup: 3,
+            });
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
+        optionsMap = {
+            '1 day': ['1 day'],
+            '3 days': ['3 days'],
+            '7 days': ['7 days'],
+            '31 days': ['31 days'],
+            '90 days': ['90 days'],
+            '180 days': ['180 days'],
+            '365 days': ['365 days']
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'curve-dates',
+                type: matsTypes.InputTypes.dateRange,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap).sort(),
+                startDate: startInit,
+                stopDate: stopInit,
+                superiorNames: ['data-source'],
+                controlButtonCovered: true,
+                unique: false,
+                default: dstr,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+                help: "dateHelp.html"
             });
     }
 };
@@ -246,7 +471,7 @@ const doCurveParams = function () {
  See curve_item.js and graph.js.
  */
 const doCurveTextPatterns = function () {
-    if (process.env.NODE_ENV === "development" ||matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveTextPatterns.remove({});
     }
     if (matsCollections.CurveTextPatterns.find().count() == 0) {
@@ -254,190 +479,222 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
-                ['', 'model', ':'],
-                ['', 'regionName', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ' '],
-                ['fcst_len:', 'forecast-length', 'h '],
-                [' valid-time:', 'valid-time', ' '],
-                ['avg:', 'average', ' ']
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label","model","region","statistic","threshHold","average","forecast-length","valid-time"
+                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['start utc: ', 'utc-cycle-start', ', ']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "curve-dates"
+            ],
+            groupSize: 6
         });
     }
 };
 
 const doSavedCurveParams = function () {
-    if (process.env.NODE_ENV === "development" ||matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.SavedCurveParams.remove({});
     }
     if (matsCollections.SavedCurveParams.find().count() == 0) {
-        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList:[]});
+        matsCollections.SavedCurveParams.insert({clName: 'changeList', changeList: []});
     }
 };
 
 const doPlotGraph = function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
+    if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.PlotGraphFunctions.remove({});
     }
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphSeries",
+            graphFunction: "graphXYLine",
             dataFunction: "dataSeries",
-            checked:true
+            checked: true
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dieoff,
+            graphFunction: "graphXYLine",
+            dataFunction: "dataDieOff",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.validtime,
+            graphFunction: "graphXYLine",
+            dataFunction: "dataValidTime",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.dailyModelCycle,
+            graphFunction: "graphXYLine",
+            dataFunction: "dataDailyModelCycle",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.histogram,
+            graphFunction: "graphHistogram",
+            dataFunction: "dataHistogram",
+            checked: false
         });
     }
 };
 
 
 Meteor.startup(function () {
-    if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
-        matsCollections.Databases.remove({});
-    }
+    matsCollections.Databases.remove({});
     if (matsCollections.Databases.find().count() == 0) {
         matsCollections.Databases.insert({
-            name:"sumSetting",
+            name: "sumSetting",
             role: "sum_data",
             status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            //user        : 'writer',
-            user        : 'readonly',
-            //password    : 'amt1234',
-            password    : 'ReadOnly@2016!',
-            database    : 'ceiling_sums',
-            connectionLimit : 10
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'ceiling_sums2',
+            connectionLimit: 10
         });
         matsCollections.Databases.insert({
-            name:"modelSetting",
+            name: "modelSetting",
             role: "model_data",
             status: "active",
-            host        : 'wolphin.fsl.noaa.gov',
-            user        : 'readonly',
-            password    : 'ReadOnly@2016!',
-            database    : 'ceiling',
-            connectionLimit : 10
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'ceiling2',
+            connectionLimit: 10
+        });
+        matsCollections.Databases.insert({
+            name: "metadata",
+            role: "metadata",
+            status: "active",
+            host: 'wolphin.fsl.noaa.gov',
+            user: 'readonly',
+            password: 'ReadOnly@2016!',
+            database: 'mats_common',
+            connectionLimit: 10
         });
     }
-    var modelSettings = matsCollections.Databases.findOne({role:"model_data",status:"active"},{host:1,user:1,password:1,database:1,connectionLimit:1});
+
+    const modelSettings = matsCollections.Databases.findOne({role: "model_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     // the pool is intended to be global
     modelPool = mysql.createPool(modelSettings);
-    modelPool.on('connection', function (connection) {
-        connection.query('set group_concat_max_len = 4294967295')
+
+    const metadataSettings = matsCollections.Databases.findOne({role: "metadata", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
     });
-    var sumSettings = matsCollections.Databases.findOne({role:"sum_data", status:"active"}, {host:1, user:1, password:1, database:1, connectionLimit:1});
+    // the pool is intended to be global
+    metadataPool = mysql.createPool(metadataSettings);
+
+    const sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
+        host: 1,
+        user: 1,
+        password: 1,
+        database: 1,
+        connectionLimit: 1
+    });
     // the pool is intended to be global
     sumPool = mysql.createPool(sumSettings);
     sumPool.on('connection', function (connection) {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    var rows;
-    try {
-        //var statement = "select table_name from information_schema.tables where table_schema='" + modelSettings.database + "'";
-        var statement = "select model,model_value,regions_name from regions_per_model";
-        // var qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         console.log('No data in database ' + modelSettings + "! query:" + statement);
-        //     } else {
-        //
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select model,model_value,regions_name from regions_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model.trim();
-            var regions_name = rows[i].regions_name;
-            var model_value = rows[i].model_value.trim();
-            var valueList = [];
-            valueList.push(model_value);
-            modelOptionsMap[model] = valueList;
-            var regionsArr = regions_name.split(',');
-            regionModelOptionsMap[model] = regionsArr;
-        }
-        //     }
-        //     qFuture['return']();
-        // }));
-        // qFuture.wait();
-    } catch (err) {
-        console.log(err.message);
-    }
+    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling2", ['threshold_descriptions']);
+    mdr.addRecord("sumPool", "ceiling_sums2", ['regions_per_model_mats_all_categories']);
+    mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
+    matsMethods.resetApp(mdr);
 
-    try {
-        // statement = "SELECT model, fcst_lens FROM fcst_lens_per_model;";
-        // qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         //console.log('No data in database ' + uamatsCollections.Settings.database + "! query:" + statement);
-        //         console.log('No data in database ' + modelSettings + "! query:" + statement);
-        //     } else {
-        //
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"SELECT model, fcst_lens FROM fcst_lens_per_model;");
-        for (var i = 0; i < rows.length; i++) {
-            var model = rows[i].model;
-            var forecastLengths = rows[i].fcst_lens;
-            var forecastLengthArr = forecastLengths.split(',');
-            forecastLengthOptionsMap[model] = forecastLengthArr;
-        }
-        //     }
-        //     qFuture['return']();
-        // }));
-        // qFuture.wait();
-    } catch (err) {
-        console.log(err.message);
-    }
+    matsCollections.appName.insert({name: "appName", app: "ceiling"});
 
-    try {
-        // statement = "select id,description,short_name from region_descriptions;";
-        // qFuture = new Future();
-        // modelPool.query(statement, Meteor.bindEnvironment(function (err, rows, fields) {
-        //     if (err != undefined) {
-        //         console.log(err.message);
-        //     }
-        //     if (rows === undefined || rows.length === 0) {
-        //         console.log('No data in database ' + modelSettings.database + "! query:" + statement);
-        //     } else {
-        matsCollections.RegionDescriptions.remove({});
-        rows = matsDataUtils.simplePoolQueryWrapSynchronous(modelPool,"select id,description,short_name from region_descriptions;");
-        for  (var i = 0; i < rows.length; i++) {
-            var regionNumber = rows[i].id;
-            var description = rows[i].description;
-            var shortName = rows[i].short_name;
-            var valueList = [];
-            valueList.push(shortName);
-            regionOptionsMap[description] = valueList;
-            matsCollections.RegionDescriptions.insert({ regionNumber: regionNumber,shortName: shortName, description: description});
-        }
-        //     }
-        //     qFuture['return']();
-        // }));
-        // qFuture.wait();
-    } catch (err) {
-        console.log(err.message);
-    }
-    // appVersion has to be done in the server context in the build context of a specific app. It is written by the build script
-    const appVersion = Assets.getText('version').trim();
-    matsMethods.resetApp({appName:'Ceiling', appVersion:appVersion});
-    console.log("Running in " + process.env.NODE_ENV + " mode... App version is " + matsCollections.Settings.findOne().version);
-    console.log("process.env", JSON.stringify(process.env, null, 2));
 });
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
 appSpecificResetRoutines = {
-    doPlotGraph:doPlotGraph,
-    doCurveParams:doCurveParams,
-    doSavedCurveParams:doSavedCurveParams,
-    doPlotParams:doPlotParams,
-    doCurveTextPatterns:doCurveTextPatterns
+    doPlotGraph: doPlotGraph,
+    doCurveParams: doCurveParams,
+    doSavedCurveParams: doSavedCurveParams,
+    doPlotParams: doPlotParams,
+    doCurveTextPatterns: doCurveTextPatterns
 };
 
 

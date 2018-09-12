@@ -12,6 +12,7 @@ Template.dateRange.onRendered(function () {
     // it seems that when the page is first rendered the checkbox might be yet defined (especially in safari).
     // in that event we test for undefined and block the curve-dates-item anyway
     if ((document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) ||
+        (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) ||
         (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d) == undefined || document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true)) {
         if (document.getElementById('curve-dates-item')) {
             document.getElementById('curve-dates-item').style.display = "none";
@@ -43,7 +44,7 @@ Template.dateRange.onRendered(function () {
             "parentEL": $('#' + idref),
             "timePicker": true,
             "timePicker24Hour": true,
-            "timePickerIncrement": 15,
+            "timePickerIncrement": 1,
             "startDate": startInit,
             "endDate": stopInit,
             "showDropdowns": true,
@@ -67,7 +68,11 @@ Template.dateRange.onRendered(function () {
 
     $('#' + idref).on('apply.daterangepicker', function (ev, picker) {
         if (picker.startDate.toString() == picker.endDate.toString()) {
-            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range!"));
+            setError(new Error("date_range error:  Your start and end dates coincide, you must select a range! This is " +
+                "because METARs and other obs can come in at slightly different times, so selecting only one time might " +
+                "leave you with very few (or no) valid obs. Instead, try using a small range. For example, if you're " +
+                "targeting the top-of-the-hour METARs at 2:00 am, set your time range from 1:45 am to 2:00 am, because " +
+                "METARs often come in early."));
             return false;
         }
         const valStr = picker.startDate.format('MM/DD/YYYY H:mm') + ' - ' + picker.endDate.format('MM/DD/YYYY H:mm');
@@ -86,8 +91,8 @@ Template.dateRange.onRendered(function () {
         try {
             // get the current values from the element and check for invalid
             const curVals = matsParamUtils.getValueForParamName(name).split(" - "); // it is a date object values are "someFromDate - someToDate"
-            var startDsr = moment(curVals[0], "MM-DD-YYYY HH:mm");
-            var endDsr = moment(curVals[1], "MM-DD-YYYY HH:mm");
+            var startDsr = moment(curVals[0], "MM/DD/YYYY HH:mm");
+            var endDsr = moment(curVals[1], "MM/DD/YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
                 setError ("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
@@ -119,7 +124,7 @@ Template.dateRange.onRendered(function () {
                     continue;
                 }
                 const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].minDate;
-                const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM-DD-YYYY HH:mm");
+                const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
                 if (superiorMinimumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].min = superiorMinimumMoment;
@@ -128,7 +133,7 @@ Template.dateRange.onRendered(function () {
                     return false;
                 }
                 const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
-                const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM-DD-YYYY HH:mm");
+                const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
                 if (superiorMaximumMoment.isValid()) {
                     superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
                     superiorVals[si].max = superiorMaximumMoment;
@@ -154,12 +159,12 @@ Template.dateRange.onRendered(function () {
                     const tStart = superiorVals[si].min;
                     const tEnd = superiorVals[si].max;
                     if (dataEnd.isBefore(tStart)) {
-                        // NCD
+                        // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return  false;
                     } else if (tEnd.isBefore(dataStart)) {
-                        // NCD
+                        // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
                         return false;
@@ -177,9 +182,15 @@ Template.dateRange.onRendered(function () {
             // now we have a normalized date range for the selected superiors.
             // evaluate DRS
             if ((dataEnd.isBefore(startDsr) || (dataStart.isAfter(endDsr)))) {
-                // the current user setting and the valid range do not overlap so just set the DSR to the valid range
-                startDsr = dataStart;
+                // the current user setting and the valid range do not overlap so just set the DSR to the most recent 30 days of the valid range
                 endDsr = dataEnd;
+                // set startDsr to the endDsr less 30 days or less the startDsr whichever is later
+                var endDsrLess30 = moment(endDsr).subtract(30, "days");
+                if (endDsrLess30.isAfter(dataStart)) {
+                    startDsr = endDsrLess30;
+                } else {
+                    startDsr = dataStart;
+                }
             } else {
                 // the current user setting and the valid range overlap
                 if (startDsr.isBefore(dataStart)) {
@@ -193,7 +204,7 @@ Template.dateRange.onRendered(function () {
             const jqIdRef = "#" + idref;
             $(jqIdRef).data('daterangepicker').setStartDate(startDsr);
             $(jqIdRef).data('daterangepicker').setStartDate(endDsr);
-            const newDateStr = startDsr.format('MM-DD-YYYY HH:mm') + ' - ' + endDsr.format('MM-DD-YYYY HH:mm');
+            const newDateStr = startDsr.format('MM/DD/YYYY HH:mm') + ' - ' + endDsr.format('MM/DD/YYYY HH:mm');
             matsParamUtils.setValueTextForParamName(name, newDateStr);
         } catch (error) {
             console.log("Error in date_range.js.refresh : " + error.message);
@@ -204,5 +215,5 @@ Template.dateRange.onRendered(function () {
     elem.addEventListener('refresh', function (e) {
         refresh();
     });
-
+    refresh();   // initial value based on what is in the superior
 });

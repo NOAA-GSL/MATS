@@ -1,0 +1,49 @@
+<template name="textHistogramOutput" xmlns="http://www.w3.org/1999/html">
+    <div id="textHistogramOutput" class="container">
+        <button id="text_export" type="button" class="export" style="display:none">Export</button>
+        <br/>
+        {{#each curves}}
+            <h5>{{curveText}}</h5>
+        {{/each}}
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>label</th>
+                <th>mean</th>
+                <th>standard deviation</th>
+                <th>n</th>
+                <th>minimum</th>
+                <th>maximum</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each curves}}
+                <tr>
+                    {{{stats this}}}
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{#each curves}}
+            <table class="table table-condensed table-bordered table-striped table-hover table-sm">
+                <thead class="thead-inverse">
+                <tr>
+                    <th>{{curveLabel this}} bin range</th>
+                    <th>n</th>
+                    <th>bin lower bound</th>
+                    <th>bin upper bound</th>
+                    <th>bin mean</th>
+                    <th>bin std dev</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#each bins this}}
+                    <tr>
+                        {{{points this}}}
+                    </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        {{/each}}
+    </div>
+</template>

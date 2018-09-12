@@ -52,7 +52,7 @@ Template.curveList.helpers({
     },
     averagesdisabled: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "";
         }
         var average = curves[0].average;
@@ -64,7 +64,7 @@ Template.curveList.helpers({
     },
     disabledPlotsHidden: function () {
         var curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "none";
         }
         var average = curves[0].average;
@@ -118,6 +118,7 @@ Template.curveList.events({
     },
     'click .plot-curves-unmatched': function (event) {
         document.getElementById("spinner").style.display = "block";
+        matsPlotUtils.disableActionButtons();
         event.preventDefault();
         // trigger the submit on the plot_list plot_list.js - click .submit-params
         Session.set('plotParameter', matsTypes.PlotActions.unmatched);
@@ -126,6 +127,7 @@ Template.curveList.events({
     },
     'click .plot-curves-matched': function (event) {
         document.getElementById("spinner").style.display = "block";
+        matsPlotUtils.disableActionButtons();
         event.preventDefault();
         // trigger the submit on the plot_list plot_list.js - click .submit-params
         Session.set('plotParameter', matsTypes.PlotActions.matched);

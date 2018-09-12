@@ -2,26 +2,38 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/apps/aircraft/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/anomalycor/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/ceiling/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/ceiling15/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/compositeReflectivity/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/dashboard/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/echotop/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/landuse/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/metproto/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitation/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitation24hr/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitationSub24hr/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/radarReflectivity/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/surfrad/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/test/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/upperair/.meteor/platforms" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/vil/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/visibility/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/visibility/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/plugman/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/visibility/.meteor/dev_bundle/lib/node_modules/cordova-lib/templates/platforms" />
@@ -34,6 +46,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/wfip2_dev/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/test/.meteor/local" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -51,6 +51,14 @@ Template.plotList.helpers({
     },
     isOwner: function() {
         return  this.owner === Meteor.userId();
+    },
+    yAxes: function() {
+        const yAxisNumber = Session.get("yAxisNumber");
+        var yAxes = [];
+        for (var yidx = 0; yidx < yAxisNumber; yidx++){
+            yAxes.push(yidx);
+        }
+        return yAxes;
     }
 });
 
@@ -141,6 +149,8 @@ Template.plotList.events({
                 p[name] = document.getElementById(name + '-' + type).value;
             }
         });
+        p['completeness'] = document.getElementById("completeness").value;
+        p['outliers'] = document.getElementById("outliers").value;
         Session.set("PlotParams", p);
 
         switch (action) {
@@ -214,11 +224,29 @@ Template.plotList.events({
                         // We have to set up the display without using click events because that would cause
                         // the restored curves to be removed
                         switch (ptElem.value) {
+                            case matsTypes.PlotTypes.timeSeries:
+                                matsCurveUtils.showTimeseriesFace();
+                                break;
                             case matsTypes.PlotTypes.profile:
                                 matsCurveUtils.showProfileFace();
                                 break;
-                            case matsTypes.PlotTypes.timeSeries:
-                                matsCurveUtils.showTimeseriesFace();
+                            case matsTypes.PlotTypes.dieoff:
+                                matsCurveUtils.showDieOffFace();
+                                break;
+                            case matsTypes.PlotTypes.threshold:
+                                matsCurveUtils.showThresholdFace();
+                                break;
+                            case matsTypes.PlotTypes.validtime:
+                                matsCurveUtils.showValidTimeFace();
+                                break;
+                            case matsTypes.PlotTypes.dailyModelCycle:
+                                matsCurveUtils.showDailyModelCycleFace();
+                                break;
+                            case matsTypes.PlotTypes.map:
+                                matsCurveUtils.showMapFace();
+                                break;
+                            case matsTypes.PlotTypes.histogram:
+                                matsCurveUtils.showHistogramFace();
                                 break;
                             case matsTypes.PlotTypes.scatter2d:
                                 matsCurveUtils.showScatterFace();
@@ -317,6 +345,7 @@ Template.plotList.events({
                 break;
             case "plot":
             default:
+                matsCurveUtils.resizeGraph(matsPlotUtils.getPlotType());
                 var pt = matsPlotUtils.getPlotType();
                 var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
                 if (pgf === undefined) {
@@ -354,6 +383,7 @@ Template.plotList.events({
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(result, Session.get('Curves'));
+
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";
                     }
@@ -370,9 +400,73 @@ Template.plotList.events({
                     document.getElementById("graphView").style.display = "block";
                     document.getElementById("textSeriesView").style.display = "none";
                     document.getElementById("textProfileView").style.display = "none";
+                    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
+                        document.getElementById('graph-touch-controls').style.display = "none";
+                    }
+
+                    var plotType = matsPlotUtils.getPlotType();
+                    var isMatched = Session.get('plotParameter') === "matched";
+
+                    // makes sure that the appropriate show/hide buttons are displayed for each plot type
+                    var curveHideElems = $('*[id$="-curve-show-hide"]');
+                    var pointHideElems = $('*[id$="-curve-show-hide-points"]');
+                    var errorHideElems = $('*[id$="-curve-errorbars"]');
+                    var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
+                    var annotateHideElems = $('*[id$="-curve-show-hide-annotate"]');
+                    if (plotType === matsTypes.PlotTypes.map) {
+                        for (var i=0; i < curveHideElems.length; i++){
+                            curveHideElems[i].style.display = 'none';
+                            pointHideElems[i].style.display = 'none';
+                            errorHideElems[i].style.display = 'none';
+                            barChHideElems[i].style.display = 'none';
+                            annotateHideElems[i].style.display = 'none';
+                        }
+                    } else if (plotType === matsTypes.PlotTypes.histogram) {
+                        for (var i=0; i < curveHideElems.length; i++){
+                            curveHideElems[i].style.display = 'none';
+                            pointHideElems[i].style.display = 'none';
+                            errorHideElems[i].style.display = 'none';
+                            barChHideElems[i].style.display = 'block';
+                            annotateHideElems[i].style.display = 'none';
+                        }
+                    } else {
+                        for (var i=0; i < curveHideElems.length; i++){
+                            curveHideElems[i].style.display = 'block';
+                            pointHideElems[i].style.display = 'block';
+                            if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
+                                errorHideElems[i].style.display = 'block';
+                            } else {
+                                errorHideElems[i].style.display = 'none';
+                            }
+                            barChHideElems[i].style.display = 'none';
+                            if (plotType !== matsTypes.PlotTypes.profile) {
+                                annotateHideElems[i].style.display = 'block';
+                            } else {
+                                annotateHideElems[i].style.display = 'none';
+                            }
+                        }
+                    }
+
+                    // makes sure that the appropriate axis customization fields are displayed for each plot type
+                    if (plotType === matsTypes.PlotTypes.map) {
+                        document.getElementById('axisLimitButton').style.display = "none";
+                    } else if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle){
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        document.getElementById('xAxisControlsNumber').style.display = "none";
+                        document.getElementById('xAxisControlsText').style.display = "block";
+                    } else {
+                        document.getElementById('axisLimitButton').style.display = "block";
+                        document.getElementById('xAxisControlsNumber').style.display = "block";
+                        document.getElementById('xAxisControlsText').style.display = "none";
+                    }
                 });
+
                 break;
         }
         return false;
     }
+});
+Template.plotList.onRendered( function() {
+    //console.log('doing client matsParamUtils.setAllParamsToDefault ');
+    matsParamUtils.setAllParamsToDefault();
 });

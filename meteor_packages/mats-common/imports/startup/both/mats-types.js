@@ -23,7 +23,18 @@ var  PlotTypes = {
     timeSeries : "TimeSeries",
     profile : "Profile",
     scatter2d : "Scatter2d",
-    dieoff : "dieOff"
+    dieoff : "DieOff",
+    threshold : "Threshold",
+    validtime : "ValidTime",
+    dailyModelCycle : "DailyModelCycle",
+    map : "Map",
+    histogram : "Histogram"
+};
+
+var ForecastTypes = {
+    dieoff: "dieoff",
+    utcCycle: "utc cycle",
+    singleCycle: "single cycle"
 };
 
 var  PlotFormats = {
@@ -64,12 +75,59 @@ var PlotView = {
     graph: "graph",
     textSeries: "textSeries",
     textProfile: "textProfile",
-    textScatter: "textScatter"
+    textScatter: "textScatter",
+    textDieoff: "textDieoff",
+    textThreshold: "textThreshold",
+    textValidTime: "textValidTime",
+    textDailyModelCycle : "textDailyModelCycle",
+    textMap: "textMap",
+    textHistogram: "textHistogram"
 };
 
 var Messages = {
     NO_DATA_FOUND: "INFO:0 data records found"
 };
+
+/*
+Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.
+These pools are global (although for future reference the access might be from this collection.). They are refenced in this script via the pool name.
+This class enforces the types of the poolName (in case someone accidentally tries to store the whole pool object), and the database name and a list
+of table names. The internal list can be appended. The getRecords returns the internal list.
+ */
+class MetaDataDBRecord {
+    constructor(poolName, dbName, tables) {
+        if (!typeof poolName === "string") {
+            throw new Error ("MetaDataDBRecord.constructor : poolName is not a string");
+        }
+        if (!typeof dbName === "string") {
+            throw new Error ("MetaDataDBRecord.constructor : dbName is not a string");
+        }
+        if (! tables instanceof Array) {
+            throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
+        }
+        this._records = [];
+        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        this._records.push(record);
+    }
+
+    addRecord(poolName, dbName, tables) {
+        if (!typeof poolName === "string") {
+            throw new Error ("MetaDataDBRecord.constructor : poolName is not a string");
+        }
+        if (!typeof dbName === "string") {
+            throw new Error ("MetaDataDBRecord.constructor : dbName is not a string");
+        }
+        if (! tables instanceof Array) {
+            throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
+        }
+        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        this._records.push(record);
+    }
+
+    getRecords() {
+        return this._records;
+    }
+}
 
 export default matsTypes = {
     InputTypes:InputTypes,
@@ -80,5 +138,8 @@ export default matsTypes = {
     MatchFormats:MatchFormats,
     PlotAxisFilters:PlotAxisFilters,
     PlotView:PlotView,
-    Messages:Messages
+    Messages:Messages,
+    ForecastTypes:ForecastTypes,
+    MetaDataDBRecord:MetaDataDBRecord
 }
+

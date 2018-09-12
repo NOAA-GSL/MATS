@@ -1,0 +1,22 @@
+<div id="matshelp">
+    <h2>Best Fit curves</h2>
+    <h3>Best Fit curves are derived by regression.js algorithms. Regression is a javascript library courtesy of Tom Alexander <a href="https://github.com/Tom-Alexander/regression-js" target="_blank">Regression JS</a></h3>
+    <p>regression.js is a javascript library containing a collection of least squares fitting methods for finding a trend in a set of data. It currently contains methods for linear, exponential, logarithmic, power and polynomial trends.(Polynomial currently excluded)</p>
+    <h1 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Usage</strong></h1>
+    <p>Most regressions require only two parameters - the regression method (linear, exponential, logarithmic, power or polynomial) and a data source. A third parameter can be used to define the degree of a polynomial when a polynomial regression is required.</p>
+    <p>regression.js will return an object containing an equation array and a points array.</p>
+    <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Linear regression</strong></h2>
+    <p>equation: [gradient, y-intercept] in the form y = mx + c</p>
+    <p class="p4">var data = [[0,1],[32, 67] .... [12, 79]];</p>
+    <p class="p4">var result = regression('linear', data);</p>
+    <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Linear regression through the origin</strong></h2>
+    <p>equation: [gradient] in the form y = mx</p>
+    <p class="p4">var data = [[0,1],[32, 67] .... [12, 79]];</p>
+    <p class="p4">var result = regression('linearThroughOrigin', data);</p>
+    <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Exponential regression</strong></h2>
+    <p>equation: [a, b] in the form y = ae^bx</p>
+    <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Logarithmic regression</strong></h2>
+    <p>equation: [a, b] in the form y = a + b ln x</p>
+    <h2 style="margin: 0.0px 0.0px 14.9px 0.0px; line-height: 22.0px; font: 18.0px Times; color: #000000; -webkit-text-stroke-color: #000000;"><strong>Power law regression</strong></h2>
+    <p>equation: [a, b] in the form y = ax^b</p>
+<</div>

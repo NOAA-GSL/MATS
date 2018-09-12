@@ -1,87 +1,33 @@
 <template name="graph">
-    <div id="graph-container" class="container" style="display:none;">
+    <div id="graph-container" class="container pull-left" style="padding-left: 5%; display:none;">
         <div id="header" class="row container">
             <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
         </div>
         <div id="graph-control" class="row container-fluid">
             <div id="plot-buttons-grp" class="btn-group btn-group-sm">
                 <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
-                <button type="button" class="btn spacebutton" id="spacer"></button>
+                <button type="button" class="btn spacebutton" id="gc-spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
-                <button type="button" class="print btn btn-primary fa fa-print">&nbsp;Printview</button>
-                <button type="button" class="btn spacebutton" id="spacer"></button>
-                <button id = "textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style= "display:block;">&nbsp;Text</button>
-                <button id = "plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style= "display:none;">&nbsp;Plot</button>
+                <button type="button" class="preview btn btn-primary fa fa-eye">&nbsp;Preview</button>
+                <button type="button" class="publish btn btn-primary fa fa-print">&nbsp;Publish</button>
+                <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="display:block;">&nbsp;Text</button>
+                <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
-                <button type="button" class="btn spacebutton" id="spacer"></button>
-                <button type="button" class="axis-adjust btn btn-default fa fa fa-arrows" id="axis-adjust"></button>
-                <button type="button" class="btn spacebutton" id="spacer"></button>
+                <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;">&nbsp;Axes</button>
+                <button type="button" class="btn spacebutton" id="gc1-spacer"></button>
                 <span id="graph-touch-controls">
-                    <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down"></button>
-                    <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right"></button>
-                    <button type="button" class="btn btn-success fa fa-compress" id="zoom-in"></button>
-                    <button type="button" class="btn btn-success fa fa-expand" id="zoom-out"></button>
-                    <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-left fa-lg" id="pan-left" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-up fa-lg" id="pan-up" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-down fa-lg" id="pan-down" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-right fa-lg" id="pan-right" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm fa fa-refresh fa-lg" id="refresh-plot" style="background-color: #00badb;"></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
+                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
                 </span>
-            </div>
-            <div class="modal modal-dialog fade" id="modal-axis-adjust" tabindex="-1" role="dialog" aria-labelledby="adjustAxis" aria-hidden="true" style="background-color: cornflowerblue">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <h2 class="modal-title" style="text-align: center; color: red;">Adjust Axis</h2>
-                        <div class="modal-body">
-                            <div>
-                                <label for="xaxis-min">xaxis minimum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn xaxis-min-dwn">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-min-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center xaxis-min" value="{{xaxismin}}">
-                                    <span class="input-group-btn xaxis-min-up">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-min-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                                <label for="xaxis-max">xaxis maximum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn xaxis-max-dwn">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-max-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center xaxis-max" value="{{xaxismax}}">
-                                    <span class="input-group-btn xaxis-max-up">
-                                <button class="btn btn-default btn-info" data-dir="xaxis-max-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="yaxis-min">yaxis minimum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn yaxis-min-dwn">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-min-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center yaxis-min" value="{{yaxismin}}">
-                                    <span class="input-group-btn yaxis-min-up">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-min-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                                <label for="yaxis-max">yaxis maximum</label>
-                                <div class="input-group number-spinner">
-                            <span class="input-group-btn yaxis-max-dwn">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-max-dwn"><span class="glyphicon glyphicon-minus"></span></button>
-                            </span>
-                                    <input type="text" class="form-control text-center yaxis-max" value="{{yaxismax}}">
-                                    <span class="input-group-btn yaxis-max-up">
-                                <button class="btn btn-default btn-info" data-dir="yaxis-max-up"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button id="close-axis-adjust" class="close-axis-adjust btn btn-info" data-dismiss="modal">Close</button>
-                            <button id="apply-axis-adjust" class="btn btn-success apply-axis-adjust">Apply</button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div id="sendModal" class="modal" role="dialog">
                 <div class="modal-dialog">
@@ -112,14 +58,25 @@
         </div>
         <div id="curves" class="row container-fluid">
             {{#each curves}}
-                <span style="color:{{color}};">--- </span><span style="font-size:large;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp" class="btn-group btn-xs">
-                    <input type="button" class="curveVisibility btn btn-primary btn-xs"  value="{{hideButtonText}}"  id="{{this.label}}-curve-show-hide" style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="points btn btn-primary btn-xs"  value="{{pointsButtonText}}"  id="{{this.label}}-curve-show-hide-points"  style= "display:block;background-color: {{this.color}}">
-                    {{#if errorBarsAllowed}}
-                        <input type="button" class="errorBars btn btn-primary btn-xs"  value="{{errorBarButtonText}}"  id="{{this.label}}-curve-errorbars"  style= "display:block;display:{{displayErrorBarButton}};background-color: {{this.color}}">
-                    {{/if}}
-                </div><br>
+                <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
+                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
+                    <input type="button" class="curveVisibility btn btn-primary btn-xs"
+                           value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="points btn btn-primary btn-xs" value="{{pointsButtonText}}"
+                           id="{{this.label}}-curve-show-hide-points"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="errorBars btn btn-primary btn-xs"
+                           value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="barVisibility btn btn-primary btn-xs"
+                           value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
+                           style="display:block;background-color: {{this.color}}">
+                    <input type="button" class="annotateVisibility btn btn-primary btn-xs"
+                           value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
+                           style="display:block;background-color: {{this.color}}">
+                </div>
+                <br>
             {{/each}}
             <hr/>
         </div>
@@ -129,16 +86,44 @@
         <div id="textProfileView" style="display:none;">
             {{>textProfileOutput}}
         </div>
+        <div id="textDieOffView" style="display:none;">
+            {{>textDieOffOutput}}
+        </div>
+        <div id="textThresholdView" style="display:none;">
+            {{>textThresholdOutput}}
+        </div>
+        <div id="textValidTimeView" style="display:none;">
+            {{>textValidTimeOutput}}
+        </div>
+        <div id="textDailyModelCycleView" style="display:none;">
+            {{>textDailyModelCycleOutput}}
+        </div>
+        <div id="textMapView" style="display:none;">
+            {{>textMapOutput}}
+        </div>
+        <div id="textHistogramView" style="display:none;">
+            {{>textHistogramOutput}}
+        </div>
         <div id="textScatter2dView" style="display:none;">
             {{>textScatter2dOutput}}
         </div>
-
-        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-            <div id="legendContainer" name="legendContainer"></div>
-            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};"></div>
-        </div>
+        {{#if isMap}}
+            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
+                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
+                </div>
+            </div>
+        {{else}}
+            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+                <div id="legendContainer" name="legendContainer"></div>
+                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
+                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
+                </div>
+            </div>
+        {{/if}}
         {{#if isProfile}}
-            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error Bars show 95% confindence</h5>
+            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error
+                Bars show 95% confidence</h5>
         {{/if}}
     </div>
 </template>

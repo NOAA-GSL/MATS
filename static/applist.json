@@ -1,14 +1,42 @@
 [
 	{
-		"app":"upperair",
-		"displayName":"Upper Air"
+		"app":"wfip2",
+		"displayName":"Wfip2"
 	},
 	{
-		"app":"surface",
-		"displayName":"Surface"
+		"app":"visibility",
+		"displayName":"Visibility"
+	},
+	{
+		"app":"wfip2-previous",
+		"displayName":"Wfip2-previous"
+	},
+	{
+		"app":"ceiling-previous",
+		"displayName":"Ceiling-previous"
 	},
 	{
 		"app":"surface-previous",
 		"displayName":"Surface-previous"
+	},
+	{
+		"app":"metproto-previous",
+		"displayName":"Test MET UA-TS-previous"
+	},
+	{
+		"app":"radarReflectivity-previous",
+		"displayName":"Radar Reflectivity-previous"
+	},
+	{
+		"app":"anomalycor",
+		"displayName":"Anomaly Correlation"
+	},
+	{
+		"app":"radarReflectivity",
+		"displayName":"Radar Reflectivity"
+	},
+	{
+		"app":"metproto",
+		"displayName":"Test MET UA-TS"
 	}
 ]

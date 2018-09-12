@@ -1,0 +1,27 @@
+<template name="textMapOutput" xmlns="http://www.w3.org/1999/html">
+    <div id="textMapOutput" class="container">
+        <button id="text_export" type="button" class="export" style="display:none">Export</button>
+        <br/>
+            {{#each curves}}
+                <h5>{{curveText}}</h5>
+            {{/each}}
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>Site Name</th>
+                <th>Number of Times</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Average Difference</th>
+            </tr>
+            </thead>
+            <tbody>
+                {{#each dataRows}}
+                    <tr>
+                        {{{points this}}}
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</template>

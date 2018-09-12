@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# source the build environment and mongo utilities
+. /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
+setBuildConfigVarsForIntegrationServer
 #
-# Used to copy existing Apps and part of .meteor to the production server
-#logDir="/builds/buildArea/logs"
+# Used to copy all the existing meteor apps and part of .meteor to a production server
 
 # This script should be modified in the following way...
 # There should be a previous location on the target.
@@ -23,41 +25,86 @@ logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
 touch $logname
 #exec > >(tee -i $logname)
 #exec 2>&1
-echo "$0 ----------- started"
+echo -e "${GRN}$0 ----------- started${NC}"
 date
 
-usage="$0 [server || help]"
-
+usage="$0 [server [app] || help]"
+if [ $# -lt 1 ]; then
+    echo -e "${RED}$0 - wrong number of params - usage: $usage${NC}"
+    exit 1
+fi
 server=$1
+requestedApp=""
+if [ $# -eq 2 ]; then
+    requestedApp=$2
+fi
 
 if [ "$1" == "help" ]; then
-        cat <<xxxxxENDxxxx
+    cat <<xxxxxENDxxxx
 This program will rsync the current /web directory to the production server named in the first parameter. It copies a selected list of apps that are found in
-MATS_for_EMB/scripts/common/project_includes, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
+the appProductionStatus database and are returned by getPublishableApps, and then a slected subset of the /web/.meteor directory. This meteor stuff is neccessary for
 the node part of phusion passenger.
 xxxxxENDxxxx
-exit 0
+    exit 0
 fi
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/meteor_includes /web/.meteor  ${server}:/web
-rsync -ralW --rsh=ssh --delete  --include-from=/builds/buildArea/MATS_for_EMB/scripts/common/project_includes /web/*  ${server}:/web
-nodepath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/node
-npmpath=`dirname "$(readlink -e ~www-data/.meteor/meteor)"`/dev_bundle/bin/npm
-servernodepath=`ssh ${server} readlink -e /usr/local/bin/node`
-servernpmpath=`ssh ${server} readlink -e /usr/local/bin/npm`
+# get the publication app list
+publishApps=($(getPublishableApps))
+if [ "X${publishApps}" == "X" ]; then
+	echo -e "${RED}nothing is currently publishable, check the appProductionStatus.buildConfiguration database - exiting${NC}"
+	exit 1
+fi
+# rsync the meteor stuff
+echo -e "${GRN}rsyncing meteor${NC}"
+/usr/bin/rsync -ralW -P --no-motd --rsh=ssh --delete  --include '.meteor/packages/meteor-tool/***' --exclude '.meteor/packages/*'  /web/.meteor  ${server}:/web 2>&1 | grep -v "^\*.*\*$"
 
-echo "do not forget to restart nginx on ${server}."
-if [ "$servernodepath" != "$servernodepath"  ];
-then
-    echo "Check the link for node that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
-    echo "server node path is : $servernodepath"
-    echo " should be : $nodepath"
-    echo "ln -sf ${nodepath} /usr/local/bin/node"
+# make a tempory export place
+tmpDeploymentDir="/tmp/deployment"
+/usr/bin/mkdir -p ${tmpDeploymentDir}
+if [ "X" == "X${requestedApp}" ]; then
+    # publish them all
+    for pa in "${publishApps[@]}"; do
+	    cv=$(date +%Y.%m.%d)
+        echo -e "${GRN}setting pub date to $cv for /web/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html${NC}"
+	    /usr/bin/sed -i -e "s/\(<x-cr>\).*\(<\/x-cr>\)/$cv/g" /web/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html
+        echo -e "${GRN}rsyncing ${pa}${NC}"
+        /usr/bin/rsync -ralW -P --rsh=ssh --delete  --include "+ ${pa}/***" --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+        # promote the app (make versions and dates match integration)
+        deploymentFile="/web/gsd/mats/${pa}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+        promoteApp ${pa}
+        # export, make valid json,  and scp the new deployment.json to the production server
+        exportCollections ${tmpDeploymentDir}
+        /usr/bin/ssh -q ${server} "/usr/bin/chmod +w ${deploymentFile}"
+        cat "${tmpDeploymentDir}/deployment.json" | "${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl" > "${tmpDeploymentDir}/deployment.json.tmp"
+        /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
+        /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
+        /usr/bin/rm -rf "${tmpDeploymentDir}/*"
+        # reset deploymentStatus to disabled for production for this app
+        disablePublicationStatusForApp ${pa}
+    done
+else
+    # publish just the requested one
+    echo -e "${GRN}rsyncing ${requestedApp}${NC}"
+    /usr/bin/rsync -ralW -P --rsh=ssh --delete  --include "+ ${requestedApp}/***"  --exclude='*' /web/*  ${server}:/web/gsd/mats 2>&1 | grep -v "^\*.*\*$"
+    # promote the app (make versions and dates match integration)
+    deploymentFile="/web/gsd/mats/${requestedApp}/bundle/programs/server/assets/packages/randyp_mats-common/public/deployment/deployment.json"
+    promoteApp ${requestedApp}
+    # export, make valid json,  and scp the new deployment.json to the production server
+    exportCollections ${tmpDeploymentDir}
+    /usr/bin/ssh -q ${server} "/usr/bin/chmod +w ${deploymentFile}"
+    cat "${tmpDeploymentDir}/deployment.json" | "${DEPLOYMENT_DIRECTORY}/scripts/common/makeCollectionExportValid.pl" > "${tmpDeploymentDir}/deployment.json.tmp"
+    /usr/bin/scp -q "${tmpDeploymentDir}/deployment.json.tmp" "${server}:${deploymentFile}"
+    /usr/bin/ssh -q ${server} "/usr/bin/chmod -w ${deploymentFile}"
+    /usr/bin/rm -rf "${tmpDeploymentDir}/*"
+    # reset deploymentStatus to disabled for production for this app
+    disablePublicationStatusForApp ${requestedApp}
 fi
-if [ "$npmpath" != "$servernpmpath"  ];
-then
-    echo "Check the link for npm that is in /usr/local/bin on ${server} to see if it is correct. If the meteor install has changed (due to meteor upgrade), fix this link"
-    echo "server node path is : $servernpmpath"
-    echo " should be : $npmpath"
-    echo "ln -sf ${npmpath} /usr/local/bin/npm"
-fi
+
+# fix up some links for the public service endpoint
+echo -e "${GRN}linking /gsd/mats${NC}"
+/usr/bin/ssh -q ${server} "cd /web; ln -sf gsd/mats/* ."
+
+echo -e "${RED}triggering restart nginx on ${server}.${NC}"
+/usr/bin/ssh -q ${server} "/bin/touch /builds/restart_nginx"
 exit 0
+
+

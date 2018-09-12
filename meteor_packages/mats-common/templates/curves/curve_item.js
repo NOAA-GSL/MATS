@@ -187,7 +187,7 @@ Template.curveItem.events({
         var removeCurve = Session.get("confirmRemoveCurve");
         if (removeCurve && removeCurve.confirm) {
             var label = removeCurve.label;
-            var color = this.color;
+            var color = removeCurve.color;
             var Curves = _.reject(Session.get('Curves'), function (item) {
                 return item.label === label
             });
@@ -202,13 +202,13 @@ Template.curveItem.events({
             }
             return false;
         } else{
-            Session.set("confirmRemoveCurve",{label:this.label});
+            Session.set("confirmRemoveCurve",{label:this.label,color:this.color});
             $("#modal-confirm-remove-curve").modal();
         }
     },
     'click .confirm-remove-curve': function () {
         var confirmCurve = Session.get("confirmRemoveCurve");
-        Session.set("confirmRemoveCurve", {label:confirmCurve.label,confirm:true});
+        Session.set("confirmRemoveCurve", {label:confirmCurve.label,color:confirmCurve.color,confirm:true});
         $("#curve-list-remove").trigger('click');
     },
     'click .edit-curve-xaxis': function(event) {
@@ -260,13 +260,15 @@ Template.curveItem.events({
                 $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
-                const val =  currentParams[plotParam.name] === null ||
+                var val =  currentParams[plotParam.name] === null ||
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
+                // refresh its dependents
+                matsSelectUtils.refreshDependents(null,plotParam);
             }
         }
-        // now reset the form parameters for the dependents
-        params = matsCollections.CurveParams.find({"dependentNames" : { "$exists" : false }}).fetch();
+        // now reset the form parameters for anything with hide/disable controls
+        params = matsCollections.CurveParams.find({"$and" : [{ "dependentNames" : { "$exists" : false }}, {"$or" : [{ "hideOtherFor" : { "$exists" : true }}, { "disableOtherFor" : { "$exists" : true }}]}]}).fetch();
         for (var p  = 0; p < params.length; p++) {
             var plotParam = params[p];
             // do any plot date parameters
@@ -282,7 +284,29 @@ Template.curveItem.events({
                 $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
                 matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
             } else {
-                const val =  currentParams[plotParam.name] === null ||
+                var val =  currentParams[plotParam.name] === null ||
+                currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
+                matsParamUtils.setInputForParamName(plotParam.name, val);
+            }
+        }
+        // now reset the form parameters for everything else
+        params = matsCollections.CurveParams.find({"$and" : [{ "dependentNames" : { "$exists" : false }}, {"$and" : [{ "hideOtherFor" : { "$exists" : false }}, { "disableOtherFor" : { "$exists" : false }}]}]}).fetch();
+        for (var p  = 0; p < params.length; p++) {
+            var plotParam = params[p];
+            // do any plot date parameters
+            if (plotParam.type === matsTypes.InputTypes.dateRange) {
+                if (currentParams[plotParam.name] === undefined) {
+                    continue;   // just like continue
+                }
+                const dateArr = currentParams[plotParam.name].split(' - ');
+                const from = dateArr[0];
+                const to = dateArr[1];
+                const idref = "#" + plotParam.name + "-item";
+                $(idref).data('daterangepicker').setStartDate(moment (from, 'MM-DD-YYYY HH:mm'));
+                $(idref).data('daterangepicker').setEndDate(moment (to, 'MM-DD-YYYY HH:mm'));
+                matsParamUtils.setValueTextForParamName(plotParam.name,currentParams[plotParam.name]);
+            } else {
+                var val =  currentParams[plotParam.name] === null ||
                 currentParams[plotParam.name] === undefined ? matsTypes.InputTypes.unused : currentParams[plotParam.name];
                 matsParamUtils.setInputForParamName(plotParam.name, val);
             }
@@ -315,7 +339,18 @@ Template.curveItem.events({
         const inputElem = matsParamUtils.getInputElementForParamName(name);
         const controlElem = matsParamUtils.getControlElementForParamName(name);
         const editingCurve = Session.get('editMode');
-        curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+        if (name.startsWith('xaxis')) {
+            curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-xaxis");
+        } else if (name.startsWith('yaxis')) {
+            curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-yaxis");
+        } else {
+            if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d) {
+                // for a scatter param that is not axis specific we still have to choos an axis - just choose x
+                curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit-xaxis");
+            } else {
+                curveListEditNode = $(event.currentTarget.parentNode.parentNode.parentNode.parentNode).find("#curve-list-edit");
+            }
+        }
         const eventTargetCurve = $(event.currentTarget.parentNode.parentNode.parentNode).find(".displayItemLabelSpan").text().trim();
         Session.set("eventTargetCurve",eventTargetCurve);
         Session.set("intendedActiveDisplayButton",name);

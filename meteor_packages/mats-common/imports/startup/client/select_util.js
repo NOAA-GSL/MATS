@@ -47,13 +47,7 @@ const refreshDependents = function (event, param) {
                     selectAllbool = document.getElementById('selectAll').checked;
                 }
                 try {
-                    if (targetParam.type === matsTypes.InputTypes.dateRange) {
-                        // dispatch the refresh event
-                        targetElem.dispatchEvent(new CustomEvent("refresh"))
-                    } else {
-                        // refresh explicitly instead of with event
-                        matsSelectUtils.refresh(null, targetParam.name);
-                    }
+                    targetElem.dispatchEvent(new CustomEvent("refresh"))
                 } catch(re) {
                     re.message = "INFO: refreshDependents of: " + param.name + " dependent: " + targetParam.name + " - error: " + re.message;
                     setInfo(re.message);
@@ -84,7 +78,7 @@ const refreshDependents = function (event, param) {
     }
 };
 
-const checkDisableOther = function (param) {
+const checkDisableOther = function (param, firstRender) {
 // check for enable controlled - This select might have control of another selector
     try {
         if (param.disableOtherFor !== undefined) {
@@ -98,7 +92,8 @@ const checkDisableOther = function (param) {
                 }
                 const selectedOptions = elem.selectedOptions;
                 const selectedText = selectedOptions && selectedOptions.length > 0 ? selectedOptions[0].text : "";
-                if ((param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
+                if ((firstRender == true && param.default == param.hideOtherFor[controlledSelectors[i]]) ||
+                    (param.disableOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.disableOtherFor[controlledSelectors[i]]) !== -1) {
                     matsParamUtils.getInputElementForParamName(controlledSelectors[i]).disabled = true;
                     matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
@@ -113,7 +108,7 @@ const checkDisableOther = function (param) {
     }
 };
 
-const checkHideOther = function (param) {
+const checkHideOther = function (param, firstRender) {
 // check for hide controlled - This select might have control of another selectors visibility
     try {
         if (param.hideOtherFor !== undefined) {
@@ -127,34 +122,27 @@ const checkHideOther = function (param) {
                 const selectedOptions = elem.selectedOptions;
                 const selectedText = selectedOptions && selectedOptions.length > 0 ? selectedOptions[0].text : "";
 
-                var otherControlElem = matsParamUtils.getControlElementForParamName(controlledSelectors[i]);
-                var otherControlElemParent = otherControlElem.parentNode;
                 var otherInputElement = matsParamUtils.getInputElementForParamName(controlledSelectors[i]);
-                var otherValueElement = matsParamUtils.getValueElementForParamName(controlledSelectors[i]);
 
-                if ((param.hideOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
+                var selectorControlElem;
+                if ((firstRender == true && param.default == param.hideOtherFor[controlledSelectors[i]]) ||
+                    (param.hideOtherFor[controlledSelectors[i]] === matsTypes.InputTypes.unused && selectedText === "") ||
                     $.inArray(selectedText, param.hideOtherFor[controlledSelectors[i]]) !== -1) {
-                    otherControlElem.style.display = 'none';
-                    otherInputElement.style.display = 'none';
-                    otherValueElement.style.display = 'none';
-                    if (otherControlElemParent)
-                    {
-                        otherControlElemParent.style.display = "none;";
+                    selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
+                    if (selectorControlElem && selectorControlElem.style) {
+                        selectorControlElem.style.display = "none";
                     }
                     matsParamUtils.setValueTextForParamName(controlledSelectors[i], matsTypes.InputTypes.unused);
                 } else {
-                    otherControlElem.style.display = 'block';
-                    otherInputElement.style.display = 'block';
-                    otherValueElement.style.display = 'block';
-                    if (otherControlElemParent)
-                    {
-                        otherControlElemParent.style.display = "block";
+                    selectorControlElem = document.getElementById(controlledSelectors[i] + '-item');
+                    if (selectorControlElem && selectorControlElem.style) {
+                        selectorControlElem.style.display = "block";
                     }
                     otherInputElement && otherInputElement.options && otherInputElement.selectedIndex >= 0 &&
                     otherInputElement.options[otherInputElement.selectedIndex].scrollIntoView();
                 }
             }
-            matsSelectUtils.checkDisableOther(param);
+            matsSelectUtils.checkDisableOther(param), firstRender;
         }
     } catch (e) {
         e.message = "INFO: Error in select.js checkHideOther: " + e.message;
@@ -208,9 +196,11 @@ const refresh = function (event, paramName) {
 
     if (elem && elem.options) {
         if (elem.selectedIndex === undefined || elem.selectedIndex === -1) {
-            elem.selectedIndex = 0;
+            if (param.default !== matsTypes.InputTypes.unused) {
+                elem.selectedIndex = 0;
+            }
         }
-        const selectedText = elem.selectedIndex >= 0 ? elem.options[elem.selectedIndex].text : "";
+        const selectedText = elem.selectedIndex >= 0 ? elem.options[elem.selectedIndex].text : matsTypes.InputTypes.unused;
         var brothers = [];
         for (var i = 0; i < elems.length; i++) {
             if (elems[i].id.indexOf(name) >= 0 && elems[i].id !== elem.id)
@@ -235,9 +225,9 @@ const refresh = function (event, paramName) {
                  matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null
                  ....
                  it has been hidden
-                 because it has a visibility dependency on another param i.e. truth-data-source
-                 is dependent upon statistic such that if the statistic is "mean" the truth-data-source
-                 is hidden. See the wfip2 main.js statistic param as an example....
+                 because it has a visibility dependency on another param i.e. truth-data-source and truth-variable
+                 are dependent upon statistic such that if the statistic is "mean" the truth-data-source and truth-variable
+                 are hidden. See the wfip2 main.js statistic param as an example....
                  "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
                  and
                  "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
@@ -333,7 +323,12 @@ const refresh = function (event, paramName) {
             }
             $('select[name="' + name + '"]').empty().append(optionsAsString);
             //reset the selected index if it had been set prior (the list may have changed so the index may have changed)
-            var selectedOptionIndex = options.indexOf(selectedText);
+            var selectedOptionIndex;
+            if (selectedText === 'initial') {
+                selectedOptionIndex = options.indexOf(param.default);
+            } else {
+                selectedOptionIndex = options.indexOf(selectedText);
+            }
             var sviText = "";
             if (selectedOptionIndex == -1 && elem.selectedIndex >= 0) {
                 for (var svi = 0; svi < selectedSuperiorValues.length; svi++) {
@@ -347,10 +342,22 @@ const refresh = function (event, paramName) {
                 }
                 setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
-            // just choose the 0th element in the element options.
-            elem.selectedIndex = 0;
-            elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
-            elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
+            // if the selectedText existed in the new options list then the selectedOptionIndex won't be -1 and we have to choose the default option
+            if (selectedOptionIndex === -1) {
+                // if the param default is unused set it to unused
+                // else just choose the 0th element in the element options. default?
+                if (param.default === matsTypes.InputTypes.unused) {
+                    matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
+                } else {
+                    elem.selectedIndex = 0;
+                    elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
+                    elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
+                }
+            } else {
+                elem.selectedIndex = selectedOptionIndex;
+                elem && elem.options && elem.selectedIndex >= 0 && elem.options[elem.selectedIndex].scrollIntoView();
+                elem && elem.options && elem.selectedIndex >= 0 && matsParamUtils.setValueTextForParamName(name, elem.options[elem.selectedIndex].text);
+            }
             for (var i = 0; i < brothers.length; i++) {
                 const belem = brothers[i];
                 const belemSelectedOptions = $(belem.selectedOptions).map(function () {

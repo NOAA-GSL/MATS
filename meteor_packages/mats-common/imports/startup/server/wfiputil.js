@@ -1,9 +1,27 @@
 import {matsCollections} from 'meteor/randyp:mats-common';
-const Future = require('fibers/future');
+
+const getPlotParamsFromStack = function() {
+    var params = {};
+    const err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    const stack = err.stack;
+    const stackElems = stack.split("\n")
+    for (si = 0; si < stackElems.length; si++) {
+        const sElem = stackElems[si].trim();
+        if (sElem.indexOf('dataFunctions') !== -1 && sElem.startsWith("at data")) {
+            const dataFunctionName = sElem.split('at ')[1];
+            try {
+                params = global[sElem.split('at ')[1].split(' ')[0]].arguments[0]
+            } catch (noJoy){}
+            break;
+        }
+    }
+    return params;
+};
 
 var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelCompletenessY, siteCompletenessX, siteCompletenessY,
                          levelBasisX, levelBasisY, siteBasisX, siteBasisY, xStatistic, yStatistic) {
-    // sum and average all of the means for all of the sites
+    // sum and average all of the means for all of the siteshalfCycleBeforeAvtime is
     var datum = {};
     var commonSitesBasisLengthX = siteBasisX.length;
     var commonSitesBasisLengthY = siteBasisY.length;
@@ -179,283 +197,453 @@ var getDatum = function (rawAxisData, axisTime, levelCompletenessX, levelComplet
     return datum;
 };
 
-var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper) {
-    var dFuture = new Future();
-    var error = "";
-    var resultData = {};
-    var minInterval = Number.MAX_VALUE;
-    var sitesBasis = [];
-    var levelsBasis = [];
-    var allTimes = [];
-    var cumulativeMovingAverage = 0;
-    var timeCount = 0;
-    var cumulativeMovingMeanForTime = 0;
-    var siteCount = 0;
-    var timeSites = [];
-    const variableInfoMap = matsCollections.CurveParams.findOne({ name: 'variable' });
-    const variableIsDiscriminator = variableInfoMap.infoMap[ myVariable ].type == 2;
-    wfip2Pool.query(statement, function (err, rows) {
-        // every row is a time and a site with a level array and a values array
-        // the time and site combination form a unique pair but there
-        // can certainly be multiple times that are the same
-        // or multiple sites that are the same.
-        // query callback - build the curve data from the results - or set an error
-        // Levels are rounded to the nearest integer and bin'd.
-        // Missing levels are added and corresponding missing values are set to null.
-        // values are set to precision(4).
-        //console.log('statement: ' + statement );
+var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJSON, myDiscriminator, disc_lower, disc_upper, isInstrument, verificationRunInterval, siteIds, instrumentId, previousCycleAveraging, dataSourcePreviousCycleRass) {
+    // verificationRunInterval is only required for instruments.
+    // Its purpose is to enable choosing instrument readings that are within +- 1/2 of the instrument cycle time from the cycle time.
+    // This is necessary because instrument times are not precise like model times. We want the closest one to the exact cycle time.
+    // If we happen to get more than one reading within +/- 1/2 of the cyle time from the exact cycle time we average the readings.
+    // VerificationRunInterval is in milliseconds and what we actually use is the halfInterval.
+    // For a single site or for a group of sites that have the same sampleInterval one query statement suffices, but for
+    // a group of sites that have different sampleIntervals the statements must be broken up according to sdampleIntervals.
 
-        if (err != undefined) {
-            error = err.message;
-            dFuture['return']();
-        } else if (rows === undefined || rows.length === 0) {
-            error = 'rows undefined error';
-            if (rows.length === 0) {
-                error = 'INFO:0 data records found';
-            }
-            // done waiting - error condition
-            dFuture['return']();
-        } else {
-            /*
-             We must map the query row result to a data structure like this...
-             var resultData = {
-                 time0: {
-                     sites{
-                         site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
-                             levels: [],
-                             values: [],
-                             sum: 0;
-                             mean: 0;
-                             numLevels: numLevels;
-                             max: max;
-                             min: min
+
+    /*
+        The profilers need to be handled specially.
+        a2e profilers time stamp the start of a 50 minute cycle of wind readings - the fifty minutes of wind readings
+        are averaged for the time stamp. This results in an hourly cycle time that is for the future 50 minutes of readings from the time stamp.
+        To get an approximate correct data point for comparison to a model (which is timestamped at the nearest time) we
+        retrieve the past hourly reading and the current hourly reading and average the two. THe cycle time is an hour starting
+        one hour past and the half interval is really a full interval.
+     */
+    if (Meteor.isServer) {
+        const Future = require('fibers/future');
+        var verificationHalfRunInterval = verificationRunInterval / 2;
+        var dFuture = new Future();
+        var error = "";
+        var resultData = {};
+        var minInterval = Number.MAX_VALUE;
+        var sitesBasis = [];
+        var levelsBasis = [];
+        var allTimes = [];
+        var cumulativeMovingAverage = 0;
+        var timeCount = 0;
+        var cumulativeMovingMeanForTime = 0;
+        var siteCount = 0;
+        var timeSites = [];
+        const variableInfoMap = matsCollections.CurveParams.findOne({name: 'variable'});
+        const variableIsDiscriminator = variableInfoMap.infoMap[myVariable].type == 2;
+        wfip2Pool.query(statement, function (err, rows) {
+            // every row is a time and a site with a level array and a values array
+            // the time and site combination form a unique pair but there
+            // can certainly be multiple times that are the same
+            // or multiple sites that are the same.
+            // query callback - build the curve data from the results - or set an error
+            // Levels are rounded to the nearest integer and bin'd.
+            // Missing levels are added and corresponding missing values are set to null.
+            // values are set to precision(4).
+            //console.log('statement: ' + statement );
+
+            if (err != undefined) {
+                error = err.message;
+                dFuture['return']();
+            } else if (rows === undefined || rows.length === 0) {
+                error = 'rows undefined error';
+                if (rows.length === 0) {
+                    error = matsTypes.Messages.NO_DATA_FOUND;
+                }
+                // done waiting - error condition
+                dFuture['return']();
+            } else {
+                /*
+                 We must map the query row result to a data structure like this...
+                 var resultData = {
+                     time0: {
+                         sites{
+                             site0: {  // times are in seconds and are unique - they are huge though so we use a map, instead of an array
+                                 levels: [],
+                                 values: [],
+                                 sum: 0;
+                                 mean: 0;
+                                 numLevels: numLevels;
+                                 max: max;
+                                 min: min
+                             },
+                             site1: {..},
+                             .
+                             .
+                             site2: {...},
+                             .
+                             .
+                             siten: {...}
+                         }
+                         timeMean: Number,   // cumulativeMovingMean for this time
+                         timeLevels: [],
+                         timeSites:[]
                          },
-                         site1: {..},
+                    time1:{ .... },
                          .
                          .
-                         site2: {...},
-                         .
-                         .
-                         siten: {...}
-                     }
-                     timeMean: Number,   // cumulativeMovingMean for this time
-                     timeLevels: [],
-                     timeSites:[]
-                     },
-                time1:{ .... },
-                     .
-                     .
-                timen:{ ... },
-             };
-             */
-            var utctime = 0;
-            var time = 0;
-            var lastavTime = 0;
-            var prevdiff = Number.MAX_VALUE;
+                    timen:{ ... },
+                 };
+                 */
+                var utctime = 0;
+                var time = 0;
+                var lastavTime = 0;
+                var lastSiteid = Number.MIN_VALUE;
+                var siteid = Number.MIN_VALUE;
+                var prevdiff = Number.MAX_VALUE;
 
-            var rowIndex;
-            var allSitesSet = new Set();
-            var allLevelsSet = new Set();
+                var rowIndex;
+                var allSitesSet = new Set();
+                var allLevelsSet = new Set();
 
-            for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
-                time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
+                /*
+                    If the source is an instrument there may be a number of times that are the same. These times have been interpolated
+                    to one half the runinterval before the interpolated time to one half the run interval after the interpolated time.
+                    All of the readings for a given interpolated time have to be averaged (sumed and divided by count)
+                 */
+                var interpolationCount = 1;
+                var previousTime = Number.MIN_VALUE;
+                var previousSiteId = Number.MIN_VALUE;
 
-                // keep track of the minimum interval for the data set
-                // it is necessary later when we fill in missing times
-                var avinterval = Math.abs(time - lastavTime);
-                if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
-                    minInterval = avinterval;
-                }
-                lastavTime = time;
-                var siteid = rows[rowIndex].sites_siteid;
-                allSitesSet.add(siteid);
-                if (timeSites.indexOf(siteid) === -1) {
-                    timeSites.push(siteid);
-                }
-                var values = [];
-                var levels = [];
-                var windSpeeds = []; // used for ws quality control toss wd when ws < 3ms
-                if (isJSON) {
-                    // JSON variable -- stored as JSON structure 'data' in the DB
-                    if (myDiscriminator !== matsTypes.InputTypes.unused) {
-                        var discriminator = Number(JSON.parse(rows[rowIndex].data)[myDiscriminator]);
-                        if (discriminator < disc_lower || discriminator > disc_upper) {
-                            continue;
-                        }
+                var valueSums = {};
+                var interpolatedValues = {};
+                var savedValues = {};
+                for (rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    // avtime is adjusted valid time
+                    utctime = Number(rows[rowIndex].valid_utc) * 1000;  // convert milli to second
+                    time = Number(rows[rowIndex].avtime) * 1000;  // convert milli to second
+                    // keep track of the minimum interval for the data set
+                    // it is necessary later when we fill in missing times
+                    var avinterval = Math.abs(time - lastavTime);
+                    if (avinterval !== 0 && avinterval < minInterval) {  // account for the same times in a row
+                        minInterval = avinterval;
                     }
-                    // if wind direction have to filter for ws < 3ms
-                    if (myVariable === "wd") {
-                        // have to capture wind speed to filter for ws < 3 mps
-                        windSpeeds = JSON.parse(rows[rowIndex].data)['ws'];
-                        // if ((JSON.parse(rows[rowIndex].data)['ws']) < 3.0) {
-                        //     continue;
-                        // }
+                    lastavTime = time;
+                    siteid = rows[rowIndex].sites_siteid;
+                    lastSiteid = siteid;
+                    allSitesSet.add(siteid);
+                    if (timeSites.indexOf(siteid) === -1) {
+                        timeSites.push(siteid);
                     }
-                    values = JSON.parse(rows[rowIndex].data)[myVariable];
-                    if (values === undefined) {
-                        // no data found in this record
-                        continue;
-                    } else {
-                        const missing_value = JSON.parse(rows[rowIndex].data)['missing_value'];
-                        if ( !(missing_value === undefined) ){
-                            if ( values === missing_value ) {
-                                values = undefined;
+                    var values = [];
+                    var levels = [];
+                    var windSpeeds = []; // used for ws quality control toss wd when ws < 3ms
+                    if (isJSON) {
+                        var jdata = JSON.parse(rows[rowIndex].data);
+                        // JSON variable -- stored as JSON structure 'data' in the DB
+                        if (myDiscriminator !== matsTypes.InputTypes.unused) {
+                            var discriminator = Number(jdata[myDiscriminator]);
+                            if (discriminator < disc_lower || discriminator > disc_upper) {
                                 continue;
                             }
                         }
-                        levels = JSON.parse(rows[rowIndex].data)['z'];
-                        if ( !(Array.isArray(levels))) {
-                            levels = [Number(levels)];
+                        // if wind direction have to filter for ws < 3ms
+                        if (myVariable === "wd") {
+                            // have to capture wind speed to filter for ws < 3 mps
+                            windSpeeds = jdata['ws'];
+                            // if ((jdata['ws']) < 3.0) {
+                            //     continue;
+                            // }
+                        }
+                        values = jdata[myVariable];
+                        if (values === undefined) {
+                            // no data found in this record
+                            continue;
+                        } else {
+                            const missing_value = jdata['missing_value'];
+                            if (!(missing_value === undefined)) {
+                                for (var vi = 0; vi < values.length; vi++) {
+                                    if (values[vi] === missing_value) {
+                                        values[vi] = null;
+                                    }
+                                }
+                            }
+                            var zVar = 'z';
+                            if (jdata['zmap']) {     // if there is a zmap
+                                zVar = jdata['zmap'][myVariable]
+                            }
+
+                            if ((myVariable === 'allws') || (myVariable === 'allwd')) {
+                                levels = jdata['allz'];
+                            } else {
+                                levels = jdata[zVar];
+                            }
+
+                            if (!(Array.isArray(levels))) {
+                                levels = [Number(levels)];
+                            }
+                        }
+
+                        if (previousCycleAveraging || dataSourcePreviousCycleRass) {
+                            /* have to get the previous values for this site (if it isn't row 0 and
+                            the previous one for this site sexists) and average the previous with this one
+                            */
+                            if (previousTime != Number.MIN_VALUE && savedValues[siteid.toString()]) {
+                                // save the current values to be used for the next time
+                                // try to average the previous valuse with these values
+                                if (resultData[previousTime]['sites'][siteid.toString()]) { // the previous values for this site did exist but were changed
+                                    var ptValues = savedValues[siteid.toString()]; // these are the unchanged ones
+                                    savedValues[siteid.toString()] = values.slice(0); // save the unchanged ones - should only be primitives - no need for deep copy
+                                    var ptLevels = resultData[previousTime]['sites'][siteid.toString()].levels;
+                                    for (var lvIndex = 0; lvIndex < levels.length; lvIndex++) {
+                                        var ptlvlIndex = 0;
+                                        var lvlFound = false;
+                                        for (ptlvlIndex; ptlvlIndex < ptLevels.length; ptlvlIndex++) {
+                                            if (ptLevels[ptlvlIndex] == levels[lvIndex]) {
+                                                lvlFound = true;
+                                                break;
+                                            }
+                                        }
+                                        if (lvlFound) {
+                                            var thisValue = values[lvIndex];
+                                            var previousValue = ptValues[ptlvlIndex];
+                                            values[lvIndex] = (thisValue + previousValue) / 2;
+                                        }
+                                    }
+                                } else {
+                                    savedValues[siteid.toString()] = values.slice(0);
+                                }
+                            } else {
+                                savedValues[siteid.toString()] = values.slice(0);
+                            }
+                        }
+
+                    } else {
+                        // conventional variable -- stored as text in the DB
+                        values = JSON.parse(rows[rowIndex][myVariable]);
+                        if (myVariable === "wd") {
+                            windSpeeds = JSON.parse(rows[rowIndex]['ws']);
+                        }
+                        if (values === undefined) {
+                            // no data found in this record
+                            continue;
+                        } else {
+                            levels = JSON.parse(rows[rowIndex].z);
                         }
                     }
-                } else {
-                    // conventional variable -- stored as text in the DB
-                    values = JSON.parse(rows[rowIndex][myVariable]);
-                    if (myVariable === "wd") {
-                        windSpeeds = JSON.parse(rows[rowIndex]['ws']);
-                    }
+
+                    // surface values and discriminators are scalars and are returned by the DB a as string
                     if (values === undefined) {
                         // no data found in this record
                         continue;
-                    }  else {
-                        levels = JSON.parse(rows[rowIndex].z);
                     }
-                }
 
-                // surface values and discriminators are scalars and are returned by the DB a as string
-                if (values === undefined) {
-                    // no data found in this record
-                    continue;
-                }
-
-                if (!(Array.isArray(values))) {
-                    // disciminators are always on the surface
-                    if (variableIsDiscriminator) {
-                        levels = [0];
-                    } else {
-                        levels = [Number(levels[0])];
-                    }
-                    values = [Number(values)];
-                    windSpeeds = [Number(windSpeeds)];
-                } else {
-                    values = values.map(function (a) {
-                        return Number(a);
-                    });
-                    windSpeeds = windSpeeds.map(function (a) {
-                        return Number(a);
-                    });
-                }
-                // quality control for windDir
-                // if corresponding windSpeed < 3ms null the windDir
-                if (myVariable === "wd") {
-                    for (var i = 0; i < values.length; i++) {
-                        if (windSpeeds[i] < 3.0) {
-                            values[i] = null;
+                    // now we have to do interpolation for instruments
+                    // halfinterval before
+                    if (isInstrument && Array.isArray(values)) {
+                        var halfCycleBeforeAvtime = time - verificationHalfRunInterval;
+                        var halfCycleAfterAvtime = time + verificationHalfRunInterval;
+                        var levelIndex;
+                        if ((time > previousTime) || (Number(siteid) > Number(previousSiteId))) {
+                            // first encounter of a new avtime (adjusted valid interval)
+                            // need to keep an interpolation index for each level because we can have dropouts at a given level for a given site
+                            interpolationCount = {};
+                            valueSums = {};
+                            interpolatedValues = {};
+                            if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
+                                //initialize the objects
+                                for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                                    interpolationCount[levels[levelIndex]] = 1;
+                                    valueSums[levels[levelIndex]] = values[levelIndex];
+                                    interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
+                                }
+                            }
+                            previousTime = time;
+                            previousSiteId = siteid;
+                        } else {
+                            // subsequent encounter of the same avtime
+                            if (utctime >= halfCycleBeforeAvtime && utctime <= halfCycleAfterAvtime) {
+                                for (levelIndex = 0; levelIndex < values.length; levelIndex++) {
+                                    interpolationCount[levels[levelIndex]] = isNaN(interpolationCount[levels[levelIndex]]) ? 1 : interpolationCount[levels[levelIndex]] + 1;
+                                    valueSums[levels[levelIndex]] = isNaN(valueSums[levels[levelIndex]]) ? values[levelIndex] : valueSums[levels[levelIndex]] + values[levelIndex];
+                                    interpolatedValues[levels[levelIndex]] = valueSums[levels[levelIndex]] / interpolationCount[levels[levelIndex]];
+                                }
+                            }
+                        }
+                        values = [];
+                        levels = [];
+                        var interpolatedLevels = Object.keys(interpolatedValues).sort(
+                            function (a, b) {
+                                return a - b;
+                            }
+                        );
+                        for (var ivIndex = 0; ivIndex < interpolatedLevels.length; ivIndex++) {
+                            levels.push(interpolatedLevels[ivIndex]);
+                            values.push(interpolatedValues[interpolatedLevels[ivIndex]]);
                         }
                     }
-                }
-                for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
-                    levels[lvlIndex] = Math.round(levels[lvlIndex]);
-                }
-                // round levels
-                var numLevels = levels.length;
-                if (numLevels === 0) {
-                    // no data found in this record
-                    continue;
-                }
 
-                // apply level filter, remove any levels and corresponding values that are not within the boundary.
-                // there are always the same number of levels as values, they correspond one to one (in database).
-                // filter backwards so the the level array is safely modified.
-                // always accept levels that are Number.MIN_VALUE - they are special discriminators{
-                for (var l = levels.length - 1; l >= 0; l--) {
-                    var lvl = levels[l];
-                    if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
-                        // remove this level - filter it out
-                        levels.splice(l, 1);
-                        values.splice(l, 1);
-                        windSpeeds.splice(l,1);
+                    if (!(Array.isArray(values))) {
+                        // disciminators are always on the surface
+                        if (variableIsDiscriminator) {
+                            levels = [0];
+                        } else {
+                            levels = [Number(levels[0])];
+                        }
+                        values = [Number(values)];
+                        windSpeeds = [Number(windSpeeds)];
                     } else {
-                        allLevelsSet.add(lvl);
+                        values = values.map(function (a) {
+                            return Number(a);
+                        });
+                        windSpeeds = windSpeeds.map(function (a) {
+                            return Number(a);
+                        });
+                    }
+                    // HACK!!!! The RASS profilers are reporting in degress celsius and what we really want is K (kelvin)
+                    // if it is a RASS profiler curve.dataSourcePreviousCycleRass will be true. Add 273.15 to each value.
+                    if (dataSourcePreviousCycleRass) {
+                        // This is a RASS we have to convert the values celsius to kelvin.
+                        for (var i = 0; i < values.length; i++) {
+                            if (values[i] !== null) {
+                                values[i] = values[i] = values[i] + 273.15;
+                            }
+                        }
+                    }
+
+                    // quality control for windDir
+                    // if corresponding windSpeed < 3ms null the windDir
+                    if (myVariable === "wd") {
+                        for (var i = 0; i < values.length; i++) {
+                            if (windSpeeds[i] < 3.0) {
+                                values[i] = null;
+                            }
+                        }
+                    }
+                    for (var lvlIndex = 0; lvlIndex < levels.length; lvlIndex++) {
+                        levels[lvlIndex] = Math.round(levels[lvlIndex]);
+                    }
+                    // round levels
+                    var numLevels = levels.length;
+                    if (numLevels === 0) {
+                        // no data found in this record
+                        continue;
+                    }
+
+                    // apply level filter, remove any levels and corresponding values that are not within the boundary.
+                    // there are always the same number of levels as values, they correspond one to one (in database).
+                    // filter backwards so the the level array is safely modified.
+                    // always accept levels that are Number.MIN_VALUE - they are special discriminators{
+                    for (var l = levels.length - 1; l >= 0; l--) {
+                        var lvl = levels[l];
+                        if (lvl != Number.MIN_VALUE && (lvl < bottom || lvl > top)) {
+                            // remove this level - filter it out
+                            levels.splice(l, 1);
+                            values.splice(l, 1);
+                            windSpeeds.splice(l, 1);
+                        } else {
+                            allLevelsSet.add(lvl);
+                        }
+                    }
+
+                    // may have dropped sample in above if
+                    numLevels = levels.length;
+
+                    //weight by level thickness when taking layer average
+                    var maxLev = levels[numLevels - 1];
+                    var minLev = levels[0];
+                    var totalLayerThickness = maxLev - minLev;
+                    var thicknessLayerCount = 0;
+                    var sum = 0;
+                    var mean = 0;
+
+                    if (numLevels > 1) {
+                        var currLev;
+                        for (var currLevIdx = 0; currLevIdx < numLevels; currLevIdx++) {
+                            currLev = levels[currLevIdx];
+                            var lowerDelta;
+                            var upperDelta;
+                            var avgDelta;
+                            var thicknessFraction;
+
+                            if (currLev === minLev) {
+                                avgDelta = (levels[currLevIdx + 1] - currLev) / 2;
+                            } else if (currLev === maxLev) {
+                                avgDelta = (currLev - levels[currLevIdx - 1]) / 2;
+                            } else {
+                                lowerDelta = currLev - levels[currLevIdx - 1];
+                                upperDelta = levels[currLevIdx + 1] - currLev;
+                                avgDelta = (lowerDelta + upperDelta) / 2;
+                            }
+                            thicknessFraction = avgDelta / totalLayerThickness;
+                            sum += values[currLevIdx];
+                            mean += values[currLevIdx] * thicknessFraction;
+                            thicknessLayerCount += thicknessFraction;
+                        }
+                        mean = mean / thicknessLayerCount;
+                    } else {
+                        sum = values[0];
+                        mean = sum;
+                    }
+
+                    if (resultData[time] === undefined) {
+                        resultData[time] = {sites: {}};
+                        cumulativeMovingMeanForTime = 0;
+                        siteCount = 0;
+                        resultData[time].timeLevels = [];
+                        timeSites = [];
+                    }
+                    if (resultData[time].sites[siteid] === undefined) {
+                        resultData[time].sites[siteid] = {};
+                    }
+                    resultData[time].sites[siteid].levels = levels;
+                    resultData[time].sites[siteid].values = values;
+                    if (myVariable === "wd") {
+                        // have to return windSpeeds for vectors
+                        resultData[time].sites[siteid].windSpeeds = windSpeeds;
+                    }
+                    resultData[time].sites[siteid].sum = sum;
+                    resultData[time].sites[siteid].numLevels = numLevels;
+                    resultData[time].sites[siteid].mean = mean;
+                    resultData[time].sites[siteid].max = Math.max.apply(null, values);
+                    resultData[time].sites[siteid].min = Math.min.apply(null, values);
+                    cumulativeMovingAverage = (mean + timeCount * cumulativeMovingAverage) / (timeCount + 1);
+                    timeCount++;
+                    cumulativeMovingMeanForTime = (mean + siteCount * cumulativeMovingMeanForTime) / (siteCount + 1);
+                    siteCount++;
+                    // store timeMean each row because we don't know how many times there are
+                    // the last one will be the one returned
+                    resultData[time].timeMean = cumulativeMovingMeanForTime;
+                    resultData[time].timeLevels = _.union(resultData[time].timeLevels, levels);
+                    resultData[time].timeSites = timeSites;
+                }
+                // fill in missing times - there must be an entry at each minInterval
+                // if there are multiple entries for a given time average them into one time entry
+                // get an array of all the times for every site
+                sitesBasis = Array.from(allSitesSet);
+                levelsBasis = Array.from(allLevelsSet);
+                allTimes = Object.keys(resultData).sort(function (a, b) {
+                    if (Number(a) > Number(b)) {
+                        return 1;
+                    }
+                    if (Number(a) < Number(b)) {
+                        return -1;
+                    }
+                    return 0;
+                }); //Very important to sort the keys!
+                time = allTimes[0];
+                for (var k = 0; k < allTimes.length - 1; k++) {
+                    time = Number(allTimes[k]);
+                    var nextTime = allTimes[k + 1];
+                    var realInterval = nextTime - time;
+                    while (realInterval > minInterval) {
+                        time = time + minInterval;
+                        resultData[time] = null;
+                        realInterval = nextTime - time;
                     }
                 }
-
-                // may have dropped sample in above if
-                numLevels = levels.length;
-
-
-                if (numLevels > 1) {
-                    var sum = values.reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                } else {
-                    var sum = values[0];
+                if (Object.keys(resultData).length == 0) {
+                    // there is no MATCHING data that can be returned
+                    error = matsTypes.Messages.NO_DATA_FOUND;
                 }
-
-                var mean = sum / numLevels;
-                if (resultData[time] === undefined) {
-                    resultData[time] = {sites: {}};
-                    cumulativeMovingMeanForTime = 0;
-                    siteCount = 0;
-                    resultData[time].timeLevels = [];
-                    timeSites = [];
-                }
-                if (resultData[time].sites[siteid] === undefined) {
-                    resultData[time].sites[siteid] = {};
-                }
-                resultData[time].sites[siteid].levels = levels;
-                resultData[time].sites[siteid].values = values;
-                if (myVariable === "wd") {
-                    // have to return windSpeeds for vectors
-                    resultData[time].sites[siteid].windSpeeds = windSpeeds;
-                }
-                resultData[time].sites[siteid].sum = sum;
-                resultData[time].sites[siteid].numLevels = numLevels;
-                resultData[time].sites[siteid].mean = mean;
-                resultData[time].sites[siteid].max = Math.max.apply(null, values);
-                resultData[time].sites[siteid].min = Math.min.apply(null, values);
-                cumulativeMovingAverage = (mean + timeCount * cumulativeMovingAverage) / (timeCount + 1);
-                timeCount++;
-                cumulativeMovingMeanForTime = (mean + siteCount * cumulativeMovingMeanForTime) / (siteCount + 1);
-                siteCount++;
-                // store timeMean each row because we don't know how many times there are
-                // the last one will be the one returned
-                resultData[time].timeMean = cumulativeMovingMeanForTime;
-                resultData[time].timeLevels = _.union(resultData[time].timeLevels, levels);
-                resultData[time].timeSites = timeSites;
+                dFuture['return']();
             }
-            // fill in missing times - there must be an entry at each minInterval
-            // if there are multiple entries for a given time average them into one time entry
-            // get an array of all the times for every site
-            sitesBasis = Array.from(allSitesSet);
-            levelsBasis = Array.from(allLevelsSet);
-            allTimes = Object.keys(resultData).sort(function (a, b) {
-                if (Number(a) > Number(b)) {
-                    return 1;
-                }
-                if (Number(a) < Number(b)) {
-                    return -1;
-                }
-                return 0;
-            }); //Very important to sort the keys!
-            time = allTimes[0];
-            for (var k = 0; k < allTimes.length - 1; k++) {
-                time = Number(allTimes[k]);
-                var nextTime = allTimes[k + 1];
-                var realInterval = nextTime - time;
-                while (realInterval > minInterval) {
-                    time = time + minInterval;
-                    resultData[time] = null;
-                    realInterval = nextTime - time;
-                }
-            }
-            dFuture['return']();
-        }
-    });
+        });
+        // wait for d future to finish - don't ya love it...
+        dFuture.wait();
+    }
 
-    // wait for d future to finish - don't ya love it...
-    dFuture.wait();
 
     return {
         error: error,
@@ -469,21 +657,21 @@ var queryWFIP2DB = function (wfip2Pool, statement, top, bottom, myVariable, isJS
 };
 
 const sumsSquaresByTimeLevel = function (params) {
-/*
-    // a dataVal is a value for non WindVars mean
-    // a dataVal is data - truth for non windvars !mean
-    // a dataVal is [u,v] for windVars mean
-    // a dataVal is [du-tu,dv-tv] for windVars !mean
+    /*
+        // a dataVal is a value for non WindVars mean
+        // a dataVal is data - truth for non windvars !mean
+        // a dataVal is [u,v] for windVars mean
+        // a dataVal is [du-tu,dv-tv] for windVars !mean
 
- sumsSquaresByTimeLevel = {
-    time0:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
-    time1:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
-    .
-    .
-    .
-    timet:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] }
- }
- */
+     sumsSquaresByTimeLevel = {
+        time0:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
+        time1:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] },
+        .
+        .
+        .
+        timet:{level0:[dataVal0,dataVal1 ... ], level1:[dataVal0,dataVal1 ... ] .... leveln:[dataVal0,dataVal1 ... ] }
+     }
+     */
     const allTimes = params.allTimes;
     const statType = params.statType;
     const queryResult = params.queryResult;
@@ -548,8 +736,7 @@ const sumsSquaresByTimeLevel = function (params) {
                     for (l = 0; l < sLevels.length; l++) {
                         level = sLevels[l];
                         timesByLevel[level] = timesByLevel[level] === undefined ? [] : timesByLevel[level];
-                        if (timesByLevel[level].indexOf(time) === -1)
-                        {
+                        if (timesByLevel[level].indexOf(time) === -1) {
                             timesByLevel[level].push(time)
                         }
                         var dataVal = verificationValues[l];
@@ -591,7 +778,7 @@ const sumsSquaresByTimeLevel = function (params) {
                                 if (windDirVar) {
                                     const uVal = Math.abs(windU - tWindU);
                                     const vVal = Math.abs(windV - tWindV);
-                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal});
+                                    sumsSquaresByTimeLevel[time][level].push({uVal: uVal, vVal: vVal});
                                     // [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
                                 } else {
                                     sumsSquaresByTimeLevel[time][level].push(Math.abs(dataVal - truthVal));  // [|(Data1 - truth1)|, |(data2 - truth2)|, .... |(datan - truthn)|]
@@ -601,7 +788,7 @@ const sumsSquaresByTimeLevel = function (params) {
                                 if (windDirVar) {
                                     const uVal = windU - tWindU;
                                     const vVal = windV - tWindV;
-                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal});
+                                    sumsSquaresByTimeLevel[time][level].push({uVal: uVal, vVal: vVal});
                                     // [(Data1 - truth1), (data2 - truth2), .... (datan - truthn)]
                                 } else {
                                     sumsSquaresByTimeLevel[time][level].push(dataVal - truthVal);
@@ -610,9 +797,9 @@ const sumsSquaresByTimeLevel = function (params) {
                                 break;
                             case "rmse":
                                 if (windDirVar) {
-                                    const uVal = Math.pow((windU - tWindU),2);
-                                    const vVal = Math.pow((windV - tWindV),2);
-                                    sumsSquaresByTimeLevel[time][level].push({uVal:uVal,vVal:vVal}); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
+                                    const uVal = Math.pow((windU - tWindU), 2);
+                                    const vVal = Math.pow((windV - tWindV), 2);
+                                    sumsSquaresByTimeLevel[time][level].push({uVal: uVal, vVal: vVal}); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
                                 } else {
                                     sumsSquaresByTimeLevel[time][level].push(Math.pow((dataVal - truthVal), 2)); //[sqr(Data1 - truth1), sqr(Data2 - truth2), .... sqr(Datan - truthn)]
                                 }
@@ -620,7 +807,7 @@ const sumsSquaresByTimeLevel = function (params) {
                             case "mean":
                             default:
                                 if (windDirVar) {
-                                    sumsSquaresByTimeLevel[time][level].push({uVal:windU,vVal:windV});
+                                    sumsSquaresByTimeLevel[time][level].push({uVal: windU, vVal: windV});
                                 } else {
                                     sumsSquaresByTimeLevel[time][level].push(dataVal);
                                 }
@@ -632,8 +819,8 @@ const sumsSquaresByTimeLevel = function (params) {
         } //  end if site qualifies
     } // for all times
     return {
-        validLevels:validLevels,
-        sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
+        validLevels: validLevels,
+        sumsSquaresByTimeLevel: sumsSquaresByTimeLevel,
         timesByLevel: timesByLevel
     };
 };
@@ -715,12 +902,123 @@ const getStatValuesByLevel = function (params) {
             statValues.push(statValue);
             statTimesSet.add(time);
         }
-        statValuesByLevel[level] = {statTimes: Array.from(statTimes), statValues: statValues, sumsForLevel: sumsForLevel};
+        statValuesByLevel[level] = {
+            statTimes: Array.from(statTimes),
+            statValues: statValues,
+            sumsForLevel: sumsForLevel
+        };
     }
     return statValuesByLevel;
 };
 
-const getDataForProfileDiffCurve = function(params) {
+const getDataForSeriesUnMatchedDiffCurve = function (params,matching) {
+    // just get the time values - not the subset data
+    /*
+     DATASET ELEMENTS:
+     series: [data,data,data ...... ]   each data is itself an array
+     data[0] - time (ploted against the x axis)
+     data[1] - statValue (plotted against the y axis)
+     data[2] - errorBar (stde_betsy * 1.96)
+     data[3] - time values
+     data[4] - time times
+     data[5] - time stats
+     data[6] - tooltip
+     */
+
+    var errorMax = Number.MIN_VALUE;
+    const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
+    const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
+    var d = [];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+    // do the differencing
+    //[avVal,stat,sub_values,sub_secs] -- avVal is time
+
+    // get the list of times for the minuendData
+    const mTimes = minuendData.map(function (a) {
+        return a[0];
+    });
+
+    // get the list of times for the subtrahendData
+    const sTimes = subtrahendData.map(function (a) {
+        return a[0];
+    });
+
+    // get the intersection of the times
+    const cTimes = mTimes.filter(function (n) {
+        return sTimes.indexOf(n) !== -1;
+    });
+    // itterate all the common times
+    for (var i = 0; i < cTimes.length; i++) { // each pressure level
+        var cl = cTimes[i];
+        // find the minuend stat for this level
+        const minuendStat = minuendData.filter(function (elem) {
+            return elem[0] === cl;
+        })[0];
+        // find the subtrhend stat for this level
+        const subtrahendStat = subtrahendData.filter(function (elem) {
+            return elem[0] === cl;
+        })[0];
+        d[i] = [];
+        // do the difference
+        d[i][0] = cl;
+        d[i][1] = minuendStat[1] - subtrahendStat[1];
+        d[i][2] = -1;
+        d[i][3] = [];
+        d[i][4] = [];
+        d[i][5] = {}; // level stats
+        d[i][6] = "<br>" + moment.utc(Number(cl)).format("YYYY-MM-DD HH:mm") + " <br> value:" + (d[i][1] === null ? null : d[i][1].toPrecision(4)); //tooltip
+
+        var minuendDataSubValues = minuendStat[3];
+        var minuendDataSubLevels = minuendStat[4];
+        var subtrahendDataSubValues = subtrahendStat[3];
+        var subtrahendDataSubLevels = subtrahendStat[4];
+
+        const levelsIntersection = minuendDataSubLevels.filter(function (n) {
+            return subtrahendDataSubLevels.indexOf(n) !== -1;
+        });
+        for (var siIndex = 0; siIndex < levelsIntersection.length - 1; siIndex++) {
+            d[i][4].push(levelsIntersection[siIndex]);
+            d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+        }
+
+        const errorResult = get_err(d[i][3], d[i][4]);
+        // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+        const errorBar = errorResult.sd * 1.96;
+
+        d[i][5] = {
+            raw_stat: d[i][1].toPrecision(4),
+            d_mean: errorResult.d_mean,
+            sd: errorResult.sd,
+            n_good: errorResult.n_good,
+            lag1: errorResult.lag1,
+            stde_betsy: errorResult.stde_betsy
+        };
+
+        d[i][6] = "Curve" + diffFrom[0].toString() + "-Curve" + diffFrom[1].toString() +
+            "<br>  time: " + moment.utc(Number(d[i][0])).format("YYYY-MM-DD HH:mm") +
+            "<br>  difference: " + d[i][1].toPrecision(4) +
+            "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+            "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+            "<br>  n: " + errorResult.n_good + //corrected +
+            "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+            "<br>  stde: " + errorResult.stde_betsy +
+            // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+            "<br>  errorbars: " + Number(d[i][1] - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(d[i][1] + (errorResult.sd * 1.96)).toPrecision(4);
+
+        if (matching) {
+            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            d[i][2] = errorBar;
+        }
+
+    }
+    return {dataset: d, errorMax: errorMax};
+};
+
+const getDataForProfileUnMatchedDiffCurve = function (params,matching) {
+    // just get the level values - not the subset data
     /*
      DATASET ELEMENTS:
      series: [data,data,data ...... ]   each data is itself an array
@@ -731,85 +1029,102 @@ const getDataForProfileDiffCurve = function(params) {
      data[4] - level times
      data[5] - level stats
      data[6] - tooltip
-
-     This is returning a differenced curve dataset that is derived from two
-     existing curve datasets. By virtue of being a difference profile curve we
-     have to match levels.
-
-     It is interesting to note that for wfip2 any profile matching has already
-     been done prior to doing any differencing.
-     A profile point value is a statistical deriviation of a collection of data. In
-     the case of wfip2 that subset collection of data at any given level may
-     have been collected from different time ranges, and different sites.
-     The job of matching had to happen before differencing. That job was to filter away
-     any and all data that did NOT match by either, time, site, or level. In the case
-     of wfip2 we have level and site completeness as well. This means matching data
-     may be filtered away because one curve did not have the 'complete enough'
-     levels, and or sites to meet the completeness criteria and so get included.
-     Matching would cause all the data in all the subsets to be tossed if it is
-     tossed from any subset.
      */
 
+    var errorMax = Number.MIN_VALUE;
     const dataset = params.dataset; // existing dataset - should contain the difference curve and the base curve
     const diffFrom = params.diffFrom; // array - [minuend_curve_index, subtrahend_curve_index] indexes are with respect to dataset
     var d = [];
-    var minuendIndex = diffFrom[1];
-    var subtrahendIndex = diffFrom[0]; // base curve
-    var minuendData = dataset[minuendIndex].data;
-    var subtrahendData = dataset[subtrahendIndex].data;
-    var minuendLevelValues = {};
-    var minuendLevels = [];
-    var minuendStatistic = null;
-    var subtrahendStatistic = null;
-    var level;
-    var value;
-    for (i = 0; i < minuendData.length; i++) {
-        level = minuendData[i][1];
-        value = minuendData[i][0];
-        if (!minuendStatistic) {
-            minuendStatistic = minuendData[i][3].statistic;
-        }
-        minuendLevels.push(level);
-        minuendLevelValues[level] = value;
-    }
-    var subtrahendLevels = [];
-    var subtrahendLevelValues = {};
-    for (i = 0; i < subtrahendData.length; i++) {
-        level = subtrahendData[i][1];
-        value = subtrahendData[i][0];
-        if (!subtrahendStatistic) {
-            subtrahendStatistic = subtrahendData[i][3].statistic;
-        }
-        subtrahendLevels.push(level);
-        subtrahendLevelValues[level] = value;
-    }
-    var d = [];
+    const minuendIndex = diffFrom[0];
+    const subtrahendIndex = diffFrom[1];
+    const minuendData = dataset[minuendIndex].data;
+    const subtrahendData = dataset[subtrahendIndex].data;
+    // do the differencing
+    //[stat,avVal,sub_values,sub_secs] -- avVal is pressure level
+
+    // get the list of pressure levels for the minuendData
+    const mLevels = minuendData.map(function (a) {
+        return a[1];
+    });
+
+    // get the list of pressure levels for the subtrahendData
+    const sLevels = subtrahendData.map(function (a) {
+        return a[1];
+    });
+
     // get the intersection of the levels
-    const commonLevels = minuendLevels.filter(function(n) {
-        return subtrahendLevels.indexOf(n) !== -1;
+    const cLevels = mLevels.filter(function (n) {
+        return sLevels.indexOf(n) !== -1;
     });
     // itterate all the common levels
-    for (i = 0; i < commonLevels.length; i++) {
-        level = commonLevels[i];
-        value = minuendLevelValues[level] - subtrahendLevelValues[level];
-        tooltip = "<br>" + label +
-            "<br>level: " + level +
-            "<br>minuend statistic: " + minuendStatistic +
-            "<br>subtrahend statistic: " + subtrahendStatistic +
-            "<br> diff value: " + (value === null ? null : value.toPrecision(4));
+    for (var i = 0; i < cLevels.length; i++) { // each pressure level
+        var cl = cLevels[i];
+        // find the minuend stat for this level
+        const minuendStat = minuendData.filter(function (elem) {
+            return elem[1] == cl;
+        })[0];
+        // find the subtrhend stat for this level
+        const subtrahendStat = subtrahendData.filter(function (elem) {
+            return elem[1] == cl;
+        })[0];
         d[i] = [];
-        d[i][0] = value;
-        d[i][1] = level;
+        // do the difference
+        d[i][0] = minuendStat[0] - subtrahendStat[0];
+        // pressure level
+        d[i][1] = cl;
         d[i][2] = -1;
         d[i][3] = [];
         d[i][4] = [];
-        d[i][5] = [];
-        d[i][6] = tooltip;
-    }
-    return {dataset:d};
-}
+        d[i][5] = {}; // level stats
+        d[i][6] = "<br>" + cl * -1 + "mb <br> value:" + (d[i][0] === null ? null : d[i][0].toPrecision(4)); //tooltip
 
-const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax) {
+        var minuendDataSubValues = minuendStat[3];
+        var minuendDataSubSeconds = minuendStat[4];
+        var subtrahendDataSubValues = subtrahendStat[3];
+        var subtrahendDataSubSeconds = subtrahendStat[4];
+
+        const secondsIntersection = minuendDataSubSeconds.filter(function (n) {
+            return subtrahendDataSubSeconds.indexOf(n) !== -1;
+        });
+        for (var siIndex = 0; siIndex < secondsIntersection.length - 1; siIndex++) {
+            d[i][4].push(secondsIntersection[siIndex]);
+            d[i][3].push(minuendDataSubValues[siIndex] - subtrahendDataSubValues[siIndex]);
+        }
+
+        const errorResult = get_err(d[i][3], d[i][4]);
+        // const errorBar = errorResult.stde_betsy * 1.96;  //this doesn't work for data with lots of gaps
+        const errorBar = errorResult.sd * 1.96;
+
+        d[i][5] = {
+            raw_stat: d[i][0].toPrecision(4),
+            d_mean: errorResult.d_mean,
+            sd: errorResult.sd,
+            n_good: errorResult.n_good,
+            lag1: errorResult.lag1,
+            stde_betsy: errorResult.stde_betsy
+        };
+
+        d[i][6] = "Curve" + diffFrom[0].toString() + "-Curve" + diffFrom[1].toString() +
+            "<br>  " + d[i][1] + "m" +
+            "<br>  difference: " + d[i][0].toPrecision(4) +
+            "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+            "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+            "<br>  n: " + errorResult.n_good + //corrected +
+            "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+            "<br>  stde: " + errorResult.stde_betsy +
+            // "<br>  errorbars: " + Number(value - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number(value + (errorResult.stde_betsy * 1.96)).toPrecision(4) +
+            "<br>  errorbars: " + Number(d[i][0] - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number(d[i][0] + (errorResult.sd * 1.96)).toPrecision(4);
+
+        if (matching) {
+            errorMax = errorMax > errorBar ? errorMax : errorBar;
+            d[i][2] = errorBar;
+        }
+
+    }
+    return {dataset: d, errorMax: errorMax};
+};
+
+const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
 // generate y-axis
     var xmin = Number.MAX_VALUE;
     var xmax = Number.MIN_VALUE;
@@ -818,7 +1133,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     var xAxislabel = "";
     var axisVariables = [];
     for (var dsi = 0; dsi < dataset.length; dsi++) {
-        if (curves[dsi] === undefined ) {   // might be a zero curve or something so skip it
+        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
             continue;
         }
         const axisKey = curves[dsi].axisKey;
@@ -834,7 +1149,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
                 if (xAxislabel.length > 30) {
                     xAxislabel += "\n";  // wrap long labels
                 }
-                xAxislabel = xAxislabel + '|' + axisMap[axisKey].axisLabel;
+                xAxislabel = xAxislabel + ' | ' + axisMap[axisKey].axisLabel;
             }
         }
         xmin = xmin < axisMap[axisKey].xmin ? xmin : axisMap[axisKey].xmin;
@@ -861,8 +1176,8 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
             color: 'grey',
-            min:xmin - xpad,
-            max:xmax + xpad,
+            min: xmin - xpad,
+            max: xmax + xpad,
             font: {
                 size: 20,
                 lineHeight: 23,
@@ -877,7 +1192,7 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
             zoomRange: [0.1, null]
         },
         yaxes: [{
-            position:"left",
+            position: "left",
             color: 'grey',
             axisLabel: ' meters',
             axisLabelColour: "black",
@@ -942,11 +1257,171 @@ const generateProfilePlotOptions = function ( dataset, curves, axisMap, errorMax
     return options;
 };
 
+const get_err = function (sVals, sSecs) {
+    /* refer to perl error_library.pl sub  get_stats
+     to see the perl implementation of these statics calculations.
+     These should match exactly those, except that they are processed in reverse order.
+     */
+
+    const plotParams = getPlotParamsFromStack();
+    var outlierQCParam;
+    if (plotParams["outliers"] !== "all") {
+        outlierQCParam = Number(plotParams["outliers"]);
+    } else {
+        outlierQCParam = 100;
+    }
+
+    var subVals = sVals;
+    var subSecs = sSecs;
+    var n = subVals.length;
+    var n_good = 0;
+    var sum_d = 0;
+    var sum2_d = 0;
+    var error = "";
+    var i;
+    for (i = 0; i < n; i++) {
+        n_good = n_good + 1;
+        sum_d = sum_d + subVals[i];
+        sum2_d = sum2_d + subVals[i] * subVals[i];
+    }
+    var d_mean = sum_d / n_good;
+    var sd2 = sum2_d / n_good - d_mean * d_mean;
+    var sd = sd2 > 0 ? Math.sqrt(sd2) : sd2;
+
+    // RIGHT NOW WE HAVE OUTLIER FILTERING DISABLED FOR WFIP2, SO SD_LIMIT IS HARDCODED TO 100 STANDARD DEVIATIONS.
+    // TO CHANGE THIS, UNCOMMENT THE FOLLOWING LINE AND COMMENT THE ONE WHERE SD_LIMIT IS SET TO 100 STANDARD DEVIATIONS.
+    // var sd_limit = outlierQCParam * sd;
+    var sd_limit = 100 * sd;
+
+    //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
+    // find minimum delta_time, if any value missing, set null
+    var last_secs = Number.MIN_VALUE;
+    var minDelta = Number.MAX_VALUE;
+    var minSecs = Number.MAX_VALUE;
+    var max_secs = Number.MIN_VALUE;
+    for (i = 0; i < subSecs.length; i++) {
+        var secs = (subSecs[i]);
+        var delta = Math.abs(secs - last_secs);
+        if (delta < minDelta) {
+            minDelta = delta;
+        }
+        if (secs < minSecs) {
+            minSecs = secs;
+        }
+        if (secs > max_secs) {
+            max_secs = secs;
+        }
+        last_secs = secs;
+    }
+
+    var data_wg = [];
+    var n_gaps = 0;
+    n_good = 0;  //NOT doing the QA for WFIP2
+    //n_good = subVals.length;
+    var sum = 0;
+    var sum2 = 0;
+    var loopTime = minSecs;
+    if (minDelta < 0) {
+        error = ("Invalid time interval - minDelta: " + minDelta);
+        console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
+    }
+    // remove data more than $sd_limit from mean
+    // RIGHT NOW WE HAVE OUTLIER FILTERING DISABLED FOR WFIP2, SO SD_LIMIT IS HARDCODED TO 100 STANDARD DEVIATIONS.
+    // THIS CAN BE UNDONE ABOVE, WHERE SD_LIMIT IS DECLARED.
+    var qaCorrected = [];
+    for (i=0; i < subVals.length; i++) {
+        if (Math.abs(subVals[i] - d_mean) > sd_limit) {
+            qaCorrected.push ("removing datum " + i + " with value " + subVals[i] + " because it exceeds " + sd_limit + " standard deviations from the mean - mean: " + d_mean + " " + sd_limit + " * sd: " + sd_limit + " delta: " +  (subVals[i] - d_mean));
+            console.log(qaCorrected.join('\n'));
+            subVals[i] = null;
+        } else {
+            n_good++;
+            sum += subVals[i];
+            sum2 += subVals[i] * subVals[i];
+        }
+    }
+    if (n_good < 1) {
+        return {d_mean:null,stde_betsy:null,sd:null,n_good:n_good,lag1:null, min:null,max:null, sum:null};
+    }
+
+    // recalculate if we threw anything away.
+    d_mean = sum / n_good;
+    sd2 = sum2 / n_good - d_mean * d_mean;
+    sd = 0;
+    if (sd2 > 0) {
+        sd = Math.sqrt(sd2);
+    }
+
+    //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
+    // look for gaps.... per Bill, we only need one gap per series of gaps...
+    var lastSecond = Number.MIN_VALUE;
+
+    for (i = 0; i < subSecs.length; i++) {
+        var sec = subSecs[i];
+        if (lastSecond >= 0) {
+            if (sec - lastSecond > minDelta) {
+                // insert a gap
+                data_wg.push(null);
+                n_gaps++;
+            }
+        }
+        lastSecond = sec;
+        data_wg.push(subVals[i]);
+    }
+    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
+
+    //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
+    var r = [];
+    for (var lag = 0; lag <= 1; lag++) {
+        r[lag] = 0;
+        var n_in_lag = 0;
+        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
+            if (data_wg[t] != null && data_wg[t + lag] != null) {
+                r[lag] += +(data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
+                n_in_lag++;
+            }
+        }
+        if (n_in_lag > 0 && sd > 0) {
+            r[lag] /= (n_in_lag * sd * sd);
+        } else {
+            r[lag] = null;
+        }
+        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
+    }
+    // Betsy Weatherhead's correction, based on lag 1
+    if (r[1] >= 1) {
+        r[1] = .99999;
+    }
+    const betsy = Math.sqrt((n_good - 1) * (1 - r[1]));
+    var stde_betsy;
+    if (betsy != 0) {
+        stde_betsy = sd / betsy;
+    } else {
+        stde_betsy = null;
+    }
+    const stats = {
+        d_mean: d_mean,
+        stde_betsy: stde_betsy,
+        sd: sd,
+        n_good: n_good,
+        lag1: r[1],
+        min: minSecs,
+        max: max_secs,
+        sum: sum_d
+    };
+    //console.log("stats are " + JSON.stringify(stats));
+    // stde_betsy is standard error with auto correlation
+    //console.log("---------\n\n");
+    return stats;
+};
+
 export default matsWfipUtils = {
     getDatum: getDatum,
     queryWFIP2DB: queryWFIP2DB,
-    sumsSquaresByTimeLevel:sumsSquaresByTimeLevel,
-    getStatValuesByLevel:getStatValuesByLevel,
-    getDataForProfileDiffCurve:getDataForProfileDiffCurve,
-    generateProfilePlotOptions:generateProfilePlotOptions
+    sumsSquaresByTimeLevel: sumsSquaresByTimeLevel,
+    getStatValuesByLevel: getStatValuesByLevel,
+    getDataForProfileUnMatchedDiffCurve: getDataForProfileUnMatchedDiffCurve,
+    getDataForSeriesUnMatchedDiffCurve: getDataForSeriesUnMatchedDiffCurve,
+    generateProfilePlotOptions: generateProfilePlotOptions,
+    get_err: get_err
 }

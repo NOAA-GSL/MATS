@@ -1,5 +1,6 @@
 .idea/workspace.xml
 apps/*/.idea/workspace.xml
+apps/*/.idea/*
 meteor_packages/.idea/workspace.xml
 .idea/tasks.xml
 apps/*/.idea/tasks.xml
@@ -15,3 +16,5 @@ meteor_packages/.idea/tasks.xml
 .idea/inspectionProfiles/
 apps/metproto/private/R_/R_work/data/
 static/img/image00.png
+.DS_Store
+/static/applist.json
