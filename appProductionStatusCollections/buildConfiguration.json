@@ -253,21 +253,21 @@
       "displayName": "Upper Air Previous",
       "displayOrder": 16,
       "deploymentStatus": "enabled",
-      "buildStatus": "archive"
+      "buildStatus": "disabled"
     },
     {
       "app": "aircraft-previous",
       "displayName": "Aircraft (AMDAR) Previous",
       "displayOrder": 17,
       "deploymentStatus": "enabled",
-      "buildStatus": "archive"
+      "buildStatus": "disabled"
     },
     {
       "app": "anomalycor-previous",
       "displayName": "Anomaly Correlation Previous",
       "displayOrder": 18,
       "deploymentStatus": "enabled",
-      "buildStatus": "archive"
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling-previous",
