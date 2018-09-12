@@ -45,16 +45,28 @@ dataDieOff = function (plotParams, plotFunction) {
         var toDate = dateRange.toDate;
         fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
         toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimes = validTimeOptionsMap[validTimeStr][0];
-        var validTimeClause = " ";
-        if (validTimes.length > 0){
-            validTimeClause = validTimes;
-        }
-        const forecastLength = curve['dieoff-forecast-length'];
-        if (forecastLength !== "dieoff") {
-            throw new Error("INFO:  non dieoff curves are not yet supported");
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var forecastLengthStr = curve['dieoff-forecast-length'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}, {optionsMap: 1})['optionsMap'];
+        var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
+        var validTimeClause = "";
+        var utcCycleStart;
+        var utcCycleStartClause = "";
+        var dateRangeClause = "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '" + fromSecs + "' and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '" + toSecs + "' ";
+        if (forecastLength === matsTypes.ForecastTypes.dieoff) {
+            const validTimeStr = curve['valid-time'];
+            const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+            const validTimes = validTimeOptionsMap[validTimeStr][0];
+            var validTimeClause = " ";
+            if (validTimes.length > 0){
+                validTimeClause = validTimes;
+            }
+        } else if (forecastLength === matsTypes.ForecastTypes.utcCycle) {
+            utcCycleStart = Number(curve['utc-cycle-start']);
+            utcCycleStartClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600)%(24*3600)/3600 IN(" + utcCycleStart + ")";
+        } else {
+            dateRangeClause = "and (unix_timestamp(m0.valid_date)+3600*m0.valid_hour - m0.fcst_len*3600) = " + fromSecs;
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -76,10 +88,10 @@ dataDieOff = function (plotParams, plotFunction) {
                 "from {{dbtable}} as m0 " +
                 "where 1=1 " +
                 "and m0.variable = '{{variable}}' " +
+                "{{dateRangeClause}} " +
                 "{{validTimeClause}} " +
+                "{{utcCycleStartClause}} " +
                 "{{levelClause}} " +
-                "and m0.valid_date >= '{{fromDate}}' " +
-                "and m0.valid_date <= '{{toDate}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -88,10 +100,10 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{data_source}}', data_source);
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
+            statement = statement.replace('{{validTimeClause}}', validTimeClause);
+            statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -163,6 +175,8 @@ dataDieOff = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;

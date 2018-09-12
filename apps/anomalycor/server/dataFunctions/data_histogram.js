@@ -55,13 +55,9 @@ dataHistogram = function (plotParams, plotFunction) {
             validTimeClause = validTimes;
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         // convert dates for sql
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -87,8 +83,8 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "{{levelClause}} " +
-                "and m0.valid_date >= '{{fromDate}}' " +
-                "and m0.valid_date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -98,8 +94,8 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{levelClause}}', levelClause);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -203,10 +199,10 @@ dataHistogram = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);

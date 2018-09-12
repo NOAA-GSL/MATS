@@ -329,63 +329,63 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.find({name: 'variable'}).count() == 0) {
         const statVarOptionsMap = {
-            'temperature': ['dt', 't', 'temp'],
-            'RH': ['drh', 'rh', 'rh'],
-            'dewpoint': ['dTd', 'td', 'dp'],
-            'wind': ['dw', 'ws', 'ws'],
+            '2m temperature': ['dt', 't', 'temp'],
+            '2m RH': ['drh', 'rh', 'rh'],
+            '2m dewpoint': ['dTd', 'td', 'dp'],
+            '10m wind': ['dw', 'ws', 'ws'],
         };
 
         const statVarUnitMap = {
             'RMS': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Bias (Model - Obs)': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'N': {
-                'temperature': 'Number',
-                'RH': 'Number',
-                'dewpoint': 'Number',
-                'wind': 'Number'
+                '2m temperature': 'Number',
+                '2m RH': 'Number',
+                '2m dewpoint': 'Number',
+                '10m wind': 'Number'
             },
             'Model average': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Obs average': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'Std deviation': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             },
             'MAE': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             }
         };
 
         const mapVarUnitMap = {
             'diff': {
-                'temperature': '°C',
-                'RH': 'RH (%)',
-                'dewpoint': '°C',
-                'wind': 'm/s'
+                '2m temperature': '°C',
+                '2m RH': 'RH (%)',
+                '2m dewpoint': '°C',
+                '10m wind': 'm/s'
             }
         };
 
@@ -436,19 +436,27 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
+        };
         matsCollections.CurveParams.insert(
             {
                 name: 'dieoff-forecast-length',
                 type: matsTypes.InputTypes.select,
-                optionsMap: {},
-                options: [matsTypes.ForecastTypes.dieoff, matsTypes.ForecastTypes.singleCycle],
-                superiorNames: [],
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.ForecastTypes.dieoff,
+                default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                controlButtonText: 'forecast-length',
+                controlButtonText: 'dieoff type',
                 displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 3
@@ -678,13 +686,14 @@ var doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
-                ['fcst_len:', 'dieoff-forecast-length', ', '],
-                ['valid-time:', 'valid-time', ', '],
+                ['', 'dieoff-forecast-length', ', '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'truth', ' '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "truth", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "truth", "curve-dates"
             ],
             groupSize: 6
         });
@@ -773,25 +782,25 @@ var doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphSeries",
+            graphFunction: "graphXYLine",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphDieOff",
+            graphFunction: "graphXYLine",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphValidTime",
+            graphFunction: "graphXYLine",
             dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphDailyModelCycle",
+            graphFunction: "graphXYLine",
             dataFunction: "dataDailyModelCycle",
             checked: false
         });

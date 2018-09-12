@@ -151,6 +151,8 @@ dataThreshold = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;

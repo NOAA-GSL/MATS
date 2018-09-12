@@ -61,10 +61,8 @@ dataProfile = function (plotParams, plotFunction) {
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var validTimeStr = curve['valid-time'];
         var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         var validTimeClause = validTimeOptionsMap[validTimeStr][0];
@@ -91,8 +89,8 @@ dataProfile = function (plotParams, plotFunction) {
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
@@ -100,8 +98,8 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
@@ -166,10 +164,10 @@ dataProfile = function (plotParams, plotFunction) {
         // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
         curve['xmin'] = xmin;
         curve['xmax'] = xmax;
+        curve['ymin'] = ymin;
+        curve['ymax'] = ymax;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
         var postQueryFinishMoment = moment();
@@ -298,7 +296,7 @@ dataProfile = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050,50,0);
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0);
     dataset.push(zeroLine);
 
     // generate plot options

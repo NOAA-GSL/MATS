@@ -11,6 +11,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         const axisKey = curves[dsi].axisKey;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
+        var xmin = curves[dsi].xmin;
+        var xmax = curves[dsi].xmax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -49,6 +51,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
+            min: xmin,
+            max: xmax
         }],
         xaxis: {
             zoomRange: [0.1, null],
@@ -240,6 +244,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         const axisKey = curves[dsi].axisKey;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
+        var xmin = curves[dsi].xmin;
+        var xmax = curves[dsi].xmax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -278,6 +284,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
+            min: xmin,
+            max: xmax
         }],
         xaxis: {
             zoomRange: [0.1, null],
@@ -340,6 +348,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         const axisKey = curves[dsi].axisKey;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
+        var xmin = curves[dsi].xmin;
+        var xmax = curves[dsi].xmax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -378,6 +388,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
+            min: xmin,
+            max: xmax
         }],
         xaxis: {
             zoomRange: [0.01, null],
@@ -444,6 +456,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         const axisKey = curves[dsi].axisKey;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
+        var xmin = curves[dsi].xmin;
+        var xmax = curves[dsi].xmax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -482,6 +496,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
+            min: xmin,
+            max: xmax
         }],
         xaxis: {
             zoomRange: [0.1, null],
@@ -583,8 +599,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         const binNum = curves[dsi].binNum;
         var ymin = axisMap[axisKey].ymin;
         var ymax = axisMap[axisKey].ymax;
-        var xmin = axisMap[axisKey].xmin;
-        var xmax = axisMap[axisKey].xmax;
+        var xmin = curves[dsi].xmin;
+        var xmax = curves[dsi].xmax;
         axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
         var binWidth = (xmax - xmin) / binNum;
@@ -621,6 +637,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
+            min: xmin,
+            max: xmax
         }],
         xaxis: {
             zoomRange: [0.1, null],

@@ -11,12 +11,6 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-06-02T23:26:38.815+0000"
-          },
-          "hashedToken": "1Am0S0j52xgWghARafd/e4T6PEAmHixYBBh/rTL7cWA="
-        },
-        {
-          "when": {
             "$date": "2018-06-22T20:20:31.115+0000"
           },
           "hashedToken": "o3LUpXLSAvlwNQmfx4MkZNM8trNNkqctBG2XJ7Ss4PQ="
@@ -26,6 +20,12 @@
             "$date": "2018-06-22T20:20:38.207+0000"
           },
           "hashedToken": "P6ZhcokgZvUkIKezxsBl1WpzQ1g1CgPflW5VxxIdY3k="
+        },
+        {
+          "when": {
+            "$date": "2018-09-11T21:28:49.862+0000"
+          },
+          "hashedToken": "sgFtG2CwOvxH9Asv95BBcJt0KL17Ktg0/pDfrb2nTW4="
         }
       ]
     }

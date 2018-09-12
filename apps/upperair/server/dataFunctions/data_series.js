@@ -16,12 +16,8 @@ dataSeries = function (plotParams, plotFunction) {
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";
     var curves = plotParams.curves;
     var curvesLength = curves.length;
@@ -93,8 +89,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -102,8 +98,8 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{model}}', tablePrefix + region);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
@@ -188,6 +184,8 @@ dataSeries = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
@@ -207,7 +205,7 @@ dataSeries = function (plotParams, plotFunction) {
     // if matching, pare down dataset to only matching data
     if (curvesLength > 1 && (matching)) {
         dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, matsTypes.PlotTypes.timeSeries);
-        }
+    }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
     var axisLimitReprocessed = {};

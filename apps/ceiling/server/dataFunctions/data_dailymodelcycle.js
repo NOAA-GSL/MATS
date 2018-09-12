@@ -68,7 +68,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "from {{model}}_{{region}} as m0 " +
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
-                "and m0.time >= {{fromSecs}} and m0.time <  {{toSecs}} " +
+                "and m0.time >= {{fromSecs}} " +
+                "and m0.time <  {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
                 "and m0.fcst_len < 24 " +
                 "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
@@ -155,6 +156,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         const mean = sum / count;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
+        curve['xmin'] = xmin;
+        curve['xmax'] = xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         curve['axisKey'] = axisKey;
