@@ -899,26 +899,30 @@ const testGetTables = new ValidatedMethod({
             password:{type: String},
             database:{type: String}
         }).validator(),
-    run (params){
-        var Future = require('fibers/future');
-        const queryWrap = Future.wrap(function(callback) {
-            const connection = mysql.createConnection({
-                host: params.host,
-                user: params.user,
-                password: params.password,
-                database: params.database
+    run (params) {
+        if (Meteor.isServer) {
+            var Future = require('fibers/future');
+            const queryWrap = Future.wrap(function (callback) {
+                const connection = mysql.createConnection({
+                    host: params.host,
+                    user: params.user,
+                    password: params.password,
+                    database: params.database
+                });
+                connection.query("show tables;", function (err, result) {
+                    const tables = result.map(function (a) {
+                        return a.Tables_in_ruc_ua_sums2;
+                    });
+                    return callback(err, tables);
+                });
+                connection.end(function (err) {
+                    if (err) {
+                        console.log("testGetTables cannot end connection");
+                    }
+                });
             });
-            connection.query("show tables;", function (err, result) {
-                const tables = result.map(function(a) {return a.Tables_in_ruc_ua_sums2;});
-                return callback(err, tables);
-            });
-            connection.end(function (err) {
-                if (err) {
-                    console.log("testGetTables cannot end connection");
-                }
-            });
-        });
-        return queryWrap().wait();
+            return queryWrap().wait();
+        }
     }
 });
 

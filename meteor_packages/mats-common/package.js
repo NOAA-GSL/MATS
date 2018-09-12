@@ -1,6 +1,6 @@
 Package.describe({
     name: 'randyp:mats-common',
-    version: '1.7.0',
+    version: '1.8.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
@@ -13,10 +13,10 @@ Package.describe({
 Package.onUse(function (api) {
     api.versionsFrom('1.4.1.1');
     Npm.depends({
-        'fibers': '1.0.14',
-        'fs': '0.0.2',
+        'fibers': '2.0.0',
+        'fs-extra': '7.0.0',
         "babel-runtime": "6.26.0",
-        "meteor-node-stubs": "0.2.3",
+        "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
         "dom-to-image": "2.6.0"
@@ -24,8 +24,8 @@ Package.onUse(function (api) {
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
     api.use('natestrauser:select2', 'client');
-    api.use('aldeed:simple-schema@1.5.3');
-    api.imply('aldeed:simple-schema@1.5.3');
+    api.use('aldeed:simple-schema');
+    api.imply('aldeed:simple-schema');
     api.use('mdg:validated-method');
     api.use('ecmascript');
     api.use('modules');
@@ -87,9 +87,6 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/client/index.js');
     api.addFiles('imports/startup/client/init.js');
     api.addFiles('imports/stylesheets/app.css');
-    api.addFiles('imports/startup/client/jquery.json-viewer.css');
-    api.addFiles('imports/startup/client/jquery.json-viewer.js');
-
     //server
     api.addFiles('imports/startup/server/data_util.js');
     api.addFiles('imports/startup/server/data_query_util.js');
@@ -106,12 +103,12 @@ Package.onUse(function (api) {
 
     //client
     api.addFiles('client/main.html', "client");
-    api.addFiles('client/main.js', "client");
+    //api.addFiles('client/main.js', "client");
     api.addFiles('client/error.js', "client");
     api.addFiles('client/info.js', "client");
 
     //server
-    api.addFiles('server/main.js', "server");
+    //api.addFiles('server/main.js', "server");
 
     //lib
     api.addFiles("lib/regression.js", ['client', 'server']);

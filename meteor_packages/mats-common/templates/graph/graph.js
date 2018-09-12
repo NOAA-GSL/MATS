@@ -588,8 +588,6 @@ Template.graph.events({
 
         var graphView = document.getElementById('graphView');
         Session.set('graphViewMode',matsTypes.PlotView.graph);
-        Blaze.render(Template.graph, graphView);
-
     },
     'click .textButton': function () {
         document.getElementById("plot-buttons-grp").style.display = "block";
