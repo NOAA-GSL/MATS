@@ -6,9 +6,11 @@
 # links to the newest used meteor npm and node. The system (things like ppassenger) is linked to these links.
 # The utility performs these steps for each app.
 # 1) meteor reset
-# 2) remove node modules
+# 2) remove .meteor/local
 # 3) meteor update (all packages)
-# 4) meteor install babel runtime - I don't know why we have to do this....
+# 4) remove node modules
+# 5) meteor npm install
+# 4) meteor npm install specific babel runtime - I don't know why we have to do this.... I think I hate babel-runtime
 # 5) clean up the meteor releases by removing unused ones
 # 6) re-link the node and npm executibliles in .meteor to the newest ones in the newest meteor packages
 
@@ -35,10 +37,11 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         cd $app;
         pwd;
         meteor reset
-        rm -rf node_modules
+        rm -rf .meteor/local
         meteor update --all-packages;
-        meteor npm install --save babel-runtime
-	    meteor npm install --save fibers
+        rm -rf node_modules
+	    meteor npm install
+        meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
         cd ..;
     done
 
