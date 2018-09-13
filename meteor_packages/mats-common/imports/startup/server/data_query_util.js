@@ -1,7 +1,8 @@
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {Meteor} from "meteor/meteor";
 
-const Future = require('fibers/future');
+//const Future = require('fibers/future');
 
 //utility to get the cadence for a particular model, so that the query function
 //knows where to include null points for missing data.
@@ -118,131 +119,141 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
      return: rowset - an array of rows
      throws: error
      */
-    const queryWrap = Future.wrap(function (pool, statement, callback) {
-        pool.query(statement, function (err, rows) {
-            return callback(err, rows);
+    if (Meteor.isServer) {
+        const Future = require('fibers/future');
+        const queryWrap = Future.wrap(function (pool, statement, callback) {
+            pool.query(statement, function (err, rows) {
+                return callback(err, rows);
+            });
         });
-    });
-    return queryWrap(pool, statement).wait();
+        return queryWrap(pool, statement).wait();
+    }
 };
 
 //this method queries the database for timeseries plots
 const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate, hasLevels, forceRegularCadence) {
     //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
+    const Future = require('fibers/future');
+    if (Meteor.isServer) {
+        const plotParams = matsDataUtils.getPlotParamsFromStack();
+        const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
-    const plotParams = matsDataUtils.getPlotParamsFromStack();
-    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+        var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
+        const regular = !(!forceRegularCadence && averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
 
-    var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
-    const regular = !(!forceRegularCadence && averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
+        var dFuture = new Future();
+        var d = [];  // d will contain the curve data
+        var error = "";
+        var N0 = [];
+        var N_times = [];
 
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var N0 = [];
-    var N_times = [];
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            } else {
+                const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular);
+                d = parsedData.d;
+                N0 = parsedData.N0;
+                N_times = parsedData.N_times;
+                cycles = parsedData.cycles;
+            }
+            // done waiting - have results
+            dFuture['return']();
+        });
 
-    pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err !== undefined && err !== null) {
-            error = err.message;
-        } else if (rows === undefined || rows === null || rows.length === 0) {
-            error = matsTypes.Messages.NO_DATA_FOUND;
-        } else {
-            const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular);
-            d = parsedData.d;
-            N0 = parsedData.N0;
-            N_times = parsedData.N_times;
-            cycles = parsedData.cycles;
-        }
-        // done waiting - have results
-        dFuture['return']();
-    });
-
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        data: d,
-        error: error,
-        N0: N0,
-        N_times: N_times,
-        averageStr: averageStr,
-        cycles: cycles,
-    };
+        // wait for future to finish
+        dFuture.wait();
+        return {
+            data: d,
+            error: error,
+            N0: N0,
+            N_times: N_times,
+            averageStr: averageStr,
+            cycles: cycles,
+        };
+    }
 };
 
 //this method queries the database for specialty curves such as profiles, dieoffs, threshold plots, valid time plots, and histograms
 const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
+    if (Meteor.isServer) {
+        const Future = require('fibers/future');
+        const plotParams = matsDataUtils.getPlotParamsFromStack();
+        const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
-    const plotParams = matsDataUtils.getPlotParamsFromStack();
-    const completenessQCParam = Number(plotParams["completeness"]) / 100;
+        var dFuture = new Future();
+        var d = [];  // d will contain the curve data
+        var error = "";
+        var N0 = [];
+        var N_times = [];
 
-    var dFuture = new Future();
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var N0 = [];
-    var N_times = [];
-
-    pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err !== undefined && err !== null) {
-            error = err.message;
-        } else if (rows === undefined || rows === null || rows.length === 0) {
-            error = matsTypes.Messages.NO_DATA_FOUND;
-        } else {
-            var parsedData;
-            if (plotType !== matsTypes.PlotTypes.histogram) {
-                parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                parsedData = parseQueryDataHistogram(rows, hasLevels);
+                var parsedData;
+                if (plotType !== matsTypes.PlotTypes.histogram) {
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
+                } else {
+                    parsedData = parseQueryDataHistogram(rows, hasLevels);
+                }
+                d = parsedData.d;
+                N0 = parsedData.N0;
+                N_times = parsedData.N_times;
             }
-            d = parsedData.d;
-            N0 = parsedData.N0;
-            N_times = parsedData.N_times;
-        }
-        dFuture['return']();
-    });
+            dFuture['return']();
+        });
 
-    // wait for future to finish
-    dFuture.wait();
-    return {
-        data: d,
-        error: error,
-        N0: N0,
-        N_times: N_times,
-    };
+        // wait for future to finish
+        dFuture.wait();
+        return {
+            data: d,
+            error: error,
+            N0: N0,
+            N_times: N_times,
+        };
+    }
 };
 
 const queryMapDB = function (pool, statement) {
-    var d = [];  // d will contain the curve data
-    var error = "";
-    var pFuture = new Future();
-    pool.query(statement, function (err, rows) {
-        // query callback - build the curve data from the results - or set an error
-        if (err !== undefined && err !== null) {
-            error = err.message;
-        } else if (rows === undefined || rows === null || rows.length === 0) {
-            error = matsTypes.Messages.NO_DATA_FOUND;
-        } else {
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                var siteName = rows[rowIndex].sta_name;
-                var N_times = rows[rowIndex].N_times;
-                var min_time = rows[rowIndex].min_time;
-                var max_time = rows[rowIndex].max_time;
-                var model_diff = rows[rowIndex].model_ob_diff;
-                d.push([siteName, N_times, min_time, max_time, model_diff]);
-            }// end of loop row
-        }
-        // done waiting - have results
-        pFuture['return']();
-    });
+    if (Meteor.isServer) {
+        var d = [];  // d will contain the curve data
+        var error = "";
+        const Future = require('fibers/future');
+        var pFuture = new Future();
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            } else {
+                for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    var siteName = rows[rowIndex].sta_name;
+                    var N_times = rows[rowIndex].N_times;
+                    var min_time = rows[rowIndex].min_time;
+                    var max_time = rows[rowIndex].max_time;
+                    var model_diff = rows[rowIndex].model_ob_diff;
+                    d.push([siteName, N_times, min_time, max_time, model_diff]);
+                }// end of loop row
+            }
+            // done waiting - have results
+            pFuture['return']();
+        });
 
-    // wait for future to finish
-    pFuture.wait();
-    return {
-        data: d,    // [sub_values,sub_secs] as arrays
-        error: error,
-    };
+        // wait for future to finish
+        pFuture.wait();
+        return {
+            data: d,    // [sub_values,sub_secs] as arrays
+            error: error,
+        };
+    }
 };
 
 //this method parses the returned query data for timeseries plots

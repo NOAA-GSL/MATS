@@ -1,13 +1,13 @@
 {
-  "name": "visibility",
+  "name": "landuse",
   "private": true,
   "scripts": {
     "start": "meteor run"
   },
   "dependencies": {
-    "babel-runtime": "^6.26.0",
-    "fibers": "^1.0.15",
-    "fs": "0.0.1-security",
+    "@babel/runtime": "7.0.0-beta.55",
+    "fibers": "^2.0.0",
+    "fs-extra": "^7.0.0",
     "meteor-node-stubs": "^0.2.3",
     "modules": "^0.4.0"
   }
