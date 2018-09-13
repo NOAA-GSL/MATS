@@ -25,6 +25,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("SiteMap");
     Meteor.subscribe("StationMap");
     Meteor.subscribe("appName");
+    Meteor.subscribe("Results");
     Session.set('Curves', []);
     Session.set('PlotParams', []);
 

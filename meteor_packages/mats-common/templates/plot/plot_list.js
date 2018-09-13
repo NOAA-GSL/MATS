@@ -357,7 +357,7 @@ Template.plotList.events({
                 Session.set('graphViewMode',matsTypes.PlotView.graph);
 
                 var graphFunction = pgf.graphFunction;
-                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, result) {
+                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, key) {
                     if (error !== undefined) {
                         //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
                         setError(error);
@@ -366,23 +366,15 @@ Template.plotList.events({
                         document.getElementById("spinner").style.display = "none";
                         return false;
                     }
-
-                    if (result.error !== undefined && result.error !== "") {
-                        setError(new Error(result.error));
-                        Session.set("spinner_img", "spinner.gif");
-                        document.getElementById("spinner").style.display="none";
-                        return false;
-                    }
-
                     document.getElementById('graph-container').style.display = 'block';
                     document.getElementById('plotType').style.display = 'none';
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    matsCurveUtils.PlotResult = jQuery.extend(true,{}, result);
+                    matsCurveUtils.PlotResult = key;
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
-                    eval (graphFunction)(result, Session.get('Curves'));
+                    eval (graphFunction)(key, Session.get('Curves'));
 
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";

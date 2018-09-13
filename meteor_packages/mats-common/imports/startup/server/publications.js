@@ -170,4 +170,11 @@ if (Meteor.isServer) {
         }
         return this.ready();
     });
+    Meteor.publish("Results", function () {
+        var data = matsCollections.Results.find({});
+        if (data) {
+            return data;
+        }
+        return this.ready();
+    });
 }

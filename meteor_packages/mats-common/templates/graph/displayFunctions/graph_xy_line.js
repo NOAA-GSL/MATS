@@ -1,15 +1,16 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
 
-graphXYLine = function (result) {
+graphXYLine = function (key) {
     // get plot info
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var dataset = result.data;
-    var options = result.options;
+    var keyData = matsCollections.Results.findOne({key:key}).data;
+    var dataset = keyData.data;
+    var options = keyData.options;
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {

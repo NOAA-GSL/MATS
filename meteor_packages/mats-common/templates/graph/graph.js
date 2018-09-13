@@ -728,7 +728,7 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        Session.set("data",matsCurveUtils.PlotResult.basis);
+        //Session.set("dataKey",key);
         $("#dataModal").modal('show');
     },
     'click .axisLimitButton': function () {

@@ -17,9 +17,10 @@ const getDataForTimes = function(data, time) {
 };
 
 const getDataForCurve = function(curve) {
-    for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
-        if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
-            return matsCurveUtils.PlotResult.data[dataIndex];
+    var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
+    for (var dataIndex = 0; dataIndex < keyData.length; dataIndex++) {
+        if (keyData[dataIndex].label === curve.label) {
+            return matsCurveUtils.data[dataIndex];
         }
     }
     return undefined;
@@ -79,7 +80,8 @@ Template.textDailyModelCycleOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
+        var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
+        if (keyData === undefined || keyData.length == 0) {
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
@@ -93,9 +95,9 @@ Template.textDailyModelCycleOutput.helpers({
 
         var timeSet = new Set();
         var di = 0;
-        for (var i = 0; i < matsCurveUtils.PlotResult.data.length; i++) {
-            for (di = 0; di < matsCurveUtils.PlotResult.data[i].data.length; di++) {
-                matsCurveUtils.PlotResult.data[i] && matsCurveUtils.PlotResult.data[i].data[di] && timeSet.add(matsCurveUtils.PlotResult.data[i].data[di][0]);
+        for (var i = 0; i < keyData.length; i++) {
+            for (di = 0; di < keyData[i].data.length; di++) {
+                keyData[i] && keyData[i].data[di] && timeSet.add(keyData[i].data[di][0]);
             }
         }
         times = Array.from (timeSet);
@@ -107,8 +109,8 @@ Template.textDailyModelCycleOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined ||
-            matsCurveUtils.PlotResult.length == 0) {
+        var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
+        if (keyData === undefined || keyData.length == 0) {
             return false;
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
@@ -162,7 +164,9 @@ Template.textDailyModelCycleOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
+        var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
+
+        if (keyData === undefined || keyData.length == 0) {
             return[];
         }
         var curves = Session.get('Curves');
@@ -178,10 +182,10 @@ Template.textDailyModelCycleOutput.helpers({
                 break;
             }
         }
-        if (matsCurveUtils.PlotResult.data[cindex] === undefined) {
+        if (keyData[cindex] === undefined) {
             return [];
         }
-        const resultData = matsCurveUtils.PlotResult.data[cindex].data;
+        const resultData = keyData[cindex].data;
         var data = resultData.map(function(value){return value[1];});
         var times = resultData.map(function(value){return value[0];});
         const stats = matsCurveUtils.get_err(data,times);
@@ -211,8 +215,9 @@ Template.textDailyModelCycleOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
+        var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
 
-        if (matsCurveUtils.PlotResult.data === undefined) {
+        if (keyData === undefined) {
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dailyModelCycle) {
@@ -242,6 +247,7 @@ Template.textDailyModelCycleOutput.events({
         }
         const curves = Session.get('Curves');
         const fillStr = settings.NullFillString;
+        var keyData = matsCollections.Results.findOne({key:matsCurveUtils.PlotResult}).data;
         var data = [];
         if (curves === undefined || curves.length == 0) {
             return data;
@@ -251,12 +257,12 @@ Template.textDailyModelCycleOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        const curveNums = matsCurveUtils.PlotResult.data.length - 1;
-        const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
+        const curveNums = keyData.length - 1;
+        const dataRows = _.range(keyData[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
+            var line = moment.utc(keyData[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                const pdata = keyData[curveIndex].data[rowIndex][1] !== null?(Number(keyData[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);

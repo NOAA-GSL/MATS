@@ -15,65 +15,10 @@ const metaDataTableUpdates = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     if (Meteor.isServer) {
-        var publicDir = "/web/static/";
-        var graphDataDir = "graphData/";
-        var publicGraphDir = publicDir + "/" + graphDataDir;
-        var fs = require('fs');
-        try {
-            if (!fs.existsSync(publicGraphDir)) {
-                fs.mkdirSync(publicGraphDir);
-            }
-        } catch (e) {
-            console.log('api.matsMethods.saveResultData', "error: " + e);
-            return "Error creating directory " + publicGraphDir + " <br>" + e;
-        }
-        var user = Meteor.userId() == null ? "anonymous" : Meteor.userId();
-        var tStamp = moment(new Date()).utc().format("YYYY-MM-DD_hh_mm_ss");
-        var datFileName = user + "-" + tStamp + ".json";
-        var fName = publicGraphDir + datFileName;
-        var link;
-        if (process.env.NODE_ENV === "development") {
-            link = "file:///web/static/" + graphDataDir + datFileName;
-        } else {
-            link = Meteor.absoluteUrl() + "/static/" + graphDataDir + datFileName;
-        }
-        var files = fs.readdirSync(publicGraphDir);
-        files.sort(function (a, b) {
-            return fs.statSync(publicGraphDir + a).mtime.getTime() -
-                fs.statSync(publicGraphDir + b).mtime.getTime();
-        });
-        // bin the files based on user
-        var fileBin = {};
-        for (var fIndex = 0; fIndex < files.length; fIndex++) {
-            var f = files[fIndex];
-            var u = f.split('-')[0];
-            fileBin[u] = fileBin[u] == undefined ? [] : fileBin[u];
-            fileBin[u].push(f);
-        }
-        var removeThese = [];
-        var fBins = Object.keys(fileBin);
-        for (fIndex = 0; fIndex < fBins.length; fIndex++) {
-            if (fileBin[fBins[fIndex]].length > 20) {
-                var oldOnes = fileBin[fBins[fIndex]].slice(0, fileBin[fBins[fIndex]].length - 20);
-                removeThese = removeThese.concat(oldOnes);
-            }
-        }
-        for (fIndex = 0; fIndex < removeThese.length; fIndex++) {
-            var path = publicGraphDir + removeThese[fIndex];
-            fs.unlink(path, function (err) {
-                if (err) {
-                    console.log('api.matsMethods.saveResultData', "could not remove file: " + path);
-                    return "console.log('api.matsMethods.saveResultData could not remove file: <br>" + path + " <br>" + err;
-                }
-            });
-        }
-        fs.writeFile(fName, JSON.stringify(result, null, 2), function (err) {
-            if (err) {
-                console.log('api.matsMethods.saveResultData', "could not write file: " + fName + "error: " + err);
-                return "api.matsMethods.saveResultData could not write file: <BR>" + fName + " <BR> error: " + err;
-            }
-        });
-        return link;
+        var hash = require('object-hash');
+        var key = hash(result.basis.plotParams);
+        matsCollections.Results.insert({"createdAt": new Date(),key:key,result:result});// createdAt ensures expiration set in mats-collections
+        return key;
     }
 };
 
@@ -735,15 +680,24 @@ const getGraphData = new ValidatedMethod({
     }).validator(),
     run(params){
         if (Meteor.isServer) {
-            var Future = require('fibers/future');
-            var future = new Future();
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
             try {
-                global[dataFunction](params.plotParams, function (results) {
-                        results.basis['dataLink'] = saveResultData(results);
-                    future["return"](results);
-                });
+                var results;
+                var hash = require('object-hash');
+                var key = hash(params.plotParams);
+                results = matsCollections.Results.findOne({key:key});
+                if (results === undefined) {
+                    var Future = require('fibers/future');
+                    var future = new Future();
+                    global[dataFunction](params.plotParams, function (results) {
+                        key = saveResultData(results);
+                        future["return"](key);
+                    });
+                    return future.wait();
+                } else {
+                    return key;
+                }
             } catch(dataFunctionError) {
                 //throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
                 if ( dataFunctionError.toLocaleString().indexOf( "INFO:" ) !== -1) {
@@ -752,7 +706,7 @@ const getGraphData = new ValidatedMethod({
                     throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
                 }
             }
-            return future.wait();
+            return key;
         }
     }
 });
