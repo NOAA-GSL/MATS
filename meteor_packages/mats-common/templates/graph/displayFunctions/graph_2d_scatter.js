@@ -8,7 +8,7 @@ graph2dScatter = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key:key}).result;
+    var keyData = matsCollections.Results.findOne({key: key}).result;
     var dataset = keyData.data;
     var options = keyData.options;
     if (min < 400) {
@@ -64,7 +64,7 @@ graph2dScatter = function (key) {
         }
     }
 
-    Session.set('options',options);
+    Session.set('options', options);
 
     var placeholder = $("#placeholder");
 
@@ -150,7 +150,7 @@ graph2dScatter = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add axis customization modal submit button
@@ -222,7 +222,7 @@ graph2dScatter = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
@@ -251,7 +251,7 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add points show/hide buttons
@@ -278,7 +278,7 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
@@ -310,7 +310,7 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // selection zooming
