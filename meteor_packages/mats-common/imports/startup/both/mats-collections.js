@@ -32,9 +32,9 @@ var SiteMap = new Mongo.Collection("SiteMap");
 var StationMap = new Mongo.Collection("StationMap");
 var appName = new Mongo.Collection("appName");
 var Results = new Mongo.Collection("Results");
-if (Meteor.isServer) {
-    Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
-}
+// if (Meteor.isServer) {
+//     Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
+// }
 //var ServiceConfiguration = new Mongo.Collection("ServiceConfiguration");
 
 

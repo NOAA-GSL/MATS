@@ -17,6 +17,7 @@ const saveResultData = function(result){
     if (Meteor.isServer) {
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
+console.log(JSON.stringify(result.basis.plotParams,null,4))
         matsCollections.Results.insert({"createdAt": new Date(),key:key,result:result});// createdAt ensures expiration set in mats-collections
         return key;
     }
@@ -685,6 +686,7 @@ const getGraphData = new ValidatedMethod({
             try {
                 var results;
                 var hash = require('object-hash');
+console.log(JSON.stringify(params.plotParams,null,4))
                 var key = hash(params.plotParams);
                 results = matsCollections.Results.findOne({key:key});
                 if (results === undefined) {
