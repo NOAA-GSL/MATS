@@ -8,7 +8,7 @@ graphHistogram = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key:key}).result;
+    var keyData = matsCollections.Results.findOne({key: key}).result;
     var dataset = keyData.data;
     var options = keyData.options;
     if (min < 400) {
@@ -64,7 +64,7 @@ graphHistogram = function (key) {
         }
     }
 
-    Session.set('options',options);
+    Session.set('options', options);
 
     var placeholder = $("#placeholder");
 
@@ -150,7 +150,7 @@ graphHistogram = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add axis customization modal submit button
@@ -222,7 +222,7 @@ graphHistogram = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add bars show/hide buttons
@@ -249,7 +249,7 @@ graphHistogram = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
@@ -281,7 +281,7 @@ graphHistogram = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // selection zooming

@@ -1,4 +1,4 @@
-graphMap = function(key) {
+graphMap = function (key) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     if (vpw < 400) {
         vpw = (.9 * vpw).toString() + "px";
@@ -13,7 +13,7 @@ graphMap = function(key) {
     }
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key:key}).result;
+    var keyData = matsCollections.Results.findOne({key: key}).result;
     var dataset = keyData.data;
     var options = keyData.options;
 
@@ -36,8 +36,8 @@ graphMap = function(key) {
         var map = new L.map('finalMap', {
             doubleClickZoom: false,
             scrollWheelZoom: false,
-            trackResize:true,
-            zoomControl:true,
+            trackResize: true,
+            zoomControl: true,
             minZoom: minZoomLevel,
             maxZoom: maxZoomLevel,
             wheelPxPerZoomLevel: 3
@@ -89,8 +89,7 @@ graphMap = function(key) {
     };
 
 
-
-    var createMarkers = function() {
+    var createMarkers = function () {
         // clear the markers
         map.eachLayer(function (l) {
             if (l._icon) {
@@ -132,10 +131,10 @@ graphMap = function(key) {
                 title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
             })
             marker.bindPopup(markerPopUp);
-            marker.on('mouseover', function(e) {
+            marker.on('mouseover', function (e) {
                 this.openPopup();
             });
-            marker.on('mouseout', function(e) {
+            marker.on('mouseout', function (e) {
                 this.closePopup();
             });
 
@@ -189,7 +188,7 @@ graphMap = function(key) {
     };
 
     // hide the spinner
-    document.getElementById("spinner").style.display="none";
+    document.getElementById("spinner").style.display = "none";
 
     // initial resize seems to be necessary
     resizeMap(this);

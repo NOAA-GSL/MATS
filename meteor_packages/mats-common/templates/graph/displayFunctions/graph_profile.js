@@ -8,7 +8,7 @@ graphProfile = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key:key}).result;
+    var keyData = matsCollections.Results.findOne({key: key}).result;
     var dataset = keyData.data;
     var options = keyData.options;
 
@@ -78,7 +78,7 @@ graphProfile = function (key) {
         }
     }
 
-    Session.set('options',options);
+    Session.set('options', options);
 
     var placeholder = $("#placeholder");
 
@@ -164,7 +164,7 @@ graphProfile = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add axis customization modal submit button
@@ -236,7 +236,7 @@ graphProfile = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     var errorbars = Session.get('errorbars');
@@ -293,7 +293,7 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add points show/hide buttons
@@ -320,7 +320,7 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add errorbars show/hide buttons
@@ -359,7 +359,7 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
@@ -391,7 +391,7 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options',options);
+        Session.set('options', options);
     });
 
     // add grid show/hide buttons

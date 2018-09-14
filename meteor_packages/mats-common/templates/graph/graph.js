@@ -1,10 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsMethods} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
-import {matsCurveUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsCurveUtils, matsMethods, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 import domtoimage from 'dom-to-image';
 
 var width = function () {
@@ -24,7 +20,7 @@ var height = function () {
     }
 };
 
-Template.graph.onRendered(function() {
+Template.graph.onRendered(function () {
     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "none";
     }
@@ -238,14 +234,14 @@ Template.graph.onCreated(function () {
     });
 
 
-    $(document).keyup(function(event) {
+    $(document).keyup(function (event) {
         if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
             document.getElementById('graph-control').style.display = 'block';
             document.getElementById('showAdministration').style.display = 'block';
             document.getElementById('navbar').style.display = 'block';
             document.getElementById('footnav').style.display = 'block';
             var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-            for (var i=0; i < ctbgElems.length; i++){
+            for (var i = 0; i < ctbgElems.length; i++) {
                 ctbgElems[i].style.display = 'block';
             }
             document.getElementById('plotType').style.display = 'block';
@@ -281,7 +277,7 @@ Template.graph.helpers({
         return Session.get('Curves');
     },
     plotName: function () {
-        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map ? "" :  Session.get('PlotParams').plotAction.toUpperCase();
+        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
     },
     curveText: function () {
         if (this.diffFrom === undefined) {
@@ -303,7 +299,7 @@ Template.graph.helpers({
             return this.label + ":  Difference";
         }
     },
-    confidenceDisplay: function() {
+    confidenceDisplay: function () {
         if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
             return "block";
         }
@@ -390,10 +386,10 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
-    isMap: function() {
+    isMap: function () {
         return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
     },
-    isProfile: function() {
+    isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile);
     }
 });
@@ -419,10 +415,10 @@ Template.graph.events({
             document.getElementById('curveList').style.display = 'block';
         }
         if (document.getElementById("plotTypeContainer")) {
-            document.getElementById("plotTypeContainer").style.display="block";
+            document.getElementById("plotTypeContainer").style.display = "block";
         }
         if (document.getElementById("scatterView")) {
-            document.getElementById("scatterView").style.display="block";
+            document.getElementById("scatterView").style.display = "block";
         }
         if (document.getElementById("scatter2d")) {
             document.getElementById("scatter2d").style.display = "block";
@@ -445,14 +441,14 @@ Template.graph.events({
         window.open(location);
         return false;
     },
-    'click .header': function(event){
+    'click .header': function (event) {
         document.getElementById('graph-control').style.display = 'block';
         document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
 
         var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
+        for (var i = 0; i < ctbgElems.length; i++) {
             ctbgElems[i].style.display = 'block';
         }
     },
@@ -461,7 +457,7 @@ Template.graph.events({
         Session.set("printMode", true);
         document.getElementById('graph-control').style.display = 'none';
         var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
+        for (var i = 0; i < ctbgElems.length; i++) {
             ctbgElems[i].style.display = 'none';
         }
         var node = document.getElementById("graph-container");
@@ -469,12 +465,12 @@ Template.graph.events({
             .then(function (dataUrl) {
                 document.getElementById('graph-control').style.display = 'block';
                 var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
+                for (var i = 0; i < ctbgElems.length; i++) {
                     ctbgElems[i].style.display = 'block';
                 }
                 var img = new Image();
-                img.src=dataUrl;
-                img.onload = function() {
+                img.src = dataUrl;
+                img.onload = function () {
                     var width = img.width;
                     var height = img.height;
                     const ratio = height / width;
@@ -486,15 +482,18 @@ Template.graph.events({
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image","_blank","left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
+                    const wind = window.open("image", "_blank", "left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
                     wind.document.write("<html><head><title>Plot</title></head>" +
                         "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
                     document.getElementById('graph-control').style.display = 'block';
                     var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i=0; i < ctbgElems.length; i++){
+                    for (var i = 0; i < ctbgElems.length; i++) {
                         ctbgElems[i].style.display = 'block';
                     }
-                    setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
+                    setTimeout(function () {
+                        wind.dispatchEvent(new Event('resize'));
+                        ;
+                    }, 1000);
                     matsCurveUtils.hideSpinner();
                 }
             })
@@ -502,7 +501,7 @@ Template.graph.events({
                 console.error('Graph.preview error, ', error);
                 document.getElementById('graph-control').style.display = 'block';
                 var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
+                for (var i = 0; i < ctbgElems.length; i++) {
                     ctbgElems[i].style.display = 'block';
                 }
                 matsCurveUtils.hideSpinner();
@@ -513,7 +512,7 @@ Template.graph.events({
         Session.set("printMode", true);
         document.getElementById('graph-control').style.display = 'none';
         var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
+        for (var i = 0; i < ctbgElems.length; i++) {
             ctbgElems[i].style.display = 'none';
         }
         var node = document.getElementById("graph-container");
@@ -521,12 +520,12 @@ Template.graph.events({
             .then(function (dataUrl) {
                 document.getElementById('graph-control').style.display = 'block';
                 var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
+                for (var i = 0; i < ctbgElems.length; i++) {
                     ctbgElems[i].style.display = 'block';
                 }
                 var img = new Image();
-                img.src=dataUrl;
-                img.onload = function() {
+                img.src = dataUrl;
+                img.onload = function () {
                     var width = img.width;
                     var height = img.height;
                     var canvas = document.createElement("canvas");
@@ -535,15 +534,18 @@ Template.graph.events({
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image","_blank","left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
+                    const wind = window.open("image", "_blank", "left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
                     wind.document.write("<html><head><title>Plot</title></head>" +
                         "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
                     document.getElementById('graph-control').style.display = 'block';
                     var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i=0; i < ctbgElems.length; i++){
+                    for (var i = 0; i < ctbgElems.length; i++) {
                         ctbgElems[i].style.display = 'block';
                     }
-                    setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
+                    setTimeout(function () {
+                        wind.dispatchEvent(new Event('resize'));
+                        ;
+                    }, 1000);
                     matsCurveUtils.hideSpinner();
                 }
             })
@@ -551,7 +553,7 @@ Template.graph.events({
                 console.error('Graph.publish error, ', error);
                 document.getElementById('graph-control').style.display = 'block';
                 var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
+                for (var i = 0; i < ctbgElems.length; i++) {
                     ctbgElems[i].style.display = 'block';
                 }
                 matsCurveUtils.hideSpinner();
@@ -587,7 +589,7 @@ Template.graph.events({
         }
 
         var graphView = document.getElementById('graphView');
-        Session.set('graphViewMode',matsTypes.PlotView.graph);
+        Session.set('graphViewMode', matsTypes.PlotView.graph);
     },
     'click .textButton': function () {
         document.getElementById("plot-buttons-grp").style.display = "block";
@@ -600,7 +602,7 @@ Template.graph.events({
 
         switch (matsPlotUtils.getPlotType()) {
             case matsTypes.PlotTypes.timeSeries:
-                Session.set('graphViewMode',matsTypes.PlotView.textSeries);
+                Session.set('graphViewMode', matsTypes.PlotView.textSeries);
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
@@ -612,7 +614,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.profile:
-                Session.set('graphViewMode',matsTypes.PlotView.textProfile);
+                Session.set('graphViewMode', matsTypes.PlotView.textProfile);
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
@@ -624,7 +626,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.dieoff:
-                Session.set('graphViewMode',matsTypes.PlotView.textDieoff);
+                Session.set('graphViewMode', matsTypes.PlotView.textDieoff);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -636,7 +638,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.threshold:
-                Session.set('graphViewMode',matsTypes.PlotView.textThreshold);
+                Session.set('graphViewMode', matsTypes.PlotView.textThreshold);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -648,7 +650,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.validtime:
-                Session.set('graphViewMode',matsTypes.PlotView.textValidTime);
+                Session.set('graphViewMode', matsTypes.PlotView.textValidTime);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -660,7 +662,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.dailyModelCycle:
-                Session.set('graphViewMode',matsTypes.PlotView.textDailyModelCycle);
+                Session.set('graphViewMode', matsTypes.PlotView.textDailyModelCycle);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -672,7 +674,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.map:
-                Session.set('graphViewMode',matsTypes.PlotView.textMap);
+                Session.set('graphViewMode', matsTypes.PlotView.textMap);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -684,7 +686,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "none";
                 break;
             case matsTypes.PlotTypes.histogram:
-                Session.set('graphViewMode',matsTypes.PlotView.textHistogram);
+                Session.set('graphViewMode', matsTypes.PlotView.textHistogram);
                 document.getElementById("textSeriesView").style.display = "none";
                 document.getElementById("textProfileView").style.display = "none";
                 document.getElementById("textScatter2dView").style.display = "none";
@@ -696,7 +698,7 @@ Template.graph.events({
                 document.getElementById("textHistogramView").style.display = "block";
                 break;
             case matsTypes.PlotTypes.scatter2d:
-                Session.set('graphViewMode',matsTypes.PlotView.textScatter);
+                Session.set('graphViewMode', matsTypes.PlotView.textScatter);
                 document.getElementById("textDieOffView").style.display = "none";
                 document.getElementById("textThresholdView").style.display = "none";
                 document.getElementById("textValidTimeView").style.display = "none";
@@ -709,7 +711,7 @@ Template.graph.events({
                 break;
             default:
                 console.log("Error: no plot type detected");
-                Session.set('graphViewMode',matsTypes.PlotView.graph);
+                Session.set('graphViewMode', matsTypes.PlotView.graph);
         }
     },
     'click .export': function () {
