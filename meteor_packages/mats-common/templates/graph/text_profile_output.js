@@ -1,21 +1,18 @@
-import { matsCollections } from 'meteor/randyp:mats-common';
-import { matsTypes } from 'meteor/randyp:mats-common';
-import { matsCurveUtils } from 'meteor/randyp:mats-common';
-import { moment } from 'meteor/momentjs:moment';
-import { matsPlotUtils } from 'meteor/randyp:mats-common';
-const getDataForLevel = function(data, level) {
-    for (var i =0; i < data.length; i++) {
-        if (data[i][1] == level) {
-            return data[i] === null ? undefined : data[i];
-        }
-    }
-    return undefined;
-};
+import {matsCollections, matsCurveUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {moment} from 'meteor/momentjs:moment';
+/*
+Referring to the Session variable plotResultKey here causes the html template to get re-rendered with the current graph data
+(which is in the Results collection).
+ */
 
-const getDataForCurve = function(curve) {
-    for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
-        if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
-            return matsCurveUtils.PlotResult.data[dataIndex];
+const getDataForCurve = function (curve) {
+    if (Session.get("plotResultKey") == undefined) {
+        return undefined;
+    }
+    var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+    for (var dataIndex = 0; dataIndex < plotResultData.length; dataIndex++) {
+        if (plotResultData[dataIndex].label === curve.label) {
+            return plotResultData[dataIndex];
         }
     }
     return undefined;
@@ -75,20 +72,7 @@ Template.textProfileOutput.helpers({
         }
     },
     curves: function (curve) {
-        /*
-         This (plotResultsUpDated) is very important.
-         The page is rendered whe the graph page comes up, but the data from the data processing callback
-         in plotList.js or curveList.js may not have set the global variable
-         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
-         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
-         (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
-         made that unworkable.
-         */
-        const plotResultsUpDated = Session.get('PlotResultsUpDated');
-        if (plotResultsUpDated === undefined) {
-            return [];
-        }
+        Session.get("plotResultKey"); // make sure we re-render when data changes
         return Session.get('Curves');
     },
     curveText: function () {
@@ -102,28 +86,13 @@ Template.textProfileOutput.helpers({
         return curve.label;
     },
     pressureLevels: function(curve) {
-        /*
-         This (plotResultsUpDated) is very important.
-         The page is rendered when the graph page comes up, but the data from the data processing callback
-         in plotList.js or curveList.js may not have set the global variable
-         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
-         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
-         (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
-         made that unworkable.
-         */
-        const plotResultsUpDated = Session.get('PlotResultsUpDated');
-        if (plotResultsUpDated === undefined) {
-            return [];
-        }
-
-        if (matsCurveUtils.PlotResult.data === undefined) {
-            return [];
-        }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return [];
         }
-        const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+        if (Session.get("plotResultKey") === undefined) {
+            return [];
+        }
+        const curveData = getDataForCurve(curve);
         if (curveData === undefined || curveData.length == 0) {
             return [];
         }
@@ -138,24 +107,6 @@ Template.textProfileOutput.helpers({
         return levels;
     },
     points: function(level) {
-        /*
-         This (plotResultsUpDated) is very important.
-         The page is rendered whe the graph page comes up, but the data from the data processing callback
-         in plotList.js or curveList.js may not have set the global variable
-         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
-         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
-         (which is in the PlotResults global). This didn't used to be necessary because the plot data
-         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
-         made that unworkable.
-         */
-        const plotResultsUpDated = Session.get('PlotResultsUpDated');
-        if (plotResultsUpDated === undefined) {
-            return [];
-        }
-        if (matsCurveUtils.PlotResult.data === undefined ||
-            matsCurveUtils.PlotResult.length == 0) {
-            return false;
-        }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return false;
         }
@@ -174,7 +125,7 @@ Template.textProfileOutput.helpers({
         var stddev = fillStr;
         try {
             // see if I have a valid data object for this dataIndex and this level....
-            const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+            const curveData = getDataForCurve(curve);
             const dataPointVal = getDataForLevel(curveData, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[5].raw_stat && dataPointVal[5].raw_stat.toPrecision(4);
@@ -210,13 +161,13 @@ Template.textProfileOutput.events({
             clabels += "," + curves[c].label;
         }
         lineData.push(clabels);
-        //var dataSet = Session.get('dataset');
-        const curveNums = matsCurveUtils.PlotResult.data.length;
-        const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
+        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        const curveNums = plotResultData.length;
+        const dataRows = _.range(plotResultData[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = Number(matsCurveUtils.PlotResult.data[0].data[rowIndex][1]);
+            var line = Number(plotResultData[0].data[rowIndex][1]);
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][0] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][0])).toPrecision(4):fillStr;
+                const pdata = plotResultData[curveIndex].data[rowIndex][0] !== null?(Number(plotResultData[curveIndex].data[rowIndex][0])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             lineData.push(line);
