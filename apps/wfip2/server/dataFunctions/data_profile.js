@@ -13,7 +13,7 @@ dataProfile = function (plotParams, plotFunction) {
     var totalProcessingStart = moment();
     var matching = plotParams.plotAction === matsTypes.PlotActions.matched;
     var error = "";
-    var curves = plotParams.curves;
+    var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
     var max_verificationRunInterval = Number.MIN_VALUE;

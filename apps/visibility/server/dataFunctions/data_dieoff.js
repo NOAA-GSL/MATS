@@ -16,7 +16,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
     var error = "";
-    var curves = plotParams.curves;
+    var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
     var axisMap = Object.create(null);
