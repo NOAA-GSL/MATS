@@ -1,4 +1,4 @@
-graphMap = function(result) {
+graphMap = function(key) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     if (vpw < 400) {
         vpw = (.9 * vpw).toString() + "px";
@@ -12,9 +12,10 @@ graphMap = function(result) {
         vph = (.6 * vph).toString() + "px";
     }
 
-
-    var dataset = result.data;
-    var options = result.options
+    // get dataset info
+    var keyData = matsCollections.Results.findOne({key:key}).result;
+    var dataset = keyData.data;
+    var options = keyData.options;
 
     var defaultPoint = [39.834, -98.604];
     var defaultZoomLevel = 5;
