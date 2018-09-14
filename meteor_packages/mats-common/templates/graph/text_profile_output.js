@@ -19,52 +19,52 @@ const getDataForCurve = function (curve) {
 };
 
 Template.textProfileOutput.helpers({
-    plotName: function() {
+    plotName: function () {
         return Session.get('plotName');
     },
-    mean: function(curve) {
+    mean: function (curve) {
         try {
             return getDataForCurve(curve).stats.d_mean.toPrecision(4);
-        } catch(e) {
+        } catch (e) {
             return NaN;
         }
     },
-    numberOf: function(curve) {
+    numberOf: function (curve) {
         try {
             return getDataForCurve(curve).stats.n_good;
         } catch (e) {
             return NaN;
         }
     },
-    stderr: function(curve) {
+    stderr: function (curve) {
         try {
             return getDataForCurve(curve).stats.stde_betsy.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
-    sd: function(curve) {
+    sd: function (curve) {
         try {
             return getDataForCurve(curve).stats.sd.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
-    lag1: function(curve) {
+    lag1: function (curve) {
         try {
             return getDataForCurve(curve).stats.lag1.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
-    min: function(curve) {
+    min: function (curve) {
         try {
             return getDataForCurve(curve).stats.minx.toPrecision(4);
         } catch (e) {
             return NaN;
         }
     },
-    max: function(curve) {
+    max: function (curve) {
         try {
             return getDataForCurve(curve).stats.maxx.toPrecision(4);
         } catch (e) {
@@ -79,13 +79,13 @@ Template.textProfileOutput.helpers({
         if (this.regionName) {
             this.regionName = this.region.split(' ')[0];
         }  // regionName might be needed in getCurveText but only region is defined
-        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
+        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
     curveLabel: function (curve) {
         return curve.label;
     },
-    pressureLevels: function(curve) {
+    pressureLevels: function (curve) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return [];
         }
@@ -102,17 +102,17 @@ Template.textProfileOutput.helpers({
         for (di = 0; di < curveData.length; di++) {
             curveData[di] && levelSet.add(curveData[di][1]);
         }
-        var levels = Array.from (levelSet);
+        var levels = Array.from(levelSet);
         levels.sort((a, b) => (b - a));
         return levels;
     },
-    points: function(level) {
+    points: function (level) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.profile) {
             return false;
         }
         var curve = Template.parentData();
-        var line = "<td>" +  Math.abs(level) + "</td>";
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+        var line = "<td>" + Math.abs(level) + "</td>";
+        const settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
@@ -139,14 +139,14 @@ Template.textProfileOutput.helpers({
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>" + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     }
 });
 
 Template.textProfileOutput.events({
-    'click .export': function() {
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+    'click .export': function () {
+        const settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
@@ -157,26 +157,26 @@ Template.textProfileOutput.events({
             return lineData;
         }
         var clabels = 'time';
-        for (var c=0; c < curves.length;c++) {
+        for (var c = 0; c < curves.length; c++) {
             clabels += "," + curves[c].label;
         }
         lineData.push(clabels);
         var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
         const curveNums = plotResultData.length;
         const dataRows = _.range(plotResultData[0].data.length);
-        for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
+        for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
             var line = Number(plotResultData[0].data[rowIndex][1]);
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = plotResultData[curveIndex].data[rowIndex][0] !== null?(Number(plotResultData[curveIndex].data[rowIndex][0])).toPrecision(4):fillStr;
+                const pdata = plotResultData[curveIndex].data[rowIndex][0] !== null ? (Number(plotResultData[curveIndex].data[rowIndex][0])).toPrecision(4) : fillStr;
                 line += "," + pdata;
             }
             lineData.push(line);
         }
         const csvString = lineData.join("%0A");
-        const a         = document.createElement('a');
-        a.href        = 'data:attachment/csv,' + csvString;
-        a.target      = '_blank';
-        a.download    = 'data.csv';
+        const a = document.createElement('a');
+        a.href = 'data:attachment/csv,' + csvString;
+        a.target = '_blank';
+        a.download = 'data.csv';
         document.body.appendChild(a);
         a.click();
     }
