@@ -5,8 +5,8 @@ Referring to the Session variable plotResultKey here causes the html template to
 (which is in the Results collection).
  */
 
-const getDataForLevel = function(data, level) {
-    for (var i =0; i < data.length; i++) {
+const getDataForLevel = function (data, level) {
+    for (var i = 0; i < data.length; i++) {
         if (data[i][1] == level) {
             return data[i] === null ? undefined : data[i];
         }

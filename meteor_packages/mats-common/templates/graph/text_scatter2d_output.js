@@ -16,7 +16,7 @@ const getDataForTime = function (data, time) {
 };
 
 Template.textScatter2dOutput.helpers({
-    plotName: function() {
+    plotName: function () {
         return Session.get('plotName');
     },
     curves: function () {
@@ -24,20 +24,20 @@ Template.textScatter2dOutput.helpers({
         return Session.get('Curves');
     },
     curveText: function () {
-        var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
+        var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
-    headers: function(curve) {
+    headers: function (curve) {
         var bFitLabel = "best fit";
         if (Session.get("plotResultKey") !== undefined) {
-                bFitLabel = "best fit";
+            bFitLabel = "best fit";
         }
         var str = "<th>" + curve.label + " x axis</th>" +
             "<th>" + curve.label + " y axis </th>" +
             "<th>" + bFitLabel + "</th>";
         return str;
     },
-    dataRows: function(curve) {
+    dataRows: function (curve) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.scatter2d) {
             return [];
         }
@@ -46,7 +46,7 @@ Template.textScatter2dOutput.helpers({
         }
 
         var curves = Session.get("Curves");
-        for (var i = 0; i < curves.length; i++){
+        for (var i = 0; i < curves.length; i++) {
             if (curve.label === curves[i].label) {
                 break;
             }
@@ -55,7 +55,7 @@ Template.textScatter2dOutput.helpers({
         var dataRows = _.range(plotResultData[i].data.length);
         return dataRows;
     },
-    points: function(curve, rowIndex) {
+    points: function (curve, rowIndex) {
         var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
         var line = '';
         for (var i = 0; i < plotResultData.length; i++) {
@@ -71,8 +71,8 @@ Template.textScatter2dOutput.helpers({
 });
 
 Template.textScatter2dOutput.events({
-    'click .export': function() {
-        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+    'click .export': function () {
+        var settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
@@ -83,17 +83,17 @@ Template.textScatter2dOutput.events({
             return data;
         }
         var clabels = 'time';
-        for (var c=0; c < curves.length;c++) {
+        for (var c = 0; c < curves.length; c++) {
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
         var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
         var curveNums = plotResultData.length - 1;
         var dataRows = _.range(plotResultData[0].data.length);
-        for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
+        for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
             var line = moment.utc(Number(plotResultData[0].data[rowIndex][0])).format('YYYY-MM-DD:HH');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = plotResultData[curveIndex].data[rowIndex][1] !== null?(Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                var pdata = plotResultData[curveIndex].data[rowIndex][1] !== null ? (Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "," + pdata;
             }
             data.push(line);
