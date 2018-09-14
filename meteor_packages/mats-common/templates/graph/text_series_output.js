@@ -1,5 +1,9 @@
 import {matsCollections, matsCurveUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment';
+/*
+Referring to the Session variable plotResultKey here causes the html template to get re-rendered with the current graph data
+(which is in the Results collection).
+ */
 
 var times = [];
 const getDataForTime = function (data, time) {
@@ -47,10 +51,6 @@ Template.textSeriesOutput.helpers({
         return times;
     },
     curves: function () {
-        /*
-        Referring to the Session variable plotResultKey here causes the html to get re-rendered with the current graph data
-        (which is in the Results collection).
-         */
         Session.get("plotResultKey"); // make sure we re-render when data changes
         return Session.get('Curves');
     },
