@@ -17,9 +17,10 @@ const getDataForTime = function(data, time) {
 };
 
 const getDataForCurve = function(curve) {
-    for (var dataIndex = 0; dataIndex < matsCurveUtils.PlotResult.data.length; dataIndex++) {
-        if (matsCurveUtils.PlotResult.data[dataIndex].label === curve.label) {
-            return matsCurveUtils.PlotResult.data[dataIndex];
+    var plotResultData = matsCollections.Results.findOne({key:matsCollections.plotResult}).result.data;
+    for (var dataIndex = 0; dataIndex < plotResultData.length; dataIndex++) {
+        if (plotResultData[dataIndex].label === curve.label) {
+            return plotResultData[dataIndex];
         }
     }
     return undefined;
@@ -45,7 +46,7 @@ Template.textSeriesOutput.helpers({
             return [];
         }
 
-        if (matsCurveUtils.PlotResult.data === undefined) {
+        if (matsCurveUtils.PlotResult === undefined) {
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
@@ -115,7 +116,7 @@ Template.textSeriesOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
+        if (matsCurveUtils.PlotResult === undefined || matsCurveUtils.PlotResult.length == 0) {
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
@@ -129,9 +130,11 @@ Template.textSeriesOutput.helpers({
 
         var timeSet = new Set();
         var di = 0;
-        for (var i = 0; i < matsCurveUtils.PlotResult.data.length; i++) {
-            for (di = 0; di < matsCurveUtils.PlotResult.data[i].data.length; di++) {
-                matsCurveUtils.PlotResult.data[i] && matsCurveUtils.PlotResult.data[i].data[di] && timeSet.add(matsCurveUtils.PlotResult.data[i].data[di][0]);
+        var resultData = matsCollections.Results.findOne({key:matsCollections.plotResult}).result.data;
+
+        for (var i = 0; i < resultData.length; i++) {
+            for (di = 0; di < resultData[i].data.length; di++) {
+                resultData[i] && resultData[i].data[di] && timeSet.add(resultData[i].data[di][0]);
             }
         }
         times = Array.from (timeSet);
@@ -153,8 +156,7 @@ Template.textSeriesOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined ||
-            matsCurveUtils.PlotResult.length == 0) {
+        if (matsCurveUtils.PlotResult === undefined) {
             return false;
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
@@ -207,7 +209,7 @@ Template.textSeriesOutput.helpers({
         if (plotResultsUpDated === undefined) {
             return [];
         }
-        if (matsCurveUtils.PlotResult.data === undefined || matsCurveUtils.PlotResult.length == 0) {
+        if (matsCurveUtils.PlotResult === undefined) {
             return[];
         }
         var curves = Session.get('Curves');
@@ -223,10 +225,11 @@ Template.textSeriesOutput.helpers({
                 break;
             }
         }
-        if (matsCurveUtils.PlotResult.data[cindex] === undefined) {
+        var plotResultData = matsCollections.Results.findOne({key:matsCollections.plotResult}).result.data;
+        if (plotResultData[cindex] === undefined) {
             return [];
         }
-        const resultData = matsCurveUtils.PlotResult.data[cindex].data;
+        const resultData = plotResultData[cindex].data;
         var data = resultData.map(function(value){return value[1];});
         var times = resultData.map(function(value){return value[0];});
         const stats = matsCurveUtils.get_err(data,times);
@@ -261,12 +264,13 @@ Template.textSeriesOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        const curveNums = matsCurveUtils.PlotResult.data.length - 1;
-        const dataRows = _.range(matsCurveUtils.PlotResult.data[0].data.length);
+        var plotResultData = matsCollections.Results.findOne({key:matsCollections.plotResult}).result.data;
+        const curveNums = plotResultData.length - 1;
+        const dataRows = _.range(plotResultData[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex ++) {
-            var line = moment.utc(matsCurveUtils.PlotResult.data[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
+            var line = moment.utc(plotResultData[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1] !== null?(Number(matsCurveUtils.PlotResult.data[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
+                const pdata = plotResultData[curveIndex].data[rowIndex][1] !== null?(Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4):fillStr;
                 line += "," + pdata;
             }
             data.push(line);
