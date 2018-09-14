@@ -6,8 +6,8 @@ Referring to the Session variable plotResultKey here causes the html template to
  */
 
 var times = [];
-const getDataForVt = function(data, time) {
-    for (var i =0; i < data.length; i++) {
+const getDataForVt = function (data, time) {
+    for (var i = 0; i < data.length; i++) {
         if (data[i][0] == Number(time)) {
             return data[i] === null ? undefined : data[i];
         }
@@ -29,7 +29,7 @@ const getDataForCurve = function (curve) {
 };
 
 Template.textValidTimeOutput.helpers({
-    plotName: function() {
+    plotName: function () {
         return Session.get('plotName');
     },
     curves: function () {
@@ -40,10 +40,10 @@ Template.textValidTimeOutput.helpers({
         return curve.label;
     },
     curveText: function () {
-        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
+        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
-    dataRows: function() {
+    dataRows: function () {
         /*
         Algorithm -
         - create a set of all the times in the data set
@@ -75,13 +75,13 @@ Template.textValidTimeOutput.helpers({
         times.sort((a, b) => (a - b));
         return times;
     },
-    points: function(vt) {
+    points: function (vt) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
             return false;
         }
         var curve = Template.parentData();
         var line = "<td>" + Number(vt) + "</td>";
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+        const settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
@@ -93,7 +93,7 @@ Template.textValidTimeOutput.helpers({
         var n = fillStr;
         var stddev = fillStr;
         try {
-            // see if I have a valid data object for this dataIndex and this level....
+            // see if I have a valid data object for this dataIndex and this vt....
             const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
             const dataPointVal = getDataForVt(curveData, vt);
             if (dataPointVal !== undefined) {
@@ -108,7 +108,7 @@ Template.textValidTimeOutput.helpers({
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>" + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     },
     stats: function (curve) {
@@ -120,7 +120,7 @@ Template.textValidTimeOutput.helpers({
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
-            return[];
+            return [];
         }
         var cindex;
         for (cindex = 0; cindex < curves.length; cindex++) {
@@ -151,7 +151,7 @@ Template.textValidTimeOutput.helpers({
 
         return line;
     },
-    trshs: function(curve) {
+    trshs: function (curve) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
             return [];
         }
@@ -165,15 +165,15 @@ Template.textValidTimeOutput.helpers({
         for (di = 0; di < curveData.length; di++) {
             curveData[di] && vtSet.add(curveData[di][0]);
         }
-        var vts = Array.from (vtSet);
+        var vts = Array.from(vtSet);
         vts.sort((a, b) => (a - b));
         return vts;
     }
 });
 
 Template.textValidTimeOutput.events({
-    'click .export': function() {
-        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+    'click .export': function () {
+        var settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }

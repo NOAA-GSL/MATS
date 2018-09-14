@@ -29,7 +29,7 @@ const getDataForCurve = function (curve) {
 };
 
 Template.textDieOffOutput.helpers({
-    plotName: function() {
+    plotName: function () {
         return Session.get('plotName');
     },
     curves: function () {
@@ -40,10 +40,10 @@ Template.textDieOffOutput.helpers({
         return curve.label;
     },
     curveText: function () {
-        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(),this);
+        const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
-    dataRows: function() {
+    dataRows: function () {
         /*
         Algorithm -
         - create a set of all the times in the data set
@@ -75,31 +75,31 @@ Template.textDieOffOutput.helpers({
         times.sort((a, b) => (a - b));
         return times;
     },
-    fhrs: function(curve) {
-    if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
-        return [];
-    }
-    const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
-    if (curveData === undefined || curveData.length == 0) {
-        return [];
-    }
+    fhrs: function (curve) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
+            return [];
+        }
+        const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
+        if (curveData === undefined || curveData.length == 0) {
+            return [];
+        }
 
-    var timeSet = new Set();
-    var di;
-    for (di = 0; di < curveData.length; di++) {
-        curveData[di] && timeSet.add(curveData[di][0]);
-    }
-    var times = Array.from (timeSet);
-    times.sort((a, b) => (a - b));
-    return times;
+        var timeSet = new Set();
+        var di;
+        for (di = 0; di < curveData.length; di++) {
+            curveData[di] && timeSet.add(curveData[di][0]);
+        }
+        var times = Array.from(timeSet);
+        times.sort((a, b) => (a - b));
+        return times;
     },
-    points: function(time) {
+    points: function (time) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.dieoff) {
             return false;
         }
         var curve = Template.parentData();
         var line = "<td>" + Number(time) + "</td>";
-        const settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+        const settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
@@ -111,7 +111,7 @@ Template.textDieOffOutput.helpers({
         var n = fillStr;
         var stddev = fillStr;
         try {
-            // see if I have a valid data object for this dataIndex and this level....
+            // see if I have a valid data object for this dataIndex and this fhr....
             const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
             const dataPointVal = getDataForTime(curveData, time);
             if (dataPointVal !== undefined) {
@@ -126,7 +126,7 @@ Template.textDieOffOutput.helpers({
             console.log("Problem in deriving curve text: " + problem);
         }
         // pdata is now either data value or fillStr
-        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>"  + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
+        line += "<td>" + pdata + "</td>" + "<td>" + mean + "</td>" + "<td>" + perror + "</td>" + "<td>" + stddev + "</td>" + "<td>" + lag1 + "</td>" + "<td>" + n + "</td>";
         return line;
     },
     stats: function (curve) {
@@ -173,8 +173,8 @@ Template.textDieOffOutput.helpers({
 });
 
 Template.textDieOffOutput.events({
-    'click .export': function() {
-        var settings = matsCollections.Settings.findOne({},{fields:{NullFillString:1}});
+    'click .export': function () {
+        var settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
             return false;
         }
