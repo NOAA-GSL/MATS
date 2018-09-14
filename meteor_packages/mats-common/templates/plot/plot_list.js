@@ -371,7 +371,7 @@ Template.plotList.events({
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    matsCurveUtils.PlotResult = key;
+                    Session.set("plotResultKey", key);
                     Session.set ('PlotResultsUpDated', new Date());
                     Session.set('graphFunction', graphFunction);
                     eval (graphFunction)(key, Session.get('Curves'));

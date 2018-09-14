@@ -864,7 +864,6 @@ export default matsCurveUtils = {
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
     get_err: get_err,
-    PlotResult: PlotResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
     resizeGraph: resizeGraph
