@@ -8,7 +8,7 @@ graphXYLine = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key:key}).data;
+    var keyData = matsCollections.Results.findOne({key:key}).result;
     var dataset = keyData.data;
     var options = keyData.options;
     if (min < 400) {
