@@ -51,7 +51,7 @@ Template.textValidTimeOutput.helpers({
         - return the length of that array as the number of rows. (missing times should have been filled in by the backend data routine)
         - for each point find the valid data for each curve at that point. If it is missing at the time just treat it as missing.
          */
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
             return [];
         }
         if (Session.get("plotResultKey") === undefined) {
@@ -151,8 +151,8 @@ Template.textValidTimeOutput.helpers({
 
         return line;
     },
-    trshs: function (curve) {
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.threshold) {
+    vts: function (curve) {
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
             return [];
         }
         const curveData = getDataForCurve(curve) && getDataForCurve(curve).data;
