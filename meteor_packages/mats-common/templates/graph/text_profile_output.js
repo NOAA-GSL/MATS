@@ -5,6 +5,15 @@ Referring to the Session variable plotResultKey here causes the html template to
 (which is in the Results collection).
  */
 
+const getDataForLevel = function(data, level) {
+    for (var i =0; i < data.length; i++) {
+        if (data[i][1] == level) {
+            return data[i] === null ? undefined : data[i];
+        }
+    }
+    return undefined;
+};
+
 const getDataForCurve = function (curve) {
     if (Session.get("plotResultKey") == undefined) {
         return undefined;
@@ -92,7 +101,7 @@ Template.textProfileOutput.helpers({
         if (Session.get("plotResultKey") === undefined) {
             return [];
         }
-        const curveData = getDataForCurve(curve);
+        const curveData = getDataForCurve(curve).data;
         if (curveData === undefined || curveData.length == 0) {
             return [];
         }
@@ -125,7 +134,7 @@ Template.textProfileOutput.helpers({
         var stddev = fillStr;
         try {
             // see if I have a valid data object for this dataIndex and this level....
-            const curveData = getDataForCurve(curve);
+            const curveData = getDataForCurve(curve).data;
             const dataPointVal = getDataForLevel(curveData, level);
             if (dataPointVal !== undefined) {
                 pdata = dataPointVal[5].raw_stat && dataPointVal[5].raw_stat.toPrecision(4);
