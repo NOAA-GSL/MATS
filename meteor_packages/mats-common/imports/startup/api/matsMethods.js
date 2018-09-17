@@ -17,7 +17,13 @@ const saveResultData = function(result){
     if (Meteor.isServer) {
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
-        matsCollections.Results.insert({"createdAt": new Date(),key:key,result:result});// createdAt ensures expiration set in mats-collections
+        try {
+            matsCollections.Results.insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
+        } catch (error) {
+            if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
+                throw new Meteor.Error(error.toLocaleString() + ": Requesting too much data... try averaging");
+            }
+        }
         return key;
     }
 };
