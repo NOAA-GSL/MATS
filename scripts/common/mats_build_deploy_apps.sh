@@ -215,13 +215,6 @@ echo deploying modified apps ${apps[*]}
 cd /web
 for app in ${apps[*]}; do
     echo -e "deploying ${GRN}$app${NC}"
-    # if existing, rm previous and move existing app to previous, be sure to change its title
-    if [ -d "$app" ]; then
-        if [ -d "$app"-previous ]; then
-            rm -rf "$app"-previous
-        fi
-        mv $app "$app"-previous
-    fi
     mkdir $app
     cd $app
     tar -xzf "/builds/${app}.tar.gz"
