@@ -69,7 +69,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= {{fromSecs}} " +
-                "and m0.time <  {{toSecs}} " +
+                "and m0.time <= {{toSecs}} " +
                 "and m0.trsh = {{threshold}} " +
                 "and m0.fcst_len < 24 " +
                 "and (m0.time - m0.fcst_len*3600)%(24*3600)/3600 IN({{utcCycleStart}}) " +
@@ -206,8 +206,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
              data[0] - avtime (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - avtime values
-             data[4] - avtime times
+             data[3] - avtime values -- removed here to save on data volume
+             data[4] - avtime times -- removed here to save on data volume
              data[5] - avtime stats
              data[6] - tooltip
              */
@@ -241,6 +241,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             } else {
                 data[di][2] = -1;
             }
+
+            // remove sub_values and sub_secs
+            data[di][3] = [];
+            data[di][4] = [];
 
             // store statistics
             data[di][5] = {

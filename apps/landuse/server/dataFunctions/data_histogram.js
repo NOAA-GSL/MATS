@@ -251,9 +251,9 @@ dataHistogram = function (plotParams, plotFunction) {
              data[0] - bin number (plotted against the x axis)
              data[1] - number in bin (ploted against the y axis)
              data[2] - -1 (no error bars for histograms)
-             data[3] - bin values
-             data[4] - bin times
-             data[5] - reserved for if there are bin levels
+             data[3] - bin values -- removed here to save on data volume
+             data[4] - bin times -- removed here to save on data volume
+             data[5] - reserved for if there are bin levels -- removed here to save on data volume
              data[6] - bin stats
              data[7] - global stats
              data[8] - tooltip
@@ -261,6 +261,11 @@ dataHistogram = function (plotParams, plotFunction) {
 
             values.push(data[di][1]);
             bins.push(data[di][0]);
+
+            // remove sub_values and sub_secs
+            data[di][3] = [];
+            data[di][4] = [];
+            data[di][5] = [];
 
             // // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +

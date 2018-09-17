@@ -234,8 +234,8 @@ dataSeries = function (plotParams, plotFunction) {
              data[0] - avtime (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - avtime values
-             data[4] - avtime times
+             data[3] - avtime values -- removed here to save on data volume
+             data[4] - avtime times -- removed here to save on data volume
              data[5] - avtime stats
              data[6] - tooltip
              */
@@ -269,6 +269,10 @@ dataSeries = function (plotParams, plotFunction) {
             } else {
                 data[di][2] = -1;
             }
+
+            // remove sub_values and sub_secs
+            data[di][3] = [];
+            data[di][4] = [];
 
             // store statistics
             data[di][5] = {
