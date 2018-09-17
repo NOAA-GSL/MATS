@@ -209,8 +209,8 @@ dataValidTime = function (plotParams, plotFunction) {
              data[0] - vt (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - vt values
-             data[4] - vt times
+             data[3] - vt values -- removed here to save on data volume
+             data[4] - vt times -- removed here to save on data volume
              data[5] - vt stats
              data[6] - tooltip
              */
@@ -244,6 +244,10 @@ dataValidTime = function (plotParams, plotFunction) {
             } else {
                 data[di][2] = -1;
             }
+
+            // remove sub_values and sub_secs
+            data[di][3] = [];
+            data[di][4] = [];
 
             // store statistics
             data[di][5] = {

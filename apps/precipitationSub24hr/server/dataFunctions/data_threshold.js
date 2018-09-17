@@ -201,8 +201,8 @@ dataThreshold = function (plotParams, plotFunction) {
              data[0] - thresh (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - thresh values
-             data[4] - thresh times
+             data[3] - thresh values -- removed here to save on data volume
+             data[4] - thresh times -- removed here to save on data volume
              data[5] - thresh stats
              data[6] - tooltip
              */
@@ -236,6 +236,10 @@ dataThreshold = function (plotParams, plotFunction) {
             } else {
                 data[di][2] = -1;
             }
+
+            // remove sub_values and sub_secs
+            data[di][3] = [];
+            data[di][4] = [];
 
             // store statistics
             data[di][5] = {
