@@ -291,9 +291,6 @@ Template.graph.helpers({
                 }
                 plotType = Session.get('plotType');
             }
-            if (this.region) {
-                this.regionName = this.region.split(' ')[0];
-            }
             return matsPlotUtils.getCurveText(plotType, this);
         } else {
             return this.label + ":  Difference";
@@ -730,7 +727,6 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        //Session.set("dataKey",key);
         $("#dataModal").modal('show');
     },
     'click .axisLimitButton': function () {

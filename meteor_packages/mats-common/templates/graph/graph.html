@@ -1,10 +1,10 @@
 <template name="graph">
-    <div id="graph-container" class="container pull-left" style="padding-left: 5%; display:none;">
-        <div id="header" class="row container">
+    <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:none;">
+        <div id="header" class="row">
             <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
         </div>
-        <div id="graph-control" class="row container-fluid">
-            <div id="plot-buttons-grp" class="btn-group btn-group-sm">
+        <div id="graph-control" class="row">
+            <span id="plot-buttons-grp" class="btn-group btn-group-xs">
                 <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
                 <button type="button" class="btn spacebutton" id="gc-spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
@@ -14,65 +14,77 @@
                 <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:none;">&nbsp;Plot</button>
                 <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
                 <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;">&nbsp;Axes</button>
-                <button type="button" class="btn spacebutton" id="gc1-spacer"></button>
-                <span id="graph-touch-controls">
-                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-left fa-lg" id="pan-left" style="background-color: #00badb;"></button>
-                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-up fa-lg" id="pan-up" style="background-color: #00badb;"></button>
-                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-down fa-lg" id="pan-down" style="background-color: #00badb;"></button>
-                    <button type="button" class="btn btn-success btn-sm fa fa-arrow-right fa-lg" id="pan-right" style="background-color: #00badb;"></button>
-                    <button type="button" class="btn btn-success btn-sm fa fa-refresh fa-lg" id="refresh-plot" style="background-color: #00badb;"></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-in"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-out"><span class="fa fa-expand fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-left-right"><span class="fa fa-arrows-h fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-in-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-plus fa-sm"></span></button>
-                    <button type="button" class="btn btn-success btn-sm" id="zoom-out-up-down"><span class="fa fa-arrows-v fa-lg"></span>&nbsp;&nbsp;<span class="fa fa-minus fa-sm"></span></button>
+                <button type="button" class="btn spacebutton" id="gc-spacer"></button>
+            </span>
+            <span id="graph-touch-controls" class="btn-group btn-group-xs" role="group" aria-label="touchcontrol">
+                <button type="button" class="btn btn-success fa fa-arrow-left" id="pan-left" style="background-color: #00badb;"></button>
+                <button type="button" class="btn btn-success fa fa-arrow-up" id="pan-up" style="background-color: #00badb;"></button>
+                <button type="button" class="btn btn-success fa fa-arrow-down" id="pan-down" style="background-color: #00badb;"></button>
+                <button type="button" class="btn btn-success fa fa-arrow-right" id="pan-right" style="background-color: #00badb;"></button>
+                <button type="button" class="btn btn-success fa fa-refresh" id="refresh-plot" style="background-color: #00badb;"></button>
+                <button type="button" class="btn spacebutton" id="gc-spacer"></button>
+                <span class="btn-group btn-group-xs" role="group">
+                    <button type="button" class="btn btn-success" id="zoom-out"><span class="fa fa-minus"></span></button>
+                    <button type="button" class="btn btn-success" disabled><span class="fa fa-expand"></span></button>
+                    <button type="button" class="btn btn-success" id="zoom-in"><span class="fa fa-plus"></span></button>
+                    <button type="button" class="btn spacebutton" id="gc-spacer"></button>
                 </span>
-            </div>
-            <div id="sendModal" class="modal" role="dialog">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4>Send To ?</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div>
-                                <label>Send Address ...</label>
-                                <input id="sendAddress" class="send-address data-input textInput" type="text" name="send address"/>
-                                <select class="data-input sentAddresses" size="5" name="sentAddresses" id="sentAddresses">
-                                    {{#each sentAddresses}}
-                                        <option>{{this}}</option>
-                                    {{/each}}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer btn-group">
-                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
-                            <button name="send" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Send</button>
+                <span class="btn-group btn-group-xs" role="group">
+                    <button type="button" class="btn btn-success" id="zoom-out-left-right"><span class="fa fa-minus"></span></button>
+                    <button type="button" class="btn btn-success" disabled><span class="fa fa-arrows-h"></span></button>
+                    <button type="button" class="btn btn-success" id="zoom-in-left-right"><span class="fa fa-plus"></span></button>
+                    <button type="button" class="btn spacebutton" id="gc-spacer"></button>
+                </span>
+                <span class="btn-group btn-group-xs" role="group">
+                    <button type="button" class="btn btn-success" id="zoom-out-up-down"><span class="fa fa-minus"></span></button>
+                    <button type="button" class="btn btn-success" disabled><span class="fa fa-arrows-v"></span></button>
+                    <button type="button" class="btn btn-success" id="zoom-in-up-down"><span class="fa fa-plus"></span></button>
+                </span>
+            </span>
+        </div>
+        <div id="sendModal" class="modal row" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4>Send To ?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <label>Send Address ...</label>
+                            <input id="sendAddress" class="send-address data-input textInput" type="text" name="send address"/>
+                            <select class="data-input sentAddresses" size="5" name="sentAddresses" id="sentAddresses">
+                                {{#each sentAddresses}}
+                                    <option>{{this}}</option>
+                                {{/each}}
+                            </select>
                         </div>
                     </div>
-                    <!-- /.modal-content -->
+                    <div class="modal-footer btn-group">
+                        <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
+                        <button name="send" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Send</button>
+                    </div>
                 </div>
-                <!-- /.modal-dialog -->
+                <!-- /.modal-content -->
             </div>
+            <!-- /.modal-dialog -->
         </div>
-        <div id="curves" class="row container-fluid">
+        <div id="curves" class="row">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-xs">
-                    <input type="button" class="curveVisibility btn btn-primary btn-xs"
+                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs">
+                    <input type="button" class="curveVisibility btn btn-primary"
                            value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
                            style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="points btn btn-primary btn-xs" value="{{pointsButtonText}}"
+                    <input type="button" class="points btn btn-primary" value="{{pointsButtonText}}"
                            id="{{this.label}}-curve-show-hide-points"
                            style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="errorBars btn btn-primary btn-xs"
+                    <input type="button" class="errorBars btn btn-primary"
                            value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
                            style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="barVisibility btn btn-primary btn-xs"
+                    <input type="button" class="barVisibility btn btn-primary"
                            value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
                            style="display:block;background-color: {{this.color}}">
-                    <input type="button" class="annotateVisibility btn btn-primary btn-xs"
+                    <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="display:block;background-color: {{this.color}}">
                 </div>
@@ -114,7 +126,7 @@
                 </div>
             </div>
         {{else}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
+            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
                 <div id="legendContainer" name="legendContainer"></div>
                 <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
                     {{! This is where flot will place the graph - there is nothing here when the page loads}}
