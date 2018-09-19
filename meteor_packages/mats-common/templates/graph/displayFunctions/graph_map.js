@@ -13,10 +13,9 @@ graphMap = function (key) {
     }
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key: key}).result;
-    var dataset = keyData.data;
-    var options = keyData.options;
-
+    var resultSet = matsCurveUtils.getGraphResult();
+    var dataset = resultSet.data;
+    var options = resultSet.options;
     var defaultPoint = [39.834, -98.604];
     var defaultZoomLevel = 5;
     var minZoomLevel = 3;

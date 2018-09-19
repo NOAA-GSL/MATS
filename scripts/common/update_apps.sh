@@ -41,7 +41,9 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         meteor update --all-packages;
         rm -rf node_modules
 	    meteor npm install
-        meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
+		meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
+		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
+		meteor npm install object-sizeof
         cd ..;
     done
 

@@ -15,13 +15,33 @@ const getDataForTime = function (data, time) {
     return undefined;
 };
 
+const getDataForCurve = function (curve) {
+    if (Session.get("plotResultKey") == undefined) {
+        return undefined;
+    }
+    for (var dataIndex = 0; dataIndex < matsCurveUtils.getPlotResultData().length; dataIndex++) {
+        if (matsCurveUtils.getPlotResultData()[dataIndex].label === curve.label) {
+            return matsCurveUtils.getPlotResultData()[dataIndex];
+        }
+    }
+    return undefined;
+};
+
 Template.textScatter2dOutput.helpers({
     plotName: function () {
         return Session.get('plotName');
     },
     curves: function () {
+        Session.get('textLoaded');
         Session.get("plotResultKey"); // make sure we re-render when data changes
-        return Session.get('Curves');
+        if (matsCurveUtils.getPlotResultData() === null) {
+            return [];
+        } else {
+            return Session.get('Curves');
+        }
+    },
+    curveLabel: function (curve) {
+        return curve.label;
     },
     curveText: function () {
         var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
@@ -37,26 +57,8 @@ Template.textScatter2dOutput.helpers({
             "<th>" + bFitLabel + "</th>";
         return str;
     },
-    dataRows: function (curve) {
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.scatter2d) {
-            return [];
-        }
-        if (Session.get("plotResultKey") === undefined) {
-            return [];
-        }
-
-        var curves = Session.get("Curves");
-        for (var i = 0; i < curves.length; i++) {
-            if (curve.label === curves[i].label) {
-                break;
-            }
-        }
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-        var dataRows = _.range(plotResultData[i].data.length);
-        return dataRows;
-    },
     points: function (curve, rowIndex) {
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        var plotResultData = matsCurveUtils.getPlotResultData();
         var line = '';
         for (var i = 0; i < plotResultData.length; i++) {
             if (plotResultData[i].label == curve.label) {
@@ -76,9 +78,9 @@ Template.textScatter2dOutput.events({
         if (settings === undefined) {
             return false;
         }
-        var fillStr = settings.NullFillString;
+        const curves = Session.get('Curves');
+        const fillStr = settings.NullFillString;
         var data = [];
-        var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return data;
         }
@@ -87,13 +89,12 @@ Template.textScatter2dOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-        var curveNums = plotResultData.length - 1;
-        var dataRows = _.range(plotResultData[0].data.length);
+        const curveNums = matsCurveUtils.getPlotResultData().length - 1;
+        const dataRows = _.range(matsCurveUtils.getPlotResultData()[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
-            var line = moment.utc(Number(plotResultData[0].data[rowIndex][0])).format('YYYY-MM-DD:HH');
+            var line = matsCurveUtils.getPlotResultData()[0].data[rowIndex][0];
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                var pdata = plotResultData[curveIndex].data[rowIndex][1] !== null ? (Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
+                const pdata = matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1] !== null ? (Number(matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "," + pdata;
             }
             data.push(line);

@@ -10,7 +10,7 @@ var times = [];
 
 const getDataForTime = function (curveIndex, time) {
     try {
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        var plotResultData = matsCurveUtils.getPlotResultData();
         for (var i = 0; i < plotResultData[curveIndex].data.length; i++) {
             if (Number(plotResultData[curveIndex].data[i][0]) === Number(time)) {
                 return plotResultData[curveIndex].data[i][1] === null ? undefined : Number(plotResultData[curveIndex].data[i][1]);
@@ -28,10 +28,13 @@ Template.textMapOutput.helpers({
         return Session.get('plotName');
     },
     curves: function () {
-        if (Session.get("plotResultKey") === undefined) {
+        Session.get('textLoaded');
+        Session.get("plotResultKey"); // make sure we re-render when data changes
+        if (matsCurveUtils.getPlotResultData() === null) {
             return [];
+        } else {
+            return Session.get('Curves');
         }
-        return Session.get('Curves');
     },
     curveLabel: function (curve) {
         return curve.label;
@@ -61,7 +64,7 @@ Template.textMapOutput.helpers({
         }
         var timeSet = new Set();
         var di = 0;
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        var plotResultData = matsCurveUtils.getPlotResultData();
         for (var i = 0; i < plotResultData.length; i++) {
             for (di = 0; di < plotResultData[i].data.length; di++) {
                 plotResultData[i] && plotResultData[i].data[di] && timeSet.add(plotResultData[i].data[di][0]);
@@ -92,7 +95,7 @@ Template.textMapOutput.helpers({
         if (Session.get("plotResultKey") === undefined) {
             return [];
         }
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        var plotResultData = matsCurveUtils.getPlotResultData();
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0) {
             return [];
@@ -138,7 +141,7 @@ Template.textMapOutput.events({
         if (Session.get("plotResultKey") === undefined) {
             return [];
         }
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        var plotResultData = matsCurveUtils.getPlotResultData();
         const curves = Session.get('Curves');
         const fillStr = settings.NullFillString;
         var data = [];

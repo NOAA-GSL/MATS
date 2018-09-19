@@ -3,6 +3,8 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 import {Info} from 'meteor/randyp:mats-common';
+import { matsMethods } from 'meteor/randyp:mats-common';
+
 
 /*
  global dataset variable - container for graph dataset.
@@ -14,7 +16,47 @@ import {Info} from 'meteor/randyp:mats-common';
  (which is in the PlotResults global).
  */
 
-PlotResult = {};
+var plotResultData = null;
+var graphResult = null;
+
+const getPlotResultData = function() {
+    return plotResultData;
+}
+
+const setPlotResultData = function() {
+    if (plotResultData === null) {
+        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: true}, function (error, result) {
+            if (error !== undefined) {
+                setError(new Error("matsMethods.getPlotResult failed : error: " + error));
+            }
+            plotResultData = result.data;
+            Session.set('textLoaded', new Date());
+        });
+    }
+}
+
+const resetPlotResultData = function() {
+    plotResultData = null;
+    Session.set('textLoaded', new Date());
+}
+
+const getGraphResult = function() {
+    if (graphResult === null) {
+        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: false}, function (error, result) {
+            if (error !== undefined) {
+                setError(new Error("matsMethods.getPlotResult failed : error: " + error));
+            }
+            graphResult = result;
+            Session.set('graphDataLoaded', new Date());
+        });
+    }
+    return graphResult;
+}
+
+const resetGraphResult = function() {
+    graphResult = null;
+    Session.set('graphDataLoaded', new Date());
+}
 
 /*
  Curve utilities - used to determine curve labels and colors etc.
@@ -864,6 +906,11 @@ export default matsCurveUtils = {
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
     get_err: get_err,
+    getPlotResultData: getPlotResultData,
+    setPlotResultData: setPlotResultData,
+    resetPlotResultData: resetPlotResultData,
+    getGraphResult: getGraphResult,
+    resetGraphResult:resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
     resizeGraph: resizeGraph

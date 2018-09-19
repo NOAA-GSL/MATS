@@ -19,22 +19,23 @@ const getDataForCurve = function (curve) {
     if (Session.get("plotResultKey") == undefined) {
         return undefined;
     }
-    var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-    for (var dataIndex = 0; dataIndex < plotResultData.length; dataIndex++) {
-        if (plotResultData[dataIndex].label === curve.label) {
-            return plotResultData[dataIndex];
+    for (var dataIndex = 0; dataIndex < matsCurveUtils.getPlotResultData().length; dataIndex++) {
+        if (matsCurveUtils.getPlotResultData()[dataIndex].label === curve.label) {
+            return matsCurveUtils.getPlotResultData()[dataIndex];
         }
     }
     return undefined;
 };
 
 Template.textValidTimeOutput.helpers({
-    plotName: function () {
-        return Session.get('plotName');
-    },
     curves: function () {
+        Session.get('textLoaded');
         Session.get("plotResultKey"); // make sure we re-render when data changes
-        return Session.get('Curves');
+        if (matsCurveUtils.getPlotResultData() === null) {
+            return [];
+        } else {
+            return Session.get('Curves');
+        }
     },
     curveLabel: function (curve) {
         return curve.label;
@@ -42,38 +43,6 @@ Template.textValidTimeOutput.helpers({
     curveText: function () {
         const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
-    },
-    dataRows: function () {
-        /*
-        Algorithm -
-        - create a set of all the times in the data set
-        - create a sorted array from that set to be used by the points routine
-        - return the length of that array as the number of rows. (missing times should have been filled in by the backend data routine)
-        - for each point find the valid data for each curve at that point. If it is missing at the time just treat it as missing.
-         */
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
-            return [];
-        }
-        if (Session.get("plotResultKey") === undefined) {
-            return [];
-        }
-        const curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
-            return false;
-        }
-
-        var timeSet = new Set();
-        var di = 0;
-        var resultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-
-        for (var i = 0; i < resultData.length; i++) {
-            for (di = 0; di < resultData[i].data.length; di++) {
-                resultData[i] && resultData[i].data[di] && timeSet.add(resultData[i].data[di][0]);
-            }
-        }
-        times = Array.from(timeSet);
-        times.sort((a, b) => (a - b));
-        return times;
     },
     points: function (vt) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.validtime) {
@@ -128,11 +97,10 @@ Template.textValidTimeOutput.helpers({
                 break;
             }
         }
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-        if (plotResultData[cindex] === undefined) {
+        if (matsCurveUtils.getPlotResultData()[cindex] === undefined) {
             return [];
         }
-        const resultData = plotResultData[cindex].data;
+        const resultData = matsCurveUtils.getPlotResultData()[cindex].data;
         var data = resultData.map(function (value) {
             return value[1];
         });
@@ -188,13 +156,12 @@ Template.textValidTimeOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-        const curveNums = plotResultData.length - 1;
-        const dataRows = _.range(plotResultData[0].data.length);
+        const curveNums = matsCurveUtils.getPlotResultData().length - 1;
+        const dataRows = _.range(matsCurveUtils.getPlotResultData()[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
-            var line = moment.utc(plotResultData[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
+            var line = matsCurveUtils.getPlotResultData()[0].data[rowIndex][0];
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = plotResultData[curveIndex].data[rowIndex][1] !== null ? (Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
+                const pdata = matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1] !== null ? (Number(matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "," + pdata;
             }
             data.push(line);

@@ -1,10 +1,7 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
 
-// hide the spinner when the plot finishes
-const hideSpinnerHook = function(plot, canvascontext) {
-    document.getElementById("spinner").style.display = "none";
-}
 
 graphXYLine = function (key) {
     // get plot info
@@ -14,13 +11,10 @@ graphXYLine = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyResultData = matsCollections.DownSampleResults.findOne({key: key});
-    if (keyResultData === undefined) {
-        keyResultData = matsCollections.Results.findOne({key: key});
-    }
-    var dataset = keyResultData.result.data;
+    var resultSet = matsCurveUtils.getGraphResult();
+    var dataset = resultSet.data;
+    var options = resultSet.options;
     console.log("graphXYLine: after getting data from Results collection:", new Date());
-    var options = keyResultData.result.options;
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {

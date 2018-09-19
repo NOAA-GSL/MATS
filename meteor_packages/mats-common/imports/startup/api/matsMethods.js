@@ -13,6 +13,13 @@ import { Mongo } from 'meteor/mongo'
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
+const Results = new Mongo.Collection("Results");
+const DownSampleResults = new Mongo.Collection("DownSampleResults");
+if (Meteor.isServer) {
+    Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
+    DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
+}
+
 const saveResultData = function(result){
     if (Meteor.isServer) {
         var sizeof = require('object-sizeof');
@@ -66,10 +73,10 @@ const saveResultData = function(result){
                     }
                     downSampleResult.data[di].data = downsampledSeries;
                 }
-                matsCollections.DownSampleResults.insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
+                DownSampleResults.insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
             }
             // save original dataset
-            matsCollections.Results.insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
+            Results.insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
                 throw new Meteor.Error(error.toLocaleString() + ": Requesting too much data... try averaging");
@@ -149,11 +156,36 @@ const readFunctionFile = new ValidatedMethod({
 });
 
 const getPlotResult = new ValidatedMethod({
-    // UNFINISHED - placeholder for retrieving plotresult data for data lineage button without cramming it into the session
     name:'matsMethods.getPlotResult',
-    validate:  new SimpleSchema({}).validator(),
-    run (){
-            return "";
+    validate:  new SimpleSchema({
+        resultKey: {type: String},
+        original: {type: Boolean}
+    }).validator(),
+    run (params){
+        if (Meteor.isServer) {
+            var rKey = params.resultKey;
+            var original = params.original;
+            if (original === true) {
+                var resultKey = Results.findOne({key: rKey},{key:1});
+                if (resultKey !== undefined) {
+                    return Results.findOne({key: rKey}).result;
+                } else {
+                    return undefined;
+                }
+            } else {
+                var dsrKey = DownSampleResults.findOne({key: rKey}, {key: 1});
+                if (dsrKey !== undefined) {
+                        return DownSampleResults.findOne({key: rKey}).result;
+                } else {
+                    var resultKey = Results.findOne({key: rKey},{key:1});
+                    if (resultKey !== undefined) {
+                        return Results.findOne({key: rKey}).result;
+                    } else {
+                        return undefined;
+                    }
+                }
+            }
+        }
     }
 });
 
@@ -743,7 +775,7 @@ const getGraphData = new ValidatedMethod({
                 var results;
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                results = matsCollections.Results.findOne({key:key});
+                results = Results.findOne({key:key});
                 if (results === undefined) {
                     var Future = require('fibers/future');
                     var future = new Future();

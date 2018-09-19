@@ -36,12 +36,7 @@ Template.data.onRendered(function() {
 Template.data.helpers({
     data:function() {
         var key = Session.get("plotResultKey");
-        var keyResult = matsCollections.Results.findOne({key: Session.get("plotResultKey")});
-        if (keyResult) {
-            return keyResult.result.data;
-        } else {
-            return undefined;
-        }
+        return matsCurveUtils.getPlotResultData();
 
     },
     options:function() {

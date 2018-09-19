@@ -8,9 +8,9 @@ graphHistogram = function (key) {
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key: key}).result;
-    var dataset = keyData.data;
-    var options = keyData.options;
+    var resultSet = matsCurveUtils.getGraphResult();
+    var dataset = resultSet.data;
+    var options = resultSet.options;
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {

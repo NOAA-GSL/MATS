@@ -6,7 +6,6 @@ Referring to the Session variable plotResultKey here causes the html template to
  */
 
 var times = [];
-var plotResultData = null;
 const getDataForTime = function (data, time) {
     for (var i = 0; i < data.length; i++) {
         if (data[i][0] == Number(time)) {
@@ -16,21 +15,13 @@ const getDataForTime = function (data, time) {
     return undefined;
 };
 
-const getPlotResultData = function(plotType, plotResultData) {
-    if (plotResultData === null && matsPlotUtils.getPlotType() === plotType) {
-        plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-    }
-    return plotResultData;
-}
-
 const getDataForCurve = function (curve) {
     if (Session.get("plotResultKey") == undefined) {
         return undefined;
     }
-    //plotResultData = getPlotResultData();
-    for (var dataIndex = 0; dataIndex < plotResultData.length; dataIndex++) {
-        if (plotResultData[dataIndex].label === curve.label) {
-            return plotResultData[dataIndex];
+    for (var dataIndex = 0; dataIndex < matsCurveUtils.getPlotResultData().length; dataIndex++) {
+        if (matsCurveUtils.getPlotResultData()[dataIndex].label === curve.label) {
+            return matsCurveUtils.getPlotResultData()[dataIndex];
         }
     }
     return undefined;
@@ -58,7 +49,7 @@ Template.textSeriesOutput.helpers({
     curves: function () {
         Session.get('textLoaded');
         Session.get("plotResultKey"); // make sure we re-render when data changes
-        if (plotResultData === null) {
+        if (matsCurveUtils.getPlotResultData() === null) {
             return [];
         } else {
             return Session.get('Curves');
@@ -124,11 +115,10 @@ Template.textSeriesOutput.helpers({
                 break;
             }
         }
-        //plotResultData = getPlotResultData();
-        if (plotResultData[cindex] === undefined) {
+        if (matsCurveUtils.getPlotResultData()[cindex] === undefined) {
             return [];
         }
-        const resultData = plotResultData[cindex].data;
+        const resultData = matsCurveUtils.getPlotResultData()[cindex].data;
         var data = resultData.map(function (value) {
             return value[1];
         });
@@ -151,14 +141,6 @@ Template.textSeriesOutput.helpers({
 });
 
 Template.textSeriesOutput.events({
-    'click .unLoadText' : function() {
-        plotResultData = null;
-        Session.set('textLoaded', new Date());
-    },
-    'click .loadText': function() {
-        plotResultData = getPlotResultData();
-        Session.set('textLoaded', new Date());
-    },
     'click .export': function () {
         var settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
@@ -175,13 +157,12 @@ Template.textSeriesOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        //plotResultData = getPlotResultData();
-        const curveNums = plotResultData.length - 1;
-        const dataRows = _.range(plotResultData[0].data.length);
+        const curveNums = matsCurveUtils.getPlotResultData().length - 1;
+        const dataRows = _.range(matsCurveUtils.getPlotResultData()[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
-            var line = moment.utc(plotResultData[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
+            var line = moment.utc(matsCurveUtils.getPlotResultData()[0].data[rowIndex][0]).format('YYYY-MM-DD HH:mm');
             for (var curveIndex = 0; curveIndex < curveNums; curveIndex++) {
-                const pdata = plotResultData[curveIndex].data[rowIndex][1] !== null ? (Number(plotResultData[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
+                const pdata = matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1] !== null ? (Number(matsCurveUtils.getPlotResultData()[curveIndex].data[rowIndex][1])).toPrecision(4) : fillStr;
                 line += "," + pdata;
             }
             data.push(line);

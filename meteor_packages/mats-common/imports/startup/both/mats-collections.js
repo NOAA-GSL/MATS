@@ -31,12 +31,6 @@ var SavedCredentials = new Mongo.Collection("SavedCredentials");
 var SiteMap = new Mongo.Collection("SiteMap");
 var StationMap = new Mongo.Collection("StationMap");
 var appName = new Mongo.Collection("appName");
-var Results = new Mongo.Collection("Results");
-var DownSampleResults = new Mongo.Collection("DownSampleResults");
-
-if (Meteor.isServer) {
-    Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
-}
 
 
 
@@ -94,8 +88,6 @@ export default matsCollections = {
     SiteMap:SiteMap,
     StationMap:StationMap,
     appName:appName,
-    Results:Results,
-    DownSampleResults:DownSampleResults,
     startInit:startInit,
     stopInit:stopInit,
     dateInitStr: dateInitStr
