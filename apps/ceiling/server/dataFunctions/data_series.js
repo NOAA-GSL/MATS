@@ -254,9 +254,9 @@ dataSeries = function (plotParams, plotFunction) {
                 data[di][2] = -1;
             }
 
-            // remove sub_values and sub_secs
-            data[di][3] = [];
-            data[di][4] = [];
+            // // remove sub_values and sub_secs
+            // data[di][3] = [];
+            // data[di][4] = [];
 
             // store statistics
             data[di][5] = {

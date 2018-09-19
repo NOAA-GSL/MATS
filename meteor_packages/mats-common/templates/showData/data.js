@@ -36,7 +36,13 @@ Template.data.onRendered(function() {
 Template.data.helpers({
     data:function() {
         var key = Session.get("plotResultKey");
-        return matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result;
+        var keyResult = matsCollections.Results.findOne({key: Session.get("plotResultKey")});
+        if (keyResult) {
+            return keyResult.result.data;
+        } else {
+            return undefined;
+        }
+
     },
     options:function() {
         return {collapsed:true,nl2br:true,recursive_collapser:true};

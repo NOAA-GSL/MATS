@@ -431,7 +431,7 @@ Template.graph.events({
         document.getElementById("textScatter2dView").style.display = "none";
         document.getElementById("textMapView").style.display = "none";
         document.getElementById("textHistogramView").style.display = "none";
-
+        $("#un_load_text").click();
         return false;
     },
     'click .new': function () {
@@ -709,7 +709,8 @@ Template.graph.events({
             default:
                 console.log("Error: no plot type detected");
                 Session.set('graphViewMode', matsTypes.PlotView.graph);
-        }
+        };
+        $("#load_text").click();
     },
     'click .export': function () {
         document.getElementById('text_export').click();

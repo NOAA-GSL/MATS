@@ -177,4 +177,11 @@ if (Meteor.isServer) {
         }
         return this.ready();
     });
+    Meteor.publish("DownSampleResults", function () {
+        var data = matsCollections.DownSampleResults.find({});
+        if (data) {
+            return data;
+        }
+        return this.ready();
+    });
 }

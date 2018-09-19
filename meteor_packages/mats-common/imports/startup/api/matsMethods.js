@@ -5,19 +5,70 @@ import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import  { matsCollections }   from 'meteor/randyp:mats-common';
 import  { matsDataUtils }   from 'meteor/randyp:mats-common';
 import  { matsDataQueryUtils }   from 'meteor/randyp:mats-common';
+import  { matsTypes }   from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import { Mongo } from 'meteor/mongo'
-
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
 const saveResultData = function(result){
     if (Meteor.isServer) {
+        var sizeof = require('object-sizeof');
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
+        var threshHold = 300000;
         try {
+            var dSize = sizeof(result.data)
+            console.log("result.basis.data size is ", dSize);
+            if (dSize > threshHold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
+                // greater than threshHold need to downsample
+                //downsample and save it in DownSampleResult
+                var downsampler = require("downsample-lttb");
+                var totalPoints = 0;
+                for (var di = 0; di < result.data.length; di++) {
+                    totalPoints += result.data[di].data.length;
+                }
+                var allowedNumberOfPoints = (threshHold/dSize) * totalPoints;
+                var downSampleResult = JSON.parse(JSON.stringify(result));
+                for (var di = 0; di < result.data.length; di++) {
+                    var lastYVIndex = result.data[di].data[0].length;
+                    //get an x,y array from the data set
+                    var xyDataset = result.data[di].data.map(function(d) {
+                        return [d[0],d[1]];
+                    });
+                    // determine the desired number of points
+                    // ratio of my points to totalPoints
+                    var ratioTotalPoints = xyDataset.length / totalPoints;
+                    var myAllowedPoints = Math.round(ratioTotalPoints * allowedNumberOfPoints);
+                    // downsample the array
+                    var downsampledSeries;
+                    if (myAllowedPoints < xyDataset.length && xyDataset.length > 2) {
+                        downsampledSeries = downsampler.processData(xyDataset, myAllowedPoints);
+                        // replace the y attributes (tooltips etc.) with the y attributes from yhe nearest x
+                        var nearestOriginalIndex = 1;
+                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++ ) {
+                            while (nearestOriginalIndex < result.data[di].data.length && result.data[di].data[nearestOriginalIndex][0] < downsampledSeries[dsi][0]) {
+                                nearestOriginalIndex++;
+                            }
+                            // which is closest - this one or the prior one?
+                            var leftDelta = Math.abs(result.data[di].data[nearestOriginalIndex -1][0] - downsampledSeries[dsi][0]);
+                            var rightDelta = Math.abs(result.data[di].data[nearestOriginalIndex][0] - downsampledSeries[dsi][0]);
+                            var nearestOriginal = leftDelta > rightDelta ? result.data[di].data[nearestOriginalIndex] : result.data[di].data[nearestOriginalIndex -1];
+                            for (var dsYVi = 2; dsYVi < lastYVIndex; dsYVi++ ) {
+                                downsampledSeries[dsi][dsYVi] = nearestOriginal[dsYVi];
+                            }
+                        }
+                        //add downsampled annotation to curve options
+                    } else {
+                        downsampledSeries = result.data[di].data;
+                    }
+                    downSampleResult.data[di].data = downsampledSeries;
+                }
+                matsCollections.DownSampleResults.insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
+            }
+            // save original dataset
             matsCollections.Results.insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
@@ -702,6 +753,8 @@ const getGraphData = new ValidatedMethod({
                     });
                     return future.wait();
                 } else {
+                    var sizeof = require('object-sizeof');
+                    console.log("result.data size is ", sizeof(results));
                     return key;
                 }
             } catch(dataFunctionError) {

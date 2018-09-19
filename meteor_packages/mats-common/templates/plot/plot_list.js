@@ -357,6 +357,7 @@ Template.plotList.events({
                 Session.set('graphViewMode',matsTypes.PlotView.graph);
 
                 var graphFunction = pgf.graphFunction;
+                console.log("prior to getGraphData call time:", new Date() );
                 matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, key) {
                     if (error !== undefined) {
                         //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
@@ -366,6 +367,7 @@ Template.plotList.events({
                         document.getElementById("spinner").style.display = "none";
                         return false;
                     }
+                    console.log("after successful getGraphData call time:", new Date() );
                     document.getElementById('graph-container').style.display = 'block';
                     document.getElementById('plotType').style.display = 'none';
                     document.getElementById('paramList').style.display = 'none';

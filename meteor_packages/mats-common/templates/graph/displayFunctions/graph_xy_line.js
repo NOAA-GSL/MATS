@@ -1,22 +1,31 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
 
+// hide the spinner when the plot finishes
+const hideSpinnerHook = function(plot, canvascontext) {
+    document.getElementById("spinner").style.display = "none";
+}
+
 graphXYLine = function (key) {
     // get plot info
+    console.log("graphXYLine: entry call time:", new Date() );
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
 
     // get dataset info
-    var keyData = matsCollections.Results.findOne({key: key}).result;
-    var dataset = keyData.data;
-    var options = keyData.options;
+    var keyResultData = matsCollections.DownSampleResults.findOne({key: key});
+    if (keyResultData === undefined) {
+        keyResultData = matsCollections.Results.findOne({key: key});
+    }
+    var dataset = keyResultData.result.data;
+    console.log("graphXYLine: after getting data from Results collection:", new Date());
+    var options = keyResultData.result.options;
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
         options.series && options.series.points && (options.series.points.radius = 2);
     }
-
     // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
@@ -413,11 +422,11 @@ graphXYLine = function (key) {
     matsGraphUtils.setNoDataLabels(dataset);
 
     // draw the plot for the first time
+    console.log("graphXYLine: before plotting:", new Date() );
+    //options.hooks = {draw:[hideSpinnerHook]};
     var plot = $.plot(placeholder, dataset, options);
-    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
-    // hide the spinner
     document.getElementById("spinner").style.display = "none";
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
     $("#placeholder").bind('plotclick', function (event, pos, item) {
         if (zooming) {
@@ -429,4 +438,5 @@ graphXYLine = function (key) {
             $("#dataModal").modal('show');
         }
     });
+    console.log("graphXYLine: finished plotting:", new Date() );
 };

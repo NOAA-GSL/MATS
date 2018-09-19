@@ -6,6 +6,7 @@ Referring to the Session variable plotResultKey here causes the html template to
  */
 
 var times = [];
+var plotResultData = null;
 const getDataForTime = function (data, time) {
     for (var i = 0; i < data.length; i++) {
         if (data[i][0] == Number(time)) {
@@ -15,11 +16,18 @@ const getDataForTime = function (data, time) {
     return undefined;
 };
 
+const getPlotResultData = function(plotType, plotResultData) {
+    if (plotResultData === null && matsPlotUtils.getPlotType() === plotType) {
+        plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+    }
+    return plotResultData;
+}
+
 const getDataForCurve = function (curve) {
     if (Session.get("plotResultKey") == undefined) {
         return undefined;
     }
-    var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+    //plotResultData = getPlotResultData();
     for (var dataIndex = 0; dataIndex < plotResultData.length; dataIndex++) {
         if (plotResultData[dataIndex].label === curve.label) {
             return plotResultData[dataIndex];
@@ -29,9 +37,6 @@ const getDataForCurve = function (curve) {
 };
 
 Template.textSeriesOutput.helpers({
-    plotName: function () {
-        return Session.get('plotName');
-    },
     avTimes: function (curve) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
             return [];
@@ -51,8 +56,13 @@ Template.textSeriesOutput.helpers({
         return times;
     },
     curves: function () {
+        Session.get('textLoaded');
         Session.get("plotResultKey"); // make sure we re-render when data changes
-        return Session.get('Curves');
+        if (plotResultData === null) {
+            return [];
+        } else {
+            return Session.get('Curves');
+        }
     },
     curveLabel: function (curve) {
         return curve.label;
@@ -60,38 +70,6 @@ Template.textSeriesOutput.helpers({
     curveText: function () {
         const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
-    },
-    dataRows: function () {
-        /*
-        Algorithm -
-        - create a set of all the times in the data set
-        - create a sorted array from that set to be used by the points routine
-        - return the length of that array as the number of rows. (missing times should have been filled in by the backend data routine)
-        - for each point find the valid data for each curve at that point. If it is missing at the time just treat it as missing.
-         */
-        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
-            return [];
-        }
-        if (Session.get("plotResultKey") === undefined) {
-            return [];
-        }
-        const curves = Session.get('Curves');
-        if (curves === undefined || curves.length == 0) {
-            return false;
-        }
-
-        var timeSet = new Set();
-        var di = 0;
-        var resultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
-
-        for (var i = 0; i < resultData.length; i++) {
-            for (di = 0; di < resultData[i].data.length; di++) {
-                resultData[i] && resultData[i].data[di] && timeSet.add(resultData[i].data[di][0]);
-            }
-        }
-        times = Array.from(timeSet);
-        times.sort((a, b) => (a - b));
-        return times;
     },
     points: function (time) {
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
@@ -146,7 +124,7 @@ Template.textSeriesOutput.helpers({
                 break;
             }
         }
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        //plotResultData = getPlotResultData();
         if (plotResultData[cindex] === undefined) {
             return [];
         }
@@ -173,6 +151,14 @@ Template.textSeriesOutput.helpers({
 });
 
 Template.textSeriesOutput.events({
+    'click .unLoadText' : function() {
+        plotResultData = null;
+        Session.set('textLoaded', new Date());
+    },
+    'click .loadText': function() {
+        plotResultData = getPlotResultData();
+        Session.set('textLoaded', new Date());
+    },
     'click .export': function () {
         var settings = matsCollections.Settings.findOne({}, {fields: {NullFillString: 1}});
         if (settings === undefined) {
@@ -189,7 +175,7 @@ Template.textSeriesOutput.events({
             clabels += "," + curves[c].label;
         }
         data.push(clabels);
-        var plotResultData = matsCollections.Results.findOne({key: Session.get("plotResultKey")}).result.data;
+        //plotResultData = getPlotResultData();
         const curveNums = plotResultData.length - 1;
         const dataRows = _.range(plotResultData[0].data.length);
         for (var rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
