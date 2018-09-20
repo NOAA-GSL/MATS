@@ -57,8 +57,41 @@ Template.textScatter2dOutput.helpers({
             "<th>" + bFitLabel + "</th>";
         return str;
     },
-    points: function (curve, rowIndex) {
-        var plotResultData = matsCurveUtils.getPlotResultData();
+    dataRows: function(curve) {
+        /*
+         This (plotResultsUpDated) is very important.
+         The page is rendered whe the graph page comes up, but the data from the data processing callback
+         in plotList.js or curveList.js may not have set the global variable
+         PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
+         Referring to plotResultsUpDated here causes the html to get re-rendered with the current graph data
+         (which is in the PlotResults global). This didn't used to be necessary because the plot data
+         was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
+         made that unworkable.
+         */
+        var plotResultsUpDated = Session.get('PlotResultsUpDated');
+        if (plotResultsUpDated === undefined) {
+            return [];
+        }
+        if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.scatter2d) {
+            return [];
+        }
+
+        var curves = Session.get("Curves");
+        for (var i = 0; i < curves.length; i++){
+            if (curve.label === curves[i].label) {
+                break;
+            }
+        }
+        if (matsCurveUtils.PlotResult.data === undefined) {
+            return [];
+        }
+        var dataRows = _.range(matsCurveUtils.PlotResult.data[i].data.length);
+        return dataRows;
+    },
+    points: function(curve, rowIndex) {
+        if (matsCurveUtils.PlotResult.data === undefined) {
+            return "";
+        }
         var line = '';
         for (var i = 0; i < plotResultData.length; i++) {
             if (plotResultData[i].label == curve.label) {

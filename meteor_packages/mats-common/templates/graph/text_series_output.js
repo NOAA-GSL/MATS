@@ -29,6 +29,7 @@ const getDataForCurve = function (curve) {
 
 Template.textSeriesOutput.helpers({
     avTimes: function (curve) {
+        Session.get('textLoaded'); // monitor for data changres like previous / next
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.timeSeries) {
             return [];
         }
@@ -40,6 +41,7 @@ Template.textSeriesOutput.helpers({
         var timeSet = new Set();
         var di;
         for (di = 0; di < curveData.length; di++) {
+        //for (di = 0; di < 50; di++) {
             curveData[di] && timeSet.add(curveData[di][0]);
         }
         var times = Array.from(timeSet);

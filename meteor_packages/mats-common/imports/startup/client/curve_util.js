@@ -11,26 +11,69 @@ import { matsMethods } from 'meteor/randyp:mats-common';
  This (plotResult) is very important. It isn't "var" because it needs to be a meteor global scope.
  The page is rendered whe the graph page comes up, but the data from the data processing callback
  in plotList.js or curveList.js may not have set the global variable
- PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
- Referring to plotResultsUpDated in the textView templates causes the template to get re-loaded with the current graph data
- (which is in the PlotResults global).
+ PlotResult.
  */
 
 var plotResultData = null;
 var graphResult = null;
+
+const sizeof = function(_1){
+    var _2=[_1];
+    var _3=0;
+    for(var _4=0;_4<_2.length;_4++){
+        switch(typeof _2[_4]){
+            case "boolean":
+                _3+=4;
+                break;
+            case "number":
+                _3+=8;
+                break;
+            case "string":
+                _3+=2*_2[_4].length;
+                break;
+            case "object":
+                if(Object.prototype.toString.call(_2[_4])!="[object Array]"){
+                    for(var _5 in _2[_4]){
+                        _3+=2*_5.length;
+                    }
+                }
+                for(var _5 in _2[_4]){
+                    var _6=false;
+                    for(var _7=0;_7<_2.length;_7++){
+                        if(_2[_7]===_2[_4][_5]){
+                            _6=true;
+                            break;
+                        }
+                    }
+                    if(!_6){
+                        _2.push(_2[_4][_5]);
+                    }
+                }
+        }
+    }
+    return _3;
+};
+
 
 const getPlotResultData = function() {
     return plotResultData;
 }
 
 const setPlotResultData = function() {
-    if (plotResultData === null) {
-        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: true}, function (error, result) {
+    var pageIndex = Session.get("pageIndex");
+    var newPageIndex = Session.get("newPageIndex");
+    if (plotResultData === null || pageIndex != newPageIndex) {
+        showSpinner();
+        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: true, pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
             if (error !== undefined) {
                 setError(new Error("matsMethods.getPlotResult failed : error: " + error));
             }
             plotResultData = result.data;
+            Session.set("pageIndex", result.dsiRealPageIndex );
             Session.set('textLoaded', new Date());
+            console.log("size of plotResultData is ", sizeof(plotResultData));
+            // have to put the hide in the callback
+            hideSpinner();
         });
     }
 }
@@ -41,16 +84,13 @@ const resetPlotResultData = function() {
 }
 
 const getGraphResult = function() {
-    if (graphResult === null) {
-        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: false}, function (error, result) {
-            if (error !== undefined) {
-                setError(new Error("matsMethods.getPlotResult failed : error: " + error));
-            }
-            graphResult = result;
-            Session.set('graphDataLoaded', new Date());
-        });
-    }
     return graphResult;
+}
+
+const setGraphResult = function(result) {
+    graphResult = result;
+    Session.set('graphDataLoaded', new Date());
+    console.log("size of graphResultData is", sizeof(graphResult));
 }
 
 const resetGraphResult = function() {
@@ -910,6 +950,7 @@ export default matsCurveUtils = {
     setPlotResultData: setPlotResultData,
     resetPlotResultData: resetPlotResultData,
     getGraphResult: getGraphResult,
+    setGraphResult: setGraphResult,
     resetGraphResult:resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,

@@ -5,7 +5,7 @@
         {{#each curves}}
             <h5>{{curveText}}</h5>
         {{/each}}
-        <table class="table table-condensed table-striped table-bordered">
+        <table id="textSeriesStatsTable" class="table table-condensed table-striped table-bordered">
             <thead>
             <tr>
                 <th>label</th>
@@ -27,7 +27,7 @@
             </tbody>
         </table>
         {{#each curves}}
-            <table class="table table-condensed table-bordered table-striped table-hover table-sm">
+            <table id="textSeriesPointsTable" class="table table-condensed table-bordered table-striped table-hover table-sm">
                 <thead class="thead-inverse">
                 <tr>
                     <th>{{curveLabel this}} time</th>

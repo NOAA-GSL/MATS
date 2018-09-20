@@ -358,26 +358,27 @@ Template.plotList.events({
 
                 var graphFunction = pgf.graphFunction;
                 console.log("prior to getGraphData call time:", new Date() );
-                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, key) {
+                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, ret) {
                     if (error !== undefined) {
                         //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
                         setError(error);
-
+                        matsCurveUtils.resetGraphResult();
+                        //Session.set ('PlotResultsUpDated', new Date());
                         Session.set("spinner_img", "spinner.gif");
                         document.getElementById("spinner").style.display = "none";
                         return false;
                     }
+                    matsCurveUtils.setGraphResult(ret.result);
+                    Session.set("plotResultKey", ret.key);
+                    delete ret;
+                    Session.set('graphFunction', graphFunction);
+                    Session.set ('PlotResultsUpDated', new Date());
                     console.log("after successful getGraphData call time:", new Date() );
                     document.getElementById('graph-container').style.display = 'block';
                     document.getElementById('plotType').style.display = 'none';
                     document.getElementById('paramList').style.display = 'none';
                     document.getElementById('plotList').style.display = 'none';
                     document.getElementById('curveList').style.display = 'none';
-                    Session.set("plotResultKey", key);
-                    Session.set ('PlotResultsUpDated', new Date());
-                    Session.set('graphFunction', graphFunction);
-                    eval (graphFunction)(key, Session.get('Curves'));
-
                     if (document.getElementById("plotTypeContainer")) {
                         document.getElementById("plotTypeContainer").style.display="none";
                     }
@@ -387,7 +388,7 @@ Template.plotList.events({
                     if (document.getElementById("scatterView")) {
                         document.getElementById("scatterView").style.display="none";
                     }
-                    document.getElementById("plotButton").style.display = "none";
+                    document.getElementById("text-button-group").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
                     document.getElementById("plot-buttons-grp").style.display = "block";
                     document.getElementById("curves").style.display = "block";

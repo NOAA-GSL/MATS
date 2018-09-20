@@ -1,14 +1,11 @@
-import { Meteor } from "meteor/meteor";
-import { ValidatedMethod } from 'meteor/mdg:validated-method';
-import { fs } from 'fs';
-import { SimpleSchema } from 'meteor/aldeed:simple-schema';
-import  { matsCollections }   from 'meteor/randyp:mats-common';
-import  { matsDataUtils }   from 'meteor/randyp:mats-common';
-import  { matsDataQueryUtils }   from 'meteor/randyp:mats-common';
-import  { matsTypes }   from 'meteor/randyp:mats-common';
+import {Meteor} from "meteor/meteor";
+import {ValidatedMethod} from 'meteor/mdg:validated-method';
+import {fs} from 'fs';
+import {SimpleSchema} from 'meteor/aldeed:simple-schema';
+import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
-import { Mongo } from 'meteor/mongo'
+import {Mongo} from 'meteor/mongo'
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
@@ -25,10 +22,12 @@ const saveResultData = function(result){
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
-        var threshHold = 300000;
+        var threshHold = 1000000;
+        var ret = {};
         try {
             var dSize = sizeof(result.data)
             console.log("result.basis.data size is ", dSize);
+            // TimeSeries and DailyModelCycle are the only plot types that require downSampling
             if (dSize > threshHold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
                 // greater than threshHold need to downsample
                 //downsample and save it in DownSampleResult
@@ -73,16 +72,19 @@ const saveResultData = function(result){
                     }
                     downSampleResult.data[di].data = downsampledSeries;
                 }
-                DownSampleResults.insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
+                DownSampleResults.rawCollection().insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
+                ret = {key:key,result:downSampleResult};
+            } else{
+                ret = {key:key,result:result};
             }
             // save original dataset
-            Results.insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
+            Results.rawCollection().insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
                 throw new Meteor.Error(error.toLocaleString() + ": Requesting too much data... try averaging");
             }
         }
-        return key;
+        return ret;
     }
 };
 
@@ -155,36 +157,82 @@ const readFunctionFile = new ValidatedMethod({
     }
 });
 
+/*
+getPlotResult is used by the matsCurveUtils.setPlotResultData which is used to display testual results.
+Because it isn't being rendered graphically this data is always full size, i.e. NOT downsampled.
+That is why it only finds in the Result collection, never the DownSampleResult collection.
+
+Because the dataset can be so large ... e.g. megabytes the data retrieval is pagenated. The index is
+applied to the underlying datasets.
+ */
 const getPlotResult = new ValidatedMethod({
     name:'matsMethods.getPlotResult',
     validate:  new SimpleSchema({
         resultKey: {type: String},
-        original: {type: Boolean}
+        original: {type: Boolean},
+        pageIndex: {type: Number},
+        newPageIndex: {type:Number}
     }).validator(),
     run (params){
         if (Meteor.isServer) {
             var rKey = params.resultKey;
             var original = params.original;
+            var pageIndex = params.pageIndex;
+            var newPageIndex = params.newPageIndex;
+            var ret;
+            var rawReturn;
             if (original === true) {
                 var resultKey = Results.findOne({key: rKey},{key:1});
                 if (resultKey !== undefined) {
-                    return Results.findOne({key: rKey}).result;
+                    rawReturn = Results.findOne({key: rKey}).result;
                 } else {
                     return undefined;
                 }
             } else {
-                var dsrKey = DownSampleResults.findOne({key: rKey}, {key: 1});
-                if (dsrKey !== undefined) {
-                        return DownSampleResults.findOne({key: rKey}).result;
+                var resultKey = Results.findOne({key: rKey},{key:1});
+                if (resultKey !== undefined) {
+                    rawReturn = Results.findOne({key: rKey}).result;
                 } else {
-                    var resultKey = Results.findOne({key: rKey},{key:1});
-                    if (resultKey !== undefined) {
-                        return Results.findOne({key: rKey}).result;
-                    } else {
-                        return undefined;
-                    }
+                    return undefined;
                 }
             }
+            ret=JSON.parse(JSON.stringify(rawReturn));
+            var start;
+            var end;
+            var direction = 1;
+            if (pageIndex <= newPageIndex) {
+                start = pageIndex * 100;
+                end = newPageIndex * 100;
+            } else {
+                var direction = -1;
+                start = newPageIndex * 100;
+                end = pageIndex * 100;
+            }
+            for (var dsi=0; dsi < ret.data.length;dsi++) {
+                if (ret.data[dsi].data.length <= 100) {
+                    continue; // don't bother with zero and max curves or datasets less than or equal to a page
+                }
+                var dsiStart = start;
+                var dsiEnd = end;
+                if (dsiStart < 0) {
+                    dsiStart = 0;
+                } else {
+                    dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
+                }
+                if (dsiEnd < dsiStart) {
+                    dsiEnd = dsiStart
+                } else {
+                    dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
+                }
+                ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart,dsiEnd);
+            }
+            delete rawReturn;
+            if (direction === 1) {
+                ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
+            } else {
+                ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
+            }
+            return ret;
         }
     }
 });
@@ -767,37 +815,45 @@ const getGraphData = new ValidatedMethod({
             type: String
         }
     }).validator(),
-    run(params){
+    run(params) {
         if (Meteor.isServer) {
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
             var dataFunction = plotGraphFunction.dataFunction;
+            var ret;
             try {
-                var results;
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                results = Results.findOne({key:key});
+                var results = Results.findOne({key: key},{key:1});
                 if (results === undefined) {
+                    // results aren't in the Collection - need to process data routine
                     var Future = require('fibers/future');
                     var future = new Future();
                     global[dataFunction](params.plotParams, function (results) {
-                        key = saveResultData(results);
-                        future["return"](key);
+                        ret = saveResultData(results);
+                        future["return"](ret);
                     });
                     return future.wait();
-                } else {
+                } else { // results were already in the Results collection (same params and not yet expired)
+                    // are results in the downsampled collection?
+                    var dsResults = DownSampleResults.findOne({key: key});
+                    if (dsResults !== undefined) {
+                        ret = dsResults;
+                    } else {
+                        ret = Results.findOne({key: key});
+                    }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
-                    return key;
+                    return ret;
                 }
-            } catch(dataFunctionError) {
+            } catch (dataFunctionError) {
                 //throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
-                if ( dataFunctionError.toLocaleString().indexOf( "INFO:" ) !== -1) {
+                if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
                     throw new Meteor.Error(dataFunctionError.message);
                 } else {
                     throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
                 }
             }
-            return key;
+            return results; // probably won't get here
         }
     }
 });
