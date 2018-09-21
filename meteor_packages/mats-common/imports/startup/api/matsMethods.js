@@ -67,6 +67,7 @@ const saveResultData = function(result){
                             }
                         }
                         //add downsampled annotation to curve options
+                        downSampleResult.data[di].annotation += "   **DOWNSAMPLED**";
                     } else {
                         downsampledSeries = result.data[di].data;
                     }
