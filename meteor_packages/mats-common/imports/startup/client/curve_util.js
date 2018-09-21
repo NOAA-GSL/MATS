@@ -16,6 +16,7 @@ import { matsMethods } from 'meteor/randyp:mats-common';
 
 var plotResultData = null;
 var graphResult = null;
+var plot;
 
 const sizeof = function(_1){
     var _2=[_1];
@@ -851,10 +852,14 @@ const get_err = function (sVals, sSecs) {
 };
 
 const showSpinner = function () {
-    document.getElementById("spinner").style.display = "block";
+    if (document.getElementById("spinner")) {
+        document.getElementById("spinner").style.display = "block";
+    }
 }
 const hideSpinner = function () {
-    document.getElementById("spinner").style.display = "none";
+    if (document.getElementById("spinner")) {
+        document.getElementById("spinner").style.display = "none";
+    }
 }
 
 const squareWidth = function () {
@@ -954,7 +959,8 @@ export default matsCurveUtils = {
     resetGraphResult:resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
-    resizeGraph: resizeGraph
+    resizeGraph: resizeGraph,
+    plot: plot
 };
 
             

@@ -390,7 +390,7 @@ Template.plotList.events({
                     }
                     document.getElementById("text-button-group").style.display = "none";
                     document.getElementById("textButton").style.display = "block";
-                    document.getElementById("plot-buttons-grp").style.display = "block";
+                    document.getElementById("all-plot-buttons-grp").style.display = "block";
                     document.getElementById("curves").style.display = "block";
                     document.getElementById("graphView").style.display = "block";
                     document.getElementById("textSeriesView").style.display = "none";

@@ -1,6 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
-import {matsCollections, matsCurveUtils, matsMethods, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections, matsCurveUtils, matsMethods, matsPlotUtils, matsTypes, matsParamUtils} from 'meteor/randyp:mats-common';
 import domtoimage from 'dom-to-image';
 
 var width = function () {
@@ -37,8 +37,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "none";
-                document.getElementById("textButton").style.display = "block";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "block";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "block";
                 document.getElementById("graphView").style.display = "block";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -57,8 +57,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "block";
@@ -77,8 +77,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -97,8 +97,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -117,8 +117,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-buttons-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -137,8 +137,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -157,8 +157,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -177,8 +177,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -197,8 +197,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "none";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "none";
                 document.getElementById("graphView").style.display = "none";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -217,8 +217,8 @@ Template.graph.onCreated(function () {
                 document.getElementById('placeholder').style.width = width();
                 document.getElementById('placeholder').style.heigth = height();
                 document.getElementById("text-button-group").style.display = "none";
-                document.getElementById("textButton").style.display = "block";
-                document.getElementById("plot-buttons-grp").style.display = "block";
+                document.getElementById("plot-button-group").style.display = "block";
+                document.getElementById("all-plot-buttons-grp").style.display = "block";
                 document.getElementById("curves").style.display = "block";
                 document.getElementById("graphView").style.display = "block";
                 document.getElementById("textSeriesView").style.display = "none";
@@ -400,6 +400,18 @@ Template.graph.helpers({
     },
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile);
+    },
+    displayReplotZoom: function() {
+        // the replot to zoom function is only really appropriate for downsampled graphs which are
+        // only possible in timeseries or dailymodelcycle plots
+        Session.get("PlotParams");
+        Session.get ('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            return "block";
+        } else {
+            return "none";
+        }
     }
 });
 
@@ -576,8 +588,7 @@ Template.graph.events({
     },
     'click .plotButton': function () {
         document.getElementById("text-button-group").style.display = "none";
-        document.getElementById("textButton").style.display = "block";
-        document.getElementById("plot-buttons-grp").style.display = "block";
+        document.getElementById("all-plot-buttons-grp").style.display = "block";
         document.getElementById("curves").style.display = "block";
         document.getElementById("graphView").style.display = "block";
         document.getElementById("textSeriesView").style.display = "none";
@@ -592,9 +603,11 @@ Template.graph.events({
         if (plotType !== matsTypes.PlotTypes.map) {
             document.getElementById('graph-touch-controls').style.display = "block";
             document.getElementById('axisLimitButton').style.display = "block";
+            document.getElementById("plot-button-group").style.display = "block";
         } else {
             document.getElementById('graph-touch-controls').style.display = "none";
             document.getElementById('axisLimitButton').style.display = "none";
+            document.getElementById("plot-button-group").style.display = "none";
         }
 
         var graphView = document.getElementById('graphView');
@@ -602,9 +615,9 @@ Template.graph.events({
         matsCurveUtils.hideSpinner();
     },
     'click .textButton': function () {
-        document.getElementById("plot-buttons-grp").style.display = "block";
         document.getElementById("text-button-group").style.display = "block";
-        document.getElementById("textButton").style.display = "none";
+        document.getElementById("plot-button-group").style.display = "none";
+        document.getElementById("all-plot-buttons-grp").style.display = "block";
         document.getElementById("curves").style.display = "none";
         document.getElementById("graphView").style.display = "none";
         document.getElementById('graph-touch-controls').style.display = "none";
@@ -771,5 +784,23 @@ Template.graph.events({
     'click .allPageButton' : function() {
         Session.set("newPageIndex",-1000);
         matsCurveUtils.setPlotResultData();
-    }
+    },
+    'click .firstPageButton' : function() {
+        Session.set("pageIndex",0);
+        Session.set("newPageIndex",1);
+        matsCurveUtils.setPlotResultData();
+    },
+    'click .replotZoomButton' : function() {
+        var xaxis = $("#placeholder").data().plot.getAxes().xaxis;
+        var params = Session.get('params');
+        var min = Math.round(xaxis.min);
+        var max = Math.round(xaxis.max);
+        var newDateRange = moment.utc(min).format('M/DD/YYYY HH:mm') + " - " + moment.utc(max).format('M/DD/YYYY HH:mm');
+        document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
+        var actionId = "plotUnmatched";
+        if (params.plotAction === "matched") {
+            actionId = plotMatched;
+        }
+        document.getElementById("plot-curves").click();
+    },
 });

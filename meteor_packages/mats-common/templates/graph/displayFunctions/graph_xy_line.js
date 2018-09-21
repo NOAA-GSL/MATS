@@ -12,6 +12,9 @@ graphXYLine = function (key) {
 
     // get dataset info
     var resultSet = matsCurveUtils.getGraphResult();
+    if (resultSet === null) {
+        return false;
+    }
     var dataset = resultSet.data;
     var options = resultSet.options;
     console.log("graphXYLine: after getting data from Results collection:", new Date());
@@ -417,8 +420,7 @@ graphXYLine = function (key) {
 
     // draw the plot for the first time
     console.log("graphXYLine: before plotting:", new Date() );
-    //options.hooks = {draw:[hideSpinnerHook]};
-    var plot = $.plot(placeholder, dataset, options);
+    plot = $.plot(placeholder, dataset, options);
     document.getElementById("spinner").style.display = "none";
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
