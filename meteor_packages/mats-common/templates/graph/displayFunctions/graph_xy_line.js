@@ -417,8 +417,9 @@ graphXYLine = function (key) {
 
     // draw the plot for the first time
     console.log("graphXYLine: before plotting:", new Date() );
-    //options.hooks = {draw:[hideSpinnerHook]};
     var plot = $.plot(placeholder, dataset, options);
+
+    // hide the spinner
     document.getElementById("spinner").style.display = "none";
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 

@@ -51,7 +51,7 @@ less@2.7.12
 livedata@1.0.18
 localstorage@1.2.0
 logging@1.1.20
-mdg:validated-method@1.1.0
+mdg:validated-method@1.2.0
 mdg:validation-error@0.5.1
 meteor@1.9.2
 meteor-base@1.4.0
