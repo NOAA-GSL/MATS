@@ -767,5 +767,9 @@ Template.graph.events({
         var pageIndex = Session.get("pageIndex");
         Session.set("newPageIndex",pageIndex + 10);
         matsCurveUtils.setPlotResultData();
+    },
+    'click .allPageButton' : function() {
+        Session.set("newPageIndex",-1000);
+        matsCurveUtils.setPlotResultData();
     }
 });

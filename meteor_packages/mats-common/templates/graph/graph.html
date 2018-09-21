@@ -6,21 +6,23 @@
         </div>
         <div id="graph-control" class="row">
             <span id="plot-buttons-grp" class="btn-group btn-group-xs">
-                <button type="button" class="back btn btn-primary fa fa-long-arrow-left">&nbsp;Back</button>
+                <button type="button" class="back btn btn-primary fa fa-long-arrow-left" data-toggle="tooltip" data-placement="top" title="return to parameters">&nbsp;Back</button>
                 <button type="button" class="btn spacebutton" id="gc-spacer"></button>
                 <button type="button" class="export btn btn-primary fa fa-floppy-o">&nbsp;Export</button>
                 <button type="button" class="preview btn btn-primary fa fa-eye">&nbsp;Preview</button>
                 <button type="button" class="publish btn btn-primary fa fa-print">&nbsp;Publish</button>
-                <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="display:block;">&nbsp;Text</button>
-                <button type="button" class="basis btn btn-primary fa fa-info">&nbsp;Data Lineage</button>
-                <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;">&nbsp;Axes</button>
+                <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="display:block;" data-toggle="tooltip" data-placement="top" title="change to text view">&nbsp;Text</button>
+                <button type="button" class="basis btn btn-primary fa fa-info" data-toggle="tooltip" data-placement="top" title="view data details">&nbsp;Data Lineage</button>
+                <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;Axes</button>
                 <button type="button" class="btn spacebutton" id="gc-spacer"></button>
                 <span id="text-button-group" class="btn-group btn-group-xs" style="display:none;">
-                    <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:block;">&nbsp;Plot</button>
-                    <button id="previousTenPageButton" type="button" class="previousTenPageButton btn btn-info fa fa-angle-double-left" style="display:block;">&nbsp;</button>
-                    <button id="previousPageButton" type="button" class="previousPageButton btn btn-info fa fa-angle-left" style="display:block;">&nbsp;</button>
-                    <button id="nextPageButton" type="button" class="nextPageButton btn btn-info fa fa-angle-right" style="display:block;">&nbsp;</button>
-                    <button id="nextTenPageButton" type="button" class="nextTenPageButton btn btn-info fa fa-angle-double-right" style="display:block;">&nbsp;</button>
+                    <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:block;" data-toggle="tooltip" data-placement="top" title="change to plot view">&nbsp;Plot</button>
+                    <button type="button" class="btn spacebutton" id="gc-spacer"></button>
+                    <button id="previousTenPageButton" type="button" class="previousTenPageButton btn btn-info fa fa-angle-double-left" style="display:block;" data-toggle="tooltip" data-placement="top" title="previous 10 pages"></button>
+                    <button id="previousPageButton" type="button" class="previousPageButton btn btn-info fa fa-angle-left" style="display:block;" data-toggle="tooltip" data-placement="top" title="previous page"></button>
+                    <button id="nextPageButton" type="button" class="nextPageButton btn btn-info fa fa-angle-right" style="display:block;" data-toggle="tooltip" data-placement="top" title="next page"></button>
+                    <button id="nextTenPageButton" type="button" class="nextTenPageButton btn btn-info fa fa-angle-double-right" style="display:block;" data-toggle="tooltip" data-placement="top" title="next 10 pages"></button>
+                    <button id="allPageButton" type="button" class="allPageButton btn btn-info fa fa-file-text-o" style="display:block;" data-toggle="tooltip" data-placement="top" title="all pages"></button>
                 </span>
             </span>
             <span id="graph-touch-controls" class="btn-group btn-group-xs" role="group" aria-label="touchcontrol">

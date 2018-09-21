@@ -165,6 +165,7 @@ That is why it only finds in the Result collection, never the DownSampleResult c
 
 Because the dataset can be so large ... e.g. megabytes the data retrieval is pagenated. The index is
 applied to the underlying datasets.
+A new page index of -1000 means get all the data i.e. no pagenation.
  */
 const getPlotResult = new ValidatedMethod({
     name:'matsMethods.getPlotResult',
@@ -201,13 +202,18 @@ const getPlotResult = new ValidatedMethod({
             var start;
             var end;
             var direction = 1;
-            if (pageIndex <= newPageIndex) {
-                start = pageIndex * 100;
-                end = newPageIndex * 100;
+            if (newPageIndex === -1000) {
+                start = 0;
+                end = Number.MAX_VALUE;
             } else {
-                var direction = -1;
-                start = newPageIndex * 100;
-                end = pageIndex * 100;
+                if (pageIndex <= newPageIndex) {
+                    start = pageIndex * 100;
+                    end = newPageIndex * 100;
+                } else {
+                    var direction = -1;
+                    start = newPageIndex * 100;
+                    end = pageIndex * 100;
+                }
             }
             for (var dsi=0; dsi < ret.data.length;dsi++) {
                 if (ret.data[dsi].data.length <= 100) {
@@ -215,23 +221,33 @@ const getPlotResult = new ValidatedMethod({
                 }
                 var dsiStart = start;
                 var dsiEnd = end;
-                if (dsiStart < 0) {
-                    dsiStart = 0;
+                if (start === 0 && end === Number.MAX_VALUE) {
+                    dsiEnd = rawReturn.data[dsi].data.length;
                 } else {
-                    dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
+                    if (dsiStart < 0) {
+                        dsiStart = 0;
+                    } else {
+                        dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
+                    }
+                    if (dsiEnd < dsiStart) {
+                        dsiEnd = dsiStart
+                    } else {
+                        dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
+                    }
                 }
-                if (dsiEnd < dsiStart) {
-                    dsiEnd = dsiStart
-                } else {
-                    dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
+                if (dsiEnd !== Number.maxValue) {
+                    ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
                 }
-                ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart,dsiEnd);
             }
             delete rawReturn;
-            if (direction === 1) {
-                ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
+            if (dsiEnd !== Number.maxValue) {
+                ret.dsiRealPageIndex = 0;
             } else {
-                ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
+                if (direction === 1) {
+                    ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
+                } else {
+                    ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
+                }
             }
             return ret;
         }
