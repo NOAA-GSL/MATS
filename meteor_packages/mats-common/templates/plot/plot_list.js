@@ -2,6 +2,7 @@ import { matsTypes } from 'meteor/randyp:mats-common'; 
 import { matsCollections } from 'meteor/randyp:mats-common';
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsMethods } from 'meteor/randyp:mats-common';
+import { matsGraphUtils } from 'meteor/randyp:mats-common';
 import { matsPlotUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common';
 import { matsSelectUtils } from 'meteor/randyp:mats-common';
@@ -365,7 +366,7 @@ Template.plotList.events({
                         matsCurveUtils.resetGraphResult();
                         //Session.set ('PlotResultsUpDated', new Date());
                         Session.set("spinner_img", "spinner.gif");
-                        document.getElementById("spinner").style.display = "none";
+                        matsCurveUtils.hideSpinner();
                         return false;
                     }
                     matsCurveUtils.setGraphResult(ret.result);
@@ -374,30 +375,8 @@ Template.plotList.events({
                     Session.set('graphFunction', graphFunction);
                     Session.set ('PlotResultsUpDated', new Date());
                     console.log("after successful getGraphData call time:", new Date() );
-                    document.getElementById('graph-container').style.display = 'block';
-                    document.getElementById('plotType').style.display = 'none';
-                    document.getElementById('paramList').style.display = 'none';
-                    document.getElementById('plotList').style.display = 'none';
-                    document.getElementById('curveList').style.display = 'none';
-                    if (document.getElementById("plotTypeContainer")) {
-                        document.getElementById("plotTypeContainer").style.display="none";
-                    }
-                    if (document.getElementById("scatter2d")){
-                        document.getElementById("scatter2d").style.display = "none";
-                    }
-                    if (document.getElementById("scatterView")) {
-                        document.getElementById("scatterView").style.display="none";
-                    }
-                    document.getElementById("text-button-group").style.display = "none";
-                    document.getElementById("textButton").style.display = "block";
-                    document.getElementById("all-plot-buttons-grp").style.display = "block";
-                    document.getElementById("curves").style.display = "block";
-                    document.getElementById("graphView").style.display = "block";
-                    document.getElementById("textSeriesView").style.display = "none";
-                    document.getElementById("textProfileView").style.display = "none";
-                    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
-                        document.getElementById('graph-touch-controls').style.display = "none";
-                    }
+
+                    matsGraphUtils.setGraphView();
 
                     var plotType = matsPlotUtils.getPlotType();
                     var isMatched = Session.get('plotParameter') === "matched";

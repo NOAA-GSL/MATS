@@ -187,7 +187,7 @@ graphMap = function (key) {
     };
 
     // hide the spinner
-    document.getElementById("spinner").style.display = "none";
+    matsCurveUtils.hideSpinner();
 
     // initial resize seems to be necessary
     resizeMap(this);

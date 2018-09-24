@@ -1,5 +1,7 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
+import {matsGraphUtils} from 'meteor/randyp:mats-common';
 
 graphProfile = function (key) {
     // get plot info
@@ -9,6 +11,9 @@ graphProfile = function (key) {
 
     // get dataset info
     var resultSet = matsCurveUtils.getGraphResult();
+    if (resultSet === null) {
+        return false;
+    }
     var dataset = resultSet.data;
     var options = resultSet.options;
 
@@ -78,8 +83,6 @@ graphProfile = function (key) {
         }
     }
 
-    Session.set('options', options);
-
     var placeholder = $("#placeholder");
 
     // bind to the pan, zoom, and redraw buttons
@@ -135,9 +138,9 @@ graphProfile = function (key) {
     });
 
     // add replot button
+    $("#refresh-plot").off('click');
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
         const yAxisLength = Session.get('yAxisLength');
 
         // restore original axis limits and labels to options map
@@ -164,13 +167,12 @@ graphProfile = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add axis customization modal submit button
+    $("#axisSubmit").off('click');
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         // get input axis limits and labels
         var ylabels = [];
@@ -236,15 +238,14 @@ graphProfile = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options', options);
     });
 
-    var errorbars = Session.get('errorbars');
+    var errorbars = [];
 
     // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
+    $("input[id$='-curve-show-hide']").off('click');
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         var id = event.target.id;
         var label = id.replace('-curve-show-hide', '');
@@ -266,13 +267,8 @@ graphProfile = function (key) {
                         Session.set(label + "pointsButtonText", 'show points');
                     }
                 }
-                // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
                 if (errorbars[c] === undefined) {
                     errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
                 }
                 if (dataset[c].points.errorbars == undefined) {
                     dataset[c].points.errorbars = errorbars[c];
@@ -293,13 +289,12 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add points show/hide buttons
+    $("input[id$='-curve-show-hide-points']").off('click');
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points', '');
@@ -320,52 +315,45 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add errorbars show/hide buttons
+    $("input[id$='-curve-errorbars']").off('click');
     $("input[id$='-curve-errorbars']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-errorbars', '');
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
-                // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
                 if (errorbars[c] === undefined) {
                     errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
                 }
                 if (dataset[c].points.errorbars == undefined) {
                     dataset[c].points.errorbars = errorbars[c];
                 } else {
                     dataset[c].points.errorbars = undefined;
                 }
-                if (dataset[c].points.errorbars !== undefined) {
-                    if (dataset[c].data.length === 0) {
-                        Session.set(label + "errorBarButtonText", 'NO DATA');
-                    } else {
-                        Session.set(label + "errorBarButtonText", 'hide error bars');
-                    }
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "errorBarButtonText", 'NO DATA');
                 } else {
-                    Session.set(label + "errorBarButtonText", 'show error bars');
+                    if (dataset[c].points.errorbars !== undefined) {
+                        Session.set(label + "errorBarButtonText", 'hide error bars');
+                    } else {
+                        Session.set(label + "errorBarButtonText", 'show error bars');
+                    }
                 }
             }
         }
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
+    $("input[id$='-curve-show-hide-annotate']").off('click');
     $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
@@ -391,10 +379,10 @@ graphProfile = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add grid show/hide buttons
+    $("input[id$='-curve-show-hide-grid']").off('click');
     $("input[id$='-curve-show-hide-grid']").click(function (event) {
         event.preventDefault();
         const id = event.target.id;
@@ -425,16 +413,7 @@ graphProfile = function (key) {
         plot = matsGraphUtils.drawGraph(ranges, dataset, options, placeholder);
         zooming = false;
     });
-    matsGraphUtils.setNoDataLabels(dataset);
-
-    // draw the plot for the first time
-    var plot = $.plot(placeholder, dataset, options);
-    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
-    // hide the spinner
-    document.getElementById("spinner").style.display = "none";
-
-    $("#placeholder").bind('plotclick', function (event, pos, item) {
+    placeholder.bind('plotclick', function (event, pos, item) {
         if (zooming) {
             zooming = false;
             return;
@@ -444,4 +423,12 @@ graphProfile = function (key) {
             $("#dataModal").modal('show');
         }
     });
+    matsGraphUtils.setNoDataLabels(dataset);
+
+    // draw the plot for the first time
+    var plot = $.plot(placeholder, dataset, options);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
+    // hide the spinner
+    matsCurveUtils.hideSpinner();
 };

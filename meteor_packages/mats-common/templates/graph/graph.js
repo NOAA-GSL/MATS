@@ -1,24 +1,15 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
-import {matsCollections, matsCurveUtils, matsMethods, matsPlotUtils, matsTypes, matsParamUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsCurveUtils,
+    matsGraphUtils,
+    matsMethods,
+    matsParamUtils,
+    matsPlotUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
 import domtoimage from 'dom-to-image';
-
-var width = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    if (vpw < 400) {
-        return (.9 * vpw).toString() + "px";
-    } else {
-        return (.8 * vpw).toString() + "px";
-    }
-};
-var height = function () {
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    if (vph < 400) {
-        return (.8 * vph).toString() + "px";
-    } else {
-        return (.6 * vph).toString() + "px";
-    }
-};
 
 var pageIndex = 0;
 
@@ -30,211 +21,38 @@ Template.graph.onRendered(function () {
 
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        //console.log ("graph resizng now");
         switch (Session.get('graphViewMode')) {
             case matsTypes.PlotView.graph:
-                //console.log($(window).height());
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "none";
-                document.getElementById("plot-button-group").style.display = "block";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "block";
-                document.getElementById("graphView").style.display = "block";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "block";
-                document.getElementById('axisLimitButton').style.display = "block";
+                matsGraphUtils.setGraphView();
                 break;
             case matsTypes.PlotView.textSeries:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "block";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textSeriesView");
                 break;
             case matsTypes.PlotView.textProfile:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "block";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textProfileView");
                 break;
             case matsTypes.PlotView.textDieoff:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "block";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textDieOffView");
                 break;
             case matsTypes.PlotView.textThreshold:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-buttons-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "block";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textThresholdView");
                 break;
             case matsTypes.PlotView.textDailyModelCycle:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.etTextView("textDailyModelCycleView");
                 break;
             case matsTypes.PlotView.textMap:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "block";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textMapView");
                 break;
             case matsTypes.PlotView.textHistogram:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "block";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textHistogramView");
                 break;
             case matsTypes.PlotView.textScatter:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "block";
-                document.getElementById("plot-button-group").style.display = "none";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
+                matsGraphUtils.setTextView("textScatter2dView");
                 break;
             default:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("text-button-group").style.display = "none";
-                document.getElementById("plot-button-group").style.display = "block";
-                document.getElementById("all-plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "block";
-                document.getElementById("graphView").style.display = "block";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "block";
-                document.getElementById('axisLimitButton').style.display = "block";
+                matsGraphUtils.setGraphView();
         }
     });
-
 
     $(document).keyup(function (event) {
         if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
@@ -250,21 +68,16 @@ Template.graph.onCreated(function () {
             Session.set("printMode", false);
         }
     });
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
-        document.getElementById('graph-touch-controls').style.display = "none";
-        document.getElementById('axisLimitButton').style.display = "none";
-    }
 });
-
 
 Template.graph.helpers({
     /**
      * @return {string}
      * @return {string}
      */
-    graphFunction: function() {
+    graphFunction: function () {
         // causes graph display routine to be processed
-        Session.get ('PlotResultsUpDated');
+        Session.get('PlotResultsUpDated');
         var graphFunction = Session.get('graphFunction');
         if (graphFunction) {
             eval(graphFunction)(Session.get('Curves'));
@@ -280,16 +93,16 @@ Template.graph.helpers({
         }
     },
     width: function () {
-        return width();
+        return matsGraphUtils.width();
     },
     height: function () {
-        return height();
+        return matsGraphUtils.height();
     },
     curves: function () {
         return Session.get('Curves');
     },
     plotName: function () {
-        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
+        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || Session.get('plotType') === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
     },
     curveText: function () {
         if (this.diffFrom === undefined) {
@@ -309,8 +122,10 @@ Template.graph.helpers({
         }
     },
     confidenceDisplay: function () {
-        if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
+        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map) {
             return "block";
+        } else {
+            return "none";
         }
 
     },
@@ -396,16 +211,16 @@ Template.graph.helpers({
         return Session.get(sval);
     },
     isMap: function () {
-        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
+        return (Session.get('plotType') === matsTypes.PlotTypes.map)
     },
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile);
     },
-    displayReplotZoom: function() {
+    displayReplotZoom: function () {
         // the replot to zoom function is only really appropriate for downsampled graphs which are
         // only possible in timeseries or dailymodelcycle plots
         Session.get("PlotParams");
-        Session.get ('PlotResultsUpDated');
+        Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
             return "block";
@@ -415,46 +230,10 @@ Template.graph.helpers({
     }
 });
 
-
 Template.graph.events({
     'click .back': function () {
         matsPlotUtils.enableActionButtons();
-        if (document.getElementById('graph-container')) {
-            document.getElementById('graph-container').style.display = 'none';
-        }
-        //if (Session.get("plotType") === matsTypes.PlotTypes.map && document.getElementById('graphView')) {
-        //    var elem = document.getElementById('graphView');
-        //    elem.remove();
-        //}
-        if (document.getElementById('paramList')) {
-            document.getElementById('paramList').style.display = 'block';
-        }
-        if (document.getElementById('plotList')) {
-            document.getElementById('plotList').style.display = 'block';
-        }
-        if (document.getElementById('curveList')) {
-            document.getElementById('curveList').style.display = 'block';
-        }
-        if (document.getElementById("plotTypeContainer")) {
-            document.getElementById("plotTypeContainer").style.display = "block";
-        }
-        if (document.getElementById("scatterView")) {
-            document.getElementById("scatterView").style.display = "block";
-        }
-        if (document.getElementById("scatter2d")) {
-            document.getElementById("scatter2d").style.display = "block";
-        }
-        //this fixes a bug that was causing text to remain displayed on the graph page if
-        //the back button was clicked and then plot matched/unmatched was clicked.
-        document.getElementById("textSeriesView").style.display = "none";
-        document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textDieOffView").style.display = "none";
-        document.getElementById("textThresholdView").style.display = "none";
-        document.getElementById("textValidTimeView").style.display = "none";
-        document.getElementById("textDailyModelCycleView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
-        document.getElementById("textMapView").style.display = "none";
-        document.getElementById("textHistogramView").style.display = "none";
+        matsGraphUtils.setDefaultView();
         matsCurveUtils.resetPlotResultData();
         return false;
     },
@@ -587,157 +366,56 @@ Template.graph.events({
         window[graphFunction](dataset, options);
     },
     'click .plotButton': function () {
-        document.getElementById("text-button-group").style.display = "none";
-        document.getElementById("all-plot-buttons-grp").style.display = "block";
-        document.getElementById("curves").style.display = "block";
-        document.getElementById("graphView").style.display = "block";
-        document.getElementById("textSeriesView").style.display = "none";
-        document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
-        document.getElementById("textDieOffView").style.display = "none";
-        document.getElementById("textThresholdView").style.display = "none";
-        document.getElementById("textValidTimeView").style.display = "none";
-        document.getElementById("textDailyModelCycleView").style.display = "none";
-        document.getElementById("textMapView").style.display = "none";
-        document.getElementById("textHistogramView").style.display = "none";
-        if (plotType !== matsTypes.PlotTypes.map) {
-            document.getElementById('graph-touch-controls').style.display = "block";
-            document.getElementById('axisLimitButton').style.display = "block";
-            document.getElementById("plot-button-group").style.display = "block";
-        } else {
-            document.getElementById('graph-touch-controls').style.display = "none";
-            document.getElementById('axisLimitButton').style.display = "none";
-            document.getElementById("plot-button-group").style.display = "none";
-        }
-
+        matsGraphUtils.setGraphView();
         var graphView = document.getElementById('graphView');
         Session.set('graphViewMode', matsTypes.PlotView.graph);
         matsCurveUtils.hideSpinner();
     },
     'click .textButton': function () {
-        document.getElementById("text-button-group").style.display = "block";
-        document.getElementById("plot-button-group").style.display = "none";
-        document.getElementById("all-plot-buttons-grp").style.display = "block";
-        document.getElementById("curves").style.display = "none";
-        document.getElementById("graphView").style.display = "none";
-        document.getElementById('graph-touch-controls').style.display = "none";
-        document.getElementById('axisLimitButton').style.display = "none";
-
         switch (matsPlotUtils.getPlotType()) {
             case matsTypes.PlotTypes.timeSeries:
                 Session.set('graphViewMode', matsTypes.PlotView.textSeries);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "block";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textSeriesView");
                 break;
             case matsTypes.PlotTypes.profile:
                 Session.set('graphViewMode', matsTypes.PlotView.textProfile);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "block";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textProfileView");
                 break;
             case matsTypes.PlotTypes.dieoff:
                 Session.set('graphViewMode', matsTypes.PlotView.textDieoff);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "block";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textDieOffView");
                 break;
             case matsTypes.PlotTypes.threshold:
                 Session.set('graphViewMode', matsTypes.PlotView.textThreshold);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "block";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textThresholdView");
                 break;
             case matsTypes.PlotTypes.validtime:
                 Session.set('graphViewMode', matsTypes.PlotView.textValidTime);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "block";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textValidTimeView");
                 break;
             case matsTypes.PlotTypes.dailyModelCycle:
                 Session.set('graphViewMode', matsTypes.PlotView.textDailyModelCycle);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textDailyModelCycleView");
                 break;
             case matsTypes.PlotTypes.map:
                 Session.set('graphViewMode', matsTypes.PlotView.textMap);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "block";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textMapView");
                 break;
             case matsTypes.PlotTypes.histogram:
                 Session.set('graphViewMode', matsTypes.PlotView.textHistogram);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "block";
+                matsGraphUtils.setTextView("textHistogramView");
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 Session.set('graphViewMode', matsTypes.PlotView.textScatter);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
+                matsGraphUtils.setTextView("textScatter2dView");
                 break;
             default:
                 console.log("Error: no plot type detected");
                 Session.set('graphViewMode', matsTypes.PlotView.graph);
-        };
-        Session.set("pageIndex",0);
-        Session.set("newPageIndex",1);
+        }
+        ;
+        Session.set("pageIndex", 0);
+        Session.set("newPageIndex", 1);
         matsCurveUtils.setPlotResultData();
     },
     'click .export': function () {
@@ -761,36 +439,36 @@ Template.graph.events({
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
     },
-    'click .previousPageButton' : function() {
+    'click .previousPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        Session.set("newPageIndex",pageIndex - 1);
+        Session.set("newPageIndex", pageIndex - 1);
         matsCurveUtils.setPlotResultData();
     },
-    'click .previousTenPageButton' : function() {
+    'click .previousTenPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        Session.set("newPageIndex",pageIndex - 10);
+        Session.set("newPageIndex", pageIndex - 10);
         matsCurveUtils.setPlotResultData();
     },
-    'click .nextPageButton' : function() {
+    'click .nextPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        Session.set("newPageIndex",pageIndex + 1);
+        Session.set("newPageIndex", pageIndex + 1);
         matsCurveUtils.setPlotResultData();
     },
-    'click .nextTenPageButton' : function() {
+    'click .nextTenPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        Session.set("newPageIndex",pageIndex + 10);
+        Session.set("newPageIndex", pageIndex + 10);
         matsCurveUtils.setPlotResultData();
     },
-    'click .allPageButton' : function() {
-        Session.set("newPageIndex",-1000);
+    'click .allPageButton': function () {
+        Session.set("newPageIndex", -1000);
         matsCurveUtils.setPlotResultData();
     },
-    'click .firstPageButton' : function() {
-        Session.set("pageIndex",0);
-        Session.set("newPageIndex",1);
+    'click .firstPageButton': function () {
+        Session.set("pageIndex", 0);
+        Session.set("newPageIndex", 1);
         matsCurveUtils.setPlotResultData();
     },
-    'click .replotZoomButton' : function() {
+    'click .replotZoomButton': function () {
         var xaxis = $("#placeholder").data().plot.getAxes().xaxis;
         var params = Session.get('params');
         var min = Math.round(xaxis.min);

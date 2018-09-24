@@ -55,8 +55,10 @@ const sizeof = function(_1){
     return _3;
 };
 
-
 const getPlotResultData = function() {
+    if (plotResultData === undefined || plotResultData === null) {
+        return [];
+    }
     return plotResultData;
 }
 
@@ -85,6 +87,9 @@ const resetPlotResultData = function() {
 }
 
 const getGraphResult = function() {
+    if (graphResult === undefined || graphResult === null) {
+        return [];
+    }
     return graphResult;
 }
 

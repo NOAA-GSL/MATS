@@ -1,11 +1,10 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
-
+import {matsGraphUtils} from 'meteor/randyp:mats-common';
 
 graphXYLine = function (key) {
     // get plot info
-    console.log("graphXYLine: entry call time:", new Date() );
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
@@ -17,12 +16,12 @@ graphXYLine = function (key) {
     }
     var dataset = resultSet.data;
     var options = resultSet.options;
-    console.log("graphXYLine: after getting data from Results collection:", new Date());
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
         options.series && options.series.points && (options.series.points.radius = 2);
     }
+
     // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
@@ -89,8 +88,6 @@ graphXYLine = function (key) {
         }
     }
 
-    Session.set('options', options);
-
     var placeholder = $("#placeholder");
 
     // bind to the pan, zoom, and redraw buttons
@@ -146,9 +143,9 @@ graphXYLine = function (key) {
     });
 
     // add replot button
+    $("#refresh-plot").off('click');
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
         const yAxisLength = Session.get('yAxisLength');
 
         // restore original axis limits and labels to options map
@@ -175,13 +172,12 @@ graphXYLine = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add axis customization modal submit button
+    $("#axisSubmit").off('click');
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         // get input axis limits and labels
         var ylabels = [];
@@ -247,15 +243,14 @@ graphXYLine = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options', options);
     });
 
-    var errorbars = Session.get('errorbars');
+    var errorbars = [];
 
     // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
+    $("input[id$='-curve-show-hide']").off('click');
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         var id = event.target.id;
         var label = id.replace('-curve-show-hide', '');
@@ -277,13 +272,8 @@ graphXYLine = function (key) {
                         Session.set(label + "pointsButtonText", 'show points');
                     }
                 }
-                // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
                 if (errorbars[c] === undefined) {
                     errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
                 }
                 if (dataset[c].points.errorbars == undefined) {
                     dataset[c].points.errorbars = errorbars[c];
@@ -304,13 +294,12 @@ graphXYLine = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add points show/hide buttons
+    $("input[id$='-curve-show-hide-points']").off('click');
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points', '');
@@ -331,52 +320,45 @@ graphXYLine = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add errorbars show/hide buttons
+    $("input[id$='-curve-errorbars']").off('click');
     $("input[id$='-curve-errorbars']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-errorbars', '');
         for (var c = 0; c < dataset.length; c++) {
             if (dataset[c].curveId == label) {
-                // save the errorbars
-                if (errorbars === undefined) {
-                    errorbars = [];
-                }
                 if (errorbars[c] === undefined) {
                     errorbars[c] = dataset[c].points.errorbars;
-                    Session.set('errorbars', errorbars);
                 }
                 if (dataset[c].points.errorbars == undefined) {
                     dataset[c].points.errorbars = errorbars[c];
                 } else {
                     dataset[c].points.errorbars = undefined;
                 }
-                if (dataset[c].points.errorbars !== undefined) {
-                    if (dataset[c].data.length === 0) {
-                        Session.set(label + "errorBarButtonText", 'NO DATA');
-                    } else {
-                        Session.set(label + "errorBarButtonText", 'hide error bars');
-                    }
+                if (dataset[c].data.length === 0) {
+                    Session.set(label + "errorBarButtonText", 'NO DATA');
                 } else {
-                    Session.set(label + "errorBarButtonText", 'show error bars');
+                    if (dataset[c].points.errorbars !== undefined) {
+                        Session.set(label + "errorBarButtonText", 'hide error bars');
+                    } else {
+                        Session.set(label + "errorBarButtonText", 'show error bars');
+                    }
                 }
             }
         }
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
+    $("input[id$='-curve-show-hide-annotate']").off('click');
     $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
@@ -402,7 +384,6 @@ graphXYLine = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // selection zooming
@@ -416,15 +397,7 @@ graphXYLine = function (key) {
         plot = matsGraphUtils.drawGraph(ranges, dataset, options, placeholder);
         zooming = false;
     });
-    matsGraphUtils.setNoDataLabels(dataset);
-
-    // draw the plot for the first time
-    console.log("graphXYLine: before plotting:", new Date() );
-    plot = $.plot(placeholder, dataset, options);
-    document.getElementById("spinner").style.display = "none";
-    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-
-    $("#placeholder").bind('plotclick', function (event, pos, item) {
+    placeholder.bind('plotclick', function (event, pos, item) {
         if (zooming) {
             zooming = false;
             return;
@@ -434,5 +407,12 @@ graphXYLine = function (key) {
             $("#dataModal").modal('show');
         }
     });
-    console.log("graphXYLine: finished plotting:", new Date() );
+    matsGraphUtils.setNoDataLabels(dataset);
+
+    // draw the plot for the first time
+    var plot = $.plot(placeholder, dataset, options);
+    placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+
+    // hide the spinner
+    matsCurveUtils.hideSpinner();
 };

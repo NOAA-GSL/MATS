@@ -241,6 +241,121 @@ const draw2dGraph = function(ranges) {
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 };
 
+var width = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    if (vpw < 400) {
+        return (.9 * vpw).toString() + "px";
+    } else {
+        return (.8 * vpw).toString() + "px";
+    }
+};
+var height = function () {
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    if (vph < 400) {
+        return (.8 * vph).toString() + "px";
+    } else {
+        return (.6 * vph).toString() + "px";
+    }
+};
+
+var setTextView = function (textViewType) {
+    //shows text page and proper text output, hides everything else
+    document.getElementById('placeholder').style.width = width();
+    document.getElementById('placeholder').style.heigth = height();
+    document.getElementById("text-page-button-group").style.display = "block";
+    document.getElementById("plot-page-button-group").style.display = "none";
+    document.getElementById("curves").style.display = "none";
+    document.getElementById("graphView").style.display = "none";
+    document.getElementById("textSeriesView").style.display = textViewType === "textSeriesView" ? "block" : "none";
+    document.getElementById("textProfileView").style.display = textViewType === "textProfileView" ? "block" : "none";
+    document.getElementById("textScatter2dView").style.display = textViewType === "textScatter2dView" ? "block" : "none";
+    document.getElementById("textDieOffView").style.display = textViewType === "textDieOffView" ? "block" : "none";
+    document.getElementById("textThresholdView").style.display = textViewType === "textThresholdView" ? "block" : "none";
+    document.getElementById("textValidTimeView").style.display = textViewType === "textValidTimeView" ? "block" : "none";
+    document.getElementById("textDailyModelCycleView").style.display = textViewType === "textDailyModelCycleView" ? "block" : "none";
+    document.getElementById("textMapView").style.display = textViewType === "textMapView" ? "block" : "none";
+    document.getElementById("textHistogramView").style.display = textViewType === "textHistogramView" ? "block" : "none";
+    document.getElementById('graph-touch-controls').style.display = "none";
+    document.getElementById('plot-control-button-group').style.display = "none";
+};
+var setGraphView = function () {
+    //shows graph page, hides everything else
+    document.getElementById('graph-container').style.display = 'block';
+    document.getElementById('plotType').style.display = 'none';
+    document.getElementById('paramList').style.display = 'none';
+    document.getElementById('plotList').style.display = 'none';
+    document.getElementById('curveList').style.display = 'none';
+    if (document.getElementById("plotTypeContainer")) {
+        document.getElementById("plotTypeContainer").style.display="none";
+    }
+    if (document.getElementById("scatter2d")){
+        document.getElementById("scatter2d").style.display = "none";
+    }
+    if (document.getElementById("scatterView")) {
+        document.getElementById("scatterView").style.display="none";
+    }
+    document.getElementById('placeholder').style.width = width();
+    document.getElementById('placeholder').style.heigth = height();
+    document.getElementById("text-page-button-group").style.display = "none";
+    document.getElementById("plot-page-button-group").style.display = "block";
+    document.getElementById("curves").style.display = "block";
+    document.getElementById("graphView").style.display = "block";
+    document.getElementById("textSeriesView").style.display = "none";
+    document.getElementById("textProfileView").style.display = "none";
+    document.getElementById("textScatter2dView").style.display = "none";
+    document.getElementById("textDieOffView").style.display = "none";
+    document.getElementById("textThresholdView").style.display = "none";
+    document.getElementById("textValidTimeView").style.display = "none";
+    document.getElementById("textDailyModelCycleView").style.display = "none";
+    document.getElementById("textMapView").style.display = "none";
+    document.getElementById("textHistogramView").style.display = "none";
+    if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
+        document.getElementById('graph-touch-controls').style.display = "block";
+        document.getElementById('plot-control-button-group').style.display = "block";
+    } else {
+        document.getElementById('graph-touch-controls').style.display = "none";
+        document.getElementById('plot-control-button-group').style.display = "none";
+    }
+};
+var setDefaultView = function() {
+    // show elements of the main page
+    if (document.getElementById('paramList')) {
+        document.getElementById('paramList').style.display = 'block';
+    }
+    if (document.getElementById('plotList')) {
+        document.getElementById('plotList').style.display = 'block';
+    }
+    if (document.getElementById('curveList')) {
+        document.getElementById('curveList').style.display = 'block';
+    }
+    if (document.getElementById("plotTypeContainer")) {
+        document.getElementById("plotTypeContainer").style.display = "block";
+    }
+    if (document.getElementById("scatterView")) {
+        document.getElementById("scatterView").style.display = "block";
+    }
+    if (document.getElementById("scatter2d")) {
+        document.getElementById("scatter2d").style.display = "block";
+    }
+    // hide graph page
+    if (document.getElementById('graph-container')) {
+        document.getElementById('graph-container').style.display = 'none';
+    }
+    document.getElementById("plot-page-button-group").style.display = "block";
+    document.getElementById('graph-touch-controls').style.display = "block";
+    document.getElementById('plot-control-button-group').style.display = "block";
+    // hide text page
+    document.getElementById("textSeriesView").style.display = "none";
+    document.getElementById("textProfileView").style.display = "none";
+    document.getElementById("textDieOffView").style.display = "none";
+    document.getElementById("textThresholdView").style.display = "none";
+    document.getElementById("textValidTimeView").style.display = "none";
+    document.getElementById("textDailyModelCycleView").style.display = "none";
+    document.getElementById("textScatter2dView").style.display = "none";
+    document.getElementById("textMapView").style.display = "none";
+    document.getElementById("textHistogramView").style.display = "none";
+};
+
 export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
     normalizeYAxis:normalizeYAxis,
@@ -253,5 +368,10 @@ export default matsGraphUtils = {
     lYSquareCap:lYSquareCap,
     uYSquareCap:uYSquareCap,
     draw2dGraph:draw2dGraph,
-    normalize2dYAxis:normalize2dYAxis
+    normalize2dYAxis:normalize2dYAxis,
+    width:width,
+    height:height,
+    setTextView:setTextView,
+    setGraphView:setGraphView,
+    setDefaultView:setDefaultView
 };

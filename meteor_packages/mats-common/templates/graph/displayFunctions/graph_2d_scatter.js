@@ -1,5 +1,7 @@
 import {moment} from 'meteor/momentjs:moment'
 import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCurveUtils} from 'meteor/randyp:mats-common';
+import {matsGraphUtils} from 'meteor/randyp:mats-common';
 
 graph2dScatter = function (key) {
     // get plot info
@@ -9,6 +11,9 @@ graph2dScatter = function (key) {
 
     // get dataset info
     var resultSet = matsCurveUtils.getGraphResult();
+    if (resultSet === null) {
+        return false;
+    }
     var dataset = resultSet.data;
     var options = resultSet.options;
     if (min < 400) {
@@ -63,8 +68,6 @@ graph2dScatter = function (key) {
             originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
         }
     }
-
-    Session.set('options', options);
 
     var placeholder = $("#placeholder");
 
@@ -121,9 +124,9 @@ graph2dScatter = function (key) {
     });
 
     // add replot button
+    $("#refresh-plot").off('click');
     $("#refresh-plot").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
         const yAxisLength = Session.get('yAxisLength');
 
         // restore original axis limits and labels to options map
@@ -150,13 +153,12 @@ graph2dScatter = function (key) {
 
         plot = $.plot(placeholder, dataset, options);
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add axis customization modal submit button
+    $("#axisSubmit").off('click');
     $("#axisSubmit").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         // get input axis limits and labels
         var ylabels = [];
@@ -222,13 +224,12 @@ graph2dScatter = function (key) {
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 
         $("#axisLimitModal").modal('hide');
-        Session.set('options', options);
     });
 
     // add curves show/hide buttons -- when curve is shown/hidden, points and errorbars are likewise shown/hidden, so we need those handlers in here too.
+    $("input[id$='-curve-show-hide']").off('click');
     $("input[id$='-curve-show-hide']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         var id = event.target.id;
         var curveLabel = id.replace('-curve-show-hide', '');
@@ -251,13 +252,12 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add points show/hide buttons
+    $("input[id$='-curve-show-hide-points']").off('click');
     $("input[id$='-curve-show-hide-points']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         var id = event.target.id;
         var label = id.replace('-curve-show-hide-points', '');
@@ -278,13 +278,12 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         // placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // add annotation show/hide buttons
+    $("input[id$='-curve-show-hide-annotate']").off('click');
     $("input[id$='-curve-show-hide-annotate']").click(function (event) {
         event.preventDefault();
-        const options = Session.get('options');
 
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
@@ -310,7 +309,6 @@ graph2dScatter = function (key) {
         plot = $.plot(placeholder, dataset, options);
         //placeholder.append("<div style='position:absolute;left:100px;top:20px;color:#666;font-size:smaller'>" + annotation + "</div>");
         placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-        Session.set('options', options);
     });
 
     // selection zooming
