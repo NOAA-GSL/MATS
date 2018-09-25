@@ -226,7 +226,7 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-                if ((diffFrom === null || diffFrom === undefined)) {
+                if ((diffFrom === null || diffFrom === undefined) || !matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data[di][1] = errorResult.d_mean;
                 } else {
