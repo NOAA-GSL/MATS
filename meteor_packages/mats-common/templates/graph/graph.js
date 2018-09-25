@@ -412,8 +412,7 @@ Template.graph.events({
             default:
                 console.log("Error: no plot type detected");
                 Session.set('graphViewMode', matsTypes.PlotView.graph);
-        }
-        ;
+        };
         Session.set("pageIndex", 0);
         Session.set("newPageIndex", 1);
         matsCurveUtils.setPlotResultData();

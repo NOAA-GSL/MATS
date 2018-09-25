@@ -5,7 +5,6 @@ Referring to the Session variable plotResultKey here causes the html template to
 (which is in the Results collection).
  */
 
-
 var times = [];
 
 const getDataForTime = function (curveIndex, time) {
@@ -40,6 +39,7 @@ Template.textMapOutput.helpers({
         return curve.label;
     },
     curveText: function () {
+        Session.get('textLoaded');
         const text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
@@ -52,6 +52,7 @@ Template.textMapOutput.helpers({
         - return the length of that array as the number of rows. (missing times should have been filled in by the backend data routine)
         - for each point find the valid data for each curve at that point. If it is missing at the time just treat it as missing.
          */
+        Session.get('textLoaded');
         if (Session.get("plotResultKey") === undefined) {
             return [];
         }
@@ -76,6 +77,7 @@ Template.textMapOutput.helpers({
     },
 
     points: function (time) {
+        Session.get('textLoaded');
         if (Session.get("plotResultKey") === undefined) {
             return false;
         }

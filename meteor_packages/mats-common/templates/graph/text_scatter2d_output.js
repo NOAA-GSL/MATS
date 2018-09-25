@@ -44,10 +44,12 @@ Template.textScatter2dOutput.helpers({
         return curve.label;
     },
     curveText: function () {
+        Session.get('textLoaded');
         var text = matsPlotUtils.getCurveText(matsPlotUtils.getPlotType(), this);
         return text;
     },
     headers: function (curve) {
+        Session.get('textLoaded');
         var bFitLabel = "best fit";
         if (Session.get("plotResultKey") !== undefined) {
             bFitLabel = "best fit";
@@ -68,8 +70,9 @@ Template.textScatter2dOutput.helpers({
          was contained in the session, but some unknown ddp behaviour having to do with the amount of plot data
          made that unworkable.
          */
+        Session.get('textLoaded');
         var plotResultsUpDated = Session.get('PlotResultsUpDated');
-        if (plotResultsUpDated === undefined) {
+        if (plotResultsUpDated === undefined || matsCurveUtils.getPlotResultData().length === 0) {
             return [];
         }
         if (matsPlotUtils.getPlotType() != matsTypes.PlotTypes.scatter2d) {
@@ -82,24 +85,33 @@ Template.textScatter2dOutput.helpers({
                 break;
             }
         }
-        if (matsCurveUtils.PlotResult.data === undefined) {
+        if (matsCurveUtils.getPlotResultData() === undefined || matsCurveUtils.getPlotResultData().length === 0) {
             return [];
         }
-        var dataRows = _.range(matsCurveUtils.PlotResult.data[i].data.length);
+        var dataRows = _.range(matsCurveUtils.getPlotResultData()[i].data.length);
         return dataRows;
     },
     points: function(curve, rowIndex) {
-        if (matsCurveUtils.PlotResult.data === undefined) {
+        Session.get('textLoaded');
+        if (matsCurveUtils.getPlotResultData() === undefined || matsCurveUtils.getPlotResultData().length === 0) {
             return "";
         }
         var line = '';
-        for (var i = 0; i < plotResultData.length; i++) {
-            if (plotResultData[i].label == curve.label) {
-                line += "<td>" + Number(plotResultData[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(plotResultData[i].data[rowIndex][1]).toPrecision(4) + "</td>";
+        var bestFitFound = false;
+        for (var i = 0; i < matsCurveUtils.getPlotResultData().length; i++) {
+            if (matsCurveUtils.getPlotResultData()[i].label == curve.label) {
+                line = "<td>" + Number(matsCurveUtils.getPlotResultData()[i].data[rowIndex][0]).toPrecision(4) + "</td> <td>" + Number(matsCurveUtils.getPlotResultData()[i].data[rowIndex][1]).toPrecision(4) + "</td>";
             }
-            if (plotResultData[i].label && plotResultData[i].label.search(curve.label + '-best fit') > -1 && line.slice(4, 4 + Number(plotResultData[i].data[rowIndex][0]).toPrecision(4).length) == Number(plotResultData[i].data[rowIndex][0]).toPrecision(4)) {
-                line += "</td> <td>" + Number(plotResultData[i].data[rowIndex][1]).toPrecision(4) + "</td>"
+            if (matsCurveUtils.getPlotResultData()[i].label.search(curve.label + '-best fit') > -1) {  // make sure it is the best fit value for this curve
+                // if there is a value use it else none
+                if (line.slice(4, 4 + Number(matsCurveUtils.getPlotResultData()[i].data[rowIndex][0]).toPrecision(4).length) == Number(matsCurveUtils.getPlotResultData()[i].data[rowIndex][0]).toPrecision(4)) {
+                    line += " <td>" + Number(matsCurveUtils.getPlotResultData()[1].data[i][1]).toPrecision(4) + "</td>";
+                    bestFitFound = true;
+                }
             }
+        }
+        if (bestFitFound === false) {
+           line += "<td>none</td>";
         }
         return line;
     }
