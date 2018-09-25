@@ -61,7 +61,7 @@ const doCurveParams = function () {
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-    var levelVariableOptionsMap = {};
+    var levelOptionsMap = {};
     var variableModelOptionsMap = {};
     var masterRegionValuesMap = {};
 
@@ -97,6 +97,13 @@ const doCurveParams = function () {
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
+            var levels = rows[i].levels;
+            var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < levelArr.length; j++) {
+                levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+            }
+            levelOptionsMap[model] = levelArr;
+
             var variables = rows[i].variable;
             var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < variableArr.length; j++) {
@@ -114,11 +121,6 @@ const doCurveParams = function () {
             }
             regionModelOptionsMap[model] = regionsArr;
         }
-
-        //levels are fixed per variable
-        levelVariableOptionsMap['HGT'] = ['500'];
-        levelVariableOptionsMap['UGRD'] = ['250', '850'];
-        levelVariableOptionsMap['VGRD'] = ['250', '850'];
 
     } catch (err) {
         console.log(err.message);
@@ -152,7 +154,7 @@ const doCurveParams = function () {
                 dates: modelDateRangeMap,
                 //tables: modelTableMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "variable", "dates", "curve-dates"],
+                dependentNames: ["region", "forecast-length", "variable", "pres-level", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -216,7 +218,6 @@ const doCurveParams = function () {
                 optionsMap: variableModelOptionsMap,
                 options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],   // convenience
                 superiorNames: ['data-source'],
-                dependentNames: ['pres-level'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -245,9 +246,9 @@ const doCurveParams = function () {
             {
                 name: 'pres-level',
                 type: matsTypes.InputTypes.select,
-                optionsMap: levelVariableOptionsMap,
-                options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
-                superiorNames: ['variable'],
+                optionsMap: levelOptionsMap,
+                options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],   // convenience
+                superiorNames: ['data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
