@@ -251,7 +251,7 @@ dataProfile = function (plotParams, plotFunction) {
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][0];
-            if ((diffFrom === null || diffFrom === undefined) || !matching) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+            if ((diffFrom === null || diffFrom === undefined)) {   // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data[di][0] = errorResult.d_mean;
             } else {
@@ -319,7 +319,7 @@ dataProfile = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 

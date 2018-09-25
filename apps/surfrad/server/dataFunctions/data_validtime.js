@@ -232,8 +232,8 @@ dataValidTime = function (plotParams, plotFunction) {
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if ( !( (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !matching) ) {
-                if ((diffFrom === null || diffFrom === undefined) || !matching) {
+            if ( !(statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') ) {
+                if ((diffFrom === null || diffFrom === undefined)) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data[di][1] = errorResult.d_mean;
                 } else {
@@ -288,7 +288,7 @@ dataValidTime = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(vts, values);
+        const stats = matsDataUtils.get_err(values, vts);
         const filteredMeans = means.filter(x => x);
         const miny = Math.min(...filteredMeans);
         const maxy = Math.max(...filteredMeans);
@@ -302,7 +302,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 

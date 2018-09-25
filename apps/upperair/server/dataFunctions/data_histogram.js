@@ -284,7 +284,7 @@ dataHistogram = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(bins, values);
+        const stats = matsDataUtils.get_err(values, bins);
         const filteredValues = values.filter(x => x);
         const miny = Math.min(...filteredValues);
         const maxy = Math.max(...filteredValues);
@@ -298,7 +298,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 
