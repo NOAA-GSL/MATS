@@ -10,14 +10,14 @@
                     <input type="button" class="curveVisibility btn btn-primary"
                            value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
                            style="display:{{curveShowHideDisplay}};background-color: {{this.color}}">
-                    <input type="button" class="points btn btn-primary" value="{{pointsButtonText}}"
+                    <input type="button" class="pointsVisibility btn btn-primary" value="{{pointsButtonText}}"
                            id="{{this.label}}-curve-show-hide-points"
                            style="display:{{pointsShowHideDisplay}};background-color: {{this.color}}">
-                    <input type="button" class="errorBars btn btn-primary"
-                           value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
+                    <input type="button" class="errorBarVisibility btn btn-primary"
+                           value="{{errorBarButtonText}}" id="{{this.label}}-curve-show-hide-errorbars"
                            style="display:{{errorbarsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="barVisibility btn btn-primary"
-                           value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
+                           value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bars"
                            style="display:{{barsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
@@ -28,8 +28,6 @@
             <hr/>
         </div>
         <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
-            <div id="legendContainer" name="legendContainer">
-            </div>
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
                 {{! This is where flot will place the graph - there is nothing here when the page loads}}
             </div>

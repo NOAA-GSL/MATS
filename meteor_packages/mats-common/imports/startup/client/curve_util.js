@@ -910,22 +910,22 @@ const resizeGraph = function (plotType) {
         case matsTypes.PlotTypes.profile:
             // set the width square
             document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.heigth = squareHeight();
+            document.getElementById('placeholder').style.height = squareHeight();
             break;
         case matsTypes.PlotTypes.scatter2d:
             // set the width square
             document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.heigth = squareHeight();
+            document.getElementById('placeholder').style.height = squareHeight();
             break;
         case matsTypes.PlotTypes.timeSeries:
             // set the width wide
             document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.heigth = rectangleHeight();
+            document.getElementById('placeholder').style.height = rectangleHeight();
             break;
         case matsTypes.PlotTypes.dieoff:
             // set the width wide
             document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.heigth = rectangleHeight();
+            document.getElementById('placeholder').style.height = rectangleHeight();
             break;
         default:
             break;

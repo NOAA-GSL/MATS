@@ -12,6 +12,9 @@ import { Template } from 'meteor/templating';
 import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
 
+var pageIndex = 0;
+var annotation = "";
+var errorTypes = {};
 
 Template.GraphStandAlone.onCreated(function () {
     console.log("GraphStandAlone.onCreated");
@@ -20,16 +23,13 @@ Template.GraphStandAlone.onCreated(function () {
     console.log("GraphStandAlone graphFunction: ", graphFunction, " key: ", key);
     Session.set("graphFunction",graphFunction);
     Session.set("plotResultKey",key);
-
-    // call the getData thingy
-
 });
 
 Template.GraphStandAlone.onRendered(function () {
-    // $(window).resize(function () {
-    //     matsGraphUtils.setGraphView();
-    // });
-    console.log("more logging stuff")
+    $(window).resize(function () {
+        matsGraphUtils.standAloneSetGraphView();
+    });
+    document.getElementById('graph-container').style.backgroundColor = 'white';
 });
 
 Template.GraphStandAlone.helpers({
@@ -41,15 +41,12 @@ Template.GraphStandAlone.helpers({
         // causes graph display routine to be processed
         var graphFunction = FlowRouter.getParam('graphFunction');
         var key = FlowRouter.getParam('key');
-        //matsCurveUtils.showSpinner();
         matsMethods.getGraphDataByKey.call({resultKey: key,}, function (error, ret) {
             if (error !== undefined) {
                 setError(error);
                 matsCurveUtils.resetGraphResult();
-                //    matsCurveUtils.hideSpinner();
                 return false;
             }
-            console.log("graphFunction ret is :", ret)
             matsCurveUtils.setGraphResult(ret.result);
             Session.set("plotResultKey", ret.key);
             Session.set('Curves',ret.result.basis.plotParams.curves);
@@ -67,24 +64,29 @@ Template.GraphStandAlone.helpers({
             $("#graph-container").show();
             if (graphFunction) {
                 eval(graphFunction)(key);
-                //      matsCurveUtils.hideSpinner();
+                var plotType = Session.get('plotType');
+                var dataset = matsCurveUtils.getGraphResult().data;
+
+                // append annotations and get errorbar types
+                annotation = "";
+                for (var i = 0; i < dataset.length; i++) {
+                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
+                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+                    }
+                    errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
+                }
             }
-            console.log("logging stuff")
+            $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
         });
     },
     Title: function () {
-        // if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
-        //     return "";
-        // } else {
-        //     return matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-        // }
         return "StandAlone Graph";
     },
     width: function () {
-        return matsGraphUtils.width();
+        return matsGraphUtils.standAloneWidth();
     },
     height: function () {
-        return matsGraphUtils.height();
+        return matsGraphUtils.standAloneHeight();
     },
     curves: function () {
         return Session.get('Curves');
@@ -183,7 +185,7 @@ Template.GraphStandAlone.helpers({
         return Session.get(sval);
     },
     curveShowHideDisplay: function () {
-        var plotType = matsPlotUtils.getPlotType();
+        var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
@@ -192,7 +194,7 @@ Template.GraphStandAlone.helpers({
         }
     },
     pointsShowHideDisplay: function () {
-        var plotType = matsPlotUtils.getPlotType();
+        var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
@@ -201,7 +203,7 @@ Template.GraphStandAlone.helpers({
         }
     },
     errorbarsShowHideDisplay: function () {
-        var plotType = matsPlotUtils.getPlotType();
+        var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
@@ -212,7 +214,7 @@ Template.GraphStandAlone.helpers({
         }
     },
     barsShowHideDisplay: function () {
-        var plotType = matsPlotUtils.getPlotType();
+        var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
         if (plotType === matsTypes.PlotTypes.histogram) {
@@ -222,7 +224,7 @@ Template.GraphStandAlone.helpers({
         }
     },
     annotateShowHideDisplay: function () {
-        var plotType = matsPlotUtils.getPlotType();
+        var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
             return 'none';
@@ -284,5 +286,114 @@ Template.GraphStandAlone.events({
                 }
                 matsCurveUtils.hideSpinner();
             });
+    },
+    'click .curveVisibility' : function(event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide', '');
+        const myData = dataset.find(function(d) {
+            return d.curveId === label;
+        });
+
+        myData.lines.show = !myData.lines.show;
+        if (myData.lines.show) {
+            myData.points.show  = true;
+            myData.points.errorbars = errorTypes[myData.curveId];
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide")[0].value = "hide curve";
+                $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+            }
+        } else {
+            myData.points.show  = false;
+            myData.points.errorbars = undefined;
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide")[0].value = "show curve";
+                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .pointsVisibility' : function(event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-points', '');
+        const myData = dataset.find(function(d) {
+            return d.curveId === label;
+        });
+        myData.points.show = !myData.points.show;
+        if (myData.data.length > 0) {
+            if (myData.points.show == true) {
+                $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+            } else {
+                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .errorBarVisibility' : function(event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-errorbars', '');
+        const myData = dataset.find(function(d) {
+            return d.curveId === label;
+        });
+        if (myData.points.errorbars === undefined) {
+            myData.points.errorbars = errorTypes[myData.curveId];
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+            }
+        } else {
+            myData.points.errorbars = undefined;
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .barVisibility' : function(event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-bars', '');
+        const myData = dataset.find(function(d) {
+            return d.curveId === label;
+        });
+        myData.bars.show = !myData.bars.show;
+        if (myData.data.length > 0) {
+            if (myData.bars.show == true) {
+                $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
+            } else {
+                $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .annotateVisibility' : function(event) {
+        event.preventDefault();
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-annotate', '');
+        if ($('#'+label+"-annotation")[0].hidden) {
+            $('#'+label+"-annotation").show();
+            $('#'+label+"-curve-show-hide-annotate")[0].value = "hide annotation";
+            $('#'+label+"-annotation")[0].hidden = false;
+        } else {
+            $('#'+label+"-annotation").hide();
+            $('#'+label+"-curve-show-hide-annotate")[0].value = "show annotation";
+            $('#'+label+"-annotation")[0].hidden = true;
+        }
+        annotation = $('#annotationContainer')[0].innerHTML;
     }
 });

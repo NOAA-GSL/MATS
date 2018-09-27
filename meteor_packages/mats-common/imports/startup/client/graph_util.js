@@ -246,7 +246,7 @@ var width = function () {
     if (vpw < 400) {
         return (.9 * vpw).toString() + "px";
     } else {
-        return (.8 * vpw).toString() + "px";
+        return (.9 * vpw).toString() + "px";
     }
 };
 var height = function () {
@@ -254,14 +254,23 @@ var height = function () {
     if (vph < 400) {
         return (.8 * vph).toString() + "px";
     } else {
-        return (.6 * vph).toString() + "px";
+        return (.7 * vph).toString() + "px";
     }
+};
+
+var standAloneWidth = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    return (.9 * vpw).toString() + "px";
+};
+var standAloneHeight = function () {
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    return (.825 * vph).toString() + "px";
 };
 
 var setTextView = function (textViewType) {
     //shows text page and proper text output, hides everything else
     document.getElementById('placeholder').style.width = width();
-    document.getElementById('placeholder').style.heigth = height();
+    document.getElementById('placeholder').style.height = height();
     document.getElementById("text-page-button-group").style.display = "block";
     document.getElementById("plot-page-button-group").style.display = "none";
     document.getElementById("curves").style.display = "none";
@@ -295,7 +304,7 @@ var setGraphView = function () {
         document.getElementById("scatterView").style.display="none";
     }
     document.getElementById('placeholder').style.width = width();
-    document.getElementById('placeholder').style.heigth = height();
+    document.getElementById('placeholder').style.height = height();
     document.getElementById("text-page-button-group").style.display = "none";
     document.getElementById("plot-page-button-group").style.display = "block";
     document.getElementById("curves").style.display = "block";
@@ -316,6 +325,14 @@ var setGraphView = function () {
         document.getElementById('graph-touch-controls').style.display = "none";
         document.getElementById('plot-control-button-group').style.display = "none";
     }
+};
+var standAloneSetGraphView = function () {
+    //shows graph page, hides everything else
+    document.getElementById('graph-container').style.display = 'block';
+    document.getElementById('placeholder').style.width = width();
+    document.getElementById('placeholder').style.height = height();
+    document.getElementById("curves").style.display = "block";
+    document.getElementById("graphView").style.display = "block";
 };
 var setDefaultView = function() {
     // show elements of the main page
@@ -371,7 +388,10 @@ export default matsGraphUtils = {
     normalize2dYAxis:normalize2dYAxis,
     width:width,
     height:height,
+    standAloneWidth:standAloneWidth,
+    standAloneHeight:standAloneHeight,
     setTextView:setTextView,
     setGraphView:setGraphView,
+    standAloneSetGraphView:standAloneSetGraphView,
     setDefaultView:setDefaultView
 };
