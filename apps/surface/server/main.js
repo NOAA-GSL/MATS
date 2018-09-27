@@ -653,7 +653,7 @@ const doCurveParams = function () {
  and then the sub arrays will be joined maintaining order.
 
  The curveTextPattern is found by its name which must match the corresponding PlotGraphFunctions.PlotType value.
- See curve_item.js and graphStandalone.js.
+ See curve_item.js and standAlone.js.
  */
 var doCurveTextPatterns = function () {
     if (process.env.NODE_ENV === "development" || matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {

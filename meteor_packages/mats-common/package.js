@@ -51,6 +51,7 @@ Package.onUse(function (api) {
     api.use("spacebars");
     api.use("check");
     api.use("bevanhunt:leaflet");
+    api.use("ostrio:flow-router-extra");
     api.use("randyp:flot");
 
     // modules
@@ -81,12 +82,19 @@ Package.onUse(function (api) {
     //api
     api.addFiles('imports/startup/api/matsMethods.js');
 
+    //layouts
+    api.addFiles("imports/startup/ui/layouts/notFound.html", "client");
+    api.addFiles("imports/startup/ui/layouts/appBody.html", "client");
+    api.addFiles("imports/startup/ui/layouts/appBody.js", "client");
+
     //client
     api.addFiles('imports/startup/client/curve_util.js');
     api.addFiles('imports/startup/client/graph_util.js');
     api.addFiles('imports/startup/client/select_util.js');
     api.addFiles('imports/startup/client/index.js');
     api.addFiles('imports/startup/client/init.js');
+    api.addFiles('imports/startup/client/routes.js');
+
     api.addFiles('imports/stylesheets/app.css');
     //server
     api.addFiles('imports/startup/server/data_util.js');
@@ -125,6 +133,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/spinner/spinner.js", "client");
 
     api.addFiles('templates/Home.html', "client");
+
     api.addFiles('templates/Home.js', "client");
     api.addFiles('templates/underConstruction/underConstruction.html', "client");
     api.addFiles('templates/underConstruction/underConstruction.js', "client");
@@ -153,8 +162,11 @@ Package.onUse(function (api) {
     api.addFiles("templates/info/info.html", "client");
     api.addFiles("templates/info/info.js", "client");
 
-    api.addFiles("templates/graph/graphStandAlone.html", "client");
-    api.addFiles("templates/graph/graphStandalone.js", "client");
+    api.addFiles("templates/graph/graph.html", "client");
+    api.addFiles("templates/graph/graph.js", "client");
+
+    api.addFiles("templates/graphStandAlone/graphStandAlone.html", "client");
+    api.addFiles("templates/graphStandAlone/graphStandAlone.js", "client");
 
     api.addFiles("templates/graph/displayFunctions/graph_xy_line.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");

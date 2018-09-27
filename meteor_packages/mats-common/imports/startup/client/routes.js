@@ -1,16 +1,23 @@
+import { Meteor } from 'meteor/meteor';
 import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
+FlowRouter.route('/', {
+    name: 'main',
+    action() {
+        console.log("in / route");
+        this.render('Home')
+    }
+});
 
-FlowRouter.route('/graphStandAlone/:_id', {
-    name: 'article',
+FlowRouter.route('/standAlone/:graphFunction/:key', {
+    name: 'standAlone',
     action(params) {
-        // All passed parameters is available as Object:
-        console.log(params);
-        // { _id: 'results_id' }
+        console.log("StandAlone Route - params: ", params);
+        this.render('GraphStandAlone', params);
+    }
+});
 
-        // Pass params to Template's context
-        this.render('graphStandAlone', params);
-    },
-    waitOn(params) {
-        return Meteor.subscribe('graphStandAlone', params._id);
+FlowRouter.route('*', {
+    action() {
+        this.render('notFound');
     }
 });

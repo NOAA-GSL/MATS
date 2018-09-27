@@ -1,42 +1,7 @@
-<template name="graphStandAlone">
+<template name="GraphStandAlone">
     <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:none;">
         <div id="header" class="row">
             <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
-            <span style="display: none">{{graphFunction}}</span>
-        </div>
-        <div id="graph-control" class="row">
-            <span id="all-plot-buttons-grp" class="btn-group btn-group-xs">
-                <span id="plot-page-button-group" class="btn-group btn-group-xs" style="display:block;">
-                    <span id="plot-control-button-group" class="btn-group btn-group-xs" style="display:block;">
-                        <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;Axes</button>
-                    </span>
-                </span>
-                <span id="graph-touch-controls" class="btn-group btn-group-xs" role="group" aria-label="touchcontrol">
-                    <button id="pan-left" type="button" class="btn btn-success fa fa-arrow-left" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph left"></button>
-                    <button id="pan-up" type="button" class="btn btn-success fa fa-arrow-up" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph up"></button>
-                    <button id="pan-down" type="button" class="btn btn-success fa fa-arrow-down" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph down"></button>
-                    <button id="pan-right" type="button" class="btn btn-success fa fa-arrow-right" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph right"></button>
-                    <button id="refresh-plot" type="button" class="btn btn-success fa fa-refresh" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset zoom to original"></button>
-                    <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    <span class="btn-group btn-group-xs" role="group">
-                        <button id="zoom-out" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom" type="button" class="btn btn-success" disabled><span class="fa fa-expand"></span></button>
-                        <button id="zoom-in" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-plus"></span></button>
-                        <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    </span>
-                    <span class="btn-group btn-group-xs" role="group">
-                        <button id="zoom-out-left-right" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out horizontal"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-left-right" type="button" class="btn btn-success" disabled><span class="fa fa-arrows-h"></span></button>
-                        <button id="zoom-in-left-right" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom in horizontal"><span class="fa fa-plus"></span></button>
-                        <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    </span>
-                    <span class="btn-group btn-group-xs" role="group">
-                        <button id="zoom-out-up-down" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out vertical"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-up-down" type="button" class="btn btn-success" disabled><span class="fa fa-arrows-v"></span></button>
-                        <button id="zoom-in-up-down" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom in vertical"><span class="fa fa-plus"></span></button>
-                    </span>
-                </span>
-            </span>
         </div>
         <div id="curves" class="row">
             {{#each curves}}
@@ -44,68 +9,31 @@
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs">
                     <input type="button" class="curveVisibility btn btn-primary"
                            value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
-                           style="display:block;background-color: {{this.color}}">
+                           style="display:{{curveShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="points btn btn-primary" value="{{pointsButtonText}}"
                            id="{{this.label}}-curve-show-hide-points"
-                           style="display:block;background-color: {{this.color}}">
+                           style="display:{{pointsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="errorBars btn btn-primary"
                            value="{{errorBarButtonText}}" id="{{this.label}}-curve-errorbars"
-                           style="display:block;background-color: {{this.color}}">
+                           style="display:{{errorbarsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="barVisibility btn btn-primary"
                            value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bar"
-                           style="display:block;background-color: {{this.color}}">
+                           style="display:{{barsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
-                           style="display:block;background-color: {{this.color}}">
+                           style="display:{{annotateShowHideDisplay}};background-color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}
             <hr/>
         </div>
-        <div id="textSeriesView" style="display:none;">
-            {{>textSeriesOutput}}
-        </div>
-        <div id="textProfileView" style="display:none;">
-            {{>textProfileOutput}}
-        </div>
-        <div id="textDieOffView" style="display:none;">
-            {{>textDieOffOutput}}
-        </div>
-        <div id="textThresholdView" style="display:none;">
-            {{>textThresholdOutput}}
-        </div>
-        <div id="textValidTimeView" style="display:none;">
-            {{>textValidTimeOutput}}
-        </div>
-        <div id="textDailyModelCycleView" style="display:none;">
-            {{>textDailyModelCycleOutput}}
-        </div>
-        <div id="textMapView" style="display:none;">
-            {{>textMapOutput}}
-        </div>
-        <div id="textHistogramView" style="display:none;">
-            {{>textHistogramOutput}}
-        </div>
-        <div id="textScatter2dView" style="display:none;">
-            {{>textScatter2dOutput}}
-        </div>
-        {{#if isMap}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
+        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
+            <div id="legendContainer" name="legendContainer">
             </div>
-        {{else}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
-                <div id="legendContainer" name="legendContainer"></div>
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
+            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
+                {{! This is where flot will place the graph - there is nothing here when the page loads}}
             </div>
-        {{/if}}
-        {{#if isProfile}}
-            <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error
-                Bars show 95% confidence</h5>
-        {{/if}}
+            <span style="display: none">{{graphFunction}}</span>
+        </div>
     </div>
 </template>

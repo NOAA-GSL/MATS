@@ -67,7 +67,7 @@ const setPlotResultData = function() {
     var newPageIndex = Session.get("newPageIndex");
     if (plotResultData === null || pageIndex != newPageIndex) {
         showSpinner();
-        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), original: true, pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
+        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
             if (error !== undefined) {
                 setError(new Error("matsMethods.getPlotResult failed : error: " + error));
             }

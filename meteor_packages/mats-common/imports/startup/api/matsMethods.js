@@ -171,7 +171,6 @@ const getPlotResult = new ValidatedMethod({
     name:'matsMethods.getPlotResult',
     validate:  new SimpleSchema({
         resultKey: {type: String},
-        original: {type: Boolean},
         pageIndex: {type: Number},
         newPageIndex: {type:Number}
     }).validator(),
@@ -183,21 +182,14 @@ const getPlotResult = new ValidatedMethod({
             var newPageIndex = params.newPageIndex;
             var ret;
             var rawReturn;
-            if (original === true) {
-                var resultKey = Results.findOne({key: rKey},{key:1});
-                if (resultKey !== undefined) {
-                    rawReturn = Results.findOne({key: rKey}).result;
-                } else {
-                    return undefined;
-                }
+
+            var resultKey = Results.findOne({key: rKey},{key:1});
+            if (resultKey !== undefined) {
+                rawReturn = Results.findOne({key: rKey}).result;
             } else {
-                var resultKey = Results.findOne({key: rKey},{key:1});
-                if (resultKey !== undefined) {
-                    rawReturn = Results.findOne({key: rKey}).result;
-                } else {
-                    return undefined;
-                }
+                return undefined;
             }
+
             ret=JSON.parse(JSON.stringify(rawReturn));
             var start;
             var end;
@@ -870,7 +862,36 @@ const getGraphData = new ValidatedMethod({
                     throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
                 }
             }
-            return results; // probably won't get here
+            return undefined; // probably won't get here
+        }
+    }
+});
+
+const getGraphDataByKey = new ValidatedMethod({
+    name: 'matsMethods.getGraphDataByKey',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var ret;
+            var key = params.resultKey;
+            try {
+                var dsResults = DownSampleResults.findOne({key: key});
+                if (dsResults !== undefined) {
+                    ret = dsResults;
+                } else {
+                    ret = Results.findOne({key: key});
+                }
+                var sizeof = require('object-sizeof');
+                console.log("getGraphDataByKey results size is ", sizeof(dsResults));
+                return ret;
+            } catch (error) {
+                    throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
+            }
+            return undefined;
         }
     }
 });
@@ -1128,6 +1149,7 @@ export default matsMethods = {
     getAuthorizations:getAuthorizations,
     applyAuthorization:applyAuthorization,
     getGraphData:getGraphData,
+    getGraphDataByKey:getGraphDataByKey,
     saveSettings:saveSettings,
     deleteSettings:deleteSettings,
     addSentAddress:addSentAddress,
