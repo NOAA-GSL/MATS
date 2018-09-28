@@ -57,7 +57,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         xaxis: {
             zoomRange: [0.1, null],
             mode: 'time',
-            font: {size: 18}
+            font: {size: 13}
         },
         yaxes: yaxes,
         yaxis: yaxis,

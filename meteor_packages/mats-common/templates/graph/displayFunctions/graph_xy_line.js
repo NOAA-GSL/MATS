@@ -17,6 +17,8 @@ graphXYLine = function (key) {
     }
     var dataset = resultSet.data;
     var options = resultSet.options;
+
+    //set options
     if (min < 400) {
         options.series && options.series.points && (options.series.points.radius = 1);
     } else {
@@ -25,6 +27,7 @@ graphXYLine = function (key) {
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
+
     // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
@@ -44,13 +47,5 @@ graphXYLine = function (key) {
         }
     }
 
-    var placeholder = $("#placeholder");
-
     matsGraphUtils.setNoDataLabels(dataset);
-
-    // draw the plot for the first time
-    var plot = $.plot(placeholder, dataset, options);
-
-    // hide the spinner
-    matsCurveUtils.hideSpinner();
 };

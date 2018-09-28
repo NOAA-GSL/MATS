@@ -10,11 +10,14 @@ import {Mongo} from 'meteor/mongo'
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
+// local collection used to store new axis ranges when opening pop out graphs
+const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");
 const Results = new Mongo.Collection("Results");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
     Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
+    AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 }
 
 const saveResultData = function(result){
@@ -25,7 +28,7 @@ const saveResultData = function(result){
         var threshHold = 1000000;
         var ret = {};
         try {
-            var dSize = sizeof(result.data)
+            var dSize = sizeof(result.data);
             console.log("result.basis.data size is ", dSize);
             // TimeSeries and DailyModelCycle are the only plot types that require downSampling
             if (dSize > threshHold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
@@ -1128,6 +1131,50 @@ const getReleaseNotes = new ValidatedMethod({
     }
 });
 
+const getNewAxes = new ValidatedMethod({
+    name: 'matsMethods.getNewAxes',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var ret;
+            var key = params.resultKey;
+            try {
+                ret = AxesStoreCollection.rawCollection().findOne({key: key});
+                return ret;
+            } catch (error) {
+                throw new Meteor.Error("Error in getNewAxes function:" + key + " : " + error.message);
+            }
+            return undefined;
+        }
+    }
+});
+
+const setNewAxes = new ValidatedMethod({
+    name: 'matsMethods.setNewAxes',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        },
+        axes: {
+            type: Object, blackbox:true
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var key = params.resultKey;
+            var axes = params.axes;
+            try {
+                AxesStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), axes: axes}});
+            } catch (error) {
+                throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
+            }
+        }
+    }
+});
 
 
 export default matsMethods = {
@@ -1159,5 +1206,7 @@ export default matsMethods = {
     getPlotResult:getPlotResult,
     testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
     testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
-    getReleaseNotes:getReleaseNotes
+    getReleaseNotes:getReleaseNotes,
+    getNewAxes:getNewAxes,
+    setNewAxes:setNewAxes
 };
