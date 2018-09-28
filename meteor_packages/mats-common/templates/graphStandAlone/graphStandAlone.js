@@ -21,6 +21,7 @@ Template.GraphStandAlone.onCreated(function () {
     Session.set('route', FlowRouter.getRouteName());
     Session.set("graphFunction",FlowRouter.getParam('graphFunction'));
     Session.set("plotResultKey",FlowRouter.getParam('key'));
+    Session.set("plotParameter",FlowRouter.getParam('matching'));
 });
 
 Template.GraphStandAlone.onRendered(function () {
@@ -64,17 +65,48 @@ Template.GraphStandAlone.helpers({
                 eval(graphFunction)(key);
                 var plotType = Session.get('plotType');
                 var dataset = matsCurveUtils.getGraphResult().data;
+                var options = matsCurveUtils.getGraphResult().options;
 
-                // append annotations and get errorbar types
-                annotation = "";
-                for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
-                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
-                    }
-                    errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
+                if (plotType !== matsTypes.PlotTypes.map) {
+                    matsMethods.getNewAxes.call({resultKey: key,}, function (error, ret) {
+                        if (error !== undefined) {
+                            setError(error);
+                            return false;
+                        }
+                        var newAxes = ret.axes;
+                        if (options.xaxes && options.xaxes[0]) {
+                            options.xaxes[0].axisLabel = newAxes.xaxis.options.axisLabel;
+                            options.xaxes[0].min = newAxes.xaxis.min;
+                            options.xaxes[0].max = newAxes.xaxis.max;
+                        }
+                        for (var yidx = 1; yidx < Object.keys(newAxes).length; yidx++) {
+                            var axesObjectKey;
+                            if (yidx === 1) {
+                                axesObjectKey = "yaxis";
+                            } else {
+                                axesObjectKey = "y" + yidx + "axis";
+                            }
+                            if (options.yaxes && options.yaxes[yidx - 1]) {
+                                options.yaxes[yidx - 1].axisLabel = newAxes[axesObjectKey].options.axisLabel;
+                                options.yaxes[yidx - 1].min = newAxes[axesObjectKey].min;
+                                options.yaxes[yidx - 1].max = newAxes[axesObjectKey].max;
+                            }
+                        }
+
+                        // append annotations and get errorbar types
+                        annotation = "";
+                        for (var i = 0; i < dataset.length; i++) {
+                            if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
+                                annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+                            }
+                            errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
+                        }
+                        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+                        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+                        matsCurveUtils.hideSpinner();
+                    });
                 }
             }
-            $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
         });
     },
     graphFunctionDispay: function() {
@@ -187,7 +219,6 @@ Template.GraphStandAlone.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
             return 'none';
         } else {
@@ -196,7 +227,6 @@ Template.GraphStandAlone.helpers({
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
             return 'none';
         } else {
@@ -216,8 +246,6 @@ Template.GraphStandAlone.helpers({
     },
     barsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        var isMatched = Session.get('plotParameter') === "matched";
-        var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
         if (plotType === matsTypes.PlotTypes.histogram && Session.get('route') !== "publish") {
             return 'block';
         } else {
@@ -226,7 +254,6 @@ Template.GraphStandAlone.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        var isMatched = Session.get('plotParameter') === "matched";
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile || Session.get('route') === "publish") {
             return 'none';
         } else {

@@ -7,15 +7,15 @@ FlowRouter.route('/', {
     }
 });
 
-FlowRouter.route('/standAlone/:graphFunction/:key', {
-    name: 'standAlone',
+FlowRouter.route('/preview/:graphFunction/:key/:matching', {
+    name: 'preview',
     action(params) {
-        console.log("in standAlone route- setting params", params);
+        console.log("in preview route- setting params", params);
         this.render('GraphStandAlone', params);
     }
 });
 
-FlowRouter.route('/publish/:graphFunction/:key', {
+FlowRouter.route('/publish/:graphFunction/:key/:matching', {
     name: 'publish',
     action(params) {
         console.log("in publish route- setting params", params);
