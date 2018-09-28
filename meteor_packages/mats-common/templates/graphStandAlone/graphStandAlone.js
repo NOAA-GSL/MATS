@@ -1,4 +1,6 @@
 import {Meteor} from 'meteor/meteor';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
     matsCollections,
     matsCurveUtils,
@@ -232,6 +234,9 @@ Template.GraphStandAlone.helpers({
         } else {
             return 'block';
         }
+    },
+    displayExportButton: function() {
+        return Session.get('route') === "publish" ? "block" : "none";
     }
 });
 
@@ -288,19 +293,19 @@ Template.GraphStandAlone.events({
                 matsCurveUtils.hideSpinner();
             });
     },
-    'click .curveVisibility' : function(event) {
+    'click .curveVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide', '');
-        const myData = dataset.find(function(d) {
+        const myData = dataset.find(function (d) {
             return d.curveId === label;
         });
 
         myData.lines.show = !myData.lines.show;
         if (myData.lines.show) {
-            myData.points.show  = true;
+            myData.points.show = true;
             myData.points.errorbars = errorTypes[myData.curveId];
             if (myData.data.length > 0) {
                 $('#' + label + "-curve-show-hide")[0].value = "hide curve";
@@ -308,7 +313,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
             }
         } else {
-            myData.points.show  = false;
+            myData.points.show = false;
             myData.points.errorbars = undefined;
             if (myData.data.length > 0) {
                 $('#' + label + "-curve-show-hide")[0].value = "show curve";
@@ -319,13 +324,13 @@ Template.GraphStandAlone.events({
         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
-    'click .pointsVisibility' : function(event) {
+    'click .pointsVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points', '');
-        const myData = dataset.find(function(d) {
+        const myData = dataset.find(function (d) {
             return d.curveId === label;
         });
         myData.points.show = !myData.points.show;
@@ -339,13 +344,13 @@ Template.GraphStandAlone.events({
         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
-    'click .errorBarVisibility' : function(event) {
+    'click .errorBarVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-errorbars', '');
-        const myData = dataset.find(function(d) {
+        const myData = dataset.find(function (d) {
             return d.curveId === label;
         });
         if (myData.points.errorbars === undefined) {
@@ -362,13 +367,13 @@ Template.GraphStandAlone.events({
         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
-    'click .barVisibility' : function(event) {
+    'click .barVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-bars', '');
-        const myData = dataset.find(function(d) {
+        const myData = dataset.find(function (d) {
             return d.curveId === label;
         });
         myData.bars.show = !myData.bars.show;
@@ -382,19 +387,43 @@ Template.GraphStandAlone.events({
         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
-    'click .annotateVisibility' : function(event) {
+    'click .annotateVisibility': function (event) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
-        if ($('#'+label+"-annotation")[0].hidden) {
-            $('#'+label+"-annotation").show();
-            $('#'+label+"-curve-show-hide-annotate")[0].value = "hide annotation";
-            $('#'+label+"-annotation")[0].hidden = false;
+        if ($('#' + label + "-annotation")[0].hidden) {
+            $('#' + label + "-annotation").show();
+            $('#' + label + "-curve-show-hide-annotate")[0].value = "hide annotation";
+            $('#' + label + "-annotation")[0].hidden = false;
         } else {
-            $('#'+label+"-annotation").hide();
-            $('#'+label+"-curve-show-hide-annotate")[0].value = "show annotation";
-            $('#'+label+"-annotation")[0].hidden = true;
+            $('#' + label + "-annotation").hide();
+            $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
+            $('#' + label + "-annotation")[0].hidden = true;
         }
         annotation = $('#annotationContainer')[0].innerHTML;
+    },
+    'click .exportpdf': function (e) {
+        console.log("exporting pdf .... ");
+        const filename  = 'ThisIsYourPDFFilename.pdf';
+        // html2canvas(document.querySelector('#graph-container'),{scale: 1.0}).then(canvas => {
+        //     let pdf = new jsPDF('p', 'pt', 'letter');
+        //     pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, 200, 400);
+        //     pdf.save(filename);
+        // });
+        var pdf = new jsPDF('p', 'pt', 'letter');
+        source = html2canvas(document.querySelector('#graph-container'),{scale: 1.0});
+        margins = {
+            top: 80,
+            bottom: 60,
+            left: 40,
+            width: 600
+        };
+        pdf.fromHTML(
+            source, // HTML string or DOM elem ref.
+            margins.left, // x coord
+            margins.top, { // y coord
+                'width': margins.width, // max width of content on PDF
+            }, function(dispose) {pdf.save(filename);},margins);
     }
 });
+
