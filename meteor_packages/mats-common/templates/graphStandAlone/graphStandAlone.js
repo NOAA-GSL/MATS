@@ -19,8 +19,8 @@ var errorTypes = {};
 Template.GraphStandAlone.onCreated(function () {
     console.log("GraphStandAlone.onCreated");
     var graphFunction = FlowRouter.getParam('graphFunction');
+    Session.set('route', FlowRouter.getRouteName());
     var key = FlowRouter.getParam('key');
-    console.log("GraphStandAlone graphFunction: ", graphFunction, " key: ", key);
     Session.set("graphFunction",graphFunction);
     Session.set("plotResultKey",key);
 });
@@ -78,6 +78,9 @@ Template.GraphStandAlone.helpers({
             }
             $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
         });
+    },
+    graphFunctionDispay: function() {
+        return Session.get('route') === "publish" ? "none" : "block";
     },
     Title: function () {
         return "StandAlone Graph";
@@ -187,7 +190,7 @@ Template.GraphStandAlone.helpers({
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
             return 'none';
         } else {
             return 'block';
@@ -196,7 +199,7 @@ Template.GraphStandAlone.helpers({
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
             return 'none';
         } else {
             return 'block';
@@ -205,7 +208,7 @@ Template.GraphStandAlone.helpers({
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
             return 'none';
         } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
             return 'block';
@@ -217,7 +220,7 @@ Template.GraphStandAlone.helpers({
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
         var barChHideElems = $('*[id$="-curve-show-hide-bar"]');
-        if (plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.histogram && Session.get('route') !== "publish") {
             return 'block';
         } else {
             return 'none';
@@ -226,7 +229,7 @@ Template.GraphStandAlone.helpers({
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile || Session.get('route') === "publish") {
             return 'none';
         } else {
             return 'block';

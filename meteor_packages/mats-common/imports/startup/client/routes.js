@@ -3,7 +3,6 @@ import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
 FlowRouter.route('/', {
     name: 'main',
     action() {
-        console.log("in / route");
         this.render('Home')
     }
 });
@@ -11,7 +10,16 @@ FlowRouter.route('/', {
 FlowRouter.route('/standAlone/:graphFunction/:key', {
     name: 'standAlone',
     action(params) {
-        console.log("StandAlone Route - params: ", params);
+        console.log("in standAlone route- setting params", params);
+        this.render('GraphStandAlone', params);
+    }
+});
+
+FlowRouter.route('/publish/:graphFunction/:key', {
+    name: 'publish',
+    action(params) {
+        params.publish = true;
+        console.log("in publish route- setting params", params);
         this.render('GraphStandAlone', params);
     }
 });

@@ -418,56 +418,14 @@ Template.graph.events({
         }, 100);
     },
     'click .publish': function () {
-        matsCurveUtils.showSpinner();
-        Session.set("printMode", true);
-        document.getElementById('graph-control').style.display = 'none';
-        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i = 0; i < ctbgElems.length; i++) {
-            ctbgElems[i].style.display = 'none';
-        }
-        var node = document.getElementById("graph-container");
-        domtoimage.toPng(node)
-            .then(function (dataUrl) {
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i = 0; i < ctbgElems.length; i++) {
-                    ctbgElems[i].style.display = 'block';
-                }
-                var img = new Image();
-                img.src = dataUrl;
-                img.onload = function () {
-                    var width = img.width;
-                    var height = img.height;
-                    var canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image", "_blank", "left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
-                    wind.document.write("<html><head><title>Plot</title></head>" +
-                        "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
-                    document.getElementById('graph-control').style.display = 'block';
-                    var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i = 0; i < ctbgElems.length; i++) {
-                        ctbgElems[i].style.display = 'block';
-                    }
-                    setTimeout(function () {
-                        wind.dispatchEvent(new Event('resize'));
-                        ;
-                    }, 1000);
-                    matsCurveUtils.hideSpinner();
-                }
-            })
-            .catch(function (error) {
-                console.error('Graph.publish error, ', error);
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i = 0; i < ctbgElems.length; i++) {
-                    ctbgElems[i].style.display = 'block';
-                }
-                matsCurveUtils.hideSpinner();
-            });
+        // open a new window with a standAlone graph of the current graph
+        var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
+        var w = h * 1.3;
+        var wind = window.open(window.location + "/publish/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey"), "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h +",width=" + w);
+        setTimeout(function () {
+            wind.resizeTo(w, h );
+            ;
+        }, 100);
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
