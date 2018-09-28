@@ -18,7 +18,6 @@ FlowRouter.route('/standAlone/:graphFunction/:key', {
 FlowRouter.route('/publish/:graphFunction/:key', {
     name: 'publish',
     action(params) {
-        params.publish = true;
         console.log("in publish route- setting params", params);
         this.render('GraphStandAlone', params);
     }

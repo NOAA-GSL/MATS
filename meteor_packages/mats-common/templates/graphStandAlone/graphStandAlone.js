@@ -18,11 +18,9 @@ var errorTypes = {};
 
 Template.GraphStandAlone.onCreated(function () {
     console.log("GraphStandAlone.onCreated");
-    var graphFunction = FlowRouter.getParam('graphFunction');
     Session.set('route', FlowRouter.getRouteName());
-    var key = FlowRouter.getParam('key');
-    Session.set("graphFunction",graphFunction);
-    Session.set("plotResultKey",key);
+    Session.set("graphFunction",FlowRouter.getParam('graphFunction'));
+    Session.set("plotResultKey",FlowRouter.getParam('key'));
 });
 
 Template.GraphStandAlone.onRendered(function () {

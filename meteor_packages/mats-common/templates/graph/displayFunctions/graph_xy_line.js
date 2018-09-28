@@ -5,6 +5,7 @@ import {matsGraphUtils} from 'meteor/randyp:mats-common';
 
 graphXYLine = function (key) {
     // get plot info
+    var route = Session.get('route');
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
@@ -21,7 +22,9 @@ graphXYLine = function (key) {
     } else {
         options.series && options.series.points && (options.series.points.radius = 2);
     }
-
+    if (route !== undefined && route !== "") {
+        options.selection = [];
+    }
     // format errorbars
     for (var i = 0; i < dataset.length; i++) {
         var o = dataset[i];
