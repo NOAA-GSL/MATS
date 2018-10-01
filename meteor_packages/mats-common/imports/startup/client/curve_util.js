@@ -73,6 +73,7 @@ const setPlotResultData = function() {
             }
             plotResultData = result.data;
             Session.set("pageIndex", result.dsiRealPageIndex );
+            Session.set("pageTextDirection", result.dsiTextDirection );
             Session.set('textLoaded', new Date());
             console.log("size of plotResultData is ", sizeof(plotResultData));
             // have to put the hide in the callback

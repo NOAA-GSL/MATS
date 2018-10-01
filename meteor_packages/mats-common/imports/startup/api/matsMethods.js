@@ -20,7 +20,7 @@ if (Meteor.isServer) {
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 }
 
-const saveResultData = function(result){
+const saveResultData = function (result) {
     if (Meteor.isServer) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
@@ -39,13 +39,13 @@ const saveResultData = function(result){
                 for (var di = 0; di < result.data.length; di++) {
                     totalPoints += result.data[di].data.length;
                 }
-                var allowedNumberOfPoints = (threshHold/dSize) * totalPoints;
+                var allowedNumberOfPoints = (threshHold / dSize) * totalPoints;
                 var downSampleResult = JSON.parse(JSON.stringify(result));
                 for (var di = 0; di < result.data.length; di++) {
                     var lastYVIndex = result.data[di].data[0].length;
                     //get an x,y array from the data set
-                    var xyDataset = result.data[di].data.map(function(d) {
-                        return [d[0],d[1]];
+                    var xyDataset = result.data[di].data.map(function (d) {
+                        return [d[0], d[1]];
                     });
                     // determine the desired number of points
                     // ratio of my points to totalPoints
@@ -57,15 +57,15 @@ const saveResultData = function(result){
                         downsampledSeries = downsampler.processData(xyDataset, myAllowedPoints);
                         // replace the y attributes (tooltips etc.) with the y attributes from yhe nearest x
                         var nearestOriginalIndex = 1;
-                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++ ) {
+                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
                             while (nearestOriginalIndex < result.data[di].data.length && result.data[di].data[nearestOriginalIndex][0] < downsampledSeries[dsi][0]) {
                                 nearestOriginalIndex++;
                             }
                             // which is closest - this one or the prior one?
-                            var leftDelta = Math.abs(result.data[di].data[nearestOriginalIndex -1][0] - downsampledSeries[dsi][0]);
+                            var leftDelta = Math.abs(result.data[di].data[nearestOriginalIndex - 1][0] - downsampledSeries[dsi][0]);
                             var rightDelta = Math.abs(result.data[di].data[nearestOriginalIndex][0] - downsampledSeries[dsi][0]);
-                            var nearestOriginal = leftDelta > rightDelta ? result.data[di].data[nearestOriginalIndex] : result.data[di].data[nearestOriginalIndex -1];
-                            for (var dsYVi = 2; dsYVi < lastYVIndex; dsYVi++ ) {
+                            var nearestOriginal = leftDelta > rightDelta ? result.data[di].data[nearestOriginalIndex] : result.data[di].data[nearestOriginalIndex - 1];
+                            for (var dsYVi = 2; dsYVi < lastYVIndex; dsYVi++) {
                                 downsampledSeries[dsi][dsYVi] = nearestOriginal[dsYVi];
                             }
                         }
@@ -77,15 +77,15 @@ const saveResultData = function(result){
                     downSampleResult.data[di].data = downsampledSeries;
                 }
                 DownSampleResults.rawCollection().insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
-                ret = {key:key,result:downSampleResult};
-            } else{
-                ret = {key:key,result:result};
+                ret = {key: key, result: downSampleResult};
+            } else {
+                ret = {key: key, result: result};
             }
             // save original dataset
             Results.rawCollection().insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
         } catch (error) {
-            if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
-                throw new Meteor.Error( + ": Requesting too much data... try averaging");
+            if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
+                throw new Meteor.Error(+": Requesting too much data... try averaging");
             }
         }
         return ret;
@@ -134,9 +134,9 @@ const getGraphFunctionFileList = new ValidatedMethod({
 });
 
 const readFunctionFile = new ValidatedMethod({
-    name:'matsMethods.readFunctionFile',
-    validate:  new SimpleSchema({}).validator(),
-    run (){
+    name: 'matsMethods.readFunctionFile',
+    validate: new SimpleSchema({}).validator(),
+    run() {
         if (Meteor.isServer) {
             var future = require('fibers/future');
             var fs = require('fs');
@@ -171,13 +171,13 @@ applied to the underlying datasets.
 A new page index of -1000 means get all the data i.e. no pagenation.
  */
 const getPlotResult = new ValidatedMethod({
-    name:'matsMethods.getPlotResult',
-    validate:  new SimpleSchema({
+    name: 'matsMethods.getPlotResult',
+    validate: new SimpleSchema({
         resultKey: {type: String},
         pageIndex: {type: Number},
-        newPageIndex: {type:Number}
+        newPageIndex: {type: Number}
     }).validator(),
-    run (params){
+    run(params) {
         if (Meteor.isServer) {
             var rKey = params.resultKey;
             var original = params.original;
@@ -186,76 +186,72 @@ const getPlotResult = new ValidatedMethod({
             var ret;
             var rawReturn;
 
-            var resultKey = Results.findOne({key: rKey},{key:1});
+            var resultKey = Results.findOne({key: rKey}, {key: 1});
             if (resultKey !== undefined) {
                 rawReturn = Results.findOne({key: rKey}).result;
             } else {
                 return undefined;
             }
 
-            ret=JSON.parse(JSON.stringify(rawReturn));
+            ret = JSON.parse(JSON.stringify(rawReturn));
             var start;
             var end;
             var direction = 1;
             if (newPageIndex === -1000) {
                 start = 0;
                 end = Number.MAX_VALUE;
+                direction = -1;
             } else {
                 if (pageIndex <= newPageIndex) {
                     start = pageIndex * 100;
                     end = newPageIndex * 100;
                 } else {
-                    var direction = -1;
+                    direction = -1;
                     start = newPageIndex * 100;
                     end = pageIndex * 100;
                 }
             }
-            for (var dsi=0; dsi < ret.data.length;dsi++) {
+            for (var dsi = 0; dsi < ret.data.length; dsi++) {
                 if (ret.data[dsi].data.length <= 100) {
                     continue; // don't bother with zero and max curves or datasets less than or equal to a page
                 }
                 var dsiStart = start;
                 var dsiEnd = end;
                 if (start === 0 && end === Number.MAX_VALUE) {
+                    dsiStart = rawReturn.data[dsi].data.length - (rawReturn.data[dsi].data.length % 100);
                     dsiEnd = rawReturn.data[dsi].data.length;
+                }
+                if (dsiStart < 0) {
+                    dsiStart = 0;
                 } else {
-                    if (dsiStart < 0) {
-                        dsiStart = 0;
-                    } else {
-                        dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
-                    }
-                    if (dsiEnd < dsiStart) {
-                        dsiEnd = dsiStart
-                    } else {
-                        dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
-                    }
+                    dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
                 }
-                if (dsiEnd !== Number.maxValue) {
-                    ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
+                if (dsiEnd < dsiStart) {
+                    dsiEnd = dsiStart
+                } else {
+                    dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
                 }
+                ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
             }
             delete rawReturn;
-            if (dsiEnd !== Number.maxValue) {
-                ret.dsiRealPageIndex = 0;
+            if (direction === 1) {
+                ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
             } else {
-                if (direction === 1) {
-                    ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
-                } else {
-                    ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
-                }
+                ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
             }
+            ret.dsiTextDirection = direction;
             return ret;
         }
     }
 });
 
 const readDataFile = new ValidatedMethod({
-    name:'matsMethods.readDataFile',
+    name: 'matsMethods.readDataFile',
     validate: new SimpleSchema({
         path: {type: String},
     }).validator(),
 
-    run(params){
+    run(params) {
         if (Meteor.isServer) {
             var fs = require('fs');
             readSyncFunc = Meteor.wrapAsync(fs.readFile);
@@ -266,43 +262,43 @@ const readDataFile = new ValidatedMethod({
 });
 
 const restoreFromFile = new ValidatedMethod({
-        name: 'matsMethods.restoreFromFile',
-        validate: new SimpleSchema({
-            type: {type: String},
-            name: {type: String},
-            data: {type: Object, blackbox:true}
-        }).validator(),
+    name: 'matsMethods.restoreFromFile',
+    validate: new SimpleSchema({
+        type: {type: String},
+        name: {type: String},
+        data: {type: Object, blackbox: true}
+    }).validator(),
 
-        run(params){
-            if (Meteor.isServer) {
-                console.log("restoring " + params.type + " file " + params.name);
-                var path = "";
-                if (params.type == "data") {
-                    path = "/web/static/dataFunctions/" + params.name;
-                } else if (params.ype == "graph") {
-                    path = "/web/static/displayFunctions/" + params.name;
-                } else {
-                    return ("error - wrong tyoe");
-                }
-                console.log('importing ' + params.type + ' file: ' + path);
-                var fs = Npm.require('fs');
-                fs.writeFile(path, params.data.toString(), function (err) {
-                    if (err) {
-                        return (err.toLocaleString());
-                    }
-                    console.log('imported ' + params.type + ' file: ' + path);
-                });
+    run(params) {
+        if (Meteor.isServer) {
+            console.log("restoring " + params.type + " file " + params.name);
+            var path = "";
+            if (params.type == "data") {
+                path = "/web/static/dataFunctions/" + params.name;
+            } else if (params.ype == "graph") {
+                path = "/web/static/displayFunctions/" + params.name;
+            } else {
+                return ("error - wrong tyoe");
             }
+            console.log('importing ' + params.type + ' file: ' + path);
+            var fs = Npm.require('fs');
+            fs.writeFile(path, params.data.toString(), function (err) {
+                if (err) {
+                    return (err.toLocaleString());
+                }
+                console.log('imported ' + params.type + ' file: ' + path);
+            });
         }
-    });
+    }
+});
 
 const restoreFromParameterFile = new ValidatedMethod({
     name: 'matsMethods.restoreFromParameterFile',
     validate: new SimpleSchema({
-        name: {type:String},
-        data: {type: Object, blackbox:true}
+        name: {type: String},
+        data: {type: Object, blackbox: true}
     }).validator(),
-    run (params) {
+    run(params) {
         var data = params.data;
         if (Meteor.isServer) {
             var d = [];
@@ -387,21 +383,21 @@ const restoreFromParameterFile = new ValidatedMethod({
                     matsCollections.Credentials.insert(o);
                 });
             }
-         }
+        }
     }
 });
 
 const getUserAddress = new ValidatedMethod({
     name: 'matsMethods.getUserAddress',
     validate: new SimpleSchema({}).validator(),
-    run (){
+    run() {
         if (Meteor.isServer) {
             return Meteor.user().services.google.email.toLowerCase();
         }
     }
 });
 
-const checkMetaDataRefresh = function() {
+const checkMetaDataRefresh = function () {
     // This routine compares the current last modified time of the tables used for curveParameter metadata
     // with the last update time to determine if an update is necessary. We really only do this for Curveparams
     /*
@@ -414,51 +410,51 @@ const checkMetaDataRefresh = function() {
      */
     var refresh = false;
     const tableUpdates = metaDataTableUpdates.find({}).fetch();
-     for (var tui = 0; tui < tableUpdates.length; tui++) {
-            var id = tableUpdates[tui]._id;
-            var poolName = tableUpdates[tui].pool;
-            var dbName = tableUpdates[tui].name;
-            var tableNames = tableUpdates[tui].tables;
-            var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
-            var updatedEpoch = Number.MAX_VALUE;
-            for (var ti = 0; ti < tableNames.length; ti++) {
-                var tName = tableNames[ti];
-                var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
-                    "    FROM   information_schema.tables" +
-                    "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
-                    "    AND TABLE_NAME = '" + tName + "'");
-                for (var i = 0; i < rows.length; i++) {
-                    try {
-                        updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
-                        break;
-                    } catch (e) {
-                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
-                    }
-                    if (updatedEpoch === Number.MAX_VALUE) {
-                        throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
-                    }
-                }
-                const lastRefreshedEpoch = moment(lastRefreshed).valueOf()/1000;
-                if (lastRefreshedEpoch < updatedEpoch) {
-                    refresh = true;
+    for (var tui = 0; tui < tableUpdates.length; tui++) {
+        var id = tableUpdates[tui]._id;
+        var poolName = tableUpdates[tui].pool;
+        var dbName = tableUpdates[tui].name;
+        var tableNames = tableUpdates[tui].tables;
+        var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
+        var updatedEpoch = Number.MAX_VALUE;
+        for (var ti = 0; ti < tableNames.length; ti++) {
+            var tName = tableNames[ti];
+            var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                "    FROM   information_schema.tables" +
+                "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
+                "    AND TABLE_NAME = '" + tName + "'");
+            for (var i = 0; i < rows.length; i++) {
+                try {
+                    updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
                     break;
+                } catch (e) {
+                    throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
+                }
+                if (updatedEpoch === Number.MAX_VALUE) {
+                    throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
                 }
             }
-            if (refresh === true) {
-                // refresh the app metadata
-                // app specific routines
-                const asrKeys = Object.keys(appSpecificResetRoutines);
-                for (var ai = 0; ai < asrKeys.length; ai++) {
-                    global.appSpecificResetRoutines[asrKeys[ai]]();
-                }
-                // remember that we updated ALL the metadata tables just now
-                metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: moment().format()}});
+            const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
+            if (lastRefreshedEpoch < updatedEpoch) {
+                refresh = true;
+                break;
             }
         }
-        return true;
+        if (refresh === true) {
+            // refresh the app metadata
+            // app specific routines
+            const asrKeys = Object.keys(appSpecificResetRoutines);
+            for (var ai = 0; ai < asrKeys.length; ai++) {
+                global.appSpecificResetRoutines[asrKeys[ai]]();
+            }
+            // remember that we updated ALL the metadata tables just now
+            metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: moment().format()}});
+        }
+    }
+    return true;
 };
 
-const resetApp = function(metaDataTableRecords) {
+const resetApp = function (metaDataTableRecords) {
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText === undefined || deploymentText == null) {
@@ -476,16 +472,20 @@ const resetApp = function(metaDataTableRecords) {
     const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
     const urlPathParts = urlPath.split(path.sep);
     //console.log("path parts are "+urlPathParts);
-    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length -6].trim() : urlPathParts[urlPathParts.length -1];
+    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length - 6].trim() : urlPathParts[urlPathParts.length - 1];
     var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
         var dep = deployment[ai];
         if (dep.deployment_environment == "development") {
-            developmentApp = dep.apps.filter(function(app){return app.app === appReference})[0];
+            developmentApp = dep.apps.filter(function (app) {
+                return app.app === appReference
+            })[0];
         }
         if (dep.servers.indexOf(hostName) > -1) {
-            app = dep.apps.filter(function(app){ return app.app === appReference })[0];
+            app = dep.apps.filter(function (app) {
+                return app.app === appReference
+            })[0];
             break;
         }
     }
@@ -509,10 +509,10 @@ const resetApp = function(metaDataTableRecords) {
     if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
         var metaDataTables = metaDataTableRecords.getRecords();
         for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
-            const metaDataRef =  metaDataTables[mdti];
+            const metaDataRef = metaDataTables[mdti];
             metaDataRef.lastRefreshed = moment().format();
-            if (metaDataTableUpdates.find({name:metaDataRef.name}).count() == 0) {
-                metaDataTableUpdates.update({name:metaDataRef.name},metaDataRef, {upsert:true});
+            if (metaDataTableUpdates.find({name: metaDataRef.name}).count() == 0) {
+                metaDataTableUpdates.update({name: metaDataRef.name}, metaDataRef, {upsert: true});
             }
         }
     } else {
@@ -543,12 +543,12 @@ const resetApp = function(metaDataTableRecords) {
 const refreshMetaData = new ValidatedMethod({
     name: 'matsMethods.refreshMetaData',
     validate: new SimpleSchema({}).validator(),
-    run (){
+    run() {
         if (Meteor.isServer) {
             try {
                 checkMetaDataRefresh();
             } catch (e) {
-                console.log (e);
+                console.log(e);
                 throw new Meteor.Error("Server error: ", e.message);
             }
         }
@@ -557,107 +557,107 @@ const refreshMetaData = new ValidatedMethod({
 });
 
 const applyDatabaseSettings = new ValidatedMethod({
-        name: 'matsMethods.applyDatabaseSettings',
-        validate: new SimpleSchema({
-            settings: {type: Object, blackbox:true}
-        }).validator(),
+    name: 'matsMethods.applyDatabaseSettings',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
 
-        run(settings){
-            if (Meteor.isServer) {
-                if (settings.name) {
-                    matsCollections.Databases.upsert({name: settings.name}, {
-                        $set: {
-                            name: settings.name,
-                            role: settings.role,
-                            status: settings.status,
-                            host: settings.host,
-                            database: settings.database,
-                            user: settings.user,
-                            password: settings.password
-                        }
-                    });
-                }
-                return false;
-            }
-        }
-});
-
-const removeDatabase = new ValidatedMethod({
-        name: 'matsMethods.removeDatabase',
-        validate: new SimpleSchema({
-            dbName: {type: String}
-        }).validator(),
-        run(dbName){
-            if (Meteor.isServer) {
-                matsCollections.Databases.remove({name: dbName});
-            }
-        }
-    });
-
-const insertColor = new ValidatedMethod({
-        name: 'matsMethods.insertColor',
-        validate: new SimpleSchema({
-            newColor: {type: String},
-            insertAfterIndex: {type: Number}
-        }).validator(),
-        run(params){
-            if (params.newColor == "rgb(255,255,255)") {
-                return false;
-            }
-            var colorScheme = matsCollections.ColorScheme.findOne({});
-            colorScheme.colors.splice(params.insertAfterIndex, 0, newColor);
-            matsCollections.update({}, colorScheme);
-            return false;
-        }
-    });
-
-const removeColor = new ValidatedMethod({
-        name: 'matsMethods.removeColor',
-        validate: new SimpleSchema({
-            removeColor: {type: String}
-        }).validator(),
-        run(removeColor){
-            var colorScheme = matsCollections.ColorScheme.findOne({});
-            var removeIndex = colorScheme.colors.indexOf(removeColor);
-            colorScheme.colors.splice(removeIndex, 1);
-            matsCollections.ColorScheme.update({}, colorScheme);
-            return false;
-        }
-    });
-
-const setSettings = new ValidatedMethod({
-        name: 'matsMethods.setSettings',
-        validate: new SimpleSchema({
-            settings: {type: Object, blackbox:true}
-        }).validator(),
-        run(params){
-            if (Meteor.isServer) {
-                var settings = params.settings;
-                var labelPrefix = settings.labelPrefix;
-                var title = settings.title;
-                var lineWidth = settings.lineWidth;
-                var nullFillString = settings.nullFillString;
-                var resetFromCode = settings.resetFromCode;
-                matsCollections.Settings.update({}, {
+    run(settings) {
+        if (Meteor.isServer) {
+            if (settings.name) {
+                matsCollections.Databases.upsert({name: settings.name}, {
                     $set: {
-                        LabelPrefix: labelPrefix,
-                        Title: title,
-                        LineWidth: lineWidth,
-                        NullFillString: nullFillString,
-                        resetFromCode: resetFromCode
+                        name: settings.name,
+                        role: settings.role,
+                        status: settings.status,
+                        host: settings.host,
+                        database: settings.database,
+                        user: settings.user,
+                        password: settings.password
                     }
                 });
             }
             return false;
         }
-    });
+    }
+});
+
+const removeDatabase = new ValidatedMethod({
+    name: 'matsMethods.removeDatabase',
+    validate: new SimpleSchema({
+        dbName: {type: String}
+    }).validator(),
+    run(dbName) {
+        if (Meteor.isServer) {
+            matsCollections.Databases.remove({name: dbName});
+        }
+    }
+});
+
+const insertColor = new ValidatedMethod({
+    name: 'matsMethods.insertColor',
+    validate: new SimpleSchema({
+        newColor: {type: String},
+        insertAfterIndex: {type: Number}
+    }).validator(),
+    run(params) {
+        if (params.newColor == "rgb(255,255,255)") {
+            return false;
+        }
+        var colorScheme = matsCollections.ColorScheme.findOne({});
+        colorScheme.colors.splice(params.insertAfterIndex, 0, newColor);
+        matsCollections.update({}, colorScheme);
+        return false;
+    }
+});
+
+const removeColor = new ValidatedMethod({
+    name: 'matsMethods.removeColor',
+    validate: new SimpleSchema({
+        removeColor: {type: String}
+    }).validator(),
+    run(removeColor) {
+        var colorScheme = matsCollections.ColorScheme.findOne({});
+        var removeIndex = colorScheme.colors.indexOf(removeColor);
+        colorScheme.colors.splice(removeIndex, 1);
+        matsCollections.ColorScheme.update({}, colorScheme);
+        return false;
+    }
+});
+
+const setSettings = new ValidatedMethod({
+    name: 'matsMethods.setSettings',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var settings = params.settings;
+            var labelPrefix = settings.labelPrefix;
+            var title = settings.title;
+            var lineWidth = settings.lineWidth;
+            var nullFillString = settings.nullFillString;
+            var resetFromCode = settings.resetFromCode;
+            matsCollections.Settings.update({}, {
+                $set: {
+                    LabelPrefix: labelPrefix,
+                    Title: title,
+                    LineWidth: lineWidth,
+                    NullFillString: nullFillString,
+                    resetFromCode: resetFromCode
+                }
+            });
+        }
+        return false;
+    }
+});
 
 const setCredentials = new ValidatedMethod({
     name: 'matsMethods.setCredentials',
     validate: new SimpleSchema({
-        settings: {type: Object, blackbox:true}
+        settings: {type: Object, blackbox: true}
     }).validator(),
-    run(settings){
+    run(settings) {
         if (Meteor.isServer) {
             var name = settings.name;
             var clientId = settings.clientId;
@@ -679,9 +679,9 @@ const setCredentials = new ValidatedMethod({
 const removeAuthorization = new ValidatedMethod({
     name: 'matsMethods.removeAuthorization',
     validate: new SimpleSchema({
-        settings: {type: Object, blackbox:true}
+        settings: {type: Object, blackbox: true}
     }).validator(),
-    run(settings){
+    run(settings) {
         if (Meteor.isServer) {
             var email;
             var roleName;
@@ -722,13 +722,12 @@ const removeAuthorization = new ValidatedMethod({
 });
 
 
-
 const applyAuthorization = new ValidatedMethod({
     name: 'matsMethods.applyAuthorization',
     validate: new SimpleSchema({
-        settings: {type: Object, blackbox:true}
+        settings: {type: Object, blackbox: true}
     }).validator(),
-    run(settings){
+    run(settings) {
         if (Meteor.isServer) {
             var roles;
             var roleName;
@@ -804,9 +803,8 @@ const applyAuthorization = new ValidatedMethod({
 
 const getAuthorizations = new ValidatedMethod({
     name: 'matsMethods.getAuthorizations',
-    validate: new SimpleSchema({
-    }).validator(),
-    run (){
+    validate: new SimpleSchema({}).validator(),
+    run() {
         var roles = [];
         if (Meteor.isServer) {
             var userEmail = Meteor.user().services.google.email.toLowerCase();
@@ -835,7 +833,7 @@ const getGraphData = new ValidatedMethod({
             try {
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                var results = Results.findOne({key: key},{key:1});
+                var results = Results.findOne({key: key}, {key: 1});
                 if (results === undefined) {
                     // results aren't in the Collection - need to process data routine
                     var Future = require('fibers/future');
@@ -892,7 +890,7 @@ const getGraphDataByKey = new ValidatedMethod({
                 console.log("getGraphDataByKey results size is ", sizeof(dsResults));
                 return ret;
             } catch (error) {
-                    throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
+                throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
             }
             return undefined;
         }
@@ -907,13 +905,13 @@ const saveSettings = new ValidatedMethod({
         },
         p: {
             type: Object,
-            blackbox:true
+            blackbox: true
         },
         permission: {
             type: String
         }
     }).validator(),
-    run(params){
+    run(params) {
         var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
             name: params.saveAs,
@@ -933,9 +931,9 @@ const deleteSettings = new ValidatedMethod({
             type: String
         }
     }).validator(),
-    run(params){
+    run(params) {
         if (!Meteor.userId()) {
-             throw new Meteor.Error("not-logged-in");
+            throw new Meteor.Error("not-logged-in");
         }
         if (Meteor.isServer) {
             matsCollections.CurveSettings.remove({name: params.name});
@@ -948,7 +946,7 @@ const addSentAddress = new ValidatedMethod({
     validate: new SimpleSchema({
         toAddress: {type: String}
     }).validator(),
-    run(toAddress){
+    run(toAddress) {
         if (!Meteor.userId()) {
             throw new Meteor.Error(401, "not-logged-in");
         }
@@ -964,12 +962,12 @@ const emailImage = new ValidatedMethod({
         toAddress: {type: String},
         subject: {type: String}
     }).validator(),
-    run(params){
+    run(params) {
         var imageStr = params.imageStr;
         var toAddress = params.toAddress;
         var subject = params.subject;
         if (!Meteor.userId()) {
-            throw new Meteor.Error(401,"not-logged-in");
+            throw new Meteor.Error(401, "not-logged-in");
         }
         var fromAddress = Meteor.user().services.google.email;
         // these come from google - see
@@ -980,7 +978,11 @@ const emailImage = new ValidatedMethod({
         //var clientId = "339389735380-382sf11aicmgdgn7e72p4end5gnm9sad.apps.googleusercontent.com";
         //var clientSecret = "7CfNN-tRl5QAL595JTW2TkRl";
         //var refresh_token = "1/PDql7FR01N2gmq5NiTfnrT-OlCYC3U67KJYYDNPeGnA";
-        var credentials = matsCollections.Credentials.findOne({name:"oauth_google"},{clientId:1,clientSecret:1,refresh_token:1});
+        var credentials = matsCollections.Credentials.findOne({name: "oauth_google"}, {
+            clientId: 1,
+            clientSecret: 1,
+            refresh_token: 1
+        });
         var clientId = credentials.clientId;
         var clientSecret = credentials.clientSecret;
         var refresh_token = credentials.refresh_token;
@@ -1038,12 +1040,12 @@ const testGetTables = new ValidatedMethod({
     name: 'matsMethods.testGetTables',
     validate: new SimpleSchema(
         {
-            host:{type: String},
-            user:{type: String},
-            password:{type: String},
-            database:{type: String}
+            host: {type: String},
+            user: {type: String},
+            password: {type: String},
+            database: {type: String}
         }).validator(),
-    run (params) {
+    run(params) {
         if (Meteor.isServer) {
             var Future = require('fibers/future');
             const queryWrap = Future.wrap(function (callback) {
@@ -1072,12 +1074,11 @@ const testGetTables = new ValidatedMethod({
 
 const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
     name: 'matsMethods.testSetMetaDataTableUpdatesLastRefreshedBack',
-    validate: new SimpleSchema({
-    }).validator(),
-    run (){
+    validate: new SimpleSchema({}).validator(),
+    run() {
         var mtu = metaDataTableUpdates.find({}).fetch();
         var id = mtu[0]._id;
-        metaDataTableUpdates.update({_id:id}, {$set: {lastRefreshed: 0}});
+        metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: 0}});
         return metaDataTableUpdates.find({}).fetch();
     }
 });
@@ -1085,21 +1086,19 @@ const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
 
 const testGetMetaDataTableUpdates = new ValidatedMethod({
     name: 'matsMethods.testGetMetaDataTableUpdates',
-    validate: new SimpleSchema({
-    }).validator(),
-    run (){
+    validate: new SimpleSchema({}).validator(),
+    run() {
         return metaDataTableUpdates.find({}).fetch();
     }
 });
 
 const getReleaseNotes = new ValidatedMethod({
     name: 'matsMethods.getReleaseNotes',
-    validate: new SimpleSchema({
-    }).validator(),
-    run (){
-    //     return Assets.getText('public/MATSReleaseNotes.html');
-    // }
-         if (Meteor.isServer) {
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        //     return Assets.getText('public/MATSReleaseNotes.html');
+        // }
+        if (Meteor.isServer) {
             var future = require('fibers/future');
             var fs = require('fs');
             var dFuture = new future();
@@ -1160,7 +1159,7 @@ const setNewAxes = new ValidatedMethod({
             type: String
         },
         axes: {
-            type: Object, blackbox:true
+            type: Object, blackbox: true
         }
     }).validator(),
     run(params) {
@@ -1178,35 +1177,35 @@ const setNewAxes = new ValidatedMethod({
 
 
 export default matsMethods = {
-    getDataFunctionFileList:getDataFunctionFileList,
-    getGraphFunctionFileList:getGraphFunctionFileList,
-    readDataFile:readDataFile,
-    readFunctionFile:readFunctionFile,
-    restoreFromFile:restoreFromFile,
-    restoreFromParameterFile:restoreFromParameterFile,
-    getUserAddress:getUserAddress,
-    refreshMetaData:refreshMetaData,
-    applyDatabaseSettings:applyDatabaseSettings,
-    removeDatabase:removeDatabase,
-    insertColor:insertColor,
-    removeColor:removeColor,
-    setSettings:setSettings,
-    setCredentials:setCredentials,
-    removeAuthorization:removeAuthorization,
-    getAuthorizations:getAuthorizations,
-    applyAuthorization:applyAuthorization,
-    getGraphData:getGraphData,
-    getGraphDataByKey:getGraphDataByKey,
-    saveSettings:saveSettings,
-    deleteSettings:deleteSettings,
-    addSentAddress:addSentAddress,
-    emailImage:emailImage,
-    resetApp:resetApp,
-    testGetTables:testGetTables,
-    getPlotResult:getPlotResult,
-    testGetMetaDataTableUpdates:testGetMetaDataTableUpdates,
-    testSetMetaDataTableUpdatesLastRefreshedBack:testSetMetaDataTableUpdatesLastRefreshedBack,
-    getReleaseNotes:getReleaseNotes,
-    getNewAxes:getNewAxes,
-    setNewAxes:setNewAxes
+    getDataFunctionFileList: getDataFunctionFileList,
+    getGraphFunctionFileList: getGraphFunctionFileList,
+    readDataFile: readDataFile,
+    readFunctionFile: readFunctionFile,
+    restoreFromFile: restoreFromFile,
+    restoreFromParameterFile: restoreFromParameterFile,
+    getUserAddress: getUserAddress,
+    refreshMetaData: refreshMetaData,
+    applyDatabaseSettings: applyDatabaseSettings,
+    removeDatabase: removeDatabase,
+    insertColor: insertColor,
+    removeColor: removeColor,
+    setSettings: setSettings,
+    setCredentials: setCredentials,
+    removeAuthorization: removeAuthorization,
+    getAuthorizations: getAuthorizations,
+    applyAuthorization: applyAuthorization,
+    getGraphData: getGraphData,
+    getGraphDataByKey: getGraphDataByKey,
+    saveSettings: saveSettings,
+    deleteSettings: deleteSettings,
+    addSentAddress: addSentAddress,
+    emailImage: emailImage,
+    resetApp: resetApp,
+    testGetTables: testGetTables,
+    getPlotResult: getPlotResult,
+    testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
+    testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
+    getReleaseNotes: getReleaseNotes,
+    getNewAxes: getNewAxes,
+    setNewAxes: setNewAxes
 };
