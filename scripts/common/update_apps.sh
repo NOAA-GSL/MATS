@@ -44,6 +44,10 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
 		meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
 		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
 		meteor npm install --save object-sizeof
+		meteor npm uninstall --save dom-to-image
+		meteor npm install --save html2canvas
+		meteor npm install --save jspdf
+		meteor npm update
         cd ..;
     done
 
