@@ -526,6 +526,11 @@ Template.graph.events({
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
     },
+    'click .firstPageButton': function () {
+        Session.set("pageIndex", 0);
+        Session.set("newPageIndex", 1);
+        matsCurveUtils.setPlotResultData();
+    },
     'click .previousPageButton': function () {
         var pageIndex = Session.get("pageIndex");
         Session.set("newPageIndex", pageIndex - 1);
@@ -544,15 +549,6 @@ Template.graph.events({
     'click .nextTenPageButton': function () {
         var pageIndex = Session.get("pageIndex");
         Session.set("newPageIndex", pageIndex + 10);
-        matsCurveUtils.setPlotResultData();
-    },
-    'click .allPageButton': function () {
-        Session.set("newPageIndex", -1000);
-        matsCurveUtils.setPlotResultData();
-    },
-    'click .firstPageButton': function () {
-        Session.set("pageIndex", 0);
-        Session.set("newPageIndex", 1);
         matsCurveUtils.setPlotResultData();
     },
     'click .replotZoomButton': function () {
