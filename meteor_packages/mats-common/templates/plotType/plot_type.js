@@ -21,13 +21,6 @@ Template.plotType.helpers({
         } else {
             return "";
         }
-    },
-    isNewWindow: function () {
-        if (window.name !== "") {
-            return true;
-        } else {
-            return false;
-        }
     }
 });
 
@@ -498,12 +491,5 @@ Template.plotType.events({
                 }
             }
         }
-    },
-    'click .newapp': function () {
-        var win = window.open(window.location.href, Date.now(), 'toolbar=0,location=0,menubar=0, resizeable=1, status=0,titlebar=0');
-        win.document.title = matsCollections.Settings === undefined ? "new app" : matsCollections.Settings.findOne({}, {fields: {Title: 1}});
-    },
-    'click .closeapp': function () {
-        window.close();
     }
 });
