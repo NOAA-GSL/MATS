@@ -24,6 +24,7 @@ Template.GraphStandAlone.onCreated(function () {
     Session.set("graphFunction",FlowRouter.getParam('graphFunction'));
     Session.set("plotResultKey",FlowRouter.getParam('key'));
     Session.set("plotParameter",FlowRouter.getParam('matching'));
+    Session.set("appName",FlowRouter.getParam('appName'));
 });
 
 Template.GraphStandAlone.onRendered(function () {
@@ -53,6 +54,7 @@ Template.GraphStandAlone.helpers({
             Session.set('Curves',ret.result.basis.plotParams.curves);
             Session.set('graphFunction', graphFunction);
             Session.set('PlotResultsUpDated', new Date());
+            Session.set('PlotParams', ret.result.basis.plotParams);
             var ptypes = Object.keys(ret.result.basis.plotParams.plotTypes);
             for (var i=0; i < ptypes.length; i++) {
                 if (ret.result.basis.plotParams.plotTypes[ptypes[i]] === true) {
@@ -112,10 +114,10 @@ Template.GraphStandAlone.helpers({
         });
     },
     graphFunctionDispay: function() {
-        return Session.get('route') === "publish" ? "none" : "block";
+        return "block";
     },
     Title: function () {
-        return "StandAlone Graph";
+        return Session.get('appName');
     },
     width: function () {
         return matsGraphUtils.standAloneWidth();
@@ -221,7 +223,7 @@ Template.GraphStandAlone.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
             return 'none';
         } else {
             return 'block';
@@ -229,7 +231,7 @@ Template.GraphStandAlone.helpers({
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
             return 'none';
         } else {
             return 'block';
@@ -238,7 +240,7 @@ Template.GraphStandAlone.helpers({
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || Session.get('route') === "publish") {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
             return 'none';
         } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
             return 'block';
@@ -248,7 +250,7 @@ Template.GraphStandAlone.helpers({
     },
     barsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.histogram && Session.get('route') !== "publish") {
+        if (plotType === matsTypes.PlotTypes.histogram ) {
             return 'block';
         } else {
             return 'none';
@@ -256,11 +258,14 @@ Template.GraphStandAlone.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile || Session.get('route') === "publish") {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile ) {
             return 'none';
         } else {
             return 'block';
         }
+    },
+    matsplotFilemname: function() {
+        return "matsplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
     }
 });
 
@@ -375,22 +380,18 @@ Template.GraphStandAlone.events({
         annotation = $('#annotationContainer')[0].innerHTML;
     },
     'click .exportpdf': function (e) {
-        console.log("exporting pdf .... ");
             $(".previewCurveButtons").each(function(i, obj) {
                 obj.style.display="none";
             });
-        const filename  = 'ThisIsYourPDFFilename.pdf';
-        html2canvas(document.querySelector('#graph-container'),{scale: 6.0}).then(canvas => {
+            //const filename  = 'MATSPlot' + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss") + '.pdf';
+            html2canvas(document.querySelector('#graph-container'),{scale: 6.0}).then(canvas => {
 
             var h=419.53;
             var w=595.28
-
+            var filename = document.getElementById("exportFileName").value;
             let pdf = new jsPDF('letter','pt','a5' );
             pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, w, h);
-
             pdf.save(filename);
-            document.window.add()
-
             $(".previewCurveButtons").each(function(i, obj) {
                 obj.style.display="block";
             });

@@ -419,7 +419,7 @@ Template.graph.events({
         // open a new window with a standAlone graph of the current graph
         var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
         var w = h * 1.3;
-        var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter'), "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
+        var wind = window.open(window.location + "preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
             wind.resizeTo(w, h);
             ;
@@ -484,6 +484,7 @@ Template.graph.events({
         matsCurveUtils.setPlotResultData();
     },
     'click .export': function () {
+
         document.getElementById('text_export').click();
     },
     'click .sentAddresses': function (event) {

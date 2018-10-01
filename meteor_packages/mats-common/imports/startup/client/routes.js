@@ -7,11 +7,27 @@ FlowRouter.route('/', {
     }
 });
 
-FlowRouter.route('/preview/:graphFunction/:key/:matching', {
+FlowRouter.route('/preview/:graphFunction/:key/:matching/:appName', {
     name: 'preview',
     action(params) {
         console.log("in preview route- setting params", params);
         this.render('GraphStandAlone', params);
+    }
+});
+
+
+FlowRouter.route('/gsd/mats/*/preview/:graphFunction/:key/:matching/:appName', {
+    name: 'preview',
+    action(params) {
+        console.log("in preview route- setting params", params);
+        this.render('GraphStandAlone', params);
+    }
+});
+
+FlowRouter.route('/gsd/mats/*/', {
+    name: 'main',
+    action() {
+        this.render('Home')
     }
 });
 

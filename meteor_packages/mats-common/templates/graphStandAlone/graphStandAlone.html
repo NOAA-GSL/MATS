@@ -1,10 +1,13 @@
 <template name="GraphStandAlone">
     <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:{{graphFunctionDispay}};">
         <div id="header" class="row">
-            <h4><span class="col-sm-9" >{{Title}}  :  {{plotText}} {{plotName}}</span>
-                <span class="col-sm-1">&nbsp;</span>
-                <input type="button" class="col-sm-2 exportpdf btn btn-xs btn-primary previewCurveButtons" value="export to pdf" id="exportpdf">
-            </h4>
+            <h4>{{Title}} : {{plotText}} {{plotName}}</h4>
+        </div>
+        <div class="row form-inline previewCurveButtons">
+            <span>
+                <input class="input-sm col-sm-5" id="exportFileName" value="{{matsplotFilemname}}">
+                <button class="btn btn-xs col-sm-3 pull-right btn-primary exportpdf" id="exportpdf">print pdf</button>
+            </span>
         </div>
         <div id="curves" class="row">
             {{#each curves}}
