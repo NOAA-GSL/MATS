@@ -261,65 +261,10 @@ Template.GraphStandAlone.helpers({
         } else {
             return 'block';
         }
-    },
-    displayExportButton: function() {
-        return Session.get('route') === "publish" ? "block" : "none";
     }
 });
 
 Template.GraphStandAlone.events({
-    'click .publish': function () {
-        matsCurveUtils.showSpinner();
-        Session.set("printMode", true);
-        document.getElementById('graph-control').style.display = 'none';
-        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i = 0; i < ctbgElems.length; i++) {
-            ctbgElems[i].style.display = 'none';
-        }
-        var node = document.getElementById("graph-container");
-        domtoimage.toPng(node)
-            .then(function (dataUrl) {
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i = 0; i < ctbgElems.length; i++) {
-                    ctbgElems[i].style.display = 'block';
-                }
-                var img = new Image();
-                img.src = dataUrl;
-                img.onload = function () {
-                    var width = img.width;
-                    var height = img.height;
-                    var canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image", "_blank", "left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
-                    wind.document.write("<html><head><title>Plot</title></head>" +
-                        "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
-                    document.getElementById('graph-control').style.display = 'block';
-                    var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i = 0; i < ctbgElems.length; i++) {
-                        ctbgElems[i].style.display = 'block';
-                    }
-                    setTimeout(function () {
-                        wind.dispatchEvent(new Event('resize'));
-                        ;
-                    }, 1000);
-                    matsCurveUtils.hideSpinner();
-                }
-            })
-            .catch(function (error) {
-                console.error('Graph.publish error, ', error);
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i = 0; i < ctbgElems.length; i++) {
-                    ctbgElems[i].style.display = 'block';
-                }
-                matsCurveUtils.hideSpinner();
-            });
-    },
     'click .curveVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
@@ -431,26 +376,24 @@ Template.GraphStandAlone.events({
     },
     'click .exportpdf': function (e) {
         console.log("exporting pdf .... ");
+            $(".previewCurveButtons").each(function(i, obj) {
+                obj.style.display="none";
+            });
         const filename  = 'ThisIsYourPDFFilename.pdf';
-        // html2canvas(document.querySelector('#graph-container'),{scale: 1.0}).then(canvas => {
-        //     let pdf = new jsPDF('p', 'pt', 'letter');
-        //     pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, 200, 400);
-        //     pdf.save(filename);
-        // });
-        var pdf = new jsPDF('p', 'pt', 'letter');
-        source = html2canvas(document.querySelector('#graph-container'),{scale: 1.0});
-        margins = {
-            top: 80,
-            bottom: 60,
-            left: 40,
-            width: 600
-        };
-        pdf.fromHTML(
-            source, // HTML string or DOM elem ref.
-            margins.left, // x coord
-            margins.top, { // y coord
-                'width': margins.width, // max width of content on PDF
-            }, function(dispose) {pdf.save(filename);},margins);
+        html2canvas(document.querySelector('#graph-container'),{scale: 6.0}).then(canvas => {
+
+            var h=419.53;
+            var w=595.28
+
+            let pdf = new jsPDF('letter','pt','a5' );
+            pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, w, h);
+            pdf.save(filename);
+
+
+            $(".previewCurveButtons").each(function(i, obj) {
+                obj.style.display="block";
+            });
+        });
     }
 });
 

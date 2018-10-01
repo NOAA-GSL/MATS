@@ -21,7 +21,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
-            color: 'grey',
+            color: 'black',
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
@@ -46,7 +46,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         xaxes: [{
             axisLabel: 'Time',
-            color: 'grey',
+            color: 'black',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
@@ -148,7 +148,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
             alignTicksWithAxis: 1,
-            color: 'grey',
+            color: 'black',
             min: xmin - xpad,
             max: xmax + xpad,
             font: {
@@ -166,7 +166,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         },
         yaxes: [{
             position: "left",
-            color: 'grey',
+            color: 'black',
             axisLabel: ' Pressure (hPa)',
             axisLabelColour: "black",
             font: {
@@ -254,7 +254,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
-            color: 'grey',
+            color: 'black',
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
@@ -279,7 +279,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         xaxes: [{
             axisLabel: 'Forecast Hour',
-            color: 'grey',
+            color: 'black',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
@@ -358,7 +358,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
-            color: 'grey',
+            color: 'black',
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
@@ -383,7 +383,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         },
         xaxes: [{
             axisLabel: 'Threshold',
-            color: 'grey',
+            color: 'black',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
@@ -466,7 +466,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
-            color: 'grey',
+            color: 'black',
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
@@ -491,7 +491,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         },
         xaxes: [{
             axisLabel: 'Hour of Day',
-            color: 'grey',
+            color: 'black',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
@@ -607,7 +607,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
-            color: 'grey',
+            color: 'black',
             axisLabel: axisLabel,
             axisLabelColour: "black",
             axisLabelUseCanvas: true,
@@ -632,7 +632,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         },
         xaxes: [{
             axisLabel: 'Bin',
-            color: 'grey',
+            color: 'black',
             axisLabelUseCanvas: true,
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',

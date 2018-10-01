@@ -15,14 +15,6 @@ FlowRouter.route('/preview/:graphFunction/:key/:matching', {
     }
 });
 
-FlowRouter.route('/publish/:graphFunction/:key/:matching', {
-    name: 'publish',
-    action(params) {
-        console.log("in publish route- setting params", params);
-        this.render('GraphStandAlone', params);
-    }
-});
-
 FlowRouter.route('*', {
     action() {
         this.render('notFound');

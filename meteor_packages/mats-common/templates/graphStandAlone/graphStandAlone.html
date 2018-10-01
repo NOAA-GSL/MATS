@@ -1,15 +1,15 @@
 <template name="GraphStandAlone">
-    <div id="export" class="exportpdf" style = display:{{displayExportButton}}>
-        <input type="button" class="exportPdf btn btn-primary" value="export to pdf" id="exportpdf">
-    </div>
     <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:{{graphFunctionDispay}};">
         <div id="header" class="row">
-            <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
+            <h4><span class="col-sm-9" >{{Title}}  :  {{plotText}} {{plotName}}</span>
+                <span class="col-sm-1">&nbsp;</span>
+                <input type="button" class="col-sm-2 exportpdf btn btn-xs btn-primary previewCurveButtons" value="export to pdf" id="exportpdf">
+            </h4>
         </div>
         <div id="curves" class="row">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
-                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs">
+                <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs previewCurveButtons">
                     <input type="button" class="curveVisibility btn btn-primary"
                            value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
                            style="display:{{curveShowHideDisplay}};background-color: {{this.color}}">
@@ -26,7 +26,6 @@
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="display:{{annotateShowHideDisplay}};background-color: {{this.color}}">
                 </div>
-                <br>
             {{/each}}
             <hr/>
         </div>

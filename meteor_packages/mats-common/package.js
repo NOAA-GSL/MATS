@@ -18,8 +18,7 @@ Package.onUse(function (api) {
         "babel-runtime": "6.26.0",
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
-        "jquery-ui": "1.12.1",
-        "dom-to-image": "2.6.0"
+        "jquery-ui": "1.12.1"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
@@ -94,6 +93,7 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/client/index.js');
     api.addFiles('imports/startup/client/init.js');
     api.addFiles('imports/startup/client/routes.js');
+    api.addFiles('imports/startup/client/jspdf.js');
 
     api.addFiles('imports/stylesheets/app.css');
     //server
