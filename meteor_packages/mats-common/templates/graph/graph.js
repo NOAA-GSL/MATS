@@ -51,7 +51,7 @@ Template.graph.onCreated(function () {
                 matsGraphUtils.setTextView("textThresholdView");
                 break;
             case matsTypes.PlotView.textDailyModelCycle:
-                matsGraphUtils.etTextView("textDailyModelCycleView");
+                matsGraphUtils.setTextView("textDailyModelCycleView");
                 break;
             case matsTypes.PlotView.textMap:
                 matsGraphUtils.setTextView("textMapView");
@@ -63,7 +63,7 @@ Template.graph.onCreated(function () {
                 matsGraphUtils.setTextView("textScatter2dView");
                 break;
             default:
-                matsGraphUtils.setGraphView();
+                //matsGraphUtils.setGraphView();
         }
     });
 
