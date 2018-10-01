@@ -93,7 +93,7 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/client/index.js');
     api.addFiles('imports/startup/client/init.js');
     api.addFiles('imports/startup/client/routes.js');
-    api.addFiles('imports/startup/client/jspdf.js');
+    //api.addFiles('imports/startup/client/jspdf.js');
 
     api.addFiles('imports/stylesheets/app.css');
     //server

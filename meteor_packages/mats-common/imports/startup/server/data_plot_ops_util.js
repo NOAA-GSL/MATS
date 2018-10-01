@@ -57,7 +57,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         xaxis: {
             zoomRange: [0.1, null],
             mode: 'time',
-            font: {size: 13}
+            font: {size: 12}
         },
         yaxes: yaxes,
         yaxis: yaxis,
@@ -644,7 +644,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             zoomRange: [0.1, null],
             ticks: plotBins,
             mode: 'xy',
-            font: {size: 14}
+            font: {size: 12}
         },
         yaxes: yaxes,
         yaxis: yaxis,

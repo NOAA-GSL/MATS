@@ -387,8 +387,9 @@ Template.GraphStandAlone.events({
 
             let pdf = new jsPDF('letter','pt','a5' );
             pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, w, h);
-            pdf.save(filename);
 
+            pdf.save(filename);
+            document.window.add()
 
             $(".previewCurveButtons").each(function(i, obj) {
                 obj.style.display="block";

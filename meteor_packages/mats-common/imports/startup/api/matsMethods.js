@@ -85,7 +85,7 @@ const saveResultData = function(result){
             Results.rawCollection().insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1 ) {
-                throw new Meteor.Error(error.toLocaleString() + ": Requesting too much data... try averaging");
+                throw new Meteor.Error( + ": Requesting too much data... try averaging");
             }
         }
         return ret;
