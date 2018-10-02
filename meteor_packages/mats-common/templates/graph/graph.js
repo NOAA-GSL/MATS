@@ -541,6 +541,7 @@ Template.graph.events({
             if (pageTextDirection !== undefined && pageTextDirection === -1) {
                 Session.set("newPageIndex", pageIndex - 1);
             } else {
+                Session.set("pageIndex", pageIndex - 1);
                 Session.set("newPageIndex", pageIndex - 2);
             }
             matsCurveUtils.setPlotResultData();
@@ -556,6 +557,7 @@ Template.graph.events({
             if (pageTextDirection !== undefined && pageTextDirection === 1) {
                 Session.set("newPageIndex", pageIndex + 1);
             } else {
+                Session.set("pageIndex", pageIndex + 1);
                 Session.set("newPageIndex", pageIndex + 2);
             }
             matsCurveUtils.setPlotResultData();
