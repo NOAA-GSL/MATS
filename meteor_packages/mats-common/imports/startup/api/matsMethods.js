@@ -1175,6 +1175,81 @@ const setNewAxes = new ValidatedMethod({
     }
 });
 
+const getResultDataByPlotType = new ValidatedMethod({
+    name: 'matsMethods.getResultDataByPlotType',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var resp = {};
+            var key = params.resultKey;
+            try {
+                var resultKey = Results.findOne({key: rKey}, {key: 1});
+                if (resultKey !== undefined) {
+                    result = Results.findOne({key: rKey}).result;
+                } else {
+                    return undefined;
+                }
+                var data = result.data;
+                // find the type
+                var plotTypes = result.basis.plotParams.plotTypes;
+                var plotType = (_.invert(plotTypes))[true];
+                // extract data
+                switch (plotType) {
+                    case TimeSeries:
+                    case DailyModelCycle:
+                        var times = [];
+                        var stats = {};
+                        var curveData = {};
+                        for (var ci = 0; ci < data.length; ci++) {
+                            const subData = data[ci].map(function (value) {
+                                return value[1];
+                            });
+                            const subTimes = data[ci].map(function (value) {
+                                return value[0];
+                            });
+                            const reStats = matsDataUtils.get_err(subData, subTimes);
+                            stats['label'] = data[ci].label;
+                            stats['mean'] = reStats.d_mean;
+                            stats['standard deviation'] = reStats.sd;
+                            stats['n'] = reStats.n_good;
+                            stats['standard error'] = reStats.stde_betsy;
+                            stats['lag1'] = reStats.lag1;
+                            stats['minimum'] = reStats.minVal;
+                            stats['maximum'] = reStats.maxVal;
+                            var cdata = data[ci].data;
+                            for (var cdi = 0; cdi < cdata.length; cdi++) {
+                                curveData[data[ci].label + ' time'] = moment.utc(Number(data[ci][0])).format('YYYY-MM-DD HH:mm');
+                                curveData['raw stat from query'] = data[ci][5].raw_stat;
+                                curveData['plotted stat'] = data[ci][1];
+                                curveData['std dev'] = data[ci][5].sd;
+                                curveData['std error'] = data[ci][5].stde_betsy;
+                                curveData['lag1'] = data[ci][5].lag1;
+                                curveData['n'] = data[ci][5].n_good;
+                            }
+                        }
+                        break;
+                    case DieOff:
+                        break;
+                    case ValidTime:
+                        break;
+                    case Histogram:
+                        break;
+                    case TimeSeries:
+                        break;
+                    default:
+                        return undefined;
+                }
+
+            } catch (error) {
+                throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
+            }
+        }
+    }
+});
 
 export default matsMethods = {
     getDataFunctionFileList: getDataFunctionFileList,

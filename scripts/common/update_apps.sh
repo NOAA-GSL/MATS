@@ -38,7 +38,8 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         pwd;
         meteor reset
         rm -rf .meteor/local
-        meteor update --all-packages;
+		meteor add meteorhacks:picker
+		meteor update --all-packages;
         rm -rf node_modules
 	    meteor npm install
 		meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
@@ -47,6 +48,7 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
 		meteor npm uninstall --save dom-to-image
 		meteor npm install --save html2canvas
 		meteor npm install --save jspdf
+
 		meteor npm update
         cd ..;
     done
