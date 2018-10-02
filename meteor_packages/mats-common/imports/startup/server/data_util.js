@@ -335,6 +335,8 @@ const get_err = function (sVals, sSecs) {
     var minDelta = Number.MAX_VALUE;
     var minSecs = Number.MAX_VALUE;
     var max_secs = Number.MIN_VALUE;
+    var minVal = Number.MAX_VALUE;
+    var maxVal = Number.MIN_VALUE;
     for (i = 0; i < subSecs.length; i++) {
         var secs = (subSecs[i]);
         var delta = Math.abs(secs - last_secs);
@@ -368,9 +370,11 @@ const get_err = function (sVals, sSecs) {
             // console.log(qaCorrected.join('\n'));
             subVals[i] = null;
         } else {
-            n_good++;
+            minVal = minVal < subVals[i] ? minVal : subVals[i];
+            maxVal = maxVal > subVals[i] ? maxVal : subVals[i];
             sum += subVals[i];
             sum2 += subVals[i] * subVals[i];
+            n_good++;
         }
     }
     if (n_good < 1) {
@@ -439,6 +443,8 @@ const get_err = function (sVals, sSecs) {
         lag1: r[1],
         min: minSecs,
         max: max_secs,
+        minVal: minVal,
+        maxVal: maxVal,
         sum: sum_d,
         qaCorrected: qaCorrected
     };
