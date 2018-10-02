@@ -26,6 +26,8 @@ var originalYaxisLabels = [];
 var originalYaxisMins = [];
 var originalYaxisMaxs = [];
 
+var openWindows = [];
+
 Template.graph.onRendered(function () {
     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "none";
@@ -424,6 +426,13 @@ Template.graph.events({
             wind.resizeTo(w, h);
             ;
         }, 100);
+        openWindows.push(wind);
+    },
+    'click .closeapp': function () {
+        for (var widx = 0; widx < openWindows.length; widx++) {
+            openWindows[widx].close();
+        }
+        openWindows = [];
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
