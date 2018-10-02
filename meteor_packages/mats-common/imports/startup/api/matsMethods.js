@@ -39,7 +39,6 @@ const getFlattenedResultData = function (resultKey) {
             switch (plotType) {
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.dailyModelCycle:
-                    var times = [];
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = [];  // map of arrays of maps
@@ -68,36 +67,30 @@ const getFlattenedResultData = function (resultKey) {
                      */
                     for (var ci = 0; ci < data.length; ci++) {
                         var stats = {};
-                        const subData = data[ci].map(function (value) {
-                            return value[1];
-                        });
-                        const subTimes = data[ci].map(function (value) {
-                            return value[0];
-                        });
-                        const reStats = matsDataUtils.get_err(subData, subTimes);
                         stats['label'] = data[ci].label;
-                        stats['mean'] = reStats.d_mean;
-                        stats['standard deviation'] = reStats.sd;
-                        stats['n'] = reStats.n_good;
-                        stats['standard error'] = reStats.stde_betsy;
-                        stats['lag1'] = reStats.lag1;
-                        stats['minimum'] = reStats.minVal;
-                        stats['maximum'] = reStats.maxVal;
+                        stats['mean'] = data[ci].stats.d_mean;
+                        stats['standard deviation'] = data[ci].stats.sd;
+                        stats['n'] = data[ci].stats.n_good;
+                        stats['standard error'] = data[ci].stats.stde_betsy;
+                        stats['lag1'] = data[ci].stats.lag1;
+                        stats['minimum'] = data[ci].stats.minVal;
+                        stats['maximum'] = data[ci].stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
+
                         var cdata = data[ci].data;
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' time'] = moment.utc(Number(data[ci][0])).format('YYYY-MM-DD HH:mm');
-                            curveDataElement['raw stat from query'] = data[ci][5].raw_stat;
-                            curveDataElement['plotted stat'] = data[ci][1];
-                            curveDataElement['std dev'] = data[ci][5].sd;
-                            curveDataElement['std error'] = data[ci][5].stde_betsy;
-                            curveDataElement['lag1'] = data[ci][5].lag1;
-                            curveDataElement['n'] = data[ci][5].n_good;
+                            curveDataElement[data[ci].label + ' time'] = moment.utc(Number(cdata[cdi][0])).format('YYYY-MM-DD HH:mm');
+                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
+                            curveDataElement['plotted stat'] = cdata[cdi][1];
+                            curveDataElement['std dev'] = cdata[cdi][5].sd;
+                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
+                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
+                            curveDataElement['n'] = cdata[cdi][5].n_good;
                             curveData.push(curveDataElement);
                         }
-                        returnData.data[data[ci].label + ' time'] = curveData;
+                        returnData.data[data[ci].label] = curveData;
                     }
                     break;
                 case matsTypes.PlotTypes.profile:
@@ -116,22 +109,22 @@ const getFlattenedResultData = function (resultKey) {
                         stats['minimum'] = data[ci].stats.minVal;
                         stats['maximum'] = data[ci].stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
+
                         var cdata = data[ci].data;
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' level'] = data[ci][1];
+                            curveDataElement[data[ci].label + ' level'] = cdata[cdi][1];
                             curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
                             curveDataElement['plotted stat'] = cdata[cdi][0];
                             curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['std error'] = data[ci][5].stde_betsy;
-                            curveDataElement['lag1'] = data[ci][5].lag1;
+                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
+                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
                             curveDataElement['n'] = cdata[cdi][5].n_good;
                             curveData.push(curveDataElement);
                         }
-                        returnData.data[data[ci].label + ' level'] = curveData;
+                        returnData.data[data[ci].label] = curveData;
                     }
-
                     break;
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.validtime:
@@ -154,20 +147,14 @@ const getFlattenedResultData = function (resultKey) {
 
                     for (var ci = 0; ci < data.length; ci++) {
                         var stats = {};
-                        const subData = data[ci].map(function (value) {
-                            return value[1];
-                        });
-                        const subTimes = data[ci].map(function (value) {
-                            return value[0];
-                        });
-                        const reStats = matsDataUtils.get_err(subData, subTimes);
                         stats['label'] = data[ci].label;
-                        stats['mean'] = reStats.d_mean;
-                        stats['standard deviation'] = reStats.sd;
-                        stats['n'] = reStats.n_good;
-                        stats['minimum'] = reStats.minVal;
-                        stats['maximum'] = reStats.maxVal;
+                        stats['mean'] = data[ci].stats.d_mean;
+                        stats['standard deviation'] = data[ci].stats.sd;
+                        stats['n'] = data[ci].stats.n_good;
+                        stats['minimum'] = data[ci].stats.minVal;
+                        stats['maximum'] = data[ci].stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
+
                         var cdata = data[ci].data;
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
@@ -179,7 +166,7 @@ const getFlattenedResultData = function (resultKey) {
                             curveDataElement['n'] = cdata[cdi][5].n_good;
                             curveData.push(curveDataElement);
                         }
-                        returnData.data[data[ci].label + ' time'] = curveData;
+                        returnData.data[data[ci].label] = curveData;
                     }
                     break;
                 case matsTypes.PlotTypes.map:
@@ -193,13 +180,13 @@ const getFlattenedResultData = function (resultKey) {
                      */
                     // maps only have one curve - an array of sites
                     var mData = data[0].data;
-                    for (var si=0; si < mData.length;si++) {
+                    for (var si = 0; si < mData.length; si++) {
                         var elem = {};
                         elem['Site Name'] = mData[si][0];
                         elem['Number of Times'] = mData[si][1];
-                        elem['Start Date'] = mData[si][2];
+                        elem['Start Date'] = moment.utc(Number(mData[si][2])).format('YYYY-MM-DD HH:mm');
                         elem['End Date'] = moment.utc(Number(mData[si][3])).format('YYYY-MM-DD HH:mm');
-                        elem['Average Difference'] = moment.utc(Number(mData[si][4])).format('YYYY-MM-DD HH:mm');
+                        elem['Average Difference'] = mData[si][4];
                         returnData.push(elem);
                     }
                     break;
@@ -210,12 +197,6 @@ const getFlattenedResultData = function (resultKey) {
 
                     for (var ci = 0; ci < data.length; ci++) {
                         var stats = {};
-                        const subData = data[ci].map(function (value) {
-                            return value[1];
-                        });
-                        const subTimes = data[ci].map(function (value) {
-                            return value[0];
-                        });
                         stats['label'] = data[ci].label;
                         stats['mean'] = data[ci][0][7].glob_mean;
                         stats['standard deviation'] = data[ci][0][7].glob_sd;
@@ -223,6 +204,7 @@ const getFlattenedResultData = function (resultKey) {
                         stats['minimum'] = data[ci][0][7].glob_min;
                         stats['maximum'] = data[ci][0][7].glob_max;
                         returnData.stats[data[ci].label] = stats;
+
                         var cdata = data[ci].data;
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
@@ -232,10 +214,10 @@ const getFlattenedResultData = function (resultKey) {
                             curveDataElement['bin lower bound'] = cdata[cdi][6].binLowBound;
                             curveDataElement['bin upper bound'] = cdata[cdi][6].binUpBound;
                             curveDataElement['bin mean'] = cdata[cdi][6].bin_mean;
-                            curveDataElement['bin std dev'] =  cdata[cdi][6].bin_sd;
+                            curveDataElement['bin std dev'] = cdata[cdi][6].bin_sd;
                             curveData.push(curveDataElement);
                         }
-                        returnData.data[data[ci].label + ' bin range'] = curveData;
+                        returnData.data[data[ci].label] = curveData;
                     }
                     break;
                 case matsTypes.PlotTypes.scatter2d:
@@ -276,13 +258,13 @@ const getFlattenedResultData = function (resultKey) {
                         // look for a best fit curve - only have to look at curves with higher index than this one
                         var bestFitIndex = -1;
                         for (var cbi = ci + 1; cbi < data.length; cbi++) {
-                            if (((data[cbi].label).indexOf(curveData.label) !== -1)&& ((data[cbi].label).indexOf("-best fit") != -1)) {
+                            if (((data[cbi].label).indexOf(curveData.label) !== -1) && ((data[cbi].label).indexOf("-best fit") != -1)) {
                                 bestFitIndex = cbi;
                                 break;
                             }
                         }
                         var curveTextData = [];
-                        for (var cdi=0; cdi < curveData.length; cdi++) {
+                        for (var cdi = 0; cdi < curveData.length; cdi++) {
                             var element = {};
                             element['xAxis'] = curveData[cdi][0];
                             element['yAxis'] = curveData[cdi][1];
@@ -301,7 +283,7 @@ const getFlattenedResultData = function (resultKey) {
             }
             return returnData;
         } catch (error) {
-            throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
+            throw new Meteor.Error("Error in getFlattenedResultData function:" + key + " : " + error.message);
         }
     }
 };
