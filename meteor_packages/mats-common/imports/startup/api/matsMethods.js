@@ -101,6 +101,36 @@ const getFlattenedResultData = function (resultKey) {
                     }
                     break;
                 case matsTypes.PlotTypes.profile:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = [];  // map of arrays of maps
+
+                    for (var ci = 0; ci < data.length; ci++) {
+                        var stats = {};
+                        stats['label'] = data[ci].label;
+                        stats['mean'] = data[ci].stats.d_mean;
+                        stats['standard deviation'] = data[ci].stats.sd;
+                        stats['n'] = data[ci].stats.n_good;
+                        stats['standard error'] = data[ci].stats.stde_betsy;
+                        stats['lag1'] = data[ci].stats.lag1;
+                        stats['minimum'] = data[ci].stats.minVal;
+                        stats['maximum'] = data[ci].stats.maxVal;
+                        returnData.stats[data[ci].label] = stats;
+                        var cdata = data[ci].data;
+                        var curveData = [];  // map of maps
+                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' level'] = data[ci][1];
+                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
+                            curveDataElement['plotted stat'] = cdata[cdi][0];
+                            curveDataElement['std dev'] = cdata[cdi][5].sd;
+                            curveDataElement['std error'] = data[ci][5].stde_betsy;
+                            curveDataElement['lag1'] = data[ci][5].lag1;
+                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label + ' level'] = curveData;
+                    }
 
                     break;
                 case matsTypes.PlotTypes.dieoff:
@@ -142,7 +172,7 @@ const getFlattenedResultData = function (resultKey) {
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[cdata[cdi].label + labelSuffix] = moment.utc(Number(cdata[cdi][0])).format('YYYY-MM-DD HH:mm');
+                            curveDataElement[cdata[cdi].label + labelSuffix] = cdata[cdi][0];
                             curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
                             curveDataElement['plotted stat'] = cdata[cdi][1];
                             curveDataElement['std dev'] = cdata[cdi][5].sd;
