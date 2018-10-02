@@ -217,19 +217,24 @@ const getPlotResult = new ValidatedMethod({
                 }
                 var dsiStart = start;
                 var dsiEnd = end;
-                if (start === 0 && end === Number.MAX_VALUE) {
+                if ((start === 0 && end === Number.MAX_VALUE) || dsiStart > ret.data[dsi].data.length) {
+                    // show the last page if we either requested it specifically or are trying to navigate past it
                     dsiStart = rawReturn.data[dsi].data.length - (rawReturn.data[dsi].data.length % 100);
                     dsiEnd = rawReturn.data[dsi].data.length;
                 }
                 if (dsiStart < 0) {
+                    // show the first page if we are trying to navigate before it
                     dsiStart = 0;
-                } else {
-                    dsiStart = dsiStart > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiStart;
+                    dsiEnd = 100;
                 }
                 if (dsiEnd < dsiStart) {
-                    dsiEnd = dsiStart
-                } else {
-                    dsiEnd = dsiEnd > ret.data[dsi].data.length ? ret.data[dsi].data.length : dsiEnd;
+                    // make sure that the end is after the start
+                    dsiEnd = dsiStart + 100;
+                }
+                if (dsiEnd > ret.data[dsi].data.length) {
+                    // make sure we don't request past the end -- if results are one page, this should convert the
+                    // start and end from 0 and 100 to 0 and whatever the end is.
+                    dsiEnd = ret.data[dsi].data.length;
                 }
                 ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
             }
