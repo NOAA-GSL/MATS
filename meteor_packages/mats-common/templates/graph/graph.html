@@ -1,7 +1,9 @@
 <template name="graph">
     <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:none;">
         <div id="header" class="row">
-            <h4>{{Title}}  :  {{plotText}} {{plotName}}</h4>
+            <span>
+                <h4>{{Title}}  :  {{plotText}} {{plotName}} <button class="btn btn-xs pull-right btn-danger closeapp">Close All Preview Windows</button></h4>
+            </span>
             <span style="display: none">{{graphFunction}}</span>
         </div>
         <div id="graph-control" class="row">

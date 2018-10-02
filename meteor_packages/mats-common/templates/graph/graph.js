@@ -26,6 +26,8 @@ var originalYaxisLabels = [];
 var originalYaxisMins = [];
 var originalYaxisMaxs = [];
 
+var openWindows = [];
+
 Template.graph.onRendered(function () {
     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "none";
@@ -424,6 +426,13 @@ Template.graph.events({
             wind.resizeTo(w, h);
             ;
         }, 100);
+        openWindows.push(wind);
+    },
+    'click .closeapp': function () {
+        for (var widx = 0; widx < openWindows.length; widx++) {
+            openWindows[widx].close();
+        }
+        openWindows = [];
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
@@ -506,65 +515,87 @@ Template.graph.events({
         $("#axisLimitModal").modal('show');
     },
     'click .firstPageButton': function () {
-        Session.set("pageIndex", 0);
-        Session.set("newPageIndex", 1);
-        matsCurveUtils.setPlotResultData();
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            Session.set("pageIndex", 0);
+            Session.set("newPageIndex", 1);
+            matsCurveUtils.setPlotResultData();
+        }
     },
     'click .previousTenPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        var pageTextDirection = Session.get("pageTextDirection");
-        // if the navigation direction is changing, you have to increment the page index an additional time,
-        // or you just move to the other end of the current page, and nothing appears to change.
-        if (pageTextDirection !== undefined && pageTextDirection === -1) {
-            Session.set("pageIndex", pageIndex - 9);
-            Session.set("newPageIndex", pageIndex - 10);
-        } else {
-            Session.set("pageIndex", pageIndex - 10);
-            Session.set("newPageIndex", pageIndex - 11);
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === -1) {
+                Session.set("pageIndex", pageIndex - 9);
+                Session.set("newPageIndex", pageIndex - 10);
+            } else {
+                Session.set("pageIndex", pageIndex - 10);
+                Session.set("newPageIndex", pageIndex - 11);
+            }
+            matsCurveUtils.setPlotResultData();
         }
-        matsCurveUtils.setPlotResultData();
     },
     'click .previousPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        var pageTextDirection = Session.get("pageTextDirection");
-        // if the navigation direction is changing, you have to increment the page index an additional time,
-        // or you just move to the other end of the current page, and nothing appears to change.
-        if (pageTextDirection !== undefined && pageTextDirection === -1) {
-            Session.set("newPageIndex", pageIndex - 1);
-        } else {
-            Session.set("newPageIndex", pageIndex - 2);
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === -1) {
+                Session.set("newPageIndex", pageIndex - 1);
+            } else {
+                Session.set("pageIndex", pageIndex - 1);
+                Session.set("newPageIndex", pageIndex - 2);
+            }
+            matsCurveUtils.setPlotResultData();
         }
-        matsCurveUtils.setPlotResultData();
     },
     'click .nextPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        var pageTextDirection = Session.get("pageTextDirection");
-        // if the navigation direction is changing, you have to increment the page index an additional time,
-        // or you just move to the other end of the current page, and nothing appears to change.
-        if (pageTextDirection !== undefined && pageTextDirection === 1) {
-            Session.set("newPageIndex", pageIndex + 1);
-        } else {
-            Session.set("newPageIndex", pageIndex + 2);
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === 1) {
+                Session.set("newPageIndex", pageIndex + 1);
+            } else {
+                Session.set("pageIndex", pageIndex + 1);
+                Session.set("newPageIndex", pageIndex + 2);
+            }
+            matsCurveUtils.setPlotResultData();
         }
-        matsCurveUtils.setPlotResultData();
     },
     'click .nextTenPageButton': function () {
         var pageIndex = Session.get("pageIndex");
-        var pageTextDirection = Session.get("pageTextDirection");
-        // if the navigation direction is changing, you have to increment the page index an additional time,
-        // or you just move to the other end of the current page, and nothing appears to change.
-        if (pageTextDirection !== undefined && pageTextDirection === 1) {
-            Session.set("pageIndex", pageIndex + 9);
-            Session.set("newPageIndex", pageIndex + 10);
-        } else {
-            Session.set("pageIndex", pageIndex + 10);
-            Session.set("newPageIndex", pageIndex + 11);
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === 1) {
+                Session.set("pageIndex", pageIndex + 9);
+                Session.set("newPageIndex", pageIndex + 10);
+            } else {
+                Session.set("pageIndex", pageIndex + 10);
+                Session.set("newPageIndex", pageIndex + 11);
+            }
+            matsCurveUtils.setPlotResultData();
         }
-        matsCurveUtils.setPlotResultData();
     },
     'click .lastPageButton': function () {
-        Session.set("newPageIndex", -1000);
-        matsCurveUtils.setPlotResultData();
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            Session.set("newPageIndex", -1000);
+            matsCurveUtils.setPlotResultData();
+        }
     },
     'click .replotZoomButton': function () {
         var xaxis = $("#placeholder").data().plot.getAxes().xaxis;
