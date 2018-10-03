@@ -256,12 +256,7 @@ dataHistogram = function (plotParams, plotFunction) {
             values.push(data[di][1]);
             bins.push(data[di][0]);
 
-            // remove sub_values and sub_secs
-            data[di][3] = [];
-            data[di][4] = [];
-            data[di][5] = [];
-
-            // // this is the tooltip, it is the last element of each dataseries element
+            // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +
                 "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
                 "<br> " + "number in bin for this curve: " + (data[di][1] === null ? null : data[di][1]) +
@@ -292,7 +287,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

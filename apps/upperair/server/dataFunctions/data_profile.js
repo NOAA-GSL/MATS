@@ -251,10 +251,6 @@ dataProfile = function (plotParams, plotFunction) {
                 data[di][2] = -1;
             }
 
-            // remove sub_values and sub_secs
-            data[di][3] = [];
-            data[di][4] = [];
-
             // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
@@ -300,7 +296,7 @@ dataProfile = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0);
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

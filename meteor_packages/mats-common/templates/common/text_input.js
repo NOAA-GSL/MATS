@@ -1,5 +1,6 @@
 import { matsCurveUtils } from 'meteor/randyp:mats-common';
 import { matsParamUtils } from 'meteor/randyp:mats-common'
+import { matsTypes } from 'meteor/randyp:mats-common'
 Template.textInput.helpers({
     defaultTextInput: function() {
         if (this.name == 'label') {   // labels are handled specially
@@ -29,13 +30,29 @@ Template.textInput.helpers({
 });
 
 Template.textInput.events({
-    'click, change, blur': function (event) {
+    'click, blur': function (event) {
         try {
             // label is handled differently - special case because of NextCurveLabel stored in Session
             const text = event.currentTarget.value;
             if (event.target.name == "label" && Session.get('NextCurveLabel') == text) {
             } else {
                 matsParamUtils.setValueTextForParamName(event.target.name, text);
+            }
+        } catch (error){
+            matsParamUtils.setValueTextForParamName(event.target.name, "");
+        }
+    },
+    'change': function (event) {
+        try {
+            // label is handled differently - special case because of NextCurveLabel stored in Session
+            const text = event.currentTarget.value;
+            if (Object.values(matsTypes.ReservedWords).indexOf(text) === -1) {
+                matsParamUtils.setValueTextForParamName(event.target.name, text);
+            } else {
+                console.log("that curve label is not allowed");
+                setTimeout(function (){
+                    matsParamUtils.setValueTextForParamName(event.target.name, "LabelNotAllowed");
+                }, 10);
             }
         } catch (error){
             matsParamUtils.setValueTextForParamName(event.target.name, "");

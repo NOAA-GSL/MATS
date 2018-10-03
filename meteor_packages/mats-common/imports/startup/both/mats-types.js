@@ -84,6 +84,21 @@ var PlotView = {
     textHistogram: "textHistogram"
 };
 
+var ReservedWords = {
+    Zero: "Zero",
+    zero: "zero",
+    ideal0: "ideal0",
+    ideal1: "ideal1",
+    ideal2: "ideal2",
+    ideal3: "ideal3",
+    ideal4: "ideal4",
+    ideal5: "ideal5",
+    ideal6: "ideal6",
+    ideal7: "ideal7",
+    ideal8: "ideal8",
+    ideal9: "ideal9"
+};
+
 var Messages = {
     NO_DATA_FOUND: "INFO:0 data records found"
 };
@@ -140,6 +155,7 @@ export default matsTypes = {
     PlotView:PlotView,
     Messages:Messages,
     ForecastTypes:ForecastTypes,
+    ReservedWords:ReservedWords,
     MetaDataDBRecord:MetaDataDBRecord
 }
 
