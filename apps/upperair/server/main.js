@@ -46,6 +46,62 @@ const doPlotParams = function () {
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        var binOptionsMap = {
+            "Default bins": ["default"],
+            "Set number of bins": ["binNumber"],
+            "Make zero a bin bound": ["zeroBound"],
+            "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+            "Manual bins": ["manual"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-bin-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: binOptionsMap,
+                options: Object.keys(binOptionsMap),
+                hideOtherFor: {
+                    'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins"],
+                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound"],
+                },
+                default: Object.keys(binOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'customize bins',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-number',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '2',
+                max: '100',
+                step: 'any',
+                default: '12',
+                controlButtonCovered: true,
+                controlButtonText: "number of bins",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-bounds',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],   // convenience
+                default: ' ',
+                controlButtonCovered: true,
+                controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
@@ -359,34 +415,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) == undefined) {
-        var dieoffOptionsMap = {
-            "Dieoff": [matsTypes.ForecastTypes.dieoff],
-            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
-            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
-        };
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: dieoffOptionsMap,
-                options: Object.keys(dieoffOptionsMap),
-                hideOtherFor: {
-                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
-                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
-                },
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(dieoffOptionsMap)[0],
-                controlButtonVisibility: 'block',
-                controlButtonText: 'dieoff type',
-                displayOrder: 7,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
-
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
         optionsMap = {};
         matsCollections.CurveParams.insert(
@@ -418,6 +446,34 @@ const doCurveParams = function () {
                 }
             });
         }
+    }
+
+    if (matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) == undefined) {
+        var dieoffOptionsMap = {
+            "Dieoff": [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(dieoffOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: 'dieoff type',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
     }
 
     if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
