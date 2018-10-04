@@ -36,36 +36,10 @@ Template.graph.onRendered(function () {
 
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        switch (Session.get('graphViewMode')) {
-            case matsTypes.PlotView.graph:
-                matsGraphUtils.setGraphView();
-                break;
-            case matsTypes.PlotView.textSeries:
-                matsGraphUtils.setTextView("textSeriesView");
-                break;
-            case matsTypes.PlotView.textProfile:
-                matsGraphUtils.setTextView("textProfileView");
-                break;
-            case matsTypes.PlotView.textDieoff:
-                matsGraphUtils.setTextView("textDieOffView");
-                break;
-            case matsTypes.PlotView.textThreshold:
-                matsGraphUtils.setTextView("textThresholdView");
-                break;
-            case matsTypes.PlotView.textDailyModelCycle:
-                matsGraphUtils.setTextView("textDailyModelCycleView");
-                break;
-            case matsTypes.PlotView.textMap:
-                matsGraphUtils.setTextView("textMapView");
-                break;
-            case matsTypes.PlotView.textHistogram:
-                matsGraphUtils.setTextView("textHistogramView");
-                break;
-            case matsTypes.PlotView.textScatter:
-                matsGraphUtils.setTextView("textScatter2dView");
-                break;
-            default:
-                //matsGraphUtils.setGraphView();
+        if (Session.get('graphViewMode') === matsTypes.PlotView.graph) {
+            matsGraphUtils.setGraphView();
+        } else {
+            matsGraphUtils.setTextView();
         }
     });
 
@@ -99,7 +73,9 @@ Template.graph.helpers({
             var plotType = Session.get('plotType');
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
-
+            if (dataset === undefined) {
+                return false;
+            }
             if (plotType !== matsTypes.PlotTypes.map) {
                 // append annotations and get errorbar types
                 annotation = "";
@@ -447,47 +423,8 @@ Template.graph.events({
         matsCurveUtils.hideSpinner();
     },
     'click .textButton': function () {
-        switch (matsPlotUtils.getPlotType()) {
-            case matsTypes.PlotTypes.timeSeries:
-                Session.set('graphViewMode', matsTypes.PlotView.textSeries);
-                matsGraphUtils.setTextView("textSeriesView");
-                break;
-            case matsTypes.PlotTypes.profile:
-                Session.set('graphViewMode', matsTypes.PlotView.textProfile);
-                matsGraphUtils.setTextView("textProfileView");
-                break;
-            case matsTypes.PlotTypes.dieoff:
-                Session.set('graphViewMode', matsTypes.PlotView.textDieoff);
-                matsGraphUtils.setTextView("textDieOffView");
-                break;
-            case matsTypes.PlotTypes.threshold:
-                Session.set('graphViewMode', matsTypes.PlotView.textThreshold);
-                matsGraphUtils.setTextView("textThresholdView");
-                break;
-            case matsTypes.PlotTypes.validtime:
-                Session.set('graphViewMode', matsTypes.PlotView.textValidTime);
-                matsGraphUtils.setTextView("textValidTimeView");
-                break;
-            case matsTypes.PlotTypes.dailyModelCycle:
-                Session.set('graphViewMode', matsTypes.PlotView.textDailyModelCycle);
-                matsGraphUtils.setTextView("textDailyModelCycleView");
-                break;
-            case matsTypes.PlotTypes.map:
-                Session.set('graphViewMode', matsTypes.PlotView.textMap);
-                matsGraphUtils.setTextView("textMapView");
-                break;
-            case matsTypes.PlotTypes.histogram:
-                Session.set('graphViewMode', matsTypes.PlotView.textHistogram);
-                matsGraphUtils.setTextView("textHistogramView");
-                break;
-            case matsTypes.PlotTypes.scatter2d:
-                Session.set('graphViewMode', matsTypes.PlotView.textScatter);
-                matsGraphUtils.setTextView("textScatter2dView");
-                break;
-            default:
-                console.log("Error: no plot type detected");
-                Session.set('graphViewMode', matsTypes.PlotView.graph);
-        }
+        matsGraphUtils.setTextView();
+        Session.set('graphViewMode', matsTypes.PlotView.text);
         Session.set("pageIndex", 0);
         Session.set("newPageIndex", 1);
         matsCurveUtils.setPlotResultData();

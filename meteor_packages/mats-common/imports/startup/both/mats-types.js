@@ -73,15 +73,7 @@ var  PlotAxisFilters = {
 
 var PlotView = {
     graph: "graph",
-    textSeries: "textSeries",
-    textProfile: "textProfile",
-    textScatter: "textScatter",
-    textDieoff: "textDieoff",
-    textThreshold: "textThreshold",
-    textValidTime: "textValidTime",
-    textDailyModelCycle : "textDailyModelCycle",
-    textMap: "textMap",
-    textHistogram: "textHistogram"
+    textSeries: "text",
 };
 
 var Messages = {

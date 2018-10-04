@@ -1178,8 +1178,6 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphXYLine",
             dataFunction: "dataSeries",
-            textViewId: "textSeriesView",
-            graphViewId: "graphSeriesView",
             checked: true,
             dependents: ['variable', 'truth-variable']
         });
@@ -1187,8 +1185,6 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.profile,
             graphFunction: "graphProfile",
             dataFunction: "dataProfile",
-            textViewId: "textProfileView",
-            graphViewId: "graphSeriesView",
             checked: false,
             dependents: ['variable', 'truth-variable']
         });
@@ -1196,8 +1192,6 @@ var doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.scatter2d,
             graphFunction: "graph2dScatter",
             dataFunction: "data2dScatter",
-            textViewId: "textScatter2dView",
-            graphViewId: "graphSeriesView",
             checked: false,
             dependents: ['variable', 'truth-variable']
         });

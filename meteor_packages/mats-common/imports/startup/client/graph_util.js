@@ -267,7 +267,7 @@ var standAloneHeight = function () {
     return (.825 * vph).toString() + "px";
 };
 
-var setTextView = function (textViewType) {
+var setTextView = function () {
     //shows text page and proper text output, hides everything else
     document.getElementById('placeholder').style.width = width();
     document.getElementById('placeholder').style.height = height();
@@ -275,15 +275,7 @@ var setTextView = function (textViewType) {
     document.getElementById("plot-page-button-group").style.display = "none";
     document.getElementById("curves").style.display = "none";
     document.getElementById("graphView").style.display = "none";
-    document.getElementById("textSeriesView").style.display = textViewType === "textSeriesView" ? "block" : "none";
-    document.getElementById("textProfileView").style.display = textViewType === "textProfileView" ? "block" : "none";
-    document.getElementById("textScatter2dView").style.display = textViewType === "textScatter2dView" ? "block" : "none";
-    document.getElementById("textDieOffView").style.display = textViewType === "textDieOffView" ? "block" : "none";
-    document.getElementById("textThresholdView").style.display = textViewType === "textThresholdView" ? "block" : "none";
-    document.getElementById("textValidTimeView").style.display = textViewType === "textValidTimeView" ? "block" : "none";
-    document.getElementById("textDailyModelCycleView").style.display = textViewType === "textDailyModelCycleView" ? "block" : "none";
-    document.getElementById("textMapView").style.display = textViewType === "textMapView" ? "block" : "none";
-    document.getElementById("textHistogramView").style.display = textViewType === "textHistogramView" ? "block" : "none";
+    document.getElementById("textView").style.display = "block";
     document.getElementById('graph-touch-controls').style.display = "none";
     document.getElementById('plot-control-button-group').style.display = "none";
 };
@@ -309,15 +301,7 @@ var setGraphView = function () {
     document.getElementById("plot-page-button-group").style.display = "block";
     document.getElementById("curves").style.display = "block";
     document.getElementById("graphView").style.display = "block";
-    document.getElementById("textSeriesView").style.display = "none";
-    document.getElementById("textProfileView").style.display = "none";
-    document.getElementById("textScatter2dView").style.display = "none";
-    document.getElementById("textDieOffView").style.display = "none";
-    document.getElementById("textThresholdView").style.display = "none";
-    document.getElementById("textValidTimeView").style.display = "none";
-    document.getElementById("textDailyModelCycleView").style.display = "none";
-    document.getElementById("textMapView").style.display = "none";
-    document.getElementById("textHistogramView").style.display = "none";
+    document.getElementById("textView").style.display = "none";
     if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "block";
         document.getElementById('plot-control-button-group').style.display = "block";
@@ -362,15 +346,7 @@ var setDefaultView = function() {
     document.getElementById('graph-touch-controls').style.display = "block";
     document.getElementById('plot-control-button-group').style.display = "block";
     // hide text page
-    document.getElementById("textSeriesView").style.display = "none";
-    document.getElementById("textProfileView").style.display = "none";
-    document.getElementById("textDieOffView").style.display = "none";
-    document.getElementById("textThresholdView").style.display = "none";
-    document.getElementById("textValidTimeView").style.display = "none";
-    document.getElementById("textDailyModelCycleView").style.display = "none";
-    document.getElementById("textScatter2dView").style.display = "none";
-    document.getElementById("textMapView").style.display = "none";
-    document.getElementById("textHistogramView").style.display = "none";
+    document.getElementById("textView").style.display = "none";
 };
 
 export default matsGraphUtils = {

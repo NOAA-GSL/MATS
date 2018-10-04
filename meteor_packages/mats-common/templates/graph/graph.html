@@ -2,7 +2,11 @@
     <div id="graph-container" class="container-fluid pull-left" style="padding-left: 5%; display:none;">
         <div id="header" class="row">
             <span>
-                <h4>{{Title}}  :  {{plotText}} {{plotName}} <button class="btn btn-xs pull-right btn-danger closeapp">Close All Preview Windows</button></h4>
+                <h4 class="col-8">
+                    {{Title}}  :  {{plotText}} {{plotName}}
+                    <button class="btn btn-xs col-2 btn-danger closeapp">Close All Preview Windows</button>
+                    <span class="col-2 pull-right"> </span>
+                </h4>
             </span>
             <span style="display: none">{{graphFunction}}</span>
         </div>
@@ -176,32 +180,8 @@
             {{/each}}
             <hr/>
         </div>
-        <div id="textSeriesView" style="display:none;">
-            {{>textSeriesOutput}}
-        </div>
-        <div id="textProfileView" style="display:none;">
-            {{>textProfileOutput}}
-        </div>
-        <div id="textDieOffView" style="display:none;">
-            {{>textDieOffOutput}}
-        </div>
-        <div id="textThresholdView" style="display:none;">
-            {{>textThresholdOutput}}
-        </div>
-        <div id="textValidTimeView" style="display:none;">
-            {{>textValidTimeOutput}}
-        </div>
-        <div id="textDailyModelCycleView" style="display:none;">
-            {{>textDailyModelCycleOutput}}
-        </div>
-        <div id="textMapView" style="display:none;">
-            {{>textMapOutput}}
-        </div>
-        <div id="textHistogramView" style="display:none;">
-            {{>textHistogramOutput}}
-        </div>
-        <div id="textScatter2dView" style="display:none;">
-            {{>textScatter2dOutput}}
+        <div id="textView" style="display:none;">
+            {{>textOutput}}
         </div>
         {{#if isMap}}
             <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">

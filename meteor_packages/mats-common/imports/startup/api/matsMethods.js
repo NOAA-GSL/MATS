@@ -20,28 +20,110 @@ if (Meteor.isServer) {
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 }
 
-const getFlattenedResultData = function (resultKey) {
+
+// private method for getting pagenated data
+const getPagenatedData = function(rky, p, np) {
     if (Meteor.isServer) {
-        var resp = {};
-        var key = resultKey;
+        var key = rky;
+        var myPageIndex = p;
+        var newPageIndex = np;
+        var ret;
+        var rawReturn;
+
         try {
-            var resultKey = Results.findOne({key: rKey}, {key: 1});
+            var Future = require('fibers/future');
+            var future = new Future();
+            var resultKey = Results.findOne({key: key}, {key: 1});
             if (resultKey !== undefined) {
-                result = Results.findOne({key: rKey}).result;
+                rawReturn = Results.findOne({key: key}).result;
+                future.return(rawReturn);
             } else {
-                return undefined;
+                future.return(undefined);
             }
-            var data = result.data;
+            future.wait();
+        } catch (e){
+            console.log ("getPagenatedData: Error - ", e);
+            return undefined;
+        }
+        ret = rawReturn === undefined ? undefined : JSON.parse(JSON.stringify(rawReturn));
+        var start;
+        var end;
+        var direction = 1;
+        if (newPageIndex === -1000) {
+            start = 0;
+            end = Number.MAX_VALUE;
+            direction = -1;
+        } else {
+            if (myPageIndex <= newPageIndex) {
+                start = myPageIndex * 100;
+                end = newPageIndex * 100;
+            } else {
+                direction = -1;
+                start = newPageIndex * 100;
+                end = myPageIndex * 100;
+            }
+        }
+        var dsiStart = start;
+        var dsiEnd = end;
+        for (var dsi = 0; dsi < ret.data.length; dsi++) {
+            if (ret.data[dsi].data.length <= 100) {
+                continue; // don't bother pagenating datasets less than or equal to a page
+            }
+            if ((start === 0 && end === Number.MAX_VALUE) || dsiStart > ret.data[dsi].data.length) {
+                // show the last page if we either requested it specifically or are trying to navigate past it
+                dsiStart = rawReturn.data[dsi].data.length - (rawReturn.data[dsi].data.length % 100);
+                dsiEnd = rawReturn.data[dsi].data.length;
+            }
+            if (dsiStart < 0) {
+                // show the first page if we are trying to navigate before it
+                dsiStart = 0;
+                dsiEnd = 100;
+            }
+            if (dsiEnd < dsiStart) {
+                // make sure that the end is after the start
+                dsiEnd = dsiStart + 100;
+            }
+            if (dsiEnd > ret.data[dsi].data.length) {
+                // make sure we don't request past the end -- if results are one page, this should convert the
+                // start and end from 0 and 100 to 0 and whatever the end is.
+                dsiEnd = ret.data[dsi].data.length;
+            }
+            ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
+        }
+        delete rawReturn;
+        if (direction === 1) {
+            ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
+        } else {
+            ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
+        }
+        ret.dsiTextDirection = direction;
+        return ret;
+    }
+}
+
+//private method for getting pagenated results and flattening them in order to be appropriate for text display.
+const getFlattenedResultData = function (rk, p, np) {
+    if (Meteor.isServer) {
+        var resp;
+        try {
+            var r = rk;
+            var p = p;
+            var np = np;
+            // get the pagenated data
+            var result = getPagenatedData(r, p, np);
             // find the type
             var plotTypes = result.basis.plotParams.plotTypes;
             var plotType = (_.invert(plotTypes))[true];
             // extract data
+            var data = result.data;
+            var dsiRealPageIndex = result.dsiRealPageIndex;
+            var dsiTextDirection = result.dsiTextDirection;
             switch (plotType) {
                 case matsTypes.PlotTypes.timeSeries:
                 case matsTypes.PlotTypes.dailyModelCycle:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = [];  // map of arrays of maps
+                    returnData.data = {};  // map of arrays of maps
                     /*
                     returnData is
                     {
@@ -66,6 +148,9 @@ const getFlattenedResultData = function (resultKey) {
                     }
                      */
                     for (var ci = 0; ci < data.length; ci++) {
+                        if (data[ci].label === "0") {
+                            continue; // don't do the zero or max curves
+                        }
                         var stats = {};
                         stats['label'] = data[ci].label;
                         stats['mean'] = data[ci].stats.d_mean;
@@ -96,9 +181,12 @@ const getFlattenedResultData = function (resultKey) {
                 case matsTypes.PlotTypes.profile:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = [];  // map of arrays of maps
+                    returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
+                        if (data[ci].label === "0") {
+                            continue; // don't do the zero or max curves
+                        }
                         var stats = {};
                         stats['label'] = data[ci].label;
                         stats['mean'] = data[ci].stats.d_mean;
@@ -143,9 +231,12 @@ const getFlattenedResultData = function (resultKey) {
                     }
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = [];  // map of arrays of maps
+                    returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
+                        if (data[ci].label === "0") {
+                            continue; // don't do the zero or max curves
+                        }
                         var stats = {};
                         stats['label'] = data[ci].label;
                         stats['mean'] = data[ci].stats.d_mean;
@@ -159,7 +250,7 @@ const getFlattenedResultData = function (resultKey) {
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[cdata[cdi].label + labelSuffix] = cdata[cdi][0];
+                            curveDataElement[data[ci].label + labelSuffix] = cdata[cdi][0];
                             curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
                             curveDataElement['plotted stat'] = cdata[cdi][1];
                             curveDataElement['std dev'] = cdata[cdi][5].sd;
@@ -182,34 +273,37 @@ const getFlattenedResultData = function (resultKey) {
                     var mData = data[0].data;
                     for (var si = 0; si < mData.length; si++) {
                         var elem = {};
-                        elem['Site Name'] = mData[si][0];
-                        elem['Number of Times'] = mData[si][1];
-                        elem['Start Date'] = moment.utc(Number(mData[si][2])).format('YYYY-MM-DD HH:mm');
-                        elem['End Date'] = moment.utc(Number(mData[si][3])).format('YYYY-MM-DD HH:mm');
-                        elem['Average Difference'] = mData[si][4];
+                        elem['Site Name'] = mData[si][0][0];
+                        elem['Number of Times'] = mData[si][0][1];
+                        elem['Start Date'] = moment.utc(Number(mData[si][0][2])*1000).format('YYYY-MM-DD HH:mm');
+                        elem['End Date'] = moment.utc(Number(mData[si][0][3])*1000).format('YYYY-MM-DD HH:mm');
+                        elem['Average Difference'] = mData[si][0][4];
                         returnData.push(elem);
                     }
                     break;
                 case matsTypes.PlotTypes.histogram:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = [];  // map of arrays of maps
+                    returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
+                        if (data[ci].label === "0") {
+                            continue; // don't do the zero or max curves
+                        }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci][0][7].glob_mean;
-                        stats['standard deviation'] = data[ci][0][7].glob_sd;
-                        stats['n'] = data[ci][0][7].glob_n;
-                        stats['minimum'] = data[ci][0][7].glob_min;
-                        stats['maximum'] = data[ci][0][7].glob_max;
+                        stats['mean'] = data[ci].data[0][7].glob_mean;
+                        stats['standard deviation'] = data[ci].data[0][7].glob_sd;
+                        stats['n'] = data[ci].data[0][7].glob_n;
+                        stats['minimum'] = data[ci].data[0][7].glob_min;
+                        stats['maximum'] = data[ci].data[0][7].glob_max;
                         returnData.stats[data[ci].label] = stats;
 
                         var cdata = data[ci].data;
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[cdata[cdi].label + ' bin range'] = cdata[cdi][6]['binLabel'];
+                            curveDataElement[data[ci].label + ' bin range'] = cdata[cdi][6]['binLabel'];
                             curveDataElement['n'] = cdata[cdi][6].bin_n;
                             curveDataElement['bin lower bound'] = cdata[cdi][6].binLowBound;
                             curveDataElement['bin upper bound'] = cdata[cdi][6].binUpBound;
@@ -253,25 +347,33 @@ const getFlattenedResultData = function (resultKey) {
                                             ....
                                 }
                      */
+                    var firstBestFitIndex = -1;
+                    var bestFitIndexes = {};
                     for (var ci = 0; ci < data.length; ci++) {
+                        if (ci == firstBestFitIndex) {
+                            break; // best fit curves are at the end so do not do further processing
+                        }
                         var curveData = data[ci];
                         // look for a best fit curve - only have to look at curves with higher index than this one
                         var bestFitIndex = -1;
                         for (var cbi = ci + 1; cbi < data.length; cbi++) {
                             if (((data[cbi].label).indexOf(curveData.label) !== -1) && ((data[cbi].label).indexOf("-best fit") != -1)) {
-                                bestFitIndex = cbi;
+                                bestFitIndexes[ci] = cbi;
+                                if (firstBestFitIndex == -1) {
+                                    firstBestFitIndex = cbi;
+                                }
                                 break;
                             }
                         }
                         var curveTextData = [];
-                        for (var cdi = 0; cdi < curveData.length; cdi++) {
+                        for (var cdi = 0; cdi < curveData.data.length; cdi++) {
                             var element = {};
-                            element['xAxis'] = curveData[cdi][0];
-                            element['yAxis'] = curveData[cdi][1];
-                            if (bestFitIndex === -1) {
+                            element['xAxis'] = curveData.data[cdi][0];
+                            element['yAxis'] = curveData.data[cdi][1];
+                            if (bestFitIndexes[ci] === undefined) {
                                 element['best fit'] = "none;"
                             } else {
-                                element['best fit'] = data[bestFitIndex][cdi][1]
+                                element['best fit'] = data[bestFitIndexes[ci]].data[cdi][1];
                             }
                             curveTextData.push(element);
                         }
@@ -281,9 +383,11 @@ const getFlattenedResultData = function (resultKey) {
                 default:
                     return undefined;
             }
+            returnData.dsiRealPageIndex = dsiRealPageIndex;
+            returnData.dsiTextDirection = dsiTextDirection;
             return returnData;
         } catch (error) {
-            throw new Meteor.Error("Error in getFlattenedResultData function:" + key + " : " + error.message);
+            throw new Meteor.Error("Error in getFlattenedResultData function: " + error.message);
         }
     }
 };
@@ -308,7 +412,7 @@ const saveResultData = function (result) {
                     totalPoints += result.data[di].data.length;
                 }
                 var allowedNumberOfPoints = (threshHold / dSize) * totalPoints;
-                var downSampleResult = JSON.parse(JSON.stringify(result));
+                var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
                 for (var di = 0; di < result.data.length; di++) {
                     var lastYVIndex = result.data[di].data[0].length;
                     //get an x,y array from the data set
@@ -430,12 +534,12 @@ const readFunctionFile = new ValidatedMethod({
 });
 
 /*
-getPlotResult is used by the matsCurveUtils.setPlotResultData which is used to display testual results.
-Because it isn't being rendered graphically this data is always full size, i.e. NOT downsampled.
+getPlotResult is used by the graph/text_*_output templates which are used to display textual results.
+Because the data isn't being rendered graphically this data is always full size, i.e. NOT downsampled.
 That is why it only finds in the Result collection, never the DownSampleResult collection.
 
 Because the dataset can be so large ... e.g. megabytes the data retrieval is pagenated. The index is
-applied to the underlying datasets.
+applied to the underlying datasets.The data gets stripped down and flattened to only contain the data neccesary for text presentation.
 A new page index of -1000 means get all the data i.e. no pagenation.
  */
 const getPlotResult = new ValidatedMethod({
@@ -448,71 +552,14 @@ const getPlotResult = new ValidatedMethod({
     run(params) {
         if (Meteor.isServer) {
             var rKey = params.resultKey;
-            var original = params.original;
-            var pageIndex = params.pageIndex;
-            var newPageIndex = params.newPageIndex;
-            var ret;
-            var rawReturn;
-
-            var resultKey = Results.findOne({key: rKey}, {key: 1});
-            if (resultKey !== undefined) {
-                rawReturn = Results.findOne({key: rKey}).result;
-            } else {
-                return undefined;
+            var pi = params.pageIndex;
+            var npi = params.newPageIndex;
+            var ret = {};
+            try {
+                ret = getFlattenedResultData(rKey, pi, npi);
+            } catch (e) {
+                console.log(e);
             }
-
-            ret = JSON.parse(JSON.stringify(rawReturn));
-            var start;
-            var end;
-            var direction = 1;
-            if (newPageIndex === -1000) {
-                start = 0;
-                end = Number.MAX_VALUE;
-                direction = -1;
-            } else {
-                if (pageIndex <= newPageIndex) {
-                    start = pageIndex * 100;
-                    end = newPageIndex * 100;
-                } else {
-                    direction = -1;
-                    start = newPageIndex * 100;
-                    end = pageIndex * 100;
-                }
-            }
-            for (var dsi = 0; dsi < ret.data.length; dsi++) {
-                if (ret.data[dsi].data.length <= 100) {
-                    continue; // don't bother with zero and max curves or datasets less than or equal to a page
-                }
-                var dsiStart = start;
-                var dsiEnd = end;
-                if ((start === 0 && end === Number.MAX_VALUE) || dsiStart > ret.data[dsi].data.length) {
-                    // show the last page if we either requested it specifically or are trying to navigate past it
-                    dsiStart = rawReturn.data[dsi].data.length - (rawReturn.data[dsi].data.length % 100);
-                    dsiEnd = rawReturn.data[dsi].data.length;
-                }
-                if (dsiStart < 0) {
-                    // show the first page if we are trying to navigate before it
-                    dsiStart = 0;
-                    dsiEnd = 100;
-                }
-                if (dsiEnd < dsiStart) {
-                    // make sure that the end is after the start
-                    dsiEnd = dsiStart + 100;
-                }
-                if (dsiEnd > ret.data[dsi].data.length) {
-                    // make sure we don't request past the end -- if results are one page, this should convert the
-                    // start and end from 0 and 100 to 0 and whatever the end is.
-                    dsiEnd = ret.data[dsi].data.length;
-                }
-                ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
-            }
-            delete rawReturn;
-            if (direction === 1) {
-                ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
-            } else {
-                ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
-            }
-            ret.dsiTextDirection = direction;
             return ret;
         }
     }
@@ -1445,17 +1492,6 @@ const setNewAxes = new ValidatedMethod({
                 throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
             }
         }
-    }
-});
-
-const getResultDataByPlotType = new ValidatedMethod({
-    name: 'matsMethods.getResultDataByPlotType',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
     }
 });
 

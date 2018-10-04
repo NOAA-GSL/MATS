@@ -14,7 +14,7 @@ import { matsMethods } from 'meteor/randyp:mats-common';
  PlotResult.
  */
 
-var plotResultData = null;
+//var plotResultData = null;
 var graphResult = null;
 var plot;
 
@@ -56,22 +56,35 @@ const sizeof = function(_1){
 };
 
 const getPlotResultData = function() {
-    if (plotResultData === undefined || plotResultData === null) {
-        return [];
+    var pageIndex = Session.get("pageIndex");
+    var newPageIndex = Session.get("newPageIndex");
+    if (plotResultData === undefined || plotResultData === null || pageIndex != newPageIndex) {
+        setPlotResultData();
     }
     return plotResultData;
 }
 
+
 const setPlotResultData = function() {
     var pageIndex = Session.get("pageIndex");
     var newPageIndex = Session.get("newPageIndex");
-    if (plotResultData === null || pageIndex != newPageIndex) {
+
+    if (pageIndex !== undefined && newPageIndex !== undefined && Session.get("plotResultKey") !== undefined && (plotResultData === null || pageIndex != newPageIndex)) {
         showSpinner();
-        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
+        matsMethods.getPlotResult.call({
+            resultKey: Session.get("plotResultKey"),
+            pageIndex: pageIndex,
+            newPageIndex: newPageIndex
+            },  function (error, result) {
             if (error !== undefined) {
                 setError(new Error("matsMethods.getPlotResult failed : error: " + error));
             }
-            plotResultData = result.data;
+            if (result == undefined) {
+                plotResultData = undefined;
+                hideSpinner();
+                return;
+            }
+            plotResultData = result;
             Session.set("pageIndex", result.dsiRealPageIndex );
             Session.set("pageTextDirection", result.dsiTextDirection );
             Session.set('textLoaded', new Date());
