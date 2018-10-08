@@ -2,10 +2,10 @@
  * Created by pierce on 8/31/16.
  */
 
-var  InputTypes = {
-    textInput : 'textInput',
-    select : 'select',
-    numberSpinner : 'numberSpinner',
+var InputTypes = {
+    textInput: 'textInput',
+    select: 'select',
+    numberSpinner: 'numberSpinner',
     dateRange: 'dateRange',
     radioGroup: 'radioGroup',
     checkBoxGroup: 'checkBoxGroup',
@@ -14,21 +14,21 @@ var  InputTypes = {
     element: 'element',
     selectMap: 'selectMap',
     custom: 'custom',
-    unused:"unused",
+    unused: "unused",
     forecastSingleCycle: 'forecasts single cycle',
     forecastMultiCycle: 'forecasts multi cycle'
-    };
+};
 
-var  PlotTypes = {
-    timeSeries : "TimeSeries",
-    profile : "Profile",
-    scatter2d : "Scatter2d",
-    dieoff : "DieOff",
-    threshold : "Threshold",
-    validtime : "ValidTime",
-    dailyModelCycle : "DailyModelCycle",
-    map : "Map",
-    histogram : "Histogram"
+var PlotTypes = {
+    timeSeries: "TimeSeries",
+    profile: "Profile",
+    scatter2d: "Scatter2d",
+    dieoff: "DieOff",
+    threshold: "Threshold",
+    validtime: "ValidTime",
+    dailyModelCycle: "DailyModelCycle",
+    map: "Map",
+    histogram: "Histogram"
 };
 
 var ForecastTypes = {
@@ -37,35 +37,35 @@ var ForecastTypes = {
     singleCycle: "single cycle"
 };
 
-var  PlotFormats = {
+var PlotFormats = {
     none: "none",
     matching: "matching",
     pairwise: "pairwise",
-    absolute:"absolute"
+    absolute: "absolute"
 };
 
-var  PlotActions = {
+var PlotActions = {
     matched: "matched",
     unmatched: "unmatched"
 };
 
-var  BestFits = {
-    none:'none',
-    linear:'linear',
-    linearThroughOrigin:'linearThroughOrigin',
-    exponential:'exponential',
-    logarithmic:'logarithmic',
-    power:'power'
+var BestFits = {
+    none: 'none',
+    linear: 'linear',
+    linearThroughOrigin: 'linearThroughOrigin',
+    exponential: 'exponential',
+    logarithmic: 'logarithmic',
+    power: 'power'
 };
 
-var  MatchFormats = {
+var MatchFormats = {
     none: "none",
     time: "time",
     level: "level",
     site: "site"
 };
 
-var  PlotAxisFilters = {
+var PlotAxisFilters = {
     none: "none",
     level: "level",
     site: "site"
@@ -76,9 +76,27 @@ var PlotView = {
     textSeries: "text",
 };
 
+var ReservedWords = {
+    Zero: "Zero",
+    zero: "zero",
+    ideal0: "ideal0",
+    ideal1: "ideal1",
+    ideal2: "ideal2",
+    ideal3: "ideal3",
+    ideal4: "ideal4",
+    ideal5: "ideal5",
+    ideal6: "ideal6",
+    ideal7: "ideal7",
+    ideal8: "ideal8",
+    ideal9: "ideal9"
+};
+
 var Messages = {
     NO_DATA_FOUND: "INFO:0 data records found"
 };
+
+//hide non-timeseries selectors at startup
+var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'bin-number', 'bin-bounds'];
 
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.
@@ -89,30 +107,30 @@ of table names. The internal list can be appended. The getRecords returns the in
 class MetaDataDBRecord {
     constructor(poolName, dbName, tables) {
         if (!typeof poolName === "string") {
-            throw new Error ("MetaDataDBRecord.constructor : poolName is not a string");
+            throw new Error("MetaDataDBRecord.constructor : poolName is not a string");
         }
         if (!typeof dbName === "string") {
-            throw new Error ("MetaDataDBRecord.constructor : dbName is not a string");
+            throw new Error("MetaDataDBRecord.constructor : dbName is not a string");
         }
-        if (! tables instanceof Array) {
-            throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
+        if (!tables instanceof Array) {
+            throw new Error("MetaDataDBRecord.constructor : tables is not an array");
         }
         this._records = [];
-        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        var record = {'pool': poolName, 'name': dbName, 'tables': tables};
         this._records.push(record);
     }
 
     addRecord(poolName, dbName, tables) {
         if (!typeof poolName === "string") {
-            throw new Error ("MetaDataDBRecord.constructor : poolName is not a string");
+            throw new Error("MetaDataDBRecord.constructor : poolName is not a string");
         }
         if (!typeof dbName === "string") {
-            throw new Error ("MetaDataDBRecord.constructor : dbName is not a string");
+            throw new Error("MetaDataDBRecord.constructor : dbName is not a string");
         }
-        if (! tables instanceof Array) {
-            throw new Error ("MetaDataDBRecord.constructor : tables is not an array");
+        if (!tables instanceof Array) {
+            throw new Error("MetaDataDBRecord.constructor : tables is not an array");
         }
-        var record = {'pool':poolName, 'name':dbName, 'tables':tables};
+        var record = {'pool': poolName, 'name': dbName, 'tables': tables};
         this._records.push(record);
     }
 
@@ -122,16 +140,18 @@ class MetaDataDBRecord {
 }
 
 export default matsTypes = {
-    InputTypes:InputTypes,
-    PlotTypes:PlotTypes,
-    PlotFormats:PlotFormats,
-    PlotActions:PlotActions,
-    BestFits:BestFits,
-    MatchFormats:MatchFormats,
-    PlotAxisFilters:PlotAxisFilters,
-    PlotView:PlotView,
-    Messages:Messages,
-    ForecastTypes:ForecastTypes,
-    MetaDataDBRecord:MetaDataDBRecord
+    InputTypes: InputTypes,
+    PlotTypes: PlotTypes,
+    PlotFormats: PlotFormats,
+    PlotActions: PlotActions,
+    BestFits: BestFits,
+    MatchFormats: MatchFormats,
+    PlotAxisFilters: PlotAxisFilters,
+    PlotView: PlotView,
+    Messages: Messages,
+    ForecastTypes: ForecastTypes,
+    ReservedWords: ReservedWords,
+    selectorsToHide: selectorsToHide,
+    MetaDataDBRecord: MetaDataDBRecord
 }
 

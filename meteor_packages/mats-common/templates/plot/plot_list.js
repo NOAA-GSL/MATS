@@ -379,4 +379,11 @@ Template.plotList.events({
 Template.plotList.onRendered( function() {
     //console.log('doing client matsParamUtils.setAllParamsToDefault ');
     matsParamUtils.setAllParamsToDefault();
+    var elem;
+    for (var sidx = 0; sidx < matsTypes.selectorsToHide.length; sidx++) {
+        elem = document.getElementById(matsTypes.selectorsToHide[sidx] + '-item');
+        if (elem && elem.style) {
+            elem.style.display = 'none';
+        }
+    }
 });

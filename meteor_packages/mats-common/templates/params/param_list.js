@@ -278,51 +278,12 @@ Template.paramList.events({
 Template.paramList.onRendered(function () {
     Session.set('displayPriority', 1);
     Session.set('editMode', '');
-    //hide dieoff-forecast-length selector for anything that isn't a dieoff curve
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dieoff) {
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-    } else {
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-    }
-
-    //hide utc-cycle-start selector for anything that isn't a dailyModelCycle curve
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.dailyModelCycle) {
-        elem = document.getElementById('valid-time-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-        elem = document.getElementById('utc-cycle-start-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-    } else {
-        elem = document.getElementById('valid-time-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('utc-cycle-start-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
-        }
-    }
 
     //hide sites and sitesMap selectors for anything that isn't a map plot or wfip2
+    var elem;
     var ptype = matsPlotUtils.getPlotType();
     elem = document.getElementById('sites-item');
+    var sitesParamHidden;
     if (elem && elem.style) {
         sitesParamHidden = matsCollections.CurveParams.findOne({name: 'sites'}).hiddenForPlotTypes;
         if (sitesParamHidden) {

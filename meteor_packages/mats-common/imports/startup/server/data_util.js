@@ -455,7 +455,7 @@ const get_err = function (sVals, sSecs) {
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
-const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
+const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, zeroPivot) {
 
     var binStats = {};
 
@@ -470,7 +470,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
     const fullRange = 6 * glob_sd;
     const binInterval = fullRange / (binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
 
-    //store an array of the upper and lower bounding values for each bin.
+    // store an array of the upper and lower bounding values for each bin.
     var binUpBounds = [];
     var binLowBounds = [];
     var binMeans = [];
@@ -486,6 +486,22 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
     binLowBounds[binNum - 1] = fullUpBound;
     binMeans[binNum - 1] = fullUpBound + binInterval / 2;
 
+    if (zeroPivot) {
+        // need to shift the bounds and means over so that one of the bounds is on zero
+        var closestBoundToZero = binLowBounds.reduce(function (prev, curr) {
+            return (Math.abs(curr) < Math.abs(prev) ? curr : prev);
+        });
+        binUpBounds[0] = binUpBounds[0] - closestBoundToZero;
+        binMeans[0] = binMeans[0] - closestBoundToZero;
+        for (b_idx = 1; b_idx < binNum - 1; b_idx++) {
+            binUpBounds[b_idx] = binUpBounds[b_idx] - closestBoundToZero;
+            binLowBounds[b_idx] = binLowBounds[b_idx] - closestBoundToZero;
+            binMeans[b_idx] = binMeans[b_idx] - closestBoundToZero;
+        }
+        binLowBounds[binNum - 1] = binLowBounds[binNum - 1] - closestBoundToZero;
+        binMeans[binNum - 1] = binMeans[binNum - 1] - closestBoundToZero;
+    }
+
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;
@@ -494,6 +510,69 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum) {
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         lowSdFromMean = (binLowBounds[b_idx]).toFixed(1);
         upSdFromMean = (binUpBounds[b_idx]).toFixed(1);
+        if (b_idx === 0) {
+            binLabels[b_idx] = "< " + upSdFromMean;
+        } else if (b_idx === binNum - 1) {
+            binLabels[b_idx] = "> " + lowSdFromMean;
+        } else {
+            binLabels[b_idx] = lowSdFromMean + "-" + upSdFromMean;
+        }
+    }
+
+    binStats['glob_mean'] = glob_mean;
+    binStats['glob_sd'] = glob_sd;
+    binStats['binUpBounds'] = binUpBounds;
+    binStats['binLowBounds'] = binLowBounds;
+    binStats['binMeans'] = binMeans;
+    binStats['binLabels'] = binLabels;
+
+    return {'binStats': binStats};
+};
+
+// utility that takes an array of user-defined bin bounds and produces a data structure containing bin information for histogram plotting
+const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, manualBinBounds) {
+
+    var binStats = {};
+
+    // calculate the global stats across all of the data
+    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const glob_mean = globalStats.d_mean;
+    const glob_sd = globalStats.sd;
+
+    // make sure the user-defined bins are in order from least to greatest
+    manualBinBounds = manualBinBounds.sort(function (a, b) {
+        return Number(a) - Number(b);
+    });
+
+
+    // store an array of the upper and lower bounding values for each bin.
+    var binUpBounds = [];
+    var binLowBounds = [];
+    var binMeans = [];
+    var binIntervalSum = 0;
+    for (var b_idx = 1; b_idx < binNum - 1; b_idx++) {
+        binUpBounds[b_idx] = manualBinBounds[b_idx];
+        binLowBounds[b_idx] = manualBinBounds[b_idx - 1];
+        binMeans[b_idx] = (binUpBounds[b_idx] + binLowBounds[b_idx]) / 2;
+        binIntervalSum = binIntervalSum + (binUpBounds[b_idx] - binLowBounds[b_idx]);
+    }
+    const binIntervalAverage = binIntervalSum / (binNum - 2);
+    binUpBounds[0] = binLowBounds[1];
+    binLowBounds[0] = -1 * Number.MAX_VALUE; // the first bin should have everything too small to fit into the other bins, so make its lower bound -1 * the max number value
+    binMeans[0] = binLowBounds[1] - binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
+    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
+    binLowBounds[binNum - 1] = binUpBounds[binNum - 2];
+    binMeans[binNum - 1] = binUpBounds[binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
+
+
+    // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
+    var binLabels = [];
+    var lowSdFromMean;
+    var upSdFromMean;
+
+    for (b_idx = 0; b_idx < binNum; b_idx++) {
+        lowSdFromMean = (binLowBounds[b_idx]).toFixed(2);
+        upSdFromMean = (binUpBounds[b_idx]).toFixed(2);
         if (b_idx === 0) {
             binLabels[b_idx] = "< " + upSdFromMean;
         } else if (b_idx === binNum - 1) {
@@ -633,6 +712,7 @@ export default matsDataUtils = {
     get_err: get_err,
     getPlotParamsFromStack: getPlotParamsFromStack,
     calculateHistogramBins: calculateHistogramBins,
+    prescribeHistogramBins: prescribeHistogramBins,
     sortHistogramBins: sortHistogramBins,
     sortFunction: sortFunction,
 

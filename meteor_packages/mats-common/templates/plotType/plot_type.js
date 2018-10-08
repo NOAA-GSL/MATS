@@ -433,6 +433,9 @@ Template.plotType.events({
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
+                    if (!curves[ci]['histogram-bin-controls'] && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}) && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default) {
+                        curves[ci]['histogram-bin-controls'] = matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }

@@ -28,7 +28,62 @@ dataHistogram = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    const binNum = 12;
+
+    // process user bin customizations
+    var binType = plotParams['histogram-bin-controls'];
+    var binNum = 12;    // default bin number
+    var zeroPivot = false;      // default is not to shift the bins over to 0
+    var binBounds = []; // default is no specified bin bounds -- our algorithm will figure them out if this array stays empty
+
+    switch (binType) {
+        case "Set number of bins":
+            // get the user's chosen number of bins
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            break;
+
+        case "Make zero a bin bound":
+            // let the histogram routine know that we want the bins shifted over to zero
+            zeroPivot = true;
+            break;
+
+        case "Set number of bins and make zero a bin bound":
+            // get the user's chosen number of bins and let the histogram routine know that we want the bins shifted over to zero
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            zeroPivot = true;
+            break;
+
+        case "Manual bins":
+            // try to parse whatever we've been given for bin bounds. Throw an error if they didn't follow directions to enter a comma-separated list of numbers.
+            try {
+                binBounds = plotParams['bin-bounds'].split(",").map(function (item) {
+                    item.trim();
+                    item = Number(item);
+                    if (!isNaN(item)) {
+                        return item
+                    } else {
+                        throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
+                    }
+                });
+                binNum = binBounds.length + 1; // add 1 because these are inner bin bounds
+            } catch (e) {
+                throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
+            }
+            // make sure that we've been given at least two good bin bounds (enough to make one bin).
+            if (binNum < 3) {
+                throw new Error("Error parsing bin bounds: please enter at least two numbers delimited by commas.");
+            }
+            break;
+
+        case "Default bins":
+        default:
+            break;
+    }
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -136,7 +191,12 @@ dataHistogram = function (plotParams, plotFunction) {
     // flatten all the returned data into one stats array and one secs array in order to calculate histogram bins over the whole range.
     const curveSubStats = [].concat.apply([], allReturnedSubStats);
     const curveSubSecs = [].concat.apply([], allReturnedSubSecs);
-    const binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum).binStats;
+    var binStats;
+    if (binBounds.length === 0) {
+        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum, zeroPivot).binStats;
+    } else {
+        binStats = matsDataUtils.prescribeHistogramBins(curveSubStats, curveSubSecs, binNum, binBounds).binStats;
+    }
 
     // store bin labels and x-axis positions of those labels for later when we set up the plot options
     var plotBins = [];
@@ -253,12 +313,7 @@ dataHistogram = function (plotParams, plotFunction) {
             values.push(data[di][1]);
             bins.push(data[di][0]);
 
-            // remove sub_values and sub_secs
-            data[di][3] = [];
-            data[di][4] = [];
-            data[di][5] = [];
-
-            // // this is the tooltip, it is the last element of each dataseries element
+            // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +
                 "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
                 "<br> " + "number in bin for this curve: " + (data[di][1] === null ? null : data[di][1]) +
@@ -289,7 +344,7 @@ dataHistogram = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

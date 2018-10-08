@@ -22,16 +22,16 @@ const getPointSymbol = function (curveIndex) {
 };
 
 // adds a horizontal black line along a specific y value
-const getHorizontalValueLine = function(xmax,xmin,yValue) {
+const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
 
     const valueLine = {
         "yaxis": 1,
-        "label": yValue.toString(),
+        "label": cLabel,
         "annotation": "",
         "color": "rgb(0,0,0)",
         "data": [
-            [xmin, yValue, yValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, yValue.toString()],
-            [xmax, yValue, yValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, yValue.toString()]
+            [xmin, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()],
+            [xmax, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()]
         ],
         "points": {
             "show": false,
@@ -67,16 +67,16 @@ const getHorizontalValueLine = function(xmax,xmin,yValue) {
 };
 
 // adds a vertical black line along a specific x value
-const getVerticalValueLine = function(ymax,ymin,xValue) {
+const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
 
     const valueLine = {
         "yaxis": 1,
-        "label": xValue.toString(),
+        "label": cLabel,
         "color": "rgb(0,0,0)",
         "annotation": "",
         "data": [
-            [xValue, -ymax, xValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, xValue.toString()],
-            [xValue, -ymin, xValue, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, xValue.toString()]
+            [xValue, -ymax, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()],
+            [xValue, -ymin, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()]
         ],
         "points": {
             "show": false,

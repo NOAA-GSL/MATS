@@ -16,7 +16,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
+        const axisPrecision = axisKey === 'Ratio' ? 4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -249,7 +249,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
+        const axisPrecision = axisKey === 'Ratio' ? 4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -353,7 +353,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
+        const axisPrecision = axisKey === 'Ratio' ? 4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -461,7 +461,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const axisPrecision = axisKey === 'Ratio' ?  4 : 2;
+        const axisPrecision = axisKey === 'Ratio' ? 4 : 2;
         const yPad = (ymax - ymin) * 0.05;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
@@ -501,7 +501,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         }],
         xaxis: {
             zoomRange: [0.1, null],
-            ticks: [[0,"0"],[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"],[8,"8"],[9,"9"],[10,"10"],[11,"11"],[12,"12"],[13,"13"],[14,"14"],[15,"15"],[16,"16"],[17,"17"],[18,"18"],[19,"19"],[20,"20"],[21,"21"],[22,"22"],[23,"23"],[24,"24"]],
+            ticks: [[0, "0"], [1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"], [7, "7"], [8, "8"], [9, "9"], [10, "10"], [11, "11"], [12, "12"], [13, "13"], [14, "14"], [15, "15"], [16, "16"], [17, "17"], [18, "18"], [19, "19"], [20, "20"], [21, "21"], [22, "22"], [23, "23"], [24, "24"]],
             mode: 'xy',
             font: {size: 18}
         },
@@ -591,6 +591,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
     var yaxes = [];
     var yaxis = [];
     var axisLabel;
+    var binWidth = 0;
     for (var dsi = 0; dsi < dataset.length; dsi++) {
         if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
             continue;
@@ -602,8 +603,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         var xmin = curves[dsi].xmin;
         var xmax = curves[dsi].xmax;
         axisLabel = axisMap[axisKey].axisLabel;
+        binWidth = ((xmax - xmin) / binNum) > binWidth ? ((xmax - xmin) / binNum) : binWidth;
         const yPad = (ymax - ymin) * 0.05;
-        var binWidth = (xmax - xmin) / binNum;
         const position = dsi === 0 ? "left" : "right";
         const yaxesOptions = {
             position: position,
@@ -626,6 +627,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         yaxes.push(yaxesOptions);
         yaxis.push(yaxisOptions);
     }
+    var xPad = binWidth * 0.55;
     const options = {
         axisLabels: {
             show: true
@@ -637,8 +639,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             axisLabelFontSizePixels: 22,
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 20,
-            min: xmin,
-            max: xmax
+            min: xmin - xPad,
+            max: xmax + xPad,
         }],
         xaxis: {
             zoomRange: [0.1, null],
