@@ -427,7 +427,7 @@ Template.graph.events({
         Session.set('graphViewMode', matsTypes.PlotView.text);
         Session.set("pageIndex", 0);
         Session.set("newPageIndex", 1);
-        matsCurveUtils.setPlotResultData();
+        Session.set('textRefreshNeeded', true);
     },
     'click .export': function () {
 
@@ -457,7 +457,7 @@ Template.graph.events({
         if (!Number.isNaN(pageIndex)) {
             Session.set("pageIndex", 0);
             Session.set("newPageIndex", 1);
-            matsCurveUtils.setPlotResultData();
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .previousTenPageButton': function () {
@@ -468,13 +468,11 @@ Template.graph.events({
             // if the navigation direction is changing, you have to increment the page index an additional time,
             // or you just move to the other end of the current page, and nothing appears to change.
             if (pageTextDirection !== undefined && pageTextDirection === -1) {
-                Session.set("pageIndex", pageIndex - 9);
                 Session.set("newPageIndex", pageIndex - 10);
             } else {
-                Session.set("pageIndex", pageIndex - 10);
                 Session.set("newPageIndex", pageIndex - 11);
             }
-            matsCurveUtils.setPlotResultData();
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .previousPageButton': function () {
@@ -487,10 +485,9 @@ Template.graph.events({
             if (pageTextDirection !== undefined && pageTextDirection === -1) {
                 Session.set("newPageIndex", pageIndex - 1);
             } else {
-                Session.set("pageIndex", pageIndex - 1);
                 Session.set("newPageIndex", pageIndex - 2);
             }
-            matsCurveUtils.setPlotResultData();
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .nextPageButton': function () {
@@ -503,10 +500,9 @@ Template.graph.events({
             if (pageTextDirection !== undefined && pageTextDirection === 1) {
                 Session.set("newPageIndex", pageIndex + 1);
             } else {
-                Session.set("pageIndex", pageIndex + 1);
                 Session.set("newPageIndex", pageIndex + 2);
             }
-            matsCurveUtils.setPlotResultData();
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .nextTenPageButton': function () {
@@ -517,21 +513,19 @@ Template.graph.events({
             // if the navigation direction is changing, you have to increment the page index an additional time,
             // or you just move to the other end of the current page, and nothing appears to change.
             if (pageTextDirection !== undefined && pageTextDirection === 1) {
-                Session.set("pageIndex", pageIndex + 9);
                 Session.set("newPageIndex", pageIndex + 10);
             } else {
-                Session.set("pageIndex", pageIndex + 10);
                 Session.set("newPageIndex", pageIndex + 11);
             }
-            matsCurveUtils.setPlotResultData();
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .lastPageButton': function () {
         var pageIndex = Session.get("pageIndex");
         // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
         if (!Number.isNaN(pageIndex)) {
-            Session.set("newPageIndex", -1000);
-            matsCurveUtils.setPlotResultData();
+            Session.set("newPageIndex", -2000);
+            Session.set('textRefreshNeeded', true);
         }
     },
     'click .replotZoomButton': function () {

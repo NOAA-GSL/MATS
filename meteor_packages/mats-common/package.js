@@ -18,7 +18,8 @@ Package.onUse(function (api) {
         "babel-runtime": "6.26.0",
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
-        "jquery-ui": "1.12.1"
+        "jquery-ui": "1.12.1",
+        "csv-stringify": "4.3.1"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
@@ -52,6 +53,7 @@ Package.onUse(function (api) {
     api.use("bevanhunt:leaflet");
     api.use("ostrio:flow-router-extra");
     api.use("randyp:flot");
+    api.use("meteorhacks:picker");
 
     // modules
     api.export("matsCollections", ['client', 'server']);
@@ -174,39 +176,12 @@ Package.onUse(function (api) {
     api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_histogram.js", "client");
 
-    api.addFiles("templates/graph/text_profile_output.html", "client");
-    api.addFiles("templates/graph/text_profile_output.js", "client");
 
     api.addFiles("templates/common/text_input.html", "client");
     api.addFiles("templates/common/text_input.js", "client");
 
-
     api.addFiles("templates/graph/text_output.html", "client");
     api.addFiles("templates/graph/text_output.js", "client");
-
-    api.addFiles("templates/graph/text_series_output.html", "client");
-    api.addFiles("templates/graph/text_series_output.js", "client");
-
-    api.addFiles("templates/graph/text_dieoff_output.html", "client");
-    api.addFiles("templates/graph/text_dieoff_output.js", "client");
-
-    api.addFiles("templates/graph/text_threshold_output.html", "client");
-    api.addFiles("templates/graph/text_threshold_output.js", "client");
-
-    api.addFiles("templates/graph/text_validtime_output.html", "client");
-    api.addFiles("templates/graph/text_validtime_output.js", "client");
-
-    api.addFiles("templates/graph/text_daily_model_cycle_output.html", "client");
-    api.addFiles("templates/graph/text_daily_model_cycle_output.js", "client");
-
-    api.addFiles("templates/graph/text_scatter2d_output.html", "client");
-    api.addFiles("templates/graph/text_scatter2d_output.js", "client");
-
-    api.addFiles("templates/graph/text_map_output.html", "client");
-    api.addFiles("templates/graph/text_map_output.js", "client");
-
-    api.addFiles("templates/graph/text_histogram_output.html", "client");
-    api.addFiles("templates/graph/text_histogram_output.js", "client");
 
     api.addFiles("templates/common/select.html", "client");
     api.addFiles("templates/common/select.js", "client");

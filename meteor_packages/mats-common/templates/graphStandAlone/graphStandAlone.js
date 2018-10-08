@@ -107,7 +107,8 @@ Template.GraphStandAlone.helpers({
                         }
                         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
                         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-                        matsCurveUtils.hideSpinner();
+                        document.getElementById("gsaSpinner").style.display="none";
+
                     });
                 }
             }
@@ -266,6 +267,14 @@ Template.GraphStandAlone.helpers({
     },
     matsplotFilemname: function() {
         return "matsplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
+    },
+    image: function () {
+        var img = Session.get("spinner_img");
+        if (img == undefined) {
+            img = "spinner.gif";
+            Session.set("spinner_img", "../../../../../image/spinner.gif");
+        }
+        return img;
     }
 });
 

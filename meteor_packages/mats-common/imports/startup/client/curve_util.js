@@ -58,7 +58,7 @@ const sizeof = function (_1) {
 const getPlotResultData = function () {
     var pageIndex = Session.get("pageIndex");
     var newPageIndex = Session.get("newPageIndex");
-    if (plotResultData === undefined || plotResultData === null || pageIndex != newPageIndex) {
+    if (plotResultData === undefined || plotResultData === null || Session.get('textRefreshNeeded') === true) {
         setPlotResultData();
     }
     return plotResultData;
@@ -69,14 +69,16 @@ const setPlotResultData = function () {
     var pageIndex = Session.get("pageIndex");
     var newPageIndex = Session.get("newPageIndex");
 
-    if (pageIndex !== undefined && newPageIndex !== undefined && Session.get("plotResultKey") !== undefined && (plotResultData === null || pageIndex != newPageIndex)) {
+    if (Session.get('textRefreshNeeded') === true) {
         showSpinner();
         matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
             if (error !== undefined) {
                 setError(new Error("matsMethods.getPlotResult failed : error: " + error));
+                Session.set('textRefreshNeeded', false);
             }
             if (result == undefined) {
                 plotResultData = undefined;
+                Session.set('textRefreshNeeded', false);
                 hideSpinner();
                 return;
             }
@@ -85,7 +87,7 @@ const setPlotResultData = function () {
             Session.set("pageTextDirection", result.dsiTextDirection);
             Session.set('textLoaded', new Date());
             console.log("size of plotResultData is ", sizeof(plotResultData));
-            // have to put the hide in the callback
+            Session.set('textRefreshNeeded', false);
             hideSpinner();
         });
     }
@@ -991,7 +993,7 @@ export default matsCurveUtils = {
     showHistogramFace: showHistogramFace,
     get_err: get_err,
     getPlotResultData: getPlotResultData,
-    setPlotResultData: setPlotResultData,
+    //setPlotResultData: setPlotResultData,
     resetPlotResultData: resetPlotResultData,
     getGraphResult: getGraphResult,
     setGraphResult: setGraphResult,

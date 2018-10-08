@@ -5,23 +5,115 @@ import {SimpleSchema} from 'meteor/aldeed:simple-schema';
 import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
-import {Mongo} from 'meteor/mongo'
-
+import {Mongo} from 'meteor/mongo';
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
+
+// define a middleware for getCSV route
+var getCSV = function (params, req, res, next) {
+    console.log('Getting data for: ',params.key);
+    var stringify = require('csv-stringify');
+    var csv = "";
+    try {
+        var result = getFlattenedResultData(params.key,0,-1000);
+        var statArray = Object.values(result.stats);
+        var dataArray = Object.values(result.data);
+        var statResultArray = []
+        var dataResultArray = [];
+        for (var si=0; si < statArray.length; si++) {
+            statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
+            statResultArray.push(Object.values(statArray[si])); // push the stats for this curve
+        }
+
+        for (var di=0; di < dataArray.length; di++) {
+            var dataSubArray = Object.values(dataArray[di]);
+            var dataHeader = Object.keys(dataSubArray[0]);
+            dataHeader[0] = 'label';
+            dataResultArray.push(dataHeader); // push this curve data header (keys)
+            for (var dsi =0; dsi < dataSubArray.length; dsi++) {  // push this curves data
+                dataResultArray.push([Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0]].concat(Object.values(dataSubArray[dsi])));
+            }
+        }
+
+        res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
+        res.setHeader( 'Content-Type', 'attachment.ContentType' );
+        stringify(statResultArray,{header: true}, function(err, output) {
+            if (err) {
+                console.log ("error in getCSV:", err);
+                res.write("error," + err.toLocaleString());
+                res.end();
+                return;
+            }
+            res.write(output);
+            stringify(dataResultArray,{header: true}, function(err, output) {
+                if (err) {
+                    console.log ("error in getCSV:", err);
+                    res.write("error," + err.toLocaleString());
+                    res.end()
+                    return;
+                }
+                res.write(output);
+                res.end();
+            });
+            delete result;
+            delete statResultArray;
+            delete dataResultArray;
+        });
+    } catch (e) {
+        console.log ('error retrieving data: ',e);
+        csv = "error," + e.toLocaleString();
+        res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
+        res.setHeader( 'Content-Type', 'attachment.ContentType' );
+        res.end(csv);
+    }
+}
+
+// define a middleware for getJSON route
+var getJSON = function (params, req, res, next) {
+    var flatJSON = "";
+    try {
+        var result = getFlattenedResultData(params.key, 0, -1000);
+        flatJSON = JSON.stringify(result);
+    } catch (e) {
+        console.log('error retrieving data: ', e);
+        flatJSON = JSON.stringify({error: e});
+        delete flatJSON.dsiRealPageIndex;
+        delete flatJSON.dsiTextDirection;
+    }
+    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
+    res.setHeader('Content-Type', 'attachment.ContentType');
+    res.end(flatJSON);
+    delete flatJSON;
+    delete result;
+}
 
 // local collection used to store new axis ranges when opening pop out graphs
 const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");
 const Results = new Mongo.Collection("Results");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
+    // add indexes to result and axescollections
     Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
+
+    // define some server side routes
+    Picker.route('/getCSV/:key', function(params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
+    });
+
+    Picker.route('/CSV/:f/:key/:m/:a', function(params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
+    });
+
+    Picker.route('/getJSON/:key', function(params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
+    });
 }
 
-
 // private method for getting pagenated data
+// a newPageIndex of -1000 means get all the data (used for export)
+// a newPageIndex of -2000 means get just the last page
 const getPagenatedData = function(rky, p, np) {
     if (Meteor.isServer) {
         var key = rky;
@@ -53,8 +145,10 @@ const getPagenatedData = function(rky, p, np) {
             start = 0;
             end = Number.MAX_VALUE;
             direction = -1;
-        } else {
-            if (myPageIndex <= newPageIndex) {
+        } else if (newPageIndex === -2000) {
+              // just the last page
+              start = -2000;
+            } else if (myPageIndex <= newPageIndex) {
                 start = myPageIndex * 100;
                 end = newPageIndex * 100;
             } else {
@@ -62,16 +156,16 @@ const getPagenatedData = function(rky, p, np) {
                 start = newPageIndex * 100;
                 end = myPageIndex * 100;
             }
-        }
+
         var dsiStart = start;
         var dsiEnd = end;
         for (var dsi = 0; dsi < ret.data.length; dsi++) {
             if (ret.data[dsi].data.length <= 100) {
-                continue; // don't bother pagenating datasets less than or equal to a page
+                continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
-            if ((start === 0 && end === Number.MAX_VALUE) || dsiStart > ret.data[dsi].data.length) {
+            if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
-                dsiStart = rawReturn.data[dsi].data.length - (rawReturn.data[dsi].data.length % 100);
+                dsiStart =  Math.floor(rawReturn.data[dsi].data.length/100) * 100;
                 dsiEnd = rawReturn.data[dsi].data.length;
             }
             if (dsiStart < 0) {
@@ -148,8 +242,10 @@ const getFlattenedResultData = function (rk, p, np) {
                     }
                      */
                     for (var ci = 0; ci < data.length; ci++) {
-                        if (data[ci].label === "0") {
-                            continue; // don't do the zero or max curves
+                        // if the curve label is a reserved word do not process the curve (its a zero or max curve)
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
