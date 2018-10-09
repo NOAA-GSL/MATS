@@ -28,3 +28,6 @@ practicalmeteor:mocha
 dynamic-import@0.4.2
 practicalmeteor:chai
 underscore
+kadira:blaze-layout
+ostrio:flow-router-extra
+meteorhacks:picker

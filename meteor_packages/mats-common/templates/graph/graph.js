@@ -1,30 +1,34 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsMethods} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
-import {matsCurveUtils} from 'meteor/randyp:mats-common';
-import domtoimage from 'dom-to-image';
+import {
+    matsCollections,
+    matsCurveUtils,
+    matsGraphUtils,
+    matsMethods,
+    matsParamUtils,
+    matsPlotUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
 
-var width = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    if (vpw < 400) {
-        return (.9 * vpw).toString() + "px";
-    } else {
-        return (.8 * vpw).toString() + "px";
-    }
-};
-var height = function () {
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    if (vph < 400) {
-        return (.8 * vph).toString() + "px";
-    } else {
-        return (.6 * vph).toString() + "px";
-    }
-};
+var pageIndex = 0;
+var annotation = "";
+var errorTypes = {};
 
-Template.graph.onRendered(function() {
+var yAxisLength = 0;
+var yAxisTranslate = {};
+var yAxisNumber = 0;
+var yidx;
+
+var originalXaxisLabel = "";
+var originalXaxisMin = "";
+var originalXaxisMax = "";
+var originalYaxisLabels = [];
+var originalYaxisMins = [];
+var originalYaxisMaxs = [];
+
+var openWindows = [];
+
+Template.graph.onRendered(function () {
     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "none";
     }
@@ -32,238 +36,121 @@ Template.graph.onRendered(function() {
 
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        //console.log ("graph resizng now");
-        switch (Session.get('graphViewMode')) {
-            case matsTypes.PlotView.graph:
-                //console.log($(window).height());
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "none";
-                document.getElementById("textButton").style.display = "block";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "block";
-                document.getElementById("graphView").style.display = "block";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "block";
-                document.getElementById('axisLimitButton').style.display = "block";
-                break;
-            case matsTypes.PlotView.textSeries:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "block";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textProfile:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "block";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textDieoff:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "block";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textThreshold:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "block";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textDailyModelCycle:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textMap:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "block";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textHistogram:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "block";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            case matsTypes.PlotView.textScatter:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "block";
-                document.getElementById("textButton").style.display = "none";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "none";
-                document.getElementById("graphView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "none";
-                document.getElementById('axisLimitButton').style.display = "none";
-                break;
-            default:
-                document.getElementById('placeholder').style.width = width();
-                document.getElementById('placeholder').style.heigth = height();
-                document.getElementById("plotButton").style.display = "none";
-                document.getElementById("textButton").style.display = "block";
-                document.getElementById("plot-buttons-grp").style.display = "block";
-                document.getElementById("curves").style.display = "block";
-                document.getElementById("graphView").style.display = "block";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                document.getElementById('graph-touch-controls').style.display = "block";
-                document.getElementById('axisLimitButton').style.display = "block";
+        if (Session.get('graphViewMode') === matsTypes.PlotView.graph) {
+            matsGraphUtils.setGraphView();
+        } else {
+            matsGraphUtils.setTextView();
         }
     });
 
-
-    $(document).keyup(function(event) {
+    $(document).keyup(function (event) {
         if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
             document.getElementById('graph-control').style.display = 'block';
             document.getElementById('showAdministration').style.display = 'block';
             document.getElementById('navbar').style.display = 'block';
             document.getElementById('footnav').style.display = 'block';
             var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-            for (var i=0; i < ctbgElems.length; i++){
+            for (var i = 0; i < ctbgElems.length; i++) {
                 ctbgElems[i].style.display = 'block';
             }
             document.getElementById('plotType').style.display = 'block';
             Session.set("printMode", false);
         }
     });
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
-        document.getElementById('graph-touch-controls').style.display = "none";
-        document.getElementById('axisLimitButton').style.display = "none";
-    }
 });
-
 
 Template.graph.helpers({
     /**
      * @return {string}
      * @return {string}
      */
+    graphFunction: function () {
+        // causes graph display routine to be processed
+        Session.get('PlotResultsUpDated');
+        var graphFunction = Session.get('graphFunction');
+        if (graphFunction) {
+            eval(graphFunction)(Session.get('plotResultKey'));
+            var plotType = Session.get('plotType');
+            var dataset = matsCurveUtils.getGraphResult().data;
+            var options = matsCurveUtils.getGraphResult().options;
+            if (dataset === undefined) {
+                return false;
+            }
+            if (plotType !== matsTypes.PlotTypes.map) {
+                // append annotations and get errorbar types
+                annotation = "";
+                for (var i = 0; i < dataset.length; i++) {
+                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
+                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
+                    }
+                    errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
+                }
+
+                // figure out how many y axes there are
+                yAxisLength = 0;
+                yAxisTranslate = {};
+                yAxisNumber = 0;
+                var currentAxisKey;
+                var axisKeys = [];
+                yAxisLength = options.yaxes.length;
+                for (yidx = 0; yidx < yAxisLength; yidx++) {
+                    currentAxisKey = options.yaxes[yidx].axisLabel;
+                    if (axisKeys.indexOf(currentAxisKey) === -1) {
+                        axisKeys.push(currentAxisKey);
+                        yAxisNumber++;
+                    }
+                    yAxisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
+                }
+
+                originalXaxisLabel = "";
+                originalXaxisMin = "";
+                originalXaxisMax = "";
+                originalYaxisLabels = [];
+                originalYaxisMins = [];
+                originalYaxisMaxs = [];
+                // store information about the axes, for use when redrawing the plot
+                if (options.xaxes && options.xaxes[0]) {
+                    originalXaxisLabel = options.xaxes[0].axisLabel;
+                    originalXaxisMin = options.xaxes[0].min;
+                    originalXaxisMax = options.xaxes[0].max;
+                }
+                for (yidx = 0; yidx < yAxisLength; yidx++) {
+                    if (options.yaxes && options.yaxes[yidx]) {
+                        originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
+                        originalYaxisMins[yidx] = options.yaxes[yidx].min;
+                        originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
+                    }
+                }
+
+                // selection zooming
+                var zooming = false;
+                $("#placeholder").bind("plotselected", function (event, ranges) {
+                    zooming = true;
+                    event.preventDefault();
+                    $("#placeholder").data().plot.getOptions().selection.mode = 'xy';
+                    $("#placeholder").data().plot.getOptions().pan.interactive = false;
+                    $("#placeholder").data().plot.getOptions().zoom.interactive = false;
+                    $("#placeholder").data().plot = matsGraphUtils.drawGraph(ranges, dataset, options, $("#placeholder"));
+                    zooming = false;
+                });
+                $("#placeholder").bind('plotclick', function (event, pos, item) {
+                    if (zooming) {
+                        zooming = false;
+                        return;
+                    }
+                    if (item && item.series.data[item.dataIndex][3]) {
+                        Session.set("data", item.series.data[item.dataIndex][3]);
+                        $("#dataModal").modal('show');
+                    }
+                });
+                // draw the plot for the first time
+                $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+                $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+            }
+            matsCurveUtils.hideSpinner();
+        }
+        return graphFunction;
+    },
     Title: function () {
         if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
             return "";
@@ -272,16 +159,16 @@ Template.graph.helpers({
         }
     },
     width: function () {
-        return width();
+        return matsGraphUtils.width();
     },
     height: function () {
-        return height();
+        return matsGraphUtils.height();
     },
     curves: function () {
         return Session.get('Curves');
     },
     plotName: function () {
-        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map ? "" :  Session.get('PlotParams').plotAction.toUpperCase();
+        return (Session.get('PlotParams') === [] || Session.get('PlotParams').plotAction === undefined) || Session.get('plotType') === matsTypes.PlotTypes.map ? "" : Session.get('PlotParams').plotAction.toUpperCase();
     },
     curveText: function () {
         if (this.diffFrom === undefined) {
@@ -295,17 +182,16 @@ Template.graph.helpers({
                 }
                 plotType = Session.get('plotType');
             }
-            if (this.region) {
-                this.regionName = this.region.split(' ')[0];
-            }
             return matsPlotUtils.getCurveText(plotType, this);
         } else {
             return this.label + ":  Difference";
         }
     },
-    confidenceDisplay: function() {
-        if (Session.get('plotType') === matsTypes.PlotTypes.profile) {
+    confidenceDisplay: function () {
+        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram) {
             return "block";
+        } else {
+            return "none";
         }
 
     },
@@ -346,6 +232,17 @@ Template.graph.helpers({
     },
     color: function () {
         return this.color;
+    },
+    yAxes: function () {
+        Session.get('PlotResultsUpDated');
+        var yAxes = [];
+        for (var yidx = 0; yidx < yAxisNumber; yidx++) {
+            yAxes.push(yidx);
+        }
+        return yAxes;
+    },
+    isMap: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.map)
     },
     sentAddresses: function () {
         var addresses = [];
@@ -390,172 +287,128 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
-    isMap: function() {
-        return (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map)
+    curveShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+            return 'none';
+        } else {
+            return 'block';
+        }
     },
-    isProfile: function() {
-        return (Session.get('plotType') === matsTypes.PlotTypes.profile);
+    pointsShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+            return 'none';
+        } else {
+            return 'block';
+        }
+    },
+    errorbarsShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        var isMatched = Session.get('plotParameter') === "matched";
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+            return 'none';
+        } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
+            return 'block';
+        } else {
+            return 'none';
+        }
+    },
+    barsShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.histogram) {
+            return 'block';
+        } else {
+            return 'none';
+        }
+    },
+    annotateShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+            return 'none';
+        } else {
+            return 'block';
+        }
+    },
+    xAxisControlsNumberVisibility: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            return "none";
+        } else {
+            return "block";
+        }
+    },
+    xAxisControlsTextVisibility: function () {
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    displayReplotZoom: function () {
+        // the replot to zoom function is only really appropriate for downsampled graphs which are
+        // only possible in timeseries or dailymodelcycle plots
+        Session.get("PlotParams");
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            return "block";
+        } else {
+            return "none";
+        }
     }
 });
-
 
 Template.graph.events({
     'click .back': function () {
         matsPlotUtils.enableActionButtons();
-        if (document.getElementById('graph-container')) {
-            document.getElementById('graph-container').style.display = 'none';
-        }
-        //if (Session.get("plotType") === matsTypes.PlotTypes.map && document.getElementById('graphView')) {
-        //    var elem = document.getElementById('graphView');
-        //    elem.remove();
-        //}
-        if (document.getElementById('paramList')) {
-            document.getElementById('paramList').style.display = 'block';
-        }
-        if (document.getElementById('plotList')) {
-            document.getElementById('plotList').style.display = 'block';
-        }
-        if (document.getElementById('curveList')) {
-            document.getElementById('curveList').style.display = 'block';
-        }
-        if (document.getElementById("plotTypeContainer")) {
-            document.getElementById("plotTypeContainer").style.display="block";
-        }
-        if (document.getElementById("scatterView")) {
-            document.getElementById("scatterView").style.display="block";
-        }
-        if (document.getElementById("scatter2d")) {
-            document.getElementById("scatter2d").style.display = "block";
-        }
-        //this fixes a bug that was causing text to remain displayed on the graph page if
-        //the back button was clicked and then plot matched/unmatched was clicked.
-        document.getElementById("textSeriesView").style.display = "none";
-        document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textDieOffView").style.display = "none";
-        document.getElementById("textThresholdView").style.display = "none";
-        document.getElementById("textValidTimeView").style.display = "none";
-        document.getElementById("textDailyModelCycleView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
-        document.getElementById("textMapView").style.display = "none";
-        document.getElementById("textHistogramView").style.display = "none";
-
+        matsGraphUtils.setDefaultView();
+        matsCurveUtils.resetPlotResultData();
         return false;
     },
     'click .new': function () {
         window.open(location);
         return false;
     },
-    'click .header': function(event){
+    'click .header': function (event) {
         document.getElementById('graph-control').style.display = 'block';
         document.getElementById('showAdministration').style.display = 'block';
         document.getElementById('navbar').style.display = 'block';
         document.getElementById('footnav').style.display = 'block';
 
         var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
+        for (var i = 0; i < ctbgElems.length; i++) {
             ctbgElems[i].style.display = 'block';
         }
     },
     'click .preview': function () {
-        matsCurveUtils.showSpinner();
-        Session.set("printMode", true);
-        document.getElementById('graph-control').style.display = 'none';
-        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
-            ctbgElems[i].style.display = 'none';
-        }
-        var node = document.getElementById("graph-container");
-        domtoimage.toPng(node)
-            .then(function (dataUrl) {
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
-                    ctbgElems[i].style.display = 'block';
+        var plotType = Session.get('plotType');
+        if (plotType !== matsTypes.PlotTypes.map) {
+            // store axes so current zoom is preserved
+            var axes = $("#placeholder").data().plot.getAxes();
+            var key = Session.get('plotResultKey');
+            matsMethods.setNewAxes.call({resultKey: key, axes: axes}, function (error) {
+                if (error !== undefined) {
+                    setError(error);
                 }
-                var img = new Image();
-                img.src=dataUrl;
-                img.onload = function() {
-                    var width = img.width;
-                    var height = img.height;
-                    const ratio = height / width;
-                    width = width * 0.5;
-                    height = width * ratio;
-                    var canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image","_blank","left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
-                    wind.document.write("<html><head><title>Plot</title></head>" +
-                        "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
-                    document.getElementById('graph-control').style.display = 'block';
-                    var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i=0; i < ctbgElems.length; i++){
-                        ctbgElems[i].style.display = 'block';
-                    }
-                    setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
-                    matsCurveUtils.hideSpinner();
-                }
-            })
-            .catch(function (error) {
-                console.error('Graph.preview error, ', error);
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
-                    ctbgElems[i].style.display = 'block';
-                }
-                matsCurveUtils.hideSpinner();
             });
+        }
+        // open a new window with a standAlone graph of the current graph
+        var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
+        var w = h * 1.3;
+        var wind = window.open(window.location + "preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
+        setTimeout(function () {
+            wind.resizeTo(w, h);
+            ;
+        }, 100);
+        openWindows.push(wind);
     },
-    'click .publish': function () {
-        matsCurveUtils.showSpinner();
-        Session.set("printMode", true);
-        document.getElementById('graph-control').style.display = 'none';
-        var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-        for (var i=0; i < ctbgElems.length; i++){
-            ctbgElems[i].style.display = 'none';
+    'click .closeapp': function () {
+        for (var widx = 0; widx < openWindows.length; widx++) {
+            openWindows[widx].close();
         }
-        var node = document.getElementById("graph-container");
-        domtoimage.toPng(node)
-            .then(function (dataUrl) {
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
-                    ctbgElems[i].style.display = 'block';
-                }
-                var img = new Image();
-                img.src=dataUrl;
-                img.onload = function() {
-                    var width = img.width;
-                    var height = img.height;
-                    var canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const newDataUrl = canvas.toDataURL("image/png");
-                    const wind = window.open("image","_blank","left=0, location=0, menubar=0,top=0, resizable=1, scrollbars=1, status=0, titlebar=0, height=" + height + ",width=" + width * 1.05);
-                    wind.document.write("<html><head><title>Plot</title></head>" +
-                        "<body><iframe width='100%' height='100%' src='" + newDataUrl + "'></iframe></body></html>");
-                    document.getElementById('graph-control').style.display = 'block';
-                    var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                    for (var i=0; i < ctbgElems.length; i++){
-                        ctbgElems[i].style.display = 'block';
-                    }
-                    setTimeout(function() { wind.dispatchEvent(new Event('resize'));; }, 1000);
-                    matsCurveUtils.hideSpinner();
-                }
-            })
-            .catch(function (error) {
-                console.error('Graph.publish error, ', error);
-                document.getElementById('graph-control').style.display = 'block';
-                var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-                for (var i=0; i < ctbgElems.length; i++){
-                    ctbgElems[i].style.display = 'block';
-                }
-                matsCurveUtils.hideSpinner();
-            });
+        openWindows = [];
     },
     'click .reload': function () {
         var dataset = Session.get('dataset');
@@ -564,153 +417,17 @@ Template.graph.events({
         window[graphFunction](dataset, options);
     },
     'click .plotButton': function () {
-        document.getElementById("plotButton").style.display = "none";
-        document.getElementById("textButton").style.display = "block";
-        document.getElementById("plot-buttons-grp").style.display = "block";
-        document.getElementById("curves").style.display = "block";
-        document.getElementById("graphView").style.display = "block";
-        document.getElementById("textSeriesView").style.display = "none";
-        document.getElementById("textProfileView").style.display = "none";
-        document.getElementById("textScatter2dView").style.display = "none";
-        document.getElementById("textDieOffView").style.display = "none";
-        document.getElementById("textThresholdView").style.display = "none";
-        document.getElementById("textValidTimeView").style.display = "none";
-        document.getElementById("textDailyModelCycleView").style.display = "none";
-        document.getElementById("textMapView").style.display = "none";
-        document.getElementById("textHistogramView").style.display = "none";
-        if (plotType !== matsTypes.PlotTypes.map) {
-            document.getElementById('graph-touch-controls').style.display = "block";
-            document.getElementById('axisLimitButton').style.display = "block";
-        } else {
-            document.getElementById('graph-touch-controls').style.display = "none";
-            document.getElementById('axisLimitButton').style.display = "none";
-        }
-
+        matsGraphUtils.setGraphView();
         var graphView = document.getElementById('graphView');
-        Session.set('graphViewMode',matsTypes.PlotView.graph);
+        Session.set('graphViewMode', matsTypes.PlotView.graph);
+        matsCurveUtils.hideSpinner();
     },
     'click .textButton': function () {
-        document.getElementById("plot-buttons-grp").style.display = "block";
-        document.getElementById("plotButton").style.display = "block";
-        document.getElementById("textButton").style.display = "none";
-        document.getElementById("curves").style.display = "none";
-        document.getElementById("graphView").style.display = "none";
-        document.getElementById('graph-touch-controls').style.display = "none";
-        document.getElementById('axisLimitButton').style.display = "none";
-
-        switch (matsPlotUtils.getPlotType()) {
-            case matsTypes.PlotTypes.timeSeries:
-                Session.set('graphViewMode',matsTypes.PlotView.textSeries);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "block";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.profile:
-                Session.set('graphViewMode',matsTypes.PlotView.textProfile);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "block";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.dieoff:
-                Session.set('graphViewMode',matsTypes.PlotView.textDieoff);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "block";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.threshold:
-                Session.set('graphViewMode',matsTypes.PlotView.textThreshold);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "block";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.validtime:
-                Session.set('graphViewMode',matsTypes.PlotView.textValidTime);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "block";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.dailyModelCycle:
-                Session.set('graphViewMode',matsTypes.PlotView.textDailyModelCycle);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.map:
-                Session.set('graphViewMode',matsTypes.PlotView.textMap);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "block";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            case matsTypes.PlotTypes.histogram:
-                Session.set('graphViewMode',matsTypes.PlotView.textHistogram);
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "none";
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "block";
-                break;
-            case matsTypes.PlotTypes.scatter2d:
-                Session.set('graphViewMode',matsTypes.PlotView.textScatter);
-                document.getElementById("textDieOffView").style.display = "none";
-                document.getElementById("textThresholdView").style.display = "none";
-                document.getElementById("textValidTimeView").style.display = "none";
-                document.getElementById("textDailyModelCycleView").style.display = "none";
-                document.getElementById("textSeriesView").style.display = "none";
-                document.getElementById("textProfileView").style.display = "none";
-                document.getElementById("textScatter2dView").style.display = "block";
-                document.getElementById("textMapView").style.display = "none";
-                document.getElementById("textHistogramView").style.display = "none";
-                break;
-            default:
-                console.log("Error: no plot type detected");
-                Session.set('graphViewMode',matsTypes.PlotView.graph);
-        }
+        matsGraphUtils.setTextView();
+        Session.set('graphViewMode', matsTypes.PlotView.text);
+        Session.set("pageIndex", 0);
+        Session.set("newPageIndex", 1);
+        Session.set('textRefreshNeeded', true);
     },
     'click .export': function () {
         document.getElementById('text_export').click();
@@ -728,10 +445,358 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        Session.set("data",matsCurveUtils.PlotResult.basis);
-        $("#dataModal").modal('show');
+        window.open(window.location + "JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
+        //window.open(window.location + "getJSON/" + Session.get("plotResultKey"));
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
+    },
+    'click .firstPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            Session.set("pageIndex", 0);
+            Session.set("newPageIndex", 1);
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .previousTenPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === -1) {
+                Session.set("newPageIndex", pageIndex - 10);
+            } else {
+                Session.set("newPageIndex", pageIndex - 11);
+            }
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .previousPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === -1) {
+                Session.set("newPageIndex", pageIndex - 1);
+            } else {
+                Session.set("newPageIndex", pageIndex - 2);
+            }
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .nextPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === 1) {
+                Session.set("newPageIndex", pageIndex + 1);
+            } else {
+                Session.set("newPageIndex", pageIndex + 2);
+            }
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .nextTenPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            var pageTextDirection = Session.get("pageTextDirection");
+            // if the navigation direction is changing, you have to increment the page index an additional time,
+            // or you just move to the other end of the current page, and nothing appears to change.
+            if (pageTextDirection !== undefined && pageTextDirection === 1) {
+                Session.set("newPageIndex", pageIndex + 10);
+            } else {
+                Session.set("newPageIndex", pageIndex + 11);
+            }
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .lastPageButton': function () {
+        var pageIndex = Session.get("pageIndex");
+        // if pageIndex is NaN, it means we only have one page and these buttons shouldn't do anything
+        if (!Number.isNaN(pageIndex)) {
+            Session.set("newPageIndex", -2000);
+            Session.set('textRefreshNeeded', true);
+        }
+    },
+    'click .replotZoomButton': function () {
+        var xaxis = $("#placeholder").data().plot.getAxes().xaxis;
+        var params = Session.get('params');
+        var min = Math.round(xaxis.min);
+        var max = Math.round(xaxis.max);
+        var newDateRange = moment.utc(min).format('M/DD/YYYY HH:mm') + " - " + moment.utc(max).format('M/DD/YYYY HH:mm');
+        document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
+        var actionId = "plotUnmatched";
+        if (params.plotAction === "matched") {
+            actionId = plotMatched;
+        }
+        document.getElementById("plot-curves").click();
+    },
+    'click .curveVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide', '');
+        const myData = dataset.find(function (d) {
+            return d.curveId === label;
+        });
+
+        myData.lines.show = !myData.lines.show;
+        if (myData.lines.show) {
+            myData.points.show = true;
+            myData.points.errorbars = errorTypes[myData.curveId];
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide")[0].value = "hide curve";
+                $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+            }
+        } else {
+            myData.points.show = false;
+            myData.points.errorbars = undefined;
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide")[0].value = "show curve";
+                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .pointsVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-points', '');
+        const myData = dataset.find(function (d) {
+            return d.curveId === label;
+        });
+        myData.points.show = !myData.points.show;
+        if (myData.data.length > 0) {
+            if (myData.points.show == true) {
+                $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+            } else {
+                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .errorBarVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-errorbars', '');
+        const myData = dataset.find(function (d) {
+            return d.curveId === label;
+        });
+        if (myData.points.errorbars === undefined) {
+            myData.points.errorbars = errorTypes[myData.curveId];
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+            }
+        } else {
+            myData.points.errorbars = undefined;
+            if (myData.data.length > 0) {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .barVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-bars', '');
+        const myData = dataset.find(function (d) {
+            return d.curveId === label;
+        });
+        myData.bars.show = !myData.bars.show;
+        if (myData.data.length > 0) {
+            if (myData.bars.show == true) {
+                $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
+            } else {
+                $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+    'click .annotateVisibility': function (event) {
+        event.preventDefault();
+        const id = event.target.id;
+        const label = id.replace('-curve-show-hide-annotate', '');
+        if ($('#' + label + "-annotation")[0].hidden) {
+            $('#' + label + "-annotation").show();
+            $('#' + label + "-curve-show-hide-annotate")[0].value = "hide annotation";
+            $('#' + label + "-annotation")[0].hidden = false;
+        } else {
+            $('#' + label + "-annotation").hide();
+            $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
+            $('#' + label + "-annotation")[0].hidden = true;
+        }
+        annotation = $('#annotationContainer')[0].innerHTML;
+    },
+    // add zoom out button
+    'click #zoom-out': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoomOut();
+    },
+
+    // add zoom in button
+    'click #zoom-in': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoom();
+    },
+    // add horizontal zoom out button
+    'click #zoom-out-left-right': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoomOutHorizontal();
+    },
+    // add horizontal zoom in button
+    'click #zoom-in-left-right': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoomHorizontal();
+    },
+    // add vertical zoom out button
+    'click #zoom-out-up-down': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoomOutVertical();
+    },
+    // add vertical zoom in button
+    'click #zoom-in-up-down': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.zoomVertical();
+    },
+    // pan-left
+    'click #pan-left': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.pan({left: -100});
+    },
+    // pan-right
+    'click #pan-right': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.pan({left: 100});
+    },
+    // pan-up
+    'click #pan-up': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.pan({top: -100});
+    },
+    // pan-down
+    'click #pan-down': function (event) {
+        event.preventDefault();
+        $("#placeholder").data().plot.pan({top: 100});
+    },
+    // add refresh button
+    'click #refresh-plot': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+
+        // restore original axis limits and labels to options map
+        if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = originalXaxisLabel;
+        }
+        if (originalXaxisMin !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].min = originalXaxisMin;
+        }
+        if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].max = originalXaxisMax;
+        }
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
+            }
+            if (originalYaxisMins[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = originalYaxisMins[yidx];
+            }
+            if (originalYaxisMaxs[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = originalYaxisMaxs[yidx];
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+    },
+
+    // add axis customization modal submit button
+    'click #axisSubmit': function (event) {
+        event.preventDefault();
+        var plotType = Session.get('plotType');
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+
+        // get input axis limits and labels
+        var ylabels = [];
+        var ymins = [];
+        var ymaxs = [];
+        var yidxTranslated;
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            yidxTranslated = yAxisTranslate[yidx];
+            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
+            if (plotType === matsTypes.PlotTypes.profile) {
+                // the actual y ticks are from 0 to -1100
+                var yminRaw = document.getElementById("y" + yidxTranslated + "AxisMax").value;
+                var ymaxRaw = document.getElementById("y" + yidxTranslated + "AxisMin").value;
+                var ymin = yminRaw !== "" ? yminRaw * -1 : "";
+                var ymax = ymaxRaw !== "" ? ymaxRaw * -1 : "";
+                ymins.push(ymin);
+                ymaxs.push(ymax);
+            } else {
+                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
+                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+            }
+        }
+
+        var xlabel = document.getElementById("xAxisLabel").value;
+        var xmin;
+        var xmax;
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            const xminRaw = document.getElementById("xAxisMinText").value;
+            const xmaxRaw = document.getElementById("xAxisMaxText").value;
+            xmin = xminRaw !== "" ? moment.utc(xminRaw).valueOf() : "";
+            xmax = xmaxRaw !== "" ? moment.utc(xmaxRaw).valueOf() : "";
+        } else {
+            xmin = document.getElementById("xAxisMin").value;
+            xmax = document.getElementById("xAxisMax").value;
+        }
+
+        // set new limits and labels in options map
+        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].axisLabel = xlabel;
+        }
+        if (xmin !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].min = xmin;
+        }
+        if (xmax !== "" && options.xaxes && options.xaxes[0]) {
+            options.xaxes[0].max = xmax;
+        }
+        for (yidx = 0; yidx < yAxisLength; yidx++) {
+            if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].axisLabel = ylabels[yidx];
+            }
+            if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].min = ymins[yidx];
+            }
+            if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
+                options.yaxes[yidx].max = ymaxs[yidx];
+            }
+        }
+        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        $("#axisLimitModal").modal('hide');
     }
 });

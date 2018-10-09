@@ -1,3 +1,5 @@
+import {matsCurveUtils,matsPlotUtils} from 'meteor/randyp:mats-common';
+
 Template.spinner.helpers({
     image: function () {
         var img = Session.get("spinner_img");
@@ -12,7 +14,7 @@ Template.spinner.helpers({
 
 Template.spinner.events({
     'click .cancel': function () {
-        document.getElementById("spinner").style.display = "none";
+        matsCurveUtils.hideSpinner();
         matsPlotUtils.enableActionButtons();
     }
 });

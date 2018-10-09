@@ -10,8 +10,17 @@
     <p>Changes: </p>
     <p>* Updated to Meteor 1.7.0</p>
     <p>* Fixed bug where the curve annotation was not updating after data was removed from matching and outlier filtering.</p>
-    <p>* Plot parameters and data now stored by mongo db, instead of by the client.</p>
-    <p>* Automatic downsampling implemented for plots with lots of data.</p>
+    <p>* Changed level selector in anomalycor to take advantage of new levels being verified from MET data.</p>
+    <p>* Added histogram bin customization capabilities.</p>
+    <p>* Plot parameters and result data are now stored by mongo db, instead of by the client, which should reduce situations where the browser gets bogged down.</p>
+    <p>* Plot results are now cached for 8 hours on the server.</p>
+    <p>* There is now a re-plot button that will re-submit a zoomed plot with the new x-axis range.</p>
+    <p>* Automatic downsampling implemented for plots that exceed 1 MB of data.</p>
+    <p>* Interactive pop out windows now allow multiple plots to be displayed side by side.</p>
+    <p>* Pop out windows have the ability to save plots as PDFs (with improved resolution than what was previously available).</p>
+    <p>* The x axis font size is now small enough for the tick labels to not run into each other on timeseries.</p>
+    <p>* The text page now has pagination for plots with lots of data.</p>
+    <p>* The button to export plot data into a CSV file works properly again. </p>
 </div>
 <div>
     <hr style="display: block; height: 2px; margin: 1em 0; border-top: 2px solid #000000;"/>

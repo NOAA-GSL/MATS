@@ -247,10 +247,6 @@ dataValidTime = function (plotParams, plotFunction) {
                 data[di][2] = -1;
             }
 
-            // remove sub_values and sub_secs
-            data[di][3] = [];
-            data[di][4] = [];
-
             // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
@@ -296,7 +292,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

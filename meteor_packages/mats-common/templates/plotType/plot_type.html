@@ -9,7 +9,7 @@
                         </p>
                         <p>For Example time series curves have a common date whereas profile plots each have their own date. The program will
                         attempt to pick reasonable defaults but you should review.</p>
-                        Do you want to prceed and remove all existing curves, or proceed and retain existing curves with possibly incomplete parameters?
+                        Do you want to proceed and remove all existing curves, or proceed and retain existing curves with possibly incomplete parameters?
                     </h4>
                 </div>
                 <div class="modal-footer">
@@ -21,12 +21,7 @@
     </div>
     <div id="plotType" class="container pull-left" style="display:block;">
         <div class="row text-center">
-            <span style="align-content:center;font-size:xx-large; font-weight: bold;">{{title}}&nbsp;&nbsp;
-                <button class="btn btn-xs btn-success newapp">New App Window</button>
-                {{#if isNewWindow}}
-                    <button class="btn btn-xs btn-danger closeapp">Close App Window</button>
-                {{/if}}
-            </span>
+            <span style="align-content:center;font-size:xx-large; font-weight: bold;">{{title}}</span>
         </div>
         <div class="row well well-sm pull-left">
             {{#each plotTypes}}
