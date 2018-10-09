@@ -149,9 +149,6 @@ Package.onUse(function (api) {
 
     api.addFiles('templates/help/help.html', "client");
 
-    api.addFiles('templates/showData/data.html', "client");
-    api.addFiles('templates/showData/data.js', "client");
-
     api.addFiles("templates/plot/plot_param_group.html", "client");
     api.addFiles("templates/plot/plot_param_group.js", "client");
 

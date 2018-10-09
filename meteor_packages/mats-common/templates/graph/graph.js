@@ -430,7 +430,6 @@ Template.graph.events({
         Session.set('textRefreshNeeded', true);
     },
     'click .export': function () {
-
         document.getElementById('text_export').click();
     },
     'click .sentAddresses': function (event) {
@@ -446,7 +445,8 @@ Template.graph.events({
         $("#sendModal").modal('show');
     },
     'click .basis': function () {
-        $("#dataModal").modal('show');
+        window.open(window.location + "JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
+        //window.open(window.location + "getJSON/" + Session.get("plotResultKey"));
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');

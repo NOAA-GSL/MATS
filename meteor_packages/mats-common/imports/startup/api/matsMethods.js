@@ -34,7 +34,7 @@ var getCSV = function (params, req, res, next) {
                 dataResultArray.push([Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0]].concat(Object.values(dataSubArray[dsi])));
             }
         }
-
+        var fileName = "matsplot-" + moment.utc().format('YYYYMMDD-HH.mm.ss') + ".csv";
         res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
         res.setHeader( 'Content-Type', 'attachment.ContentType' );
         stringify(statResultArray,{header: true}, function(err, output) {
@@ -72,7 +72,7 @@ var getCSV = function (params, req, res, next) {
 var getJSON = function (params, req, res, next) {
     var flatJSON = "";
     try {
-        var result = getFlattenedResultData(params.key, 0, -1000);
+        var result = getPagenatedData(params.key, 0, -1000);
         flatJSON = JSON.stringify(result);
     } catch (e) {
         console.log('error retrieving data: ', e);
@@ -80,9 +80,11 @@ var getJSON = function (params, req, res, next) {
         delete flatJSON.dsiRealPageIndex;
         delete flatJSON.dsiTextDirection;
     }
-    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
-    res.setHeader('Content-Type', 'attachment.ContentType');
-    res.end(flatJSON);
+//    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
+//    res.setHeader('Content-Type', 'attachment.ContentType');
+    res.setHeader('Content-Type', 'application/json');
+    res.write(flatJSON);
+    res.end();
     delete flatJSON;
     delete result;
 }
@@ -102,11 +104,15 @@ if (Meteor.isServer) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
+    Picker.route('/getJSON/:key', function(params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
+    });
+
     Picker.route('/CSV/:f/:key/:m/:a', function(params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/getJSON/:key', function(params, req, res, next) {
+    Picker.route('/JSON/:f/:key/:m/:a', function(params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 }
@@ -141,6 +147,7 @@ const getPagenatedData = function(rky, p, np) {
         var start;
         var end;
         var direction = 1;
+        // all the data
         if (newPageIndex === -1000) {
             start = 0;
             end = Number.MAX_VALUE;
@@ -661,21 +668,6 @@ const getPlotResult = new ValidatedMethod({
     }
 });
 
-const readDataFile = new ValidatedMethod({
-    name: 'matsMethods.readDataFile',
-    validate: new SimpleSchema({
-        path: {type: String},
-    }).validator(),
-
-    run(params) {
-        if (Meteor.isServer) {
-            var fs = require('fs');
-            readSyncFunc = Meteor.wrapAsync(fs.readFile);
-            var fData = readSyncFunc(params.path);
-            return fData.toString();
-        }
-    }
-});
 
 const restoreFromFile = new ValidatedMethod({
     name: 'matsMethods.restoreFromFile',
@@ -1594,7 +1586,6 @@ const setNewAxes = new ValidatedMethod({
 export default matsMethods = {
     getDataFunctionFileList: getDataFunctionFileList,
     getGraphFunctionFileList: getGraphFunctionFileList,
-    readDataFile: readDataFile,
     readFunctionFile: readFunctionFile,
     restoreFromFile: restoreFromFile,
     restoreFromParameterFile: restoreFromParameterFile,
