@@ -212,7 +212,7 @@ Template.textOutput.helpers({
                         "<td>" + (('n' in element) && element['n'] ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.profile:
-                line += "<td>" + element[labelKey += " level"] * -1 + "</td>" +
+                line += "<td>" + element[labelKey += " level"] + "</td>" +
                         "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query']  !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
                         "<td>" + (element['plotted stat'] != undefined && element['plotted stat']  !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
                         "<td>" + (element['std dev'] != undefined && element['std dev']  !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +

@@ -28,14 +28,15 @@ var getCSV = function (params, req, res, next) {
         for (var di=0; di < dataArray.length; di++) {
             var dataSubArray = Object.values(dataArray[di]);
             var dataHeader = Object.keys(dataSubArray[0]);
-            dataHeader[0] = 'label';
+            //dataHeader[0] = 'label';
+            dataHeader[0] = Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
             dataResultArray.push(dataHeader); // push this curve data header (keys)
             for (var dsi =0; dsi < dataSubArray.length; dsi++) {  // push this curves data
-                dataResultArray.push([Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0]].concat(Object.values(dataSubArray[dsi])));
+                dataResultArray.push(Object.values(dataSubArray[dsi]));
             }
         }
         var fileName = "matsplot-" + moment.utc().format('YYYYMMDD-HH.mm.ss') + ".csv";
-        res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
+        res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
         res.setHeader( 'Content-Type', 'attachment.ContentType' );
         stringify(statResultArray,{header: true}, function(err, output) {
             if (err) {
@@ -287,8 +288,9 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
-                        if (data[ci].label === "0") {
-                            continue; // don't do the zero or max curves
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
@@ -305,7 +307,7 @@ const getFlattenedResultData = function (rk, p, np) {
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < cdata.length; cdi++) {
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' level'] = cdata[cdi][1];
+                            curveDataElement[data[ci].label + ' level'] = cdata[cdi][1] * -1;
                             curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
                             curveDataElement['plotted stat'] = cdata[cdi][0];
                             curveDataElement['std dev'] = cdata[cdi][5].sd;
@@ -337,8 +339,9 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
-                        if (data[ci].label === "0") {
-                            continue; // don't do the zero or max curves
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
@@ -390,8 +393,9 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.data = {};  // map of arrays of maps
 
                     for (var ci = 0; ci < data.length; ci++) {
-                        if (data[ci].label === "0") {
-                            continue; // don't do the zero or max curves
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
