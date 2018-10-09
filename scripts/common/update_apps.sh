@@ -48,7 +48,8 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
 		meteor npm uninstall --save dom-to-image
 		meteor npm install --save html2canvas
 		meteor npm install --save jspdf
-
+		meteor npm uninstall -g jsonexport --save
+		meteor npm install -g csv-stringify --save
 		meteor npm update
         cd ..;
     done

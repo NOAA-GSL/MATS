@@ -28,3 +28,4 @@ dynamic-import@0.4.2
 underscore
 kadira:blaze-layout
 ostrio:flow-router-extra
+meteorhacks:picker

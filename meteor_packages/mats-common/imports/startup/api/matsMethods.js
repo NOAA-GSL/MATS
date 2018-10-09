@@ -1256,8 +1256,10 @@ const getGraphData = new ValidatedMethod({
                     var dsResults = DownSampleResults.findOne({key: key});
                     if (dsResults !== undefined) {
                         ret = dsResults;
+                        DownSampleResults.rawCollection().update({key: key},{$set: {"createdAt": new Date()}});
                     } else {
                         ret = Results.findOne({key: key});
+                        Results.rawCollection().update({key: key},{$set: {"createdAt": new Date()}});
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
