@@ -41,16 +41,19 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
 		meteor add meteorhacks:picker
 		meteor update --all-packages
         rm -rf node_modules
-	    meteor npm install
-		meteor npm install --save-exact @babel/runtime@latest
+		meteor npm uninstall --save dom-to-image
+		meteor npm uninstall meteor-node-stubs
+		meteor npm uninstall readable-streams
+		meteor npm uninstall jsonexport --save
+		meteor npm install @babel/runtime@latest
 		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
 		meteor npm install --save object-sizeof
-		meteor npm uninstall --save dom-to-image
 		meteor npm install --save html2canvas
 		meteor npm install --save jspdf
-		meteor npm uninstall -g jsonexport --save
 		meteor npm install -g csv-stringify --save
-		meteor npm update
+	    meteor npm install
+		meteor npm audit fix
+		meteor npm list
         cd ..;
     done
 exit

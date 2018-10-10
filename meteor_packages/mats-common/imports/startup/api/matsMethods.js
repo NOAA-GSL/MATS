@@ -1,6 +1,5 @@
 import {Meteor} from "meteor/meteor";
 import {ValidatedMethod} from 'meteor/mdg:validated-method';
-import {fs} from 'fs';
 import {SimpleSchema} from 'meteor/aldeed:simple-schema';
 import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
@@ -12,83 +11,88 @@ const metaDataTableUpdates = new Mongo.Collection(null);
 
 // define a middleware for getCSV route
 var getCSV = function (params, req, res, next) {
-    console.log('Getting data for: ',params.key);
-    var stringify = require('csv-stringify');
-    var csv = "";
-    try {
-        var result = getFlattenedResultData(params.key,0,-1000);
-        var statArray = Object.values(result.stats);
-        var dataArray = Object.values(result.data);
-        var statResultArray = [];
-        var dataResultArray = [];
-        for (var si=0; si < statArray.length; si++) {
-            statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
-            statResultArray.push(Object.values(statArray[si])); // push the stats for this curve
-        }
+    if (Meteor.isServer) {
+        console.log('Getting data for: ', params.key);
 
-        for (var di=0; di < dataArray.length; di++) {
-            var dataSubArray = Object.values(dataArray[di]);
-            var dataHeader = Object.keys(dataSubArray[0]);
-            //dataHeader[0] = 'label';
-            dataHeader[0] = Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
-            dataResultArray.push(dataHeader); // push this curve data header (keys)
-            for (var dsi =0; dsi < dataSubArray.length; dsi++) {  // push this curves data
-                dataResultArray.push(Object.values(dataSubArray[dsi]));
+        var stringify = require('csv-stringify');
+        var csv = "";
+        try {
+            var result = getFlattenedResultData(params.key, 0, -1000);
+            var statArray = Object.values(result.stats);
+            var dataArray = Object.values(result.data);
+            var statResultArray = [];
+            var dataResultArray = [];
+            for (var si = 0; si < statArray.length; si++) {
+                statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
+                statResultArray.push(Object.values(statArray[si])); // push the stats for this curve
             }
-        }
-        var fileName = "matsplot-" + moment.utc().format('YYYYMMDD-HH.mm.ss') + ".csv";
-        res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
-        res.setHeader( 'Content-Type', 'attachment.ContentType' );
-        stringify(statResultArray,{header: true}, function(err, output) {
-            if (err) {
-                console.log ("error in getCSV:", err);
-                res.write("error," + err.toLocaleString());
-                res.end();
-                return;
+
+            for (var di = 0; di < dataArray.length; di++) {
+                var dataSubArray = Object.values(dataArray[di]);
+                var dataHeader = Object.keys(dataSubArray[0]);
+                //dataHeader[0] = 'label';
+                dataHeader[0] = Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
+                dataResultArray.push(dataHeader); // push this curve data header (keys)
+                for (var dsi = 0; dsi < dataSubArray.length; dsi++) {  // push this curves data
+                    dataResultArray.push(Object.values(dataSubArray[dsi]));
+                }
             }
-            res.write(output);
-            stringify(dataResultArray,{header: true}, function(err, output) {
+            var fileName = "matsplot-" + moment.utc().format('YYYYMMDD-HH.mm.ss') + ".csv";
+            res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+            res.setHeader('Content-Type', 'attachment.ContentType');
+            stringify(statResultArray, {header: true}, function (err, output) {
                 if (err) {
-                    console.log ("error in getCSV:", err);
+                    console.log("error in getCSV:", err);
                     res.write("error," + err.toLocaleString());
                     res.end();
                     return;
                 }
                 res.write(output);
-                res.end();
+                stringify(dataResultArray, {header: true}, function (err, output) {
+                    if (err) {
+                        console.log("error in getCSV:", err);
+                        res.write("error," + err.toLocaleString());
+                        res.end();
+                        return;
+                    }
+                    res.write(output);
+                    res.end();
+                });
+                delete result;
+                delete statResultArray;
+                delete dataResultArray;
             });
-            delete result;
-            delete statResultArray;
-            delete dataResultArray;
-        });
-    } catch (e) {
-        console.log ('error retrieving data: ',e);
-        csv = "error," + e.toLocaleString();
-        res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
-        res.setHeader( 'Content-Type', 'attachment.ContentType' );
-        res.end(csv);
+        } catch (e) {
+            console.log('error retrieving data: ', e);
+            csv = "error," + e.toLocaleString();
+            res.setHeader('Content-disposition', 'attachment; filename=matsplot.csv');
+            res.setHeader('Content-Type', 'attachment.ContentType');
+            res.end(csv);
+        }
     }
 };
 
 // define a middleware for getJSON route
 var getJSON = function (params, req, res, next) {
-    var flatJSON = "";
-    try {
-        var result = getPagenatedData(params.key, 0, -1000);
-        flatJSON = JSON.stringify(result);
-    } catch (e) {
-        console.log('error retrieving data: ', e);
-        flatJSON = JSON.stringify({error: e});
-        delete flatJSON.dsiRealPageIndex;
-        delete flatJSON.dsiTextDirection;
-    }
+    if (Meteor.isServer) {
+        var flatJSON = "";
+        try {
+            var result = getPagenatedData(params.key, 0, -1000);
+            flatJSON = JSON.stringify(result);
+        } catch (e) {
+            console.log('error retrieving data: ', e);
+            flatJSON = JSON.stringify({error: e});
+            delete flatJSON.dsiRealPageIndex;
+            delete flatJSON.dsiTextDirection;
+        }
 //    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
 //    res.setHeader('Content-Type', 'attachment.ContentType');
-    res.setHeader('Content-Type', 'application/json');
-    res.write(flatJSON);
-    res.end();
-    delete flatJSON;
-    delete result;
+        res.setHeader('Content-Type', 'application/json');
+        res.write(flatJSON);
+        res.end();
+        delete flatJSON;
+        delete result;
+    }
 };
 
 // local collection used to store new axis ranges when opening pop out graphs
@@ -102,19 +106,19 @@ if (Meteor.isServer) {
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 
     // define some server side routes
-    Picker.route('/getCSV/:key', function(params, req, res, next) {
+    Picker.route('/getCSV/:key', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/getJSON/:key', function(params, req, res, next) {
+    Picker.route('/getJSON/:key', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
-    Picker.route('/CSV/:f/:key/:m/:a', function(params, req, res, next) {
+    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/JSON/:f/:key/:m/:a', function(params, req, res, next) {
+    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 }
@@ -122,7 +126,7 @@ if (Meteor.isServer) {
 // private method for getting pagenated data
 // a newPageIndex of -1000 means get all the data (used for export)
 // a newPageIndex of -2000 means get just the last page
-const getPagenatedData = function(rky, p, np) {
+const getPagenatedData = function (rky, p, np) {
     if (Meteor.isServer) {
         var key = rky;
         var myPageIndex = p;
@@ -141,8 +145,8 @@ const getPagenatedData = function(rky, p, np) {
                 future.return(undefined);
             }
             future.wait();
-        } catch (e){
-            console.log ("getPagenatedData: Error - ", e);
+        } catch (e) {
+            console.log("getPagenatedData: Error - ", e);
             return undefined;
         }
         ret = rawReturn === undefined ? undefined : JSON.parse(JSON.stringify(rawReturn));
@@ -174,7 +178,7 @@ const getPagenatedData = function(rky, p, np) {
             var dsiEnd = end;
             if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
-                dsiStart =  Math.floor(rawReturn.data[dsi].data.length/100) * 100;
+                dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
                 dsiEnd = rawReturn.data[dsi].data.length;
             }
             if (dsiStart < 0) {
@@ -382,8 +386,8 @@ const getFlattenedResultData = function (rk, p, np) {
                         var elem = {};
                         elem['Site Name'] = mData[si][0][0];
                         elem['Number of Times'] = mData[si][0][1];
-                        elem['Start Date'] = moment.utc(Number(mData[si][0][2])*1000).format('YYYY-MM-DD HH:mm');
-                        elem['End Date'] = moment.utc(Number(mData[si][0][3])*1000).format('YYYY-MM-DD HH:mm');
+                        elem['Start Date'] = moment.utc(Number(mData[si][0][2]) * 1000).format('YYYY-MM-DD HH:mm');
+                        elem['End Date'] = moment.utc(Number(mData[si][0][3]) * 1000).format('YYYY-MM-DD HH:mm');
                         elem['Average Difference'] = mData[si][0][4];
                         returnData.push(elem);
                     }
@@ -1261,10 +1265,10 @@ const getGraphData = new ValidatedMethod({
                     var dsResults = DownSampleResults.findOne({key: key});
                     if (dsResults !== undefined) {
                         ret = dsResults;
-                        DownSampleResults.rawCollection().update({key: key},{$set: {"createdAt": new Date()}});
+                        DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     } else {
                         ret = Results.findOne({key: key});
-                        Results.rawCollection().update({key: key},{$set: {"createdAt": new Date()}});
+                        Results.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
