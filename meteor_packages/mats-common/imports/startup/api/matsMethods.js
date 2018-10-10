@@ -5,7 +5,8 @@ import {SimpleSchema} from 'meteor/aldeed:simple-schema';
 import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
-import {Mongo} from 'meteor/mongo';
+import {Mongo} from 'meteor/mongo'
+
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
@@ -18,7 +19,7 @@ var getCSV = function (params, req, res, next) {
         var result = getFlattenedResultData(params.key,0,-1000);
         var statArray = Object.values(result.stats);
         var dataArray = Object.values(result.data);
-        var statResultArray = []
+        var statResultArray = [];
         var dataResultArray = [];
         for (var si=0; si < statArray.length; si++) {
             statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
@@ -50,7 +51,7 @@ var getCSV = function (params, req, res, next) {
                 if (err) {
                     console.log ("error in getCSV:", err);
                     res.write("error," + err.toLocaleString());
-                    res.end()
+                    res.end();
                     return;
                 }
                 res.write(output);
@@ -67,7 +68,7 @@ var getCSV = function (params, req, res, next) {
         res.setHeader( 'Content-Type', 'attachment.ContentType' );
         res.end(csv);
     }
-}
+};
 
 // define a middleware for getJSON route
 var getJSON = function (params, req, res, next) {
@@ -88,7 +89,7 @@ var getJSON = function (params, req, res, next) {
     res.end();
     delete flatJSON;
     delete result;
-}
+};
 
 // local collection used to store new axis ranges when opening pop out graphs
 const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");
@@ -152,25 +153,25 @@ const getPagenatedData = function(rky, p, np) {
         if (newPageIndex === -1000) {
             start = 0;
             end = Number.MAX_VALUE;
-            direction = -1;
         } else if (newPageIndex === -2000) {
-              // just the last page
-              start = -2000;
-            } else if (myPageIndex <= newPageIndex) {
-                start = myPageIndex * 100;
-                end = newPageIndex * 100;
-            } else {
-                direction = -1;
-                start = newPageIndex * 100;
-                end = myPageIndex * 100;
-            }
+            // just the last page
+            direction = -1;
+            start = -2000;
+        } else if (myPageIndex <= newPageIndex) {
+            start = (newPageIndex - 1) * 100;
+            end = newPageIndex * 100;
+        } else {
+            direction = -1;
+            start = newPageIndex * 100;
+            end = (newPageIndex + 1) * 100;
+        }
 
-        var dsiStart = start;
-        var dsiEnd = end;
         for (var dsi = 0; dsi < ret.data.length; dsi++) {
             if (ret.data[dsi].data.length <= 100) {
                 continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
+            var dsiStart = start;
+            var dsiEnd = end;
             if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
                 dsiStart =  Math.floor(rawReturn.data[dsi].data.length/100) * 100;
