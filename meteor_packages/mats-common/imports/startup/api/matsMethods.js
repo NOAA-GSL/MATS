@@ -85,8 +85,6 @@ var getJSON = function (params, req, res, next) {
             delete flatJSON.dsiRealPageIndex;
             delete flatJSON.dsiTextDirection;
         }
-//    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
-//    res.setHeader('Content-Type', 'attachment.ContentType');
         res.setHeader('Content-Type', 'application/json');
         res.write(flatJSON);
         res.end();
