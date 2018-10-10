@@ -446,7 +446,6 @@ Template.graph.events({
     },
     'click .basis': function () {
         window.open(window.location + "/JSON/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "resizable=yes");
-        //window.open(window.location + "getJSON/" + Session.get("plotResultKey"));
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');

@@ -112,6 +112,10 @@ if (Meteor.isServer) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
+    Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
+    });
+
     Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
@@ -119,6 +123,10 @@ if (Meteor.isServer) {
     Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
+    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
+    });
+
 }
 
 // private method for getting pagenated data
