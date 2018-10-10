@@ -39,10 +39,10 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         meteor reset
         rm -rf .meteor/local
 		meteor add meteorhacks:picker
-		meteor update --all-packages;
+		meteor update --all-packages
         rm -rf node_modules
 	    meteor npm install
-		meteor npm install --save-exact @babel/runtime@7.0.0-beta.55
+		meteor npm install --save-exact @babel/runtime@latest
 		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
 		meteor npm install --save object-sizeof
 		meteor npm uninstall --save dom-to-image
@@ -53,7 +53,7 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
 		meteor npm update
         cd ..;
     done
-
+exit
 # clean up meteor releases for all the apps
 shopt -s nullglob
 releases=(`find . -name release | while read r; do cat $r | cut -d'@' -f2 | uniq; done | uniq | sed 's/\.\([^.]\)$/_\1/'`)
