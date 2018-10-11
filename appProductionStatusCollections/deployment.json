@@ -82,8 +82,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.7.12-2018.10.11.17.36",
-      "buildDate": "2018.10.11.17.36",
+      "version": "1.7.12-2018.10.11.23.47",
+      "buildDate": "2018.10.11.23.47",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -481,8 +481,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.00.25",
+      "version": "1.7.12",
+      "buildDate": "2018.10.11.23.47",
       "last_test_run": "",
       "last_test_status": ""
     },
