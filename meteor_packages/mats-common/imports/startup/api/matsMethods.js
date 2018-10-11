@@ -85,8 +85,6 @@ var getJSON = function (params, req, res, next) {
             delete flatJSON.dsiRealPageIndex;
             delete flatJSON.dsiTextDirection;
         }
-//    res.setHeader('Content-disposition', 'attachment; filename=matsplot.json');
-//    res.setHeader('Content-Type', 'attachment.ContentType');
         res.setHeader('Content-Type', 'application/json');
         res.write(flatJSON);
         res.end();
@@ -114,8 +112,24 @@ if (Meteor.isServer) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
+    Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
+    });
+
+    Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
+    });
+
     Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
+    });
+
+    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
     });
 
     Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {

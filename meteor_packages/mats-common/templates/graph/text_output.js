@@ -366,6 +366,6 @@ Template.textOutput.events({
         var plotType = Session.get('plotType');
             var key = Session.get('plotResultKey');
         // open a new window with
-        window.open(window.location + "getCSV/" + Session.get("plotResultKey"));
+        window.open(window.location + "/CSV/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title);
     }
 });
