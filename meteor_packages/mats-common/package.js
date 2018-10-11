@@ -1,6 +1,6 @@
 Package.describe({
     name: 'randyp:mats-common',
-    version: '1.7.0',
+    version: '1.8.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
@@ -13,19 +13,19 @@ Package.describe({
 Package.onUse(function (api) {
     api.versionsFrom('1.4.1.1');
     Npm.depends({
-        'fibers': '1.0.14',
-        'fs': '0.0.2',
-        "babel-runtime": "6.26.0",
-        "meteor-node-stubs": "0.2.3",
+        'fibers': '2.0.0',
+        'fs-extra': '7.0.0',
+        "@babel/runtime": "7.1.2",
+        "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
-        "dom-to-image": "2.6.0"
+        "csv-stringify": "4.3.1"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
     api.use('natestrauser:select2', 'client');
-    api.use('aldeed:simple-schema@1.5.3');
-    api.imply('aldeed:simple-schema@1.5.3');
+    api.use('aldeed:simple-schema');
+    api.imply('aldeed:simple-schema');
     api.use('mdg:validated-method');
     api.use('ecmascript');
     api.use('modules');
@@ -51,7 +51,9 @@ Package.onUse(function (api) {
     api.use("spacebars");
     api.use("check");
     api.use("bevanhunt:leaflet");
+    api.use("ostrio:flow-router-extra");
     api.use("randyp:flot");
+    api.use("meteorhacks:picker");
 
     // modules
     api.export("matsCollections", ['client', 'server']);
@@ -59,6 +61,7 @@ Package.onUse(function (api) {
     api.export("matsMethods", ['client', 'server']);
     api.export("matsCurveUtils", ['client']);
     api.export("matsSelectUtils", ['client']);
+    api.export("matsGraphUtils", ['client']);
     api.export("matsParamUtils", ['client', 'server']);
     api.export("matsMathUtils", ['client', 'server']);
     api.export("matsPlotUtils", ['client', 'server']);
@@ -80,16 +83,21 @@ Package.onUse(function (api) {
     //api
     api.addFiles('imports/startup/api/matsMethods.js');
 
+    //layouts
+    api.addFiles("imports/startup/ui/layouts/notFound.html", "client");
+    api.addFiles("imports/startup/ui/layouts/appBody.html", "client");
+    api.addFiles("imports/startup/ui/layouts/appBody.js", "client");
+
     //client
     api.addFiles('imports/startup/client/curve_util.js');
     api.addFiles('imports/startup/client/graph_util.js');
     api.addFiles('imports/startup/client/select_util.js');
     api.addFiles('imports/startup/client/index.js');
     api.addFiles('imports/startup/client/init.js');
-    api.addFiles('imports/stylesheets/app.css');
-    api.addFiles('imports/startup/client/jquery.json-viewer.css');
-    api.addFiles('imports/startup/client/jquery.json-viewer.js');
+    api.addFiles('imports/startup/client/routes.js');
+    //api.addFiles('imports/startup/client/jspdf.js');
 
+    api.addFiles('imports/stylesheets/app.css', "client");
     //server
     api.addFiles('imports/startup/server/data_util.js');
     api.addFiles('imports/startup/server/data_query_util.js');
@@ -106,12 +114,12 @@ Package.onUse(function (api) {
 
     //client
     api.addFiles('client/main.html', "client");
-    api.addFiles('client/main.js', "client");
+    //api.addFiles('client/main.js', "client");
     api.addFiles('client/error.js', "client");
     api.addFiles('client/info.js', "client");
 
     //server
-    api.addFiles('server/main.js', "server");
+    //api.addFiles('server/main.js', "server");
 
     //lib
     api.addFiles("lib/regression.js", ['client', 'server']);
@@ -127,6 +135,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/spinner/spinner.js", "client");
 
     api.addFiles('templates/Home.html', "client");
+
     api.addFiles('templates/Home.js', "client");
     api.addFiles('templates/underConstruction/underConstruction.html', "client");
     api.addFiles('templates/underConstruction/underConstruction.js', "client");
@@ -139,9 +148,6 @@ Package.onUse(function (api) {
     api.addFiles("templates/plot/plot_list.js", "client");
 
     api.addFiles('templates/help/help.html', "client");
-
-    api.addFiles('templates/showData/data.html', "client");
-    api.addFiles('templates/showData/data.js', "client");
 
     api.addFiles("templates/plot/plot_param_group.html", "client");
     api.addFiles("templates/plot/plot_param_group.js", "client");
@@ -158,41 +164,21 @@ Package.onUse(function (api) {
     api.addFiles("templates/graph/graph.html", "client");
     api.addFiles("templates/graph/graph.js", "client");
 
+    api.addFiles("templates/graphStandAlone/graphStandAlone.html", "client");
+    api.addFiles("templates/graphStandAlone/graphStandAlone.js", "client");
+
     api.addFiles("templates/graph/displayFunctions/graph_xy_line.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
     api.addFiles("templates/graph/displayFunctions/graph_histogram.js", "client");
 
-    api.addFiles("templates/graph/text_profile_output.html", "client");
-    api.addFiles("templates/graph/text_profile_output.js", "client");
 
     api.addFiles("templates/common/text_input.html", "client");
     api.addFiles("templates/common/text_input.js", "client");
 
-    api.addFiles("templates/graph/text_series_output.html", "client");
-    api.addFiles("templates/graph/text_series_output.js", "client");
-
-    api.addFiles("templates/graph/text_dieoff_output.html", "client");
-    api.addFiles("templates/graph/text_dieoff_output.js", "client");
-
-    api.addFiles("templates/graph/text_threshold_output.html", "client");
-    api.addFiles("templates/graph/text_threshold_output.js", "client");
-
-    api.addFiles("templates/graph/text_validtime_output.html", "client");
-    api.addFiles("templates/graph/text_validtime_output.js", "client");
-
-    api.addFiles("templates/graph/text_daily_model_cycle_output.html", "client");
-    api.addFiles("templates/graph/text_daily_model_cycle_output.js", "client");
-
-    api.addFiles("templates/graph/text_scatter2d_output.html", "client");
-    api.addFiles("templates/graph/text_scatter2d_output.js", "client");
-
-    api.addFiles("templates/graph/text_map_output.html", "client");
-    api.addFiles("templates/graph/text_map_output.js", "client");
-
-    api.addFiles("templates/graph/text_histogram_output.html", "client");
-    api.addFiles("templates/graph/text_histogram_output.js", "client");
+    api.addFiles("templates/graph/text_output.html", "client");
+    api.addFiles("templates/graph/text_output.js", "client");
 
     api.addFiles("templates/common/select.html", "client");
     api.addFiles("templates/common/select.js", "client");

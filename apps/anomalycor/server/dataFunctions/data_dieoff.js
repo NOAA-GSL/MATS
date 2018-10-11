@@ -16,7 +16,7 @@ dataDieOff = function (plotParams, plotFunction) {
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
     var error = "";
-    var curves = plotParams.curves;
+    var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
     var axisMap = Object.create(null);
@@ -224,8 +224,8 @@ dataDieOff = function (plotParams, plotFunction) {
              data[0] - fhr (plotted against the x axis)
              data[1] - statValue (ploted against the y axis)
              data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - fhr values
-             data[4] - fhr times
+             data[3] - fhr values -- removed here to save on data volume
+             data[4] - fhr times -- removed here to save on data volume
              data[5] - fhr stats
              data[6] - tooltip
              */
@@ -285,7 +285,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(fhrs, values);
+        const stats = matsDataUtils.get_err(values, fhrs);
         const filteredMeans = means.filter(x => x);
         const miny = Math.min(...filteredMeans);
         const maxy = Math.max(...filteredMeans);
@@ -299,17 +299,17 @@ dataDieOff = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     //add ideal value line at 100
-    const idealLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 100);
+    const idealLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 100, matsTypes.ReservedWords.ideal0);
     dataset.push(idealLine);
 
     // generate plot options

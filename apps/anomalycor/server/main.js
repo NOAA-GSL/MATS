@@ -46,6 +46,62 @@ const doPlotParams = function () {
                 default: matsTypes.PlotFormats.none,
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        var binOptionsMap = {
+            "Default bins": ["default"],
+            "Set number of bins": ["binNumber"],
+            "Make zero a bin bound": ["zeroBound"],
+            "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+            "Manual bins": ["manual"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-bin-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: binOptionsMap,
+                options: Object.keys(binOptionsMap),
+                hideOtherFor: {
+                    'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins"],
+                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound"],
+                },
+                default: Object.keys(binOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'customize bins',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-number',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '2',
+                max: '100',
+                step: 'any',
+                default: '12',
+                controlButtonCovered: true,
+                controlButtonText: "number of bins",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-bounds',
+                type: matsTypes.InputTypes.textInput,
+                optionsMap: {},
+                options: [],   // convenience
+                default: ' ',
+                controlButtonCovered: true,
+                controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
@@ -61,7 +117,7 @@ const doCurveParams = function () {
     var modelDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
-    var levelVariableOptionsMap = {};
+    var levelOptionsMap = {};
     var variableModelOptionsMap = {};
     var masterRegionValuesMap = {};
 
@@ -97,6 +153,13 @@ const doCurveParams = function () {
             }
             forecastLengthOptionsMap[model] = forecastLengthArr;
 
+            var levels = rows[i].levels;
+            var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
+            for (var j = 0; j < levelArr.length; j++) {
+                levelArr[j] = levelArr[j].replace(/'|\[|\]/g, "");
+            }
+            levelOptionsMap[model] = levelArr;
+
             var variables = rows[i].variable;
             var variableArr = variables.split(',').map(Function.prototype.call, String.prototype.trim);
             for (var j = 0; j < variableArr.length; j++) {
@@ -114,11 +177,6 @@ const doCurveParams = function () {
             }
             regionModelOptionsMap[model] = regionsArr;
         }
-
-        //levels are fixed per variable
-        levelVariableOptionsMap['HGT'] = ['500'];
-        levelVariableOptionsMap['UGRD'] = ['250', '850'];
-        levelVariableOptionsMap['VGRD'] = ['250', '850'];
 
     } catch (err) {
         console.log(err.message);
@@ -152,7 +210,7 @@ const doCurveParams = function () {
                 dates: modelDateRangeMap,
                 //tables: modelTableMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "variable", "dates", "curve-dates"],
+                dependentNames: ["region", "forecast-length", "variable", "pres-level", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -216,7 +274,6 @@ const doCurveParams = function () {
                 optionsMap: variableModelOptionsMap,
                 options: variableModelOptionsMap[Object.keys(variableModelOptionsMap)[0]],   // convenience
                 superiorNames: ['data-source'],
-                dependentNames: ['pres-level'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -245,9 +302,9 @@ const doCurveParams = function () {
             {
                 name: 'pres-level',
                 type: matsTypes.InputTypes.select,
-                optionsMap: levelVariableOptionsMap,
-                options: levelVariableOptionsMap[Object.keys(levelVariableOptionsMap)[0]],   // convenience
-                superiorNames: ['variable'],
+                optionsMap: levelOptionsMap,
+                options: levelOptionsMap[Object.keys(levelOptionsMap)[0]],   // convenience
+                superiorNames: ['data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -288,34 +345,6 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
-        var dieoffOptionsMap = {
-            "Dieoff" : [matsTypes.ForecastTypes.dieoff],
-            "Dieoff for a specific UTC cycle start time" : [matsTypes.ForecastTypes.utcCycle],
-            "Single cycle forecast" : [matsTypes.ForecastTypes.singleCycle]
-        };
-        matsCollections.CurveParams.insert(
-            {
-                name: 'dieoff-forecast-length',
-                type: matsTypes.InputTypes.select,
-                optionsMap: dieoffOptionsMap,
-                options: Object.keys(dieoffOptionsMap),
-                hideOtherFor: {
-                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
-                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
-                },
-                selected: '',
-                controlButtonCovered: true,
-                unique: false,
-                default: Object.keys(dieoffOptionsMap)[0],
-                controlButtonVisibility: 'block',
-                controlButtonText: 'dieoff type',
-                displayOrder: 7,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
-
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
@@ -346,6 +375,34 @@ const doCurveParams = function () {
                 }
             });
         }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+        var dieoffOptionsMap = {
+            "Dieoff": [matsTypes.ForecastTypes.dieoff],
+            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
+        };
+        matsCollections.CurveParams.insert(
+            {
+                name: 'dieoff-forecast-length',
+                type: matsTypes.InputTypes.select,
+                optionsMap: dieoffOptionsMap,
+                options: Object.keys(dieoffOptionsMap),
+                hideOtherFor: {
+                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(dieoffOptionsMap)[0],
+                controlButtonVisibility: 'block',
+                controlButtonText: 'dieoff type',
+                displayOrder: 7,
+                displayPriority: 1,
+                displayGroup: 3
+            });
     }
 
     if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
@@ -426,7 +483,7 @@ const doCurveParams = function () {
  and then the sub arrays will be joined maintaining order.
 
  The curveTextPattern is found by its name which must match the corresponding PlotGraphFunctions.PlotType value.
- See curve_item.js and graph.js.
+ See curve_item.js and standAlone.js.
  */
 const doCurveTextPatterns = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {

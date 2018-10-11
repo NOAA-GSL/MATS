@@ -16,7 +16,7 @@ dataProfile = function (plotParams, plotFunction) {
     var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
     var error = "";
-    var curves = plotParams.curves;
+    var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
     var axisMap = Object.create(null);
@@ -215,8 +215,8 @@ dataProfile = function (plotParams, plotFunction) {
                  data[0] - statValue (ploted against the x axis)
                  data[1] - level (plotted against the y axis)
                  data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-                 data[3] - level values
-                 data[4] - level times
+                 data[3] - level values -- removed here to save on data volume
+                 data[4] - level times -- removed here to save on data volume
                  data[5] - level stats
                  data[6] - tooltip
                  */
@@ -290,13 +290,13 @@ dataProfile = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0);
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

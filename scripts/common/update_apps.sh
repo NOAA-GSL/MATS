@@ -6,9 +6,11 @@
 # links to the newest used meteor npm and node. The system (things like ppassenger) is linked to these links.
 # The utility performs these steps for each app.
 # 1) meteor reset
-# 2) remove node modules
+# 2) remove .meteor/local
 # 3) meteor update (all packages)
-# 4) meteor install babel runtime - I don't know why we have to do this....
+# 4) remove node modules
+# 5) meteor npm install
+# 4) meteor npm install specific babel runtime - I don't know why we have to do this.... I think I hate babel-runtime
 # 5) clean up the meteor releases by removing unused ones
 # 6) re-link the node and npm executibliles in .meteor to the newest ones in the newest meteor packages
 
@@ -35,13 +37,26 @@ for app in $(find . -maxdepth 1 -type d -not -path ".")
         cd $app;
         pwd;
         meteor reset
+        rm -rf .meteor/local
+		meteor add meteorhacks:picker
+		meteor update --all-packages
         rm -rf node_modules
-        meteor update --all-packages;
-        meteor npm install --save babel-runtime
-	    meteor npm install --save fibers
+		meteor npm uninstall --save dom-to-image
+		meteor npm uninstall meteor-node-stubs
+		meteor npm uninstall readable-streams
+		meteor npm uninstall jsonexport --save
+		meteor npm install @babel/runtime@latest
+		meteor npm install git+https://github.com/pingec/downsample-lttb.git --save
+		meteor npm install --save object-sizeof
+		meteor npm install --save html2canvas
+		meteor npm install --save jspdf
+		meteor npm install -g csv-stringify --save
+	    meteor npm install
+		meteor npm audit fix
+		meteor npm list
         cd ..;
     done
-
+exit
 # clean up meteor releases for all the apps
 shopt -s nullglob
 releases=(`find . -name release | while read r; do cat $r | cut -d'@' -f2 | uniq; done | uniq | sed 's/\.\([^.]\)$/_\1/'`)

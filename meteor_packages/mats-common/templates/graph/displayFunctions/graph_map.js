@@ -1,4 +1,4 @@
-graphMap = function(result) {
+graphMap = function (key) {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     if (vpw < 400) {
         vpw = (.9 * vpw).toString() + "px";
@@ -12,10 +12,10 @@ graphMap = function(result) {
         vph = (.6 * vph).toString() + "px";
     }
 
-
-    var dataset = result.data;
-    var options = result.options
-
+    // get dataset info
+    var resultSet = matsCurveUtils.getGraphResult();
+    var dataset = resultSet.data;
+    var options = resultSet.options;
     var defaultPoint = [39.834, -98.604];
     var defaultZoomLevel = 5;
     var minZoomLevel = 3;
@@ -35,8 +35,8 @@ graphMap = function(result) {
         var map = new L.map('finalMap', {
             doubleClickZoom: false,
             scrollWheelZoom: false,
-            trackResize:true,
-            zoomControl:true,
+            trackResize: true,
+            zoomControl: true,
             minZoom: minZoomLevel,
             maxZoom: maxZoomLevel,
             wheelPxPerZoomLevel: 3
@@ -88,8 +88,7 @@ graphMap = function(result) {
     };
 
 
-
-    var createMarkers = function() {
+    var createMarkers = function () {
         // clear the markers
         map.eachLayer(function (l) {
             if (l._icon) {
@@ -131,10 +130,10 @@ graphMap = function(result) {
                 title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
             })
             marker.bindPopup(markerPopUp);
-            marker.on('mouseover', function(e) {
+            marker.on('mouseover', function (e) {
                 this.openPopup();
             });
-            marker.on('mouseout', function(e) {
+            marker.on('mouseout', function (e) {
                 this.closePopup();
             });
 
@@ -188,7 +187,7 @@ graphMap = function(result) {
     };
 
     // hide the spinner
-    document.getElementById("spinner").style.display="none";
+    matsCurveUtils.hideSpinner();
 
     // initial resize seems to be necessary
     resizeMap(this);

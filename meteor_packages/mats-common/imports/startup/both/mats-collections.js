@@ -2,7 +2,6 @@
  * Created by pierce on 8/31/16.
  */
 import { Mongo } from 'meteor/mongo';
-
 var CurveParams = new Mongo.Collection("CurveParams");
 var Scatter2dParams = new Mongo.Collection("Scatter2dParams");
 var CurveTextPatterns = new Mongo.Collection("CurveTextPatterns");
@@ -32,7 +31,7 @@ var SavedCredentials = new Mongo.Collection("SavedCredentials");
 var SiteMap = new Mongo.Collection("SiteMap");
 var StationMap = new Mongo.Collection("StationMap");
 var appName = new Mongo.Collection("appName");
-//var ServiceConfiguration = new Mongo.Collection("ServiceConfiguration");
+
 
 
 const startInit = function () {

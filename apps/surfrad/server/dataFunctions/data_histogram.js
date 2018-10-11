@@ -17,7 +17,7 @@ dataHistogram = function (plotParams, plotFunction) {
     var alreadyMatched = false;
     var totalProcessingStart = moment();
     var error = "";
-    var curves = plotParams.curves;
+    var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var curvesLengthSoFar = 0;
     var dataset = [];
@@ -28,7 +28,62 @@ dataHistogram = function (plotParams, plotFunction) {
     var ymax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
-    const binNum = 12;
+
+    // process user bin customizations
+    var binType = plotParams['histogram-bin-controls'];
+    var binNum = 12;    // default bin number
+    var zeroPivot = false;      // default is not to shift the bins over to 0
+    var binBounds = []; // default is no specified bin bounds -- our algorithm will figure them out if this array stays empty
+
+    switch (binType) {
+        case "Set number of bins":
+            // get the user's chosen number of bins
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            break;
+
+        case "Make zero a bin bound":
+            // let the histogram routine know that we want the bins shifted over to zero
+            zeroPivot = true;
+            break;
+
+        case "Set number of bins and make zero a bin bound":
+            // get the user's chosen number of bins and let the histogram routine know that we want the bins shifted over to zero
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            zeroPivot = true;
+            break;
+
+        case "Manual bins":
+            // try to parse whatever we've been given for bin bounds. Throw an error if they didn't follow directions to enter a comma-separated list of numbers.
+            try {
+                binBounds = plotParams['bin-bounds'].split(",").map(function (item) {
+                    item.trim();
+                    item = Number(item);
+                    if (!isNaN(item)) {
+                        return item
+                    } else {
+                        throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
+                    }
+                });
+                binNum = binBounds.length + 1; // add 1 because these are inner bin bounds
+            } catch (e) {
+                throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
+            }
+            // make sure that we've been given at least two good bin bounds (enough to make one bin).
+            if (binNum < 3) {
+                throw new Error("Error parsing bin bounds: please enter at least two numbers delimited by commas.");
+            }
+            break;
+
+        case "Default bins":
+        default:
+            break;
+    }
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -153,7 +208,12 @@ dataHistogram = function (plotParams, plotFunction) {
     // flatten all the returned data into one stats array and one secs array in order to calculate histogram bins over the whole range.
     const curveSubStats = [].concat.apply([], allReturnedSubStats);
     const curveSubSecs = [].concat.apply([], allReturnedSubSecs);
-    const binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum).binStats;
+    var binStats;
+    if (binBounds.length === 0) {
+        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum, zeroPivot).binStats;
+    } else {
+        binStats = matsDataUtils.prescribeHistogramBins(curveSubStats, curveSubSecs, binNum, binBounds).binStats;
+    }
 
     // store bin labels and x-axis positions of those labels for later when we set up the plot options
     var plotBins = [];
@@ -260,9 +320,9 @@ dataHistogram = function (plotParams, plotFunction) {
              data[0] - bin number (plotted against the x axis)
              data[1] - number in bin (ploted against the y axis)
              data[2] - -1 (no error bars for histograms)
-             data[3] - bin values
-             data[4] - bin times
-             data[5] - reserved for if there are bin levels
+             data[3] - bin values -- removed here to save on data volume
+             data[4] - bin times -- removed here to save on data volume
+             data[5] - reserved for if there are bin levels -- removed here to save on data volume
              data[6] - bin stats
              data[7] - global stats
              data[8] - tooltip
@@ -271,7 +331,7 @@ dataHistogram = function (plotParams, plotFunction) {
             values.push(data[di][1]);
             bins.push(data[di][0]);
 
-            // // this is the tooltip, it is the last element of each dataseries element
+            // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +
                 "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
                 "<br> " + "number in bin for this curve: " + (data[di][1] === null ? null : data[di][1]) +
@@ -282,7 +342,7 @@ dataHistogram = function (plotParams, plotFunction) {
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(bins, values);
+        const stats = matsDataUtils.get_err(values, bins);
         const filteredValues = values.filter(x => x);
         const miny = Math.min(...filteredValues);
         const maxy = Math.max(...filteredValues);
@@ -296,13 +356,13 @@ dataHistogram = function (plotParams, plotFunction) {
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            axisMap[curves[curveIndex].axisKey]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
         }
     }
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     // generate plot options

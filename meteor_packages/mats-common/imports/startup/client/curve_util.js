@@ -3,18 +3,118 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 import {Info} from 'meteor/randyp:mats-common';
+import {matsMethods} from 'meteor/randyp:mats-common';
+
 
 /*
  global dataset variable - container for graph dataset.
  This (plotResult) is very important. It isn't "var" because it needs to be a meteor global scope.
  The page is rendered whe the graph page comes up, but the data from the data processing callback
  in plotList.js or curveList.js may not have set the global variable
- PlotResult. The callback sets the variable then sets the session variable plotResultsUpDated.
- Referring to plotResultsUpDated in the textView templates causes the template to get re-loaded with the current graph data
- (which is in the PlotResults global).
+ PlotResult.
  */
 
-PlotResult = {};
+//var plotResultData = null;
+var graphResult = null;
+var plot;
+
+const sizeof = function (_1) {
+    var _2 = [_1];
+    var _3 = 0;
+    for (var _4 = 0; _4 < _2.length; _4++) {
+        switch (typeof _2[_4]) {
+            case "boolean":
+                _3 += 4;
+                break;
+            case "number":
+                _3 += 8;
+                break;
+            case "string":
+                _3 += 2 * _2[_4].length;
+                break;
+            case "object":
+                if (Object.prototype.toString.call(_2[_4]) != "[object Array]") {
+                    for (var _5 in _2[_4]) {
+                        _3 += 2 * _5.length;
+                    }
+                }
+                for (var _5 in _2[_4]) {
+                    var _6 = false;
+                    for (var _7 = 0; _7 < _2.length; _7++) {
+                        if (_2[_7] === _2[_4][_5]) {
+                            _6 = true;
+                            break;
+                        }
+                    }
+                    if (!_6) {
+                        _2.push(_2[_4][_5]);
+                    }
+                }
+        }
+    }
+    return _3;
+};
+
+const getPlotResultData = function () {
+    var pageIndex = Session.get("pageIndex");
+    var newPageIndex = Session.get("newPageIndex");
+    if (plotResultData === undefined || plotResultData === null || Session.get('textRefreshNeeded') === true) {
+        setPlotResultData();
+    }
+    return plotResultData;
+}
+
+
+const setPlotResultData = function () {
+    var pageIndex = Session.get("pageIndex");
+    var newPageIndex = Session.get("newPageIndex");
+
+    if (Session.get('textRefreshNeeded') === true) {
+        showSpinner();
+        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
+            if (error !== undefined) {
+                setError(new Error("matsMethods.getPlotResult failed : error: " + error));
+                Session.set('textRefreshNeeded', false);
+            }
+            if (result == undefined) {
+                plotResultData = undefined;
+                Session.set('textRefreshNeeded', false);
+                hideSpinner();
+                return;
+            }
+            plotResultData = result;
+            Session.set("pageIndex", result.dsiRealPageIndex);
+            Session.set("pageTextDirection", result.dsiTextDirection);
+            Session.set('textLoaded', new Date());
+            console.log("size of plotResultData is ", sizeof(plotResultData));
+            Session.set('textRefreshNeeded', false);
+            hideSpinner();
+        });
+    }
+}
+
+const resetPlotResultData = function () {
+    plotResultData = null;
+    Session.set('textLoaded', new Date());
+}
+
+const getGraphResult = function () {
+    if (graphResult === undefined || graphResult === null) {
+        return [];
+    }
+    return graphResult;
+}
+
+const setGraphResult = function (result) {
+    graphResult = result;
+    Session.set('graphDataLoaded', new Date());
+    console.log("size of graphResultData is", sizeof(graphResult));
+}
+
+const resetGraphResult = function () {
+    graphResult = null;
+    Session.set('graphDataLoaded', new Date());
+}
 
 /*
  Curve utilities - used to determine curve labels and colors etc.
@@ -293,6 +393,9 @@ const showTimeseriesFace = function () {
             'average': 'block',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
             'truth': 'block'
         };
         if (appName !== 'wfip2') {
@@ -325,18 +428,21 @@ const showProfileFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'block',
-                'dates': 'none',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'block',
-                'forecast-length': 'block',
-                'dieoff-forecast-length': 'none',
-                'average': 'none',
-                'valid-time': 'block',
-                'utc-cycle-start': 'none',
-                'truth': 'block'
-            };
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -367,18 +473,21 @@ const showDieOffFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'block',
-                'dates': 'none',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'block',
-                'forecast-length': 'none',
-                'dieoff-forecast-length': 'block',
-                'average': 'none',
-                'valid-time': 'block',
-                'utc-cycle-start': 'none',
-                'truth': 'block'
-            };
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'none',
+            'dieoff-forecast-length': 'block',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -413,18 +522,21 @@ const showThresholdFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'block',
-                'dates': 'none',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'none',
-                'forecast-length': 'block',
-                'dieoff-forecast-length': 'none',
-                'average': 'none',
-                'valid-time': 'block',
-                'utc-cycle-start': 'none',
-                'truth': 'block'
-            };
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'none',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -455,18 +567,21 @@ const showValidTimeFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'block',
-                'dates': 'none',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'block',
-                'forecast-length': 'block',
-                'dieoff-forecast-length': 'none',
-                'average': 'none',
-                'valid-time': 'none',
-                'utc-cycle-start': 'none',
-                'truth': 'block'
-            };
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'none',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -497,18 +612,21 @@ const showDailyModelCycleFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'none',
-                'dates': 'block',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'block',
-                'forecast-length': 'none',
-                'dieoff-forecast-length': 'none',
-                'average': 'none',
-                'valid-time': 'none',
-                'utc-cycle-start': 'block',
-                'truth': 'block'
-            };
+            'curve-dates': 'none',
+            'dates': 'block',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'none',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'none',
+            'utc-cycle-start': 'block',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -550,6 +668,9 @@ const showMapFace = function () {
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
             'truth': 'none',
             'sites': 'block',
             'sitesMap': 'block'
@@ -577,18 +698,21 @@ const showHistogramFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.histogram).checked === true) {
         var appName = matsParamUtils.getAppName();
         var faceOptions = {
-                'curve-dates': 'block',
-                'dates': 'none',
-                'region': 'block',
-                'statistic': 'block',
-                'threshold': 'block',
-                'forecast-length': 'block',
-                'dieoff-forecast-length': 'none',
-                'average': 'none',
-                'valid-time': 'block',
-                'utc-cycle-start': 'none',
-                'truth': 'block'
-            };
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'block',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
         if (appName !== 'wfip2') {
             faceOptions['sites'] = 'none';
             faceOptions['sitesMap'] = 'none';
@@ -769,10 +893,14 @@ const get_err = function (sVals, sSecs) {
 };
 
 const showSpinner = function () {
-    document.getElementById("spinner").style.display = "block";
+    if (document.getElementById("spinner")) {
+        document.getElementById("spinner").style.display = "block";
+    }
 }
 const hideSpinner = function () {
-    document.getElementById("spinner").style.display = "none";
+    if (document.getElementById("spinner")) {
+        document.getElementById("spinner").style.display = "none";
+    }
 }
 
 const squareWidth = function () {
@@ -818,22 +946,22 @@ const resizeGraph = function (plotType) {
         case matsTypes.PlotTypes.profile:
             // set the width square
             document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.heigth = squareHeight();
+            document.getElementById('placeholder').style.height = squareHeight();
             break;
         case matsTypes.PlotTypes.scatter2d:
             // set the width square
             document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.heigth = squareHeight();
+            document.getElementById('placeholder').style.height = squareHeight();
             break;
         case matsTypes.PlotTypes.timeSeries:
             // set the width wide
             document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.heigth = rectangleHeight();
+            document.getElementById('placeholder').style.height = rectangleHeight();
             break;
         case matsTypes.PlotTypes.dieoff:
             // set the width wide
             document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.heigth = rectangleHeight();
+            document.getElementById('placeholder').style.height = rectangleHeight();
             break;
         default:
             break;
@@ -864,10 +992,16 @@ export default matsCurveUtils = {
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
     get_err: get_err,
-    PlotResult: PlotResult,
+    getPlotResultData: getPlotResultData,
+    //setPlotResultData: setPlotResultData,
+    resetPlotResultData: resetPlotResultData,
+    getGraphResult: getGraphResult,
+    setGraphResult: setGraphResult,
+    resetGraphResult: resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
-    resizeGraph: resizeGraph
+    resizeGraph: resizeGraph,
+    plot: plot
 };
 
             
