@@ -33,14 +33,10 @@ Template.graph.onRendered(function () {
         document.getElementById('graph-touch-controls').style.display = "none";
     }
 });
-
 Template.graph.onCreated(function () {
     $(window).resize(function () {
-        if (Session.get('graphViewMode') === matsTypes.PlotView.graph) {
-            matsGraphUtils.setGraphView();
-        } else {
-            matsGraphUtils.setTextView();
-        }
+        document.getElementById('placeholder').style.width = matsGraphUtils.width();
+        document.getElementById('placeholder').style.height = matsGraphUtils.height();
     });
 
     $(document).keyup(function (event) {

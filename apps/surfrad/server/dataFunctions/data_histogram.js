@@ -331,6 +331,11 @@ dataHistogram = function (plotParams, plotFunction) {
             values.push(data[di][1]);
             bins.push(data[di][0]);
 
+            // remove sub values and times to save space
+            data[di][3] = [];
+            data[di][4] = [];
+            data[di][5] = [];
+
             // this is the tooltip, it is the last element of each dataseries element
             data[di][8] = label +
                 "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
