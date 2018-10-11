@@ -26,7 +26,6 @@ Template.plotType.helpers({
 
 
 Template.plotType.events({
-
     'click .plot-type-TimeSeries': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
@@ -165,7 +164,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
