@@ -250,6 +250,10 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
                 data[di][2] = -1;
             }
 
+            // remove sub values and times to save space
+            data[di][3] = [];
+            data[di][4] = [];
+
             // store statistics
             data[di][5] = {
                 raw_stat: rawStat,
