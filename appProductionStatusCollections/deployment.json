@@ -58,8 +58,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.7.12-2018.10.11.17.46",
-      "buildDate": "2018.10.11.17.46",
+      "version": "1.7.12-2018.10.11.23.57",
+      "buildDate": "2018.10.11.23.57",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -441,8 +441,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.00.35",
+      "version": "1.7.12",
+      "buildDate": "2018.10.11.23.58",
       "last_test_run": "",
       "last_test_status": ""
     },
