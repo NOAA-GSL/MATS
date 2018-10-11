@@ -19,12 +19,16 @@
                         {{>underConstruction}}
                     </div>
                 {{else}}
+                    <div class=" row">
+                        {{>changePlotType}}
+                    </div>
                     <div class="row pull-left col-lg-12">
                         {{>curveList}}
                     </div>
                     <div class=" row pull-left">
                         {{>error}}
                         {{>info}}
+                        {{>changePlotType}}
                     </div>
                     <div id="scatterView" class=" row pull-left col-lg-10">
                         {{>scatter2d}}

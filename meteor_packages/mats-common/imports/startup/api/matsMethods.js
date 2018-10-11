@@ -151,9 +151,9 @@ const getPagenatedData = function (rky, p, np) {
         try {
             var Future = require('fibers/future');
             var future = new Future();
-            var resultKey = Results.findOne({key: key}, {key: 1});
+            var resultKey = Results.findOne({key: key}, {key: 1}, {disableOplog: true});
             if (resultKey !== undefined) {
-                rawReturn = Results.findOne({key: key}).result;
+                rawReturn = Results.findOne({key: key}, {disableOplog: true}).result;
                 future.return(rawReturn);
             } else {
                 future.return(undefined);
@@ -1264,7 +1264,7 @@ const getGraphData = new ValidatedMethod({
             try {
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                var results = Results.findOne({key: key}, {key: 1});
+                var results = Results.findOne({key: key}, {key: 1}, {disableOplog: true});
                 if (results === undefined) {
                     // results aren't in the Collection - need to process data routine
                     var Future = require('fibers/future');
@@ -1276,12 +1276,12 @@ const getGraphData = new ValidatedMethod({
                     return future.wait();
                 } else { // results were already in the Results collection (same params and not yet expired)
                     // are results in the downsampled collection?
-                    var dsResults = DownSampleResults.findOne({key: key});
+                    var dsResults = DownSampleResults.findOne({key: key},{}, {disableOplog: true});
                     if (dsResults !== undefined) {
                         ret = dsResults;
                         DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     } else {
-                        ret = Results.findOne({key: key});
+                        ret = Results.findOne({key: key},{}, {disableOplog: true});
                         Results.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     }
                     var sizeof = require('object-sizeof');
@@ -1313,11 +1313,11 @@ const getGraphDataByKey = new ValidatedMethod({
             var ret;
             var key = params.resultKey;
             try {
-                var dsResults = DownSampleResults.findOne({key: key});
+                var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
                 if (dsResults !== undefined) {
                     ret = dsResults;
                 } else {
-                    ret = Results.findOne({key: key});
+                    ret = Results.findOne({key: key}, {}, {disableOplog: true});
                 }
                 var sizeof = require('object-sizeof');
                 console.log("getGraphDataByKey results size is ", sizeof(dsResults));

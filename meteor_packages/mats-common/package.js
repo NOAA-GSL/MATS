@@ -161,6 +161,9 @@ Package.onUse(function (api) {
     api.addFiles("templates/info/info.html", "client");
     api.addFiles("templates/info/info.js", "client");
 
+    api.addFiles("templates/changePlotType/changePlotType.html", "client");
+    api.addFiles("templates/changePlotType/changePlotType.js", "client");
+
     api.addFiles("templates/graph/graph.html", "client");
     api.addFiles("templates/graph/graph.js", "client");
 

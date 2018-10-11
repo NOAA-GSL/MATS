@@ -337,7 +337,6 @@ Template.plotList.events({
                 return false;
                 break;
             case "plot":
-            default:
                 matsCurveUtils.resizeGraph(matsPlotUtils.getPlotType());
                 var pt = matsPlotUtils.getPlotType();
                 var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
@@ -370,7 +369,8 @@ Template.plotList.events({
 
                     matsGraphUtils.setGraphView();
                 });
-
+                break;
+            default:
                 break;
         }
         return false;

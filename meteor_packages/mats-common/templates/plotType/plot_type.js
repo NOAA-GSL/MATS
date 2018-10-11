@@ -26,24 +26,7 @@ Template.plotType.helpers({
 
 
 Template.plotType.events({
-    'click .confirm-remove-all': function () {
-        matsCurveUtils.clearAllUsed();
-        matsParamUtils.setAllParamsToDefault();
-        Session.set("editMode", "");
-        Session.set("paramWellColor", "#f5f5f5");  // default grey
-        Session.set("lastUpdate", Date.now());
 
-        Session.set("confirmPlotChange", Date.now());
-        const plotChangeType = Session.get('plotChangeType');
-        const ref = "#plot-type-" + plotChangeType;   //NOTE: this assumes that the id of the associated plotType is following a convention defined by matsTypes.PlotTypes
-        $(ref).trigger('click');
-    },
-    'click .confirm-keep-all': function () {
-        Session.set("confirmPlotChange", Date.now());
-        const plotChangeType = Session.get('plotChangeType');
-        const ref = "#plot-type-" + plotChangeType;   //NOTE: this assumes that the id of the associated plotType is following a convention defined by matsTypes.PlotTypes
-        $(ref).trigger('click');
-    },
     'click .plot-type-TimeSeries': function (event) {
         if (Session.get("confirmPlotChange")) {
             // change has been confirmed
@@ -78,7 +61,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -131,7 +113,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -184,7 +165,7 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
+
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -234,7 +215,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -282,16 +262,8 @@ Template.plotType.events({
                 }
                 Session.set('Curves', curves);
             }
-            // matsMethods.refreshMetaData.call({}, function (error, result) {
-            //     if (error !== undefined) {
-            //         setError(new Error(error.message));
-            //     }
-            //     matsParamUtils.setAllParamsToDefault();
-            //     Session.set("lastUpdate", Date.now());
-            // });
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -338,7 +310,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -385,7 +356,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -441,7 +411,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
@@ -475,7 +444,6 @@ Template.plotType.events({
             }
             Session.set("confirmPlotChange", "");
             Session.set('plotChangeType', "");
-            return false;
         } else {
             // no confirmation yet so check to see if we have any curves and if so then show the confirm dialog
             if (Session.get("Curves").length > 0) {
