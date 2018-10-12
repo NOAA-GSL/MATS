@@ -1,5 +1,5 @@
-const setNoDataLabels = function (dataset) {
 // set the label for the hide show buttons (NO DATA) for the initial time here
+const setNoDataLabels = function (dataset) {
     for (var c = 0; c < dataset.length; c++) {
         if (dataset[c].data.length === 0) {
             Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
@@ -67,6 +67,7 @@ const setNoDataLabels = function (dataset) {
     }
 };
 
+// tools to draw the map for a map plot
 const drawMap = function () {
     var defaultPoint = this.data.defaultMapView.point;
     var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
@@ -84,8 +85,8 @@ const drawMap = function () {
     var map = L.map(this.data.name + "-" + this.data.type, {
         doubleClickZoom: false,
         scrollWheelZoom: false,
-        trackResize:true,
-        zoomControl:true,
+        trackResize: true,
+        zoomControl: true,
         minZoom: minZoomLevel,
         maxZoom: maxZoomLevel,
         wheelPxPerZoomLevel: 3
@@ -109,7 +110,7 @@ const drawMap = function () {
     if (!markerFeatures) {
         markerFeatures = {};
     }
-}
+};
 
 const normalizeYAxis = function (ranges, nOptions) {
     /*
@@ -126,10 +127,10 @@ const normalizeYAxis = function (ranges, nOptions) {
      */
     var yaxisRangesKeys = _.difference(Object.keys(ranges), ["xaxis"]); // get just the yaxis from the ranges... yaxis, yaxis2, yaxis3...., yaxisn
     // I want the yaxis first then the y1axis y2axis etc...
-    yaxisRangesKeys = ["yaxis"].concat(_.difference(Object.keys(ranges),["xaxis","yaxis"]).sort());
+    yaxisRangesKeys = ["yaxis"].concat(_.difference(Object.keys(ranges), ["xaxis", "yaxis"]).sort());
     var yaxisFrom = ranges['yaxis'].from;
     var yaxisTo = ranges['yaxis'].to;
-    for (var i =0; i < yaxisRangesKeys.length; i++) {
+    for (var i = 0; i < yaxisRangesKeys.length; i++) {
         // [yaxis,y2axis,y3axis ....]
         if (i !== 0) {
             // might have to skip a duplicated axis... but never yaxis
@@ -147,12 +148,14 @@ const normalizeYAxis = function (ranges, nOptions) {
     return nOptions;
 };
 
-const drawGraph = function(ranges, dataset, options, placeholder) {
+// utility to draw the graph
+const drawGraph = function (ranges, dataset, options, placeholder) {
     var dOptions = $.extend(true, {}, options);
-    var zOptions = $.extend(true, {}, dOptions, normalizeYAxis(ranges,dOptions));
+    var zOptions = $.extend(true, {}, dOptions, normalizeYAxis(ranges, dOptions));
     return $.plot(placeholder, dataset, zOptions);
 };
 
+// formats the error bars for profile plots (stat plotted on the x axis)
 const drawXErrorCaps = function (ctx, lowerx, upperx, y, radius) {
     // ctx is CanvasRenferingContext2d
     ctx.beginPath();
@@ -169,19 +172,22 @@ const drawXErrorCaps = function (ctx, lowerx, upperx, y, radius) {
 
 };
 
+// x-axis stat error bar format helper
 const lXSquareCap = function (ctx, x, y, radius) {
     lowerx = x;
     // this is where you would make the xradius vary by the size of the error
     var xradius = radius;
     var yradius = radius;
-   drawXErrorCaps(ctx, lowerx, upperx, y, radius);
+    drawXErrorCaps(ctx, lowerx, upperx, y, radius);
 };
 
+// x-axis stat error bar format helper
 var uXSquareCap = function (ctx, x, y, radius) {
     // upper gets called first -- see drawError in flot
     upperx = x;
 };
 
+// formats the error bars for non-profile plots (stat plotted on the y axis)
 const drawYErrorCaps = function (ctx, lowery, uppery, x, radius) {
     // ctx is CanvasRenferingContext2d
     //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
@@ -199,6 +205,7 @@ const drawYErrorCaps = function (ctx, lowery, uppery, x, radius) {
 
 };
 
+// y-axis stat error bar format helper
 const lYSquareCap = function (ctx, x, y, radius) {
     //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
     lowery = y;
@@ -208,6 +215,7 @@ const lYSquareCap = function (ctx, x, y, radius) {
     drawYErrorCaps(ctx, lowery, uppery, x, radius);
 };
 
+// y-axis stat error bar format helper
 var uYSquareCap = function (ctx, x, y, radius) {
     //lowery and uppery are reversed for some reason and I can't figure out why, so just know that lowery is really the upper y limit and uppery is really the upper y limit
     // upper gets called first -- see drawError in flot
@@ -230,7 +238,7 @@ const normalize2dYAxis = function (ranges) {
     return axis;
 };
 
-const draw2dGraph = function(ranges) {
+const draw2dGraph = function (ranges) {
     var normalizedOptions = normalizeYAxis(ranges);
     var zOptions = $.extend(true, {}, options, normalizedOptions);
     delete zOptions.xaxes[0].max;
@@ -241,6 +249,7 @@ const draw2dGraph = function(ranges) {
     placeholder.append("<div style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
 };
 
+// plot width helper used in multiple places
 var width = function () {
     var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
     if (vpw < 400) {
@@ -249,6 +258,8 @@ var width = function () {
         return (.9 * vpw).toString() + "px";
     }
 };
+
+// plot height helper used in multiple places
 var height = function () {
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     if (vph < 400) {
@@ -267,6 +278,7 @@ var standAloneHeight = function () {
     return (.825 * vph).toString() + "px";
 };
 
+// helper to bring up the text page
 var setTextView = function () {
     //shows text page and proper text output, hides everything else
     document.getElementById('placeholder').style.width = width();
@@ -279,6 +291,8 @@ var setTextView = function () {
     document.getElementById('graph-touch-controls').style.display = "none";
     document.getElementById('plot-control-button-group').style.display = "none";
 };
+
+// helper to bring up the graph page
 var setGraphView = function () {
     //shows graph page, hides everything else
     document.getElementById('graph-container').style.display = 'block';
@@ -287,13 +301,13 @@ var setGraphView = function () {
     document.getElementById('plotList').style.display = 'none';
     document.getElementById('curveList').style.display = 'none';
     if (document.getElementById("plotTypeContainer")) {
-        document.getElementById("plotTypeContainer").style.display="none";
+        document.getElementById("plotTypeContainer").style.display = "none";
     }
-    if (document.getElementById("scatter2d")){
+    if (document.getElementById("scatter2d")) {
         document.getElementById("scatter2d").style.display = "none";
     }
     if (document.getElementById("scatterView")) {
-        document.getElementById("scatterView").style.display="none";
+        document.getElementById("scatterView").style.display = "none";
     }
     document.getElementById('placeholder').style.width = width();
     document.getElementById('placeholder').style.height = height();
@@ -310,6 +324,8 @@ var setGraphView = function () {
         document.getElementById('plot-control-button-group').style.display = "none";
     }
 };
+
+// helper to bring up the graph page in a pop-up window
 var standAloneSetGraphView = function () {
     //shows graph page, hides everything else
     document.getElementById('graph-container').style.display = 'block';
@@ -318,7 +334,9 @@ var standAloneSetGraphView = function () {
     document.getElementById("curves").style.display = "block";
     document.getElementById("graphView").style.display = "block";
 };
-var setDefaultView = function() {
+
+// helper to bring up the main selector page
+var setDefaultView = function () {
     // show elements of the main page
     if (document.getElementById('paramList')) {
         document.getElementById('paramList').style.display = 'block';
@@ -351,23 +369,23 @@ var setDefaultView = function() {
 
 export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
-    normalizeYAxis:normalizeYAxis,
-    drawGraph:drawGraph,
-    drawMap:drawMap,
-    drawXErrorCaps:drawXErrorCaps,
-    drawYErrorCaps:drawYErrorCaps,
-    lXSquareCap:lXSquareCap,
-    uXSquareCap:uXSquareCap,
-    lYSquareCap:lYSquareCap,
-    uYSquareCap:uYSquareCap,
-    draw2dGraph:draw2dGraph,
-    normalize2dYAxis:normalize2dYAxis,
-    width:width,
-    height:height,
-    standAloneWidth:standAloneWidth,
-    standAloneHeight:standAloneHeight,
-    setTextView:setTextView,
-    setGraphView:setGraphView,
-    standAloneSetGraphView:standAloneSetGraphView,
-    setDefaultView:setDefaultView
+    normalizeYAxis: normalizeYAxis,
+    drawGraph: drawGraph,
+    drawMap: drawMap,
+    drawXErrorCaps: drawXErrorCaps,
+    drawYErrorCaps: drawYErrorCaps,
+    lXSquareCap: lXSquareCap,
+    uXSquareCap: uXSquareCap,
+    lYSquareCap: lYSquareCap,
+    uYSquareCap: uYSquareCap,
+    draw2dGraph: draw2dGraph,
+    normalize2dYAxis: normalize2dYAxis,
+    width: width,
+    height: height,
+    standAloneWidth: standAloneWidth,
+    standAloneHeight: standAloneHeight,
+    setTextView: setTextView,
+    setGraphView: setGraphView,
+    standAloneSetGraphView: standAloneSetGraphView,
+    setDefaultView: setDefaultView
 };

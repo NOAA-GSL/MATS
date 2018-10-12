@@ -4,6 +4,7 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsParamUtils} from 'meteor/randyp:mats-common';
 
+// method to refresh the peers of the current selector
 const refreshPeer = function (event, param) {
     try {
         const peerName = param.peerName;
@@ -26,6 +27,7 @@ const refreshPeer = function (event, param) {
     }
 };
 
+// method to refresh the dependents of the current selector
 const refreshDependents = function (event, param) {
     try {
         const dependentNames = param.dependentNames;
@@ -48,7 +50,7 @@ const refreshDependents = function (event, param) {
                 }
                 try {
                     targetElem.dispatchEvent(new CustomEvent("refresh"))
-                } catch(re) {
+                } catch (re) {
                     re.message = "INFO: refreshDependents of: " + param.name + " dependent: " + targetParam.name + " - error: " + re.message;
                     setInfo(re.message);
                 }
@@ -78,8 +80,8 @@ const refreshDependents = function (event, param) {
     }
 };
 
-const checkDisableOther = function (param, firstRender) {
 // check for enable controlled - This select might have control of another selector
+const checkDisableOther = function (param, firstRender) {
     try {
         if (param.disableOtherFor !== undefined) {
             // this param controls the enable/disable properties of at least one other param.
@@ -108,8 +110,8 @@ const checkDisableOther = function (param, firstRender) {
     }
 };
 
+// check for hide controlled - This select might have control of another selector's visibility
 const checkHideOther = function (param, firstRender) {
-// check for hide controlled - This select might have control of another selectors visibility
     try {
         if (param.hideOtherFor !== undefined) {
             // this param controls the visibility of at least one other param.
@@ -150,6 +152,7 @@ const checkHideOther = function (param, firstRender) {
     }
 };
 
+// refresh the selector in question to the appropriate options indicated by the values of any superior selectors
 const refresh = function (event, paramName) {
     if (paramName.search('axis') === 1) {
         // this is a "brother" (hidden) scatterplot param. There is no need to refresh it or add event listeners etc.
@@ -293,7 +296,7 @@ const refresh = function (event, paramName) {
                         }
                     }
                 } else {
-                options = param.options;
+                    options = param.options;
                 }
             }
             var optionsAsString = "";
@@ -307,7 +310,7 @@ const refresh = function (event, paramName) {
                     // disabled option
                     if (firstGroup === true) {
                         // first in group
-                        optionsAsString += "<optgroup label=" + options[i] +">";
+                        optionsAsString += "<optgroup label=" + options[i] + ">";
                         firstGroup = false;
                     } else {
                         optionsAsString += "</optgroup>";

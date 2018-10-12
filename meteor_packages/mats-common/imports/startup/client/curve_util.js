@@ -14,8 +14,8 @@ import {matsMethods} from 'meteor/randyp:mats-common';
  PlotResult.
  */
 
-//var plotResultData = null;
-var graphResult = null;
+//var plotResultData = null; -- this was the global variable for the text output data, but now it is set elsewhere
+var graphResult = null;     // this is the global variable for the data on the graph
 var plot;
 
 const sizeof = function (_1) {
@@ -55,6 +55,8 @@ const sizeof = function (_1) {
     return _3;
 };
 
+// Retrieves the globally stored plotResultData for the text output and other things.
+// Re-sets the plotResultData if the requested page range has changed, or if it has not been previously set.
 const getPlotResultData = function () {
     var pageIndex = Session.get("pageIndex");
     var newPageIndex = Session.get("newPageIndex");
@@ -62,16 +64,20 @@ const getPlotResultData = function () {
         setPlotResultData();
     }
     return plotResultData;
-}
+};
 
-
+// Sets the global plotResultData variable for the text output to the requested range from the Results data stored in mongo, via a MatsMethod.
 const setPlotResultData = function () {
     var pageIndex = Session.get("pageIndex");
     var newPageIndex = Session.get("newPageIndex");
 
     if (Session.get('textRefreshNeeded') === true) {
         showSpinner();
-        matsMethods.getPlotResult.call({resultKey: Session.get("plotResultKey"), pageIndex:pageIndex, newPageIndex:newPageIndex}, function (error, result) {
+        matsMethods.getPlotResult.call({
+            resultKey: Session.get("plotResultKey"),
+            pageIndex: pageIndex,
+            newPageIndex: newPageIndex
+        }, function (error, result) {
             if (error !== undefined) {
                 setError(new Error("matsMethods.getPlotResult failed : error: " + error));
                 Session.set('textRefreshNeeded', false);
@@ -91,30 +97,34 @@ const setPlotResultData = function () {
             hideSpinner();
         });
     }
-}
+};
 
+// resets the global plotResultData variable for the text output to null
 const resetPlotResultData = function () {
     plotResultData = null;
     Session.set('textLoaded', new Date());
-}
+};
 
+// gets the global graphResult variable, which is the data object for the (possibly downsampled) data on the graph
 const getGraphResult = function () {
     if (graphResult === undefined || graphResult === null) {
         return [];
     }
     return graphResult;
-}
+};
 
+// sets the global graphResult variable to the (possibly downsampled) data object returned from MatsMethods, in order to make the graph
 const setGraphResult = function (result) {
     graphResult = result;
     Session.set('graphDataLoaded', new Date());
     console.log("size of graphResultData is", sizeof(graphResult));
-}
+};
 
+// resets the global graphResult variable to null
 const resetGraphResult = function () {
     graphResult = null;
     Session.set('graphDataLoaded', new Date());
-}
+};
 
 /*
  Curve utilities - used to determine curve labels and colors etc.
@@ -133,7 +143,7 @@ const getNextCurveLabel = function () {
     return Session.get('NextCurveLabel');
 };
 
-//determine the next curve Label and set it in the session
+// determine the next curve Label and set it in the session
 // private, not exported
 const setNextCurveLabel = function () {
     const usedLabels = Session.get('UsedLabels');
@@ -166,7 +176,7 @@ const setNextCurveLabel = function () {
     Session.set('NextCurveLabel', nextCurveLabel);
 };
 
-//determine the next curve color and set it in the session
+// determine the next curve color and set it in the session
 // private - not exported
 const setNextCurveColor = function () {
     var usedColors = Session.get('UsedColors');
@@ -196,6 +206,8 @@ const setNextCurveColor = function () {
     Session.set('NextCurveColor', nextCurveColor);
 };
 
+// get the next curve color from the session
+// private - not exported
 const getNextCurveColor = function () {
     if (Session.get('NextCurveColor') === undefined) {
         setNextCurveColor();
@@ -213,7 +225,7 @@ const clearUsedLabel = function (label) {
     Session.set('NextCurveLabel', label);
 };
 
-//clear a used color and set the nextCurveColor to the one just cleared
+// clear a used color and set the nextCurveColor to the one just cleared
 const clearUsedColor = function (color) {
     var usedColors = Session.get('UsedColors');
     var newUsedColors = _.reject(usedColors, function (c) {
@@ -252,7 +264,7 @@ const setUsedColors = function () {
     setNextCurveColor();
 };
 
-//private - not exported
+// private - not exported
 const setUsedLabels = function () {
     var curves = Session.get('Curves');
     var usedLabels = [];
@@ -283,7 +295,7 @@ const resetScatterApply = function () {
 };
 
 // add the difference curves
-//private - not exported
+// private - not exported
 const addDiffs = function () {
     var curves = Session.get('Curves');
     var newCurves = Session.get('Curves');
@@ -348,8 +360,8 @@ const addDiffs = function () {
 };
 
 
-//remove difference curves
-//private - not exported
+// remove difference curves
+// private - not exported
 const removeDiffs = function () {
     var curves = Session.get('Curves');
     var newCurves = _.reject(curves, function (curve) {
@@ -378,6 +390,7 @@ const checkDiffs = function () {
     }
 };
 
+// method to display the appropriate selectors for a timeseries curve
 const showTimeseriesFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
@@ -423,6 +436,7 @@ const showTimeseriesFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a profile curve
 const showProfileFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
@@ -468,6 +482,7 @@ const showProfileFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a dieoff curve
 const showDieOffFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
@@ -517,6 +532,7 @@ const showDieOffFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a threshold curve
 const showThresholdFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
@@ -562,6 +578,7 @@ const showThresholdFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a valid time curve
 const showValidTimeFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
@@ -607,6 +624,7 @@ const showValidTimeFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a daily model cycle curve
 const showDailyModelCycleFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) {
@@ -652,6 +670,7 @@ const showDailyModelCycleFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a map
 const showMapFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
@@ -693,6 +712,7 @@ const showMapFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a histogram
 const showHistogramFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.histogram).checked === true) {
@@ -738,6 +758,7 @@ const showHistogramFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a scatter plot
 const showScatterFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
         var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -759,6 +780,7 @@ const showScatterFace = function () {
     }
 };
 
+// this is no longer used, but it was once employed by the text output routines to calculate the stats for the entire curve
 const get_err = function (sVals, sSecs) {
     /* THIS IS DIFFERENT FROM THE ONE IN DATA_UTILS,
        This one does not throw away outliers and it captures minVal and maxVal
