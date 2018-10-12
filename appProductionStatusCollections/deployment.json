@@ -106,8 +106,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.7.12-2018.10.11.18.24",
-      "buildDate": "2018.10.11.18.24",
+      "version": "1.7.12-2018.10.12.00.34",
+      "buildDate": "2018.10.12.00.34",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -449,8 +449,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.01.15",
+      "version": "1.7.12",
+      "buildDate": "2018.10.12.00.36",
       "last_test_run": "",
       "last_test_status": ""
     },
