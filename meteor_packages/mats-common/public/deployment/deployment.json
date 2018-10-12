@@ -34,8 +34,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.7.12-2018.10.11.18.07",
-      "buildDate": "2018.10.11.18.07",
+      "version": "1.7.12-2018.10.12.00.17",
+      "buildDate": "2018.10.12.00.17",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -401,8 +401,8 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.00.53",
+      "version": "1.7.12",
+      "buildDate": "2018.10.12.00.15",
       "last_test_run": "",
       "last_test_status": ""
     },
