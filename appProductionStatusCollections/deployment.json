@@ -90,8 +90,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.7.12-2018.10.11.17.56",
-      "buildDate": "2018.10.11.17.56",
+      "version": "1.7.12-2018.10.12.00.07",
+      "buildDate": "2018.10.12.00.07",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -457,8 +457,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.00.42",
+      "version": "1.7.12",
+      "buildDate": "2018.10.12.00.04",
       "last_test_run": "",
       "last_test_status": ""
     },
