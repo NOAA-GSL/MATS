@@ -50,8 +50,8 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.7.12-2018.10.11.18.10",
-      "buildDate": "2018.10.11.18.10",
+      "version": "1.7.12-2018.10.12.00.20",
+      "buildDate": "2018.10.12.00.20",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -417,8 +417,8 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.7.11",
-      "buildDate": "2018.10.11.00.56",
+      "version": "1.7.12",
+      "buildDate": "2018.10.12.00.18",
       "last_test_run": "",
       "last_test_status": ""
     },
