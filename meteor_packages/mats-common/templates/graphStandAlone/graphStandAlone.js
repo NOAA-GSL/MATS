@@ -10,8 +10,8 @@ import {
     matsPlotUtils,
     matsTypes
 } from 'meteor/randyp:mats-common';
-import { Template } from 'meteor/templating';
-import { FlowRouter } from 'meteor/ostrio:flow-router-extra';
+import {Template} from 'meteor/templating';
+import {FlowRouter} from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
 
 var pageIndex = 0;
@@ -19,15 +19,17 @@ var annotation = "";
 var errorTypes = {};
 
 Template.GraphStandAlone.onCreated(function () {
+    // get the params for what this window will contain from the route
     console.log("GraphStandAlone.onCreated");
     Session.set('route', FlowRouter.getRouteName());
-    Session.set("graphFunction",FlowRouter.getParam('graphFunction'));
-    Session.set("plotResultKey",FlowRouter.getParam('key'));
-    Session.set("plotParameter",FlowRouter.getParam('matching'));
-    Session.set("appName",FlowRouter.getParam('appName'));
+    Session.set("graphFunction", FlowRouter.getParam('graphFunction'));
+    Session.set("plotResultKey", FlowRouter.getParam('key'));
+    Session.set("plotParameter", FlowRouter.getParam('matching'));
+    Session.set("appName", FlowRouter.getParam('appName'));
 });
 
 Template.GraphStandAlone.onRendered(function () {
+    // set view options for this new graph window
     $(window).resize(function () {
         matsGraphUtils.standAloneSetGraphView();
     });
@@ -51,12 +53,12 @@ Template.GraphStandAlone.helpers({
             }
             matsCurveUtils.setGraphResult(ret.result);
             Session.set("plotResultKey", ret.key);
-            Session.set('Curves',ret.result.basis.plotParams.curves);
+            Session.set('Curves', ret.result.basis.plotParams.curves);
             Session.set('graphFunction', graphFunction);
             Session.set('PlotResultsUpDated', new Date());
             Session.set('PlotParams', ret.result.basis.plotParams);
             var ptypes = Object.keys(ret.result.basis.plotParams.plotTypes);
-            for (var i=0; i < ptypes.length; i++) {
+            for (var i = 0; i < ptypes.length; i++) {
                 if (ret.result.basis.plotParams.plotTypes[ptypes[i]] === true) {
                     Session.set('plotType', ptypes[i]);
                     break;
@@ -72,6 +74,7 @@ Template.GraphStandAlone.helpers({
                 var options = matsCurveUtils.getGraphResult().options;
 
                 if (plotType !== matsTypes.PlotTypes.map) {
+                    // make sure the zoom carries over from the old graph
                     matsMethods.getNewAxes.call({resultKey: key,}, function (error, ret) {
                         if (error !== undefined) {
                             setError(error);
@@ -107,14 +110,14 @@ Template.GraphStandAlone.helpers({
                         }
                         $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
                         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-                        document.getElementById("gsaSpinner").style.display="none";
+                        document.getElementById("gsaSpinner").style.display = "none";
 
                     });
                 }
             }
         });
     },
-    graphFunctionDispay: function() {
+    graphFunctionDispay: function () {
         return "block";
     },
     Title: function () {
@@ -224,7 +227,7 @@ Template.GraphStandAlone.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else {
             return 'block';
@@ -232,7 +235,7 @@ Template.GraphStandAlone.helpers({
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else {
             return 'block';
@@ -241,7 +244,7 @@ Template.GraphStandAlone.helpers({
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram ) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
             return 'block';
@@ -251,7 +254,7 @@ Template.GraphStandAlone.helpers({
     },
     barsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.histogram ) {
+        if (plotType === matsTypes.PlotTypes.histogram) {
             return 'block';
         } else {
             return 'none';
@@ -259,13 +262,13 @@ Template.GraphStandAlone.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile ) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
             return 'none';
         } else {
             return 'block';
         }
     },
-    matsplotFilemname: function() {
+    matsplotFilemname: function () {
         return "matsplot-" + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss")
     },
     image: function () {
@@ -389,20 +392,20 @@ Template.GraphStandAlone.events({
         annotation = $('#annotationContainer')[0].innerHTML;
     },
     'click .exportpdf': function (e) {
-            $(".previewCurveButtons").each(function(i, obj) {
-                obj.style.display="none";
-            });
-            //const filename  = 'MATSPlot' + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss") + '.pdf';
-            html2canvas(document.querySelector('#graph-container'),{scale: 6.0}).then(canvas => {
+        $(".previewCurveButtons").each(function (i, obj) {
+            obj.style.display = "none";
+        });
+        //const filename  = 'MATSPlot' + moment(new Date()).format("DD-MM-YYYY-hh:mm:ss") + '.pdf';
+        html2canvas(document.querySelector('#graph-container'), {scale: 6.0}).then(canvas => {
 
-            var h=419.53;
-            var w=595.28
+            var h = 419.53;
+            var w = 595.28
             var filename = document.getElementById("exportFileName").value;
-            let pdf = new jsPDF('letter','pt','a5' );
+            let pdf = new jsPDF('letter', 'pt', 'a5');
             pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, w, h);
             pdf.save(filename);
-            $(".previewCurveButtons").each(function(i, obj) {
-                obj.style.display="block";
+            $(".previewCurveButtons").each(function (i, obj) {
+                obj.style.display = "block";
             });
         });
     }

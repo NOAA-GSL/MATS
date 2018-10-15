@@ -10,9 +10,9 @@ graph2dScatter = function (key) {
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
 
-    // get dataset info
+    // get dataset info and options
     var resultSet = matsCurveUtils.getGraphResult();
-    if (resultSet === null) {
+    if (resultSet === null || resultSet === undefined || resultSet.data === undefined) {
         return false;
     }
     var dataset = resultSet.data;
@@ -20,9 +20,9 @@ graph2dScatter = function (key) {
 
     //set options
     if (min < 400) {
-        options.series && options.series.points && (options.series.points.radius = 1);
+        options !== undefined && options.series && options.series.points && (options.series.points.radius = 1);
     } else {
-        options.series && options.series.points && (options.series.points.radius = 2);
+        options !== undefined && options.series && options.series.points && (options.series.points.radius = 2);
     }
     if (route !== undefined && route !== "") {
         options.selection = [];

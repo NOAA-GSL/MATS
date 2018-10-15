@@ -186,12 +186,14 @@ const getPagenatedData = function (rky, p, np) {
             end = (newPageIndex + 1) * 100;
         }
 
+        var dsiStart;
+        var dsiEnd;
         for (var dsi = 0; dsi < ret.data.length; dsi++) {
             if (ret.data[dsi].data.length <= 100) {
                 continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
-            var dsiStart = start;
-            var dsiEnd = end;
+            dsiStart = start;
+            dsiEnd = end;
             if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
                 dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
@@ -526,21 +528,21 @@ const saveResultData = function (result) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
-        var threshHold = 1000000;
+        var threshold = 1000000;
         var ret = {};
         try {
             var dSize = sizeof(result.data);
             console.log("result.basis.data size is ", dSize);
             // TimeSeries and DailyModelCycle are the only plot types that require downSampling
-            if (dSize > threshHold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
-                // greater than threshHold need to downsample
+            if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
+                // greater than threshold need to downsample
                 // downsample and save it in DownSampleResult
                 var downsampler = require("downsample-lttb");
                 var totalPoints = 0;
                 for (var di = 0; di < result.data.length; di++) {
                     totalPoints += result.data[di].data.length;
                 }
-                var allowedNumberOfPoints = (threshHold / dSize) * totalPoints;
+                var allowedNumberOfPoints = (threshold / dSize) * totalPoints;
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
                 for (var di = 0; di < result.data.length; di++) {
                     var lastYVIndex = result.data[di].data[0].length;
