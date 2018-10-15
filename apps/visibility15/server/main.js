@@ -125,6 +125,7 @@ const doCurveParams = function () {
     var truthsModelOptionsMap = {};
     var masterRegionValuesMap = {};
     var masterThresholdValuesMap = {};
+    var masterTruthValuesMap = {};
     var rows;
     try {
         rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "SELECT short_name,description FROM region_descriptions;");
@@ -147,6 +148,19 @@ const doCurveParams = function () {
             masterDescription = rows[j].description.trim();
             masterTrsh = rows[j].trsh.trim();
             masterThresholdValuesMap[masterTrsh] = masterDescription;
+        }
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    try {
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(modelPool, "SELECT truth,description FROM truth_descriptions;");
+        var masterDescription;
+        var masterTruth;
+        for (var j = 0; j < rows.length; j++) {
+            masterDescription = rows[j].description.trim();
+            masterTruth = rows[j].truth.trim();
+            masterTruthValuesMap[masterTruth] = masterDescription;
         }
     } catch (err) {
         console.log(err.message);
@@ -184,8 +198,10 @@ const doCurveParams = function () {
             var truths = rows[i].truth;
             var truthsArrRaw = truths.split(',').map(Function.prototype.call, String.prototype.trim);
             var truthsArr = [];
+            var dummyTruth;
             for (var j = 0; j < truthsArrRaw.length; j++) {
-                truthsArr.push(truthsArrRaw[j].replace(/'|\[|\]/g, ""));
+                dummyTruth = truthsArrRaw[j].replace(/'|\[|\]/g, "");
+                truthsArr.push(masterTruthValuesMap[dummyTruth]);
             }
             truthsModelOptionsMap[model] = truthsArr;
 
@@ -231,7 +247,7 @@ const doCurveParams = function () {
                 optionsMap: modelOptionsMap,
                 dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap),   // convenience
-                dependentNames: ["region", "forecast-length", "threshold", "dates", "curve-dates"],
+                dependentNames: ["region", "forecast-length", "threshold", "truth", "dates", "curve-dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap)[0],
                 unique: false,
@@ -374,10 +390,11 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: truthsModelOptionsMap,
                 options: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]],   // convenience
+                valuesMap: masterTruthValuesMap,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][3],
+                default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][1],
                 controlButtonVisibility: 'block',
                 displayOrder: 6,
                 displayPriority: 1,
@@ -392,7 +409,7 @@ const doCurveParams = function () {
                 $set: {
                     optionsMap: truthsModelOptionsMap,
                     options: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]],
-                    default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][3]
+                    default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][1]
                 }
             });
         }
@@ -590,12 +607,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
+                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "average", "forecast-length", "valid-time"
+                "label", "data-source", "region", "statistic", "threshold", "truth", "average", "forecast-length", "valid-time"
             ],
             groupSize: 6
 
@@ -608,13 +626,14 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
+                ['', 'truth', ', '],
                 ['', 'dieoff-forecast-length', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "truth", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });
@@ -626,11 +645,12 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
+                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });
@@ -642,10 +662,11 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
+                ['', 'truth', ', '],
                 ['start utc: ', 'utc-cycle-start', ', ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "utc-cycle-start"
+                "label", "data-source", "region", "statistic", "threshold", "truth", "utc-cycle-start"
             ],
             groupSize: 6
         });
@@ -657,12 +678,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
+                ['', 'truth', ', '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "forecast-length", "valid-time", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "valid-time", "curve-dates"
             ],
             groupSize: 6
         });
