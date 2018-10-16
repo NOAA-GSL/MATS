@@ -30,6 +30,7 @@ dataHistogram = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
 
     // process user bin customizations
+    var yAxisFormat = plotParams['histogram-yaxis-controls'];
     var binType = plotParams['histogram-bin-controls'];
     var binNum = 12;    // default bin number
     var zeroPivot = false;      // default is not to shift the bins over to 0
@@ -127,7 +128,10 @@ dataHistogram = function (plotParams, plotFunction) {
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = "Number";
+        var axisKey = yAxisFormat;
+        if (yAxisFormat === 'Relative frequency') {
+            axisKey = axisKey + " (x100)"
+        }
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
@@ -315,7 +319,7 @@ dataHistogram = function (plotParams, plotFunction) {
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
              data[0] - bin number (plotted against the x axis)
-             data[1] - number in bin (ploted against the y axis)
+             data[1] - number in bin OR bin RF (ploted against the y axis)
              data[2] - -1 (no error bars for histograms)
              data[3] - bin values -- removed here to save on data volume
              data[4] - bin times -- removed here to save on data volume
@@ -324,6 +328,11 @@ dataHistogram = function (plotParams, plotFunction) {
              data[7] - global stats
              data[8] - tooltip
              */
+
+            if (yAxisFormat === 'Relative frequency') {
+                // replace the bin number with the bin relative frequency for the plotted statistic
+                data[di][1] = data[di][6].bin_rf * 100;
+            }
 
             values.push(data[di][1]);
             bins.push(data[di][0]);

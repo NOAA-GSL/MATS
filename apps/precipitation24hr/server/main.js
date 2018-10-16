@@ -61,6 +61,24 @@ const doPlotParams = function () {
                 displayGroup: 3
             });
 
+        var yAxisOptionsMap = {
+            "Number": ["number"],
+            "Relative frequency": ["relFreq"]
+        };
+        matsCollections.PlotParams.insert(
+            {
+                name: 'histogram-yaxis-controls',
+                type: matsTypes.InputTypes.select,
+                optionsMap: yAxisOptionsMap,
+                options: Object.keys(yAxisOptionsMap),
+                default: Object.keys(yAxisOptionsMap)[0],
+                controlButtonCovered: true,
+                controlButtonText: 'Y-axis mode',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
         var binOptionsMap = {
             "Default bins": ["default"],
             "Set number of bins": ["binNumber"],
@@ -81,7 +99,7 @@ const doPlotParams = function () {
                 default: Object.keys(binOptionsMap)[0],
                 controlButtonCovered: true,
                 controlButtonText: 'customize bins',
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -98,7 +116,7 @@ const doPlotParams = function () {
                 default: '12',
                 controlButtonCovered: true,
                 controlButtonText: "number of bins",
-                displayOrder: 2,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -112,7 +130,7 @@ const doPlotParams = function () {
                 default: ' ',
                 controlButtonCovered: true,
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
-                displayOrder: 3,
+                displayOrder: 4,
                 displayPriority: 1,
                 displayGroup: 2
             });
