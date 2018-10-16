@@ -24,15 +24,18 @@ var getCSV = function (params, req, res, next) {
             var dataResultArray = [];
             for (var si = 0; si < statArray.length; si++) {
                 statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
-                statResultArray.push(Object.values(statArray[si])); // push the stats for this curve
+                statResultArray.push(statArray[si]['n'] === 0 ? [statArray[si].label] : Object.values(statArray[si])); // push the stats for this curve
             }
 
             for (var di = 0; di < dataArray.length; di++) {
                 var dataSubArray = Object.values(dataArray[di]);
-                var dataHeader = Object.keys(dataSubArray[0]);
+                var dataHeader = dataSubArray[0] === undefined ? statArray[di].label : Object.keys(dataSubArray[0]);
                 //dataHeader[0] = 'label';
-                dataHeader[0] = Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
+                dataHeader[0] = dataSubArray[0] === undefined ? "NO DATA" : Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
                 dataResultArray.push(dataHeader); // push this curve data header (keys)
+                if (dataSubArray[0] === undefined) {
+                    continue;
+                }
                 for (var dsi = 0; dsi < dataSubArray.length; dsi++) {  // push this curves data
                     dataResultArray.push(Object.values(dataSubArray[dsi]));
                 }
