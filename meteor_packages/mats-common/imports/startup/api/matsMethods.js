@@ -435,6 +435,7 @@ const getFlattenedResultData = function (rk, p, np) {
                             var curveDataElement = {};
                             curveDataElement[data[ci].label + ' bin range'] = cdata[cdi][6]['binLabel'];
                             curveDataElement['n'] = cdata[cdi][6].bin_n;
+                            curveDataElement['bin rel freq'] = cdata[cdi][6].bin_rf;
                             curveDataElement['bin lower bound'] = cdata[cdi][6].binLowBound;
                             curveDataElement['bin upper bound'] = cdata[cdi][6].binUpBound;
                             curveDataElement['bin mean'] = cdata[cdi][6].bin_mean;

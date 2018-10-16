@@ -159,6 +159,7 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.histogram:
                 header += "<th>" + curve.label + "  bin range</th>\
                         <th>bin n</th>\
+                        <th>bin rel freq</th>\
                         <th>bin lower bound</th>\
                         <th>bin upper bound</th>\
                         <th>bin mean</th>\
@@ -260,6 +261,7 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.histogram:
                 line += "<td>" + element[labelKey += " bin range"] + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>" +
+                    "<td>" + (element['bin rel freq'] != undefined && element['bin rel freq'] !== null ? element['bin rel freq'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['bin lower bound'] != undefined && element['bin lower bound'] !== null ? element['bin lower bound'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['bin upper bound'] != undefined && element['bin upper bound'] !== null ? element['bin upper bound'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['bin mean'] != undefined && element['bin mean'] !== null ? element['bin mean'].toPrecision(4) : fillStr) + "</td>" +

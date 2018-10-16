@@ -616,7 +616,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             axisLabelFontFamily: 'Verdana, Arial',
             axisLabelPadding: 3,
             alignTicksWithAxis: 1,
-            tickDecimals: 0,
+            tickDecimals: 1,
             min: ymin - yPad,
             max: ymax + yPad,
             font: {size: 18}

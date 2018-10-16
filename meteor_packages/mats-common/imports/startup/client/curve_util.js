@@ -407,6 +407,7 @@ const showTimeseriesFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -453,6 +454,7 @@ const showProfileFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -499,6 +501,7 @@ const showDieOffFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -549,6 +552,7 @@ const showThresholdFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -595,6 +599,7 @@ const showValidTimeFace = function () {
             'valid-time': 'none',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -641,6 +646,7 @@ const showDailyModelCycleFace = function () {
             'valid-time': 'none',
             'utc-cycle-start': 'block',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -688,6 +694,7 @@ const showMapFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'none',
@@ -729,6 +736,7 @@ const showHistogramFace = function () {
             'valid-time': 'block',
             'utc-cycle-start': 'none',
             'histogram-bin-controls': 'block',
+            'histogram-yaxis-controls': 'block',
             'bin-number': 'none',
             'bin-bounds': 'none',
             'truth': 'block'
@@ -761,17 +769,42 @@ const showHistogramFace = function () {
 // method to display the appropriate selectors for a scatter plot
 const showScatterFace = function () {
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
-        var elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        var appName = matsParamUtils.getAppName();
+        var faceOptions = {
+            'curve-dates': 'none',
+            'dates': 'block',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block'
+        };
+        if (appName !== 'wfip2') {
+            faceOptions['sites'] = 'none';
+            faceOptions['sitesMap'] = 'none';
+        } else {
+            faceOptions['sites'] = 'block';
+            faceOptions['sitesMap'] = 'block';
+        }
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
         if (elem && elem.style) {
             elem.style.display = "block";
-        }
-        elem = document.getElementById('forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "block";
-        }
-        elem = document.getElementById('dieoff-forecast-length-item');
-        if (elem && elem.style) {
-            elem.style.display = "none";
         }
         Session.set('plotType', matsTypes.PlotTypes.scatter2d);
         Session.set('lastUpdate', Date.now());   // force curveParams to re-render

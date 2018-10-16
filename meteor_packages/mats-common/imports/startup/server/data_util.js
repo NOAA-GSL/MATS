@@ -489,7 +489,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, ze
     if (zeroPivot) {
         // need to shift the bounds and means over so that one of the bounds is on zero
         var closestBoundToZero = binLowBounds.reduce(function (prev, curr) {
-            return (Math.abs(curr) < Math.abs(prev) ? curr : prev);
+            return (Math.abs(curr-0) < Math.abs(prev-0) ? curr : prev);
         });
         binUpBounds[0] = binUpBounds[0] - closestBoundToZero;
         binMeans[0] = binMeans[0] - closestBoundToZero;
@@ -641,18 +641,21 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     var bin_mean;
     var bin_sd;
     var bin_n;
+    var bin_rf;
 
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
         bin_mean = binStats.d_mean;
         bin_sd = binStats.sd;
         bin_n = binStats.n_good;
+        bin_rf = bin_n / glob_n;
 
         if (hasLevels) {
             d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
                 'bin_mean': bin_mean,
                 'bin_sd': bin_sd,
                 'bin_n': bin_n,
+                'bin_rf': bin_rf,
                 'binLowBound': binLowBounds[b_idx],
                 'binUpBound': binUpBounds[b_idx],
                 'binLabel': binLabels[b_idx]
@@ -668,6 +671,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
                 'bin_mean': bin_mean,
                 'bin_sd': bin_sd,
                 'bin_n': bin_n,
+                'bin_rf': bin_rf,
                 'binLowBound': binLowBounds[b_idx],
                 'binUpBound': binUpBounds[b_idx],
                 'binLabel': binLabels[b_idx]

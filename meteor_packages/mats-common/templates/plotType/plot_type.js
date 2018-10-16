@@ -404,6 +404,9 @@ Template.plotType.events({
                     if (!curves[ci]['histogram-bin-controls'] && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}) && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default) {
                         curves[ci]['histogram-bin-controls'] = matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default;
                     }
+                    if (!curves[ci]['histogram-yaxis-controls'] && matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}) && matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}).default) {
+                        curves[ci]['histogram-yaxis-controls'] = matsCollections.CurveParams.findOne({name: 'histogram-yaxis-controls'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }
