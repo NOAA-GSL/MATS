@@ -14,7 +14,7 @@ const getControlButtonIdForParamName = function (paramName) {
     }
 };
 
-// get the control Button Element fthat corresponds to the param name
+// get the control Button Element that corresponds to the param name
 const getControlElementForParamName = function (paramName) {
     // scatter axis don't really exist in matsCollections.CurveParams but they are elements
     const pname = paramName.replace(/^.axis-/, '');
@@ -39,7 +39,6 @@ const getValueForParamName = function (paramName) {
         return undefined;
     }
 };
-
 
 // get the VALUE BOX id for the element that corresponds to the param name
 const getValueIdForParamName = function (paramName) {
@@ -266,7 +265,6 @@ const getElementValues = function () {
     });
     return data;
 };
-
 
 const expandParams = function () {
     const params = matsCollections.CurveParams.find({}).fetch();

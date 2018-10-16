@@ -10,9 +10,9 @@ graphProfile = function (key) {
     var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
     var min = Math.min(vpw, vph);
 
-    // get dataset info
+    // get dataset info and options
     var resultSet = matsCurveUtils.getGraphResult();
-    if (resultSet === null) {
+    if (resultSet === null || resultSet === undefined || resultSet.data === undefined) {
         return false;
     }
     var dataset = resultSet.data;
@@ -42,5 +42,6 @@ graphProfile = function (key) {
         }
     }
 
+    // initializa show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };

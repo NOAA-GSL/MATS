@@ -24,15 +24,18 @@ var getCSV = function (params, req, res, next) {
             var dataResultArray = [];
             for (var si = 0; si < statArray.length; si++) {
                 statResultArray.push(Object.keys(statArray[si])); // push the stat header for this curve(keys)
-                statResultArray.push(Object.values(statArray[si])); // push the stats for this curve
+                statResultArray.push(statArray[si]['n'] === 0 ? [statArray[si].label] : Object.values(statArray[si])); // push the stats for this curve
             }
 
             for (var di = 0; di < dataArray.length; di++) {
                 var dataSubArray = Object.values(dataArray[di]);
-                var dataHeader = Object.keys(dataSubArray[0]);
+                var dataHeader = dataSubArray[0] === undefined ? statArray[di].label : Object.keys(dataSubArray[0]);
                 //dataHeader[0] = 'label';
-                dataHeader[0] = Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
+                dataHeader[0] = dataSubArray[0] === undefined ? "NO DATA" : Object.keys(dataSubArray[0]).filter(key => key.indexOf('Curve') != -1)[0];
                 dataResultArray.push(dataHeader); // push this curve data header (keys)
+                if (dataSubArray[0] === undefined) {
+                    continue;
+                }
                 for (var dsi = 0; dsi < dataSubArray.length; dsi++) {  // push this curves data
                     dataResultArray.push(Object.values(dataSubArray[dsi]));
                 }
@@ -93,12 +96,12 @@ var getJSON = function (params, req, res, next) {
     }
 };
 
-// local collection used to store new axis ranges when opening pop out graphs
-const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");
+// initialize collections used for pop-out window functionality
+const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");    // local collection used to store new axis ranges when opening pop out graphs
 const Results = new Mongo.Collection("Results");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
-    // add indexes to result and axescollections
+    // add indexes to result and axes collections
     Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
@@ -167,29 +170,33 @@ const getPagenatedData = function (rky, p, np) {
         var start;
         var end;
         var direction = 1;
-        // all the data
         if (newPageIndex === -1000) {
+            // all the data
             start = 0;
             end = Number.MAX_VALUE;
         } else if (newPageIndex === -2000) {
             // just the last page
-            direction = -1;
             start = -2000;
+            direction = -1;
         } else if (myPageIndex <= newPageIndex) {
+            // proceed forward
             start = (newPageIndex - 1) * 100;
             end = newPageIndex * 100;
         } else {
+            // move back
             direction = -1;
             start = newPageIndex * 100;
             end = (newPageIndex + 1) * 100;
         }
 
+        var dsiStart;
+        var dsiEnd;
         for (var dsi = 0; dsi < ret.data.length; dsi++) {
             if (ret.data[dsi].data.length <= 100) {
                 continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
-            var dsiStart = start;
-            var dsiEnd = end;
+            dsiStart = start;
+            dsiEnd = end;
             if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
                 dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
@@ -220,9 +227,9 @@ const getPagenatedData = function (rky, p, np) {
         ret.dsiTextDirection = direction;
         return ret;
     }
-}
+};
 
-//private method for getting pagenated results and flattening them in order to be appropriate for text display.
+// private method for getting pagenated results and flattening them in order to be appropriate for text display.
 const getFlattenedResultData = function (rk, p, np) {
     if (Meteor.isServer) {
         var resp;
@@ -518,26 +525,27 @@ const getFlattenedResultData = function (rk, p, np) {
     }
 };
 
+// save the result from the query into mongo and downsample if that result's size is greater than 1Mb
 const saveResultData = function (result) {
     if (Meteor.isServer) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
-        var threshHold = 1000000;
+        var threshold = 1000000;
         var ret = {};
         try {
             var dSize = sizeof(result.data);
             console.log("result.basis.data size is ", dSize);
             // TimeSeries and DailyModelCycle are the only plot types that require downSampling
-            if (dSize > threshHold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
-                // greater than threshHold need to downsample
-                //downsample and save it in DownSampleResult
+            if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
+                // greater than threshold need to downsample
+                // downsample and save it in DownSampleResult
                 var downsampler = require("downsample-lttb");
                 var totalPoints = 0;
                 for (var di = 0; di < result.data.length; di++) {
                     totalPoints += result.data[di].data.length;
                 }
-                var allowedNumberOfPoints = (threshHold / dSize) * totalPoints;
+                var allowedNumberOfPoints = (threshold / dSize) * totalPoints;
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
                 for (var di = 0; di < result.data.length; di++) {
                     var lastYVIndex = result.data[di].data[0].length;
@@ -567,7 +575,7 @@ const saveResultData = function (result) {
                                 downsampledSeries[dsi][dsYVi] = nearestOriginal[dsYVi];
                             }
                         }
-                        //add downsampled annotation to curve options
+                        // add downsampled annotation to curve options
                         downSampleResult.data[di].annotation += "   **DOWNSAMPLED**";
                     } else {
                         downsampledSeries = result.data[di].data;
@@ -590,7 +598,7 @@ const saveResultData = function (result) {
     }
 };
 
-
+// administration tool
 const getDataFunctionFileList = new ValidatedMethod({
     name: 'matsMethods.getDataFunctionFileList',
     validate: new SimpleSchema({}).validator(),
@@ -611,6 +619,7 @@ const getDataFunctionFileList = new ValidatedMethod({
     }
 });
 
+// administration tool
 const getGraphFunctionFileList = new ValidatedMethod({
     name: 'matsMethods.getGraphFunctionFileList',
     validate: new SimpleSchema({}).validator(),
@@ -631,6 +640,7 @@ const getGraphFunctionFileList = new ValidatedMethod({
     }
 });
 
+// administration tool
 const readFunctionFile = new ValidatedMethod({
     name: 'matsMethods.readFunctionFile',
     validate: new SimpleSchema({}).validator(),
@@ -692,6 +702,7 @@ const getPlotResult = new ValidatedMethod({
 });
 
 
+// administration tool
 const restoreFromFile = new ValidatedMethod({
     name: 'matsMethods.restoreFromFile',
     validate: new SimpleSchema({
@@ -723,6 +734,7 @@ const restoreFromFile = new ValidatedMethod({
     }
 });
 
+// administration tool
 const restoreFromParameterFile = new ValidatedMethod({
     name: 'matsMethods.restoreFromParameterFile',
     validate: new SimpleSchema({
@@ -818,6 +830,7 @@ const restoreFromParameterFile = new ValidatedMethod({
     }
 });
 
+// administration tool
 const getUserAddress = new ValidatedMethod({
     name: 'matsMethods.getUserAddress',
     validate: new SimpleSchema({}).validator(),
@@ -828,6 +841,7 @@ const getUserAddress = new ValidatedMethod({
     }
 });
 
+// used to see if the main page needs to update its selectors
 const checkMetaDataRefresh = function () {
     // This routine compares the current last modified time of the tables used for curveParameter metadata
     // with the last update time to determine if an update is necessary. We really only do this for Curveparams
@@ -885,6 +899,7 @@ const checkMetaDataRefresh = function () {
     return true;
 };
 
+// makes sure all of the parameters display appropriate selections in relation to one another
 const resetApp = function (metaDataTableRecords) {
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
@@ -971,6 +986,7 @@ const resetApp = function (metaDataTableRecords) {
     }
 };
 
+// refreshes the metadata for the app that's running
 const refreshMetaData = new ValidatedMethod({
     name: 'matsMethods.refreshMetaData',
     validate: new SimpleSchema({}).validator(),
@@ -987,6 +1003,7 @@ const refreshMetaData = new ValidatedMethod({
     }
 });
 
+// database controls
 const applyDatabaseSettings = new ValidatedMethod({
     name: 'matsMethods.applyDatabaseSettings',
     validate: new SimpleSchema({
@@ -1013,6 +1030,7 @@ const applyDatabaseSettings = new ValidatedMethod({
     }
 });
 
+// database controls
 const removeDatabase = new ValidatedMethod({
     name: 'matsMethods.removeDatabase',
     validate: new SimpleSchema({
@@ -1025,6 +1043,7 @@ const removeDatabase = new ValidatedMethod({
     }
 });
 
+// app utility
 const insertColor = new ValidatedMethod({
     name: 'matsMethods.insertColor',
     validate: new SimpleSchema({
@@ -1042,6 +1061,7 @@ const insertColor = new ValidatedMethod({
     }
 });
 
+// app utility
 const removeColor = new ValidatedMethod({
     name: 'matsMethods.removeColor',
     validate: new SimpleSchema({
@@ -1056,6 +1076,7 @@ const removeColor = new ValidatedMethod({
     }
 });
 
+// administation tool
 const setSettings = new ValidatedMethod({
     name: 'matsMethods.setSettings',
     validate: new SimpleSchema({
@@ -1083,6 +1104,7 @@ const setSettings = new ValidatedMethod({
     }
 });
 
+// administation tool
 const setCredentials = new ValidatedMethod({
     name: 'matsMethods.setCredentials',
     validate: new SimpleSchema({
@@ -1107,6 +1129,7 @@ const setCredentials = new ValidatedMethod({
     }
 });
 
+// administation tool
 const removeAuthorization = new ValidatedMethod({
     name: 'matsMethods.removeAuthorization',
     validate: new SimpleSchema({
@@ -1153,6 +1176,7 @@ const removeAuthorization = new ValidatedMethod({
 });
 
 
+// administation tool
 const applyAuthorization = new ValidatedMethod({
     name: 'matsMethods.applyAuthorization',
     validate: new SimpleSchema({
@@ -1232,6 +1256,7 @@ const applyAuthorization = new ValidatedMethod({
     }
 });
 
+// administation tool
 const getAuthorizations = new ValidatedMethod({
     name: 'matsMethods.getAuthorizations',
     validate: new SimpleSchema({}).validator(),
@@ -1245,6 +1270,7 @@ const getAuthorizations = new ValidatedMethod({
     }
 });
 
+// retrieves the saved query results (or downsampled results)
 const getGraphData = new ValidatedMethod({
     name: 'matsMethods.getGraphData',
     validate: new SimpleSchema({
@@ -1276,12 +1302,12 @@ const getGraphData = new ValidatedMethod({
                     return future.wait();
                 } else { // results were already in the Results collection (same params and not yet expired)
                     // are results in the downsampled collection?
-                    var dsResults = DownSampleResults.findOne({key: key},{}, {disableOplog: true});
+                    var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
                     if (dsResults !== undefined) {
                         ret = dsResults;
                         DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     } else {
-                        ret = Results.findOne({key: key},{}, {disableOplog: true});
+                        ret = Results.findOne({key: key}, {}, {disableOplog: true});
                         Results.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     }
                     var sizeof = require('object-sizeof');
@@ -1301,6 +1327,7 @@ const getGraphData = new ValidatedMethod({
     }
 });
 
+// retrieves the saved query results (or downsampled results) for a specific key
 const getGraphDataByKey = new ValidatedMethod({
     name: 'matsMethods.getGraphDataByKey',
     validate: new SimpleSchema({
@@ -1330,6 +1357,7 @@ const getGraphDataByKey = new ValidatedMethod({
     }
 });
 
+//administration tools
 const saveSettings = new ValidatedMethod({
     name: 'matsMethods.saveSettings',
     validate: new SimpleSchema({
@@ -1357,6 +1385,7 @@ const saveSettings = new ValidatedMethod({
     }
 });
 
+//administration tools
 const deleteSettings = new ValidatedMethod({
     name: 'matsMethods.deleteSettings',
     validate: new SimpleSchema({
@@ -1374,6 +1403,7 @@ const deleteSettings = new ValidatedMethod({
     }
 });
 
+//administration tools
 const addSentAddress = new ValidatedMethod({
     name: 'matsMethods.addSentAddress',
     validate: new SimpleSchema({
@@ -1388,6 +1418,7 @@ const addSentAddress = new ValidatedMethod({
     }
 });
 
+//administration tools
 const emailImage = new ValidatedMethod({
     name: 'matsMethods.emailImage',
     validate: new SimpleSchema({
@@ -1464,64 +1495,6 @@ const emailImage = new ValidatedMethod({
             throw new Meteor.Error(401, "Send error " + e.message());
         }
         return false;
-    }
-});
-
-/* test methods */
-
-const testGetTables = new ValidatedMethod({
-    name: 'matsMethods.testGetTables',
-    validate: new SimpleSchema(
-        {
-            host: {type: String},
-            user: {type: String},
-            password: {type: String},
-            database: {type: String}
-        }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var Future = require('fibers/future');
-            const queryWrap = Future.wrap(function (callback) {
-                const connection = mysql.createConnection({
-                    host: params.host,
-                    user: params.user,
-                    password: params.password,
-                    database: params.database
-                });
-                connection.query("show tables;", function (err, result) {
-                    const tables = result.map(function (a) {
-                        return a.Tables_in_ruc_ua_sums2;
-                    });
-                    return callback(err, tables);
-                });
-                connection.end(function (err) {
-                    if (err) {
-                        console.log("testGetTables cannot end connection");
-                    }
-                });
-            });
-            return queryWrap().wait();
-        }
-    }
-});
-
-const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
-    name: 'matsMethods.testSetMetaDataTableUpdatesLastRefreshedBack',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        var mtu = metaDataTableUpdates.find({}).fetch();
-        var id = mtu[0]._id;
-        metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: 0}});
-        return metaDataTableUpdates.find({}).fetch();
-    }
-});
-
-
-const testGetMetaDataTableUpdates = new ValidatedMethod({
-    name: 'matsMethods.testGetMetaDataTableUpdates',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        return metaDataTableUpdates.find({}).fetch();
     }
 });
 
@@ -1605,6 +1578,64 @@ const setNewAxes = new ValidatedMethod({
                 throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
             }
         }
+    }
+});
+
+/* test methods */
+
+const testGetTables = new ValidatedMethod({
+    name: 'matsMethods.testGetTables',
+    validate: new SimpleSchema(
+        {
+            host: {type: String},
+            user: {type: String},
+            password: {type: String},
+            database: {type: String}
+        }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var Future = require('fibers/future');
+            const queryWrap = Future.wrap(function (callback) {
+                const connection = mysql.createConnection({
+                    host: params.host,
+                    user: params.user,
+                    password: params.password,
+                    database: params.database
+                });
+                connection.query("show tables;", function (err, result) {
+                    const tables = result.map(function (a) {
+                        return a.Tables_in_ruc_ua_sums2;
+                    });
+                    return callback(err, tables);
+                });
+                connection.end(function (err) {
+                    if (err) {
+                        console.log("testGetTables cannot end connection");
+                    }
+                });
+            });
+            return queryWrap().wait();
+        }
+    }
+});
+
+const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
+    name: 'matsMethods.testSetMetaDataTableUpdatesLastRefreshedBack',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        var mtu = metaDataTableUpdates.find({}).fetch();
+        var id = mtu[0]._id;
+        metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: 0}});
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
+
+
+const testGetMetaDataTableUpdates = new ValidatedMethod({
+    name: 'matsMethods.testGetMetaDataTableUpdates',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        return metaDataTableUpdates.find({}).fetch();
     }
 });
 

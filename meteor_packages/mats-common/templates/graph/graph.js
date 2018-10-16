@@ -29,11 +29,13 @@ var originalYaxisMaxs = [];
 var openWindows = [];
 
 Template.graph.onRendered(function () {
+    // make sure the zoom and pan buttons don't show up for maps, as they only work on flot graphs
     if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
         document.getElementById('graph-touch-controls').style.display = "none";
     }
 });
 Template.graph.onCreated(function () {
+    // the window resize event needs to also resize the graph
     $(window).resize(function () {
         document.getElementById('placeholder').style.width = matsGraphUtils.width();
         document.getElementById('placeholder').style.height = matsGraphUtils.height();
@@ -98,13 +100,13 @@ Template.graph.helpers({
                     yAxisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
                 }
 
+                // store information about the axes, for use when redrawing the plot
                 originalXaxisLabel = "";
                 originalXaxisMin = "";
                 originalXaxisMax = "";
                 originalYaxisLabels = [];
                 originalYaxisMins = [];
                 originalYaxisMaxs = [];
-                // store information about the axes, for use when redrawing the plot
                 if (options.xaxes && options.xaxes[0]) {
                     originalXaxisLabel = options.xaxes[0].axisLabel;
                     originalXaxisMin = options.xaxes[0].min;

@@ -1,6 +1,6 @@
 import {matsParamUtils,matsCurveUtils} from 'meteor/randyp:mats-common';
 
-
+// moved here from plotType.html and plotType.js
 Template.changePlotType.events({
     'click .confirm-remove-all': function () {
         event.preventDefault();

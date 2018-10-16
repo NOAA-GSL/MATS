@@ -6,20 +6,20 @@
             <h5>{{curveText}}</h5>
         {{/each}}
         {{#if notMapOrScatter}}
-        <table id="textStatsTable" class="table table-condensed table-striped table-bordered">
-            <thead>
-            <tr>
-                {{{statHeaders}}}
-            </tr>
-            </thead>
-            <tbody>
-            {{#each curves}}
+            <table id="textStatsTable" class="table table-condensed table-striped table-bordered">
+                <thead>
                 <tr>
-                    {{{stats this}}}
+                    {{{statHeaders}}}
                 </tr>
-            {{/each}}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {{#each curves}}
+                    <tr>
+                        {{{stats this}}}
+                    </tr>
+                {{/each}}
+                </tbody>
+            </table>
         {{/if}}
         {{#each curves}}
             <table id="textElementsTable" class="table table-condensed table-bordered table-striped table-hover table-sm">
