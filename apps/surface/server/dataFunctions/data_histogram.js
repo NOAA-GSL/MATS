@@ -30,81 +30,11 @@ dataHistogram = function (plotParams, plotFunction) {
     var ymin = Number.MAX_VALUE;
 
     // process user bin customizations
-    var yAxisFormat = plotParams['histogram-yaxis-controls'];
-    var binType = plotParams['histogram-bin-controls'];
-    var binNum = 12;    // default bin number
-    var pivotVal = undefined;      // default is not to shift the bins over to a pivot
-    var binBounds = []; // default is no specified bin bounds -- our algorithm will figure them out if this array stays empty
-
-    switch (binType) {
-        case "Set number of bins":
-            // get the user's chosen number of bins
-            binNum = Number(plotParams['bin-number']);
-            if (isNaN(binNum)) {
-                throw new Error("Error parsing bin number: please enter the desired number of bins.");
-            }
-            break;
-
-        case "Make zero a bin bound":
-            // let the histogram routine know that we want the bins shifted over to zero
-            pivotVal = 0;
-            break;
-
-        case "Choose a bin bound":
-            // let the histogram routine know that we want the bins shifted over to whatever was input
-            pivotVal = Number(plotParams['bin-pivot']);
-            if (isNaN(pivotVal)) {
-                throw new Error("Error parsing bin pivot: please enter the desired bin pivot.");
-            }
-            break;
-
-        case "Set number of bins and make zero a bin bound":
-            // get the user's chosen number of bins and let the histogram routine know that we want the bins shifted over to zero
-            binNum = Number(plotParams['bin-number']);
-            if (isNaN(binNum)) {
-                throw new Error("Error parsing bin number: please enter the desired number of bins.");
-            }
-            pivotVal = 0;
-            break;
-
-        case "Set number of bins and choose a bin bound":
-            // get the user's chosen number of bins and let the histogram routine know that we want the bins shifted over to whatever was input
-            binNum = Number(plotParams['bin-number']);
-            if (isNaN(binNum)) {
-                throw new Error("Error parsing bin number: please enter the desired number of bins.");
-            }
-            pivotVal = Number(plotParams['bin-pivot']);
-            if (isNaN(pivotVal)) {
-                throw new Error("Error parsing bin pivot: please enter the desired bin pivot.");
-            }
-            break;
-
-        case "Manual bins":
-            // try to parse whatever we've been given for bin bounds. Throw an error if they didn't follow directions to enter a comma-separated list of numbers.
-            try {
-                binBounds = plotParams['bin-bounds'].split(",").map(function (item) {
-                    item.trim();
-                    item = Number(item);
-                    if (!isNaN(item)) {
-                        return item
-                    } else {
-                        throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
-                    }
-                });
-                binNum = binBounds.length + 1; // add 1 because these are inner bin bounds
-            } catch (e) {
-                throw new Error("Error parsing bin bounds: please enter  at least two numbers delimited by commas.");
-            }
-            // make sure that we've been given at least two good bin bounds (enough to make one bin).
-            if (binNum < 3) {
-                throw new Error("Error parsing bin bounds: please enter at least two numbers delimited by commas.");
-            }
-            break;
-
-        case "Default bins":
-        default:
-            break;
-    }
+    const binParams = matsDataUtils.setHistogramParameters(plotParams);
+    const yAxisFormat = binParams.yAxisFormat;
+    const binNum = binParams.binNum;
+    const pivotVal = binParams.pivotVal;
+    const binBounds = binParams.binBounds;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve

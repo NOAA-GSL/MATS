@@ -74,7 +74,9 @@ const doPlotParams = function () {
             "Default bins": ["default"],
             "Set number of bins": ["binNumber"],
             "Make zero a bin bound": ["zeroBound"],
+            "Choose a bin bound": ["chooseBound"],
             "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
+            "Set number of bins and choose a bin bound": ["binNumberWithChosen"],
             "Manual bins": ["manual"]
         };
         matsCollections.PlotParams.insert(
@@ -84,8 +86,9 @@ const doPlotParams = function () {
                 optionsMap: binOptionsMap,
                 options: Object.keys(binOptionsMap),
                 hideOtherFor: {
-                    'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins"],
-                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound"],
+                    'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins", "Choose a bin bound"],
+                    'bin-pivot': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound", "Manual bins"],
+                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound"],
                 },
                 default: Object.keys(binOptionsMap)[0],
                 controlButtonCovered: true,
@@ -114,6 +117,23 @@ const doPlotParams = function () {
 
         matsCollections.PlotParams.insert(
             {
+                name: 'bin-pivot',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin pivot value",
+                displayOrder: 4,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
                 name: 'bin-bounds',
                 type: matsTypes.InputTypes.textInput,
                 optionsMap: {},
@@ -121,7 +141,7 @@ const doPlotParams = function () {
                 default: ' ',
                 controlButtonCovered: true,
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
-                displayOrder: 4,
+                displayOrder: 5,
                 displayPriority: 1,
                 displayGroup: 2
             });
