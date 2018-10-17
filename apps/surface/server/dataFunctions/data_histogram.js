@@ -33,7 +33,7 @@ dataHistogram = function (plotParams, plotFunction) {
     var yAxisFormat = plotParams['histogram-yaxis-controls'];
     var binType = plotParams['histogram-bin-controls'];
     var binNum = 12;    // default bin number
-    var zeroPivot = false;      // default is not to shift the bins over to 0
+    var pivotVal = undefined;      // default is not to shift the bins over to a pivot
     var binBounds = []; // default is no specified bin bounds -- our algorithm will figure them out if this array stays empty
 
     switch (binType) {
@@ -47,7 +47,15 @@ dataHistogram = function (plotParams, plotFunction) {
 
         case "Make zero a bin bound":
             // let the histogram routine know that we want the bins shifted over to zero
-            zeroPivot = true;
+            pivotVal = 0;
+            break;
+
+        case "Choose a bin bound":
+            // let the histogram routine know that we want the bins shifted over to whatever was input
+            pivotVal = Number(plotParams['bin-pivot']);
+            if (isNaN(pivotVal)) {
+                throw new Error("Error parsing bin pivot: please enter the desired bin pivot.");
+            }
             break;
 
         case "Set number of bins and make zero a bin bound":
@@ -56,7 +64,19 @@ dataHistogram = function (plotParams, plotFunction) {
             if (isNaN(binNum)) {
                 throw new Error("Error parsing bin number: please enter the desired number of bins.");
             }
-            zeroPivot = true;
+            pivotVal = 0;
+            break;
+
+        case "Set number of bins and choose a bin bound":
+            // get the user's chosen number of bins and let the histogram routine know that we want the bins shifted over to whatever was input
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            pivotVal = Number(plotParams['bin-pivot']);
+            if (isNaN(pivotVal)) {
+                throw new Error("Error parsing bin pivot: please enter the desired bin pivot.");
+            }
             break;
 
         case "Manual bins":
@@ -204,7 +224,7 @@ dataHistogram = function (plotParams, plotFunction) {
     const curveSubSecs = [].concat.apply([], allReturnedSubSecs);
     var binStats;
     if (binBounds.length === 0) {
-        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum, zeroPivot).binStats;
+        binStats = matsDataUtils.calculateHistogramBins(curveSubStats, curveSubSecs, binNum, pivotVal).binStats;
     } else {
         binStats = matsDataUtils.prescribeHistogramBins(curveSubStats, curveSubSecs, binNum, binBounds).binStats;
     }

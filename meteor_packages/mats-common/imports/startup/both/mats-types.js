@@ -96,7 +96,7 @@ var Messages = {
 };
 
 //hide non-timeseries selectors at startup
-var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-bounds'];
+var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-bounds'];
 
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.

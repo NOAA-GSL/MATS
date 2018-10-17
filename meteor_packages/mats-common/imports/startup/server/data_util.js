@@ -455,7 +455,7 @@ const get_err = function (sVals, sSecs) {
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
-const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, zeroPivot) {
+const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, pivotVal) {
 
     var binStats = {};
 
@@ -486,27 +486,20 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, ze
     binLowBounds[binNum - 1] = fullUpBound;
     binMeans[binNum - 1] = fullUpBound + binInterval / 2;
 
-    if (zeroPivot) {
-        // need to shift the bounds and means over so that one of the bounds is on zero
-        var closestBoundToZero = binLowBounds.reduce(function (prev, curr) {
-            return (Math.abs(curr-0) < Math.abs(prev-0) ? curr : prev);
+    if (pivotVal !== undefined && isNumber(pivotVal)) {
+        // need to shift the bounds and means over so that one of the bounds is on the chosen pivot
+        var closestBoundToPivot = binLowBounds.reduce(function (prev, curr) {
+            return (Math.abs(curr-pivotVal) < Math.abs(prev-pivotVal) ? curr : prev);
         });
-        binUpBounds[0] = binUpBounds[0] - closestBoundToZero;
-        binMeans[0] = binMeans[0] - closestBoundToZero;
-        for (b_idx = 1; b_idx < binNum - 1; b_idx++) {
-            binUpBounds[b_idx] = binUpBounds[b_idx] - closestBoundToZero;
-            binLowBounds[b_idx] = binLowBounds[b_idx] - closestBoundToZero;
-            binMeans[b_idx] = binMeans[b_idx] - closestBoundToZero;
-        }
-        binLowBounds[binNum - 1] = binLowBounds[binNum - 1] - closestBoundToZero;
-        binMeans[binNum - 1] = binMeans[binNum - 1] - closestBoundToZero;
+        binUpBounds = binUpBounds.map(function(val){return val - (closestBoundToPivot - pivotVal);});
+        binLowBounds = binLowBounds.map(function(val){return val - (closestBoundToPivot - pivotVal);});
+        binMeans = binMeans.map(function(val){return val - (closestBoundToPivot - pivotVal);});
     }
 
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;
     var upSdFromMean;
-
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         lowSdFromMean = (binLowBounds[b_idx]).toFixed(1);
         upSdFromMean = (binUpBounds[b_idx]).toFixed(1);
@@ -544,7 +537,6 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, ma
         return Number(a) - Number(b);
     });
 
-
     // store an array of the upper and lower bounding values for each bin.
     var binUpBounds = [];
     var binLowBounds = [];
@@ -569,7 +561,6 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, ma
     var binLabels = [];
     var lowSdFromMean;
     var upSdFromMean;
-
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         lowSdFromMean = (binLowBounds[b_idx]).toFixed(2);
         upSdFromMean = (binUpBounds[b_idx]).toFixed(2);
@@ -612,8 +603,8 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
     const glob_n = globalStats.n_good;
-    const glob_max = Math.max(...curveSubStats);
-    const glob_min = Math.min(...curveSubStats);
+    const glob_max = globalStats.maxVal;
+    const glob_min = globalStats.minVal;
 
     // sort data into bins
     const binUpBounds = masterBinStats.binUpBounds;
