@@ -19,7 +19,8 @@ Package.onUse(function (api) {
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
-        "csv-stringify": "4.3.1"
+        "csv-stringify": "4.3.1",
+        "node-file-cache" : "1.0.2"
     });
     api.mainModule("server/main.js", "server");
     api.mainModule("client/main.js", "client");
@@ -74,6 +75,7 @@ Package.onUse(function (api) {
     api.export("matsDataProcessUtils", ['server']);
     api.export("regression", ['client', 'server']);
     api.export("matsWfipUtils", ['server']);
+    api.export("matsCache", ['server']);
 
     // add imports
     //both
@@ -110,6 +112,7 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/server/index.js');
     api.addFiles('imports/startup/server/publications.js');
     api.addFiles('imports/startup/server/wfiputil.js');
+    api.addFiles('imports/startup/server/cache.js');
 
     // top level
     api.addFiles('footer.html', "client");

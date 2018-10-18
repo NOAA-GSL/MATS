@@ -10,4 +10,5 @@ import './data_curve_ops_util.js';
 import './data_plot_ops_util.js';
 import './data_process_util.js';
 import './wfiputil.js';
+import './cache.js';
 import '../both';
