@@ -1,26 +1,13 @@
 import {Meteor} from "meteor/meteor";
 import {ValidatedMethod} from 'meteor/mdg:validated-method';
 import {SimpleSchema} from 'meteor/aldeed:simple-schema';
-import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes, matsCache} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import {Mongo} from 'meteor/mongo'
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
-
-if (Meteor.isServer) {
-    const Results = require('node-file-cache').create({file:'fileCache', life: 8 * 3600000});
-    var getResult = function (key) {
-        var result = Results.get(key);
-        //console.log("got result from cache:", result);
-        return result === null ? undefined : result;
-    }
-    var storeResult = function (key, result) {
-        Results.set(key, result);
-        //console.log('set result in cache key:', key);
-    }
-}
 
 // define a middleware for getCSV route
 var getCSV = function (params, req, res, next) {
@@ -161,7 +148,7 @@ const getPagenatedData = function (rky, p, np) {
         var rawReturn;
 
         try {
-            var result = getResult(key);
+            var result = matsCache.getResult(key);
             rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something,createdAt:date, result:resultObject}
          } catch (e) {
             console.log("getPagenatedData: Error - ", e);
@@ -589,7 +576,7 @@ const saveResultData = function (result) {
                 ret = {key: key, result: result};
             }
             // save original dataset
-            storeResult(key,{"createdAt": new Date(), key: key, result: result});
+            matsCache.storeResult(key,{"createdAt": new Date(), key: key, result: result});
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
                 throw new Meteor.Error(+": Requesting too much data... try averaging");
@@ -1269,7 +1256,7 @@ const getGraphData = new ValidatedMethod({
             try {
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                var results = getResult(key);
+                var results = matsCache.getResult(key);
                 if (results === undefined) {
                     // results aren't in the cache - need to process data routine
                     const Future = require('fibers/future');
@@ -1288,7 +1275,7 @@ const getGraphData = new ValidatedMethod({
                     } else {
                         ret = results;  // {key:someKey, createdAt:date, result:resultObject}
                         // refresh expire time? I only know how to re - set the item
-                        storeResult(results.key,results);
+                        matsCache.storeResult(results.key,results);
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
@@ -1323,7 +1310,7 @@ const getGraphDataByKey = new ValidatedMethod({
                 if (dsResults !== undefined) {
                     ret = dsResults;
                 } else {
-                    ret = getResult(key); // {key:someKey, createdAt:date, result:resultObject}
+                    ret = matsCache.getResult(key); // {key:someKey, createdAt:date, result:resultObject}
                 }
                 var sizeof = require('object-sizeof');
                 console.log("getGraphDataByKey results size is ", sizeof(dsResults));

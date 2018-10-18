@@ -74,6 +74,7 @@ Package.onUse(function (api) {
     api.export("matsDataPlotOpsUtils", ['server']);
     api.export("regression", ['client', 'server']);
     api.export("matsWfipUtils", ['server']);
+    api.export("matsCache", ['server']);
 
     // add imports
     //both
@@ -109,6 +110,7 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/server/index.js');
     api.addFiles('imports/startup/server/publications.js');
     api.addFiles('imports/startup/server/wfiputil.js');
+    api.addFiles('imports/startup/server/cache.js');
 
     // top level
     api.addFiles('footer.html', "client");
