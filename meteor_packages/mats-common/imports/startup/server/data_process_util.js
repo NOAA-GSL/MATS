@@ -5,7 +5,7 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
-const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, matching, plotType, hasLevels, diffFrom, idealValues, axisMap, xmax, xmin, dataRequests, totalProcessingStart) {
+const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, diffFrom, idealValues, axisMap, xmax, xmin, dataRequests, totalProcessingStart) {
     var error = "";
 
     // variable to store maximum error bar length
@@ -25,7 +25,9 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        if (appName !== "surfrad") {
+            axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        }
         diffFrom = curves[curveIndex].diffFrom;
         var statisticSelect = curves[curveIndex]['statistic'];
         var data = dataset[curveIndex].data;
@@ -58,16 +60,18 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || !matching) {
-                // assign recalculated statistic to data[di][1], which is the value to be plotted
-                data[di][1] = errorResult.d_mean;
-            } else {
-                if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
-                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                    data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+            if (appName !== "surfrad" || !(appName === "surfrad" && (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !matching)) {  // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
+                if ((diffFrom === null || diffFrom === undefined) || !matching) {
+                    // assign recalculated statistic to data[di][1], which is the value to be plotted
+                    data[di][1] = errorResult.d_mean;
                 } else {
-                    // keep the null for no data at this point
-                    data[di][1] = null;
+                    if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                        // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                        data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+                    } else {
+                        // keep the null for no data at this point
+                        data[di][1] = null;
+                    }
                 }
             }
             values.push(data[di][1]);
@@ -128,8 +132,10 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
         dataset[curveIndex]['stats'] = stats;
 
         // recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        if (appName !== "surfrad") {
+            axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
+            axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        }
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
