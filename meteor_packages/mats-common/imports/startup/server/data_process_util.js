@@ -108,12 +108,10 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
                     data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dailyModelCycle:
-                    var fhr = ((data[di][0]/1000) % (24 * 3600)) / 3600 - utcCycleStarts[curveIndex];
+                    var fhr = ((data[di][0] / 1000) % (24 * 3600)) / 3600 - utcCycleStarts[curveIndex];
                     fhr = fhr < 0 ? fhr + 24 : fhr;
                     data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
                     data[di][6] = data[di][6] + "<br> forecast hour: " + fhr;
-                    break;
-                case matsTypes.PlotTypes.profile:
                     break;
                 case matsTypes.PlotTypes.dieoff:
                     data[di][6] = data[di][6] + "<br> fhr: " + data[di][0];
@@ -182,8 +180,6 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
         case matsTypes.PlotTypes.dailyModelCycle:
             resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
             break;
-        case matsTypes.PlotTypes.profile:
-            break;
         case matsTypes.PlotTypes.dieoff:
             resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
             break;
@@ -197,6 +193,161 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
             break;
     }
 
+    var totalProcessingFinish = moment();
+    dataRequests["total retrieval and processing time for curve set"] = {
+        begin: totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: dataRequests
+        }
+    };
+};
+
+const processDataProfile = function (curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart) {
+    // variable to store maximum error bar length
+    var errorMax = Number.MIN_VALUE;
+    var error = "";
+
+    // if matching, pare down dataset to only matching data
+    if (curvesLength > 1 && matching) {
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, plotType);
+    }
+
+    // we may need to recalculate the axis limits after unmatched data and outliers are removed
+    var axisLimitReprocessed = {};
+
+    // calculate data statistics (including error bars) for each curve
+    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
+        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+        var diffFrom = curves[curveIndex].diffFrom;
+        var statisticSelect = curves[curveIndex]['statistic'];
+        var data = dataset[curveIndex].data;
+        const label = dataset[curveIndex].label;
+
+        var di = 0;
+        var values = [];
+        var levels = [];
+        var means = [];
+        var rawStat;
+
+        while (di < data.length) {
+
+            var errorResult = {};
+
+            /*
+                 DATASET ELEMENTS:
+                 series: [data,data,data ...... ]   each data is itself an array
+                 data[0] - statValue (ploted against the x axis)
+                 data[1] - level (plotted against the y axis)
+                 data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
+                 data[3] - level values -- removed here to save on data volume
+                 data[4] - level times -- removed here to save on data volume
+                 data[5] - level stats
+                 data[6] - tooltip
+                 */
+
+            // errorResult holds all the calculated curve stats like mean, sd, etc.
+            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+
+            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
+            rawStat = data[di][0];
+            if ((diffFrom === null || diffFrom === undefined) || !matching) {
+                // assign recalculated statistic to data[di][1], which is the value to be plotted
+                data[di][0] = errorResult.d_mean;
+            } else {
+                if (dataset[diffFrom[0]].data[di][0] !== null && dataset[diffFrom[1]].data[di][0] !== null) {
+                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
+                    data[di][0] = dataset[diffFrom[0]].data[di][0] - dataset[diffFrom[1]].data[di][0];
+                } else {
+                    // keep the null for no data at this point
+                    data[di][0] = null;
+                }
+            }
+            values.push(data[di][0]);
+            levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+            means.push(errorResult.d_mean);
+
+            // store error bars if matching
+            const errorBar = errorResult.sd * 1.96;
+            if (matching) {
+                errorMax = errorMax > errorBar ? errorMax : errorBar;
+                data[di][2] = errorBar;
+            } else {
+                data[di][2] = -1;
+            }
+
+            // remove sub values and times to save space
+            data[di][3] = [];
+            data[di][4] = [];
+
+            // store statistics
+            data[di][5] = {
+                raw_stat: rawStat,
+                d_mean: errorResult.d_mean,
+                sd: errorResult.sd,
+                n_good: errorResult.n_good,
+                lag1: errorResult.lag1,
+                stde_betsy: errorResult.stde_betsy
+            };
+
+            // this is the tooltip, it is the last element of each dataseries element
+            data[di][6] = label +
+                "<br>" + -data[di][1] + "mb" +
+                "<br> " + statisticSelect + ": " + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
+                "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
+                "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
+                "<br>  n: " + errorResult.n_good +
+                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
+                // "<br>  stde: " + errorResult.stde_betsy +
+                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.sd * 1.96)).toPrecision(4);
+
+            di++;
+        }
+
+        // get the overall stats for the text output - this uses the means not the stats.
+        const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
+        const filteredMeans = means.filter(x => x);
+        const minx = Math.min(...filteredMeans);
+        const maxx = Math.max(...filteredMeans);
+        stats.minx = minx;
+        stats.maxx = maxx;
+        dataset[curveIndex]['stats'] = stats;
+
+        // recalculate axis options after QC and matching
+        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
+        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+
+        // recalculate curve annotation after QC and matching
+        if (stats.d_mean !== undefined && stats.d_mean !== null) {
+            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
+        }
+    }
+
+    // add black 0 line curve
+    // need to define the minimum and maximum x value for making the zero curve
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0, matsTypes.ReservedWords.zero);
+    dataset.push(zeroLine);
+
+    //add ideal value lines, if any
+    var idealValueLine;
+    var idealLabel;
+    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+        idealLabel = "ideal" + ivIdx.toString();
+        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        dataset.push(idealValueLine);
+    }
+
+    // generate plot options
+    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
     var totalProcessingFinish = moment();
     dataRequests["total retrieval and processing time for curve set"] = {
         begin: totalProcessingStart.format(),
@@ -424,6 +575,7 @@ const processDataHistogram = function (curvesLength, curves, dataFoundForCurve, 
 export default matsDataProcessUtils = {
 
     processDataXYCurve: processDataXYCurve,
+    processDataProfile: processDataProfile,
     processDataHistogram: processDataHistogram
 
 }

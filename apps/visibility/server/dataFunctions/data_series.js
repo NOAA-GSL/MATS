@@ -10,11 +10,12 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    var dataRequests = {}; // used to store data queries
-    var dataFoundForCurve = true;
+    const appName = "visibility";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.timeSeries;
     const hasLevels = false;
+    var dataRequests = {}; // used to store data queries
+    var dataFoundForCurve = true;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
     var fromSecs = dateRange.fromSeconds;
@@ -23,6 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
@@ -186,6 +188,6 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, matching, plotType, hasLevels, diffFrom, idealValues, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
+    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
     plotFunction(result);
 };

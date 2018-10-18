@@ -3,22 +3,25 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
 dataDieOff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
+    const appName = "visibility15";
+    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
+    const plotType = matsTypes.PlotTypes.dieoff;
+    const hasLevels = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
-    var matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var totalProcessingStart = moment();
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
@@ -109,7 +112,7 @@ dataDieOff = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, matsTypes.PlotTypes.dieoff, false);
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -158,7 +161,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 ymin: ymin,
                 ymax: ymax,
                 diffFrom: diffFrom
-            }, matsTypes.PlotTypes.dieoff, false);
+            }, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -188,156 +191,7 @@ dataDieOff = function (plotParams, plotFunction) {
         }
     }  // end for curves
 
-    // variable to store maximum error bar length
-    var errorMax = Number.MIN_VALUE;
-
-    // if matching, pare down dataset to only matching data
-    if (curvesLength > 1 && (matching)) {
-        dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curvesLength);
-    }
-
-    // we may need to recalculate the axis limits after unmatched data and outliers are removed
-    var axisLimitReprocessed = {};
-
-    // calculate data statistics (including error bars) for each curve
-    for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
-        diffFrom = curves[curveIndex].diffFrom;
-        statisticSelect = curves[curveIndex]['statistic'];
-        var data = dataset[curveIndex].data;
-        const label = dataset[curveIndex].label;
-
-        var di = 0;
-        var values = [];
-        var fhrs = [];
-        var means = [];
-        var rawStat;
-
-        while (di < data.length) {
-
-            var errorResult = {};
-
-            /*
-             DATASET ELEMENTS:
-             series: [data,data,data ...... ]   each data is itself an array
-             data[0] - fhr (plotted against the x axis)
-             data[1] - statValue (ploted against the y axis)
-             data[2] - errorBar (sd * 1.96, formerly stde_betsy * 1.96)
-             data[3] - fhr values -- removed here to save on data volume
-             data[4] - fhr times -- removed here to save on data volume
-             data[5] - fhr stats
-             data[6] - tooltip
-             */
-
-            // errorResult holds all the calculated curve stats like mean, sd, etc.
-            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
-
-            // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
-            rawStat = data[di][1];
-            if ((diffFrom === null || diffFrom === undefined) || !matching) {
-                // assign recalculated statistic to data[di][1], which is the value to be plotted
-                data[di][1] = errorResult.d_mean;
-            } else {
-                if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
-                    // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                    data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
-                } else {
-                    // keep the null for no data at this point
-                    data[di][1] = null;
-                }
-            }
-            values.push(data[di][1]);
-            fhrs.push(data[di][0]);
-            means.push(errorResult.d_mean);
-
-            // store error bars if matching
-            const errorBar = errorResult.sd * 1.96;
-            if (matching) {
-                errorMax = errorMax > errorBar ? errorMax : errorBar;
-                data[di][2] = errorBar;
-            } else {
-                data[di][2] = -1;
-            }
-
-            // remove sub values and times to save space
-            data[di][3] = [];
-            data[di][4] = [];
-
-            // store statistics
-            data[di][5] = {
-                raw_stat: rawStat,
-                d_mean: errorResult.d_mean,
-                sd: errorResult.sd,
-                n_good: errorResult.n_good,
-                lag1: errorResult.lag1,
-                stde_betsy: errorResult.stde_betsy
-            };
-
-            // this is the tooltip, it is the last element of each dataseries element
-            data[di][6] = label +
-                "<br>" + "fhr: " + data[di][0] +
-                "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
-                "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
-                "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
-                "<br>  n: " + errorResult.n_good +
-                // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
-                // "<br>  stde: " + errorResult.stde_betsy +
-                "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
-
-            di++;
-        }
-
-        // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values, fhrs);
-        const filteredMeans = means.filter(x => x);
-        const miny = Math.min(...filteredMeans);
-        const maxy = Math.max(...filteredMeans);
-        stats.miny = miny;
-        stats.maxy = maxy;
-        dataset[curveIndex]['stats'] = stats;
-
-        // recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-        axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
-
-        // recalculate curve annotation after QC and matching
-        if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
-        }
-    }
-
-    // add black 0 line curve
-    // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
-    dataset.push(zeroLine);
-
-    //add ideal value lines, if any
-    var idealValueLine;
-    var idealLabel;
-    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
-        idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
-        dataset.push(idealValueLine);
-    }
-
-    // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
-    var totalProcessingFinish = moment();
-    dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProcessingStart.format(),
-        finish: totalProcessingFinish.format(),
-        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
-    };
-
-    // pass result to client-side plotting functions
-    var result = {
-        error: error,
-        data: dataset,
-        options: resultOptions,
-        basis: {
-            plotParams: plotParams,
-            queries: dataRequests
-        }
-    };
+    // process the data returned by the query
+    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
     plotFunction(result);
 };

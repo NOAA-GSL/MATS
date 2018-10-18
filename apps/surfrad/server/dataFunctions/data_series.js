@@ -24,6 +24,7 @@ dataSeries = function (plotParams, plotFunction) {
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
     var dataset = [];
+    var utcCycleStarts = [];
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var ymax = Number.MIN_VALUE;
@@ -207,6 +208,6 @@ dataSeries = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, diffFrom, idealValues, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
+    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
     plotFunction(result);
 };
