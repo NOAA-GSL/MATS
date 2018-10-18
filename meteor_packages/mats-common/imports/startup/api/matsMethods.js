@@ -9,11 +9,22 @@ import {Mongo} from 'meteor/mongo'
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
 
+if (Meteor.isServer) {
+    const Results = require('node-file-cache').create({file:'fileCache', life: 8 * 3600000});
+    var getResult = function (key) {
+        var result = Results.get(key);
+        //console.log("got result from cache:", result);
+        return result === null ? undefined : result;
+    }
+    var storeResult = function (key, result) {
+        Results.set(key, result);
+        //console.log('set result in cache key:', key);
+    }
+}
+
 // define a middleware for getCSV route
 var getCSV = function (params, req, res, next) {
     if (Meteor.isServer) {
-        console.log('Getting data for: ', params.key);
-
         var stringify = require('csv-stringify');
         var csv = "";
         try {
@@ -98,11 +109,9 @@ var getJSON = function (params, req, res, next) {
 
 // initialize collections used for pop-out window functionality
 const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");    // local collection used to store new axis ranges when opening pop out graphs
-const Results = new Mongo.Collection("Results");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
     // add indexes to result and axes collections
-    Results.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
     AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 
@@ -152,17 +161,9 @@ const getPagenatedData = function (rky, p, np) {
         var rawReturn;
 
         try {
-            var Future = require('fibers/future');
-            var future = new Future();
-            var resultKey = Results.findOne({key: key}, {key: 1}, {disableOplog: true});
-            if (resultKey !== undefined) {
-                rawReturn = Results.findOne({key: key}, {disableOplog: true}).result;
-                future.return(rawReturn);
-            } else {
-                future.return(undefined);
-            }
-            future.wait();
-        } catch (e) {
+            var result = getResult(key);
+            rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something,createdAt:date, result:resultObject}
+         } catch (e) {
             console.log("getPagenatedData: Error - ", e);
             return undefined;
         }
@@ -588,7 +589,7 @@ const saveResultData = function (result) {
                 ret = {key: key, result: result};
             }
             // save original dataset
-            Results.rawCollection().insert({"createdAt": new Date(), key: key, result: result});// createdAt ensures expiration set in mats-collections
+            storeResult(key,{"createdAt": new Date(), key: key, result: result});
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
                 throw new Meteor.Error(+": Requesting too much data... try averaging");
@@ -604,17 +605,6 @@ const getDataFunctionFileList = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run() {
         if (Meteor.isServer) {
-            // var future = require('fibers/future');
-            // var fs = require('fs');
-            // fs.readdir("/web/static/dataFunctions/", function (err, files) {
-            //     if (err) {
-            //         console.log("getDataFunctionFileList error: " + err);
-            //         return (err);
-            //     }
-            //     console.log("getDataFunctionFileList files are " + files);
-            //     future["return"](files);
-            // });
-            // return future.wait();
         }
     }
 });
@@ -625,17 +615,6 @@ const getGraphFunctionFileList = new ValidatedMethod({
     validate: new SimpleSchema({}).validator(),
     run() {
         if (Meteor.isServer) {
-            // var future = require('fibers/future');
-            // var fs = require('fs');
-            // fs.readdir("/web/static/displayFunctions/", function (err, files) {
-            //     if (err) {
-            //         console.log("getDataFunctionFileList error: " + err);
-            //         return (err);
-            //     }
-            //     console.log("getGraphFunctionFileList files are " + files);
-            //     future["return"](files);
-            // });
-            // return future.wait();
         }
     }
 });
@@ -672,7 +651,7 @@ const readFunctionFile = new ValidatedMethod({
 /*
 getPlotResult is used by the graph/text_*_output templates which are used to display textual results.
 Because the data isn't being rendered graphically this data is always full size, i.e. NOT downsampled.
-That is why it only finds in the Result collection, never the DownSampleResult collection.
+That is why it only finds it in the Result file cache, never the DownSampleResult collection.
 
 Because the dataset can be so large ... e.g. megabytes the data retrieval is pagenated. The index is
 applied to the underlying datasets.The data gets stripped down and flattened to only contain the data neccesary for text presentation.
@@ -1290,10 +1269,10 @@ const getGraphData = new ValidatedMethod({
             try {
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
-                var results = Results.findOne({key: key}, {key: 1}, {disableOplog: true});
+                var results = getResult(key);
                 if (results === undefined) {
-                    // results aren't in the Collection - need to process data routine
-                    var Future = require('fibers/future');
+                    // results aren't in the cache - need to process data routine
+                    const Future = require('fibers/future');
                     var future = new Future();
                     global[dataFunction](params.plotParams, function (results) {
                         ret = saveResultData(results);
@@ -1307,15 +1286,15 @@ const getGraphData = new ValidatedMethod({
                         ret = dsResults;
                         DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
                     } else {
-                        ret = Results.findOne({key: key}, {}, {disableOplog: true});
-                        Results.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
+                        ret = results;  // {key:someKey, createdAt:date, result:resultObject}
+                        // refresh expire time? I only know how to re - set the item
+                        storeResult(results.key,results);
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
                     return ret;
                 }
             } catch (dataFunctionError) {
-                //throw new Meteor.Error(dataFunctionError.message,"Error in getGraphData function:" + dataFunction);
                 if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
                     throw new Meteor.Error(dataFunctionError.message);
                 } else {
@@ -1344,7 +1323,7 @@ const getGraphDataByKey = new ValidatedMethod({
                 if (dsResults !== undefined) {
                     ret = dsResults;
                 } else {
-                    ret = Results.findOne({key: key}, {}, {disableOplog: true});
+                    ret = getResult(key); // {key:someKey, createdAt:date, result:resultObject}
                 }
                 var sizeof = require('object-sizeof');
                 console.log("getGraphDataByKey results size is ", sizeof(dsResults));
@@ -1594,7 +1573,7 @@ const testGetTables = new ValidatedMethod({
         }).validator(),
     run(params) {
         if (Meteor.isServer) {
-            var Future = require('fibers/future');
+            const Future = require('fibers/future');
             const queryWrap = Future.wrap(function (callback) {
                 const connection = mysql.createConnection({
                     host: params.host,
