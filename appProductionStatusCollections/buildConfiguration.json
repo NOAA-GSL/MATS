@@ -60,65 +60,72 @@
       "buildStatus": "enabled"
     },
     {
+      "app": "visibility15",
+      "displayName": "Visibility 15 Min",
+      "displayOrder": 7,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
       "app": "surface",
       "displayName": "Surface",
-      "displayOrder": 7,
+      "displayOrder": 8,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
-      "displayOrder": 8,
+      "displayOrder": 9,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
-      "displayOrder": 9,
+      "displayOrder": 10,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
-      "displayOrder": 10,
+      "displayOrder": 11,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
-      "displayOrder": 11,
+      "displayOrder": 12,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
-      "displayOrder": 12,
+      "displayOrder": 13,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
-      "displayOrder": 13,
+      "displayOrder": 14,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 14,
+      "displayOrder": 15,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 15,
+      "displayOrder": 16,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     }
