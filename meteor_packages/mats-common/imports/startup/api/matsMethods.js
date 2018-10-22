@@ -189,6 +189,11 @@ const getPagenatedData = function (rky, p, np) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
                 dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
                 dsiEnd = rawReturn.data[dsi].data.length;
+                if (dsiEnd === dsiStart) {
+                    // make sure the last page isn't empty--if rawReturn.data[dsi].data.length/100 produces a whole number,
+                    // dsiStart and dsiEnd would be the same. This makes sure that the last full page is indeed the last page, without a phantom empty page afterwards
+                    dsiStart = dsiEnd - 100;
+                }
             }
             if (dsiStart < 0) {
                 // show the first page if we are trying to navigate before it
