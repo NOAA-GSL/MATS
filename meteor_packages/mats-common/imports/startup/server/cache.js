@@ -5,11 +5,6 @@ if (Meteor.isServer) {
     var getResult = function (key) {
         console.log('asked to get result from cache for key:', key);
         var result = Results.get(key);
-        if (result === null) {
-            console.log("got null result from cache for key:", key);
-        } else {
-            console.log("got result from cache for key:", key);
-        }
         return result === null ? undefined : result;
     }
     var storeResult = function (key, result) {
