@@ -346,7 +346,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.InputTypes.unused,
+                default: levelOptionsMap[Object.keys(levelOptionsMap)[0]][2],
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
                 displayOrder: 5,

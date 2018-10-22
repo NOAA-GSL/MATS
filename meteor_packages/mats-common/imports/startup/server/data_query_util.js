@@ -296,10 +296,16 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         var sub_secs;
         var sub_levs;
         if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
-            sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-            sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-            if (hasLevels) {
-                sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+            try {
+                sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                if (hasLevels) {
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                }
+            } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
+                e.message = "Error in parseQueryDataTimeSeries. The expected fields don't seem to be present in the results cache: " + e.message;
+                throw new Error(e.message);
             }
         } else {
             sub_values = NaN;
@@ -402,10 +408,16 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         var sub_secs;
         var sub_levs;
         if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
-            sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-            sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-            if (hasLevels) {
-                sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+            try {
+                sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                if (hasLevels) {
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                }
+            } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
+                e.message = "Error in parseQueryDataSpecialtyCurve. The expected fields don't seem to be present in the results cache: " + e.message;
+                throw new Error(e.message);
             }
         } else {
             sub_stats = NaN;
@@ -497,13 +509,19 @@ const parseQueryDataHistogram = function (rows, hasLevels) {
         var sub_levs;
 
         if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
-            sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
-            curveSubStatsRaw.push(sub_stats);
-            sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
-            curveSubSecsRaw.push(sub_secs);
-            if (hasLevels) {
-                sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
-                curveSubLevsRaw.push(sub_levs);
+            try {
+                sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
+                curveSubStatsRaw.push(sub_stats);
+                sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
+                curveSubSecsRaw.push(sub_secs);
+                if (hasLevels) {
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                    curveSubLevsRaw.push(sub_levs);
+                }
+            } catch (e) {
+                // this is an error produced by a bug in the query function, not an error returned by the mysql database
+                e.message = "Error in parseQueryDataHistogram. The expected fields don't seem to be present in the results cache: " + e.message;
+                throw new Error(e.message);
             }
         }
     }

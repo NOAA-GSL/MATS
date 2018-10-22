@@ -81,7 +81,10 @@ dataHistogram = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
                 "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
                 "avg(m0.wacorr/100) as stat, " +
-                "count(m0.wacorr) as N0, group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, group_concat( unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0 " +
+                "count(m0.wacorr) as N0, " +
+                "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, " +
+                "group_concat(unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0, " +
+                "group_concat(m0.level order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_levs0 " +
                 "from {{dbtable}} as m0 " +
                 "where 1=1 " +
                 "and m0.variable = '{{variable}}' " +
