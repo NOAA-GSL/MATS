@@ -2,7 +2,7 @@ import {matsParamUtils,matsCurveUtils} from 'meteor/randyp:mats-common';
 
 // moved here from plotType.html and plotType.js
 Template.changePlotType.events({
-    'click .confirm-remove-all': function () {
+    'click .confirm-remove-all': function (event) {
         event.preventDefault();
         matsCurveUtils.clearAllUsed();
         matsParamUtils.setAllParamsToDefault();
@@ -16,7 +16,7 @@ Template.changePlotType.events({
         $(ref).trigger('click');
         //return false;
     },
-    'click .confirm-keep-all': function () {
+    'click .confirm-keep-all': function (event) {
         event.preventDefault();
         Session.set("confirmPlotChange", Date.now());
         const plotChangeType = Session.get('plotChangeType');
