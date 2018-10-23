@@ -13,53 +13,53 @@
         </div>
         <div id="graph-control" class="row">
             <span id="all-plot-buttons-grp" class="btn-group btn-group-sm">
-                <button id="backButton" type="button" class="back btn btn-primary fa fa-long-arrow-left" data-toggle="tooltip" data-placement="top" title="return to parameters">&nbsp;&nbsp;<strong>Back</strong></button>
+                <button id="backButton" type="button" class="back btn btn-primary fa fa-long-arrow-left" style="border-radius: 5px;" data-toggle="tooltip" data-placement="top" title="return to parameters">&nbsp;&nbsp;<strong>Back</strong></button>
                 <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                <button id="previewButton" type="button" class="preview btn btn-primary fa fa-print" data-toggle="tooltip" data-placement="top" title="preview graph in separate window">&nbsp;&nbsp;<strong>Preview</strong></button>
+                <button id="previewButton" type="button" class="preview btn btn-primary fa fa-print" style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;" data-toggle="tooltip" data-placement="top" title="preview graph in separate window">&nbsp;&nbsp;<strong>Preview</strong></button>
                 <button id="basisButton" type="button" class="basis btn btn-primary fa fa-info" data-toggle="tooltip" data-placement="top" title="view data details">&nbsp;&nbsp;<strong>Data Lineage</strong></button>
                 <span id="text-page-button-group" class="btn-group btn-group-sm" style="display:none;">
-                    <button id="exportButton" type="button" class="export btn btn-primary fa fa-floppy-o" data-toggle="tooltip" data-placement="top" title="export current text data to csv file">&nbsp;&nbsp;<strong>Export</strong></button>
+                    <button id="exportButton" type="button" class="export btn btn-primary fa fa-floppy-o" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px;" data-toggle="tooltip" data-placement="top" title="export current text data to csv file">&nbsp;&nbsp;<strong>Export</strong></button>
                     <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="display:block;" data-toggle="tooltip" data-placement="top" title="change to plot view">&nbsp;&nbsp;<strong>Plot</strong></button>
+                    <button id="plotButton" type="button" class="plotButton btn btn-primary fa fa-line-chart" style="border-radius: 5px; display:block;" data-toggle="tooltip" data-placement="top" title="change to plot view">&nbsp;&nbsp;<strong>Plot</strong></button>
                     <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    <button id="firstPageButton" type="button" class="firstPageButton btn btn-info fa fa-fast-backward" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="first page">&nbsp;&nbsp;<strong>First page</strong></button>
+                    <button id="firstPageButton" type="button" class="firstPageButton btn btn-info fa fa-fast-backward" style="border-top-left-radius: 5px; border-bottom-left-radius: 5px; display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="first page">&nbsp;&nbsp;<strong>First page</strong></button>
                     <button id="previousTenPageButton" type="button" class="previousTenPageButton btn btn-info fa fa-step-backward" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="previous 10 pages">&nbsp;&nbsp;<strong>Back 10 pages</strong></button>
                     <button id="previousPageButton" type="button" class="previousPageButton btn btn-info fa fa-chevron-left" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="previous page">&nbsp;&nbsp;<strong>Prev page</strong></button>
                     <button id="nextPageButton" type="button" class="nextPageButton btn btn-info fa fa-chevron-right" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="next page">&nbsp;&nbsp;<strong>Next page</strong></button>
                     <button id="nextTenPageButton" type="button" class="nextTenPageButton btn btn-info fa fa-step-forward" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="next 10 pages">&nbsp;&nbsp;<strong>Forward 10 pages</strong></button>
-                    <button id="lastPageButton" type="button" class="lastPageButton btn btn-info fa fa-fast-forward" style="display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="last page">&nbsp;&nbsp;<strong>Last page</strong></button>
+                    <button id="lastPageButton" type="button" class="lastPageButton btn btn-info fa fa-fast-forward" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px; display:block;background-color: #003399;" data-toggle="tooltip" data-placement="top" title="last page">&nbsp;&nbsp;<strong>Last page</strong></button>
                 </span>
                 <span id="plot-page-button-group" class="btn-group btn-group-sm" style="display:block;">
                     <span id="plot-control-button-group" class="btn-group btn-group-sm" style="display:block;">
                         <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;&nbsp;<strong>Axes</strong></button>
                         <button id="replotZoomButton" type="button" class="replotZoomButton btn btn-primary fa fa-line-chart" style="display:{{displayReplotZoom}};"  data-toggle="tooltip" data-placement="top" title="replot graph to current zoom setting">&nbsp;&nbsp;<strong>Re-plot</strong></button>
                     </span>
-                    <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="display:block;" data-toggle="tooltip" data-placement="top" title="change to text view">&nbsp;&nbsp;<strong>Text</strong></button>
+                    <button id="textButton" type="button" class="textButton btn btn-primary fa fa-file-text-o" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px; display:block;" data-toggle="tooltip" data-placement="top" title="change to text view">&nbsp;&nbsp;<strong>Text</strong></button>
                     <button id="gc-spacer" type="button" class="btn spacebutton"></button>
                 </span>
                 <span id="graph-touch-controls" class="btn-group btn-group-sm" role="group" aria-label="touchcontrol">
-                    <button id="pan-left" type="button" class="btn btn-info fa fa-arrow-left" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph left"></button>
-                    <button id="pan-up" type="button" class="btn btn-info fa fa-arrow-up" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph up"></button>
-                    <button id="pan-down" type="button" class="btn btn-info fa fa-arrow-down" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph down"></button>
-                    <button id="pan-right" type="button" class="btn btn-info fa fa-arrow-right" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph right"></button>
-                    <button id="refresh-plot" type="button" class="btn btn-info fa fa-refresh" style="background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset zoom to original"></button>
+                    <button id="pan-left" type="button" class="btn btn-info fa fa-arrow-left" style="border-radius: 10px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph left"></button>
+                    <button id="pan-up" type="button" class="btn btn-info fa fa-arrow-up" style="border-radius: 10px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph up"></button>
+                    <button id="pan-down" type="button" class="btn btn-info fa fa-arrow-down" style="border-radius: 10px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph down"></button>
+                    <button id="pan-right" type="button" class="btn btn-info fa fa-arrow-right" style="border-radius: 10px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph right"></button>
+                    <button id="refresh-plot" type="button" class="btn btn-info fa fa-refresh" style="border-radius: 10px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset zoom to original"></button>
                     <button id="gc-spacer" type="button" class="btn spacebutton"></button>
                     <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom" type="button" class="btn btn-success" disabled><span class="fa fa-expand"></span></button>
-                        <button id="zoom-in" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-plus"></span></button>
+                        <button id="zoom-out" type="button" class="btn btn-success" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-minus"></span></button>
+                        <button id="dead-zoom" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-expand"></span></button>
+                        <button id="zoom-in" type="button" class="btn btn-success" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-plus"></span></button>
                         <button id="gc-spacer" type="button" class="btn spacebutton"></button>
                     </span>
                     <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out-left-right" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out horizontal"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-left-right" type="button" class="btn btn-success" disabled><span class="fa fa-arrows-h"></span></button>
-                        <button id="zoom-in-left-right" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom in horizontal"><span class="fa fa-plus"></span></button>
+                        <button id="zoom-out-left-right" type="button" class="btn btn-success" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom out horizontal"><span class="fa fa-minus"></span></button>
+                        <button id="dead-zoom-left-right" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-arrows-h"></span></button>
+                        <button id="zoom-in-left-right" type="button" class="btn btn-success" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom in horizontal"><span class="fa fa-plus"></span></button>
                         <button id="gc-spacer" type="button" class="btn spacebutton"></button>
                     </span>
                     <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out-up-down" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom out vertical"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-up-down" type="button" class="btn btn-success" disabled><span class="fa fa-arrows-v"></span></button>
-                        <button id="zoom-in-up-down" type="button" class="btn btn-success" data-toggle="tooltip" data-placement="top" title="zoom in vertical"><span class="fa fa-plus"></span></button>
+                        <button id="zoom-out-up-down" type="button" class="btn btn-success" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom out vertical"><span class="fa fa-minus"></span></button>
+                        <button id="dead-zoom-up-down" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-arrows-v"></span></button>
+                        <button id="zoom-in-up-down" type="button" class="btn btn-success" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;" data-toggle="tooltip" data-placement="top" title="zoom in vertical"><span class="fa fa-plus"></span></button>
                     </span>
                 </span>
             </span>
