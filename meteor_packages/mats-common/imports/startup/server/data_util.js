@@ -459,6 +459,8 @@ const setHistogramParameters = function (plotParams) {
     var yAxisFormat = plotParams['histogram-yaxis-controls'];
     var binType = plotParams['histogram-bin-controls'];
     var binNum = 12;    // default bin number
+    var binStart = undefined;    // default is no mandated bin start
+    var binStride = undefined;         // default is no mandated stride
     var pivotVal = undefined;      // default is not to shift the bins over to a pivot
     var binBounds = []; // default is no specified bin bounds -- our algorithm will figure them out if this array stays empty
 
@@ -527,58 +529,93 @@ const setHistogramParameters = function (plotParams) {
             }
             break;
 
+        case "Manual bin start, number, and stride":
+            // get the bin start, number, and stride.
+            binNum = Number(plotParams['bin-number']);
+            if (isNaN(binNum)) {
+                throw new Error("Error parsing bin number: please enter the desired number of bins.");
+            }
+            binStart = Number(plotParams['bin-start']);
+            if (isNaN(binStart)) {
+                throw new Error("Error parsing bin start: please enter the desired bin start.");
+            }
+            binStride = Number(plotParams['bin-stride']);
+            if (isNaN(binStride)) {
+                throw new Error("Error parsing bin stride: please enter the desired bin stride.");
+            }
+            break;
+
         case "Default bins":
         default:
             break;
     }
-    return {yAxisFormat: yAxisFormat, binNum: binNum, pivotVal: pivotVal, binBounds: binBounds};
+    return {yAxisFormat: yAxisFormat, binNum: binNum, binStart: binStart, binStride: binStride, pivotVal: pivotVal, binBounds: binBounds};
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
-const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, pivotVal) {
+const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams) {
+
+    // binStart and binStride will only be defined if the user wants to specify the bin spacing.
+    // otherwise, we'll use the mean and standard deviation of the data to space the bins.
+
+    // pivotVal will only be defined if the user wants to shift the bin limits to align with a certain value.
+    // otherwise, we'll keep everything aligned with the data mean.
 
     var binStats = {};
+    var binUpBounds = [];
+    var binLowBounds = [];
+    var binMeans = [];
 
     // calculate the global stats across all of the data
     const globalStats = get_err(curveSubStats, curveSubSecs);
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
-    // use the global stats to determine the bin bounds -- should be based on dividing up +/- 3*sd from the mean into requested number of bins
-    const fullLowBound = glob_mean - 3 * glob_sd;
-    const fullUpBound = glob_mean + 3 * glob_sd;
-    const fullRange = 6 * glob_sd;
-    const binInterval = fullRange / (binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
+    var fullLowBound;
+    var fullUpBound;
+    var fullRange;
+    var binInterval;
+
+    if (binParams.binStart === undefined || binParams.binStride === undefined) {
+        // use the global stats to determine the bin bounds -- should be based on dividing up +/- 3*sd from the mean into requested number of bins
+        fullLowBound = glob_mean - 3 * glob_sd;
+        fullUpBound = glob_mean + 3 * glob_sd;
+        fullRange = 6 * glob_sd;
+        binInterval = fullRange / (binParams.binNum - 2);   // take off two bins from the total number of requested bins to represent values either less than - 3*sd from the mean or greater than 3*sd from the mean
+    } else {
+        // use the user-defined start, number, and stride to determine the bin bounds
+        fullLowBound = binParams.binStart;
+        fullUpBound = binParams.binStart + (binParams.binNum - 2) * binParams.binStride;  // take off two bins from the total number of requested bins to represent values that fall outside of the prescribed range
+        fullRange = (binParams.binNum - 2) * binParams.binStride;
+        binInterval = binParams.binStride;
+    }
 
     // store an array of the upper and lower bounding values for each bin.
-    var binUpBounds = [];
-    var binLowBounds = [];
-    var binMeans = [];
     binUpBounds[0] = fullLowBound; // the first upper bound should be exactly - 3*sd from the mean, or the previously calculated fullLowBound
     binLowBounds[0] = -1 * Number.MAX_VALUE;
     binMeans[0] = fullLowBound - binInterval / 2;
-    for (var b_idx = 1; b_idx < binNum - 1; b_idx++) {
+    for (var b_idx = 1; b_idx < binParams.binNum - 1; b_idx++) {
         binUpBounds[b_idx] = binUpBounds[b_idx - 1] + binInterval; // increment from fullLowBound to get the rest of the bin upper limits
         binLowBounds[b_idx] = binUpBounds[b_idx - 1];
         binMeans[b_idx] = binUpBounds[b_idx - 1] + binInterval / 2;
     }
-    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
-    binLowBounds[binNum - 1] = fullUpBound;
-    binMeans[binNum - 1] = fullUpBound + binInterval / 2;
+    binUpBounds[binParams.binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
+    binLowBounds[binParams.binNum - 1] = fullUpBound;
+    binMeans[binParams.binNum - 1] = fullUpBound + binInterval / 2;
 
-    if (pivotVal !== undefined && !isNaN(pivotVal)) {
+    if (binParams.pivotVal !== undefined && !isNaN(binParams.pivotVal)) {
         // need to shift the bounds and means over so that one of the bounds is on the chosen pivot
         var closestBoundToPivot = binLowBounds.reduce(function (prev, curr) {
-            return (Math.abs(curr - pivotVal) < Math.abs(prev - pivotVal) ? curr : prev);
+            return (Math.abs(curr - binParams.pivotVal) < Math.abs(prev - binParams.pivotVal) ? curr : prev);
         });
         binUpBounds = binUpBounds.map(function (val) {
-            return val - (closestBoundToPivot - pivotVal);
+            return val - (closestBoundToPivot - binParams.pivotVal);
         });
         binLowBounds = binLowBounds.map(function (val) {
-            return val - (closestBoundToPivot - pivotVal);
+            return val - (closestBoundToPivot - binParams.pivotVal);
         });
         binMeans = binMeans.map(function (val) {
-            return val - (closestBoundToPivot - pivotVal);
+            return val - (closestBoundToPivot - binParams.pivotVal);
         });
     }
 
@@ -586,12 +623,12 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, pi
     var binLabels = [];
     var lowSdFromMean;
     var upSdFromMean;
-    for (b_idx = 0; b_idx < binNum; b_idx++) {
+    for (b_idx = 0; b_idx < binParams.binNum; b_idx++) {
         lowSdFromMean = (binLowBounds[b_idx]).toFixed(2);
         upSdFromMean = (binUpBounds[b_idx]).toFixed(2);
         if (b_idx === 0) {
             binLabels[b_idx] = "< " + upSdFromMean;
-        } else if (b_idx === binNum - 1) {
+        } else if (b_idx === binParams.binNum - 1) {
             binLabels[b_idx] = "> " + lowSdFromMean;
         } else {
             binLabels[b_idx] = lowSdFromMean + "-" + upSdFromMean;
@@ -609,7 +646,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binNum, pi
 };
 
 // utility that takes an array of user-defined bin bounds and produces a data structure containing bin information for histogram plotting
-const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, manualBinBounds) {
+const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams) {
 
     var binStats = {};
 
@@ -619,7 +656,7 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, ma
     const glob_sd = globalStats.sd;
 
     // make sure the user-defined bins are in order from least to greatest
-    manualBinBounds = manualBinBounds.sort(function (a, b) {
+    binParams.binBounds = binParams.binBounds.sort(function (a, b) {
         return Number(a) - Number(b);
     });
 
@@ -628,31 +665,31 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binNum, ma
     var binLowBounds = [];
     var binMeans = [];
     var binIntervalSum = 0;
-    for (var b_idx = 1; b_idx < binNum - 1; b_idx++) {
-        binUpBounds[b_idx] = manualBinBounds[b_idx];
-        binLowBounds[b_idx] = manualBinBounds[b_idx - 1];
+    for (var b_idx = 1; b_idx < binParams.binNum - 1; b_idx++) {
+        binUpBounds[b_idx] = binParams.binBounds[b_idx];
+        binLowBounds[b_idx] = binParams.binBounds[b_idx - 1];
         binMeans[b_idx] = (binUpBounds[b_idx] + binLowBounds[b_idx]) / 2;
         binIntervalSum = binIntervalSum + (binUpBounds[b_idx] - binLowBounds[b_idx]);
     }
-    const binIntervalAverage = binIntervalSum / (binNum - 2);
+    const binIntervalAverage = binIntervalSum / (binParams.binNum - 2);
     binUpBounds[0] = binLowBounds[1];
     binLowBounds[0] = -1 * Number.MAX_VALUE; // the first bin should have everything too small to fit into the other bins, so make its lower bound -1 * the max number value
     binMeans[0] = binLowBounds[1] - binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
-    binUpBounds[binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
-    binLowBounds[binNum - 1] = binUpBounds[binNum - 2];
-    binMeans[binNum - 1] = binUpBounds[binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
+    binUpBounds[binParams.binNum - 1] = Number.MAX_VALUE; // the last bin should have everything too large to fit into the previous bins, so make its upper bound the max number value
+    binLowBounds[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2];
+    binMeans[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
 
 
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;
     var upSdFromMean;
-    for (b_idx = 0; b_idx < binNum; b_idx++) {
+    for (b_idx = 0; b_idx < binParams.binNum; b_idx++) {
         lowSdFromMean = (binLowBounds[b_idx]).toFixed(2);
         upSdFromMean = (binUpBounds[b_idx]).toFixed(2);
         if (b_idx === 0) {
             binLabels[b_idx] = "< " + upSdFromMean;
-        } else if (b_idx === binNum - 1) {
+        } else if (b_idx === binParams.binNum - 1) {
             binLabels[b_idx] = "> " + lowSdFromMean;
         } else {
             binLabels[b_idx] = lowSdFromMean + "-" + upSdFromMean;
