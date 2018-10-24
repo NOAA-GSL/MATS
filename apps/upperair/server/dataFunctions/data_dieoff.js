@@ -210,6 +210,9 @@ dataDieOff = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    var result = matsDataProcessUtils.processDataXYCurve(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
+    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "utcCycleStarts": utcCycleStarts, "axisMap": axisMap, "xmax": xmax, "xmin": xmin};
+    const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };

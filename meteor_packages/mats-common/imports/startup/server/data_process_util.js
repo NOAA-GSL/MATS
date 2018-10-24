@@ -6,17 +6,17 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataPlotOpsUtils} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
-const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart) {
+const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
     // variable to store maximum error bar length
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
     // if matching, pare down dataset to only matching data
-    if (curvesLength > 1 && matching) {
-        if (hasLevels) {
-            dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, plotType);
+    if (curveInfoParams.curvesLength > 1 && appParams.matching) {
+        if (appParams.hasLevels) {
+            dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curveInfoParams.curvesLength, appParams.plotType);
         } else {
-            dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curvesLength);
+            dataset = matsDataMatchUtils.getMatchedDataSet(dataset, curveInfoParams.curvesLength);
         }
     }
 
@@ -24,12 +24,12 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
     var axisLimitReprocessed = {};
 
     // calculate data statistics (including error bars) for each curve
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        if (appName !== "surfrad") {
-            axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+        if (appParams.appName !== "surfrad") {
+            axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         }
-        var diffFrom = curves[curveIndex].diffFrom;
-        var statisticSelect = curves[curveIndex]['statistic'];
+        var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
+        var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex].data;
         const label = dataset[curveIndex].label;
 
@@ -60,8 +60,8 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][1];
-            if (appName !== "surfrad" || !(appName === "surfrad" && (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !matching)) {  // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
-                if ((diffFrom === null || diffFrom === undefined) || !matching) {
+            if (appParams.appName !== "surfrad" || !(appParams.appName === "surfrad" && (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !appParams.matching)) {  // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
+                if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data[di][1] = errorResult.d_mean;
                 } else {
@@ -80,7 +80,7 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
             // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
-            if (matching) {
+            if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
@@ -103,12 +103,12 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
             // this is the tooltip, it is the last element of each dataseries element
             data[di][6] = label;
-            switch (plotType) {
+            switch (appParams.plotType) {
                 case matsTypes.PlotTypes.timeSeries:
                     data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dailyModelCycle:
-                    var fhr = ((data[di][0] / 1000) % (24 * 3600)) / 3600 - utcCycleStarts[curveIndex];
+                    var fhr = ((data[di][0] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
                     fhr = fhr < 0 ? fhr + 24 : fhr;
                     data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
                     data[di][6] = data[di][6] + "<br> forecast hour: " + fhr;
@@ -148,9 +148,9 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
         dataset[curveIndex]['stats'] = stats;
 
         // recalculate axis options after QC and matching
-        if (appName !== "surfrad") {
-            axisMap[curves[curveIndex].axisKey]['ymax'] = (axisMap[curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxy : axisMap[curves[curveIndex].axisKey]['ymax'];
-            axisMap[curves[curveIndex].axisKey]['ymin'] = (axisMap[curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? miny : axisMap[curves[curveIndex].axisKey]['ymin'];
+        if (appParams.appName !== "surfrad") {
+            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
+            curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
         }
 
         // recalculate curve annotation after QC and matching
@@ -161,43 +161,43 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, 0, matsTypes.ReservedWords.zero);
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     //add ideal value lines, if any
     var idealValueLine;
     var idealLabel;
-    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+    for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
         idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
         dataset.push(idealValueLine);
     }
 
     // generate plot options
     var resultOptions;
-    switch (plotType) {
+    switch (appParams.plotType) {
         case matsTypes.PlotTypes.timeSeries:
         case matsTypes.PlotTypes.dailyModelCycle:
-            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curves, axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateSeriesPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.dieoff:
-            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curves, axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateDieoffPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.validtime:
-            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curves, axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateValidTimePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
             break;
         case matsTypes.PlotTypes.threshold:
-            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curves, axisMap, errorMax);
+            resultOptions = matsDataPlotOpsUtils.generateThresholdPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
             break;
         default:
             break;
     }
 
     var totalProcessingFinish = moment();
-    dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProcessingStart.format(),
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
         finish: totalProcessingFinish.format(),
-        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
     };
 
     // pass result to client-side plotting functions
@@ -207,29 +207,29 @@ const processDataXYCurve = function (curvesLength, curves, plotParams, dataset, 
         options: resultOptions,
         basis: {
             plotParams: plotParams,
-            queries: dataRequests
+            queries: bookkeepingParams.dataRequests
         }
     };
 };
 
-const processDataProfile = function (curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart) {
+const processDataProfile = function (dataset, appParams, curveInfoParams, plotParams, bookkeepingParams) {
     // variable to store maximum error bar length
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
     // if matching, pare down dataset to only matching data
-    if (curvesLength > 1 && matching) {
-        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curvesLength, plotType);
+    if (curveInfoParams.curvesLength > 1 && appParams.matching) {
+        dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curveInfoParams.curvesLength, appParams.plotType);
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
     var axisLimitReprocessed = {};
 
     // calculate data statistics (including error bars) for each curve
-    for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        axisLimitReprocessed[curves[curveIndex].axisKey] = axisLimitReprocessed[curves[curveIndex].axisKey] !== undefined;
-        var diffFrom = curves[curveIndex].diffFrom;
-        var statisticSelect = curves[curveIndex]['statistic'];
+    for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
+        axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
+        var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
+        var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex].data;
         const label = dataset[curveIndex].label;
 
@@ -260,7 +260,7 @@ const processDataProfile = function (curvesLength, curves, plotParams, dataset, 
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data[di][0];
-            if ((diffFrom === null || diffFrom === undefined) || !matching) {
+            if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data[di][0] = errorResult.d_mean;
             } else {
@@ -278,7 +278,7 @@ const processDataProfile = function (curvesLength, curves, plotParams, dataset, 
 
             // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
-            if (matching) {
+            if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data[di][2] = errorBar;
             } else {
@@ -323,8 +323,8 @@ const processDataProfile = function (curvesLength, curves, plotParams, dataset, 
         dataset[curveIndex]['stats'] = stats;
 
         // recalculate axis options after QC and matching
-        axisMap[curves[curveIndex].axisKey]['xmax'] = (axisMap[curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? maxx : axisMap[curves[curveIndex].axisKey]['xmax'];
-        axisMap[curves[curveIndex].axisKey]['xmin'] = (axisMap[curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curves[curveIndex].axisKey]) ? minx : axisMap[curves[curveIndex].axisKey]['xmin'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
+        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'] > minx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? minx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmin'];
 
         // recalculate curve annotation after QC and matching
         if (stats.d_mean !== undefined && stats.d_mean !== null) {
@@ -340,19 +340,19 @@ const processDataProfile = function (curvesLength, curves, plotParams, dataset, 
     //add ideal value lines, if any
     var idealValueLine;
     var idealLabel;
-    for (var ivIdx = 0; ivIdx < idealValues.length; ivIdx++) {
+    for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
         idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(xmax, xmin, idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        idealValueLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
         dataset.push(idealValueLine);
     }
 
     // generate plot options
-    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curves, axisMap, errorMax);
+    const resultOptions = matsDataPlotOpsUtils.generateProfilePlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, errorMax);
     var totalProcessingFinish = moment();
-    dataRequests["total retrieval and processing time for curve set"] = {
-        begin: totalProcessingStart.format(),
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
         finish: totalProcessingFinish.format(),
-        duration: moment.duration(totalProcessingFinish.diff(totalProcessingStart)).asSeconds() + ' seconds'
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
     };
 
     // pass result to client-side plotting functions
@@ -362,7 +362,7 @@ const processDataProfile = function (curvesLength, curves, plotParams, dataset, 
         options: resultOptions,
         basis: {
             plotParams: plotParams,
-            queries: dataRequests
+            queries: bookkeepingParams.dataRequests
         }
     };
 };

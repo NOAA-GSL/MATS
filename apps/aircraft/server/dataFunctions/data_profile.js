@@ -210,6 +210,9 @@ dataProfile = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    var result = matsDataProcessUtils.processDataProfile(curvesLength, curves, plotParams, dataset, appName, matching, plotType, hasLevels, idealValues, utcCycleStarts, axisMap, xmax, xmin, dataRequests, totalProcessingStart);
+    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "axisMap": axisMap};
+    const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    var result = matsDataProcessUtils.processDataProfile(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);
 };
