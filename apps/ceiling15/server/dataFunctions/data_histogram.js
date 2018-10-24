@@ -30,8 +30,6 @@ dataHistogram = function (plotParams, plotFunction) {
     const binParams = matsDataUtils.setHistogramParameters(plotParams);
     const yAxisFormat = binParams.yAxisFormat;
     const binNum = binParams.binNum;
-    const pivotVal = binParams.pivotVal;
-    const binBounds = binParams.binBounds;
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -137,6 +135,9 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    var result = matsDataProcessUtils.processDataHistogram(curvesLength, curves, dataFoundForCurve, plotParams, dataset, appName, matching, alreadyMatched, hasLevels, allReturnedSubStats, allReturnedSubSecs, binNum, pivotVal, binBounds, axisMap, yAxisFormat, dataRequests, totalProcessingStart);
+    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
+    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, [], dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };
