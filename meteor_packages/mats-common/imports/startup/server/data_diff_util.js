@@ -182,6 +182,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                         'bin_mean': null,
                         'bin_sd': null,
                         'bin_n': diffValue,
+                        'bin_rf': minuendData[minuendIndex][6].bin_rf - subtrahendData[subtrahendIndex][6].bin_rf,
                         'binLowBound': minuendData[minuendIndex][6].binLowBound,
                         'binUpBound': minuendData[minuendIndex][6].binUpBound,
                         'binLabel': minuendData[minuendIndex][6].binLabel
@@ -218,6 +219,7 @@ const getDataForDiffCurve = function (params, plotType, hasLevels) {
                         'bin_mean': null,
                         'bin_sd': null,
                         'bin_n': null,
+                        'bin_rf': null,
                         'binLowBound': minuendData[minuendIndex][6].binLowBound,
                         'binUpBound': minuendData[minuendIndex][6].binUpBound,
                         'binLabel': minuendData[minuendIndex][6].binLabel

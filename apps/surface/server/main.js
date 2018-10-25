@@ -2,7 +2,6 @@ import {Meteor} from 'meteor/meteor';
 import {mysql} from 'meteor/pcel:mysql';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
@@ -87,7 +86,8 @@ const doPlotParams = function () {
             "Choose a bin bound": ["chooseBound"],
             "Set number of bins and make zero a bin bound": ["binNumberWithZero"],
             "Set number of bins and choose a bin bound": ["binNumberWithChosen"],
-            "Manual bins": ["manual"]
+            "Manual bins": ["manual"],
+            "Manual bin start, number, and stride": ["manualStride"]
         };
         matsCollections.PlotParams.insert(
             {
@@ -97,8 +97,10 @@ const doPlotParams = function () {
                 options: Object.keys(binOptionsMap),
                 hideOtherFor: {
                     'bin-number': ["Default bins", "Make zero a bin bound", "Manual bins", "Choose a bin bound"],
-                    'bin-pivot': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound", "Manual bins"],
-                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound"],
+                    'bin-pivot': ["Default bins", "Set number of bins", "Make zero a bin bound", "Set number of bins and make zero a bin bound", "Manual bins", "Manual bin start, number, and stride"],
+                    'bin-start': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bins"],
+                    'bin-stride': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bins"],
+                    'bin-bounds': ["Default bins", "Set number of bins", "Make zero a bin bound", "Choose a bin bound", "Set number of bins and make zero a bin bound", "Set number of bins and choose a bin bound", "Manual bin start, number, and stride"],
                 },
                 default: Object.keys(binOptionsMap)[0],
                 controlButtonCovered: true,
@@ -144,6 +146,40 @@ const doPlotParams = function () {
 
         matsCollections.PlotParams.insert(
             {
+                name: 'bin-start',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin start",
+                displayOrder: 5,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'bin-stride',
+                type: matsTypes.InputTypes.numberSpinner,
+                optionsMap: {},
+                options: [],   // convenience
+                min: '-10000',
+                max: '10000',
+                step: 'any',
+                default: '0',
+                controlButtonCovered: true,
+                controlButtonText: "bin stride",
+                displayOrder: 6,
+                displayPriority: 1,
+                displayGroup: 2
+            });
+
+        matsCollections.PlotParams.insert(
+            {
                 name: 'bin-bounds',
                 type: matsTypes.InputTypes.textInput,
                 optionsMap: {},
@@ -151,7 +187,7 @@ const doPlotParams = function () {
                 default: ' ',
                 controlButtonCovered: true,
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
-                displayOrder: 5,
+                displayOrder: 7,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -540,7 +576,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
+                default: 6,
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
                 displayOrder: 7,
