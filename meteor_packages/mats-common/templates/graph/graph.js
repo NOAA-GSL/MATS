@@ -1,5 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
+import Plotly from '../../imports/startup/client/lib/plotly.min.js';
 import {
     matsCollections,
     matsCurveUtils,
@@ -121,29 +122,46 @@ Template.graph.helpers({
                 }
 
                 // selection zooming
-                var zooming = false;
-                $("#placeholder").bind("plotselected", function (event, ranges) {
-                    zooming = true;
-                    event.preventDefault();
-                    $("#placeholder").data().plot.getOptions().selection.mode = 'xy';
-                    $("#placeholder").data().plot.getOptions().pan.interactive = false;
-                    $("#placeholder").data().plot.getOptions().zoom.interactive = false;
-                    $("#placeholder").data().plot = matsGraphUtils.drawGraph(ranges, dataset, options, $("#placeholder"));
-                    zooming = false;
-                });
-                $("#placeholder").bind('plotclick', function (event, pos, item) {
-                    if (zooming) {
-                        zooming = false;
-                        return;
-                    }
-                    if (item && item.series.data[item.dataIndex][3]) {
-                        Session.set("data", item.series.data[item.dataIndex][3]);
-                        $("#dataModal").modal('show');
-                    }
-                });
+                // var zooming = false;
+                // $("#placeholder").bind("plotselected", function (event, ranges) {
+                //     zooming = true;
+                //     event.preventDefault();
+                //     $("#placeholder").data().plot.getOptions().selection.mode = 'xy';
+                //     $("#placeholder").data().plot.getOptions().pan.interactive = false;
+                //     $("#placeholder").data().plot.getOptions().zoom.interactive = false;
+                //     $("#placeholder").data().plot = matsGraphUtils.drawGraph(ranges, dataset, options, $("#placeholder"));
+                //     zooming = false;
+                // });
+                // $("#placeholder").bind('plotclick', function (event, pos, item) {
+                //     if (zooming) {
+                //         zooming = false;
+                //         return;
+                //     }
+                //     if (item && item.series.data[item.dataIndex][3]) {
+                //         Session.set("data", item.series.data[item.dataIndex][3]);
+                //         $("#dataModal").modal('show');
+                //     }
+                // });
+
                 // draw the plot for the first time
-                $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-                $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+                // $("#placeholder").data().plot = Plotly.plot($("#placeholder")[0], dataset, options);
+
+                var graphData = [];
+                for (var di = 0; di < dataset.length; di++) {
+                    var dataExtract = {};
+                    var xvals = dataset[di].data.map(function (d) {
+                        return d[0];
+                    });
+                    var yvals = dataset[di].data.map(function (d) {
+                        return d[1];
+                    });
+                    dataExtract['x'] = xvals;
+                    dataExtract['y'] = yvals;
+                    dataExtract['mode'] = 'lines+markers';
+                    graphData.push(dataExtract);
+                }
+
+                $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], graphData);
             }
             matsCurveUtils.hideSpinner();
         }
