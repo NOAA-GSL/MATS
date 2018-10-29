@@ -19,34 +19,10 @@ graphXYLine = function (key) {
     var options = resultSet.options;
 
     //set options
-    if (min < 400) {
-        options !== undefined && options.series && options.series.points && (options.series.points.radius = 1);
-    } else {
-        options !== undefined && options.series && options.series.points && (options.series.points.radius = 2);
-    }
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
 
-    // format errorbars
-    for (var i = 0; i < dataset.length; i++) {
-        var o = dataset[i];
-        var capRadius = 10;
-        if (min < 400) {
-            o.points && (o.points.radius = 1);
-            capRadius = 5;
-        } else {
-            o.points && (o.points.radius = 2);
-            capRadius = 10;
-        }
-        if (o.points.yerr.lowerCap === "squareCap") {
-            o.points.yerr.lowerCap = matsGraphUtils.lYSquareCap;
-        }
-        if (o.points.yerr.upperCap === "squareCap") {
-            o.points.yerr.upperCap = matsGraphUtils.uYSquareCap;
-        }
-    }
-
-    // initializa show/hide button labels
+    // initialize show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };
