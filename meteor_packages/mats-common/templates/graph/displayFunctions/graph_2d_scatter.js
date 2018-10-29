@@ -17,8 +17,12 @@ graph2dScatter = function (key) {
     }
     var dataset = resultSet.data;
     var options = resultSet.options;
+
+    //set options
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
+
+    // initialize show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };

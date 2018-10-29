@@ -22,6 +22,7 @@ graphProfile = function (key) {
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
-    // initializa show/hide button labels
+
+    // initialize show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };

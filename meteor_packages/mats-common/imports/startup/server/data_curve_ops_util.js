@@ -25,41 +25,19 @@ const getPointSymbol = function (curveIndex) {
 const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
 
     const valueLine = {
-        "yaxis": 1,
         "label": cLabel,
         "annotation": "",
-        "color": "rgb(0,0,0)",
+        "name": "y = " + yValue.toString(),
+        "mode": "lines",
         "data": [
             [xmin, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()],
             [xmax, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()]
         ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
+        "marker": {
+            "color": "rgb(0,0,0)",
         },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": xmax,
-            "max": xmin,
-            "sum": 0,
-            "miny": yValue,
-            "maxy": yValue
+        "line": {
+            "color": "rgb(0,0,0)",
         }
     };
 
@@ -70,41 +48,19 @@ const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
 const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
 
     const valueLine = {
-        "yaxis": 1,
         "label": cLabel,
-        "color": "rgb(0,0,0)",
         "annotation": "",
+        "name": "x = " + xValue.toString(),
+        "mode": "lines",
         "data": [
             [xValue, -ymax, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()],
             [xValue, -ymin, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()]
         ],
-        "points": {
-            "show": false,
-            "errorbars": "x",
-            "xerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
+        "marker": {
+            "color": "rgb(0,0,0)",
         },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
-            "d_mean": 0,
-            "stde_betsy": 0,
-            "sd": 0,
-            "n_good": 0,
-            "lag1": 0,
-            "min": ymin,
-            "max": ymax,
-            "sum": 0,
-            "minx": xValue,
-            "maxx": xValue
+        "line": {
+            "color": "rgb(0,0,0)",
         }
     };
 
@@ -209,14 +165,14 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
      dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
      */
     const label = curve['label'];
-    const axisKey = curve['axisKey'];
     const annotation = curve['annotation'];
-    const color = curve['color'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
-    const pointSymbol = getPointSymbol(curveIndex);
+    const axisKey = curve['axisKey'];
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -225,43 +181,37 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            // axisLabel: axisKey + " - " + label
             axisLabel: axisKey
         };
     }
+
+    //set curve options
     const curveOptions = {
-        yaxis: 1,   // for profiles there is only one xaxis and one yaxis
         label: label,
         curveId: label,
+        name: label,
+        yaxis: "y1",
         annotation: annotation,
-        color: color,
-        data: dataSeries,
-        points: {
-            symbol: pointSymbol,
-            fillColor: color,
-            show: true,
-            errorbars: "x",
-            xerr: {
-                show: true,
-                asymmetric: false,
-                upperCap: "squareCap",
-                lowerCap: "squareCap",
-                color: color,
-                radius: 5
-            }
+        mode: "lines+markers",
+        marker: {
+            color: curve['color'],
         },
-
-        lines: {
-            show: true,
-            fill: false
-        }
+        line: {
+            color: curve['color'],
+        },
+        error_x: {
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            // width: 0
+        },
+        data: dataSeries,
     };
+
     return curveOptions;
 };
 
