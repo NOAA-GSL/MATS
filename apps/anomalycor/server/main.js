@@ -712,6 +712,9 @@ Meteor.startup(function () {
 
     matsCollections.appName.insert({name: "appName", app: "anomalycor"});
 
+    import {matsCache} from 'meteor/randyp:mats-common';
+    matsCache.clear();  // DISABLE FOR PRODUCTION *********
+
 });
 
 // this object is global so that the reset code can get to it

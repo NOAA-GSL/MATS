@@ -134,8 +134,8 @@ dataHistogram = function (plotParams, plotFunction) {
                 };
                 // get the data back from the query
                 d = queryResult.data;
-                allReturnedSubStats.push(d.curveSubStats); // save returned data so that we can calculate histogram stats once all the queries are done
-                allReturnedSubSecs.push(d.curveSubSecs);
+                allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
+                allReturnedSubSecs.push(d.subSecs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

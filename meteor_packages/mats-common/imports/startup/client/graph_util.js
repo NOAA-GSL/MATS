@@ -1,7 +1,7 @@
 // set the label for the hide show buttons (NO DATA) for the initial time here
 const setNoDataLabels = function (dataset) {
     for (var c = 0; c < dataset.length; c++) {
-        if (dataset[c].data.length === 0) {
+        if (dataset[c].x.length === 0) {
             Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide')) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide').value = 'NO DATA';

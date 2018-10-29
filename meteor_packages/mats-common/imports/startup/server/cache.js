@@ -13,10 +13,16 @@ if (Meteor.isServer) {
         Results.set(key, result);
         console.log('set result in cache for app: ', process.env.PWD, 'key:', key);
     }
+    var clear = function () {
+        console.log('asked to clear result cache');
+        Results.clear();
+    }
 }
+
 
 export default
     matsCache = {
         getResult: getResult,
-        storeResult: storeResult
+        storeResult: storeResult,
+        clear: clear
     }

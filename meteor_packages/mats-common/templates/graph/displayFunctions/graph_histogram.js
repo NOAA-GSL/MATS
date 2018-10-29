@@ -17,17 +17,9 @@ graphHistogram = function (key) {
     }
     var dataset = resultSet.data;
     var options = resultSet.options;
-
-    //set options
-    if (min < 400) {
-        options !== undefined && options.series && options.series.points && (options.series.points.radius = 1);
-    } else {
-        options !== undefined && options.series && options.series.points && (options.series.points.radius = 2);
-    }
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
-
-    // initializa show/hide button labels
+    // initialize show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };

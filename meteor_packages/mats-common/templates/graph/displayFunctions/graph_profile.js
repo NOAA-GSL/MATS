@@ -22,26 +22,6 @@ graphProfile = function (key) {
     if (route !== undefined && route !== "") {
         options.selection = [];
     }
-
-    // format errorbars
-    for (var i = 0; i < dataset.length; i++) {
-        var o = dataset[i];
-        var capRadius = 10;
-        if (min < 400) {
-            o.points && (o.points.radius = 1);
-            capRadius = 5;
-        } else {
-            o.points && (o.points.radius = 2);
-            capRadius = 10;
-        }
-        if (o.points.xerr.lowerCap === "squareCap") {
-            o.points.xerr.lowerCap = matsGraphUtils.lXSquareCap;
-        }
-        if (o.points.xerr.upperCap === "squareCap") {
-            o.points.xerr.upperCap = matsGraphUtils.uXSquareCap;
-        }
-    }
-
     // initializa show/hide button labels
     matsGraphUtils.setNoDataLabels(dataset);
 };

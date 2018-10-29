@@ -30,7 +30,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
         var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
-        var data = dataset[curveIndex].data;
+        var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
         var di = 0;
@@ -38,11 +38,31 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         var indVars = [];
         var means = [];
         var rawStat;
+        /*
+        dataset[curveLength]
+        each dataset has dataset[curveLength].data
+        dataset[curveLength].data is
+        {
+            x:[],
+            y:[],
+            error_x:[],
+            error_y:[],
+            subVals:[],
+            subSecs:[],
+            subLevs:[],
+            stats:[],
+            tooltip:[]
+            xmin:num,
+            xmax:num,
+            ymin:num,
+            ymax:num,
+            sum:sum,
+            count:count
+        }
+        */
 
-        while (di < data.length) {
-
+        while (di < data.x.length) {
             var errorResult = {};
-
             /*
              DATASET ELEMENTS:
              series: [data,data,data ...... ]   each data is itself an array
@@ -56,43 +76,48 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
              */
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
-            rawStat = data[di][1];
-            if (appParams.appName !== "surfrad" || !(appParams.appName === "surfrad" && (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') && !appParams.matching)) {  // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
+            rawStat = data.y[di];
+            // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
+            if (appParams.appName !== "surfrad" ||
+                !(appParams.appName === "surfrad" &&
+                    (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
+                    !appParams.matching)) {
                 if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
-                    data[di][1] = errorResult.d_mean;
+                    data.y[di] = errorResult.d_mean;
                 } else {
-                    if (dataset[diffFrom[0]].data[di][1] !== null && dataset[diffFrom[1]].data[di][1] !== null) {
+                    if (dataset[diffFrom[0]].data.y[di] !== null && dataset[diffFrom[1]].data.y[di] !== null) {
                         // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                        data[di][1] = dataset[diffFrom[0]].data[di][1] - dataset[diffFrom[1]].data[di][1];
+                        data.y[di] = dataset[diffFrom[0]].data.y[di] - dataset[diffFrom[1]].data.y[di];
                     } else {
                         // keep the null for no data at this point
-                        data[di][1] = null;
+                        data.y[di] = null;
                     }
                 }
             }
-            values.push(data[di][1]);
-            indVars.push(data[di][0]);
+            values.push(data.y[di]);
+            indVars.push(data.x[di]);
             means.push(errorResult.d_mean);
 
             // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
-                data[di][2] = errorBar;
+                data.error_y[di] = errorBar;
             } else {
-                data[di][2] = -1;
+                data.error_y[di] = -1;
             }
 
             // remove sub values and times to save space
-            data[di][3] = [];
-            data[di][4] = [];
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
 
             // store statistics
-            data[di][5] = {
+            data.stats[di] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
@@ -102,38 +127,38 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             };
 
             // this is the tooltip, it is the last element of each dataseries element
-            data[di][6] = label;
+            data.toolTips[di] = label;
             switch (appParams.plotType) {
                 case matsTypes.PlotTypes.timeSeries:
-                    data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
+                    data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dailyModelCycle:
-                    var fhr = ((data[di][0] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
+                    var fhr = ((data.x[di] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
                     fhr = fhr < 0 ? fhr + 24 : fhr;
-                    data[di][6] = data[di][6] + "<br> time: " + moment.utc(data[di][0]).format("YYYY-MM-DD HH:mm");
-                    data[di][6] = data[di][6] + "<br> forecast hour: " + fhr;
+                    data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    data.toolTips[di] = data.toolTips[di] + "<br> forecast hour: " + fhr;
                     break;
                 case matsTypes.PlotTypes.dieoff:
-                    data[di][6] = data[di][6] + "<br> fhr: " + data[di][0];
+                    data.toolTips[di] = data.toolTips[di] + "<br> fhr: " + data.x[di];
                     break;
                 case matsTypes.PlotTypes.validtime:
-                    data[di][6] = data[di][6] + "<br> hour of day: " + data[di][0];
+                    data.toolTips[di] = data.toolTips[di] + "<br> hour of day: " + data.x[di];
                     break;
                 case matsTypes.PlotTypes.threshold:
-                    data[di][6] = data[di][6] + "<br> threshold: " + data[di][0];
+                    data.toolTips[di] = data.toolTips[di] + "<br> threshold: " + data.x[di];
                     break;
                 default:
-                    data[di][6] = data[di][6] + "<br>" + data[di][0];
+                    data.toolTips[di] = data.toolTips[di] + "<br>" + data.x[di];
                     break;
             }
-            data[di][6] = data[di][6] +
-                "<br> " + statisticSelect + ": " + (data[di][1] === null ? null : data[di][1].toPrecision(4)) +
+            data.toolTips[di] = data.toolTips[di] +
+                "<br> " + statisticSelect + ": " + (data.y[di] === null ? null : data.y[di].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
                 // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>  stde: " + errorResult.stde_betsy +
-                "<br>  errorbars: " + Number((data[di][1]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][1]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>  errorbars: " + Number((data.y[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -159,19 +184,19 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
     }
 
-    // add black 0 line curve
-    // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
-    dataset.push(zeroLine);
-
-    //add ideal value lines, if any
-    var idealValueLine;
-    var idealLabel;
-    for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
-        idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
-        dataset.push(idealValueLine);
-    }
+    // // add black 0 line curve
+    // // need to define the minimum and maximum x value for making the zero curve
+    // const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
+    // dataset.push(zeroLine);
+    //
+    // //add ideal value lines, if any
+    // var idealValueLine;
+    // var idealLabel;
+    // for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
+    //     idealLabel = "ideal" + ivIdx.toString();
+    //     idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+    //     dataset.push(idealValueLine);
+    // }
 
     // generate plot options
     var resultOptions;
@@ -300,7 +325,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             };
 
             // this is the tooltip, it is the last element of each dataseries element
-            data[di][6] = label +
+            data.toolTips[di] = label +
                 "<br>" + -data[di][1] + "mb" +
                 "<br> " + statisticSelect + ": " + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +

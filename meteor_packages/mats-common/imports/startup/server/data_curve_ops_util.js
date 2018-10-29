@@ -133,13 +133,14 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
      dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
      */
     const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
-    const annotation = curve['annotation'];
-    const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -148,39 +149,43 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            // axisLabel: axisKey + " - " + label
             axisLabel: axisKey
         };
     }
-    const curveOptions = {
-        yaxis: axisMap[axisKey].index,
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        points: {
-            symbol: pointSymbol,
-            fillColor: curve['color'],
-            show: true,
-            errorbars: "y",
-            yerr: {
-                show: true,
-                asymmetric: false,
-                upperCap: "squareCap",
-                lowerCap: "squareCap",
-                color: curve['color'],
-                radius: 5
-            }
-        },
-        lines: {show: true, fill: false}
+
+    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
+
+    var error_y_temp = {
+        error_y: {
+            array: dataSeries.error_y,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            // width: 0
+        }
     };
+    var curveOptions = {...{
+            label: label,
+            curveId: label,
+            name: label,
+            yaxis: "y" + (axisNumber + 1),
+            annotation: annotation,
+            mode: "lines+markers",
+            marker: {
+                color: curve['color'],
+            },
+            line: {
+                color: curve['color'],
+            },
+    }, ...dataSeries} ;
+
+    delete curveOptions.error_y;
+
+    curveOptions['error_y'] = error_y_temp.error_y;
 
     return curveOptions;
 };

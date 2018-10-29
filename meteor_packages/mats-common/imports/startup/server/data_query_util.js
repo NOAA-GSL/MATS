@@ -1,5 +1,4 @@
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {Meteor} from "meteor/meteor";
 
 //const Future = require('fibers/future');
@@ -142,7 +141,17 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
         const regular = !(!forceRegularCadence && averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
 
         var dFuture = new Future();
-        var d = [];  // d will contain the curve data
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            toolTips: []
+        };  
         var error = "";
         var N0 = [];
         var N_times = [];
@@ -185,7 +194,18 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
         const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
         var dFuture = new Future();
-        var d = [];  // d will contain the curve data
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            error_x: [],
+            error_y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            toolTips: []
+        };
+
         var error = "";
         var N0 = [];
         var N_times = [];
@@ -201,7 +221,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
                 if (plotType !== matsTypes.PlotTypes.histogram) {
                     parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
                 } else {
-                    parsedData = parseQueryDataHistogram(rows, hasLevels);
+                    parsedData = parseQueryDataHistogram(d,rows, hasLevels);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
@@ -258,17 +278,30 @@ const queryMapDB = function (pool, statement) {
 
 //this method parses the returned query data for timeseries plots
 const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular) {
-
+/*
+    var d = {// d will contain the curve data
+        x: [],
+        y: [],
+        error_x: [],   // curveTime
+        error_y: [],   // values
+        subVals: [],   //subVals
+        subSecs: [],   //subSecs
+        subLevs: [],   //subLevs
+        stats: [],     //curveStats
+        toolTips: []
+    };
+*/
+    d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
     var N_times = [];
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
 
     var curveTime = [];
-    var curveStat = [];
-    var curveSubStats = [];
-    var curveSubSecs = [];
-    var curveSubLevs = [];
+    var curveStats = [];
+    var subVals = [];
+    var subSecs = [];
+    var subLevs = [];
 
     var time_interval = rows.length > 1 ? Number(rows[1].avtime) - Number(rows[0].avtime) : undefined; //calculate a base time interval -- will be used if data is regular
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
@@ -315,11 +348,11 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             }
         }
         curveTime.push(avTime);
-        curveStat.push(stat);
-        curveSubStats.push(sub_values);
-        curveSubSecs.push(sub_secs);
+        curveStats.push(stat);
+        subVals.push(sub_values);
+        subSecs.push(sub_secs);
         if (hasLevels) {
-            curveSubLevs.push(sub_levs);
+            subLevs.push(sub_levs);
         }
     }
 
@@ -332,13 +365,27 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
 
     time_interval = time_interval * 1000;
     var loopTime = xmin;
+    var sum = 0;
     while (loopTime <= xmax) {
         var d_idx = curveTime.indexOf(loopTime);
         if (d_idx < 0) {
             if (hasLevels) {
-                d.push([loopTime, null, -1, NaN, NaN, NaN]);     // add a null for missing data
+                //d.push([loopTime, null, -1, NaN, NaN, NaN]);// add a null for missing data
+                d.x.push(loopTime);
+                d.y.push(null);
+                //d.error_x not used
+                d.error_y.push(-1);   //placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
+                d.subLevs.push(NaN);
             } else {
-                d.push([loopTime, null, -1, NaN, NaN]);     // add a null for missing data
+                //d.push([loopTime, null, -1, NaN, NaN]);     // add a null for missing data
+                d.x.push(loopTime);
+                d.y.push(null);
+                //d.error_x not used
+                d.error_y.push(-1); //placeholder
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
             }
         } else {
             var this_N0 = N0[d_idx];
@@ -347,15 +394,42 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
             // we don't have any points with a smaller completeness value than specified by the user.
             if (this_N0 < 0.1 * N0_max || this_N_times < completenessQCParam * N_times_max) {
                 if (hasLevels) {
-                    d.push([loopTime, null, -1, NaN, NaN, NaN]);     // add a null if this time doesn't pass QC
+//                    d.push([loopTime, null, -1, NaN, NaN, NaN]);     // add a null if this time doesn't pass QC
+                    d.x.push(loopTime);
+                    d.y.push(null);
+                    //d.error_x not used
+                    d.error_y.push(-1); //placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
+                    d.subLevs.push(NaN);
                 } else {
-                    d.push([loopTime, null, -1, NaN, NaN]);     // add a null if this time doesn't pass QC
+//                    d.push([loopTime, null, -1, NaN, NaN]);     // add a null if this time doesn't pass QC
+                    d.x.push(loopTime);
+                    d.y.push(null);
+                    //d.error_x not used
+                    d.error_y.push(-1); //placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
                 }
             } else {
+                sum += curveStats[d_idx];
                 if (hasLevels) {
-                    d.push([loopTime, curveStat[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);   // else add the real data
+                    //d.push([loopTime, curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);   // else add the real data
+                    d.x.push(loopTime);
+                    d.y.push(curveStats[d_idx]);
+                    //d.error_x not used
+                    d.error_y.push(-1);
+                    d.subVals.push(subVals[d_idx]);
+                    d.subSecs.push(subSecs[d_idx]);
+                    d.subLevs.push(subLevs[d_idx]);
                 } else {
-                    d.push([loopTime, curveStat[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx]]);   // else add the real data
+                    //d.push([loopTime, curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx]]);   // else add the real data
+                    d.x.push(loopTime);
+                    d.y.push(curveStats[d_idx]);
+                    //d.error_x not used
+                    d.error_y.push(-1);
+                    d.subVals.push(subVals[d_idx]);
+                    d.subSecs.push(subSecs[d_idx]);
                 }
             }
         }
@@ -367,6 +441,11 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     if (regular) {
         cycles = [time_interval];   // regular models will return one cycle cadence
     }
+    d.xmin = Math.min(d.x);
+    d.ymin = Math.min(d.y);
+    d.xmax = Math.max(d.x);
+    d.ymax = Math.max(d.y);
+    d.sum = sum;
     return {
         d: d,
         N0: N0,
@@ -377,18 +456,28 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
 
 //this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
 const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, hasLevels) {
-
+    /*
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            error_x: [],   // curveTime
+            error_y: [],   // values
+            subVals: [],   //subVals
+            subSecs: [],   //subSecs
+            subLevs: [],   //subLevs
+            stats: [],     //curveStats
+            toolTips: []
+        };
+    */
     var N0 = [];
     var N_times = [];
-
     var curveIndependentVars = [];
-    var curveStat = [];
-    var curveSubStats = [];
-    var curveSubSecs = [];
-    var curveSubLevs = [];
+    var curveStats = [];
+    var subVals = [];
+    var subSecs = [];
+    var subLevs = [];
 
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-
         var independentVar;
         if (plotType === matsTypes.PlotTypes.validtime) {
             independentVar = Number(rows[rowIndex].hr_of_day);
@@ -432,27 +521,25 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             const cycles_missing = Math.floor((Number(independentVar) - Number(rows[rowIndex - 1].avtime * 1000)) / (3600 * 24 * 1000));
             for (var missingIdx = cycles_missing; missingIdx > 0; missingIdx--) {
                 curveIndependentVars.push(independentVar - 3600 * 24 * 1000 * missingIdx);
-                curveStat.push(null);
-                curveSubStats.push(NaN);
-                curveSubSecs.push(NaN);
+                curveStats.push(null);
+                subVals.push(NaN);
+                subSecs.push(NaN);
                 if (hasLevels) {
-                    curveSubLevs.push(NaN);
+                    subLevs.push(NaN);
                 }
             }
         }
-
         curveIndependentVars.push(independentVar);
-        curveStat.push(stat);
-        curveSubStats.push(sub_stats);
-        curveSubSecs.push(sub_secs);
+        curveStats.push(stat);
+        subVals.push(sub_stats);
+        subSecs.push(sub_secs);
         if (hasLevels) {
-            curveSubLevs.push(sub_levs);
+            subLevs.push(sub_levs);
         }
     }
-
     var N0_max = Math.max(...N0);
     var N_times_max = Math.max(...N_times);
-
+    var sum = 0;
     for (var d_idx = 0; d_idx < curveIndependentVars.length; d_idx++) {
         var this_N0 = N0[d_idx];
         var this_N_times = N_times[d_idx];
@@ -462,28 +549,74 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             if (plotType === matsTypes.PlotTypes.profile) {
                 // profile has the stat first, and then the independent var. The others have independent var and then stat.
                 // this is in the pattern of x-plotted-variable, y-plotted-variable.
-                d.push([null, curveIndependentVars[d_idx], -1, NaN, NaN, NaN]);
+                //d.push([null, curveIndependentVars[d_idx], -1, NaN, NaN, NaN]);
+                d.x.push(null);
+                d.y.push(curveIndependentVars[d_idx]);
+                d.error_x.push(-1);  // placeholder
+                //d.error_y not used for profile
+                d.subVals.push(NaN);
+                d.subSecs.push(NaN);
+                d.subLevs.push(NaN);
             } else if (plotType !== matsTypes.PlotTypes.dieoff) {
                 // for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
                 if (hasLevels) {
-                    d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN, NaN]);
+                    //d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN, NaN]);
+                    d.x.push(curveIndependentVars[d_idx]);
+                    d.y.push(null);
+                    //d.error_x not used for curves other than profile
+                    d.error_y.push(-1);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
+                    d.subLevs.push(NaN);
                 } else {
-                    d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN]);
+                    //d.push([curveIndependentVars[d_idx], null, -1, NaN, NaN]);
+                    d.x.push(curveIndependentVars[d_idx]);
+                    d.y.push(null);
+                    //d.error_x not used for curves other than profile
+                    d.error_y.push(-1);  // placeholder
+                    d.subVals.push(NaN);
+                    d.subSecs.push(NaN);
                 }
             }
         } else {
             // else add the real data
+            sum += curveStats[d_idx];
             if (plotType === matsTypes.PlotTypes.profile) {
                 // profile has the stat first, and then the independent var. The others have independent var and then stat.
                 // this is in the pattern of x-plotted-variable, y-plotted-variable.
-                d.push([curveStat[d_idx], curveIndependentVars[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);
+//                d.push([curveStats[d_idx], curveIndependentVars[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);
+                d.x.push(curveStats[d_idx]);
+                d.y.push(curveIndependentVars[d_idx]);
+                d.error_x.push(-1) // placeholder
+                //d.error_y.push(-1);  //not used for profile curves
+                d.subVals.push(subVals[d_idx]);
+                d.subSecs.push(subSecs[d_idx]);
+                d.subLevs.push(subLevs[d_idx]);
             } else if (hasLevels) {
-                d.push([curveIndependentVars[d_idx], curveStat[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx], curveSubLevs[d_idx]]);
+//                d.push([curveIndependentVars[d_idx], curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);
+                d.x.push(curveIndependentVars[d_idx]);
+                d.y.push(curveStats[d_idx]);
+                //d.error_x not used for curves other than profile
+                d.error_y.push(-1);  // placeholder
+                d.subVals.push(subVals[d_idx]);
+                d.subSecs.push(subSecs[d_idx]);
+                d.subLevs.push(subLevs[d_idx]);
             } else {
-                d.push([curveIndependentVars[d_idx], curveStat[d_idx], -1, curveSubStats[d_idx], curveSubSecs[d_idx]]);
+//                d.push([curveIndependentVars[d_idx], curveStats[d_idx], -1, subVals[d_idx], subSecs[d_idx]]);
+                d.x.push(curveIndependentVars[d_idx]);
+                d.y.push(curveStats[d_idx]);
+                //d.error_x not used for curves other than profile
+                d.error_y.push(-1);  // placeholder
+                d.subVals.push(subVals[d_idx]);
+                d.subSecs.push(subSecs[d_idx]);
             }
         }
     }
+    d.xmin = Math.min(d.x);
+    d.ymin = Math.min(d.y);
+    d.xmax = Math.max(d.x);
+    d.ymax = Math.max(d.y);
+    d.sum = sum;
 
     return {
         d: d,
@@ -493,7 +626,20 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 };
 
 // this method parses the returned query data for histograms
-const parseQueryDataHistogram = function (rows, hasLevels) {
+const parseQueryDataHistogram = function (d, rows, hasLevels) {
+/*
+    var d = {// d will contain the curve data
+        x: [], //placeholder
+        y: [], //placeholder
+        error_x: [], // unused
+        error_y: [], // unused
+        subVals: [],
+        subSecs: [],
+        subLevs: [],
+        stats: [], // placeholder
+        toolTips: [] //placeholder
+    };
+*/
 
     // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
     var curveSubStatsRaw = [];
@@ -527,21 +673,21 @@ const parseQueryDataHistogram = function (rows, hasLevels) {
     }
 
     // we don't have bins yet, so we want all of the data in one array
-    const curveSubStats = [].concat.apply([], curveSubStatsRaw);
-    const curveSubSecs = [].concat.apply([], curveSubSecsRaw);
-    var curveSubLevs;
+    const subVals = [].concat.apply([], curveSubStatsRaw);
+    const subSecs = [].concat.apply([], curveSubSecsRaw);
+    var subLevs;
     if (hasLevels) {
-        curveSubLevs = [].concat.apply([], curveSubLevsRaw);
+        subLevs = [].concat.apply([], curveSubLevsRaw);
     }
 
+    d.subVals = subVals;
+    d.subSecs = subSecs;
+    d.subLevs = subLevs;
+
     return {
-        d: {
-            'curveSubStats': curveSubStats,
-            'curveSubSecs': curveSubSecs,
-            'curveSubLevs': curveSubLevs
-        },
-        N0: curveSubStats.length,
-        N_times: curveSubSecs.length
+        d: d,
+        N0: subVals.length,
+        N_times: subSecs.length
     };
 };
 
