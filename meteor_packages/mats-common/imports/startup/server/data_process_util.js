@@ -128,33 +128,33 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
             // this is the tooltip, it is the last element of each dataseries element.
             // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
-            data.toolTips[di] = label;
+            data.text[di] = label;
             switch (appParams.plotType) {
                 case matsTypes.PlotTypes.timeSeries:
-                    data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    data.text[di] = data.text[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     data.x[di] = moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dailyModelCycle:
                     var fhr = ((data.x[di] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
                     fhr = fhr < 0 ? fhr + 24 : fhr;
-                    data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
-                    data.toolTips[di] = data.toolTips[di] + "<br> forecast hour: " + fhr;
+                    data.text[di] = data.text[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    data.text[di] = data.text[di] + "<br> forecast hour: " + fhr;
                     data.x[di] = moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dieoff:
-                    data.toolTips[di] = data.toolTips[di] + "<br> fhr: " + data.x[di];
+                    data.text[di] = data.text[di] + "<br> fhr: " + data.x[di];
                     break;
                 case matsTypes.PlotTypes.validtime:
-                    data.toolTips[di] = data.toolTips[di] + "<br> hour of day: " + data.x[di];
+                    data.text[di] = data.text[di] + "<br> hour of day: " + data.x[di];
                     break;
                 case matsTypes.PlotTypes.threshold:
-                    data.toolTips[di] = data.toolTips[di] + "<br> threshold: " + data.x[di];
+                    data.text[di] = data.text[di] + "<br> threshold: " + data.x[di];
                     break;
                 default:
-                    data.toolTips[di] = data.toolTips[di] + "<br>" + data.x[di];
+                    data.text[di] = data.text[di] + "<br>" + data.x[di];
                     break;
             }
-            data.toolTips[di] = data.toolTips[di] +
+            data.text[di] = data.text[di] +
                 "<br> " + statisticSelect + ": " + (data.y[di] === null ? null : data.y[di].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
@@ -349,7 +349,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             };
 
             // this is the tooltip, it is the last element of each dataseries element
-            data.toolTips[di] = label +
+            data.text[di] = label +
                 "<br>" + data.y[di] + "mb" +
                 "<br> " + statisticSelect + ": " + (data.x[di] === null ? null : data.x[di].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
@@ -419,10 +419,6 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams) {
     var error = "";
     var curvesLengthSoFar = 0;
-    var xmax = Number.MIN_VALUE;
-    var ymax = Number.MIN_VALUE;
-    var xmin = Number.MAX_VALUE;
-    var ymin = Number.MAX_VALUE;
 
     // flatten all the returned data into one stats array and one secs array in order to calculate histogram bins over the whole range.
     const curveSubStats = [].concat.apply([], allReturnedSubStats);
@@ -436,9 +432,12 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     }
 
     // store bin labels and x-axis positions of those labels for later when we set up the plot options
-    var plotBins = [];
+    var plotBins = {};
+    plotBins['binMeans'] = [];
+    plotBins['binLabels'] = [];
     for (var b_idx = 0; b_idx < binStats.binMeans.length; b_idx++) {
-        plotBins.push([binStats.binMeans[b_idx], binStats.binLabels[b_idx]]);
+        plotBins['binMeans'].push(binStats.binMeans[b_idx]);
+        plotBins['binLabels'].push(binStats.binLabels[b_idx]);
     }
 
     // post process curves
@@ -447,14 +446,12 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     var d = {// d will contain the curve data
         x: [],
         y: [],
-        error_x: [],
-        error_y: [],
         subVals: [],
         subSecs: [],
         subLevs: [],
         stats: [],
         bin_stats: [],
-        toolTips: [],
+        text: [],
         xmin: Number.MAX_VALUE,
         xmax: Number.MIN_VALUE,
         ymin: Number.MAX_VALUE,
@@ -490,8 +487,8 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             // then take diffs
             const diffResult = matsDataDiffUtils.getDataForDiffCurve({
                 dataset: dataset,
-                ymin: ymin,
-                ymax: ymax,
+                ymin: d.ymin,
+                ymax: d.ymax,
                 diffFrom: diffFrom
             }, matsTypes.PlotTypes.histogram, appParams.hasLevels);
 
@@ -502,10 +499,6 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         curve['annotation'] = "";
-        curve['xmin'] = d.xmin;
-        curve['xmax'] = d.xmax;
-        curve['ymin'] = d.ymin;
-        curve['ymax'] = d.ymax;
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
         const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
@@ -535,14 +528,14 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
         diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
-        var data = dataset[curveIndex].data;
+        var data = dataset[curveIndex];
         label = dataset[curveIndex].label;
 
         var di = 0;
         var values = [];
         var bins = [];
 
-        while (di < data.length) {
+        while (di < data.x.length) {
 
             /*
              DATASET ELEMENTS:
@@ -560,23 +553,23 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
             if (curveInfoParams.yAxisFormat === 'Relative frequency') {
                 // replace the bin number with the bin relative frequency for the plotted statistic
-                data[di][1] = data[di][6].bin_rf * 100;
+                data.y[di] = data.bin_stats[di].bin_rf * 100;
             }
 
-            values.push(data[di][1]);
-            bins.push(data[di][0]);
+            values.push(data.y[di]);
+            bins.push(data.x[di]);
 
             // remove sub values and times to save space
-            data[di][3] = [];
-            data[di][4] = [];
-            data[di][5] = [];
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
 
             // this is the tooltip, it is the last element of each dataseries element
-            data[di][8] = label +
-                "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data[di][6].binLowBound === null ? null : data[di][6].binLowBound.toPrecision(4)) + " and " + (data[di][6].binUpBound === null ? null : data[di][6].binUpBound.toPrecision(4)) + ")" +
-                "<br> " + "number in bin for this curve: " + (data[di][1] === null ? null : data[di][1]) +
-                "<br>  bin mean for this curve: " + statisticSelect + " = " + (data[di][6].bin_mean === null ? null : data[di][6].bin_mean.toPrecision(4)) +
-                "<br>  bin sd  for this curve: " + statisticSelect + " = " + (data[di][6].bin_sd === null ? null : data[di][6].bin_sd.toPrecision(4));
+            d.text[di] = label +
+                "<br>" + "bin: " + di + " (" + statisticSelect + " values between " + (data.bin_stats[di].binLowBound === null ? null : data.bin_stats[di].binLowBound.toPrecision(4)) + " and " + (data.bin_stats[di].binUpBound === null ? null : data.bin_stats[di].binUpBound.toPrecision(4)) + ")" +
+                "<br> " + "number in bin for this curve: " + (data.y[di] === null ? null : data.y[di]) +
+                "<br>  bin mean for this curve: " + statisticSelect + " = " + (data.bin_stats[di].bin_mean === null ? null : data.bin_stats[di].bin_mean.toPrecision(4)) +
+                "<br>  bin sd  for this curve: " + statisticSelect + " = " + (data.bin_stats[di].bin_sd === null ? null : data.bin_stats[di].bin_sd.toPrecision(4));
 
             di++;
         }
@@ -594,10 +587,6 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
 
-        // recalculate curve annotation after QC and matching
-        if (stats.d_mean !== undefined && stats.d_mean !== null) {
-            dataset[curveIndex]['annotation'] = label + "- mean = " + stats.d_mean.toPrecision(4);
-        }
     }
 
     // generate plot options

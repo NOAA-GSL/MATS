@@ -773,21 +773,17 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
             var d = {// d will contain the curve data
                 x: [], //placeholder
                 y: [], //placeholder
-                error_x: [], // unused
-                error_y: [], // unused
                 subVals: [],
                 subSecs: [],
                 subLevs: [],
                 stats: [], // placeholder
                 bin_stats: [], // placeholder
-                toolTips: [] //placeholder
+                text: [] //placeholder
             };
         */
 
         d.x.push(binMeans[b_idx]);
         d.y.push(bin_n);
-        d.error_x.push(-1);
-        d.error_y.push(-1);
         d.subVals.push(binSubStats[b_idx]);
         d.subSecs.push(binSubSecs[b_idx]);
         d.subLevs.push(binSubLevs[b_idx]);
@@ -807,7 +803,7 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
             'binUpBound': binUpBounds[b_idx],
             'binLabel': binLabels[b_idx]
         });
-        d.toolTips.push(null);
+        d.text.push(null);
 
         if (hasLevels) {
             d.subLevs.push(binSubLevs[b_idx]);

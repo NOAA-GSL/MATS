@@ -150,7 +150,7 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
             subSecs: [],
             subLevs: [],
             stats: [],
-            toolTips: [],
+            text: [],
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -208,7 +208,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
             subSecs: [],
             subLevs: [],
             stats: [],
-            toolTips: [],
+            text: [],
             xmin: Number.MAX_VALUE,
             xmax: Number.MIN_VALUE,
             ymin: Number.MAX_VALUE,
@@ -298,7 +298,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         subSecs: [],   //subSecs
         subLevs: [],   //subLevs
         stats: [],     //curveStats
-        toolTips: [],
+        text: [],
         xmin: Number.MAX_VALUE,
         xmax: Number.MIN_VALUE,
         ymin: Number.MAX_VALUE,
@@ -483,7 +483,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             subSecs: [],   //subSecs
             subLevs: [],   //subLevs
             stats: [],     //curveStats
-            toolTips: [],
+            text: [],
             xmin:num,
             ymin:num,
             xmax:num,
@@ -662,7 +662,7 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
         subLevs: [],
         glob_stats: [], // placeholder
         bin_stats: [], // placeholder
-        toolTips: [] //placeholder
+        text: [] //placeholder
     };
 */
 

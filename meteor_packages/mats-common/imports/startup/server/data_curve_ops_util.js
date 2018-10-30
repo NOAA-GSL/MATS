@@ -256,12 +256,14 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
      dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
      */
     const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
-    const annotation = curve['annotation'];
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -270,8 +272,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
@@ -279,17 +280,17 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
             axisLabel: axisKey
         };
     }
-    const curveOptions = {
-        yaxis: axisMap[axisKey].index,
+
+    const curveOptions = {...{
         label: label,
         curveId: label,
+        name: label,
         annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        points: {show: false,},
-        lines: {show: false, fill: false},
-        bars: {show: true}
-    };
+        marker: {
+            color: curve['color']
+        },
+        type:'bar'
+    }, ...dataSeries} ;
 
     return curveOptions;
 };

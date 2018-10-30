@@ -342,108 +342,38 @@ const generateMapPlotOptions = function (dataset, curves) {
 
 // sets plot options for valid time graphs
 const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBins) {
-    // generate y-axis
-    var yaxes = [];
-    var yaxis = [];
-    var axisLabel;
-    var binWidth = 0;
-    for (var dsi = 0; dsi < dataset.length; dsi++) {
-        if (curves[dsi] === undefined) {   // might be a zero curve or something so skip it
-            continue;
-        }
-        const axisKey = curves[dsi].axisKey;
-        const binNum = curves[dsi].binNum;
-        var ymin = axisMap[axisKey].ymin;
-        var ymax = axisMap[axisKey].ymax;
-        var xmin = curves[dsi].xmin;
-        var xmax = curves[dsi].xmax;
-        axisLabel = axisMap[axisKey].axisLabel;
-        binWidth = ((xmax - xmin) / binNum) > binWidth ? ((xmax - xmin) / binNum) : binWidth;
-        const yPad = (ymax - ymin) * 0.05;
-        const position = dsi === 0 ? "left" : "right";
-        const yaxesOptions = {
-            position: position,
-            color: 'black',
-            axisLabel: axisLabel,
-            axisLabelColour: "black",
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 22,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 3,
-            alignTicksWithAxis: 1,
-            tickDecimals: 1,
-            min: ymin - yPad,
-            max: ymax + yPad,
-            font: {size: 18}
-        };
-        const yaxisOptions = {   // used for zooming
-            zoomRange: [0.1, 10]
-        };
-        yaxes.push(yaxesOptions);
-        yaxis.push(yaxisOptions);
-    }
-    var xPad = binWidth * 0.55;
-    const options = {
-        axisLabels: {
-            show: true
+    const axisKey = curves[0].axisKey;
+    const axisLabel = axisMap[axisKey].axisLabel;
+
+    var layout = {
+        margin: {
+            l: 60,
+            r: 60,
+            b: 80,
+            t: 20,
+            pad: 4
         },
-        xaxes: [{
-            axisLabel: 'Bin',
-            color: 'black',
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 22,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 20,
-            min: xmin - xPad,
-            max: xmax + xPad,
-        }],
-        xaxis: {
-            zoomRange: [0.1, null],
-            ticks: plotBins,
-            mode: 'xy',
-            font: {size: 12}
-        },
-        yaxes: yaxes,
-        yaxis: yaxis,
-        legend: {
-            show: false,
-            container: "#legendContainer",
-            noColumns: 0,
-            position: 'ne'
-        },
-        series: {
-            bars: {
-                show: true,
-            },
-            shadowSize: 0
-        },
-        bars: {
-            align: "center",
-            barWidth: binWidth
-        },
-        zoom: {
-            interactive: false
-        },
-        pan: {
-            interactive: false
-        },
-        selection: {
-            mode: "xy"
-        },
-        grid: {
-            hoverable: true,
-            borderWidth: 3,
-            mouseActiveRadius: 50,
-            backgroundColor: "white",
-            axisMargin: 20
-        },
-        tooltip: true,
-        tooltipOpts: {
-            // the ct value is the last element of the data series for profiles. This is the tooltip content.
-            content: "<span style='font-size:150%'><strong>%ct</strong></span>"
-        }
+        zeroline: false,
+        bargap :0.05,
+        barmode: 'group'
     };
-    return options;
+
+    layout['xaxis'] = {
+        title: 'Bin',
+        titlefont: {color: '#000000'},
+        tickfont: {color: '#000000'},
+        tickvals: plotBins.binMeans,
+        ticktext: plotBins.binLabels,
+    };
+
+    layout['yaxis'] = {
+        title: axisLabel,
+        titlefont: {color: '#000000'},
+        tickfont: {color: '#000000'},
+    };
+
+    return layout;
+
 };
 
 export default matsDataPlotOpsUtils = {
