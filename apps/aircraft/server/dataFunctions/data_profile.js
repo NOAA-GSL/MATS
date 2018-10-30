@@ -166,30 +166,32 @@ dataProfile = function (plotParams, plotFunction) {
             d = diffResult.dataset;
         }  // end difference curve
 
-        //make sure outliers don't skew axis scale
-        var d_n = d.length;
-        var d_n_good = 0;
-        var d_sum_d = 0;
-        var d_sum2_d = 0;
-        for (var di = 0; di < d_n; di++) {
-            if (d[di][0] !== null) {
-                d_n_good = d_n_good + 1;
-                d_sum_d = d_sum_d + d[di][0];
-                d_sum2_d = d_sum2_d + d[di][0] * d[di][0];
-            }
-        }
-        var d_mean = d_sum_d / d_n_good;
-        var d_sd2 = d_sum2_d / d_n_good - d_mean * d_mean;
-        var d_sd = d_sd2 > 0 ? Math.sqrt(d_sd2) : d_sd2;
-        var d_sd_limit = 3 * d_sd;
+        // //make sure outliers don't skew axis scale
+        // var d_n = d.length;
+        // var d_n_good = 0;
+        // var d_sum_d = 0;
+        // var d_sum2_d = 0;
+        // for (var di = 0; di < d_n; di++) {
+        //     if (d[di][0] !== null) {
+        //         d_n_good = d_n_good + 1;
+        //         d_sum_d = d_sum_d + d[di][0];
+        //         d_sum2_d = d_sum2_d + d[di][0] * d[di][0];
+        //     }
+        // }
+        // var d_mean = d_sum_d / d_n_good;
+        // var d_sd2 = d_sum2_d / d_n_good - d_mean * d_mean;
+        // var d_sd = d_sd2 > 0 ? Math.sqrt(d_sd2) : d_sd2;
+        // var d_sd_limit = 3 * d_sd;
 
         // set axis limits based on returned data
-        for (var di = 0; di < d.length; di++) {
-            if (d[di][0] <= d_mean + d_sd_limit) {
-                xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
-                xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
-           }
-        }
+        xmax = d.xmax;
+        xmin = d.xmin;
+        // for (var di = 0; di < d.length; di++) {
+        //     if (d[di][0] <= d_mean + d_sd_limit) {
+        //         xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
+        //         xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
+        //    }
+        // }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options

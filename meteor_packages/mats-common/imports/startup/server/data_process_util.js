@@ -443,27 +443,26 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     // post process curves
     var sortedData;
     var curve;
-    var d = {// d will contain the curve data
-        x: [],
-        y: [],
-        subVals: [],
-        subSecs: [],
-        subLevs: [],
-        stats: [],
-        bin_stats: [],
-        text: [],
-        xmin: Number.MAX_VALUE,
-        xmax: Number.MIN_VALUE,
-        ymin: Number.MAX_VALUE,
-        ymax: Number.MIN_VALUE,
-        sum: 0
-    };
-
     var diffFrom;
     var label;
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
         curve = curveInfoParams.curves[curveIndex];
         diffFrom = curve.diffFrom;
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            stats: [],
+            bin_stats: [],
+            text: [],
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
+        };
         label = curve.label;
         if (diffFrom == null) {
             var postQueryStartMoment = moment();

@@ -79,7 +79,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var axisKey = "Correlation";
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-        var d = [];
+        var d;
         var sum = 0;
         var count = 0;
         if (diffFrom == null) {

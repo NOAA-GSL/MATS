@@ -59,7 +59,9 @@ dataValidTime = function (plotParams, plotFunction) {
             idealValues.push(idealVal);
         }
 
-        var d = [];
+        var d;
+        var sum = 0;
+        var count = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
@@ -124,18 +126,12 @@ dataValidTime = function (plotParams, plotFunction) {
             // set axis limits based on returned data
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
-                xmin = xmin < d[0][0] ? xmin : d[0][0];
-                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
-                var sum = 0;
-                var count = 0;
-                for (var i = 0; i < d.length; i++) {
-                    if (d[i][1] !== null) {
-                        sum = sum + d[i][1];
-                        count++;
-                        ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
-                        ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                    }
-                }
+                xmin = d.xmin;
+                ymin=d.ymin;
+                xmax=d.xmax;
+                ymax=d.ymax;
+                sum = d.sum;
+                count = d.x.length;
             }
         } else {
             // this is a difference curve

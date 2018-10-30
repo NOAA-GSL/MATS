@@ -7,6 +7,7 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
+
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appName = "anomalycor";
@@ -65,7 +66,7 @@ dataSeries = function (plotParams, plotFunction) {
         var axisKey = "Correlation";
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-        var d = [];
+        var d;
         var sum = 0;
         var count = 0;
         if (diffFrom == null) {

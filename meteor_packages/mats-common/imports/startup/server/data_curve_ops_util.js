@@ -287,7 +287,10 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
         name: label,
         annotation: annotation,
         marker: {
-            color: curve['color']
+            color: curve['color'],
+            line: {
+                color: "rgb(0,0,0)"
+            }
         },
         type:'bar'
     }, ...dataSeries} ;
