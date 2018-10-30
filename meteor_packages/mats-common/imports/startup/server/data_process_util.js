@@ -108,7 +108,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_y.array[di] = errorBar;
             } else {
-                data.error_y.array[di] = -1;
+                data.error_y.array[di] = null;
             }
 
             // remove sub values and times to save space
@@ -327,7 +327,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_x.array[di] = errorBar;
             } else {
-                data.error_x.array[di] = -1;
+                data.error_x.array[di] = null;
             }
 
             // remove sub values and times to save space

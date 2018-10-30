@@ -389,7 +389,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                 d.x.push(loopTime);
                 d.y.push(null);
                 //d.error_x not used
-                d.error_y.push(-1);   //placeholder
+                d.error_y.push(null);   //placeholder
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
                 d.subLevs.push(NaN);
@@ -398,7 +398,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                 d.x.push(loopTime);
                 d.y.push(null);
                 //d.error_x not used
-                d.error_y.push(-1); //placeholder
+                d.error_y.push(null); //placeholder
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
             }
@@ -413,7 +413,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                     d.x.push(loopTime);
                     d.y.push(null);
                     //d.error_x not used
-                    d.error_y.push(-1); //placeholder
+                    d.error_y.push(null); //placeholder
                     d.subVals.push(NaN);
                     d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
@@ -422,7 +422,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                     d.x.push(loopTime);
                     d.y.push(null);
                     //d.error_x not used
-                    d.error_y.push(-1); //placeholder
+                    d.error_y.push(null); //placeholder
                     d.subVals.push(NaN);
                     d.subSecs.push(NaN);
                 }
@@ -433,7 +433,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                     d.x.push(loopTime);
                     d.y.push(curveStats[d_idx]);
                     //d.error_x not used
-                    d.error_y.push(-1);
+                    d.error_y.push(null);
                     d.subVals.push(subVals[d_idx]);
                     d.subSecs.push(subSecs[d_idx]);
                     d.subLevs.push(subLevs[d_idx]);
@@ -442,7 +442,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
                     d.x.push(loopTime);
                     d.y.push(curveStats[d_idx]);
                     //d.error_x not used
-                    d.error_y.push(-1);
+                    d.error_y.push(null);
                     d.subVals.push(subVals[d_idx]);
                     d.subSecs.push(subSecs[d_idx]);
                 }
@@ -574,7 +574,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                 //d.push([null, curveIndependentVars[d_idx], -1, NaN, NaN, NaN]);
                 d.x.push(null);
                 d.y.push(curveIndependentVars[d_idx]);
-                d.error_x.push(-1);  // placeholder
+                d.error_x.push(null);  // placeholder
                 //d.error_y not used for profile
                 d.subVals.push(NaN);
                 d.subSecs.push(NaN);
@@ -586,7 +586,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                     d.x.push(curveIndependentVars[d_idx]);
                     d.y.push(null);
                     //d.error_x not used for curves other than profile
-                    d.error_y.push(-1);  // placeholder
+                    d.error_y.push(null);  // placeholder
                     d.subVals.push(NaN);
                     d.subSecs.push(NaN);
                     d.subLevs.push(NaN);
@@ -595,7 +595,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                     d.x.push(curveIndependentVars[d_idx]);
                     d.y.push(null);
                     //d.error_x not used for curves other than profile
-                    d.error_y.push(-1);  // placeholder
+                    d.error_y.push(null);  // placeholder
                     d.subVals.push(NaN);
                     d.subSecs.push(NaN);
                 }
@@ -609,8 +609,8 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 //                d.push([curveStats[d_idx], curveIndependentVars[d_idx], -1, subVals[d_idx], subSecs[d_idx], subLevs[d_idx]]);
                 d.x.push(curveStats[d_idx]);
                 d.y.push(curveIndependentVars[d_idx]);
-                d.error_x.push(-1) // placeholder
-                //d.error_y.push(-1);  //not used for profile curves
+                d.error_x.push(null); // placeholder
+                //d.error_y not used for curves other than profile
                 d.subVals.push(subVals[d_idx]);
                 d.subSecs.push(subSecs[d_idx]);
                 d.subLevs.push(subLevs[d_idx]);
@@ -619,7 +619,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                 d.x.push(curveIndependentVars[d_idx]);
                 d.y.push(curveStats[d_idx]);
                 //d.error_x not used for curves other than profile
-                d.error_y.push(-1);  // placeholder
+                d.error_y.push(null);  // placeholder
                 d.subVals.push(subVals[d_idx]);
                 d.subSecs.push(subSecs[d_idx]);
                 d.subLevs.push(subLevs[d_idx]);
@@ -628,7 +628,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
                 d.x.push(curveIndependentVars[d_idx]);
                 d.y.push(curveStats[d_idx]);
                 //d.error_x not used for curves other than profile
-                d.error_y.push(-1);  // placeholder
+                d.error_y.push(null);  // placeholder
                 d.subVals.push(subVals[d_idx]);
                 d.subSecs.push(subSecs[d_idx]);
             }
