@@ -29,10 +29,19 @@ const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
         "annotation": "",
         "name": "y = " + yValue.toString(),
         "mode": "lines",
-        "data": [
-            [xmin, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()],
-            [xmax, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()]
-        ],
+        "x":[xmin,xmax],
+        "y":[yValue,yValue],
+        "error_x":[-1,-1],
+        "error_y":[-1,-1],
+        "subVals":[],
+        "subSecs":[],
+        "subLevs":[],
+        "stats":[{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0},{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}],
+        "tooltip":["y = " + yValue.toString(),"y = " + yValue.toString()],
+        "xmin":xmin,
+        "xmax":xmax,
+        "ymin":yValue,
+        "ymax":yValue,
         "marker": {
             "color": "rgb(0,0,0)",
         },
@@ -52,10 +61,19 @@ const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
         "annotation": "",
         "name": "x = " + xValue.toString(),
         "mode": "lines",
-        "data": [
-            [xValue, -ymax, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()],
-            [xValue, -ymin, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()]
-        ],
+        "x":[xValue,xValue],
+        "y":[ymin,ymax],
+        "error_x":[-1,-1],
+        "error_y":[-1,-1],
+        "subVals":[],
+        "subSecs":[],
+        "subLevs":[],
+        "stats":[{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0},{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}],
+        "tooltip":["x = " + xValue.toString(),"x = " + xValue.toString()],
+        "xmin":xValue,
+        "xmax":xValue,
+        "ymin":ymin,
+        "ymax":ymax,
         "marker": {
             "color": "rgb(0,0,0)",
         },
@@ -190,8 +208,15 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         };
     }
 
-    //set curve options
-    const curveOptions = {
+    var error_x_temp = {
+        error_x: {
+            array: dataSeries.error_x,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            // width: 0
+        }
+    };
+    var curveOptions = {...{
         label: label,
         curveId: label,
         name: label,
@@ -204,13 +229,11 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         line: {
             color: curve['color'],
         },
-        error_x: {
-            thickness: 1,     // set the thickness of the error bars
-            color: curve['color'],
-            // width: 0
-        },
-        data: dataSeries,
-    };
+    }, ...dataSeries} ;
+
+    delete curveOptions.error_x;
+
+    curveOptions['error_x'] = error_x_temp.error_x;
 
     return curveOptions;
 };

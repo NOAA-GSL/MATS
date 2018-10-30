@@ -907,9 +907,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ruc_ua", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-
     matsCollections.appName.insert({name: "appName", app: "upperair"});
-
 });
 
 // this object is global so that the reset code can get to it

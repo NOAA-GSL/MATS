@@ -4,7 +4,7 @@ import {SimpleSchema} from 'meteor/aldeed:simple-schema';
 import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes, matsCache} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
-import {Mongo} from 'meteor/mongo'
+import {Mongo} from 'meteor/mongo';
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
@@ -534,47 +534,64 @@ const saveResultData = function (result) {
             if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
                 // greater than threshold need to downsample
                 // downsample and save it in DownSampleResult
+                console.log("DownSampling");
                 var downsampler = require("downsample-lttb");
                 var totalPoints = 0;
                 for (var di = 0; di < result.data.length; di++) {
-                    totalPoints += result.data[di].data.length;
+                    totalPoints += result.data[di].x.length;
                 }
                 var allowedNumberOfPoints = (threshold / dSize) * totalPoints;
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
-                for (var di = 0; di < result.data.length; di++) {
-                    var lastYVIndex = result.data[di].data[0].length;
-                    //get an x,y array from the data set
-                    var xyDataset = result.data[di].data.map(function (d) {
-                        return [d[0], d[1]];
+                for (var ci = 0; ci < result.data.length; ci++) {
+                    var dsData = {};
+                    var xyDataset = result.data[ci].x.map(function (d,index) {
+                        return [result.data[ci].x[index],result.data[ci].y[index]];
                     });
-                    // determine the desired number of points
-                    // ratio of my points to totalPoints
                     var ratioTotalPoints = xyDataset.length / totalPoints;
                     var myAllowedPoints = Math.round(ratioTotalPoints * allowedNumberOfPoints);
                     // downsample the array
                     var downsampledSeries;
                     if (myAllowedPoints < xyDataset.length && xyDataset.length > 2) {
                         downsampledSeries = downsampler.processData(xyDataset, myAllowedPoints);
-                        // replace the y attributes (tooltips etc.) with the y attributes from yhe nearest x
-                        var nearestOriginalIndex = 1;
-                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
-                            while (nearestOriginalIndex < result.data[di].data.length && result.data[di].data[nearestOriginalIndex][0] < downsampledSeries[dsi][0]) {
-                                nearestOriginalIndex++;
-                            }
-                            // which is closest - this one or the prior one?
-                            var leftDelta = Math.abs(result.data[di].data[nearestOriginalIndex - 1][0] - downsampledSeries[dsi][0]);
-                            var rightDelta = Math.abs(result.data[di].data[nearestOriginalIndex][0] - downsampledSeries[dsi][0]);
-                            var nearestOriginal = leftDelta > rightDelta ? result.data[di].data[nearestOriginalIndex] : result.data[di].data[nearestOriginalIndex - 1];
-                            for (var dsYVi = 2; dsYVi < lastYVIndex; dsYVi++) {
-                                downsampledSeries[dsi][dsYVi] = nearestOriginal[dsYVi];
+                        // replace the y attributes (tooltips etc.) with the y attributes from the nearest x
+                        var originalIndex = 0;
+                        // skip through the original dataset capturing each downSampled data point
+                        var arrayKeys = [];
+                        var nonArrayKeys = [];
+                        var keys = Object.keys(result.data[ci]);
+                        for (var ki = 0; ki < keys.length; ki++) {
+                            if (Array.isArray(result.data[ci][keys[ki]])) {
+                                arrayKeys.push(keys[ki]);
+                                dsData[keys[ki]] = [];
+                            } else {
+                                nonArrayKeys.push(keys[ki]);
                             }
                         }
+                        // We only ever downsample series plots - never profiles and series plots only ever have error_y arrays.
+                        // This is a little hacky but what is happening is we putting error_y.array on the arrayKeys list so that it gets its
+                        // downsampled equivalent values.
+                        for (ki=0; ki < nonArrayKeys.length; ki++) {
+                            dsData[nonArrayKeys[ki]] = result.data[ci][nonArrayKeys[ki]];
+                        }
+                        // remove the original error_y array data.
+                        dsData['error_y'].array = [];
+                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
+                            while (originalIndex < result.data[ci].x.length && (result.data[ci].x[originalIndex] < downsampledSeries[dsi][0])) {
+                                originalIndex++;
+                            }
+                            // capture the stuff related to this downSampled data point (downSampled data points are always a subset of original data points)
+                            for (ki=0; ki < arrayKeys.length; ki++) {
+                                dsData[arrayKeys[ki]][dsi] = result.data[ci][arrayKeys[ki]][originalIndex];
+                            }
+                            dsData['error_y']['array'][dsi] = result.data[ci]['error_y']['array'][originalIndex];
+                        }
                         // add downsampled annotation to curve options
-                        downSampleResult.data[di].annotation += "   **DOWNSAMPLED**";
+                        downSampleResult[ci] = dsData;
+                        downSampleResult[ci].annotation += "   **DOWNSAMPLED**";
                     } else {
-                        downsampledSeries = result.data[di].data;
+                        downSampleResult[ci] = result.data[ci];
                     }
-                    downSampleResult.data[di].data = downsampledSeries;
+                    downSampleResult.data[ci] = downSampleResult[ci];
                 }
                 DownSampleResults.rawCollection().insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
                 ret = {key: key, result: downSampleResult};
@@ -956,6 +973,9 @@ const resetApp = function (metaDataTableRecords) {
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
+    if (process.env.NODE_ENV === "development") {
+        matsCache.clear();  // DISABLE FOR PRODUCTION *********
+    }
 };
 
 // refreshes the metadata for the app that's running
@@ -1260,6 +1280,9 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             var ret;
             try {
+                if (process.env.NODE_ENV === "development") {
+                    matsCache.clear();  // DISABLE FOR PRODUCTION *********
+                }
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
                 var results = matsCache.getResult(key);

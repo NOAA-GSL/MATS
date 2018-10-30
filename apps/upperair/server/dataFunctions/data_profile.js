@@ -159,10 +159,12 @@ dataProfile = function (plotParams, plotFunction) {
         }
 
         // set axis limits based on returned data
-        for (var di = 0; di < d.length; di++) {
-            xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
-            xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
-        }
+        xmax = d.xmax;
+        xmin = d.xmin;
+        // for (var di = 0; di < d.length; di++) {
+        //     xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
+        //     xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
+        // }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options

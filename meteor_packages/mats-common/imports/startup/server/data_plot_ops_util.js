@@ -77,11 +77,10 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         title: 'Pressure Level',
         titlefont: {color: '#000000'},
         tickfont: {color: '#000000'},
-        tickvals: [-1000, -900, -800, -700, -600, -500, -400, -300, -200, -100],
+        tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
         ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
-        // type: 'log',
-        range: [-1050, -1]
-
+        type: 'log',
+        range: [1050, 1]
     };
 
     const xAxisNumber = Object.keys(axisMap).length;

@@ -106,9 +106,9 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             const errorBar = errorResult.sd * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
-                data.error_y[di] = errorBar;
+                data.error_y.array[di] = errorBar;
             } else {
-                data.error_y[di] = -1;
+                data.error_y.array[di] = -1;
             }
 
             // remove sub values and times to save space
@@ -255,7 +255,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
         var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
-        var data = dataset[curveIndex].data;
+        var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
         var di = 0;
@@ -263,11 +263,31 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         var levels = [];
         var means = [];
         var rawStat;
+        /*
+        dataset[curveLength]
+        each dataset has dataset[curveLength].data
+        dataset[curveLength].data is
+        {
+            x:[],
+            y:[],
+            error_x:[],
+            error_y:[],
+            subVals:[],
+            subSecs:[],
+            subLevs:[],
+            stats:[],
+            tooltip:[]
+            xmin:num,
+            xmax:num,
+            ymin:num,
+            ymax:num,
+            sum:sum,
+            count:count
+        }
+        */
 
-        while (di < data.length) {
-
+        while (di < data.y.length) {
             var errorResult = {};
-
             /*
                  DATASET ELEMENTS:
                  series: [data,data,data ...... ]   each data is itself an array
@@ -281,41 +301,42 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                  */
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            errorResult = matsDataUtils.get_err(data[di][3], data[di][4]);
+            errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
-            rawStat = data[di][0];
+            rawStat = data.x[di];
             if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
-                data[di][0] = errorResult.d_mean;
+                data.x[di] = errorResult.d_mean;
             } else {
-                if (dataset[diffFrom[0]].data[di][0] !== null && dataset[diffFrom[1]].data[di][0] !== null) {
+                if (dataset[diffFrom[0]].data.x[di] !== null && dataset[diffFrom[1]].data.x[di] !== null) {
                     // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                    data[di][0] = dataset[diffFrom[0]].data[di][0] - dataset[diffFrom[1]].data[di][0];
+                    data.x[di] = dataset[diffFrom[0]].data.x[di] - dataset[diffFrom[1]].data.x[di];
                 } else {
                     // keep the null for no data at this point
-                    data[di][0] = null;
+                    data.x[di] = null;
                 }
             }
-            values.push(data[di][0]);
-            levels.push(data[di][1] * -1);  // inverted data for graphing - remember?
+            values.push(data.x[di]);
+            levels.push(data.y[di]);
             means.push(errorResult.d_mean);
 
             // store error bars if matching
             const errorBar = errorResult.sd * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
-                data[di][2] = errorBar;
+                data.error_x.array[di] = errorBar;
             } else {
-                data[di][2] = -1;
+                data.error_x.array[di] = -1;
             }
 
             // remove sub values and times to save space
-            data[di][3] = [];
-            data[di][4] = [];
+            data.subVals[di] = [];
+            data.subSecs[di] = [];
+            data.subLevs[di] = [];
 
             // store statistics
-            data[di][5] = {
+            data.stats[di] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
                 sd: errorResult.sd,
@@ -326,14 +347,14 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
             // this is the tooltip, it is the last element of each dataseries element
             data.toolTips[di] = label +
-                "<br>" + -data[di][1] + "mb" +
-                "<br> " + statisticSelect + ": " + (data[di][0] === null ? null : data[di][0].toPrecision(4)) +
+                "<br>" + data.y[di] + "mb" +
+                "<br> " + statisticSelect + ": " + (data.x[di] === null ? null : data.x[di].toPrecision(4)) +
                 "<br>  sd: " + (errorResult.sd === null ? null : errorResult.sd.toPrecision(4)) +
                 "<br>  mean: " + (errorResult.d_mean === null ? null : errorResult.d_mean.toPrecision(4)) +
                 "<br>  n: " + errorResult.n_good +
                 // "<br>  lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>  stde: " + errorResult.stde_betsy +
-                "<br>  errorbars: " + Number((data[di][0]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data[di][0]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>  errorbars: " + Number((data.x[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -345,7 +366,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         const maxx = Math.max(...filteredMeans);
         stats.minx = minx;
         stats.maxx = maxx;
-        dataset[curveIndex]['stats'] = stats;
+        dataset[curveIndex]['globStats'] = stats;
 
         // recalculate axis options after QC and matching
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
@@ -420,7 +441,24 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     // post process curves
     var sortedData;
     var curve;
-    var d;
+    var d = {// d will contain the curve data
+        x: [],
+        y: [],
+        error_x: [],
+        error_y: [],
+        subVals: [],
+        subSecs: [],
+        subLevs: [],
+        stats: [],
+        bin_stats: [],
+        toolTips: [],
+        xmin: Number.MAX_VALUE,
+        xmax: Number.MIN_VALUE,
+        ymin: Number.MAX_VALUE,
+        ymax: Number.MIN_VALUE,
+        sum: 0
+    };
+
     var diffFrom;
     var label;
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
@@ -431,23 +469,8 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             var postQueryStartMoment = moment();
             if (curveInfoParams.dataFoundForCurve[curveIndex]) {
                 // sort queried data into the full set of histogram bins
-                sortedData = matsDataUtils.sortHistogramBins(allReturnedSubStats[curveIndex], allReturnedSubSecs[curveIndex], allReturnedSubLevs[curveIndex], binParams.binNum, binStats, appParams.hasLevels, []);
+                sortedData = matsDataUtils.sortHistogramBins(allReturnedSubStats[curveIndex], allReturnedSubSecs[curveIndex], allReturnedSubLevs[curveIndex], binParams.binNum, binStats, appParams.hasLevels, d);
                 d = sortedData.d;
-                // set axis limits based on returned data
-                xmin = xmin < d[0][0] ? xmin : d[0][0];
-                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
-                var sum = 0;
-                var count = 0;
-                for (var i = 0; i < d.length; i++) {
-                    if (d[i][1] !== null) {
-                        sum = sum + d[i][1];
-                        count++;
-                        ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
-                        ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                    }
-                }
-            } else {
-                d = [];
             }
         } else {
             // this is a difference curve, so we're done with regular curves.
@@ -471,21 +494,15 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-            ymin = diffResult.ymin;
-            ymax = diffResult.ymax;
-            sum = diffResult.sum;
-            count = diffResult.count;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const mean = sum / count;
-        const annotation = label + "- mean = " + mean.toPrecision(4);
-        curve['annotation'] = annotation;
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
+        curve['annotation'] = "";
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
         curve['axisKey'] = curveInfoParams.curves[curveIndex].axisKey;
         const cOptions = matsDataCurveOpsUtils.generateBarChartCurveOptions(curve, curveIndex, curveInfoParams.axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);

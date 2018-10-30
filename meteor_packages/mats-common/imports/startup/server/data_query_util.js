@@ -150,7 +150,12 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
             subSecs: [],
             subLevs: [],
             stats: [],
-            toolTips: []
+            toolTips: [],
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
         };  
         var error = "";
         var N0 = [];
@@ -203,7 +208,12 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
             subSecs: [],
             subLevs: [],
             stats: [],
-            toolTips: []
+            toolTips: [],
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
         };
 
         var error = "";
@@ -288,7 +298,12 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         subSecs: [],   //subSecs
         subLevs: [],   //subLevs
         stats: [],     //curveStats
-        toolTips: []
+        toolTips: [],
+        xmin: Number.MAX_VALUE,
+        xmax: Number.MIN_VALUE,
+        ymin: Number.MAX_VALUE,
+        ymax: Number.MIN_VALUE,
+        sum = 0
     };
 */
     d.error_x = null;  // time series doesn't use x errorbars
@@ -441,10 +456,12 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     if (regular) {
         cycles = [time_interval];   // regular models will return one cycle cadence
     }
-    d.xmin = Math.min(d.x);
-    d.ymin = Math.min(d.y);
-    d.xmax = Math.max(d.x);
-    d.ymax = Math.max(d.y);
+    const filteredx = d.x.filter(x => x);
+    const filteredy = d.y.filter(y => y);
+    d.xmin = Math.min(...filteredx);
+    d.xmax = Math.max(...filteredx);
+    d.ymin = Math.min(...filteredy);
+    d.ymax = Math.max(...filteredy);
     d.sum = sum;
     return {
         d: d,
@@ -466,7 +483,12 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             subSecs: [],   //subSecs
             subLevs: [],   //subLevs
             stats: [],     //curveStats
-            toolTips: []
+            toolTips: [],
+            xmin:num,
+            ymin:num,
+            xmax:num,
+            ymax:num,
+            sum:num;
         };
     */
     var N0 = [];
@@ -612,10 +634,12 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             }
         }
     }
-    d.xmin = Math.min(d.x);
-    d.ymin = Math.min(d.y);
-    d.xmax = Math.max(d.x);
-    d.ymax = Math.max(d.y);
+    const filteredx = d.x.filter(x => x);
+    const filteredy = d.y.filter(y => y);
+    d.xmin = Math.min(...filteredx);
+    d.xmax = Math.max(...filteredx);
+    d.ymin = Math.min(...filteredy);
+    d.ymax = Math.max(...filteredy);
     d.sum = sum;
 
     return {
@@ -636,7 +660,8 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
         subVals: [],
         subSecs: [],
         subLevs: [],
-        stats: [], // placeholder
+        glob_stats: [], // placeholder
+        bin_stats: [], // placeholder
         toolTips: [] //placeholder
     };
 */

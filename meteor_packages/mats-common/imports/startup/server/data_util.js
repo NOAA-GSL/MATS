@@ -751,12 +751,17 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
 
     // calculate the statistics for each bin
     // we are especially interested in the number of values in each bin, as that is the plotted stat in a histogram
+    d.xmin = d.x[0];
+    d.xmax = d.x[binNum - 1];
+
     var binStats;
     var bin_mean;
     var bin_sd;
     var bin_n;
     var bin_rf;
 
+    var sum = 0;
+    var count = 0;
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
         bin_mean = binStats.d_mean;
@@ -764,39 +769,58 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         bin_n = binStats.n_good;
         bin_rf = bin_n / glob_n;
 
+        /*
+            var d = {// d will contain the curve data
+                x: [], //placeholder
+                y: [], //placeholder
+                error_x: [], // unused
+                error_y: [], // unused
+                subVals: [],
+                subSecs: [],
+                subLevs: [],
+                stats: [], // placeholder
+                bin_stats: [], // placeholder
+                toolTips: [] //placeholder
+            };
+        */
+
+        d.x.push(binMeans[b_idx]);
+        d.y.push(bin_n);
+        d.error_x.push(-1);
+        d.error_y.push(-1);
+        d.subVals.push(binSubStats[b_idx]);
+        d.subSecs.push(binSubSecs[b_idx]);
+        d.subLevs.push(binSubLevs[b_idx]);
+        d.stats.push({
+            'glob_mean': glob_mean,
+            'glob_sd': glob_sd,
+            'glob_n': glob_n,
+            'glob_max': glob_max,
+            'glob_min': glob_min
+        });
+        d.bin_stats.push({
+            'bin_mean': bin_mean,
+            'bin_sd': bin_sd,
+            'bin_n': bin_n,
+            'bin_rf': bin_rf,
+            'binLowBound': binLowBounds[b_idx],
+            'binUpBound': binUpBounds[b_idx],
+            'binLabel': binLabels[b_idx]
+        });
+        d.toolTips.push(null);
+
         if (hasLevels) {
-            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'bin_rf': bin_rf,
-                'binLowBound': binLowBounds[b_idx],
-                'binUpBound': binUpBounds[b_idx],
-                'binLabel': binLabels[b_idx]
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
-        } else {
-            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], null, {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'bin_rf': bin_rf,
-                'binLowBound': binLowBounds[b_idx],
-                'binUpBound': binUpBounds[b_idx],
-                'binLabel': binLabels[b_idx]
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
+            d.subLevs.push(binSubLevs[b_idx]);
         }
+
+        // set axis limits based on returned data
+        if (d.y[b_idx] !== null) {
+            sum = sum + d.y[b_idx];
+            count++;
+            d.ymin = d.ymin < d.y[b_idx] ? d.ymin : d.y[b_idx];
+            d.ymax = d.ymax > d.y[b_idx] ? d.ymax : d.y[b_idx];
+        }
+
     }
     return {d: d};
 };
