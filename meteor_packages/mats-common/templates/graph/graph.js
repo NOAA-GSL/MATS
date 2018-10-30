@@ -29,12 +29,6 @@ var originalYaxisMaxs = [];
 
 var openWindows = [];
 
-Template.graph.onRendered(function () {
-    // make sure the zoom and pan buttons don't show up for maps, as they only work on flot graphs
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
-        document.getElementById('graph-touch-controls').style.display = "none";
-    }
-});
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
     $(window).resize(function () {
@@ -665,88 +659,6 @@ Template.graph.events({
         }
         annotation = $('#annotationContainer')[0].innerHTML;
     },
-    // add zoom out button
-    'click #zoom-out': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomOut();
-    },
-
-    // add zoom in button
-    'click #zoom-in': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoom();
-    },
-    // add horizontal zoom out button
-    'click #zoom-out-left-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomOutHorizontal();
-    },
-    // add horizontal zoom in button
-    'click #zoom-in-left-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomHorizontal();
-    },
-    // add vertical zoom out button
-    'click #zoom-out-up-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomOutVertical();
-    },
-    // add vertical zoom in button
-    'click #zoom-in-up-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomVertical();
-    },
-    // pan-left
-    'click #pan-left': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({left: -100});
-    },
-    // pan-right
-    'click #pan-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({left: 100});
-    },
-    // pan-up
-    'click #pan-up': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({top: -100});
-    },
-    // pan-down
-    'click #pan-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({top: 100});
-    },
-    // add refresh button
-    'click #refresh-plot': function (event) {
-        event.preventDefault();
-        var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
-
-        // restore original axis limits and labels to options map
-        if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].axisLabel = originalXaxisLabel;
-        }
-        if (originalXaxisMin !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].min = originalXaxisMin;
-        }
-        if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].max = originalXaxisMax;
-        }
-        for (yidx = 0; yidx < yAxisLength; yidx++) {
-            if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
-            }
-            if (originalYaxisMins[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].min = originalYaxisMins[yidx];
-            }
-            if (originalYaxisMaxs[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].max = originalYaxisMaxs[yidx];
-            }
-        }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
-    },
-
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
         event.preventDefault();
