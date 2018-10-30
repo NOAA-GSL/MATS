@@ -80,7 +80,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
         ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
         type: 'log',
-        range: [1050, 1]
+        autorange:'reversed'
     };
 
     const xAxisNumber = Object.keys(axisMap).length;
@@ -100,7 +100,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             title: axisLabel,
             titlefont: {color: '#000000'},
             tickfont: {color: '#000000'},
-            range: [xmin - xPad, xmax + xPad],
+            // range: [xmin - xPad, xmax + xPad],
             zeroline: false
         };
     }
