@@ -288,7 +288,6 @@ var setTextView = function () {
     document.getElementById("curves").style.display = "none";
     document.getElementById("graphView").style.display = "none";
     document.getElementById("textView").style.display = "block";
-    document.getElementById('graph-touch-controls').style.display = "none";
     document.getElementById('plot-control-button-group').style.display = "none";
 };
 
@@ -317,10 +316,8 @@ var setGraphView = function () {
     document.getElementById("graphView").style.display = "block";
     document.getElementById("textView").style.display = "none";
     if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
-        document.getElementById('graph-touch-controls').style.display = "block";
         document.getElementById('plot-control-button-group').style.display = "block";
     } else {
-        document.getElementById('graph-touch-controls').style.display = "none";
         document.getElementById('plot-control-button-group').style.display = "none";
     }
 };
@@ -361,7 +358,6 @@ var setDefaultView = function () {
         document.getElementById('graph-container').style.display = 'none';
     }
     document.getElementById("plot-page-button-group").style.display = "block";
-    document.getElementById('graph-touch-controls').style.display = "block";
     document.getElementById('plot-control-button-group').style.display = "block";
     // hide text page
     document.getElementById("textView").style.display = "none";
