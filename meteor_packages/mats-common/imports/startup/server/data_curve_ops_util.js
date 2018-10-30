@@ -31,8 +31,8 @@ const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
         "mode": "lines",
         "x":[xmin,xmax],
         "y":[yValue,yValue],
-        "error_x":[-1,-1],
-        "error_y":[-1,-1],
+        "error_x":[null,null],
+        "error_y":[null,null],
         "subVals":[],
         "subSecs":[],
         "subLevs":[],
@@ -42,9 +42,6 @@ const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
         "xmax":xmax,
         "ymin":yValue,
         "ymax":yValue,
-        "marker": {
-            "color": "rgb(0,0,0)",
-        },
         "line": {
             "color": "rgb(0,0,0)",
         }
@@ -63,8 +60,8 @@ const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
         "mode": "lines",
         "x":[xValue,xValue],
         "y":[ymin,ymax],
-        "error_x":[-1,-1],
-        "error_y":[-1,-1],
+        "error_x":[null,null],
+        "error_y":[null,null],
         "subVals":[],
         "subSecs":[],
         "subLevs":[],
@@ -74,9 +71,6 @@ const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
         "xmax":xValue,
         "ymin":ymin,
         "ymax":ymax,
-        "marker": {
-            "color": "rgb(0,0,0)",
-        },
         "line": {
             "color": "rgb(0,0,0)",
         }
@@ -151,6 +145,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             mode: "lines+markers",
             marker: {
                 color: curve['color'],
+                size: 8
             },
             line: {
                 color: curve['color'],
@@ -225,6 +220,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         mode: "lines+markers",
         marker: {
             color: curve['color'],
+            size: 8
         },
         line: {
             color: curve['color'],

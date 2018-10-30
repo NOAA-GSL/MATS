@@ -126,17 +126,20 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 stde_betsy: errorResult.stde_betsy
             };
 
-            // this is the tooltip, it is the last element of each dataseries element
+            // this is the tooltip, it is the last element of each dataseries element.
+            // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
             data.toolTips[di] = label;
             switch (appParams.plotType) {
                 case matsTypes.PlotTypes.timeSeries:
                     data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
+                    data.x[di] = moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dailyModelCycle:
                     var fhr = ((data.x[di] / 1000) % (24 * 3600)) / 3600 - curveInfoParams.utcCycleStarts[curveIndex];
                     fhr = fhr < 0 ? fhr + 24 : fhr;
                     data.toolTips[di] = data.toolTips[di] + "<br> time: " + moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     data.toolTips[di] = data.toolTips[di] + "<br> forecast hour: " + fhr;
+                    data.x[di] = moment.utc(data.x[di]).format("YYYY-MM-DD HH:mm");
                     break;
                 case matsTypes.PlotTypes.dieoff:
                     data.toolTips[di] = data.toolTips[di] + "<br> fhr: " + data.x[di];
@@ -184,19 +187,19 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
     }
 
-    // // add black 0 line curve
-    // // need to define the minimum and maximum x value for making the zero curve
-    // const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
-    // dataset.push(zeroLine);
-    //
-    // //add ideal value lines, if any
-    // var idealValueLine;
-    // var idealLabel;
-    // for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
-    //     idealLabel = "ideal" + ivIdx.toString();
-    //     idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
-    //     dataset.push(idealValueLine);
-    // }
+    // add black 0 line curve
+    // need to define the minimum and maximum x value for making the zero curve
+    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
+    dataset.push(zeroLine);
+
+    //add ideal value lines, if any
+    var idealValueLine;
+    var idealLabel;
+    for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
+        idealLabel = "ideal" + ivIdx.toString();
+        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        dataset.push(idealValueLine);
+    }
 
     // generate plot options
     var resultOptions;
