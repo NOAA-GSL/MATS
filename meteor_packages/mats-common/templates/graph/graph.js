@@ -161,7 +161,7 @@ Template.graph.helpers({
                 // //     graphData.push(dataExtract);
                 // // }
 
-                $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset);
+                $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
             }
             matsCurveUtils.hideSpinner();
         }
