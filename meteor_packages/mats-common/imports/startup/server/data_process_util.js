@@ -369,7 +369,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         const maxx = Math.max(...filteredMeans);
         stats.minx = minx;
         stats.maxx = maxx;
-        dataset[curveIndex]['globStats'] = stats;
+        dataset[curveIndex]['glob_stats'] = stats;
 
         // recalculate axis options after QC and matching
         curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'] < maxx || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxx : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['xmax'];
