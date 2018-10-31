@@ -130,7 +130,7 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 };
 
 //this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, foreCastOffset, startDate, endDate, hasLevels, forceRegularCadence) {
+const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, forecastOffset, startDate, endDate, hasLevels, forceRegularCadence) {
     //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
     if (Meteor.isServer) {
@@ -156,7 +156,7 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
             ymin: Number.MAX_VALUE,
             ymax: Number.MIN_VALUE,
             sum: 0
-        };  
+        };
         var error = "";
         var N0 = [];
         var N_times = [];
@@ -168,7 +168,7 @@ const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, for
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
-                const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular);
+                const parsedData = parseQueryDataTimeSeries(pool, rows, d, completenessQCParam, hasLevels, averageStr, forecastOffset, cycles, regular);
                 d = parsedData.d;
                 N0 = parsedData.N0;
                 N_times = parsedData.N_times;
@@ -231,7 +231,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
                 if (plotType !== matsTypes.PlotTypes.histogram) {
                     parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
                 } else {
-                    parsedData = parseQueryDataHistogram(d,rows, hasLevels);
+                    parsedData = parseQueryDataHistogram(d, rows, hasLevels);
                 }
                 d = parsedData.d;
                 N0 = parsedData.N0;
@@ -288,24 +288,25 @@ const queryMapDB = function (pool, statement) {
 
 //this method parses the returned query data for timeseries plots
 const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, hasLevels, averageStr, foreCastOffset, cycles, regular) {
-/*
-    var d = {// d will contain the curve data
-        x: [],
-        y: [],
-        error_x: [],   // curveTime
-        error_y: [],   // values
-        subVals: [],   //subVals
-        subSecs: [],   //subSecs
-        subLevs: [],   //subLevs
-        stats: [],     //curveStats
-        text: [],
-        xmin: Number.MAX_VALUE,
-        xmax: Number.MIN_VALUE,
-        ymin: Number.MAX_VALUE,
-        ymax: Number.MIN_VALUE,
-        sum = 0
-    };
-*/
+    /*
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            error_x: [],   // curveTime
+            error_y: [],   // values
+            subVals: [],   //subVals
+            subSecs: [],   //subSecs
+            subLevs: [],   //subLevs
+            stats: [],     //pointStats
+            text: [],
+            glob_stats: {},     //curveStats
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            sum: 0
+        };
+    */
     d.error_x = null;  // time series doesn't use x errorbars
     var N0 = [];
     var N_times = [];
@@ -482,8 +483,9 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             subVals: [],   //subVals
             subSecs: [],   //subSecs
             subLevs: [],   //subLevs
-            stats: [],     //curveStats
+            stats: [],     //pointStats
             text: [],
+            glob_stats: {},     //curveStats
             xmin:num,
             ymin:num,
             xmax:num,
@@ -651,20 +653,24 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
 
 // this method parses the returned query data for histograms
 const parseQueryDataHistogram = function (d, rows, hasLevels) {
-/*
-    var d = {// d will contain the curve data
-        x: [], //placeholder
-        y: [], //placeholder
-        error_x: [], // unused
-        error_y: [], // unused
-        subVals: [],
-        subSecs: [],
-        subLevs: [],
-        glob_stats: [], // placeholder
-        bin_stats: [], // placeholder
-        text: [] //placeholder
-    };
-*/
+    /*
+        var d = {// d will contain the curve data
+            x: [], //placeholder
+            y: [], //placeholder
+            error_x: [], // unused
+            error_y: [], // unused
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            glob_stats: [], // placeholder
+            bin_stats: [], // placeholder
+            text: [] //placeholder
+            xmin:num,
+            xmax:num,
+            ymin:num,
+            ymax:num
+        };
+    */
 
     // these arrays hold all the sub values and seconds (and levels) until they are sorted into bins
     var curveSubStatsRaw = [];

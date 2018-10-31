@@ -84,19 +84,19 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
                 "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
+                "{{validTimeClause}} " +
+                "and m0.fcst_len = {{forecastLength}} " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
-            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{forecastLength}}', forecastLength);
             var validTimeClause = " ";
             if (validTimes.length > 0) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";

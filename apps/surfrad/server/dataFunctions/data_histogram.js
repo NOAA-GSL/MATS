@@ -108,7 +108,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{regionClause}}', regionClause);
             var validTimeClause = " ";
-            if (validTimes.length > 0){
+            if (validTimes.length > 0) {
                 validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
@@ -154,8 +154,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, [], dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };

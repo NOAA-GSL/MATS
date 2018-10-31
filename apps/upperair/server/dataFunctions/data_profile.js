@@ -89,12 +89,12 @@ dataProfile = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
@@ -149,10 +149,7 @@ dataProfile = function (plotParams, plotFunction) {
 
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
@@ -186,7 +183,12 @@ dataProfile = function (plotParams, plotFunction) {
 
     // process the data returned by the query
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "axisMap": axisMap};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "idealValues": idealValues,
+        "axisMap": axisMap
+    };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataProfile(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

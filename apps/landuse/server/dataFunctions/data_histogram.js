@@ -87,7 +87,7 @@ dataHistogram = function (plotParams, plotFunction) {
                 "and m0.valid_day+3600*m0.hour >= '{{fromSecs}}' " +
                 "and m0.valid_day+3600*m0.hour <= '{{toSecs}}' " +
                 "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.vgtyp IN({{vgtyp}}) "+
+                "and m0.vgtyp IN({{vgtyp}}) " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -145,8 +145,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, [], dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };

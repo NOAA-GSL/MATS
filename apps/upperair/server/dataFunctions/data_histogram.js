@@ -92,12 +92,12 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -153,8 +153,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };

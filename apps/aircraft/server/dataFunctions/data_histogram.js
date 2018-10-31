@@ -63,8 +63,8 @@ dataHistogram = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var validTimeClause =" ";
-        if (validTimes.length > 0){
+        var validTimeClause = " ";
+        if (validTimes.length > 0) {
             validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -101,9 +101,9 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
+                "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
@@ -162,8 +162,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };

@@ -104,8 +104,8 @@ dataDieOff = function (plotParams, plotFunction) {
                 "group by avtime " +
                 "order by avtime;";
 
-            statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
             statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
             statement = statement.replace('{{dateRangeClause}}', dateRangeClause);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{utcCycleStartClause}}', utcCycleStartClause);
@@ -150,27 +150,24 @@ dataDieOff = function (plotParams, plotFunction) {
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
                 xmin = d.xmin;
-                ymin=d.ymin;
-                xmax=d.xmax;
-                ymax=d.ymax;
+                ymin = d.ymin;
+                xmax = d.xmax;
+                ymax = d.ymax;
                 sum = d.sum;
                 count = d.x.length;
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                ymin: ymin,
-                ymax: ymax,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-            ymin = diffResult.ymin;
-            ymax = diffResult.ymax;
-            sum = diffResult.sum;
-            count = diffResult.count;
+            xmin = d.xmin;
+            ymin = d.ymin;
+            xmax = d.xmax;
+            ymax = d.ymax;
+            sum = d.sum;
+            count = d.x.length;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later

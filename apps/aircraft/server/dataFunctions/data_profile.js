@@ -95,8 +95,8 @@ dataProfile = function (plotParams, plotFunction) {
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
-                " from {{data_source}} as m0 " +
-                "  where 1=1 " +
+                "from {{data_source}} as m0 " +
+                "where 1=1 " +
                 "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -157,41 +157,14 @@ dataProfile = function (plotParams, plotFunction) {
 
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-        }  // end difference curve
+        }
 
-        // //make sure outliers don't skew axis scale
-        // var d_n = d.length;
-        // var d_n_good = 0;
-        // var d_sum_d = 0;
-        // var d_sum2_d = 0;
-        // for (var di = 0; di < d_n; di++) {
-        //     if (d[di][0] !== null) {
-        //         d_n_good = d_n_good + 1;
-        //         d_sum_d = d_sum_d + d[di][0];
-        //         d_sum2_d = d_sum2_d + d[di][0] * d[di][0];
-        //     }
-        // }
-        // var d_mean = d_sum_d / d_n_good;
-        // var d_sd2 = d_sum2_d / d_n_good - d_mean * d_mean;
-        // var d_sd = d_sd2 > 0 ? Math.sqrt(d_sd2) : d_sd2;
-        // var d_sd_limit = 3 * d_sd;
-
-        // set axis limits based on returned data
         xmax = d.xmax;
         xmin = d.xmin;
-        // for (var di = 0; di < d.length; di++) {
-        //     if (d[di][0] <= d_mean + d_sd_limit) {
-        //         xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
-        //         xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
-        //    }
-        // }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
@@ -213,7 +186,12 @@ dataProfile = function (plotParams, plotFunction) {
 
     // process the data returned by the query
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "axisMap": axisMap};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "idealValues": idealValues,
+        "axisMap": axisMap
+    };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataProfile(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

@@ -307,8 +307,6 @@ const get_err = function (sVals, sSecs) {
 
     var subVals = [];
     var subSecs = [];
-    var sVals = sVals;
-    var sSecs = sSecs;
     var n = sVals.length;
     var n_good = 0;
     var sum_d = 0;
@@ -549,7 +547,14 @@ const setHistogramParameters = function (plotParams) {
         default:
             break;
     }
-    return {yAxisFormat: yAxisFormat, binNum: binNum, binStart: binStart, binStride: binStride, pivotVal: pivotVal, binBounds: binBounds};
+    return {
+        yAxisFormat: yAxisFormat,
+        binNum: binNum,
+        binStart: binStart,
+        binStride: binStride,
+        pivotVal: pivotVal,
+        binBounds: binBounds
+    };
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
@@ -751,9 +756,6 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
 
     // calculate the statistics for each bin
     // we are especially interested in the number of values in each bin, as that is the plotted stat in a histogram
-    d.xmin = d.x[0];
-    d.xmax = d.x[binNum - 1];
-
     var binStats;
     var bin_mean;
     var bin_sd;
@@ -770,16 +772,22 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         bin_rf = bin_n / glob_n;
 
         /*
-            var d = {// d will contain the curve data
-                x: [], //placeholder
-                y: [], //placeholder
-                subVals: [],
-                subSecs: [],
-                subLevs: [],
-                stats: [], // placeholder
-                bin_stats: [], // placeholder
-                text: [] //placeholder
-            };
+        var d = {// d will contain the curve data
+            x: [], //placeholder
+            y: [], //placeholder
+            error_x: [], // unused
+            error_y: [], // unused
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            glob_stats: {}, // placeholder
+            bin_stats: [], // placeholder
+            text: [], //placeholder
+            xmax: Number.MIN_VALUE,
+            xmin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE
+        };
         */
 
         d.x.push(binMeans[b_idx]);
@@ -787,13 +795,6 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         d.subVals.push(binSubStats[b_idx]);
         d.subSecs.push(binSubSecs[b_idx]);
         d.subLevs.push(binSubLevs[b_idx]);
-        d.stats.push({
-            'glob_mean': glob_mean,
-            'glob_sd': glob_sd,
-            'glob_n': glob_n,
-            'glob_max': glob_max,
-            'glob_min': glob_min
-        });
         d.bin_stats.push({
             'bin_mean': bin_mean,
             'bin_sd': bin_sd,
@@ -818,6 +819,16 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         }
 
     }
+    d.glob_stats = {
+        'glob_mean': glob_mean,
+        'glob_sd': glob_sd,
+        'glob_n': glob_n,
+        'glob_max': glob_max,
+        'glob_min': glob_min
+    };
+    d.xmin = d.x[0];
+    d.xmax = d.x[binNum - 1];
+
     return {d: d};
 };
 

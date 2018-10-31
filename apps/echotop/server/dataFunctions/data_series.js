@@ -77,10 +77,10 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= '{{fromSecs}}' " +
                 "and m0.time <= '{{toSecs}}' " +
+                "{{validTimeClause}} " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.trsh = '{{threshold}}' " +
                 "and m0.fcst_len = '{{forecastLength}}' " +
                 "group by avtime " +
@@ -147,27 +147,24 @@ dataSeries = function (plotParams, plotFunction) {
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
                 xmin = d.xmin;
-                ymin=d.ymin;
-                xmax=d.xmax;
-                ymax=d.ymax;
+                ymin = d.ymin;
+                xmax = d.xmax;
+                ymax = d.ymax;
                 sum = d.sum;
                 count = d.x.length;
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                ymin: ymin,
-                ymax: ymax,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-            ymin = diffResult.ymin;
-            ymax = diffResult.ymax;
-            sum = diffResult.sum;
-            count = diffResult.count;
+            xmin = d.xmin;
+            ymin = d.ymin;
+            xmax = d.xmax;
+            ymax = d.ymax;
+            sum = d.sum;
+            count = d.x.length;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later
@@ -192,7 +189,15 @@ dataSeries = function (plotParams, plotFunction) {
 
     // process the data returned by the query
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "utcCycleStarts": utcCycleStarts, "axisMap": axisMap, "xmax": xmax, "xmin": xmin};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "idealValues": idealValues,
+        "utcCycleStarts": utcCycleStarts,
+        "axisMap": axisMap,
+        "xmax": xmax,
+        "xmin": xmin
+    };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

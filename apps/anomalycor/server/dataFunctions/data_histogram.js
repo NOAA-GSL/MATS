@@ -53,7 +53,7 @@ dataHistogram = function (plotParams, plotFunction) {
         const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
         const validTimes = validTimeOptionsMap[validTimeStr][0];
         var validTimeClause = " ";
-        if (validTimes.length > 0){
+        if (validTimes.length > 0) {
             validTimeClause = validTimes;
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -86,12 +86,12 @@ dataHistogram = function (plotParams, plotFunction) {
                 "group_concat(m0.level order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_levs0 " +
                 "from {{dbtable}} as m0 " +
                 "where 1=1 " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
                 "and m0.variable = '{{variable}}' " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "{{levelClause}} " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
@@ -141,8 +141,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };

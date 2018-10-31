@@ -74,10 +74,10 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}}_{{region}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
-                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.time >= {{fromSecs}} " +
                 "and m0.time <  {{toSecs}} " +
+                "{{validTimeClause}} " +
+                "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.trsh = {{threshold}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.fcst_min = {{forecastMinute}} " +
@@ -136,8 +136,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, [], dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };
