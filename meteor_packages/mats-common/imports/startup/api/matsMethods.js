@@ -179,18 +179,18 @@ const getPagenatedData = function (rky, p, np) {
 
         var dsiStart;
         var dsiEnd;
-        for (var dsi = 0; dsi < ret.data.length; dsi++) {
-            if (ret.data[dsi].data.length <= 100) {
+        for (var csi = 0; csi < ret.data.length; csi++) {
+            if (ret.data[csi].x === undefined || ret.data[csi].x === null || ret.data[csi].x.length <= 100) {
                 continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
             dsiStart = start;
             dsiEnd = end;
-            if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
+            if (dsiStart > ret.data[csi].x.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
-                dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
-                dsiEnd = rawReturn.data[dsi].data.length;
+                dsiStart = Math.floor(rawReturn.data[csi].x.length / 100) * 100;
+                dsiEnd = rawReturn.data[csi].x.length;
                 if (dsiEnd === dsiStart) {
-                    // make sure the last page isn't empty--if rawReturn.data[dsi].data.length/100 produces a whole number,
+                    // make sure the last page isn't empty--if rawReturn.data[csi].data.length/100 produces a whole number,
                     // dsiStart and dsiEnd would be the same. This makes sure that the last full page is indeed the last page, without a phantom empty page afterwards
                     dsiStart = dsiEnd - 100;
                 }
@@ -204,13 +204,17 @@ const getPagenatedData = function (rky, p, np) {
                 // make sure that the end is after the start
                 dsiEnd = dsiStart + 100;
             }
-            if (dsiEnd > ret.data[dsi].data.length) {
+            if (dsiEnd > ret.data[csi].x.length) {
                 // make sure we don't request past the end -- if results are one page, this should convert the
                 // start and end from 0 and 100 to 0 and whatever the end is.
-                dsiEnd = ret.data[dsi].data.length;
+                dsiEnd = ret.data[csi].x.length;
             }
-            ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
+            ret.data[csi].x = rawReturn.data[csi].x.slice(dsiStart, dsiEnd);
+            ret.data[csi].y = rawReturn.data[csi].y.slice(dsiStart, dsiEnd);
+            ret.data[csi].stats = rawReturn.data[csi].stats.slice(dsiStart, dsiEnd);
+            ret.data[csi].glob_stats = rawReturn.data[csi].glob_stats;
         }
+
         delete rawReturn;
         if (direction === 1) {
             ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
@@ -268,7 +272,7 @@ const getFlattenedResultData = function (rk, p, np) {
                               }
                     }
                      */
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) { // for each curve
                         // if the curve label is a reserved word do not process the curve (its a zero or max curve)
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
@@ -276,26 +280,25 @@ const getFlattenedResultData = function (rk, p, np) {
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['standard error'] = data[ci].stats.stde_betsy;
-                        stats['lag1'] = data[ci].stats.lag1;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['standard error'] = data[ci].glob_stats.stde_betsy;
+                        stats['lag1'] = data[ci].glob_stats.lag1;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) { //for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' time'] = moment.utc(Number(cdata[cdi][0])).format('YYYY-MM-DD HH:mm');
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][1];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
-                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + ' time'] = data[ci].x[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].y[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
+                            curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -304,35 +307,34 @@ const getFlattenedResultData = function (rk, p, np) {
                 case matsTypes.PlotTypes.profile:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = {};  // map of arrays of maps
-
-                    for (var ci = 0; ci < data.length; ci++) {
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['standard error'] = data[ci].stats.stde_betsy;
-                        stats['lag1'] = data[ci].stats.lag1;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['standard error'] = data[ci].glob_stats.stde_betsy;
+                        stats['lag1'] = data[ci].glob_stats.lag1;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
                         var cdata = data[ci].data;
-                        var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' level'] = cdata[cdi][1] * -1;
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][0];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
-                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + ' level'] = data[ci].y[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].x[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
+                            curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -357,29 +359,28 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
 
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + labelSuffix] = cdata[cdi][0];
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][1];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + labelSuffix] = data[ci].y[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].y[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -411,31 +412,30 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
 
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) { // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].data[0][7].glob_mean;
-                        stats['standard deviation'] = data[ci].data[0][7].glob_sd;
-                        stats['n'] = data[ci].data[0][7].glob_n;
-                        stats['minimum'] = data[ci].data[0][7].glob_min;
-                        stats['maximum'] = data[ci].data[0][7].glob_max;
+                        stats['mean'] = data[ci].glob_stats.glob_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.glob_sd;
+                        stats['n'] = data[ci].glob_stats.glob_n;
+                        stats['minimum'] = data[ci].glob_stats.glob_min;
+                        stats['maximum'] = data[ci].glob_stats.glob_max;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {   // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' bin range'] = cdata[cdi][6]['binLabel'];
-                            curveDataElement['n'] = cdata[cdi][6].bin_n;
-                            curveDataElement['bin rel freq'] = cdata[cdi][6].bin_rf;
-                            curveDataElement['bin lower bound'] = cdata[cdi][6].binLowBound;
-                            curveDataElement['bin upper bound'] = cdata[cdi][6].binUpBound;
-                            curveDataElement['bin mean'] = cdata[cdi][6].bin_mean;
-                            curveDataElement['bin std dev'] = cdata[cdi][6].bin_sd;
+                            curveDataElement[data[ci].label + ' bin range'] = data[ci].bin_stats[cdi]['binLabel'];
+                            curveDataElement['n'] = data[ci].bin_stats[cdi].bin_n;
+                            curveDataElement['bin rel freq'] = data[ci].bin_stats[cdi].bin_rf;
+                            curveDataElement['bin lower bound'] = data[ci].bin_stats[cdi].binLowBound;
+                            curveDataElement['bin upper bound'] = data[ci].bin_stats[cdi].binUpBound;
+                            curveDataElement['bin mean'] = data[ci].bin_stats[cdi].bin_mean;
+                            curveDataElement['bin std dev'] = data[ci].bin_stats[cdi].bin_sd;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;

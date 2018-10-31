@@ -116,7 +116,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             data.subSecs[di] = [];
             data.subLevs[di] = [];
 
-            // store statistics
+            // store statistics for this di datapoint
             data.stats[di] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -173,7 +173,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         const maxy = Math.max(...filteredMeans);
         stats.miny = miny;
         stats.maxy = maxy;
-        dataset[curveIndex]['stats'] = stats;
+        dataset[curveIndex]['glob_stats'] = stats;
 
         // recalculate axis options after QC and matching
         if (appParams.appName !== "surfrad") {
@@ -454,7 +454,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             subVals: [],
             subSecs: [],
             subLevs: [],
-            stats: [],
+            glob_stats: [],
             bin_stats: [],
             text: [],
             xmin: Number.MAX_VALUE,
@@ -520,43 +520,29 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
     }
 
     // we may need to recalculate the axis limits after unmatched data and outliers are removed
-    var axisLimitReprocessed = {};
+    // var axisLimitReprocessed = {};
 
     // calculate data statistics (including error bars) for each curve
     for (curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
-        axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
+        // axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
         diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
         var data = dataset[curveIndex];
         label = dataset[curveIndex].label;
 
         var di = 0;
-        var values = [];
-        var bins = [];
+        // var values = [];
+        // var bins = [];
 
         while (di < data.x.length) {
-
-            /*
-             DATASET ELEMENTS:
-             series: [data,data,data ...... ]   each data is itself an array
-             data[0] - bin number (plotted against the x axis)
-             data[1] - number in bin OR bin RF (plotted against the y axis)
-             data[2] - -1 (no error bars for histograms)
-             data[3] - bin values -- removed here to save on data volume
-             data[4] - bin times -- removed here to save on data volume
-             data[5] - reserved for if there are bin levels -- removed here to save on data volume
-             data[6] - bin stats
-             data[7] - global stats
-             data[8] - tooltip
-             */
 
             if (curveInfoParams.yAxisFormat === 'Relative frequency') {
                 // replace the bin number with the bin relative frequency for the plotted statistic
                 data.y[di] = data.bin_stats[di].bin_rf * 100;
             }
 
-            values.push(data.y[di]);
-            bins.push(data.x[di]);
+            // values.push(data.x[di]);
+            // bins.push(di);
 
             // remove sub values and times to save space
             data.subVals[di] = [];
@@ -574,19 +560,19 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values, bins);
-        const filteredValues = values.filter(x => x);
-        const miny = Math.min(...filteredValues);
-        const maxy = Math.max(...filteredValues);
-        stats.miny = miny;
-        stats.maxy = maxy;
-        dataset[curveIndex]['stats'] = stats;
+        // const stats = matsDataUtils.get_err(values, bins);
+        // const filteredValues = values.filter(x => x);
+        // const miny = Math.min(...filteredValues);
+        // const maxy = Math.max(...filteredValues);
+        // stats.miny = miny;
+        // stats.maxy = maxy;
+        // dataset[curveIndex]['glob_stats'] = stats;
+        //
+        // // recalculate axis options after QC and matching
+        // curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
+        // curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
 
-        // recalculate axis options after QC and matching
-        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
-        curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'] > miny || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? miny : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymin'];
-
-    }
+    } // end curves
 
     // generate plot options
     const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, plotBins);

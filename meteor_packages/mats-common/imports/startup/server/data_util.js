@@ -679,7 +679,6 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     binLowBounds[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2];
     binMeans[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
 
-
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;
@@ -787,13 +786,6 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         d.subVals.push(binSubStats[b_idx]);
         d.subSecs.push(binSubSecs[b_idx]);
         d.subLevs.push(binSubLevs[b_idx]);
-        d.stats.push({
-            'glob_mean': glob_mean,
-            'glob_sd': glob_sd,
-            'glob_n': glob_n,
-            'glob_max': glob_max,
-            'glob_min': glob_min
-        });
         d.bin_stats.push({
             'bin_mean': bin_mean,
             'bin_sd': bin_sd,
@@ -818,6 +810,13 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         }
 
     }
+    d.glob_stats = {
+        'glob_mean': glob_mean,
+        'glob_sd': glob_sd,
+        'glob_n': glob_n,
+        'glob_max': glob_max,
+        'glob_min': glob_min
+    };
     return {d: d};
 };
 
