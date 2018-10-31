@@ -684,7 +684,6 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     binLowBounds[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2];
     binMeans[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
 
-
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;

@@ -105,7 +105,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             data.subSecs[di] = [];
             data.subLevs[di] = [];
 
-            // store statistics
+            // store statistics for this di datapoint
             data.stats[di] = {
                 raw_stat: rawStat,
                 d_mean: errorResult.d_mean,
@@ -439,10 +439,10 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             glob_stats: {}, // placeholder
             bin_stats: [], // placeholder
             text: [], //placeholder
-            xmax: Number.MIN_VALUE,
             xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
             ymax: Number.MIN_VALUE,
-            ymin: Number.MAX_VALUE
         };
 
         if (diffFrom == null) {
@@ -469,7 +469,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-       }
+        }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
@@ -525,7 +525,7 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 
             di++;
         }
-    }
+    } // end curves
 
     // generate plot options
     const resultOptions = matsDataPlotOpsUtils.generateHistogramPlotOptions(dataset, curveInfoParams.curves, curveInfoParams.axisMap, plotBins);
