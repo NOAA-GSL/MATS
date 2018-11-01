@@ -104,7 +104,7 @@
                         </div>
                         {{#each yAxis in yAxes}}
                             <div><br></div>
-                            <div id="y{{yAxis}}AxisCustomControls" style="display:block;">
+                            <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
                                 <div class="row">
                                     <label class="col-sm-2">Y{{yAxis}} label: </label>
                                     <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>

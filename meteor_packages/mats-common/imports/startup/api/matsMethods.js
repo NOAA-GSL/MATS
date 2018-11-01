@@ -95,12 +95,12 @@ var getJSON = function (params, req, res, next) {
 };
 
 // initialize collections used for pop-out window functionality
-const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");    // local collection used to store new axis ranges when opening pop out graphs
+const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
-    AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
+    LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 
     // define some server side routes
     Picker.route('/getCSV/:key', function (params, req, res, next) {
@@ -1532,8 +1532,31 @@ const getReleaseNotes = new ValidatedMethod({
     }
 });
 
-const getNewAxes = new ValidatedMethod({
-    name: 'matsMethods.getNewAxes',
+const saveLayout= new ValidatedMethod({
+    name: 'matsMethods.saveLayout',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        },
+        layout: {
+            type: Object, blackbox: true
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var key = params.resultKey;
+            var layout = params.layout;
+            try {
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
+            } catch (error) {
+                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
+            }
+        }
+    }
+});
+
+const getLayout = new ValidatedMethod({
+    name: 'matsMethods.getLayout',
     validate: new SimpleSchema({
         resultKey: {
             type: String
@@ -1544,35 +1567,12 @@ const getNewAxes = new ValidatedMethod({
             var ret;
             var key = params.resultKey;
             try {
-                ret = AxesStoreCollection.rawCollection().findOne({key: key});
+                ret = LayoutStoreCollection.rawCollection().findOne({key: key});
                 return ret;
             } catch (error) {
-                throw new Meteor.Error("Error in getNewAxes function:" + key + " : " + error.message);
+                throw new Meteor.Error("Error in getLayout function:" + key + " : " + error.message);
             }
             return undefined;
-        }
-    }
-});
-
-const setNewAxes = new ValidatedMethod({
-    name: 'matsMethods.setNewAxes',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        },
-        axes: {
-            type: Object, blackbox: true
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var key = params.resultKey;
-            var axes = params.axes;
-            try {
-                AxesStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), axes: axes}});
-            } catch (error) {
-                throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
-            }
         }
     }
 });
@@ -1664,6 +1664,6 @@ export default matsMethods = {
     testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
     testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
     getReleaseNotes: getReleaseNotes,
-    getNewAxes: getNewAxes,
-    setNewAxes: setNewAxes
+    getLayout: getLayout,
+    saveLayout: saveLayout
 };

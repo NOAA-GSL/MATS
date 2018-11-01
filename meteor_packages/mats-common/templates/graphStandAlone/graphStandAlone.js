@@ -75,47 +75,16 @@ Template.GraphStandAlone.helpers({
                 var options = matsCurveUtils.getGraphResult().options;
 
                 if (plotType !== matsTypes.PlotTypes.map) {
-                    // make sure the zoom carries over from the old graph
-                    // matsMethods.getNewAxes.call({resultKey: key,}, function (error, ret) {
-                    //     if (error !== undefined) {
-                    //         setError(error);
-                    //         return false;
-                    //     }
-                    //     var newAxes = ret.axes;
-                    //     if (options.xaxes && options.xaxes[0]) {
-                    //         options.xaxes[0].axisLabel = newAxes.xaxis.options.axisLabel;
-                    //         options.xaxes[0].min = newAxes.xaxis.min;
-                    //         options.xaxes[0].max = newAxes.xaxis.max;
-                    //     }
-                    //     for (var yidx = 1; yidx < Object.keys(newAxes).length; yidx++) {
-                    //         var axesObjectKey;
-                    //         if (yidx === 1) {
-                    //             axesObjectKey = "yaxis";
-                    //         } else {
-                    //             axesObjectKey = "y" + yidx + "axis";
-                    //         }
-                    //         if (options.yaxes && options.yaxes[yidx - 1]) {
-                    //             options.yaxes[yidx - 1].axisLabel = newAxes[axesObjectKey].options.axisLabel;
-                    //             options.yaxes[yidx - 1].min = newAxes[axesObjectKey].min;
-                    //             options.yaxes[yidx - 1].max = newAxes[axesObjectKey].max;
-                    //         }
-                    //     }
-                    //
-                    //     // append annotations and get errorbar types
-                    //     annotation = "";
-                    //     for (var i = 0; i < dataset.length; i++) {
-                    //         if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
-                    //             annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
-                    //         }
-                    //         errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
-                    //     }
-
+                    // make sure to capture the options (layout) from the old graph - which were stored in graph.js
+                    matsMethods.getLayout.call({resultKey: key,}, function (error, ret) {
+                        if (error !== undefined) {
+                            setError(error);
+                            return false;
+                        }
+                        options = ret.layout;
                     $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
-                        // $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-                        //$("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
                         document.getElementById("gsaSpinner").style.display = "none";
-
-                    //});
+                    });
                 }
             }
         });
@@ -313,7 +282,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
     'click .pointsVisibility': function (event) {
@@ -333,7 +302,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-points")[0].value = "show points";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
     'click .errorBarVisibility': function (event) {
@@ -356,7 +325,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
     'click .barVisibility': function (event) {
@@ -376,7 +345,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
+        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
         $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
     },
     'click .annotateVisibility': function (event) {
