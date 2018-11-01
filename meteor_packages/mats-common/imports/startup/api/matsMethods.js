@@ -376,7 +376,7 @@ const getFlattenedResultData = function (rk, p, np) {
                         var curveData = [];  // map of maps
                         for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + labelSuffix] = data[ci].y[cdi];
+                            curveDataElement[data[ci].label + labelSuffix] = data[ci].x[cdi];
                             curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
                             curveDataElement['plotted stat'] = data[ci].y[cdi];
                             curveDataElement['std dev'] = data[ci].stats[cdi].sd;
@@ -1370,6 +1370,7 @@ const saveSettings = new ValidatedMethod({
     run(params) {
         var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
+            created:moment().format("MM/DD/YYYY HH:mm:ss"),
             name: params.saveAs,
             data: params.p,
             owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
