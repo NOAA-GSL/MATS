@@ -196,7 +196,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
     };
 
     layout['xaxis'] = {
-        title: 'Forecast Hour',
+        title: 'Threshold',
         titlefont: {color: '#000000', size: 22},
         tickfont: {color: '#000000', size: 14},
         tickvals: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0],
@@ -266,7 +266,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
     };
 
     layout['xaxis'] = {
-        title: 'Forecast Hour',
+        title: 'Hour of Day',
         titlefont: {color: '#000000', size: 22},
         tickfont: {color: '#000000', size: 14},
         tick0: 0,

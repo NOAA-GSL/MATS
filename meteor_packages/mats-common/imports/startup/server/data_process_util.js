@@ -78,9 +78,9 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                     // assign recalculated statistic to data[di][1], which is the value to be plotted
                     data.y[di] = errorResult.d_mean;
                 } else {
-                    if (dataset[diffFrom[0]].data.y[di] !== null && dataset[diffFrom[1]].data.y[di] !== null) {
+                    if (dataset[diffFrom[0]].y[di] !== null && dataset[diffFrom[1]].y[di] !== null) {
                         // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                        data.y[di] = dataset[diffFrom[0]].data.y[di] - dataset[diffFrom[1]].data.y[di];
+                        data.y[di] = dataset[diffFrom[0]].y[di] - dataset[diffFrom[1]].y[di];
                     } else {
                         // keep the null for no data at this point
                         data.y[di] = null;
@@ -290,9 +290,9 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 // assign recalculated statistic to data[di][1], which is the value to be plotted
                 data.x[di] = errorResult.d_mean;
             } else {
-                if (dataset[diffFrom[0]].data.x[di] !== null && dataset[diffFrom[1]].data.x[di] !== null) {
+                if (dataset[diffFrom[0]].x[di] !== null && dataset[diffFrom[1]].x[di] !== null) {
                     // make sure that the diff curve actually shows the difference when matching. Otherwise outlier filtering etc. can make it slightly off.
-                    data.x[di] = dataset[diffFrom[0]].data.x[di] - dataset[diffFrom[1]].data.x[di];
+                    data.x[di] = dataset[diffFrom[0]].x[di] - dataset[diffFrom[1]].x[di];
                 } else {
                     // keep the null for no data at this point
                     data.x[di] = null;

@@ -793,7 +793,6 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         d.y.push(bin_n);
         d.subVals.push(binSubStats[b_idx]);
         d.subSecs.push(binSubSecs[b_idx]);
-        d.subLevs.push(binSubLevs[b_idx]);
         d.bin_stats.push({
             'bin_mean': bin_mean,
             'bin_sd': bin_sd,
