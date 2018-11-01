@@ -27,11 +27,11 @@ const getMatchedDataSet = function (dataset, curvesLength) {
         independentVarGroups[curveIndex] = [];  // store the independentVars for each curve that are not null
         independentVarHasPoint[curveIndex] = [];   // store the *all* of the independentVars for each curve
         subSecs[curveIndex] = {};  // store the individual record times (subSecs) going into each independentVar for each curve
-        data = dataset[curveIndex].data;
-        for (di = 0; di < data.length; di++) { // loop over every independentVar value in this curve
-            currIndependentVar = data[di][0];
-            if (data[di][1] !== null) {
-                subSecs[curveIndex][currIndependentVar] = data[di][4];   // store raw secs for this independentVar value, since it's not a null point
+        data = dataset[curveIndex];
+        for (di = 0; di < data.x.length; di++) { // loop over every independentVar value in this curve
+            currIndependentVar = data.x[di];
+            if (data.y[di] !== null) {
+                subSecs[curveIndex][currIndependentVar] = data.subSecs[di];   // store raw secs for this independentVar value, since it's not a null point
                 independentVarGroups[curveIndex].push(currIndependentVar);   // store this independentVar value, since it's not a null point
             }
             independentVarHasPoint[curveIndex].push(currIndependentVar);    // store all the independentVar values, regardless of whether they're null
@@ -53,27 +53,34 @@ const getMatchedDataSet = function (dataset, curvesLength) {
 
     // remove non-matching independentVars and subSecs
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // loop over every curve
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
 
         // need to loop backwards through the data array so that we can splice non-matching indices
         // while still having the remaining indices in the correct order
-        for (di = data.length - 1; di >= 0; di--) {
+        var dataLength = data.x.length;
+        for (di = dataLength - 1; di >= 0; di--) {
 
-            if (matchingIndependentVars.indexOf(data[di][0]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
-                if (matchingIndependentHasPoint.indexOf(data[di][0]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
-                    data.splice(di, 1);
+            if (matchingIndependentVars.indexOf(data.x[di]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
+                if (matchingIndependentHasPoint.indexOf(data.x[di]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
+                    data.x.splice(di, 1);
+                    data.y.splice(di, 1);
+                    data.error_y.array.splice(di, 1);
+                    data.subVals.splice(di, 1);
+                    data.subSecs.splice(di, 1);
+                    data.stats.splice(di, 1);
+                    data.text.splice(di, 1);
                 } else {    // if all of the curves have either data or nulls at this independentVar, and there is at least one null, ensure all of the curves are null
-                    data[di][1] = null;
-                    data[di][3] = NaN;
-                    data[di][4] = NaN;
+                    data.y[di] = null;
+                    data.subVals[di] = NaN;
+                    data.subSecs[di] = NaN;
                 }
                 continue;   // then move on to the next independentVar. There's no need to mess with the subSecs
             }
-            subSecs = data[di][4];
-            subValues = data[di][3];
+            subSecs = data.subSecs[di];
+            subValues = data.subVals[di];
 
             if (subSecs.length > 0) {
-                currIndependentVar = data[di][0];
+                currIndependentVar = data.x[di];
                 newSubValues = [];
                 newSubSecs = [];
                 for (si = 0; si < subSecs.length; si++) {  // loop over all subSecs for this independentVar
@@ -87,11 +94,11 @@ const getMatchedDataSet = function (dataset, curvesLength) {
                     }
                 }
                 // store the filtered data
-                data[di][3] = newSubValues;
-                data[di][4] = newSubSecs;
+                data.subVals[di] = newSubValues;
+                data.subSecs[di] = newSubSecs;
             }
         }
-        dataset[curveIndex].data = data;
+        dataset[curveIndex] = data;
     }
 
     return dataset;
@@ -120,15 +127,15 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
     // valid time plot, it's hour of day. This function identifies the the independentVar values common across all of
     // the curves, and then the common sub times/levels/values for those independentVar values.
 
-    //determine whether data[0] or data[1] is the independent variable, and which is the stat value
-    var independentVarIndex;
-    var statValueIndex;
+    //determine whether data.x or data.y is the independent variable, and which is the stat value
+    var independentVarName;
+    var statVarName;
     if (plotType !== matsTypes.PlotTypes.profile) {
-        independentVarIndex = 0;
-        statValueIndex = 1;
+        independentVarName = 'x';
+        statVarName = 'y';
     } else {
-        independentVarIndex = 1;
-        statValueIndex = 0;
+        independentVarName = 'y';
+        statVarName = 'x';
     }
 
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // every curve
@@ -136,12 +143,12 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
         independentVarHasPoint[curveIndex] = [];   // store the *all* of the independentVars for each curve
         subSecs[curveIndex] = {};  // store the individual record times (subSecs) going into each independentVar for each curve
         subLevs[curveIndex] = {};  // store the individual record levels (subLevs) going into each independentVar for each curve
-        data = dataset[curveIndex].data;
-        for (di = 0; di < data.length; di++) { // loop over every independentVar value in this curve
-            currIndependentVar = data[di][independentVarIndex];
-            if (data[di][statValueIndex] !== null) {
-                subSecs[curveIndex][currIndependentVar] = data[di][4];   // store raw secs for this independentVar value, since it's not a null point
-                subLevs[curveIndex][currIndependentVar] = data[di][5];   // store raw levs for this independentVar value, since it's not a null point
+        data = dataset[curveIndex];
+        for (di = 0; di < data[independentVarName].length; di++) { // loop over every independentVar value in this curve
+            currIndependentVar = data[independentVarName][di];
+            if (data[statVarName][di] !== null) {
+                subSecs[curveIndex][currIndependentVar] = data.subSecs[di];   // store raw secs for this independentVar value, since it's not a null point
+                subLevs[curveIndex][currIndependentVar] = data.subLevs[di];   // store raw levs for this independentVar value, since it's not a null point
                 independentVarGroups[curveIndex].push(currIndependentVar);   // store this independentVar value, since it's not a null point
             }
             independentVarHasPoint[curveIndex].push(currIndependentVar);    // store all the independentVar values, regardless of whether they're null
@@ -175,29 +182,37 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
 
     // remove non-matching independentVars and subSecs
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // loop over every curve
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
 
         // need to loop backwards through the data array so that we can splice non-matching indices
         // while still having the remaining indices in the correct order
-        for (di = data.length - 1; di >= 0; di--) {
+        var dataLength = data[independentVarName].length;
+        for (di = dataLength - 1; di >= 0; di--) {
 
-            if (matchingIndependentVars.indexOf(data[di][independentVarIndex]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
-                if (matchingIndependentHasPoint.indexOf(data[di][independentVarIndex]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
-                    data.splice(di, 1);
+            if (matchingIndependentVars.indexOf(data[independentVarName][di]) === -1) {  // if this is not a common non-null independentVar value, we'll have to remove some data
+                if (matchingIndependentHasPoint.indexOf(data[independentVarName][di]) === -1) {   // if at least one curve doesn't even have a null here, much less a matching value (beacause of the cadence), just drop this independentVar
+                    data.x.splice(di, 1);
+                    data.y.splice(di, 1);
+                    data[('error_' + statVarName)].array.splice(di, 1);
+                    data.subVals.splice(di, 1);
+                    data.subSecs.splice(di, 1);
+                    data.subLevs.splice(di, 1);
+                    data.stats.splice(di, 1);
+                    data.text.splice(di, 1);
                 } else {    // if all of the curves have either data or nulls at this independentVar, and there is at least one null, ensure all of the curves are null
-                    data[di][statValueIndex] = null;
-                    data[di][3] = NaN;
-                    data[di][4] = NaN;
-                    data[di][5] = NaN;
+                    data[statVarName][di] = null;
+                    data.subVals[di] = NaN;
+                    data.subSecs[di] = NaN;
+                    data.subLevs[di] = NaN;
                 }
                 continue;   // then move on to the next independentVar. There's no need to mess with the subSecs or subLevs
             }
-            subSecs = data[di][4];
-            subLevs = data[di][5];
-            subValues = data[di][3];
+            subSecs = data.subSecs[di];
+            subLevs = data.subLevs[di];
+            subValues = data.subVals[di];
 
             if (subSecs.length > 0 && subLevs.length > 0) {
-                currIndependentVar = data[di][independentVarIndex];
+                currIndependentVar = data[independentVarName][di];
                 newSubValues = [];
                 newSubSecs = [];
                 newSubLevs = [];
@@ -215,12 +230,12 @@ const getMatchedDataSetWithLevels = function (dataset, curvesLength, plotType) {
                     }
                 }
                 // store the filtered data
-                data[di][3] = newSubValues;
-                data[di][4] = newSubSecs;
-                data[di][5] = newSubLevs;
+                data.subVals[di] = newSubValues;
+                data.subSecs[di] = newSubSecs;
+                data.subLevs[di] = newSubLevs;
             }
         }
-        dataset[curveIndex].data = data;
+        dataset[curveIndex] = data;
     }
 
     return dataset;
@@ -244,14 +259,14 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
 
     // pull all subSecs and subStats out of their bins, and back into one master array
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
         subStatsRaw[curveIndex] = [];
         subSecsRaw[curveIndex] = [];
         subStats[curveIndex] = [];
         subSecs[curveIndex] = [];
-        for (di = 0; di < data.length; di++) {
-            subStatsRaw[curveIndex].push(data[di][3]);
-            subSecsRaw[curveIndex].push(data[di][4]);
+        for (di = 0; di < data.x.length; di++) {
+            subStatsRaw[curveIndex].push(data.subVals[di]);
+            subSecsRaw[curveIndex].push(data.subSecs[di]);
         }
         subStats[curveIndex] = [].concat.apply([], subStatsRaw[curveIndex]);
         subSecs[curveIndex] = [].concat.apply([], subSecsRaw[curveIndex]);
@@ -265,7 +280,7 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
 
     // remove non-matching subSecs and subStats
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // loop over every curve
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
         if (subSecIntersection.length > 0) {
             newSubStats[curveIndex] = [];
             newSubSecs[curveIndex] = [];
@@ -281,11 +296,45 @@ const getMatchedDataSetHistogram = function (dataset, curvesLength, binStats) {
                 }
             }
             // re-sort all of the data into histogram bins
-            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.length, binStats, false, []);
-            dataset[curveIndex].data = newCurveData.d;
+            var d = {// d will contain the curve data
+                x: [], //placeholder
+                y: [], //placeholder
+                error_x: [], // unused
+                error_y: [], // unused
+                subVals: [],
+                subSecs: [],
+                subLevs: [],
+                glob_stats: {}, // placeholder
+                bin_stats: [], // placeholder
+                text: [], //placeholder
+                xmin: Number.MAX_VALUE,
+                xmax: Number.MIN_VALUE,
+                ymin: Number.MAX_VALUE,
+                ymax: Number.MIN_VALUE,
+            };
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], [], data.x.length, binStats, false, d);
+            var newCurveDataKeys = Object.keys(newCurveData.d);
+            for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
+                dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];
+            }
         } else {
             // if there are no matching values, set data to an empty array
-            dataset[curveIndex].data = [];
+            dataset[curveIndex] = {
+                x: [],
+                y: [],
+                error_x: [],
+                error_y: [],
+                subVals: [],
+                subSecs: [],
+                subLevs: [],
+                glob_stats: {},
+                bin_stats: [],
+                text: [],
+                xmin: Number.MAX_VALUE,
+                xmax: Number.MIN_VALUE,
+                ymin: Number.MAX_VALUE,
+                ymax: Number.MIN_VALUE,
+            };
         }
     }
     return dataset;
@@ -312,17 +361,17 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, bi
 
     // pull all subSecs and subStats out of their bins, and back into one master array
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
         subStatsRaw[curveIndex] = [];
         subSecsRaw[curveIndex] = [];
         subLevsRaw[curveIndex] = [];
         subStats[curveIndex] = [];
         subSecs[curveIndex] = [];
         subLevs[curveIndex] = [];
-        for (di = 0; di < data.length; di++) {
-            subStatsRaw[curveIndex].push(data[di][3]);
-            subSecsRaw[curveIndex].push(data[di][4]);
-            subLevsRaw[curveIndex].push(data[di][5]);
+        for (di = 0; di < data.x.length; di++) {
+            subStatsRaw[curveIndex].push(data.subVals[di]);
+            subSecsRaw[curveIndex].push(data.subSecs[di]);
+            subLevsRaw[curveIndex].push(data.subLevs[di]);
         }
         subStats[curveIndex] = [].concat.apply([], subStatsRaw[curveIndex]);
         subSecs[curveIndex] = [].concat.apply([], subSecsRaw[curveIndex]);
@@ -348,7 +397,7 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, bi
 
     // remove non-matching subSecs, subLevs, and subStats
     for (curveIndex = 0; curveIndex < curvesLength; curveIndex++) { // loop over every curve
-        data = dataset[curveIndex].data;
+        data = dataset[curveIndex];
         if (subIntersections.length > 0) {
             newSubStats[curveIndex] = [];
             newSubSecs[curveIndex] = [];
@@ -368,11 +417,45 @@ const getMatchedDataSetHistogramWithLevels = function (dataset, curvesLength, bi
                 }
             }
             // re-sort all of the data into histogram bins
-            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.length, binStats, true, []);
-            dataset[curveIndex].data = newCurveData.d;
+            var d = {// d will contain the curve data
+                x: [], //placeholder
+                y: [], //placeholder
+                error_x: [], // unused
+                error_y: [], // unused
+                subVals: [],
+                subSecs: [],
+                subLevs: [],
+                glob_stats: {}, // placeholder
+                bin_stats: [], // placeholder
+                text: [], //placeholder
+                xmin: Number.MAX_VALUE,
+                xmax: Number.MIN_VALUE,
+                ymin: Number.MAX_VALUE,
+                ymax: Number.MIN_VALUE,
+            };
+            newCurveData = matsDataUtils.sortHistogramBins(newSubStats[curveIndex], newSubSecs[curveIndex], newSubLevs[curveIndex], data.x.length, binStats, true, d);
+            var newCurveDataKeys = Object.keys(newCurveData.d);
+            for (var didx = 0; didx < newCurveDataKeys.length; didx++) {
+                dataset[curveIndex][newCurveDataKeys[didx]] = newCurveData.d[newCurveDataKeys[didx]];
+            }
         } else {
-            // if there are no matching values, set data to an empty array
-            dataset[curveIndex].data = [];
+            // if there are no matching values, set data to an empty dataset
+            dataset[curveIndex] = {
+                x: [],
+                y: [],
+                error_x: [],
+                error_y: [],
+                subVals: [],
+                subSecs: [],
+                subLevs: [],
+                glob_stats: {},
+                bin_stats: [],
+                text: [],
+                xmin: Number.MAX_VALUE,
+                xmax: Number.MIN_VALUE,
+                ymin: Number.MAX_VALUE,
+                ymax: Number.MIN_VALUE,
+            };
         }
     }
     return dataset;

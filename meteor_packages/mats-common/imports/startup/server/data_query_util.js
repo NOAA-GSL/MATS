@@ -464,6 +464,14 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     d.ymin = Math.min(...filteredy);
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
+
+    if (d.x.indexOf(0) !== -1 && 0 < d.xmin){
+        d.xmin = 0;
+    }
+    if (d.y.indexOf(0) !== -1 && 0 < d.ymin){
+        d.ymin = 0;
+    }
+
     return {
         d: d,
         N0: N0,
@@ -643,6 +651,13 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
     d.ymin = Math.min(...filteredy);
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
+
+    if (d.x.indexOf(0) !== -1 && 0 < d.xmin){
+        d.xmin = 0;
+    }
+    if (d.y.indexOf(0) !== -1 && 0 < d.ymin){
+        d.ymin = 0;
+    }
 
     return {
         d: d,
