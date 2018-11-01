@@ -106,7 +106,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             title: axisLabel,
             titlefont: {color: '#000000', size: 22},
             tickfont: {color: '#000000', size: 14},
-            // range: [xmin - xPad, xmax + xPad],
+            range: [xmin - xPad, xmax + xPad],
             zeroline: false
         };
     }

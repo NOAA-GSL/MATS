@@ -25,11 +25,8 @@ dataProfile = function (plotParams, plotFunction) {
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-    // ymin is negative in order to get the yaxis to plot inverted for profiles
-    // we tried to use flot's invert and transform functions but this did not work properly
-    // so just draw the axis negative and change the ticks to positive numbers.
-    var ymax = 0;
-    var ymin = -1100;
+    var ymax = 1050;
+    var ymin = 1;
     var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -78,7 +75,7 @@ dataProfile = function (plotParams, plotFunction) {
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-        var d = [];
+        var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters

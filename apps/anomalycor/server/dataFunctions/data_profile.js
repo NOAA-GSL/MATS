@@ -10,7 +10,7 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataProfile = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "aircraft";
+    const appName = "anomalycor";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.profile;
     const hasLevels = true;
@@ -27,7 +27,7 @@ dataProfile = function (plotParams, plotFunction) {
     var xmin = Number.MAX_VALUE;
     var ymax = 1050;
     var ymin = 1;
-    var idealValues = [];
+    var idealValues = [100];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
         // initialize variables specific to each curve
@@ -37,81 +37,59 @@ dataProfile = function (plotParams, plotFunction) {
         const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        const variableStr = curve['variable'];
-        const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        const variable = variableOptionsMap[variableStr];
-        const top = curve['top'];
-        const bottom = curve['bottom'];
-        var statisticSelect = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-        var statistic;
-        var statKey;
-        if (variableStr === 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-            statKey = statisticSelect + '-winds';
-            statistic = statistic + "," + statAuxMap[statKey];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-            statKey = statisticSelect + '-other';
-            statistic = statistic + "," + statAuxMap[statKey];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
-        var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var curveDates = curve['curve-dates'];
-        var fromDateStr = curveDates.split(' - ')[0]; // get the from part
-        fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
-        var toDateStr = curveDates.split(' - ')[1]; // get the to part
-        toDateStr = toDateStr.split(' ')[0];  // strip off time field
-        var curveDatesDateRangeFrom = moment.utc(fromDateStr, "MM-DD-YYYY").format('YYYY-M-D');
-        var curveDatesDateRangeTo = moment.utc(toDateStr, "MM-DD-YYYY").format('YYYY-M-D');
-        const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var dbtable = data_source + "_anomcorr_" + region;
+        const variable = curve['variable'];
+        curves[curveIndex]['statistic'] = "Correlation";
+        const validTimeStr = curve['valid-time'];
+        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
+        const validTimes = validTimeOptionsMap[validTimeStr][0];
         var validTimeClause = " ";
         if (validTimes.length > 0) {
-            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+            validTimeClause = validTimes;
         }
-        const forecastLength = curve['forecast-length'];
-        const phaseStr = curve['phase'];
-        const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
-        const phase = phaseOptionsMap[phaseStr];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
+        var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = varUnits;
+        var axisKey = "Correlation";
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select m0.mb10*10 as avVal, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
-                "{{statistic}} " +
-                "from {{data_source}} as m0 " +
+            var statement = "select m0.level as avVal, " +
+                "count(distinct unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as N_times, " +
+                "min(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as min_secs, " +
+                "max(unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as max_secs, " +
+                "avg(m0.wacorr/100) as stat, " +
+                "count(m0.wacorr) as N0, " +
+                "group_concat(m0.wacorr/100 order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_values0, " +
+                "group_concat(unix_timestamp(m0.valid_date)+3600*m0.valid_hour order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_secs0, " +
+                "group_concat(m0.level order by unix_timestamp(m0.valid_date)+3600*m0.valid_hour) as sub_levs0 " +
+                "from {{dbtable}} as m0 " +
                 "where 1=1 " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.valid_date)+3600*m0.valid_hour <= '{{toSecs}}' " +
+                "and m0.variable = '{{variable}}' " +
                 "{{validTimeClause}} " +
-                "{{phase}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and m0.fcst_len = {{forecastLength}} " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
 
-            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', curveDatesDateRangeFrom);
-            statement = statement.replace('{{toDate}}', curveDatesDateRangeTo);
-            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{dbtable}}', dbtable);
+            statement = statement.replace('{{data_source}}', data_source);
+            statement = statement.replace('{{region}}', region);
+            statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{phase}}', phase);
+            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -141,11 +119,7 @@ dataProfile = function (plotParams, plotFunction) {
                 } else {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                    if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + data_source + " and " + region + "].");
-                    } else {
-                        throw new Error(error);
-                    }
+                    throw (new Error(error));
                 }
             }
 
@@ -160,8 +134,13 @@ dataProfile = function (plotParams, plotFunction) {
             d = diffResult.dataset;
         }
 
+        // set axis limits based on returned data
         xmax = d.xmax;
         xmin = d.xmin;
+        // for (var di = 0; di < d.length; di++) {
+        //     xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
+        //     xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
+        // }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
