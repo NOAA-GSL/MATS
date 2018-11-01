@@ -152,20 +152,15 @@ dataProfile = function (plotParams, plotFunction) {
             d = diffResult.dataset;
         }
 
-        // set axis limits based on returned data
-        xmax = d.xmax;
-        xmin = d.xmin;
-        // for (var di = 0; di < d.length; di++) {
-        //     xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
-        //     xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
-        // }
+        xmin = xmin < d.xmin ? xmin : d.xmin;
+        xmax = xmax > d.xmax ? xmax : d.xmax;
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.

@@ -94,12 +94,12 @@ dataProfile = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
+                "and m0.date >= '{{fromDate}}' " +
+                "and m0.date <= '{{toDate}}' " +
                 "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
@@ -160,15 +160,15 @@ dataProfile = function (plotParams, plotFunction) {
             d = diffResult.dataset;
         }
 
-        xmax = d.xmax;
-        xmin = d.xmin;
+        xmin = xmin < d.xmin ? xmin : d.xmin;
+        xmax = xmax > d.xmax ? xmax : d.xmax;
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.

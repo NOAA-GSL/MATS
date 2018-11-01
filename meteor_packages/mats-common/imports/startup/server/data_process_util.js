@@ -158,8 +158,14 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(values, indVars);
         const filteredMeans = means.filter(x => x);
-        const miny = Math.min(...filteredMeans);
-        const maxy = Math.max(...filteredMeans);
+        var miny = Math.min(...filteredMeans);
+        var maxy = Math.max(...filteredMeans);
+        if (means.indexOf(0) !== -1 && 0 < miny){
+            miny = 0;
+        }
+        if (means.indexOf(0) !== -1 && 0 > maxy){
+            maxy = 0;
+        }
         stats.miny = miny;
         stats.maxy = maxy;
         dataset[curveIndex]['glob_stats'] = stats;
@@ -343,8 +349,14 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
         const filteredMeans = means.filter(x => x);
-        const minx = Math.min(...filteredMeans);
-        const maxx = Math.max(...filteredMeans);
+        var minx = Math.min(...filteredMeans);
+        var maxx = Math.max(...filteredMeans);
+        if (means.indexOf(0) !== -1 && 0 < minx){
+            minx = 0;
+        }
+        if (means.indexOf(0) !== -1 && 0 > maxx){
+            maxx = 0;
+        }
         stats.minx = minx;
         stats.maxx = maxx;
         dataset[curveIndex]['glob_stats'] = stats;

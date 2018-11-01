@@ -26,8 +26,8 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
     var dataset = [];
     var utcCycleStarts = [];
     var axisMap = Object.create(null);
-    var xmax = Number.MIN_VALUE;
-    var ymax = Number.MIN_VALUE;
+    var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
@@ -63,8 +63,6 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
         }
 
         var d;
-        var sum = 0;
-        var count = 0;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
@@ -133,36 +131,30 @@ dataDailyModelCycle = function (plotParams, plotFunction) {
             // set axis limits based on returned data
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
-                xmin = d.xmin;
-                ymin = d.ymin;
-                xmax = d.xmax;
-                ymax = d.ymax;
-                sum = d.sum;
-                count = d.x.length;
+                xmin = xmin < d.xmin ? xmin : d.xmin;
+                xmax = xmax > d.xmax ? xmax : d.xmax;
+                ymin = ymin < d.ymin ? ymin : d.ymin;
+                ymax = ymax > d.ymax ? ymax : d.ymax;
             }
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
-
-            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
-            xmin = d.xmin;
-            ymin = d.ymin;
-            xmax = d.xmax;
-            ymax = d.ymax;
-            sum = d.sum;
-            count = d.x.length;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const mean = sum / count;
+        const mean = d.sum / d.x.length;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
