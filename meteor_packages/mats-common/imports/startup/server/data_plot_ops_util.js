@@ -9,7 +9,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             pad: 4
         },
         zeroline: false,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
 
     layout['xaxis'] = {
@@ -73,7 +74,8 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
             pad: 4
         },
         zeroline: false,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
     layout['yaxis'] = {
         title: 'Pressure Level',
@@ -120,7 +122,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             pad: 4
         },
         zeroline: false,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
 
     layout['xaxis'] = {
@@ -184,7 +187,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             pad: 4
         },
         zeroline: false,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
 
     layout['xaxis'] = {
@@ -252,7 +256,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             pad: 4
         },
         zeroline: false,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
 
     layout['xaxis'] = {
@@ -361,7 +366,8 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         zeroline: false,
         bargap: 0.25,
         barmode: 'group',
-        hovermode: 'closest'
+        hovermode: 'closest',
+        showlegend: false
     };
 
     layout['xaxis'] = {
