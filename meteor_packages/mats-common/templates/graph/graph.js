@@ -394,16 +394,16 @@ Template.graph.events({
     },
     'click .preview': function () {
         var plotType = Session.get('plotType');
-        if (plotType !== matsTypes.PlotTypes.map) {
-            // store axes so current zoom is preserved
-            var axes = $("#placeholder").data().plot.getAxes();
-            var key = Session.get('plotResultKey');
-            matsMethods.setNewAxes.call({resultKey: key, axes: axes}, function (error) {
-                if (error !== undefined) {
-                    setError(error);
-                }
-            });
-        }
+        // if (plotType !== matsTypes.PlotTypes.map) {
+        //     // store axes so current zoom is preserved
+        //     var axes = $("#placeholder").data().plot.getAxes();
+        //     var key = Session.get('plotResultKey');
+        //     matsMethods.setNewAxes.call({resultKey: key, axes: axes}, function (error) {
+        //         if (error !== undefined) {
+        //             setError(error);
+        //         }
+        //     });
+        // }
         // open a new window with a standAlone graph of the current graph
         var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
         var w = h * 1.3;
