@@ -10,13 +10,14 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
     layout['xaxis'] = {
         title: 'Time',
-        titlefont: {color: '#000000'},
-        tickfont: {color: '#000000'},
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 12},
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free'};
@@ -40,8 +41,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 zeroline: false
             };
@@ -49,8 +50,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
@@ -75,12 +76,13 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         },
         zeroline: false,
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
     layout['yaxis'] = {
         title: 'Pressure Level',
-        titlefont: {color: '#000000'},
-        tickfont: {color: '#000000'},
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
         tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
         ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
         type: 'log',
@@ -102,8 +104,8 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         const axisObjectKey = axisIdx === 0 ? 'xaxis' : 'xaxis' + (axisIdx + 1);
         layout[axisObjectKey] = {
             title: axisLabel,
-            titlefont: {color: '#000000'},
-            tickfont: {color: '#000000'},
+            titlefont: {color: '#000000', size: 22},
+            tickfont: {color: '#000000', size: 14},
             // range: [xmin - xPad, xmax + xPad],
             zeroline: false
         };
@@ -123,13 +125,14 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
     layout['xaxis'] = {
         title: 'Forecast Hour',
-        titlefont: {color: '#000000'},
-        tickfont: {color: '#000000'}
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free'};
@@ -153,8 +156,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 zeroline: false
             };
@@ -162,8 +165,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
@@ -188,13 +191,14 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
     layout['xaxis'] = {
         title: 'Forecast Hour',
-        titlefont: {color: '#000000'},
-        tickfont: {color: '#000000'},
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
         tickvals: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0],
         ticktext: ["0.01", "0.10", "0.25", "0.50", "1.00", "1.50", "2.00", "3.00"],
         type: 'log',
@@ -222,8 +226,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 zeroline: false
             };
@@ -231,8 +235,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
@@ -257,13 +261,14 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
     layout['xaxis'] = {
         title: 'Forecast Hour',
-        titlefont: {color: '#000000'},
-        tickfont: {color: '#000000'},
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 14},
         tick0: 0,
         dtick: 1,
         range: [0, 23]
@@ -290,8 +295,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             axisObjectKey = 'yaxis';
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 zeroline: false
             };
@@ -299,8 +304,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             axisObjectKey = 'yaxis' + (axisIdx + 1);
             layout[axisObjectKey] = {
                 title: axisLabel,
-                titlefont: {color: '#000000'},
-                tickfont: {color: '#000000'},
+                titlefont: {color: '#000000', size: 22},
+                tickfont: {color: '#000000', size: 14},
                 range: [ymin - yPad, ymax + yPad],
                 anchor: axisAnchor[axisIdx],
                 overlaying: 'y',
@@ -367,6 +372,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         bargap: 0.25,
         barmode: 'group',
         hovermode: 'closest',
+        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
