@@ -584,6 +584,22 @@ const doCurveTextPatterns = function () {
 
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
@@ -640,6 +656,12 @@ const doPlotGraph = function () {
             graphFunction: "graphXYLine",
             dataFunction: "dataSeries",
             checked: true
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            graphFunction: "graphProfile",
+            dataFunction: "dataProfile",
+            checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
