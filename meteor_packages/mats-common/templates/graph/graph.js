@@ -14,8 +14,6 @@ import {
 var pageIndex = 0;
 var annotation = "";
 var errorTypes = {};
-var savedAxis = {};
-
 var openWindows = [];
 
 Template.graph.onCreated(function () {
@@ -68,10 +66,12 @@ Template.graph.helpers({
                 }
 
                 // save the original yaxis's and xaxis
+                var savedAxis = Session.get('savedAxis') === undefined ? {} : Session.get('savedAxis');
                 savedAxis['xaxis'] = options.xaxis;
-                forEach(Object.keys(options).filter(function(o){return o.startsWith("yaxis")}),function(yaxisKey){
+                Object.keys(options).filter(function(o){return o.startsWith("yaxis")}).forEach(function(yaxisKey){
                     savedAxis[yaxisKey] = options[yaxisKey];
                 });
+                Session.set('savedAxis',savedAxis);
                 $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
             }
             matsCurveUtils.hideSpinner();
@@ -162,7 +162,14 @@ Template.graph.helpers({
     },
     yAxes: function () {
         Session.get('PlotResultsUpDated');
-        return Object.keys(savedAxis).filter(function(axisKey){return axisKey.startsWith("yaxis")});
+        var savedAxis = Session.get('savedAxis');
+        if (savedAxis === undefined) {
+            return;
+        }
+        // create an array like [0,1,2...] for each unique yaxis
+        // by getting the yaxis keys - filtering them to be unique, then using an Array.apply on the resulting array
+        // to assign a number to each value
+        return Array.apply(null, {length:Object.keys(savedAxis).filter(function(k){return k.startsWith('yaxis')}).length}).map(Number.call, Number);
     },
     isMap: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.map)
@@ -579,12 +586,16 @@ Template.graph.events({
         var ylabels = [];
         var ymins = [];
         var ymaxs = [];
-//        var savedYAxis = Object.keys(savedAxis).map(function (key) {if (key.startsWith('yaxis')){return savedAxis[key];}});
+        var savedAxis = Session.get('savedAxis');
+        if (savedAxis === undefined) {
+            return;
+        }
+        var savedYAxis = Object.keys(savedAxis).map(function (key) {if (key.startsWith('yaxis')){return savedAxis[key];}});
 
-        for (yidx = 0; yidx < yAxisLength; yidx++) {
-            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
-            ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+        for (var yidx = 0; yidx < savedYAxis.length; yidx++) {
+            ylabels.push(document.getElementById("y" + yidx + "AxisLabel").value);
+            ymins.push(document.getElementById("y" + yidx + "AxisMin").value);
+            ymaxs.push(document.getElementById("y" + yidx + "AxisMax").value);
         }
 
         var xlabel = document.getElementById("xAxisLabel").value;
@@ -596,20 +607,20 @@ Template.graph.events({
             options.xaxis.title = xlabel;
         }
         if (xmin !== "" && options.xaxis) {
-            options.xaxis['range'] = options.xaxis['range'] === undefined ? [xmin,xmax] : ;
+            options.xaxis['range'] = options.xaxis['range'] === undefined ? [xmin,0] : [xmin, options.xaxis['range'][1]];
         }
         if (xmax !== "" && options.xaxis) {
             options.xaxis.range[1] = xmax;
         }
         for (yidx = 0; yidx < yAxisLength; yidx++) {
-            if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].axisLabel = ylabels[yidx];
+            if (ylabels[yidx] !== "" && options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)]) {
+                options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)].title = ylabels[yidx];
             }
-            if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].min = ymins[yidx];
+            if (ymins[yidx] !== "" && options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)]) {
+                options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)].min = ymins[yidx];sfsdfsfsdf
             }
-            if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].max = ymaxs[yidx];
+            if (ymaxs[yidx] !== "" && options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)]) {
+                options['yaxis' + yidx == 0 ? "" : Number(yidx + 1)].max = ymaxs[yidx];
             }
         }
         $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
