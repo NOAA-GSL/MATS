@@ -155,6 +155,11 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             di++;
         }
 
+        // enable error bars if matching and they aren't null
+        if (appParams.matching && data.error_y.array.filter(x => x).length > 0) {
+            data.error_y.visible = true;
+        }
+
         // get the overall stats for the text output - this uses the means not the stats.
         const stats = matsDataUtils.get_err(values, indVars);
         const filteredMeans = means.filter(x => x);
@@ -344,6 +349,11 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>errorbars: " + Number((data.x[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.sd * 1.96)).toPrecision(4);
 
             di++;
+        }
+
+        // enable error bars if matching and they aren't null
+        if (appParams.matching && data.error_x.array.filter(x => x).length > 0) {
+            data.error_x.visible = true;
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
