@@ -1,5 +1,7 @@
 // sets plot options for timeseries graphs
 const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) {
+    var xmin = moment(axisMap[Object.keys(axisMap)[0]].xmin).format("YYYY-MM-DD HH:mm");
+    var xmax = moment(axisMap[Object.keys(axisMap)[0]].xmax).format("YYYY-MM-DD HH:mm");
     var layout = {
         margin: {
             l: 60,
@@ -18,6 +20,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         title: 'Time',
         titlefont: {color: '#000000', size: 22},
         tickfont: {color: '#000000', size: 12},
+        range: [xmin,xmax]
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free'};
