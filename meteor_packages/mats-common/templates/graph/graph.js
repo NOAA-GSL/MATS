@@ -20,20 +20,9 @@ Template.graph.onCreated(function () {
     $(window).resize(function () {
         document.getElementById('placeholder').style.width = matsGraphUtils.width();
         document.getElementById('placeholder').style.height = matsGraphUtils.height();
-    });
-    $(document).keyup(function (event) {
-        if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
-            document.getElementById('graph-control').style.display = 'block';
-            document.getElementById('showAdministration').style.display = 'block';
-            document.getElementById('navbar').style.display = 'block';
-            document.getElementById('footnav').style.display = 'block';
-            var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-            for (var i = 0; i < ctbgElems.length; i++) {
-                ctbgElems[i].style.display = 'block';
-            }
-            document.getElementById('plotType').style.display = 'block';
-            Session.set("printMode", false);
-        }
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
     });
 });
 
@@ -564,9 +553,9 @@ Template.graph.events({
             };
             update.error_y.visible = !update.error_y.visible;
             if (dataset[myDataIdx].error_y.visible) {
-                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
-            } else {
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+            } else {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
             }
         }
         $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
@@ -584,9 +573,9 @@ Template.graph.events({
                 visible: !dataset[myDataIdx].visible
             };
             if (dataset[myDataIdx].visible) {
-                $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
-            } else {
                 $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
+            } else {
+                $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
             }
         }
         $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);

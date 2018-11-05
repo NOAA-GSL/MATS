@@ -28,11 +28,15 @@
                     <input type="button" class="barVisibility btn btn-primary"
                            value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bars"
                            style="display:{{barsShowHideDisplay}};background-color: {{this.color}}">
+                    <input type="button" class="annotateVisibility btn btn-primary"
+                           value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
+                           style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
                 </div>
             {{/each}}
             <hr/>
         </div>
         <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
+            <div id="legendContainer" name="legendContainer"></div>
             <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
                 {{! This is where flot will place the graph - there is nothing here when the page loads}}
             </div>
