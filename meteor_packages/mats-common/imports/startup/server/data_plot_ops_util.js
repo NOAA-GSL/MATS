@@ -1,7 +1,10 @@
+import {moment} from 'meteor/momentjs:moment'
+
 // sets plot options for timeseries graphs
 const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) {
     var xmin = moment(axisMap[Object.keys(axisMap)[0]].xmin).format("YYYY-MM-DD HH:mm");
     var xmax = moment(axisMap[Object.keys(axisMap)[0]].xmax).format("YYYY-MM-DD HH:mm");
+
     var layout = {
         margin: {
             l: 60,
