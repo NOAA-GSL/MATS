@@ -2,8 +2,8 @@ import {moment} from 'meteor/momentjs:moment'
 
 // sets plot options for timeseries graphs
 const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) {
-    var xmin = moment(axisMap[Object.keys(axisMap)[0]].xmin).format("YYYY-MM-DD HH:mm");
-    var xmax = moment(axisMap[Object.keys(axisMap)[0]].xmax).format("YYYY-MM-DD HH:mm");
+    var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
+    var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
 
     var layout = {
         margin: {
@@ -15,15 +15,14 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
     layout['xaxis'] = {
         title: 'Time',
         titlefont: {color: '#000000', size: 22},
-        tickfont: {color: '#000000', size: 12},
-        range: [xmin,xmax]
+        tickfont: {color: '#000000', size: 12}
     };
 
     const axisAnchor = {0: 'x', 1: 'x', 2: 'free', 3: 'free'};
@@ -40,8 +39,10 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
+        xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
+        xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
+        axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
             axisObjectKey = 'yaxis';
@@ -67,6 +68,10 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             };
         }
     }
+    const xPad = (xmax - xmin) * 0.05;
+    xmax = moment.utc(xmax + xPad).format("YYYY-MM-DD HH:mm");
+    xmin = moment.utc(xmin - xPad).format("YYYY-MM-DD HH:mm");
+    layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
 
@@ -82,7 +87,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
     layout['yaxis'] = {
@@ -121,6 +126,9 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
 
 // sets plot options for dieoff graphs
 const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) {
+    var xmin = axisMap[Object.keys(axisMap)[0]].xmin;
+    var xmax = axisMap[Object.keys(axisMap)[0]].xmax;
+
     var layout = {
         margin: {
             l: 60,
@@ -131,7 +139,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
@@ -155,8 +163,10 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
+        xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
+        xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
+        axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
             axisObjectKey = 'yaxis';
@@ -182,6 +192,10 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             };
         }
     }
+    const xPad = (xmax - xmin) * 0.05;
+    xmax = xmax + xPad;
+    xmin = xmin - xPad;
+    layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
 
@@ -197,7 +211,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
@@ -225,8 +239,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
+        axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
             axisObjectKey = 'yaxis';
@@ -267,7 +281,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         },
         zeroline: false,
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 
@@ -294,8 +308,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        axisLabel = axisMap[axisKey].axisLabel;
         const yPad = (ymax - ymin) * 0.05;
+        axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
             axisObjectKey = 'yaxis';
@@ -378,7 +392,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
         bargap: 0.25,
         barmode: 'group',
         hovermode: 'closest',
-        hoverlabel: {'font':{'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
 

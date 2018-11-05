@@ -598,41 +598,54 @@ Template.graph.events({
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
         event.preventDefault();
-        var options = Session.get('options');
+        var plotType = Session.get('plotType');
+        var newOpts = {};
         // get input axis limits and labels
+        $("input[id^=x][id$=AxisLabel]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
+            }
+        });
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
+            });
+            $("input[id^=x][id$=AxisMaxText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
+        } else {
+            $("input[id^=x][id$=AxisMin]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
+            });
+            $("input[id^=x][id$=AxisMax]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
+        }
         $("input[id^=y][id$=AxisLabel]").get().forEach(function (elem, index) {
-            if (options['yaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['yaxis' + (index === 0 ? "" : index + 1)].title = elem.value;
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
         $("input[id^=y][id$=AxisMin]").get().forEach(function (elem, index) {
-            if (options['yaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['yaxis' + (index === 0 ? "" : index + 1)].range[0] = elem.value;
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
             }
         });
         $("input[id^=y][id$=AxisMax]").get().forEach(function (elem, index) {
-            if (options['yaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['yaxis' + (index === 0 ? "" : index + 1)].range[1] = elem.value;
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
 
             }
         });
-        $("input[id^=x][id$=AxisLabel]").get().forEach(function (elem, index) {
-            if (options['xaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['xaxis' + (index === 0 ? "" : index + 1)].title = elem.value;
-            }
-        });
-        $("input[id^=x][id$=AxisMin]").get().forEach(function (elem, index) {
-            if (options['xaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['xaxis' + (index === 0 ? "" : index + 1)].range[0] = elem.value;
-            }
-        });
-        $("input[id^=x][id$=AxisMax]").get().forEach(function (elem, index) {
-            if (options['xaxis' + (index === 0 ? "" : index + 1)] && elem.value !== undefined && elem.value !== "") {
-                options['xaxis' + (index === 0 ? "" : index + 1)].range[1] = elem.value;
-            }
-        });
-        Plotly.relayout($("#placeholder")[0], options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        $("#placeholder").data().plot = Plotly.relayout($("#placeholder")[0], newOpts);
         $("#axisLimitModal").modal('hide');
     }
 });
