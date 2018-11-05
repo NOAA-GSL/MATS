@@ -127,6 +127,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             array: dataSeries.error_y,
             thickness: 1,     // set the thickness of the error bars
             color: curve['color'],
+            visible: false, // changed later if matching
             // width: 0
         }
     };
@@ -137,6 +138,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             name: label,
             yaxis: "y" + (axisNumber + 1),
             annotation: annotation,
+            annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
                 color: curve['color'],
@@ -145,6 +147,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             line: {
                 color: curve['color'],
             },
+            visible: true
         }, ...dataSeries
     };
 
@@ -189,6 +192,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             array: dataProfile.error_x,
             thickness: 1,     // set the thickness of the error bars
             color: curve['color'],
+            visible: false, // changed later if matching
             // width: 0
         }
     };
@@ -199,6 +203,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             name: label,
             yaxis: "y1",
             annotation: annotation,
+            annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
                 color: curve['color'],
@@ -207,6 +212,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             line: {
                 color: curve['color'],
             },
+            visible: true
         }, ...dataProfile
     };
 
@@ -252,13 +258,15 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
             curveId: label,
             name: label,
             annotation: annotation,
+            annotateColor: curve['color'],
             marker: {
                 color: curve['color'],
                 line: {
                     color: "rgb(0,0,0)"
                 }
             },
-            type: 'bar'
+            type: 'bar',
+            visible: true
         }, ...dataBars
     };
 
