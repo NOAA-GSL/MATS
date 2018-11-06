@@ -60,6 +60,11 @@ Template.graph.helpers({
                 $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
             }
             matsCurveUtils.hideSpinner();
+
+            // $("#placeholder").on('plotly_relayout', function(event){
+            //     console.log(event.target);
+            // });
+
         }
         return graphFunction;
     },
@@ -595,10 +600,17 @@ Template.graph.events({
         }
         annotation = $('#annotationContainer')[0].innerHTML;
     },
+    // add refresh button
+    'click #refresh-plot': function (event) {
+        event.preventDefault();
+        var options = Session.get('options');
+        $("#placeholder").data().plot = Plotly.relayout($("#placeholder")[0], options);
+    },
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
         event.preventDefault();
         var plotType = Session.get('plotType');
+        var options = Session.get('options');
         var newOpts = {};
         // get input axis limits and labels
         $("input[id^=x][id$=AxisLabel]").get().forEach(function (elem, index) {
@@ -636,16 +648,24 @@ Template.graph.events({
         });
         $("input[id^=y][id$=AxisMin]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
-                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                } else {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
             }
         });
         $("input[id^=y][id$=AxisMax]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
-                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
-
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                } else {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
             }
         });
         $("#placeholder").data().plot = Plotly.relayout($("#placeholder")[0], newOpts);
         $("#axisLimitModal").modal('hide');
     }
 });
+
