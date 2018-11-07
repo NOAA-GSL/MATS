@@ -64,6 +64,7 @@ Template.graph.helpers({
                 currentXMin = options.xaxis.range[0];
                 currentXMax = options.xaxis.range[1];
 
+                // if the layout changes, store the new x axis limits in case someone presses replot.
                 $("#placeholder")[0].on('plotly_relayout', function(eventdata){
                     currentXMin = eventdata['xaxis.range[0]'];
                     currentXMax = eventdata['xaxis.range[1]'];
