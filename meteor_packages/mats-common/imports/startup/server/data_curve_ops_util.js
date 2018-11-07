@@ -30,6 +30,7 @@ const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
         "name": "y = " + yValue.toString(),
         "mode": "lines",
         "x": [xmin, xmax],
+        "x_epoch": [xmin, xmax],
         "y": [yValue, yValue],
         "error_x": [null, null],
         "error_y": [null, null],

@@ -14,6 +14,8 @@ import {
 var pageIndex = 0;
 var annotation = "";
 var openWindows = [];
+var currentXMin = undefined;
+var currentXMax = undefined;
 
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
@@ -58,12 +60,16 @@ Template.graph.helpers({
                 $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
                 $("#legendContainer").empty();
                 $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
+
+                currentXMin = options.xaxis.range[0];
+                currentXMax = options.xaxis.range[1];
+
+                $("#placeholder")[0].on('plotly_relayout', function(eventdata){
+                    currentXMin = eventdata['xaxis.range[0]'];
+                    currentXMax = eventdata['xaxis.range[1]'];
+                });
             }
             matsCurveUtils.hideSpinner();
-
-            // $("#placeholder").on('plotly_relayout', function(event){
-            //     console.log(event.target);
-            // });
 
         }
         return graphFunction;
@@ -451,15 +457,17 @@ Template.graph.events({
         }
     },
     'click .replotZoomButton': function () {
-        var xaxisRange = $("#placeholder")[0].layout.xaxis.range;
-        var newDateRange = moment.utc(xaxisRange[0]).format('M/DD/YYYY HH:mm') + " - " + moment.utc(xaxisRange[0]).format('M/DD/YYYY HH:mm');
-        document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
-        var params = Session.get('params');
-        var actionId = "plotUnmatched";
-        if (params.plotAction === "matched") {
-            actionId = plotMatched;
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            var newDateRange = moment.utc(currentXMin).format('M/DD/YYYY HH:mm') + " - " + moment.utc(currentXMax).format('M/DD/YYYY HH:mm');
+            document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
+            var params = Session.get('params');
+            var actionId = "plotUnmatched";
+            if (params.plotAction === "matched") {
+                actionId = plotMatched;
+            }
+            document.getElementById("plot-curves").click();
         }
-        document.getElementById("plot-curves").click();
     },
     'click .curveVisibility': function (event) {
         event.preventDefault();

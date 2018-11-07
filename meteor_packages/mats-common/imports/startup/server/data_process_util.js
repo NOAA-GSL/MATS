@@ -189,6 +189,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
 
         if (appParams.plotType === matsTypes.PlotTypes.timeSeries || appParams.plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            data['x_epoch'] = data.x;
             data.x = data.x.map(function (val) {
                 return moment.utc(val).format("YYYY-MM-DD HH:mm");
             });

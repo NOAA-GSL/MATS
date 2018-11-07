@@ -222,7 +222,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         tickfont: {color: '#000000', size: 14},
         tickvals: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0],
         ticktext: ["0.01", "0.10", "0.25", "0.50", "1.00", "1.50", "2.00", "3.00"],
-        type: 'log',
+        // type: 'log',
         range: [0, 3]
     };
 

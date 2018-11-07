@@ -525,7 +525,7 @@ const saveResultData = function (result) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
         var key = hash(result.basis.plotParams);
-        var threshold = 1000000;
+        var threshold = 1100000;
         var ret = {};
         try {
             var dSize = sizeof(result.data);
@@ -538,14 +538,14 @@ const saveResultData = function (result) {
                 var downsampler = require("downsample-lttb");
                 var totalPoints = 0;
                 for (var di = 0; di < result.data.length; di++) {
-                    totalPoints += result.data[di].x.length;
+                    totalPoints += result.data[di].x_epoch.length;
                 }
                 var allowedNumberOfPoints = (threshold / dSize) * totalPoints;
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
                 for (var ci = 0; ci < result.data.length; ci++) {
                     var dsData = {};
-                    var xyDataset = result.data[ci].x.map(function (d,index) {
-                        return [result.data[ci].x[index],result.data[ci].y[index]];
+                    var xyDataset = result.data[ci].x_epoch.map(function (d,index) {
+                        return [result.data[ci].x_epoch[index],result.data[ci].y[index]];
                     });
                     var ratioTotalPoints = xyDataset.length / totalPoints;
                     var myAllowedPoints = Math.round(ratioTotalPoints * allowedNumberOfPoints);
@@ -560,11 +560,13 @@ const saveResultData = function (result) {
                         var nonArrayKeys = [];
                         var keys = Object.keys(result.data[ci]);
                         for (var ki = 0; ki < keys.length; ki++) {
-                            if (Array.isArray(result.data[ci][keys[ki]])) {
-                                arrayKeys.push(keys[ki]);
-                                dsData[keys[ki]] = [];
-                            } else {
-                                nonArrayKeys.push(keys[ki]);
+                            if (keys[ki] !== 'x_epoch') {
+                                if (Array.isArray(result.data[ci][keys[ki]])) {
+                                    arrayKeys.push(keys[ki]);
+                                    dsData[keys[ki]] = [];
+                                } else {
+                                    nonArrayKeys.push(keys[ki]);
+                                }
                             }
                         }
                         // We only ever downsample series plots - never profiles and series plots only ever have error_y arrays.
@@ -576,7 +578,7 @@ const saveResultData = function (result) {
                         // remove the original error_y array data.
                         dsData['error_y'].array = [];
                         for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
-                            while (originalIndex < result.data[ci].x.length && (result.data[ci].x[originalIndex] < downsampledSeries[dsi][0])) {
+                            while (originalIndex < result.data[ci].x_epoch.length && (result.data[ci].x_epoch[originalIndex] < downsampledSeries[dsi][0])) {
                                 originalIndex++;
                             }
                             // capture the stuff related to this downSampled data point (downSampled data points are always a subset of original data points)
@@ -599,6 +601,11 @@ const saveResultData = function (result) {
                 ret = {key: key, result: result};
             }
             // save original dataset
+            if (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle) {
+                for (var ci = 0; ci < result.data.length; ci++) {
+                    delete(result.data[ci]['x_epoch']);     // we only needed this as an index for downsampling
+                }
+            }
             matsCache.storeResult(key,{"createdAt": new Date(), key: key, result: result});
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
@@ -1308,7 +1315,7 @@ const getGraphData = new ValidatedMethod({
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
-                    return ret;
+                    return;
                 }
             } catch (dataFunctionError) {
                 if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
