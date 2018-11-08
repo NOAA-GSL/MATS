@@ -43,11 +43,15 @@ Template.graph.helpers({
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
             Session.set('options', options);
+            $("#legendContainer").empty();
+            $("#placeholder").empty();
             if (dataset === undefined) {
-                $("#legendContainer").empty();
-                $("#placeholder").empty();
                 return false;
             }
+
+            // initial plot
+            $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+
             if (plotType !== matsTypes.PlotTypes.map) {
                 // append annotations
                 annotation = "";
@@ -56,22 +60,17 @@ Template.graph.helpers({
                         annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                     }
                 }
-                // initial plot
-                $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
-                $("#legendContainer").empty();
                 $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
 
+                // if the layout changes, store the new x axis limits in case someone presses replot.
                 currentXMin = options.xaxis.range[0];
                 currentXMax = options.xaxis.range[1];
-
-                // if the layout changes, store the new x axis limits in case someone presses replot.
-                $("#placeholder")[0].on('plotly_relayout', function(eventdata){
+                $("#placeholder")[0].on('plotly_relayout', function (eventdata) {
                     currentXMin = eventdata['xaxis.range[0]'];
                     currentXMax = eventdata['xaxis.range[1]'];
                 });
             }
             matsCurveUtils.hideSpinner();
-
         }
         return graphFunction;
     },
@@ -159,18 +158,19 @@ Template.graph.helpers({
     },
     yAxes: function () {
         Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
         // create an array like [0,1,2...] for each unique yaxis
         // by getting the yaxis keys - filtering them to be unique, then using an Array.apply on the resulting array
         // to assign a number to each value
         var yaxis = {};
-        if ($("#placeholder")[0] === undefined) {
+        if ($("#placeholder")[0] === undefined || plotType === matsTypes.PlotTypes.map) {
             return;
         }
         Object.keys($("#placeholder")[0].layout).filter(function (k) {
             if (k.startsWith('yaxis')) {
                 yaxis[k] = $("#placeholder")[0].layout[k];
             }
-        })
+        });
         return Array.apply(null, {length: Object.keys(yaxis).length}).map(Number.call, Number);
     },
     isMap: function () {

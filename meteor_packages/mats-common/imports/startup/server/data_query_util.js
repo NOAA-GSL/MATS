@@ -251,9 +251,19 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
     }
 };
 
-const queryMapDB = function (pool, statement) {
+const queryMapDB = function (pool, statement, d) {
     if (Meteor.isServer) {
-        var d = [];  // d will contain the curve data
+        if (d === undefined) {
+            d = {
+                siteName: [],
+                queryVal: [],
+                lat: [],
+                lon: [],
+                color: [],
+                stats: [],
+                text: []
+            };  // d will contain the curve data
+        }
         var error = "";
         const Future = require('fibers/future');
         var pFuture = new Future();
@@ -264,13 +274,23 @@ const queryMapDB = function (pool, statement) {
             } else if (rows === undefined || rows === null || rows.length === 0) {
                 error = matsTypes.Messages.NO_DATA_FOUND;
             } else {
+                var queryVal;
                 for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    var siteName = rows[rowIndex].sta_name;
-                    var N_times = rows[rowIndex].N_times;
-                    var min_time = rows[rowIndex].min_time;
-                    var max_time = rows[rowIndex].max_time;
-                    var model_diff = rows[rowIndex].model_ob_diff;
-                    d.push([siteName, N_times, min_time, max_time, model_diff]);
+                    queryVal = rows[rowIndex].model_ob_diff;
+                    d.siteName.push(rows[rowIndex].sta_name);
+                    d.queryVal.push(queryVal);
+                    d.stats.push({
+                        N_times: rows[rowIndex].N_times,
+                        min_time: rows[rowIndex].min_time,
+                        max_time: rows[rowIndex].max_time
+                    });
+                    if (queryVal <= -1) {
+                        d.color.push("rgb(0,0,255)");
+                    } else if (queryVal >= 1) {
+                        d.color.push("rgb(255,0,0)");
+                    } else {
+                        d.color.push("rgb(0,0,0)");
+                    }
                 }// end of loop row
             }
             // done waiting - have results

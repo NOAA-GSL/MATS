@@ -29,14 +29,10 @@ const getDataForCurve = function (curve) {
     if (matsCurveUtils.getPlotResultData() === null) {
         return [];
     }
-    if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-        return matsCurveUtils.getPlotResultData();
+    if (Session.get("plotType") === matsTypes.PlotTypes.scatter2d) {
+        return matsCurveUtils.getPlotResultData()[curve.label];
     } else {
-        if (Session.get("plotType") === matsTypes.PlotTypes.scatter2d) {
-            return matsCurveUtils.getPlotResultData()[curve.label];
-        } else {
-            return matsCurveUtils.getPlotResultData().data[curve.label];
-        }
+        return matsCurveUtils.getPlotResultData().data[curve.label];
     }
 };
 
@@ -343,14 +339,6 @@ Template.textOutput.helpers({
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.map:
-                line += "<td>" + curve['label'] + "</td>" +
-                    "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['standard deviation'] != undefined && stats['standard deviation'] !== null ? stats['standard deviation'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['n']).toString() + "</td>" +
-                    "<td>" + (stats['standard error'] != undefined && stats['standard error'] != null ? stats['standard error'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['lag1'] != undefined && stats['lag1'] != null ? stats['lag1'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['minimum'] != undefined && stats['minimum'] != null ? stats['minimum'].toPrecision(4) : "undefined").toString() + "</td>" +
-                    "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 line += "<td>" + curve['label'] + "</td>" +

@@ -806,7 +806,7 @@ var doCurveTextPatterns = function () {
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time", "truth"
             ],
-            groupSize: 4
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
@@ -873,7 +873,7 @@ var doCurveTextPatterns = function () {
             displayParams: [
                 "data-source", "sites", "variable", "forecast-length", "valid-time"
             ],
-            groupSize: 4
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.histogram,

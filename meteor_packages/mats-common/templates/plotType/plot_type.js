@@ -55,6 +55,15 @@ Template.plotType.events({
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }
@@ -106,6 +115,15 @@ Template.plotType.events({
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -159,6 +177,15 @@ Template.plotType.events({
                     if (!curves[ci]['dieoff-forecast-length'] && matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) && matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}).default) {
                         curves[ci]['dieoff-forecast-length'] = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}).default;
                     }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }
@@ -207,6 +234,15 @@ Template.plotType.events({
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -257,6 +293,15 @@ Template.plotType.events({
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
                     }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
+                    }
                 }
                 Session.set('Curves', curves);
             }
@@ -302,6 +347,15 @@ Template.plotType.events({
                     }
                     if (!curves[ci]['utc-cycle-start'] && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}) && matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default) {
                         curves[ci]['utc-cycle-start'] = matsCollections.CurveParams.findOne({name: 'utc-cycle-start'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
                 }
                 Session.set('Curves', curves);
@@ -400,6 +454,15 @@ Template.plotType.events({
                     }
                     if (!curves[ci]['forecast-length'] && matsCollections.CurveParams.findOne({name: 'forecast-length'}) && matsCollections.CurveParams.findOne({name: 'forecast-length'}).default) {
                         curves[ci]['forecast-length'] = matsCollections.CurveParams.findOne({name: 'forecast-length'}).default;
+                    }
+                    if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
+                        curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
+                    }
+                    if (!curves[ci]['statistic'] && matsCollections.CurveParams.findOne({name: 'statistic'}) && matsCollections.CurveParams.findOne({name: 'statistic'}).default) {
+                        curves[ci]['statistic'] = matsCollections.CurveParams.findOne({name: 'statistic'}).default;
+                    }
+                    if (!curves[ci]['truth'] && matsCollections.CurveParams.findOne({name: 'truth'}) && matsCollections.CurveParams.findOne({name: 'truth'}).default) {
+                        curves[ci]['truth'] = matsCollections.CurveParams.findOne({name: 'truth'}).default;
                     }
                     if (!curves[ci]['histogram-bin-controls'] && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}) && matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default) {
                         curves[ci]['histogram-bin-controls'] = matsCollections.CurveParams.findOne({name: 'histogram-bin-controls'}).default;

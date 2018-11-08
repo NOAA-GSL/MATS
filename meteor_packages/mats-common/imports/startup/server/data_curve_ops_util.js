@@ -274,27 +274,28 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, curveIndex, dataSeries, sitePlot) {
+const generateMapCurveOptions = function (curve, dataSeries) {
+
+    const markerSizes = dataSeries.queryVal.map(function (val) {
+        return Math.abs(val * 10);
+    });
 
     const label = curve['label'];
-    const annotation = curve['annotation'];
-    const pointSymbol = getPointSymbol(curveIndex);
 
     const curveOptions = {
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        sites: sitePlot,
-        points: {
-            symbol: pointSymbol,
-            fillColor: curve['color'],
-            show: true,
-            errorbars: "y",
-        },
-        lines: {show: true, fill: false}
+        ...{
+            label: label,
+            type: 'scattermapbox',
+            mode: 'markers',
+            marker: {
+                color: dataSeries.color,
+                size: markerSizes,
+                opacity: 1
+            }
+        }, ...dataSeries
     };
+
+    delete curveOptions.color;
 
     return curveOptions;
 };

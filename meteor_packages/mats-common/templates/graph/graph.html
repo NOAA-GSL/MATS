@@ -68,73 +68,75 @@
             </div>
             <!-- /.modal-dialog -->
         </div>
-        <div id="axisLimitModal" class="modal container" role="dialog">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Select axis limits and labels: </h3>
-                        <h4>* Leave a field blank to preserve its original value. </h4>
-                        <h4>* Only data from your original time range has been queried and is available to plot. </h4>
-                    </div>
-                    <div class="modal-body">
-                        <div id="xAxisCustomControls" style="display:block;">
-                            <div class="row">
-                                <label class="col-sm-2">X label: </label>
-                                <input id="xAxisLabel" class="y-axis-label data-input textInput col-sm-3" type="text" value="" name="xAxisLabel"/>
-                            </div>
-                            <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
-                                <div class="row">
-                                    <label class="col-sm-2">X_min: </label>
-                                    <input id="xAxisMin" class="x-axis-min data-input numberInput col-sm-3" type="number" value="" name="xAxisMin"/>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-2">X_max: </label>
-                                    <input id="xAxisMax" class="x-axis-max data-input numberInput col-sm-3" type="number" value="" name="xAxisMax"/>
-                                </div>
-                            </div>
-                            <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
-                                <div class="row">
-                                    <label class="col-sm-2">X_min: </label>
-                                    <input id="xAxisMinText" class="x-axis-min data-input textInput col-sm-3" type="text" value="" name="xAxisMinText"/>
-                                    <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-2">X_max: </label>
-                                    <input id="xAxisMaxText" class="x-axis-max data-input textInput col-sm-3" type="text" value="" name="xAxisMaxText"/>
-                                    <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                </div>
-                            </div>
+        {{#if isMap}}
+            <div id="axisLimitModal" class="modal container" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select axis limits and labels: </h3>
+                            <h4>* Leave a field blank to preserve its original value. </h4>
+                            <h4>* Only data from your original time range has been queried and is available to plot. </h4>
                         </div>
-                        {{#each yAxis in yAxes}}
-                            <div><br></div>
-                            <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
+                        <div class="modal-body">
+                            <div id="xAxisCustomControls" style="display:block;">
                                 <div class="row">
-                                    <label class="col-sm-2">Y{{yAxis}} label: </label>
-                                    <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
+                                    <label class="col-sm-2">X label: </label>
+                                    <input id="xAxisLabel" class="y-axis-label data-input textInput col-sm-3" type="text" value="" name="xAxisLabel"/>
                                 </div>
-                                <div id="yAxisControlsNumber" style="display:block;">
+                                <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
                                     <div class="row">
-                                        <label class="col-sm-2">Y{{yAxis}}_min: </label>
-                                        <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                        <label class="col-sm-2">X_min: </label>
+                                        <input id="xAxisMin" class="x-axis-min data-input numberInput col-sm-3" type="number" value="" name="xAxisMin"/>
                                     </div>
                                     <div class="row">
-                                        <label class="col-sm-2">Y{{yAxis}}_max: </label>
-                                        <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                        <label class="col-sm-2">X_max: </label>
+                                        <input id="xAxisMax" class="x-axis-max data-input numberInput col-sm-3" type="number" value="" name="xAxisMax"/>
+                                    </div>
+                                </div>
+                                <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
+                                    <div class="row">
+                                        <label class="col-sm-2">X_min: </label>
+                                        <input id="xAxisMinText" class="x-axis-min data-input textInput col-sm-3" type="text" value="" name="xAxisMinText"/>
+                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-sm-2">X_max: </label>
+                                        <input id="xAxisMaxText" class="x-axis-max data-input textInput col-sm-3" type="text" value="" name="xAxisMaxText"/>
+                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
                                     </div>
                                 </div>
                             </div>
-                        {{/each}}
+                            {{#each yAxis in yAxes}}
+                                <div><br></div>
+                                <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
+                                    <div class="row">
+                                        <label class="col-sm-2">Y{{yAxis}} label: </label>
+                                        <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
+                                    </div>
+                                    <div id="yAxisControlsNumber" style="display:block;">
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_min: </label>
+                                            <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_max: </label>
+                                            <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            {{/each}}
+                        </div>
+                        <div class="modal-footer btn-group">
+                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
+                            <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
+                            </button>
+                        </div>
                     </div>
-                    <div class="modal-footer btn-group">
-                        <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
-                        <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
-                        </button>
-                    </div>
+                    <!-- /.modal-content -->
                 </div>
-                <!-- /.modal-content -->
+                <!-- /.modal-dialog -->
             </div>
-            <!-- /.modal-dialog -->
-        </div>
+        {{/if}}
         <div id="curves" class="row">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
@@ -162,20 +164,12 @@
         <div id="textView" style="display:none;">
             {{>textOutput}}
         </div>
-        {{#if isMap}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
+        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
+            <div id="legendContainer" name="legendContainer"></div>
+            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
+                {{! This is where flot will place the graph - there is nothing here when the page loads}}
             </div>
-        {{else}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
-                <div id="legendContainer" name="legendContainer"></div>
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
-            </div>
-        {{/if}}
+        </div>
         <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error
             Bars show 95% confidence</h5>
     </div>

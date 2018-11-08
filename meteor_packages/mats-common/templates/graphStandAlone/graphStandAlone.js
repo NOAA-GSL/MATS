@@ -73,19 +73,25 @@ Template.GraphStandAlone.helpers({
                 var plotType = Session.get('plotType');
                 var dataset = matsCurveUtils.getGraphResult().data;
                 var options = matsCurveUtils.getGraphResult().options;
+                $("#legendContainer").empty();
+                $("#placeholder").empty();
                 if (dataset === undefined) {
-                    $("#legendContainer").empty();
-                    $("#placeholder").empty();
                     return false;
                 }
-                if (plotType !== matsTypes.PlotTypes.map) {
-                    // make sure to capture the options (layout) from the old graph - which were stored in graph.js
-                    matsMethods.getLayout.call({resultKey: key,}, function (error, ret) {
-                        if (error !== undefined) {
-                            setError(error);
-                            return false;
-                        }
-                        options = ret.layout;
+                // make sure to capture the options (layout) from the old graph - which were stored in graph.js
+                matsMethods.getLayout.call({resultKey: key,}, function (error, ret) {
+                    if (error !== undefined) {
+                        setError(error);
+                        return false;
+                    }
+                    options = ret.layout;
+                    if (plotType === matsTypes.PlotTypes.map) {
+                        options.mapbox.zoom = 2.75;
+                    }
+                    // initial plot
+                    $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+
+                    if (plotType !== matsTypes.PlotTypes.map) {
                         // append annotations
                         annotation = "";
                         for (var i = 0; i < dataset.length; i++) {
@@ -93,13 +99,10 @@ Template.GraphStandAlone.helpers({
                                 annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                             }
                         }
-                        // initial plot
-                        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
-                        $("#legendContainer").empty();
                         $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
-                        document.getElementById("gsaSpinner").style.display = "none";
-                    });
-                }
+                    }
+                    document.getElementById("gsaSpinner").style.display = "none";
+                });
             }
         });
     },

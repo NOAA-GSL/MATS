@@ -29,35 +29,13 @@ Template.map.onRendered(function () {
         minZoom: minZoomLevel,
         maxZoom: maxZoomLevel,
         wheelPxPerZoomLevel: 3
-      //  drawControl: true
     }).setView(defaultPoint, defaultZoomLevel);
-    // visit https://leaflet-extras.github.io/leaflet-providers/preview/ if you want to choose something different
-//    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
-//        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
-//        maxZoom: 16}).addTo(map);
-//    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}.{ext}', {
-//        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-//        subdomains: 'abcd',
-//        minZoom: 0,
-//        maxZoom: 20,
-//        ext: 'png'
-//    }).addTo(map);
-//    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-//        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-//        maxZoom: 16
-//    }).addTo(map);
+
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
         maxZoom: 13
     }).addTo(map);
-    //var drawnItems = new L.FeatureGroup();
-   // map.addLayer(drawnItems);
-   // var drawControl = new L.Control.Draw({
-    //    edit: {
-    //        featureGroup: drawnItems
-    //    }
-   // });
-   // map.addControl(drawControl);
+
     L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
     if (!markerFeatures) {
         markerFeatures = {};

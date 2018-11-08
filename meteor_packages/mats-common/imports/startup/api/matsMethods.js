@@ -150,7 +150,7 @@ const getPagenatedData = function (rky, p, np) {
         try {
             var result = matsCache.getResult(key);
             rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something,createdAt:date, result:resultObject}
-         } catch (e) {
+        } catch (e) {
             console.log("getPagenatedData: Error - ", e);
             return undefined;
         }
@@ -387,25 +387,25 @@ const getFlattenedResultData = function (rk, p, np) {
                     }
                     break;
                 case matsTypes.PlotTypes.map:
-                    var returnData = [];  // array of maps
-                    /*
-                        returnData = [
-                                         {siteName:aSiteName, number of times:number, start date: date, end date:date, average difference: number},
-                                         {siteName:aDifferentSiteName, number of times:number, start date: date, end date:date, average difference: number},
-                                          ...
-                                     ]
-                     */
-                    // maps only have one curve - an array of sites
-                    var mData = data[0].data;
-                    for (var si = 0; si < mData.length; si++) {
-                        var elem = {};
-                        elem['Site Name'] = mData[si][0][0];
-                        elem['Number of Times'] = mData[si][0][1];
-                        elem['Start Date'] = moment.utc(Number(mData[si][0][2]) * 1000).format('YYYY-MM-DD HH:mm');
-                        elem['End Date'] = moment.utc(Number(mData[si][0][3]) * 1000).format('YYYY-MM-DD HH:mm');
-                        elem['Average Difference'] = mData[si][0][4];
-                        returnData.push(elem);
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of maps
+
+                    var stats = {};
+                    stats['label'] = data[0].label;
+                    returnData.stats[data[0].label] = stats;
+
+                    var curveData = [];  // map of maps
+                    for (var si = 0; si < data[0].siteName.length; si++) {
+                        var curveDataElement = {};
+                        curveDataElement['Site Name'] = data[0].siteName[si];
+                        curveDataElement['Number of Times'] = data[0].stats[si].N_times;
+                        curveDataElement['Start Date'] = moment.utc((data[0].stats[si].min_time) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveDataElement['End Date'] = moment.utc((data[0].stats[si].max_time) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveDataElement['Average Difference'] = data[0].queryVal[si];
+                        curveData.push(curveDataElement);
                     }
+                    returnData.data[data[0].label] = curveData;
                     break;
                 case matsTypes.PlotTypes.histogram:
                     var returnData = {};
@@ -544,8 +544,8 @@ const saveResultData = function (result) {
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
                 for (var ci = 0; ci < result.data.length; ci++) {
                     var dsData = {};
-                    var xyDataset = result.data[ci].x_epoch.map(function (d,index) {
-                        return [result.data[ci].x_epoch[index],result.data[ci].y[index]];
+                    var xyDataset = result.data[ci].x_epoch.map(function (d, index) {
+                        return [result.data[ci].x_epoch[index], result.data[ci].y[index]];
                     });
                     var ratioTotalPoints = xyDataset.length / totalPoints;
                     var myAllowedPoints = Math.round(ratioTotalPoints * allowedNumberOfPoints);
@@ -572,7 +572,7 @@ const saveResultData = function (result) {
                         // We only ever downsample series plots - never profiles and series plots only ever have error_y arrays.
                         // This is a little hacky but what is happening is we putting error_y.array on the arrayKeys list so that it gets its
                         // downsampled equivalent values.
-                        for (ki=0; ki < nonArrayKeys.length; ki++) {
+                        for (ki = 0; ki < nonArrayKeys.length; ki++) {
                             dsData[nonArrayKeys[ki]] = result.data[ci][nonArrayKeys[ki]];
                         }
                         // remove the original error_y array data.
@@ -582,7 +582,7 @@ const saveResultData = function (result) {
                                 originalIndex++;
                             }
                             // capture the stuff related to this downSampled data point (downSampled data points are always a subset of original data points)
-                            for (ki=0; ki < arrayKeys.length; ki++) {
+                            for (ki = 0; ki < arrayKeys.length; ki++) {
                                 dsData[arrayKeys[ki]][dsi] = result.data[ci][arrayKeys[ki]][originalIndex];
                             }
                             dsData['error_y']['array'][dsi] = result.data[ci]['error_y']['array'][originalIndex];
@@ -606,7 +606,7 @@ const saveResultData = function (result) {
                     delete(result.data[ci]['x_epoch']);     // we only needed this as an index for downsampling
                 }
             }
-            matsCache.storeResult(key,{"createdAt": new Date(), key: key, result: result});
+            matsCache.storeResult(key, {"createdAt": new Date(), key: key, result: result});
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
                 throw new Meteor.Error(+": Requesting too much data... try averaging");
@@ -1311,7 +1311,7 @@ const getGraphData = new ValidatedMethod({
                     } else {
                         ret = results;  // {key:someKey, createdAt:date, result:resultObject}
                         // refresh expire time? I only know how to re - set the item
-                        matsCache.storeResult(results.key,results);
+                        matsCache.storeResult(results.key, results);
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
@@ -1377,7 +1377,7 @@ const saveSettings = new ValidatedMethod({
     run(params) {
         var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
-            created:moment().format("MM/DD/YYYY HH:mm:ss"),
+            created: moment().format("MM/DD/YYYY HH:mm:ss"),
             name: params.saveAs,
             data: params.p,
             owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
@@ -1539,7 +1539,7 @@ const getReleaseNotes = new ValidatedMethod({
     }
 });
 
-const saveLayout= new ValidatedMethod({
+const saveLayout = new ValidatedMethod({
     name: 'matsMethods.saveLayout',
     validate: new SimpleSchema({
         resultKey: {

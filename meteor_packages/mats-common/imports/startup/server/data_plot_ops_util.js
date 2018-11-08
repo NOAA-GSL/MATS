@@ -340,38 +340,29 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
 };
 
 // sets plot options for map graphs
-const generateMapPlotOptions = function (dataset, curves) {
+const generateMapPlotOptions = function () {
     const options = {
-        labels: {
-            show: true
-        },
-        map: {
-            points: {
-                show: true
+        autosize: true,
+        hovermode: 'closest',
+        mapbox: {
+            bearing: 0,
+            center: {
+                lat: 39.834,
+                lon: -98.604
             },
-            shadowSize: 0
+            pitch: 0,
+            zoom: 3.25,
+            accesstoken: 'pk.eyJ1IjoibWF0cy1nc2QiLCJhIjoiY2pvN2l1N2MyMG9xdTN3bWR3ODV5a2E2ZiJ9.PtgcGhxaoD43N0OwJSNVMg',
+            style: 'light'
         },
-        zoom: {
-            interactive: false
+        margin: {
+            l: 30,
+            r: 30,
+            b: 40,
+            t: 10,
+            pad: 4
         },
-        pan: {
-            interactive: false
-        },
-        selection: {
-            mode: "xy"
-        },
-        grid: {
-            hoverable: true,
-            borderWidth: 3,
-            mouseActiveRadius: 50,
-            backgroundColor: "white",
-            axisMargin: 20
-        },
-        tooltip: true,
-        tooltipOpts: {
-            // the ct value is the last element of the data series for profiles. This is the tooltip content.
-            content: "<span style='font-size:75%'><strong>%ct</strong></span>"
-        }
+        showlegend: false,
     };
     return options;
 };
