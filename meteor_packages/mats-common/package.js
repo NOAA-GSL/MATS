@@ -175,12 +175,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/graphStandAlone/graphStandAlone.html", "client");
     api.addFiles("templates/graphStandAlone/graphStandAlone.js", "client");
 
-    api.addFiles("templates/graph/displayFunctions/graph_xy_line.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_histogram.js", "client");
-
+    api.addFiles("templates/graph/displayFunctions/graph_plotly.js", "client");
 
     api.addFiles("templates/common/text_input.html", "client");
     api.addFiles("templates/common/text_input.js", "client");

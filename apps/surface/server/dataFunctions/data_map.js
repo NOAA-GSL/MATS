@@ -112,7 +112,8 @@ dataMap = function (plotParams, plotFunction) {
                 var tooltips = site +
                     "<br>" + "variable: " + variable +
                     "<br>" + "model: " + dataSource +
-                    "<br>" + "model-obs: " + d.queryVal[siteIndex] + " " + varUnits;
+                    "<br>" + "model-obs: " + d.queryVal[siteIndex] + " " + varUnits +
+                    "<br>" + "n: " + d.stats[siteIndex].N_times;
 
                 d.text.push(tooltips);
 

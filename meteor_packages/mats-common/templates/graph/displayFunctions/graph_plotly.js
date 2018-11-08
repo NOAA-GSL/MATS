@@ -3,7 +3,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
 import {matsGraphUtils} from 'meteor/randyp:mats-common';
 
-graphMap = function (key) {
+graphPlotly = function (key) {
     // get plot info
     var route = Session.get('route');
 
@@ -12,10 +12,16 @@ graphMap = function (key) {
     if (resultSet === null || resultSet === undefined || resultSet.data === undefined) {
         return false;
     }
-    var options = resultSet.options;
 
     //set options
+    var options = resultSet.options;
     if (route !== undefined && route !== "") {
         options.selection = [];
+    }
+
+    // initialize show/hide button labels
+    if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
+        var dataset = resultSet.data;
+        matsGraphUtils.setNoDataLabels(dataset);
     }
 };

@@ -912,37 +912,37 @@ var doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDailyModelCycle",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.map,
-            graphFunction: "graphMap",
+            graphFunction: "graphPlotly",
             dataFunction: "dataMap",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
-            graphFunction: "graphHistogram",
+            graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
             checked: false
         });
