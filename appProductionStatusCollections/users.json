@@ -57,15 +57,9 @@
       "loginTokens": [
         {
           "when": {
-            "$date": "2018-10-29T21:05:15.577+0000"
+            "$date": "2018-07-27T23:00:14.104+0000"
           },
-          "hashedToken": "AR4IRw6QwJvxMRjEIxX/UL3NP6IED+yRpykohT7ah3A="
-        },
-        {
-          "when": {
-            "$date": "2018-10-29T21:05:15.828+0000"
-          },
-          "hashedToken": "9SjU8kDibxEZwsm6O4goxsfkJvd+ukCA+a9h265Gre0="
+          "hashedToken": "+7GTtGo1yQqYvMBwe5RcefDyBeTtW2rByD6gryOElAY="
         }
       ]
     }
