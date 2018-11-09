@@ -393,6 +393,20 @@ const getFlattenedResultData = function (rk, p, np) {
 
                     var stats = {};
                     stats['label'] = data[0].label;
+                    stats['total number of obs'] = data[0].stats.reduce(function(prev, curr) {
+                        return prev + curr.N_times;
+                    }, 0);
+                    stats['mean difference'] = matsDataUtils.average(data[0].queryVal);
+                    stats['standard deviation'] = matsDataUtils.stdev(data[0].queryVal);
+                    stats['minimum time'] = data[0].stats.reduce(function (prev, curr) {
+                        return (prev < curr.min_time ? prev : curr.min_time);
+                    });
+                    stats['minimum time'] = moment.utc(stats['minimum time'] * 1000).format('YYYY-MM-DD HH:mm');
+                    stats['maximum time'] = data[0].stats.reduce(function (prev, curr) {
+                        return (prev > curr.max_time ? prev : curr.max_time);
+                    });
+                    stats['maximum time'] = moment.utc(stats['maximum time'] * 1000).format('YYYY-MM-DD HH:mm');
+
                     returnData.stats[data[0].label] = stats;
 
                     var curveData = [];  // map of maps

@@ -86,6 +86,18 @@ const average = function (data) {
     return avg;
 };
 
+//utility for calculating the stdev of an array
+const stdev = function (data) {
+    var avg = average(data);
+    var squareDiffs = data.map(function(value){
+        var diff = value - avg;
+        return diff * diff;
+    });
+    var avgSquareDiff = average(squareDiffs);
+    var stdDev = Math.sqrt(avgSquareDiff);
+    return stdDev;
+};
+
 //this function makes sure date strings are in the correct format
 const dateConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
@@ -848,6 +860,7 @@ export default matsDataUtils = {
     arraysEqual: arraysEqual,
     findArrayInSubArray: findArrayInSubArray,
     average: average,
+    stdev: stdev,
     dateConvert: dateConvert,
     getDateRange: getDateRange,
     secsConvert: secsConvert,

@@ -46,8 +46,8 @@ Template.textOutput.onRendered(function () {
 });
 
 Template.textOutput.helpers({
-    notMapOrScatter: function () {
-        return Session.get("plotType") !== matsTypes.PlotTypes.map && Session.get("plotType") !== matsTypes.PlotTypes.scatter2d;
+    notScatter: function () {
+        return Session.get("plotType") !== matsTypes.PlotTypes.scatter2d;
     },
 
     // get the table header for the summary stats at the top of the text page
@@ -80,8 +80,12 @@ Template.textOutput.helpers({
                 // no stat for scatter
                 break;
             case matsTypes.PlotTypes.map:
-                // no stat header
-                header = "";
+                header += "<th>label</th>\
+                    <th>mean</th>\
+                    <th>standard deviation</th>\
+                    <th>n</th>\
+                    <th>minimum time</th>\
+                    <th>maximum time</th>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 header += "<th>label</th>\
@@ -339,6 +343,12 @@ Template.textOutput.helpers({
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.map:
+                line += "<td>" + curve['label'] + "</td>" +
+                    "<td>" + (stats['mean difference'] != undefined && stats['mean difference'] !== null ? stats['mean difference'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['standard deviation'] != undefined && stats['standard deviation'] !== null ? stats['standard deviation'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['total number of obs'] != undefined && stats['total number of obs'] !== null ? stats['total number of obs'] : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['minimum time'] != undefined && stats['minimum time'] != null ? stats['minimum time'] : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['maximum time'] != undefined && stats['maximum time'] != null ? stats['maximum time'] : "undefined").toString() + "</td>";
                 break;
             case matsTypes.PlotTypes.histogram:
                 line += "<td>" + curve['label'] + "</td>" +
