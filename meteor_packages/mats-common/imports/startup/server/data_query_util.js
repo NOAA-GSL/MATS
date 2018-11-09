@@ -251,7 +251,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
     }
 };
 
-const queryMapDB = function (pool, statement, d) {
+const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource, variable, varUnits, site, siteIndex, siteMap) {
     if (Meteor.isServer) {
         if (d === undefined) {
             d = {
@@ -263,6 +263,33 @@ const queryMapDB = function (pool, statement, d) {
                 stats: [],
                 text: []
             };  // d will contain the curve data
+            dBlue = {
+                siteName: [],
+                queryVal: [],
+                lat: [],
+                lon: [],
+                stats: [],
+                text: [],
+                color: "rgb(0,0,255)"
+            };  // for biases <= -1
+            dBlack = {
+                siteName: [],
+                queryVal: [],
+                lat: [],
+                lon: [],
+                stats: [],
+                text: [],
+                color: "rgb(0,0,0)"
+            };  // for biases > -1 and < 1
+            dRed = {
+                siteName: [],
+                queryVal: [],
+                lat: [],
+                lon: [],
+                stats: [],
+                text: [],
+                color: "rgb(255,0,0)"
+            };  // for biases >= 1
         }
         var error = "";
         const Future = require('fibers/future');
@@ -284,12 +311,41 @@ const queryMapDB = function (pool, statement, d) {
                         min_time: rows[rowIndex].min_time,
                         max_time: rows[rowIndex].max_time
                     });
+                    var tooltips = site +
+                        "<br>" + "variable: " + variable +
+                        "<br>" + "model: " + dataSource +
+                        "<br>" + "model-obs: " + d.queryVal[siteIndex] + " " + varUnits +
+                        "<br>" + "n: " + d.stats[siteIndex].N_times;
+                    d.text.push(tooltips);
+
+                    var thisSite = siteMap.find(obj => {
+                        return obj.name === site;
+                    });
+                    d.lat.push(thisSite.point[0]);
+                    d.lon.push(thisSite.point[1]);
+
+                    var textMarker = queryVal === null ? "" : queryVal.toFixed(0);
                     if (queryVal <= -1) {
                         d.color.push("rgb(0,0,255)");
+                        dBlue.siteName.push(rows[rowIndex].sta_name);
+                        dBlue.queryVal.push(queryVal);
+                        dBlue.text.push(textMarker);
+                        dBlue.lat.push(thisSite.point[0]);
+                        dBlue.lon.push(thisSite.point[1]);
                     } else if (queryVal >= 1) {
                         d.color.push("rgb(255,0,0)");
+                        dRed.siteName.push(rows[rowIndex].sta_name);
+                        dRed.queryVal.push(queryVal);
+                        dRed.text.push(textMarker);
+                        dRed.lat.push(thisSite.point[0]);
+                        dRed.lon.push(thisSite.point[1]);
                     } else {
                         d.color.push("rgb(0,0,0)");
+                        dBlack.siteName.push(rows[rowIndex].sta_name);
+                        dBlack.queryVal.push(queryVal);
+                        dBlack.text.push(textMarker);
+                        dBlack.lat.push(thisSite.point[0]);
+                        dBlack.lon.push(thisSite.point[1]);
                     }
                 }// end of loop row
             }
@@ -301,6 +357,9 @@ const queryMapDB = function (pool, statement, d) {
         pFuture.wait();
         return {
             data: d,    // [sub_values,sub_secs] as arrays
+            dataBlue: dBlue,    // [sub_values,sub_secs] as arrays
+            dataBlack: dBlack,    // [sub_values,sub_secs] as arrays
+            dataRed: dRed,    // [sub_values,sub_secs] as arrays
             error: error,
         };
     }

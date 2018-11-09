@@ -277,7 +277,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
 const generateMapCurveOptions = function (curve, dataSeries) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
-        return Math.abs(val * 10);
+        return Math.ceil(Math.abs(val * 9)) + 1;
     });
 
     const label = curve['label'];
@@ -290,8 +290,33 @@ const generateMapCurveOptions = function (curve, dataSeries) {
             marker: {
                 color: dataSeries.color,
                 size: markerSizes,
-                opacity: 1
-            }
+                opacity: 0
+            },
+        }, ...dataSeries
+    };
+
+    delete curveOptions.color;
+
+    return curveOptions;
+};
+
+const generateMapColorTextOptions = function (label, dataSeries) {
+
+    const curveOptions = {
+        ...{
+            label: label,
+            type: 'scattermapbox',
+            mode: 'markers+text',
+            marker: {
+                opacity: 0
+            },
+            textfont: {
+                family: 'sans serif',
+                // size: 18,
+                color: dataSeries.color
+            },
+            hoverinfo: 'skip',
+            visible: true
         }, ...dataSeries
     };
 
@@ -309,6 +334,7 @@ export default matsDataCurveOpsUtils = {
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,
     generateBarChartCurveOptions: generateBarChartCurveOptions,
-    generateMapCurveOptions: generateMapCurveOptions
+    generateMapCurveOptions: generateMapCurveOptions,
+    generateMapColorTextOptions: generateMapColorTextOptions
 
 }

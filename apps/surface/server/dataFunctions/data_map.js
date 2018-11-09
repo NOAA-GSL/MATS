@@ -41,7 +41,9 @@ dataMap = function (plotParams, plotFunction) {
     var axisKey = varUnits;
     curves[0].axisKey = axisKey; // stash the axisKey to use it later for axis options
     var d;
-    var thisSite;
+    var dBlue;
+    var dBlack;
+    var dRed;
     for (var siteIndex = 0; siteIndex < siteLength; siteIndex++) {
         if (diffFrom == null) {
             var site = sitesList[siteIndex];
@@ -98,7 +100,7 @@ dataMap = function (plotParams, plotFunction) {
             var startMoment = moment();
             var finishMoment;
             try {
-                queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, d);
+                queryResult = matsDataQueryUtils.queryMapDB(sitePool, statement, d, dBlue, dBlack, dRed, dataSource, variable, varUnits, site, siteIndex, siteMap);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label + " - " + site] = {
                     begin: startMoment.format(),
@@ -108,21 +110,9 @@ dataMap = function (plotParams, plotFunction) {
                 };
 
                 d = queryResult.data;
-
-                var tooltips = site +
-                    "<br>" + "variable: " + variable +
-                    "<br>" + "model: " + dataSource +
-                    "<br>" + "model-obs: " + d.queryVal[siteIndex] + " " + varUnits +
-                    "<br>" + "n: " + d.stats[siteIndex].N_times;
-
-                d.text.push(tooltips);
-
-                thisSite = siteMap.find(obj => {
-                    return obj.name === site;
-                });
-
-                d.lat.push(thisSite.point[0]);
-                d.lon.push(thisSite.point[1]);
+                dBlue = queryResult.dataBlue;
+                dBlack = queryResult.dataBlack;
+                dRed = queryResult.dataRed;
 
             } catch (e) {
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -144,8 +134,16 @@ dataMap = function (plotParams, plotFunction) {
         }
     }
 
+    var cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d);  // generate map with site data
+    dataset.push(cOptions);
 
-    const cOptions = matsDataCurveOpsUtils.generateMapCurveOptions(curve, d);  // generate map with site data
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blueCurveText, dBlue);  // generate blue text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.blackCurveText,dBlack);  // generate black text layer
+    dataset.push(cOptions);
+
+    cOptions = matsDataCurveOpsUtils.generateMapColorTextOptions(matsTypes.ReservedWords.redCurveText,dRed);  // generate red text layer
     dataset.push(cOptions);
 
     const resultOptions = matsDataPlotOpsUtils.generateMapPlotOptions();

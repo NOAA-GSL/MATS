@@ -68,7 +68,7 @@
             </div>
             <!-- /.modal-dialog -->
         </div>
-        {{#if isMap}}
+        {{#if isNotMap}}
             <div id="axisLimitModal" class="modal container" role="dialog">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -156,6 +156,9 @@
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
+                    <input type="button" class="heatMapVisibility btn btn-primary"
+                           value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
+                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}

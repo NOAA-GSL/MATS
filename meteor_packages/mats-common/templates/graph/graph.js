@@ -173,8 +173,8 @@ Template.graph.helpers({
         });
         return Array.apply(null, {length: Object.keys(yaxis).length}).map(Number.call, Number);
     },
-    isMap: function () {
-        return (Session.get('plotType') === matsTypes.PlotTypes.map)
+    isNotMap: function () {
+        return (Session.get('plotType') !== matsTypes.PlotTypes.map)
     },
     sentAddresses: function () {
         var addresses = [];
@@ -219,6 +219,13 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
+    heatMapButtonText: function () {
+        var sval = this.label + "heatMapButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'show heat map');
+        }
+        return Session.get(sval);
+    },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
@@ -257,6 +264,14 @@ Template.graph.helpers({
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+            return 'none';
+        } else {
+            return 'block';
+        }
+    },
+    heatMapShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType !== matsTypes.PlotTypes.map) {
             return 'none';
         } else {
             return 'block';
@@ -608,6 +623,40 @@ Template.graph.events({
             $('#' + label + "-annotation")[0].hidden = true;
         }
         annotation = $('#annotationContainer')[0].innerHTML;
+    },
+    'click .heatMapVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        if (dataset[0].lat.length > 0) {
+            var update;
+            var didx;
+            if (dataset[0].marker.opacity === 0) {
+                update = {
+                    'marker.opacity': 1
+                };
+                $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': false
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
+            } else {
+                update = {
+                    'marker.opacity': 0
+                };
+                $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': true
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
+
+            }
+        }
     },
     // add refresh button
     'click #refresh-plot': function (event) {
