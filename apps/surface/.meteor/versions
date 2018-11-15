@@ -82,7 +82,7 @@ ostrio:flow-router-extra@3.6.0
 pcel:mysql@0.1.0
 promise@0.11.1
 random@1.1.0
-randyp:mats-common@1.8.0
+randyp:mats-common@2.0.0
 rate-limit@1.0.9
 reactive-dict@1.2.1
 reactive-var@1.0.11

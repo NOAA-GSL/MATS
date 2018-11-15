@@ -88,7 +88,7 @@ practicalmeteor:mocha-core@1.0.1
 practicalmeteor:sinon@1.14.1_2
 promise@0.11.1
 random@1.1.0
-randyp:mats-common@1.8.0
+randyp:mats-common@2.0.0
 rate-limit@1.0.9
 reactive-dict@1.2.1
 reactive-var@1.0.11
