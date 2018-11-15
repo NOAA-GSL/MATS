@@ -301,7 +301,7 @@ const doCurveParams = function () {
                     network: 'METAR',
                     peerOption: site_name,
                     id: site_id,
-                    highLightColor: 'pink'
+                    highLightColor: 'blue'
                 }
             };
             sitesLocationMap.push(obj);
@@ -770,7 +770,7 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true,
-                defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 3},
                 hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d],
                 help: 'map-help.html'
             });

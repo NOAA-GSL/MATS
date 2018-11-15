@@ -1,211 +1,275 @@
-var mapWidth = function () {
-    var w = Math.round(Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * .9);
-    return w + "px";
-};
-var mapHeight = function () {
-    var h = Math.round(Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5);
-    return h + "px";
-};
+import Plotly from "../../imports/startup/client/lib/plotly-latest.min";
 
 Template.map.onRendered(function () {
-    var defaultPoint = this.data.defaultMapView.point;
-    var defaultZoomLevel = this.data.defaultMapView.zoomLevel;
-    var minZoomLevel = this.data.defaultMapView.minZoomLevel;
-    var maxZoomLevel = this.data.defaultMapView.maxZoomLevel;
-    var peerName = this.data.peerName;
 
-    var targetElement = document.getElementsByName(peerName)[0];
-    if (!targetElement) {
-        return;
-    }
-    var targetId = '#' + targetElement.id;
-    var markers = this.data.optionsMap;   // from app startup
-    var markerFeatures = {};
-    var map = L.map(this.data.name + "-" + this.data.type, {
-        doubleClickZoom: false,
-        scrollWheelZoom: false,
-        trackResize:true,
-        zoomControl:true,
-        minZoom: minZoomLevel,
-        maxZoom: maxZoomLevel,
-        wheelPxPerZoomLevel: 3
-    }).setView(defaultPoint, defaultZoomLevel);
+    var targetId = '';
+    var markers = [];
+    var thisMarkers = [];
+    var peerOptions = [];
+    var selectedValues = [];
+    var divElement = '';
+    var divId = '';
+    var layout = {};
+    var dataset = {};
+    var defaultAttrs = this;    // save for when we need to reset to defaults
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
-        maxZoom: 13
-    }).addTo(map);
+    // method to initialize the map selector
+    var initializeSelectorMap = function (item) {
+        var defaultPoint = item.data.defaultMapView.point;
+        var defaultZoomLevel = item.data.defaultMapView.zoomLevel;
+        var peerName = item.data.peerName;
 
-    L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
-    if (!markerFeatures) {
-        markerFeatures = {};
-    }
-    
-    var createUnSelectedIcon = function (m) {
-        var options = m.options;
-        var icon = L.divIcon({
-            iconSize: new L.point(0, 0),  // get rid of default white box icon
-            html: '<div style="border: none;' +
-            'width:' + options.size + 'px;' +
-            'height:' + options.size + 'px;' +
-            'background-color:' + options.color + ';' +
-            'border-radius:50%;">' +
-            //'<b style="font-size: large">&nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
-            '</div>',
-            options: options
-        });
-        return icon;
-    };
-
-    var createSelectedIcon = function (m) {
-        var options = m.options;
-        var icon = L.divIcon({
-            iconSize: new L.point(0, 0),  // get rid of default white box icon
-            html: '<div style="box-shadow: 0 0 0 ' + options.size / 2 + 'px ' + options.highLightColor + ';' +
-            'border: none;' +
-            'width:' + options.size + 'px;' +
-            'height:' + options.size + 'px;' +
-            'background-color:' + options.color + ';' +
-            'border-radius:50%;">' +
-            //'<b style="font-size: large"> &nbsp;&nbsp;&nbsp;&nbsp;' + options.network + '</b>' +
-            '</div>',
-            options: options
-        });
-        return icon;
-    };
-
-    var toggleTargetSelection = function (event) {
-        var marker = event.target;
-        var markerId = event.latlng.lat + ',' + event.latlng.lng + ':' + event.target.options.title;
-        var mFeatures = markerFeatures[markerId];
-        var icon = mFeatures.unSelectedIcon;
-        var peerOption = mFeatures.markerPeerOption;
-        var selectedValues = $(targetId).val() ? $(targetId).val() : [];
-        var index = selectedValues.indexOf(peerOption);
-        if (index > -1) {
-            // toggle off
-            icon = mFeatures.unSelectedIcon;
-            selectedValues.splice(index, 1);
-        } else {
-            //toggle on
-            icon = mFeatures.selectedIcon;
-            selectedValues.push(peerOption);
+        var targetElement = document.getElementsByName(peerName)[0];
+        if (!targetElement) {
+            return;
         }
-        // set the selected value(s) of the peer
-        $(targetId).val(selectedValues);
-        // trigger the change event on the peer
-        $(targetId).trigger("change");
-        marker.setIcon(icon);
-    };
+        targetId = '#' + targetElement.id;
 
+        markers = item.data.optionsMap;   // from app startup
+        thisMarkers = [];       // markers valid for this data source
 
-
-    var refreshMarkersForPeer = function(peerElement) {
-        // find out what peer options are available
-        var peerOptions = [];
-         if (peerElement.options) {
-             for (var i = 0; i < peerElement.options.length; i++) {
-                 peerOptions.push(peerElement.options[i].text);
-             }
-
-             // clear the markers
-             map.eachLayer(function (l) {
-                 if (l._icon) {
-                     map.removeLayer(l);
-                 }
-             });
-         }
-            for (var m = 0; m < markers.length; m++) {
-                var markerPeerOption = markers[m].options.peerOption;
-                if (_.contains(peerOptions, markerPeerOption)) {
-                    var unSelectedIcon = createUnSelectedIcon(markers[m]);
-                    var selectedIcon = createSelectedIcon(markers[m]);
-                    var markerOptions = markers[m].options;
-                    var title = markerOptions.peerOption + ' - ' + markerOptions.title;
-                    var point = markers[m].point;
-                    var markerId = point[0] + ',' + point[1] + ':' + title;
-                    var features = {
-                        unSelectedIcon: unSelectedIcon,
-                        selectedIcon: selectedIcon,
-                        markerOptions: markerOptions,
-                        markerPeerOption: markerPeerOption
-                    };
-
-                    var marker = new L.Marker(markers[m].point, {
-                        icon: unSelectedIcon,
-                        title: markers[m].options.peerOption + ' - ' + markers[m].options.title,
-                    }).on('click', function (event) {
-                            // toggle selection of corresponding site option for this marker
-                            toggleTargetSelection(event);
-                        }
-                    );
-                    markerFeatures[markerId] = features;
-                    map.addLayer(marker);
-                }
+        // find out what peer options are available for this data source
+        peerOptions = [];
+        if (targetElement.options) {
+            for (var i = 0; i < targetElement.options.length; i++) {
+                peerOptions.push(targetElement.options[i].text);
             }
+        }
+        selectedValues = $(targetId).val() ? $(targetId).val() : [];
+
+        divElement = item.data.name + '-' + item.data.type;
+        divId = '#' + divElement;
+
+        layout = {
+            autosize: true,
+            // height: 500,
+            // width: 840,
+            hovermode: 'closest',
+            mapbox: {
+                bearing: 0,
+                center: {
+                    lat: defaultPoint[0],
+                    lon: defaultPoint[1]
+                },
+                pitch: 0,
+                zoom: defaultZoomLevel,
+                accesstoken: 'pk.eyJ1IjoibWF0cy1nc2QiLCJhIjoiY2pvN2l1N2MyMG9xdTN3bWR3ODV5a2E2ZiJ9.PtgcGhxaoD43N0OwJSNVMg',
+                style: 'light'
+            },
+            margin: {
+                l: 10,
+                r: 10,
+                b: 10,
+                t: 10,
+                pad: 4
+            },
+            showlegend: false,
+        };
+
+        dataset = {
+            label: 'sitesMap',
+            siteName: [],
+            lat: [],
+            lon: [],
+            text: [],
+            type: 'scattermapbox',
+            mode: 'markers',
+            marker: {
+                color: [],
+                opacity: 1
+            }
+        };
+
+        // set the initial site marker locations and colors
+        var marker;
+        for (var sidx = 0; sidx < peerOptions.length; sidx++) {
+            marker = markers.find(obj => {
+                return obj.name === peerOptions[sidx];
+            });
+            thisMarkers[sidx] = marker;
+            dataset.siteName[sidx] = marker.name;
+            dataset.text[sidx] = marker.name;
+            dataset.lat[sidx] = marker.point[0];
+            dataset.lon[sidx] = marker.point[1];
+            if (selectedValues.indexOf(marker.name) === -1) {
+                dataset.marker.color[sidx] = marker.options.color;
+            } else {
+                dataset.marker.color[sidx] = marker.options.highLightColor;
+            }
+        }
     };
 
+    // call the above initialization for the first time
+    initializeSelectorMap(this);
+
+    // draw the map for the first time
+    Plotly.newPlot($(divId)[0], [dataset], layout);
+
+    /*
+
+    The following lines of code are event handlers for if a user clicks on a single station, or uses the area select
+    tools to highlight a group of stations. For now, the logic is such that individual stations can toggle between
+    chosen and unchosen by clicking them, but the area select tools will just choose everything that is outlined.
+    This is so that if a user has been manually choosing stations and then gives up and uses the area select, all of
+    their intended stations will be chosen (the ones they had already manually selected won't be unchosen). There will
+    be some sort of 'deselect all' button on this modal to unchoose everything.
+
+    NOTE: We are using plotly's event handlers here, but we are not using its native chosen/unchosen capabilities.
+    Instead, we are getting the chosen values back from the area select and adding them into out own arrays. We then
+    finish by telling plotly to deselect everything in its own internal accounting. There are two reasons for this:
+        1) plotly's ways of handling chosen/unchosen values are way more complicated than is needed here
+        2) under plotly's system, if we use the area select once, we then can't go back and add other areas or
+        individual stations without losing the original selection.
+
+    However, we may want to explore plotly's native chosen/unchosen capabilities in the future for our process-oriented
+    verification.
+
+    --MBS, 11/13/18
+
+     */
+
+    // event handler for clicking individual stations
+    $(divId)[0].on('plotly_click', function (eventdata) {
+        //get index of current station
+        const currPoint = eventdata.points[0].pointNumber;
+        if (dataset.marker.color[currPoint] === thisMarkers[currPoint].options.color) {
+            // switch to selected color and add this station to our selected values array
+            dataset.marker.color[currPoint] = thisMarkers[currPoint].options.highLightColor;
+            selectedValues.push(eventdata.points[0].text);
+        } else {
+            // switch to deselected color and remove this station from our selected values array
+            dataset.marker.color[currPoint] = thisMarkers[currPoint].options.color;
+            var tidx = selectedValues.indexOf(eventdata.points[0].text);
+            if (tidx > -1) {
+                selectedValues.splice(tidx, 1);
+            }
+        }
+        // update the marker color on the plot and the values in the site selector
+        var update = {'marker': {color: dataset.marker.color, opacity: 1}};
+        Plotly.restyle($(divId)[0], update, eventdata.points[0].curveNumber);
+        $(targetId).val(selectedValues).trigger("change");
+    });
+
+    // event handler for outlining multiple stations
+    $(divId)[0].on('plotly_selected', function (eventdata) {
+        if (eventdata === undefined || (eventdata.points.length < 1)) {
+            // the user has clicked outside of the select area, so make sure plotly's area select is disabled.
+            // otherwise the user won't be able to choose individual stations after choosing an area select
+            $(divId + " .select-outline").remove();
+            Plotly.restyle($(divId)[0], {selectedpoints: [null]});
+        } else {
+            // the user has selected all the points in an area. Iterate through them and select any that are not already selected.
+            var currPoint;
+            eventdata.points.forEach(function (pt) {
+                currPoint = pt.pointNumber;
+                if (dataset.marker.color[currPoint] === thisMarkers[currPoint].options.color) {
+                    // switch to selected color and add this station to our selected values array
+                    dataset.marker.color[currPoint] = thisMarkers[currPoint].options.highLightColor;
+                    selectedValues.push(pt.text);
+                }
+            });
+            // update the marker color on the plot and the values in the site selector
+            var update = {'marker': {color: dataset.marker.color, opacity: 1}};
+            Plotly.restyle($(divId)[0], update, eventdata.points[0].curveNumber);
+            $(targetId).val(selectedValues).trigger("change");
+
+            // As per the comment block above, we're done here, so make sure plotly's area select is disabled.
+            // otherwise the user won't be able to choose individual stations after choosing an area select.
+            $(divId + " .select-outline").remove();
+            Plotly.restyle($(divId)[0], {selectedpoints: [null]});
+        }
+    });
+
+    // event handler for selecting all stations
+    $('.selectSites').on('click', function () {
+        event.preventDefault();
+        // fill the selected values array with all available options and change the marker to its highlight color
+        $(targetId).val(peerOptions).trigger("change");
+        for (var sidx = 0; sidx < thisMarkers.length; sidx++) {
+            dataset.marker.color[sidx] = thisMarkers[sidx].options.highLightColor;
+        }
+        var update = {'marker': {color: dataset.marker.color, opacity: 1}};
+        Plotly.restyle($(divId)[0], update, [0]);
+    });
+
+    // event handler for deselecting all stations
+    $('.deselectSites').on('click', function () {
+        event.preventDefault();
+        // empty the selected values array and return the marker to its original color
+        $(targetId).val([]).trigger("change");
+        for (var sidx = 0; sidx < thisMarkers.length; sidx++) {
+            dataset.marker.color[sidx] = thisMarkers[sidx].options.color;
+        }
+        var update = {'marker': {color: dataset.marker.color, opacity: 1}};
+        Plotly.restyle($(divId)[0], update, [0]);
+    });
+
+    // method to see if the available sites have changed for this data source
+    var refreshOptionsForPeer = function (peerElement) {
+        // find out what peer options are available
+        peerOptions = [];
+        if (peerElement.options) {
+            for (var i = 0; i < peerElement.options.length; i++) {
+                peerOptions.push(peerElement.options[i].text);
+            }
+        }
+    };
+
+    // method to sync the map up with the sites selector
     var refresh = function (peerElement) {
         if (!peerElement) {
             return;
         }
         var peerId = peerElement.id;
-        refreshMarkersForPeer(peerElement);
-        var selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
-        // iterate through all the makers,
-        // set the selectedIcon if they are selected in the peer
-        // set the unSelectedIcon if they are not selected in the peer
-        $.each(map._layers, function (ml) {
-            if (map._layers[ml]._latlng) {
-                var lat = map._layers[ml]._latlng.lat;
-                var lng = map._layers[ml]._latlng.lng;
-                var point = [lat, lng];
-                var marker = markers.filter(function (obj) {
-                    return obj.point[0] === point[0] && obj.point[1] === point[1];
-                })[0];
-                if (marker !== undefined) {
-                    var peerOption = marker.options.peerOption;
-                    var markerId = marker.point[0] + ',' + marker.point[1] + ':' + marker.options.peerOption + ' - ' + marker.options.title;
-                    var mFeatures = markerFeatures[markerId];
-                    if (_.contains(selectedValues, peerOption)) {
-                        map._layers[ml].setIcon(mFeatures.selectedIcon);
-                    } else {
-                        map._layers[ml].setIcon(mFeatures.unSelectedIcon);
-                    }
-                }
+        refreshOptionsForPeer(peerElement);
+        selectedValues = $('#' + peerId).val() ? $('#' + peerId).val() : [];
+
+        // need to redo these in case the available sites have changed for this data source
+        thisMarkers = [];
+        dataset.siteName = [];
+        dataset.text = [];
+        dataset.lat = [];
+        dataset.lon = [];
+        dataset.marker.color = [];
+        var marker;
+        for (var sidx = 0; sidx < peerOptions.length; sidx++) {
+            marker = markers.find(obj => {
+                return obj.name === peerOptions[sidx];
+            });
+            thisMarkers[sidx] = marker;
+            dataset.siteName[sidx] = marker.name;
+            dataset.text[sidx] = marker.name;
+            dataset.lat[sidx] = marker.point[0];
+            dataset.lon[sidx] = marker.point[1];
+            if (selectedValues.indexOf(marker.name) === -1) {
+                dataset.marker.color[sidx] = marker.options.color;
+            } else {
+                dataset.marker.color[sidx] = marker.options.highLightColor;
             }
-        });
+        }
+        $(divId)[0].data[0] = dataset;
+        Plotly.redraw($(divId)[0]);
     };
 
-    var resizeMap = function (what) {
-        map.invalidateSize();   // really important....
-        //$('#mapModal').on('show.bs.modal', function(){
-        //    setTimeout(function() {
-        //        map.invalidateSize();
-        //    }, 10);
-        //});
-        var ref = what.data.name + '-' + what.data.type;
-        var elem = document.getElementById(ref);
-        //elem.style.height = mapHeight();
-        //elem.style.width = mapWidth();
-        elem.style.height = '500px';
-        elem.style.width = '875px';
+    // method to reset the map to defaults
+    var resetMap = function (item) {
+        initializeSelectorMap(item);
+        $(divId)[0].data[0] = dataset;
+        $(divId)[0].layout = layout;
+        Plotly.redraw($(divId)[0]);
     };
-    // initial resize seems to be necessary
-    resizeMap(this);
-    // register an event listener so that the item.js can ask the map div to resize after the map div becomes visible
-    var ref = this.data.name + '-' + this.data.type;
-    var elem = document.getElementById(ref);
-    elem.addEventListener('resizeMap', function (e) {
-        resizeMap(e.detail);
-    });
 
     // register an event listener so that the select.js can ask the map div to refresh after a selection
-    var ref = this.data.name + '-' + this.data.type;
-    var elem = document.getElementById(ref);
+    var elem = document.getElementById(divElement);
     elem.addEventListener('refresh', function (e) {
         refresh(e.detail.refElement);
     });
-    refresh(targetElement);
+
+    // register an event listener so that the param_util.js can ask the map div to reset when someone clicks 'reset to defaults'
+    elem = document.getElementById(divElement);
+    elem.addEventListener('reset', function (e) {
+        resetMap(defaultAttrs);
+    });
+
 
 });

@@ -34,7 +34,7 @@ Template.GraphStandAlone.onRendered(function () {
         document.getElementById('placeholder').style.height = matsGraphUtils.height();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
-        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+        Plotly.newPlot($("#placeholder")[0], dataset, options);
     });
     document.getElementById('graph-container').style.backgroundColor = 'white';
 });
@@ -89,7 +89,7 @@ Template.GraphStandAlone.helpers({
                         options.mapbox.zoom = 2.75;
                     }
                     // initial plot
-                    $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+                    Plotly.newPlot($("#placeholder")[0], dataset, options);
 
                     if (plotType !== matsTypes.PlotTypes.map) {
                         // append annotations
@@ -214,6 +214,13 @@ Template.GraphStandAlone.helpers({
         }
         return Session.get(sval);
     },
+    heatMapButtonText: function () {
+        var sval = this.label + "heatMapButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'show heat map');
+        }
+        return Session.get(sval);
+    },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
@@ -252,6 +259,14 @@ Template.GraphStandAlone.helpers({
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+            return 'none';
+        } else {
+            return 'block';
+        }
+    },
+    heatMapShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType !== matsTypes.PlotTypes.map) {
             return 'none';
         } else {
             return 'block';
@@ -314,7 +329,7 @@ Template.GraphStandAlone.events({
                 }
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .pointsVisibility': function (event) {
         event.preventDefault();
@@ -352,7 +367,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
@@ -373,7 +388,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .barVisibility': function (event) {
         event.preventDefault();
@@ -393,7 +408,7 @@ Template.GraphStandAlone.events({
                 $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .annotateVisibility': function (event) {
         event.preventDefault();
@@ -409,6 +424,40 @@ Template.GraphStandAlone.events({
             $('#' + label + "-annotation")[0].hidden = true;
         }
         annotation = $('#annotationContainer')[0].innerHTML;
+    },
+    'click .heatMapVisibility': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        if (dataset[0].lat.length > 0) {
+            var update;
+            var didx;
+            if (dataset[0].marker.opacity === 0) {
+                update = {
+                    'marker.opacity': 1
+                };
+                Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': false
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
+            } else {
+                update = {
+                    'marker.opacity': 0
+                };
+                Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': true
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
+
+            }
+        }
     },
     'click .exportpdf': function (e) {
         $(".previewCurveButtons").each(function (i, obj) {

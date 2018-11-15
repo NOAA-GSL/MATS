@@ -24,7 +24,7 @@ Template.graph.onCreated(function () {
         document.getElementById('placeholder').style.height = matsGraphUtils.height();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
-        $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+        Plotly.newPlot($("#placeholder")[0], dataset, options);
     });
 });
 
@@ -50,7 +50,7 @@ Template.graph.helpers({
             }
 
             // initial plot
-            $("#placeholder").data().plot = Plotly.newPlot($("#placeholder")[0], dataset, options);
+            Plotly.newPlot($("#placeholder")[0], dataset, options);
 
             if (plotType !== matsTypes.PlotTypes.map) {
                 // append annotations
@@ -528,7 +528,7 @@ Template.graph.events({
                 }
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .pointsVisibility': function (event) {
         event.preventDefault();
@@ -566,7 +566,7 @@ Template.graph.events({
                 $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
@@ -587,7 +587,7 @@ Template.graph.events({
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .barVisibility': function (event) {
         event.preventDefault();
@@ -607,7 +607,7 @@ Template.graph.events({
                 $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
             }
         }
-        $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .annotateVisibility': function (event) {
         event.preventDefault();
@@ -634,24 +634,24 @@ Template.graph.events({
                 update = {
                     'marker.opacity': 1
                 };
-                $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, 0);
+                Plotly.restyle($("#placeholder")[0], update, 0);
                 update = {
                     'visible': false
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
-                    $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, didx);
+                    Plotly.restyle($("#placeholder")[0], update, didx);
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
             } else {
                 update = {
                     'marker.opacity': 0
                 };
-                $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, 0);
+                Plotly.restyle($("#placeholder")[0], update, 0);
                 update = {
                     'visible': true
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
-                    $("#placeholder").data().plot = Plotly.restyle($("#placeholder")[0], update, didx);
+                    Plotly.restyle($("#placeholder")[0], update, didx);
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
 
@@ -662,7 +662,7 @@ Template.graph.events({
     'click #refresh-plot': function (event) {
         event.preventDefault();
         var options = Session.get('options');
-        $("#placeholder").data().plot = Plotly.relayout($("#placeholder")[0], options);
+        Plotly.relayout($("#placeholder")[0], options);
     },
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
@@ -722,7 +722,7 @@ Template.graph.events({
                 }
             }
         });
-        $("#placeholder").data().plot = Plotly.relayout($("#placeholder")[0], newOpts);
+        Plotly.relayout($("#placeholder")[0], newOpts);
         $("#axisLimitModal").modal('hide');
     }
 });
