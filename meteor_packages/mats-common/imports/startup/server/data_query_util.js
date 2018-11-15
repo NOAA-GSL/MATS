@@ -544,13 +544,19 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
 
-    if (d.x.indexOf(0) !== -1 && 0 < d.xmin){
+    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)){
         d.xmin = 0;
     }
-    if (d.y.indexOf(0) !== -1 && 0 < d.ymin){
+    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)){
         d.ymin = 0;
     }
 
+    if (d.xmax == "-Infinity"){
+        d.xmax = 0;
+    }
+    if (d.ymax == "-Infinity"){
+        d.ymax = 0;
+    }
     return {
         d: d,
         N0: N0,
@@ -731,11 +737,18 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
 
-    if (d.x.indexOf(0) !== -1 && 0 < d.xmin){
+    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)){
         d.xmin = 0;
     }
-    if (d.y.indexOf(0) !== -1 && 0 < d.ymin){
+    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)){
         d.ymin = 0;
+    }
+
+    if (d.xmax == "-Infinity"){
+        d.xmax = 0;
+    }
+    if (d.ymax == "-Infinity"){
+        d.ymax = 0;
     }
 
     return {

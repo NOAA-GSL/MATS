@@ -39,7 +39,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = (ymax - ymin) * 0.05;
+        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
         xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -68,7 +68,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             };
         }
     }
-    const xPad = (xmax - xmin) * 0.05;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = moment.utc(xmax + xPad).format("YYYY-MM-DD HH:mm");
     xmin = moment.utc(xmin - xPad).format("YYYY-MM-DD HH:mm");
     layout['xaxis']['range'] = [xmin, xmax];
@@ -112,7 +112,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         xmax = xmax + errorMax;
         xmin = xmin - errorMax;
         axisLabel = axisMap[axisKey].axisLabel;
-        const xPad = (xmax - xmin) * 0.05;
+        const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
         const axisObjectKey = axisIdx === 0 ? 'xaxis' : 'xaxis' + (axisIdx + 1);
         layout[axisObjectKey] = {
             title: axisLabel,
@@ -164,7 +164,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = (ymax - ymin) * 0.05;
+        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
         xmin = axisMap[axisKey].xmin < xmin ? axisMap[axisKey].xmin : xmin;
         xmax = axisMap[axisKey].xmax > xmax ? axisMap[axisKey].xmax : xmax;
         axisLabel = axisMap[axisKey].axisLabel;
@@ -193,7 +193,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             };
         }
     }
-    const xPad = (xmax - xmin) * 0.05;
+    const xPad = ((xmax - xmin) * 0.05) !== 0 ? (xmax - xmin) * 0.05 : 0.05;
     xmax = xmax + xPad;
     xmin = xmin - xPad;
     layout['xaxis']['range'] = [xmin, xmax];
@@ -240,7 +240,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = (ymax - ymin) * 0.05;
+        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {
@@ -309,7 +309,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         var ymax = axisMap[axisKey].ymax;
         ymax = ymax + errorMax;
         ymin = ymin - errorMax;
-        const yPad = (ymax - ymin) * 0.05;
+        const yPad = ((ymax - ymin) * 0.05) !== 0 ? (ymax - ymin) * 0.05 : 0.05;
         axisLabel = axisMap[axisKey].axisLabel;
         var axisObjectKey;
         if (axisIdx === 0) {

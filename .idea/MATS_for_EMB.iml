@@ -17,8 +17,10 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/landuse/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/metproto/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipAQPI/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitation/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitation24hr/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/precipitationAQPI/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipitationSub24hr/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/radarReflectivity/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/surface/.meteor/dev_bundle/lib/node_modules/cordova-lib/src/platforms" />
