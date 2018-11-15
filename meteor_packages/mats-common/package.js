@@ -51,9 +51,7 @@ Package.onUse(function (api) {
     api.use("ejson");
     api.use("spacebars");
     api.use("check");
-    api.use("bevanhunt:leaflet");
     api.use("ostrio:flow-router-extra");
-    api.use("randyp:flot");
     api.use("meteorhacks:picker");
 
     // modules
