@@ -88,7 +88,10 @@ var ReservedWords = {
     ideal6: "ideal6",
     ideal7: "ideal7",
     ideal8: "ideal8",
-    ideal9: "ideal9"
+    ideal9: "ideal9",
+    blueCurveText: "blueCurveText",
+    blackCurveText: "blackCurveText",
+    redCurveText: "redCurveText"
 };
 
 var Messages = {

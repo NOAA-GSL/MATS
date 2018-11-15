@@ -1,6 +1,6 @@
 Package.describe({
     name: 'randyp:mats-common',
-    version: '1.8.0',
+    version: '2.0.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
@@ -51,9 +51,7 @@ Package.onUse(function (api) {
     api.use("ejson");
     api.use("spacebars");
     api.use("check");
-    api.use("bevanhunt:leaflet");
     api.use("ostrio:flow-router-extra");
-    api.use("randyp:flot");
     api.use("meteorhacks:picker");
 
     // modules
@@ -175,12 +173,7 @@ Package.onUse(function (api) {
     api.addFiles("templates/graphStandAlone/graphStandAlone.html", "client");
     api.addFiles("templates/graphStandAlone/graphStandAlone.js", "client");
 
-    api.addFiles("templates/graph/displayFunctions/graph_xy_line.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_profile.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_2d_scatter.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_map.js", "client");
-    api.addFiles("templates/graph/displayFunctions/graph_histogram.js", "client");
-
+    api.addFiles("templates/graph/displayFunctions/graph_plotly.js", "client");
 
     api.addFiles("templates/common/text_input.html", "client");
     api.addFiles("templates/common/text_input.js", "client");

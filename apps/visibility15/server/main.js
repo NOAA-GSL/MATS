@@ -781,31 +781,31 @@ const doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDailyModelCycle",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
-            graphFunction: "graphHistogram",
+            graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
             checked: false
         });
@@ -881,12 +881,12 @@ Meteor.startup(function () {
         connection.query('set group_concat_max_len = 4294967295')
     });
 
-    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling_5min", ['threshold_descriptions']);
-    mdr.addRecord("sumPool", "ceiling_5min_sums", ['regions_per_model_mats_all_categories']);
+    let mdr = new matsTypes.MetaDataDBRecord("modelPool", "vis_1min", ['threshold_descriptions']);
+    mdr.addRecord("sumPool", "vis_1min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
 
-    matsCollections.appName.insert({name: "appName", app: "ceiling15"});
+    matsCollections.appName.insert({name: "appName", app: "visibility15"});
 
 });
 

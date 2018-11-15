@@ -395,6 +395,15 @@ const setAllParamsToDefault = function () {
             const stopInit = dateInitStrParts[1];
             const dstr = startInit + ' - ' + stopInit;
             matsParamUtils.setValueTextForParamName(param.name, dstr);
+        } else if (param.type === matsTypes.InputTypes.selectMap) {
+            const targetId = param.name + '-' + param.type;
+            const targetElem = document.getElementById(targetId);
+            const resetMapEvent = new CustomEvent("reset", {
+                detail: {
+                    refElement: (event !== null) ? event.target : null
+                }
+            });
+            targetElem.dispatchEvent(resetMapEvent);
         } else {
             setDefaultForParamName(param);
         }

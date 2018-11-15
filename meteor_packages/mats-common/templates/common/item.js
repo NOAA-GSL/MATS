@@ -107,19 +107,8 @@ Template.item.events({
                     $(ref).select2("open");   // need to foricibly open the selector for the select2
                 }
                 if (this.type == matsTypes.InputTypes.selectMap) {
-                    var ref = this.name + '-' + this.type;
-                    var m = document.getElementById(ref);
-                    var data = {
-                        name: this.name,
-                        type: this.type
-                    };
-                    var resizeMapEvent = new CustomEvent("resizeMap", {
-                        detail: {
-                            data: data
-                        }
-                    });
                     $("#mapModal").modal('show');
-                    m.dispatchEvent(resizeMapEvent);
+                    window.dispatchEvent(new Event('resize'));
                 }
             }
         }

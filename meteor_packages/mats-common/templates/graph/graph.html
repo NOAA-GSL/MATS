@@ -38,29 +38,7 @@
                     <button id="gc-spacer" type="button" class="btn spacebutton"></button>
                 </span>
                 <span id="graph-touch-controls" class="btn-group btn-group-sm" role="group" aria-label="touchcontrol">
-                    <button id="pan-left" type="button" class="btn btn-info fa fa-arrow-left" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph left"></button>
-                    <button id="pan-up" type="button" class="btn btn-info fa fa-arrow-up" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph up"></button>
-                    <button id="pan-down" type="button" class="btn btn-info fa fa-arrow-down" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph down"></button>
-                    <button id="pan-right" type="button" class="btn btn-info fa fa-arrow-right" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="pan graph right"></button>
                     <button id="refresh-plot" type="button" class="btn btn-info fa fa-refresh" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset zoom to original"></button>
-                    <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out" type="button" class="btn btn-success" style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-expand"></span></button>
-                        <button id="zoom-in" type="button" class="btn btn-success" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom out"><span class="fa fa-plus"></span></button>
-                        <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    </span>
-                    <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out-left-right" type="button" class="btn btn-success" style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom out horizontal"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-left-right" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-arrows-h"></span></button>
-                        <button id="zoom-in-left-right" type="button" class="btn btn-success" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom in horizontal"><span class="fa fa-plus"></span></button>
-                        <button id="gc-spacer" type="button" class="btn spacebutton"></button>
-                    </span>
-                    <span class="btn-group btn-group-sm" role="group">
-                        <button id="zoom-out-up-down" type="button" class="btn btn-success" style="border-top-left-radius: 5px; border-bottom-left-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom out vertical"><span class="fa fa-minus"></span></button>
-                        <button id="dead-zoom-up-down" type="button" class="btn btn-success" style="color: #000000;" disabled><span class="fa fa-arrows-v"></span></button>
-                        <button id="zoom-in-up-down" type="button" class="btn btn-success" style="border-top-right-radius: 5px; border-bottom-right-radius: 5px;" data-toggle="tooltip" data-placement="top" title="zoom in vertical"><span class="fa fa-plus"></span></button>
-                    </span>
                 </span>
             </span>
         </div>
@@ -90,73 +68,75 @@
             </div>
             <!-- /.modal-dialog -->
         </div>
-        <div id="axisLimitModal" class="modal container" role="dialog">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Select axis limits and labels: </h3>
-                        <h4>* Leave a field blank to preserve its original value. </h4>
-                        <h4>* Only data from your original time range has been queried and is available to plot. </h4>
-                    </div>
-                    <div class="modal-body">
-                        <div id="xAxisCustomControls" style="display:block;">
-                            <div class="row">
-                                <label class="col-sm-2">X label: </label>
-                                <input id="xAxisLabel" class="y-axis-label data-input textInput col-sm-3" type="text" value="" name="xAxisLabel"/>
-                            </div>
-                            <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
-                                <div class="row">
-                                    <label class="col-sm-2">X_min: </label>
-                                    <input id="xAxisMin" class="x-axis-min data-input numberInput col-sm-3" type="number" value="" name="xAxisMin"/>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-2">X_max: </label>
-                                    <input id="xAxisMax" class="x-axis-max data-input numberInput col-sm-3" type="number" value="" name="xAxisMax"/>
-                                </div>
-                            </div>
-                            <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
-                                <div class="row">
-                                    <label class="col-sm-2">X_min: </label>
-                                    <input id="xAxisMinText" class="x-axis-min data-input textInput col-sm-3" type="text" value="" name="xAxisMinText"/>
-                                    <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-2">X_max: </label>
-                                    <input id="xAxisMaxText" class="x-axis-max data-input textInput col-sm-3" type="text" value="" name="xAxisMaxText"/>
-                                    <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                </div>
-                            </div>
+        {{#if isNotMap}}
+            <div id="axisLimitModal" class="modal container" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select axis limits and labels: </h3>
+                            <h4>* Leave a field blank to preserve its original value. </h4>
+                            <h4>* Only data from your original time range has been queried and is available to plot. </h4>
                         </div>
-                        {{#each yAxis in yAxes}}
-                            <div><br></div>
-                            <div id="y{{yAxis}}AxisCustomControls" style="display:block;">
+                        <div class="modal-body">
+                            <div id="xAxisCustomControls" style="display:block;">
                                 <div class="row">
-                                    <label class="col-sm-2">Y{{yAxis}} label: </label>
-                                    <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
+                                    <label class="col-sm-2">X label: </label>
+                                    <input id="xAxisLabel" class="y-axis-label data-input textInput col-sm-3" type="text" value="" name="xAxisLabel"/>
                                 </div>
-                                <div id="yAxisControlsNumber" style="display:block;">
+                                <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
                                     <div class="row">
-                                        <label class="col-sm-2">Y{{yAxis}}_min: </label>
-                                        <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                        <label class="col-sm-2">X_min: </label>
+                                        <input id="xAxisMin" class="x-axis-min data-input numberInput col-sm-3" type="number" value="" name="xAxisMin"/>
                                     </div>
                                     <div class="row">
-                                        <label class="col-sm-2">Y{{yAxis}}_max: </label>
-                                        <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                        <label class="col-sm-2">X_max: </label>
+                                        <input id="xAxisMax" class="x-axis-max data-input numberInput col-sm-3" type="number" value="" name="xAxisMax"/>
+                                    </div>
+                                </div>
+                                <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
+                                    <div class="row">
+                                        <label class="col-sm-2">X_min: </label>
+                                        <input id="xAxisMinText" class="x-axis-min data-input textInput col-sm-3" type="text" value="" name="xAxisMinText"/>
+                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-sm-2">X_max: </label>
+                                        <input id="xAxisMaxText" class="x-axis-max data-input textInput col-sm-3" type="text" value="" name="xAxisMaxText"/>
+                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
                                     </div>
                                 </div>
                             </div>
-                        {{/each}}
+                            {{#each yAxis in yAxes}}
+                                <div><br></div>
+                                <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
+                                    <div class="row">
+                                        <label class="col-sm-2">Y{{yAxis}} label: </label>
+                                        <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
+                                    </div>
+                                    <div id="yAxisControlsNumber" style="display:block;">
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_min: </label>
+                                            <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_max: </label>
+                                            <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            {{/each}}
+                        </div>
+                        <div class="modal-footer btn-group">
+                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
+                            <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
+                            </button>
+                        </div>
                     </div>
-                    <div class="modal-footer btn-group">
-                        <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
-                        <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
-                        </button>
-                    </div>
+                    <!-- /.modal-content -->
                 </div>
-                <!-- /.modal-content -->
+                <!-- /.modal-dialog -->
             </div>
-            <!-- /.modal-dialog -->
-        </div>
+        {{/if}}
         <div id="curves" class="row">
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
@@ -176,6 +156,9 @@
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
+                    <input type="button" class="heatMapVisibility btn btn-primary"
+                           value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
+                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: {{this.color}}">
                 </div>
                 <br>
             {{/each}}
@@ -184,20 +167,12 @@
         <div id="textView" style="display:none;">
             {{>textOutput}}
         </div>
-        {{#if isMap}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row container-fluid">
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
+        <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
+            <div id="legendContainer" name="legendContainer"></div>
+            <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
+                {{! This is where plotly will place the graph - there is nothing here when the page loads}}
             </div>
-        {{else}}
-            <div id="graphView" style="height:100%;margin:0;padding:0;" class="row">
-                <div id="legendContainer" name="legendContainer"></div>
-                <div id="placeholder" class="row" name="placeholder" style="float:left;width:{{width}}; height:{{height}};">
-                    {{! This is where flot will place the graph - there is nothing here when the page loads}}
-                </div>
-            </div>
-        {{/if}}
+        </div>
         <h5 class="row text-center" id="confidenceNote" style="font-size:large;display:{{confidenceDisplay}};">Error
             Bars show 95% confidence</h5>
     </div>

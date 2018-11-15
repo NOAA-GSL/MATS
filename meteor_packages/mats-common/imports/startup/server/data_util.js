@@ -86,6 +86,18 @@ const average = function (data) {
     return avg;
 };
 
+//utility for calculating the stdev of an array
+const stdev = function (data) {
+    var avg = average(data);
+    var squareDiffs = data.map(function(value){
+        var diff = value - avg;
+        return diff * diff;
+    });
+    var avgSquareDiff = average(squareDiffs);
+    var stdDev = Math.sqrt(avgSquareDiff);
+    return stdDev;
+};
+
 //this function makes sure date strings are in the correct format
 const dateConvert = function (dStr) {
     if (dStr === undefined || dStr === " ") {
@@ -307,8 +319,6 @@ const get_err = function (sVals, sSecs) {
 
     var subVals = [];
     var subSecs = [];
-    var sVals = sVals;
-    var sSecs = sSecs;
     var n = sVals.length;
     var n_good = 0;
     var sum_d = 0;
@@ -549,7 +559,14 @@ const setHistogramParameters = function (plotParams) {
         default:
             break;
     }
-    return {yAxisFormat: yAxisFormat, binNum: binNum, binStart: binStart, binStride: binStride, pivotVal: pivotVal, binBounds: binBounds};
+    return {
+        yAxisFormat: yAxisFormat,
+        binNum: binNum,
+        binStart: binStart,
+        binStride: binStride,
+        pivotVal: pivotVal,
+        binBounds: binBounds
+    };
 };
 
 // utility that takes arrays of seconds and values and produces a data structure containing bin information for histogram plotting
@@ -679,7 +696,6 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     binLowBounds[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2];
     binMeans[binParams.binNum - 1] = binUpBounds[binParams.binNum - 2] + binIntervalAverage / 2; // the bin means for the edge bins is a little arbitrary, so base it on the average bin width
 
-
     // calculate the labels for each bin, based on the data bounding range, for the graph x-axis later
     var binLabels = [];
     var lowSdFromMean;
@@ -757,6 +773,8 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     var bin_n;
     var bin_rf;
 
+    var sum = 0;
+    var count = 0;
     for (b_idx = 0; b_idx < binNum; b_idx++) {
         binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
         bin_mean = binStats.d_mean;
@@ -764,40 +782,63 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
         bin_n = binStats.n_good;
         bin_rf = bin_n / glob_n;
 
+        /*
+        var d = {// d will contain the curve data
+            x: [], //placeholder
+            y: [], //placeholder
+            error_x: [], // unused
+            error_y: [], // unused
+            subVals: [],
+            subSecs: [],
+            subLevs: [],
+            glob_stats: {}, // placeholder
+            bin_stats: [], // placeholder
+            text: [], //placeholder
+            xmax: Number.MIN_VALUE,
+            xmin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE
+        };
+        */
+
+        d.x.push(binMeans[b_idx]);
+        d.y.push(bin_n);
+        d.subVals.push(binSubStats[b_idx]);
+        d.subSecs.push(binSubSecs[b_idx]);
+        d.bin_stats.push({
+            'bin_mean': bin_mean,
+            'bin_sd': bin_sd,
+            'bin_n': bin_n,
+            'bin_rf': bin_rf,
+            'binLowBound': binLowBounds[b_idx],
+            'binUpBound': binUpBounds[b_idx],
+            'binLabel': binLabels[b_idx]
+        });
+        d.text.push(null);
+
         if (hasLevels) {
-            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx], {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'bin_rf': bin_rf,
-                'binLowBound': binLowBounds[b_idx],
-                'binUpBound': binUpBounds[b_idx],
-                'binLabel': binLabels[b_idx]
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
-        } else {
-            d.push([binMeans[b_idx], bin_n, -1, binSubStats[b_idx], binSubSecs[b_idx], null, {
-                'bin_mean': bin_mean,
-                'bin_sd': bin_sd,
-                'bin_n': bin_n,
-                'bin_rf': bin_rf,
-                'binLowBound': binLowBounds[b_idx],
-                'binUpBound': binUpBounds[b_idx],
-                'binLabel': binLabels[b_idx]
-            }, {
-                'glob_mean': glob_mean,
-                'glob_sd': glob_sd,
-                'glob_n': glob_n,
-                'glob_max': glob_max,
-                'glob_min': glob_min
-            }, null]);
+            d.subLevs.push(binSubLevs[b_idx]);
         }
+
+        // set axis limits based on returned data
+        if (d.y[b_idx] !== null) {
+            sum = sum + d.y[b_idx];
+            count++;
+            d.ymin = d.ymin < d.y[b_idx] ? d.ymin : d.y[b_idx];
+            d.ymax = d.ymax > d.y[b_idx] ? d.ymax : d.y[b_idx];
+        }
+
     }
+    d.glob_stats = {
+        'glob_mean': glob_mean,
+        'glob_sd': glob_sd,
+        'glob_n': glob_n,
+        'glob_max': glob_max,
+        'glob_min': glob_min
+    };
+    d.xmin = d.x[0];
+    d.xmax = d.x[binNum - 1];
+
     return {d: d};
 };
 
@@ -819,6 +860,7 @@ export default matsDataUtils = {
     arraysEqual: arraysEqual,
     findArrayInSubArray: findArrayInSubArray,
     average: average,
+    stdev: stdev,
     dateConvert: dateConvert,
     getDateRange: getDateRange,
     secsConvert: secsConvert,

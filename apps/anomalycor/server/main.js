@@ -584,6 +584,22 @@ const doCurveTextPatterns = function () {
 
         });
         matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['', 'curve-dates', '']
+            ],
+            displayParams: [
+                "label", "data-source", "region", "variable", "valid-time", "forecast-length", "curve-dates"
+            ],
+            groupSize: 6
+        });
+        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
@@ -637,19 +653,25 @@ const doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.profile,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataProfile",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
-            graphFunction: "graphHistogram",
+            graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
             checked: false
         });
@@ -709,9 +731,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anom_corr2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-
     matsCollections.appName.insert({name: "appName", app: "anomalycor"});
-
 });
 
 // this object is global so that the reset code can get to it

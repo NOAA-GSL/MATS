@@ -25,11 +25,8 @@ dataProfile = function (plotParams, plotFunction) {
     var axisMap = Object.create(null);
     var xmax = Number.MIN_VALUE;
     var xmin = Number.MAX_VALUE;
-    // ymin is negative in order to get the yaxis to plot inverted for profiles
-    // we tried to use flot's invert and transform functions but this did not work properly
-    // so just draw the axis negative and change the ticks to positive numbers.
-    var ymax = 0;
-    var ymin = -1100;
+    var ymax = 1050;
+    var ymin = 1;
     var idealValues = [];
 
     for (var curveIndex = 0; curveIndex < curvesLength; curveIndex++) {
@@ -78,23 +75,23 @@ dataProfile = function (plotParams, plotFunction) {
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-        var d = [];
+        var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select  -m0.mb10*10 as avVal, " +
+            var statement = "select m0.mb10*10 as avVal, " +
                 "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
                 "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
                 "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
                 "{{statistic}} " +
                 "from {{model}} as m0 " +
                 "where 1=1 " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "group by avVal " +
                 "order by avVal" +
                 ";";
@@ -149,27 +146,21 @@ dataProfile = function (plotParams, plotFunction) {
 
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
 
             // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
         }
 
-        // set axis limits based on returned data
-        for (var di = 0; di < d.length; di++) {
-            xmax = (xmax > d[di][0] || d[di][0] === null) ? xmax : d[di][0];
-            xmin = (xmin < d[di][0] || d[di][0] === null) ? xmin : d[di][0];
-        }
+        xmin = xmin < d.xmin ? xmin : d.xmin;
+        xmax = xmax > d.xmax ? xmax : d.xmax;
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         // profile plots always go from 0 to 1000 initially
         curve['annotation'] = "";
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
         curve['ymin'] = ymin;
         curve['ymax'] = ymax;
         const cOptions = matsDataCurveOpsUtils.generateProfileCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
@@ -184,7 +175,12 @@ dataProfile = function (plotParams, plotFunction) {
 
     // process the data returned by the query
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "axisMap": axisMap};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "idealValues": idealValues,
+        "axisMap": axisMap
+    };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataProfile(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

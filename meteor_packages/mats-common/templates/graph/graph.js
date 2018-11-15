@@ -1,5 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
+import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
 import {
     matsCollections,
     matsCurveUtils,
@@ -12,48 +13,18 @@ import {
 
 var pageIndex = 0;
 var annotation = "";
-var errorTypes = {};
-
-var yAxisLength = 0;
-var yAxisTranslate = {};
-var yAxisNumber = 0;
-var yidx;
-
-var originalXaxisLabel = "";
-var originalXaxisMin = "";
-var originalXaxisMax = "";
-var originalYaxisLabels = [];
-var originalYaxisMins = [];
-var originalYaxisMaxs = [];
-
 var openWindows = [];
+var currentXMin = undefined;
+var currentXMax = undefined;
 
-Template.graph.onRendered(function () {
-    // make sure the zoom and pan buttons don't show up for maps, as they only work on flot graphs
-    if (matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map) {
-        document.getElementById('graph-touch-controls').style.display = "none";
-    }
-});
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
     $(window).resize(function () {
         document.getElementById('placeholder').style.width = matsGraphUtils.width();
         document.getElementById('placeholder').style.height = matsGraphUtils.height();
-    });
-
-    $(document).keyup(function (event) {
-        if (Session.get("printMode") && event.keyCode == 27) { // escape key maps to keycode `27`
-            document.getElementById('graph-control').style.display = 'block';
-            document.getElementById('showAdministration').style.display = 'block';
-            document.getElementById('navbar').style.display = 'block';
-            document.getElementById('footnav').style.display = 'block';
-            var ctbgElems = $('*[id^="curve-text-buttons-grp"]');
-            for (var i = 0; i < ctbgElems.length; i++) {
-                ctbgElems[i].style.display = 'block';
-            }
-            document.getElementById('plotType').style.display = 'block';
-            Session.set("printMode", false);
-        }
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
+        Plotly.newPlot($("#placeholder")[0], dataset, options);
     });
 });
 
@@ -71,79 +42,33 @@ Template.graph.helpers({
             var plotType = Session.get('plotType');
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
+            Session.set('options', options);
+            $("#legendContainer").empty();
+            $("#placeholder").empty();
             if (dataset === undefined) {
                 return false;
             }
+
+            // initial plot
+            Plotly.newPlot($("#placeholder")[0], dataset, options);
+
             if (plotType !== matsTypes.PlotTypes.map) {
-                // append annotations and get errorbar types
+                // append annotations
                 annotation = "";
                 for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile) {
-                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].color + "'>" + dataset[i].annotation + " </div>";
-                    }
-                    errorTypes[dataset[i].curveId] = dataset[i].points.errorbars;
-                }
-
-                // figure out how many y axes there are
-                yAxisLength = 0;
-                yAxisTranslate = {};
-                yAxisNumber = 0;
-                var currentAxisKey;
-                var axisKeys = [];
-                yAxisLength = options.yaxes.length;
-                for (yidx = 0; yidx < yAxisLength; yidx++) {
-                    currentAxisKey = options.yaxes[yidx].axisLabel;
-                    if (axisKeys.indexOf(currentAxisKey) === -1) {
-                        axisKeys.push(currentAxisKey);
-                        yAxisNumber++;
-                    }
-                    yAxisTranslate[yidx] = axisKeys.indexOf(currentAxisKey);
-                }
-
-                // store information about the axes, for use when redrawing the plot
-                originalXaxisLabel = "";
-                originalXaxisMin = "";
-                originalXaxisMax = "";
-                originalYaxisLabels = [];
-                originalYaxisMins = [];
-                originalYaxisMaxs = [];
-                if (options.xaxes && options.xaxes[0]) {
-                    originalXaxisLabel = options.xaxes[0].axisLabel;
-                    originalXaxisMin = options.xaxes[0].min;
-                    originalXaxisMax = options.xaxes[0].max;
-                }
-                for (yidx = 0; yidx < yAxisLength; yidx++) {
-                    if (options.yaxes && options.yaxes[yidx]) {
-                        originalYaxisLabels[yidx] = options.yaxes[yidx].axisLabel;
-                        originalYaxisMins[yidx] = options.yaxes[yidx].min;
-                        originalYaxisMaxs[yidx] = options.yaxes[yidx].max;
+                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile && dataset[i].curveId !== undefined) {
+                        annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                     }
                 }
+                $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
 
-                // selection zooming
-                var zooming = false;
-                $("#placeholder").bind("plotselected", function (event, ranges) {
-                    zooming = true;
-                    event.preventDefault();
-                    $("#placeholder").data().plot.getOptions().selection.mode = 'xy';
-                    $("#placeholder").data().plot.getOptions().pan.interactive = false;
-                    $("#placeholder").data().plot.getOptions().zoom.interactive = false;
-                    $("#placeholder").data().plot = matsGraphUtils.drawGraph(ranges, dataset, options, $("#placeholder"));
-                    zooming = false;
+                // if the layout changes, store the new x axis limits in case someone presses replot.
+                currentXMin = options.xaxis.range[0];
+                currentXMax = options.xaxis.range[1];
+                $("#placeholder")[0].on('plotly_relayout', function (eventdata) {
+                    currentXMin = eventdata['xaxis.range[0]'];
+                    currentXMax = eventdata['xaxis.range[1]'];
                 });
-                $("#placeholder").bind('plotclick', function (event, pos, item) {
-                    if (zooming) {
-                        zooming = false;
-                        return;
-                    }
-                    if (item && item.series.data[item.dataIndex][3]) {
-                        Session.set("data", item.series.data[item.dataIndex][3]);
-                        $("#dataModal").modal('show');
-                    }
-                });
-                // draw the plot for the first time
-                $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-                $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
             }
             matsCurveUtils.hideSpinner();
         }
@@ -233,14 +158,23 @@ Template.graph.helpers({
     },
     yAxes: function () {
         Session.get('PlotResultsUpDated');
-        var yAxes = [];
-        for (var yidx = 0; yidx < yAxisNumber; yidx++) {
-            yAxes.push(yidx);
+        var plotType = Session.get('plotType');
+        // create an array like [0,1,2...] for each unique yaxis
+        // by getting the yaxis keys - filtering them to be unique, then using an Array.apply on the resulting array
+        // to assign a number to each value
+        var yaxis = {};
+        if ($("#placeholder")[0] === undefined || plotType === matsTypes.PlotTypes.map) {
+            return;
         }
-        return yAxes;
+        Object.keys($("#placeholder")[0].layout).filter(function (k) {
+            if (k.startsWith('yaxis')) {
+                yaxis[k] = $("#placeholder")[0].layout[k];
+            }
+        });
+        return Array.apply(null, {length: Object.keys(yaxis).length}).map(Number.call, Number);
     },
-    isMap: function () {
-        return (Session.get('plotType') === matsTypes.PlotTypes.map)
+    isNotMap: function () {
+        return (Session.get('plotType') !== matsTypes.PlotTypes.map)
     },
     sentAddresses: function () {
         var addresses = [];
@@ -285,6 +219,13 @@ Template.graph.helpers({
         }
         return Session.get(sval);
     },
+    heatMapButtonText: function () {
+        var sval = this.label + "heatMapButtonText";
+        if (Session.get(sval) === undefined) {
+            Session.set(sval, 'show heat map');
+        }
+        return Session.get(sval);
+    },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
@@ -323,6 +264,14 @@ Template.graph.helpers({
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+            return 'none';
+        } else {
+            return 'block';
+        }
+    },
+    heatMapShowHideDisplay: function () {
+        var plotType = Session.get('plotType');
+        if (plotType !== matsTypes.PlotTypes.map) {
             return 'none';
         } else {
             return 'block';
@@ -382,16 +331,14 @@ Template.graph.events({
     },
     'click .preview': function () {
         var plotType = Session.get('plotType');
-        if (plotType !== matsTypes.PlotTypes.map) {
-            // store axes so current zoom is preserved
-            var axes = $("#placeholder").data().plot.getAxes();
-            var key = Session.get('plotResultKey');
-            matsMethods.setNewAxes.call({resultKey: key, axes: axes}, function (error) {
-                if (error !== undefined) {
-                    setError(error);
-                }
-            });
-        }
+        // capture the layout
+        const layout = $("#placeholder")[0].layout;
+        var key = Session.get('plotResultKey');
+        matsMethods.saveLayout.call({resultKey: key, layout: layout}, function (error) {
+            if (error !== undefined) {
+                setError(error);
+            }
+        });
         // open a new window with a standAlone graph of the current graph
         var h = Math.max(document.documentElement.clientHeight, window.innerWidth || 0) * .5;
         var w = h * 1.3;
@@ -526,274 +473,257 @@ Template.graph.events({
         }
     },
     'click .replotZoomButton': function () {
-        var xaxis = $("#placeholder").data().plot.getAxes().xaxis;
-        var params = Session.get('params');
-        var min = Math.round(xaxis.min);
-        var max = Math.round(xaxis.max);
-        var newDateRange = moment.utc(min).format('M/DD/YYYY HH:mm') + " - " + moment.utc(max).format('M/DD/YYYY HH:mm');
-        document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
-        var actionId = "plotUnmatched";
-        if (params.plotAction === "matched") {
-            actionId = plotMatched;
+        var plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+            var newDateRange = moment.utc(currentXMin).format('M/DD/YYYY HH:mm') + " - " + moment.utc(currentXMax).format('M/DD/YYYY HH:mm');
+            document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
+            var params = Session.get('params');
+            var actionId = "plotUnmatched";
+            if (params.plotAction === "matched") {
+                actionId = plotMatched;
+            }
+            document.getElementById("plot-curves").click();
         }
-        document.getElementById("plot-curves").click();
     },
     'click .curveVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide', '');
-        const myData = dataset.find(function (d) {
+        const myDataIdx = dataset.findIndex(function (d) {
             return d.curveId === label;
         });
-
-        myData.lines.show = !myData.lines.show;
-        if (myData.lines.show) {
-            myData.points.show = true;
-            myData.points.errorbars = errorTypes[myData.curveId];
-            if (myData.data.length > 0) {
-                $('#' + label + "-curve-show-hide")[0].value = "hide curve";
-                $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
-                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
-            }
-        } else {
-            myData.points.show = false;
-            myData.points.errorbars = undefined;
-            if (myData.data.length > 0) {
-                $('#' + label + "-curve-show-hide")[0].value = "show curve";
-                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
-                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+        if (dataset[myDataIdx].x.length > 0) {
+            var update;
+            if (dataset[myDataIdx].visible) {
+                if (dataset[myDataIdx].mode === "lines") {                  // in line mode, lines are visible, so make nothing visible
+                    update = {
+                        visible: !dataset[myDataIdx].visible
+                    };
+                    $('#' + label + "-curve-show-hide")[0].value = "show curve";
+                } else if (dataset[myDataIdx].mode === "lines+markers") {   // in line and point mode, lines and points are visible, so make nothing visible
+                    update = {
+                        visible: !dataset[myDataIdx].visible
+                    };
+                    $('#' + label + "-curve-show-hide")[0].value = "show curve";
+                    $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+                } else if (dataset[myDataIdx].mode === "markers") {         // in point mode, points are visible, so make lines and points visible
+                    update = {
+                        mode: "lines+markers"
+                    };
+                    $('#' + label + "-curve-show-hide")[0].value = "hide curve";
+                }
+            } else {
+                if (dataset[myDataIdx].mode === "lines") {                  // in line mode, nothing is visible, so make lines visible
+                    update = {
+                        visible: !dataset[myDataIdx].visible
+                    };
+                    $('#' + label + "-curve-show-hide")[0].value = "hide curve";
+                } else if (dataset[myDataIdx].mode === "lines+markers") {   // in line and point mode, nothing is visible, so make lines and points visible
+                    update = {
+                        visible: !dataset[myDataIdx].visible
+                    };
+                    $('#' + label + "-curve-show-hide")[0].value = "hide curve";
+                    $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+                }
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .pointsVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-points', '');
-        const myData = dataset.find(function (d) {
+        const myDataIdx = dataset.findIndex(function (d) {
             return d.curveId === label;
         });
-        myData.points.show = !myData.points.show;
-        if (myData.data.length > 0) {
-            if (myData.points.show == true) {
+        if (dataset[myDataIdx].x.length > 0) {
+            var update;
+            if (dataset[myDataIdx].visible) {
+                if (dataset[myDataIdx].mode === "lines") {                  // lines are visible, so make lines and points visible
+                    update = {
+                        mode: "lines+markers"
+                    };
+                    $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
+                } else if (dataset[myDataIdx].mode === "lines+markers") {   // lines and points are visible, so make only lines visible
+                    update = {
+                        mode: "lines"
+                    };
+                    $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+                } else if (dataset[myDataIdx].mode === "markers") {         // points are visible, so make nothing visible
+                    update = {
+                        visible: !dataset[myDataIdx].visible,
+                        mode: "lines"
+                    };
+                    $('#' + label + "-curve-show-hide-points")[0].value = "show points";
+                }
+            } else {                                                        // nothing is visible, so make points visible
+                update = {
+                    visible: !dataset[myDataIdx].visible,
+                    mode: "markers"
+                };
                 $('#' + label + "-curve-show-hide-points")[0].value = "hide points";
-            } else {
-                $('#' + label + "-curve-show-hide-points")[0].value = "show points";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-errorbars', '');
-        const myData = dataset.find(function (d) {
+        const myDataIdx = dataset.findIndex(function (d) {
             return d.curveId === label;
         });
-        if (myData.points.errorbars === undefined) {
-            myData.points.errorbars = errorTypes[myData.curveId];
-            if (myData.data.length > 0) {
-                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
-            }
-        } else {
-            myData.points.errorbars = undefined;
-            if (myData.data.length > 0) {
-                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
+        if (dataset[myDataIdx].x.length > 0) {
+            var update = {
+                error_y: dataset[myDataIdx].error_y
+            };
+            update.error_y.visible = !update.error_y.visible;
+            if (dataset[myDataIdx].error_y.visible) {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+            } else {
+                $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .barVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-bars', '');
-        const myData = dataset.find(function (d) {
+        const myDataIdx = dataset.findIndex(function (d) {
             return d.curveId === label;
         });
-        myData.bars.show = !myData.bars.show;
-        if (myData.data.length > 0) {
-            if (myData.bars.show == true) {
+        if (dataset[myDataIdx].x.length > 0) {
+            var update = {
+                visible: !dataset[myDataIdx].visible
+            };
+            if (dataset[myDataIdx].visible) {
                 $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
             } else {
                 $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
             }
         }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        Plotly.restyle($("#placeholder")[0], update, myDataIdx);
     },
     'click .annotateVisibility': function (event) {
         event.preventDefault();
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-annotate', '');
         if ($('#' + label + "-annotation")[0].hidden) {
-            $('#' + label + "-annotation").show();
+            $('#' + label + "-annotation")[0].style.display = "block";
             $('#' + label + "-curve-show-hide-annotate")[0].value = "hide annotation";
             $('#' + label + "-annotation")[0].hidden = false;
         } else {
-            $('#' + label + "-annotation").hide();
+            $('#' + label + "-annotation")[0].style.display = "none";
             $('#' + label + "-curve-show-hide-annotate")[0].value = "show annotation";
             $('#' + label + "-annotation")[0].hidden = true;
         }
         annotation = $('#annotationContainer')[0].innerHTML;
     },
-    // add zoom out button
-    'click #zoom-out': function (event) {
+    'click .heatMapVisibility': function (event) {
         event.preventDefault();
-        $("#placeholder").data().plot.zoomOut();
-    },
+        var dataset = matsCurveUtils.getGraphResult().data;
+        if (dataset[0].lat.length > 0) {
+            var update;
+            var didx;
+            if (dataset[0].marker.opacity === 0) {
+                update = {
+                    'marker.opacity': 1
+                };
+                Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': false
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
+            } else {
+                update = {
+                    'marker.opacity': 0
+                };
+                Plotly.restyle($("#placeholder")[0], update, 0);
+                update = {
+                    'visible': true
+                };
+                for (didx = 1; didx < dataset.length; didx++) {
+                    Plotly.restyle($("#placeholder")[0], update, didx);
+                }
+                $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
 
-    // add zoom in button
-    'click #zoom-in': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoom();
-    },
-    // add horizontal zoom out button
-    'click #zoom-out-left-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomOutHorizontal();
-    },
-    // add horizontal zoom in button
-    'click #zoom-in-left-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomHorizontal();
-    },
-    // add vertical zoom out button
-    'click #zoom-out-up-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomOutVertical();
-    },
-    // add vertical zoom in button
-    'click #zoom-in-up-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.zoomVertical();
-    },
-    // pan-left
-    'click #pan-left': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({left: -100});
-    },
-    // pan-right
-    'click #pan-right': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({left: 100});
-    },
-    // pan-up
-    'click #pan-up': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({top: -100});
-    },
-    // pan-down
-    'click #pan-down': function (event) {
-        event.preventDefault();
-        $("#placeholder").data().plot.pan({top: 100});
+            }
+        }
     },
     // add refresh button
     'click #refresh-plot': function (event) {
         event.preventDefault();
-        var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
-
-        // restore original axis limits and labels to options map
-        if (originalXaxisLabel !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].axisLabel = originalXaxisLabel;
-        }
-        if (originalXaxisMin !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].min = originalXaxisMin;
-        }
-        if (originalXaxisMax !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].max = originalXaxisMax;
-        }
-        for (yidx = 0; yidx < yAxisLength; yidx++) {
-            if (originalYaxisLabels[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].axisLabel = originalYaxisLabels[yidx];
-            }
-            if (originalYaxisMins[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].min = originalYaxisMins[yidx];
-            }
-            if (originalYaxisMaxs[yidx] !== undefined && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].max = originalYaxisMaxs[yidx];
-            }
-        }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        var options = Session.get('options');
+        Plotly.relayout($("#placeholder")[0], options);
     },
-
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
         event.preventDefault();
         var plotType = Session.get('plotType');
-        var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
-
+        var options = Session.get('options');
+        var newOpts = {};
         // get input axis limits and labels
-        var ylabels = [];
-        var ymins = [];
-        var ymaxs = [];
-        var yidxTranslated;
-        for (yidx = 0; yidx < yAxisLength; yidx++) {
-            yidxTranslated = yAxisTranslate[yidx];
-            ylabels.push(document.getElementById("y" + yidxTranslated + "AxisLabel").value);
-            if (plotType === matsTypes.PlotTypes.profile) {
-                // the actual y ticks are from 0 to -1100
-                var yminRaw = document.getElementById("y" + yidxTranslated + "AxisMax").value;
-                var ymaxRaw = document.getElementById("y" + yidxTranslated + "AxisMin").value;
-                var ymin = yminRaw !== "" ? yminRaw * -1 : "";
-                var ymax = ymaxRaw !== "" ? ymaxRaw * -1 : "";
-                ymins.push(ymin);
-                ymaxs.push(ymax);
-            } else {
-                ymins.push(document.getElementById("y" + yidxTranslated + "AxisMin").value);
-                ymaxs.push(document.getElementById("y" + yidxTranslated + "AxisMax").value);
+        $("input[id^=x][id$=AxisLabel]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
-        }
-
-        var xlabel = document.getElementById("xAxisLabel").value;
-        var xmin;
-        var xmax;
+        });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
-            const xminRaw = document.getElementById("xAxisMinText").value;
-            const xmaxRaw = document.getElementById("xAxisMaxText").value;
-            xmin = xminRaw !== "" ? moment.utc(xminRaw).valueOf() : "";
-            xmax = xmaxRaw !== "" ? moment.utc(xmaxRaw).valueOf() : "";
+            $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
+            });
+            $("input[id^=x][id$=AxisMaxText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
         } else {
-            xmin = document.getElementById("xAxisMin").value;
-            xmax = document.getElementById("xAxisMax").value;
+            $("input[id^=x][id$=AxisMin]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
+            });
+            $("input[id^=x][id$=AxisMax]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
+            });
         }
-
-        // set new limits and labels in options map
-        if (xlabel !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].axisLabel = xlabel;
-        }
-        if (xmin !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].min = xmin;
-        }
-        if (xmax !== "" && options.xaxes && options.xaxes[0]) {
-            options.xaxes[0].max = xmax;
-        }
-        for (yidx = 0; yidx < yAxisLength; yidx++) {
-            if (ylabels[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].axisLabel = ylabels[yidx];
+        $("input[id^=y][id$=AxisLabel]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
-            if (ymins[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].min = ymins[yidx];
+        });
+        $("input[id^=y][id$=AxisMin]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                } else {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                }
             }
-            if (ymaxs[yidx] !== "" && options.yaxes && options.yaxes[yidx]) {
-                options.yaxes[yidx].max = ymaxs[yidx];
+        });
+        $("input[id^=y][id$=AxisMax]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                if (plotType === matsTypes.PlotTypes.profile) {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                } else {
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                }
             }
-        }
-        $("#placeholder").data().plot = $.plot($("#placeholder"), dataset, options);
-        $("#placeholder").append("<div id='annotationContainer' style='position:absolute;left:100px;top:20px;font-size:smaller'>" + annotation + "</div>");
+        });
+        Plotly.relayout($("#placeholder")[0], newOpts);
         $("#axisLimitModal").modal('hide');
     }
 });
+

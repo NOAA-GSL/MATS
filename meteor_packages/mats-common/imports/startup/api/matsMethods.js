@@ -4,7 +4,7 @@ import {SimpleSchema} from 'meteor/aldeed:simple-schema';
 import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes, matsCache} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
-import {Mongo} from 'meteor/mongo'
+import {Mongo} from 'meteor/mongo';
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
@@ -95,12 +95,12 @@ var getJSON = function (params, req, res, next) {
 };
 
 // initialize collections used for pop-out window functionality
-const AxesStoreCollection = new Mongo.Collection("AxesStoreCollection");    // local collection used to store new axis ranges when opening pop out graphs
+const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
 if (Meteor.isServer) {
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
-    AxesStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
+    LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
 
     // define some server side routes
     Picker.route('/getCSV/:key', function (params, req, res, next) {
@@ -150,7 +150,7 @@ const getPagenatedData = function (rky, p, np) {
         try {
             var result = matsCache.getResult(key);
             rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something,createdAt:date, result:resultObject}
-         } catch (e) {
+        } catch (e) {
             console.log("getPagenatedData: Error - ", e);
             return undefined;
         }
@@ -179,18 +179,18 @@ const getPagenatedData = function (rky, p, np) {
 
         var dsiStart;
         var dsiEnd;
-        for (var dsi = 0; dsi < ret.data.length; dsi++) {
-            if (ret.data[dsi].data.length <= 100) {
+        for (var csi = 0; csi < ret.data.length; csi++) {
+            if (ret.data[csi].x === undefined || ret.data[csi].x === null || ret.data[csi].x.length <= 100) {
                 continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
             }
             dsiStart = start;
             dsiEnd = end;
-            if (dsiStart > ret.data[dsi].data.length || dsiStart === -2000) {
+            if (dsiStart > ret.data[csi].x.length || dsiStart === -2000) {
                 // show the last page if we either requested it specifically or are trying to navigate past it
-                dsiStart = Math.floor(rawReturn.data[dsi].data.length / 100) * 100;
-                dsiEnd = rawReturn.data[dsi].data.length;
+                dsiStart = Math.floor(rawReturn.data[csi].x.length / 100) * 100;
+                dsiEnd = rawReturn.data[csi].x.length;
                 if (dsiEnd === dsiStart) {
-                    // make sure the last page isn't empty--if rawReturn.data[dsi].data.length/100 produces a whole number,
+                    // make sure the last page isn't empty--if rawReturn.data[csi].data.length/100 produces a whole number,
                     // dsiStart and dsiEnd would be the same. This makes sure that the last full page is indeed the last page, without a phantom empty page afterwards
                     dsiStart = dsiEnd - 100;
                 }
@@ -204,13 +204,17 @@ const getPagenatedData = function (rky, p, np) {
                 // make sure that the end is after the start
                 dsiEnd = dsiStart + 100;
             }
-            if (dsiEnd > ret.data[dsi].data.length) {
+            if (dsiEnd > ret.data[csi].x.length) {
                 // make sure we don't request past the end -- if results are one page, this should convert the
                 // start and end from 0 and 100 to 0 and whatever the end is.
-                dsiEnd = ret.data[dsi].data.length;
+                dsiEnd = ret.data[csi].x.length;
             }
-            ret.data[dsi].data = rawReturn.data[dsi].data.slice(dsiStart, dsiEnd);
+            ret.data[csi].x = rawReturn.data[csi].x.slice(dsiStart, dsiEnd);
+            ret.data[csi].y = rawReturn.data[csi].y.slice(dsiStart, dsiEnd);
+            ret.data[csi].stats = rawReturn.data[csi].stats.slice(dsiStart, dsiEnd);
+            ret.data[csi].glob_stats = rawReturn.data[csi].glob_stats;
         }
+
         delete rawReturn;
         if (direction === 1) {
             ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
@@ -268,7 +272,7 @@ const getFlattenedResultData = function (rk, p, np) {
                               }
                     }
                      */
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) { // for each curve
                         // if the curve label is a reserved word do not process the curve (its a zero or max curve)
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
@@ -276,26 +280,25 @@ const getFlattenedResultData = function (rk, p, np) {
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['standard error'] = data[ci].stats.stde_betsy;
-                        stats['lag1'] = data[ci].stats.lag1;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['standard error'] = data[ci].glob_stats.stde_betsy;
+                        stats['lag1'] = data[ci].glob_stats.lag1;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) { //for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' time'] = moment.utc(Number(cdata[cdi][0])).format('YYYY-MM-DD HH:mm');
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][1];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
-                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + ' time'] = data[ci].x[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].y[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
+                            curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -304,35 +307,34 @@ const getFlattenedResultData = function (rk, p, np) {
                 case matsTypes.PlotTypes.profile:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
-                    returnData.data = {};  // map of arrays of maps
-
-                    for (var ci = 0; ci < data.length; ci++) {
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['standard error'] = data[ci].stats.stde_betsy;
-                        stats['lag1'] = data[ci].stats.lag1;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['standard error'] = data[ci].glob_stats.stde_betsy;
+                        stats['lag1'] = data[ci].glob_stats.lag1;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
                         var cdata = data[ci].data;
-                        var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' level'] = cdata[cdi][1] * -1;
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][0];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['std error'] = cdata[cdi][5].stde_betsy;
-                            curveDataElement['lag1'] = cdata[cdi][5].lag1;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + ' level'] = data[ci].y[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].x[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['std error'] = data[ci].stats[cdi].stde_betsy;
+                            curveDataElement['lag1'] = data[ci].stats[cdi].lag1;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -357,85 +359,97 @@ const getFlattenedResultData = function (rk, p, np) {
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
 
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].stats.d_mean;
-                        stats['standard deviation'] = data[ci].stats.sd;
-                        stats['n'] = data[ci].stats.n_good;
-                        stats['minimum'] = data[ci].stats.minVal;
-                        stats['maximum'] = data[ci].stats.maxVal;
+                        stats['mean'] = data[ci].glob_stats.d_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.sd;
+                        stats['n'] = data[ci].glob_stats.n_good;
+                        stats['minimum'] = data[ci].glob_stats.minVal;
+                        stats['maximum'] = data[ci].glob_stats.maxVal;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + labelSuffix] = cdata[cdi][0];
-                            curveDataElement['raw stat from query'] = cdata[cdi][5].raw_stat;
-                            curveDataElement['plotted stat'] = cdata[cdi][1];
-                            curveDataElement['std dev'] = cdata[cdi][5].sd;
-                            curveDataElement['n'] = cdata[cdi][5].n_good;
+                            curveDataElement[data[ci].label + labelSuffix] = data[ci].x[cdi];
+                            curveDataElement['raw stat from query'] = data[ci].stats[cdi].raw_stat;
+                            curveDataElement['plotted stat'] = data[ci].y[cdi];
+                            curveDataElement['std dev'] = data[ci].stats[cdi].sd;
+                            curveDataElement['n'] = data[ci].stats[cdi].n_good;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
                 case matsTypes.PlotTypes.map:
-                    var returnData = [];  // array of maps
-                    /*
-                        returnData = [
-                                         {siteName:aSiteName, number of times:number, start date: date, end date:date, average difference: number},
-                                         {siteName:aDifferentSiteName, number of times:number, start date: date, end date:date, average difference: number},
-                                          ...
-                                     ]
-                     */
-                    // maps only have one curve - an array of sites
-                    var mData = data[0].data;
-                    for (var si = 0; si < mData.length; si++) {
-                        var elem = {};
-                        elem['Site Name'] = mData[si][0][0];
-                        elem['Number of Times'] = mData[si][0][1];
-                        elem['Start Date'] = moment.utc(Number(mData[si][0][2]) * 1000).format('YYYY-MM-DD HH:mm');
-                        elem['End Date'] = moment.utc(Number(mData[si][0][3]) * 1000).format('YYYY-MM-DD HH:mm');
-                        elem['Average Difference'] = mData[si][0][4];
-                        returnData.push(elem);
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of maps
+
+                    var stats = {};
+                    stats['label'] = data[0].label;
+                    stats['total number of obs'] = data[0].stats.reduce(function(prev, curr) {
+                        return prev + curr.N_times;
+                    }, 0);
+                    stats['mean difference'] = matsDataUtils.average(data[0].queryVal);
+                    stats['standard deviation'] = matsDataUtils.stdev(data[0].queryVal);
+                    stats['minimum time'] = data[0].stats.reduce(function (prev, curr) {
+                        return (prev < curr.min_time ? prev : curr.min_time);
+                    });
+                    stats['minimum time'] = moment.utc(stats['minimum time'] * 1000).format('YYYY-MM-DD HH:mm');
+                    stats['maximum time'] = data[0].stats.reduce(function (prev, curr) {
+                        return (prev > curr.max_time ? prev : curr.max_time);
+                    });
+                    stats['maximum time'] = moment.utc(stats['maximum time'] * 1000).format('YYYY-MM-DD HH:mm');
+
+                    returnData.stats[data[0].label] = stats;
+
+                    var curveData = [];  // map of maps
+                    for (var si = 0; si < data[0].siteName.length; si++) {
+                        var curveDataElement = {};
+                        curveDataElement['Site Name'] = data[0].siteName[si];
+                        curveDataElement['Number of Times'] = data[0].stats[si].N_times;
+                        curveDataElement['Start Date'] = moment.utc((data[0].stats[si].min_time) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveDataElement['End Date'] = moment.utc((data[0].stats[si].max_time) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveDataElement['Average Difference'] = data[0].queryVal[si];
+                        curveData.push(curveDataElement);
                     }
+                    returnData.data[data[0].label] = curveData;
                     break;
                 case matsTypes.PlotTypes.histogram:
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of maps
 
-                    for (var ci = 0; ci < data.length; ci++) {
+                    for (var ci = 0; ci < data.length; ci++) { // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
                         }
                         var stats = {};
                         stats['label'] = data[ci].label;
-                        stats['mean'] = data[ci].data[0][7].glob_mean;
-                        stats['standard deviation'] = data[ci].data[0][7].glob_sd;
-                        stats['n'] = data[ci].data[0][7].glob_n;
-                        stats['minimum'] = data[ci].data[0][7].glob_min;
-                        stats['maximum'] = data[ci].data[0][7].glob_max;
+                        stats['mean'] = data[ci].glob_stats.glob_mean;
+                        stats['standard deviation'] = data[ci].glob_stats.glob_sd;
+                        stats['n'] = data[ci].glob_stats.glob_n;
+                        stats['minimum'] = data[ci].glob_stats.glob_min;
+                        stats['maximum'] = data[ci].glob_stats.glob_max;
                         returnData.stats[data[ci].label] = stats;
 
-                        var cdata = data[ci].data;
                         var curveData = [];  // map of maps
-                        for (var cdi = 0; cdi < cdata.length; cdi++) {
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {   // for each datapoint
                             var curveDataElement = {};
-                            curveDataElement[data[ci].label + ' bin range'] = cdata[cdi][6]['binLabel'];
-                            curveDataElement['n'] = cdata[cdi][6].bin_n;
-                            curveDataElement['bin rel freq'] = cdata[cdi][6].bin_rf;
-                            curveDataElement['bin lower bound'] = cdata[cdi][6].binLowBound;
-                            curveDataElement['bin upper bound'] = cdata[cdi][6].binUpBound;
-                            curveDataElement['bin mean'] = cdata[cdi][6].bin_mean;
-                            curveDataElement['bin std dev'] = cdata[cdi][6].bin_sd;
+                            curveDataElement[data[ci].label + ' bin range'] = data[ci].bin_stats[cdi]['binLabel'];
+                            curveDataElement['n'] = data[ci].bin_stats[cdi].bin_n;
+                            curveDataElement['bin rel freq'] = data[ci].bin_stats[cdi].bin_rf;
+                            curveDataElement['bin lower bound'] = data[ci].bin_stats[cdi].binLowBound;
+                            curveDataElement['bin upper bound'] = data[ci].bin_stats[cdi].binUpBound;
+                            curveDataElement['bin mean'] = data[ci].bin_stats[cdi].bin_mean;
+                            curveDataElement['bin std dev'] = data[ci].bin_stats[cdi].bin_sd;
                             curveData.push(curveDataElement);
                         }
                         returnData.data[data[ci].label] = curveData;
@@ -534,47 +548,66 @@ const saveResultData = function (result) {
             if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
                 // greater than threshold need to downsample
                 // downsample and save it in DownSampleResult
+                console.log("DownSampling");
                 var downsampler = require("downsample-lttb");
                 var totalPoints = 0;
                 for (var di = 0; di < result.data.length; di++) {
-                    totalPoints += result.data[di].data.length;
+                    totalPoints += result.data[di].x_epoch.length;
                 }
                 var allowedNumberOfPoints = (threshold / dSize) * totalPoints;
                 var downSampleResult = result === undefined ? undefined : JSON.parse(JSON.stringify(result));
-                for (var di = 0; di < result.data.length; di++) {
-                    var lastYVIndex = result.data[di].data[0].length;
-                    //get an x,y array from the data set
-                    var xyDataset = result.data[di].data.map(function (d) {
-                        return [d[0], d[1]];
+                for (var ci = 0; ci < result.data.length; ci++) {
+                    var dsData = {};
+                    var xyDataset = result.data[ci].x_epoch.map(function (d, index) {
+                        return [result.data[ci].x_epoch[index], result.data[ci].y[index]];
                     });
-                    // determine the desired number of points
-                    // ratio of my points to totalPoints
                     var ratioTotalPoints = xyDataset.length / totalPoints;
                     var myAllowedPoints = Math.round(ratioTotalPoints * allowedNumberOfPoints);
                     // downsample the array
                     var downsampledSeries;
                     if (myAllowedPoints < xyDataset.length && xyDataset.length > 2) {
                         downsampledSeries = downsampler.processData(xyDataset, myAllowedPoints);
-                        // replace the y attributes (tooltips etc.) with the y attributes from yhe nearest x
-                        var nearestOriginalIndex = 1;
-                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
-                            while (nearestOriginalIndex < result.data[di].data.length && result.data[di].data[nearestOriginalIndex][0] < downsampledSeries[dsi][0]) {
-                                nearestOriginalIndex++;
-                            }
-                            // which is closest - this one or the prior one?
-                            var leftDelta = Math.abs(result.data[di].data[nearestOriginalIndex - 1][0] - downsampledSeries[dsi][0]);
-                            var rightDelta = Math.abs(result.data[di].data[nearestOriginalIndex][0] - downsampledSeries[dsi][0]);
-                            var nearestOriginal = leftDelta > rightDelta ? result.data[di].data[nearestOriginalIndex] : result.data[di].data[nearestOriginalIndex - 1];
-                            for (var dsYVi = 2; dsYVi < lastYVIndex; dsYVi++) {
-                                downsampledSeries[dsi][dsYVi] = nearestOriginal[dsYVi];
+                        // replace the y attributes (tooltips etc.) with the y attributes from the nearest x
+                        var originalIndex = 0;
+                        // skip through the original dataset capturing each downSampled data point
+                        var arrayKeys = [];
+                        var nonArrayKeys = [];
+                        var keys = Object.keys(result.data[ci]);
+                        for (var ki = 0; ki < keys.length; ki++) {
+                            if (keys[ki] !== 'x_epoch') {
+                                if (Array.isArray(result.data[ci][keys[ki]])) {
+                                    arrayKeys.push(keys[ki]);
+                                    dsData[keys[ki]] = [];
+                                } else {
+                                    nonArrayKeys.push(keys[ki]);
+                                }
                             }
                         }
+                        // We only ever downsample series plots - never profiles and series plots only ever have error_y arrays.
+                        // This is a little hacky but what is happening is we putting error_y.array on the arrayKeys list so that it gets its
+                        // downsampled equivalent values.
+                        for (ki = 0; ki < nonArrayKeys.length; ki++) {
+                            dsData[nonArrayKeys[ki]] = result.data[ci][nonArrayKeys[ki]];
+                        }
+                        // remove the original error_y array data.
+                        dsData['error_y'].array = [];
+                        for (var dsi = 0; dsi < downsampledSeries.length; dsi++) {
+                            while (originalIndex < result.data[ci].x_epoch.length && (result.data[ci].x_epoch[originalIndex] < downsampledSeries[dsi][0])) {
+                                originalIndex++;
+                            }
+                            // capture the stuff related to this downSampled data point (downSampled data points are always a subset of original data points)
+                            for (ki = 0; ki < arrayKeys.length; ki++) {
+                                dsData[arrayKeys[ki]][dsi] = result.data[ci][arrayKeys[ki]][originalIndex];
+                            }
+                            dsData['error_y']['array'][dsi] = result.data[ci]['error_y']['array'][originalIndex];
+                        }
                         // add downsampled annotation to curve options
-                        downSampleResult.data[di].annotation += "   **DOWNSAMPLED**";
+                        downSampleResult[ci] = dsData;
+                        downSampleResult[ci].annotation += "   **DOWNSAMPLED**";
                     } else {
-                        downsampledSeries = result.data[di].data;
+                        downSampleResult[ci] = result.data[ci];
                     }
-                    downSampleResult.data[di].data = downsampledSeries;
+                    downSampleResult.data[ci] = downSampleResult[ci];
                 }
                 DownSampleResults.rawCollection().insert({"createdAt": new Date(), key: key, result: downSampleResult});// createdAt ensures expiration set in mats-collections
                 ret = {key: key, result: downSampleResult};
@@ -582,7 +615,12 @@ const saveResultData = function (result) {
                 ret = {key: key, result: result};
             }
             // save original dataset
-            matsCache.storeResult(key,{"createdAt": new Date(), key: key, result: result});
+            if (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle) {
+                for (var ci = 0; ci < result.data.length; ci++) {
+                    delete(result.data[ci]['x_epoch']);     // we only needed this as an index for downsampling
+                }
+            }
+            matsCache.storeResult(key, {"createdAt": new Date(), key: key, result: result});
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
                 throw new Meteor.Error(+": Requesting too much data... try averaging");
@@ -956,6 +994,9 @@ const resetApp = function (metaDataTableRecords) {
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
+    if (process.env.NODE_ENV === "development") {
+        matsCache.clear();  // DISABLE FOR PRODUCTION *********
+    }
 };
 
 // refreshes the metadata for the app that's running
@@ -1260,6 +1301,9 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             var ret;
             try {
+                if (process.env.NODE_ENV === "development") {
+                    matsCache.clear();  // DISABLE FOR PRODUCTION *********
+                }
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
                 var results = matsCache.getResult(key);
@@ -1281,11 +1325,11 @@ const getGraphData = new ValidatedMethod({
                     } else {
                         ret = results;  // {key:someKey, createdAt:date, result:resultObject}
                         // refresh expire time? I only know how to re - set the item
-                        matsCache.storeResult(results.key,results);
+                        matsCache.storeResult(results.key, results);
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
-                    return ret;
+                    return;
                 }
             } catch (dataFunctionError) {
                 if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
@@ -1347,6 +1391,7 @@ const saveSettings = new ValidatedMethod({
     run(params) {
         var user = "anonymous";
         matsCollections.CurveSettings.upsert({name: params.saveAs}, {
+            created: moment().format("MM/DD/YYYY HH:mm:ss"),
             name: params.saveAs,
             data: params.p,
             owner: Meteor.userId() == null ? "anonymous" : Meteor.userId(),
@@ -1508,8 +1553,31 @@ const getReleaseNotes = new ValidatedMethod({
     }
 });
 
-const getNewAxes = new ValidatedMethod({
-    name: 'matsMethods.getNewAxes',
+const saveLayout = new ValidatedMethod({
+    name: 'matsMethods.saveLayout',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        },
+        layout: {
+            type: Object, blackbox: true
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var key = params.resultKey;
+            var layout = params.layout;
+            try {
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
+            } catch (error) {
+                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
+            }
+        }
+    }
+});
+
+const getLayout = new ValidatedMethod({
+    name: 'matsMethods.getLayout',
     validate: new SimpleSchema({
         resultKey: {
             type: String
@@ -1520,35 +1588,12 @@ const getNewAxes = new ValidatedMethod({
             var ret;
             var key = params.resultKey;
             try {
-                ret = AxesStoreCollection.rawCollection().findOne({key: key});
+                ret = LayoutStoreCollection.rawCollection().findOne({key: key});
                 return ret;
             } catch (error) {
-                throw new Meteor.Error("Error in getNewAxes function:" + key + " : " + error.message);
+                throw new Meteor.Error("Error in getLayout function:" + key + " : " + error.message);
             }
             return undefined;
-        }
-    }
-});
-
-const setNewAxes = new ValidatedMethod({
-    name: 'matsMethods.setNewAxes',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        },
-        axes: {
-            type: Object, blackbox: true
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var key = params.resultKey;
-            var axes = params.axes;
-            try {
-                AxesStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), axes: axes}});
-            } catch (error) {
-                throw new Meteor.Error("Error in setNewAxes function:" + key + " : " + error.message);
-            }
         }
     }
 });
@@ -1640,6 +1685,6 @@ export default matsMethods = {
     testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
     testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
     getReleaseNotes: getReleaseNotes,
-    getNewAxes: getNewAxes,
-    setNewAxes: setNewAxes
+    getLayout: getLayout,
+    saveLayout: saveLayout
 };

@@ -301,7 +301,7 @@ const doCurveParams = function () {
                     network: 'METAR',
                     peerOption: site_name,
                     id: site_id,
-                    highLightColor: 'pink'
+                    highLightColor: 'blue'
                 }
             };
             sitesLocationMap.push(obj);
@@ -770,7 +770,7 @@ const doCurveParams = function () {
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true,
-                defaultMapView: {point: [39.834, -98.604], zoomLevel: 5, minZoomLevel: 3, maxZoomLevel: 10},
+                defaultMapView: {point: [39.834, -98.604], zoomLevel: 3},
                 hiddenForPlotTypes: [matsTypes.PlotTypes.dieoff, matsTypes.PlotTypes.timeSeries, matsTypes.PlotTypes.validtime, matsTypes.PlotTypes.profile, matsTypes.PlotTypes.scatter2d],
                 help: 'map-help.html'
             });
@@ -806,7 +806,7 @@ var doCurveTextPatterns = function () {
             displayParams: [
                 "label", "data-source", "region", "statistic", "variable", "average", "forecast-length", "valid-time", "truth"
             ],
-            groupSize: 4
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
@@ -873,7 +873,7 @@ var doCurveTextPatterns = function () {
             displayParams: [
                 "data-source", "sites", "variable", "forecast-length", "valid-time"
             ],
-            groupSize: 4
+            groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.histogram,
@@ -912,37 +912,37 @@ var doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.validtime,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataValidTime",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dailyModelCycle,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDailyModelCycle",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.map,
-            graphFunction: "graphMap",
+            graphFunction: "graphPlotly",
             dataFunction: "dataMap",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
-            graphFunction: "graphHistogram",
+            graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
             checked: false
         });

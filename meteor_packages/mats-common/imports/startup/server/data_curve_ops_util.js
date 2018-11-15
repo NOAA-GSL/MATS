@@ -22,44 +22,35 @@ const getPointSymbol = function (curveIndex) {
 };
 
 // adds a horizontal black line along a specific y value
-const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
+const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
 
     const valueLine = {
-        "yaxis": 1,
         "label": cLabel,
         "annotation": "",
-        "color": "rgb(0,0,0)",
-        "data": [
-            [xmin, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()],
-            [xmax, yValue, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "y = " + yValue.toString()]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "y",
-            "yerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
+        "name": "y = " + yValue.toString(),
+        "mode": "lines",
+        "x": [xmin, xmax],
+        "x_epoch": [xmin, xmax],
+        "y": [yValue, yValue],
+        "error_x": [null, null],
+        "error_y": [null, null],
+        "subVals": [],
+        "subSecs": [],
+        "subLevs": [],
+        "stats": [{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, {
             "d_mean": 0,
-            "stde_betsy": 0,
             "sd": 0,
             "n_good": 0,
             "lag1": 0,
-            "min": xmax,
-            "max": xmin,
-            "sum": 0,
-            "miny": yValue,
-            "maxy": yValue
+            "stde": 0
+        }],
+        "tooltip": ["y = " + yValue.toString(), "y = " + yValue.toString()],
+        "xmin": xmin,
+        "xmax": xmax,
+        "ymin": yValue,
+        "ymax": yValue,
+        "line": {
+            "color": "rgb(0,0,0)",
         }
     };
 
@@ -67,44 +58,34 @@ const getHorizontalValueLine = function(xmax,xmin,yValue,cLabel) {
 };
 
 // adds a vertical black line along a specific x value
-const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
+const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
 
     const valueLine = {
-        "yaxis": 1,
         "label": cLabel,
-        "color": "rgb(0,0,0)",
         "annotation": "",
-        "data": [
-            [xValue, -ymax, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()],
-            [xValue, -ymin, -1, [0], [0], {"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, "x = " + xValue.toString()]
-        ],
-        "points": {
-            "show": false,
-            "errorbars": "x",
-            "xerr": {
-                "show": false,
-                "asymmetric": false,
-                "upperCap": "squareCap",
-                "lowerCap": "squareCap",
-                "color": "rgb(0,0,255)",
-                "radius": 5
-            }
-        },
-        "lines": {
-            "show": true,
-            "fill": false
-        },
-        "stats": {
+        "name": "x = " + xValue.toString(),
+        "mode": "lines",
+        "x": [xValue, xValue],
+        "y": [ymin, ymax],
+        "error_x": [null, null],
+        "error_y": [null, null],
+        "subVals": [],
+        "subSecs": [],
+        "subLevs": [],
+        "stats": [{"d_mean": 0, "sd": 0, "n_good": 0, "lag1": 0, "stde": 0}, {
             "d_mean": 0,
-            "stde_betsy": 0,
             "sd": 0,
             "n_good": 0,
             "lag1": 0,
-            "min": ymin,
-            "max": ymax,
-            "sum": 0,
-            "minx": xValue,
-            "maxx": xValue
+            "stde": 0
+        }],
+        "tooltip": ["x = " + xValue.toString(), "x = " + xValue.toString()],
+        "xmin": xValue,
+        "xmax": xValue,
+        "ymin": ymin,
+        "ymax": ymax,
+        "line": {
+            "color": "rgb(0,0,0)",
         }
     };
 
@@ -113,33 +94,16 @@ const getVerticalValueLine = function(ymax,ymin,xValue,cLabel) {
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
-    /*
-     some curves will share an axis based on the axis map key.
-     for example all the curves that have the same variable and statistic might share an axis.
-     The axis key might be different for different apps.
-     These axis have parameters that have been stashed in the axisMap
-     PARAMETERS:
-     curve -  the curve object
-     curveIndex : Number - the integer index of this curve
-     axisMap: object - a map of axis params ....
-     required curve params for generating an axisMap are:
-     label : String - that is the label of an axis
-     ymin : Number - the minimum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
-     ymax : the maximum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
-     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
-     optional params in an axisMap:
-     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
 
-     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
-     */
     const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
-    const annotation = curve['annotation'];
-    const pointSymbol = getPointSymbol(curveIndex);
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -148,70 +112,65 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            // axisLabel: axisKey + " - " + label
             axisLabel: axisKey
         };
     }
-    const curveOptions = {
-        yaxis: axisMap[axisKey].index,
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        points: {
-            symbol: pointSymbol,
-            fillColor: curve['color'],
-            show: true,
-            errorbars: "y",
-            yerr: {
-                show: true,
-                asymmetric: false,
-                upperCap: "squareCap",
-                lowerCap: "squareCap",
-                color: curve['color'],
-                radius: 5
-            }
-        },
-        lines: {show: true, fill: false}
+
+    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
+
+    var error_y_temp = {
+        error_y: {
+            array: dataSeries.error_y,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            visible: false, // changed later if matching
+            // width: 0
+        }
     };
+    var curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            yaxis: "y" + (axisNumber + 1),
+            annotation: annotation,
+            annotateColor: curve['color'],
+            mode: "lines+markers",
+            marker: {
+                color: curve['color'],
+                size: 8
+            },
+            line: {
+                color: curve['color'],
+            },
+            visible: true
+        }, ...dataSeries
+    };
+
+    delete curveOptions.error_y;
+
+    curveOptions['error_y'] = error_y_temp.error_y;
 
     return curveOptions;
 };
 
 // provides curve options for all plot types with an independent y axis and a dependent x axis
-const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
-    /*
-     some curves will share an axis based on the axis map key.
-     for example all the curves that have the same variable and statistic might share an axis.
-     The axis key might be different for different apps.
-     These axis have parameters that have been stashed in the axisMap
-     PARAMETERS:
-     curve -  the curve object
-     curveIndex : Number - the integer index of this curve
-     axisMap: object - a map of axis params ....
-     required curve params for generating an axisMap are:
-     label : String - that is the label of an axis
-     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
-     optional params in an axisMap:
-     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
-     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
-     */
+const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataProfile) {
+
     const label = curve['label'];
-    const axisKey = curve['axisKey'];
     const annotation = curve['annotation'];
-    const color = curve['color'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
-    const pointSymbol = getPointSymbol(curveIndex);
+    const axisKey = curve['axisKey'];
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -220,74 +179,63 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataSe
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
             ymax: ymax,
-            // axisLabel: axisKey + " - " + label
             axisLabel: axisKey
         };
     }
-    const curveOptions = {
-        yaxis: 1,   // for profiles there is only one xaxis and one yaxis
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: color,
-        data: dataSeries,
-        points: {
-            symbol: pointSymbol,
-            fillColor: color,
-            show: true,
-            errorbars: "x",
-            xerr: {
-                show: true,
-                asymmetric: false,
-                upperCap: "squareCap",
-                lowerCap: "squareCap",
-                color: color,
-                radius: 5
-            }
-        },
 
-        lines: {
-            show: true,
-            fill: false
+    var error_x_temp = {
+        error_x: {
+            array: dataProfile.error_x,
+            thickness: 1,     // set the thickness of the error bars
+            color: curve['color'],
+            visible: false, // changed later if matching
+            // width: 0
         }
     };
+    var curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            yaxis: "y1",
+            annotation: annotation,
+            annotateColor: curve['color'],
+            mode: "lines+markers",
+            marker: {
+                color: curve['color'],
+                size: 8
+            },
+            line: {
+                color: curve['color'],
+            },
+            visible: true
+        }, ...dataProfile
+    };
+
+    delete curveOptions.error_x;
+
+    curveOptions['error_x'] = error_x_temp.error_x;
+
     return curveOptions;
 };
 
 // provides curve options for all plot types with an independent x axis and a dependent y axis
-const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
-    /*
-     some curves will share an axis based on the axis map key.
-     for example all the curves that have the same variable and statistic might share an axis.
-     The axis key might be different for different apps.
-     These axis have parameters that have been stashed in the axisMap
-     PARAMETERS:
-     curve -  the curve object
-     curveIndex : Number - the integer index of this curve
-     axisMap: object - a map of axis params ....
-     required curve params for generating an axisMap are:
-     label : String - that is the label of an axis
-     ymin : Number - the minimum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
-     ymax : the maximum value of the curves y axis that corresponds to this axisKey (in other words for this curve)
-     axisKey : String - the axisMap key for this curve, i.e. the curves variable and statistic concatenated together.
-     optional params in an axisMap:
-     annotation : String - gets placed on the graph at the top left. e.g. "mean" for a time series.
+const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataBars) {
 
-     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
-     */
     const label = curve['label'];
+    const annotation = curve['annotation'];
+
+    // adjust axes for later setting of the plot options
     const ymin = curve['ymin'];
     const ymax = curve['ymax'];
     const xmin = curve['xmin'];
     const xmax = curve['xmax'];
     const axisKey = curve['axisKey'];
-    const annotation = curve['annotation'];
     if (axisKey in axisMap) {
         axisMap[axisKey].axisLabel = axisKey;
         axisMap[axisKey].ymin = ymin < axisMap[axisKey].ymin ? ymin : axisMap[axisKey].ymin;
@@ -296,8 +244,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
         axisMap[axisKey].xmax = xmax > axisMap[axisKey].xmax ? xmax : axisMap[axisKey].xmax;
     } else {
         axisMap[axisKey] = {
-            index: curveIndex + 1,
-            label: label,
+            index: Object.keys(axisMap).length + 1,
             xmin: xmin,
             xmax: xmax,
             ymin: ymin,
@@ -305,47 +252,75 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataS
             axisLabel: axisKey
         };
     }
+
     const curveOptions = {
-        yaxis: axisMap[axisKey].index,
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        points: {show: false,},
-        lines: {show: false, fill: false},
-        bars: {show: true}
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            annotation: annotation,
+            annotateColor: curve['color'],
+            marker: {
+                color: curve['color'],
+                line: {
+                    color: "rgb(0,0,0)"
+                }
+            },
+            type: 'bar',
+            visible: true
+        }, ...dataBars
     };
 
     return curveOptions;
 };
 
-const generateMapCurveOptions = function (curve, curveIndex, dataSeries, sitePlot) {
-    /*
-     PARAMETERS:
-     curve -  the curve object
-     curveIndex : Number - the integer index of this curve
-     dataSeries : array - the actual flot dataSeries array for this curve.  like [[x,y],[x,y], .... [x,y]]
-     */
+const generateMapCurveOptions = function (curve, dataSeries) {
+
+    const markerSizes = dataSeries.queryVal.map(function (val) {
+        return Math.ceil(Math.abs(val * 9)) + 1;
+    });
+
     const label = curve['label'];
-    const annotation = curve['annotation'];
-    const pointSymbol = getPointSymbol(curveIndex);
 
     const curveOptions = {
-        label: label,
-        curveId: label,
-        annotation: annotation,
-        color: curve['color'],
-        data: dataSeries,
-        sites: sitePlot,
-        points: {
-            symbol: pointSymbol,
-            fillColor: curve['color'],
-            show: true,
-            errorbars: "y",
-        },
-        lines: {show: true, fill: false}
+        ...{
+            label: label,
+            type: 'scattermapbox',
+            mode: 'markers',
+            marker: {
+                color: dataSeries.color,
+                size: markerSizes,
+                opacity: 0
+            },
+        }, ...dataSeries
     };
+
+    delete curveOptions.color;
+
+    return curveOptions;
+};
+
+const generateMapColorTextOptions = function (label, dataSeries) {
+
+    const curveOptions = {
+        ...{
+            label: label,
+            type: 'scattermapbox',
+            mode: 'markers+text',
+            marker: {
+                opacity: 0
+            },
+            textfont: {
+                family: 'sans serif',
+                // size: 18,
+                color: dataSeries.color
+            },
+            hoverinfo: 'skip',
+            visible: true
+        }, ...dataSeries
+    };
+
+    delete curveOptions.color;
 
     return curveOptions;
 };
@@ -358,7 +333,8 @@ export default matsDataCurveOpsUtils = {
 
     generateSeriesCurveOptions: generateSeriesCurveOptions,
     generateProfileCurveOptions: generateProfileCurveOptions,
-    generateBarChartCurveOptions:generateBarChartCurveOptions,
-    generateMapCurveOptions: generateMapCurveOptions
+    generateBarChartCurveOptions: generateBarChartCurveOptions,
+    generateMapCurveOptions: generateMapCurveOptions,
+    generateMapColorTextOptions: generateMapColorTextOptions
 
 }

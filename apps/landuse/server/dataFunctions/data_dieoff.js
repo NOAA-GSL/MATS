@@ -23,8 +23,8 @@ dataDieOff = function (plotParams, plotFunction) {
     var dataset = [];
     var utcCycleStarts = [];
     var axisMap = Object.create(null);
-    var xmax = Number.MIN_VALUE;
-    var ymax = Number.MIN_VALUE;
+    var xmax = -1 * Number.MAX_VALUE;
+    var ymax = -1 * Number.MAX_VALUE;
     var xmin = Number.MAX_VALUE;
     var ymin = Number.MAX_VALUE;
     var idealValues = [];
@@ -83,7 +83,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var axisKey = varUnits;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
-        var d = [];
+        var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
@@ -96,7 +96,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 "where 1=1 " +
                 "{{dateRangeClause}} " +
                 "{{validTimeClause}} " +
-                "and m0.vgtyp IN({{vgtyp}}) "+
+                "and m0.vgtyp IN({{vgtyp}}) " +
                 "{{utcCycleStartClause}} " +
                 "group by avtime " +
                 "order by avtime;";
@@ -147,45 +147,30 @@ dataDieOff = function (plotParams, plotFunction) {
             // set axis limits based on returned data
             var postQueryStartMoment = moment();
             if (dataFoundForCurve) {
-                xmin = xmin < d[0][0] ? xmin : d[0][0];
-                xmax = xmax > d[d.length - 1][0] ? xmax : d[d.length - 1][0];
-                var sum = 0;
-                var count = 0;
-                for (var i = 0; i < d.length; i++) {
-                    if (d[i][1] !== null) {
-                        sum = sum + d[i][1];
-                        count++;
-                        ymin = Number(ymin) < Number(d[i][1]) ? ymin : d[i][1];
-                        ymax = Number(ymax) > Number(d[i][1]) ? ymax : d[i][1];
-                    }
-                }
+                xmin = xmin < d.xmin ? xmin : d.xmin;
+                xmax = xmax > d.xmax ? xmax : d.xmax;
+                ymin = ymin < d.ymin ? ymin : d.ymin;
+                ymax = ymax > d.ymax ? ymax : d.ymax;
             }
         } else {
             // this is a difference curve
-            const diffResult = matsDataDiffUtils.getDataForDiffCurve({
-                dataset: dataset,
-                ymin: ymin,
-                ymax: ymax,
-                diffFrom: diffFrom
-            }, plotType, hasLevels);
-
-            // adjust axis stats based on new data from diff curve
+            const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
             d = diffResult.dataset;
-            ymin = diffResult.ymin;
-            ymax = diffResult.ymax;
-            sum = diffResult.sum;
-            count = diffResult.count;
+            xmin = xmin < d.xmin ? xmin : d.xmin;
+            xmax = xmax > d.xmax ? xmax : d.xmax;
+            ymin = ymin < d.ymin ? ymin : d.ymin;
+            ymax = ymax > d.ymax ? ymax : d.ymax;
         }
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const mean = sum / count;
+        const mean = d.sum / d.x.length;
         const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
-        curve['xmin'] = xmin;
-        curve['xmax'] = xmax;
-        curve['ymin'] = ymin;
-        curve['ymax'] = ymax;
+        curve['xmin'] = d.xmin;
+        curve['xmax'] = d.xmax;
+        curve['ymin'] = d.ymin;
+        curve['ymax'] = d.ymax;
         curve['axisKey'] = axisKey;
         const cOptions = matsDataCurveOpsUtils.generateSeriesCurveOptions(curve, curveIndex, axisMap, d);  // generate plot with data, curve annotation, axis labels, etc.
         dataset.push(cOptions);
@@ -199,7 +184,15 @@ dataDieOff = function (plotParams, plotFunction) {
 
     // process the data returned by the query
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "idealValues": idealValues, "utcCycleStarts": utcCycleStarts, "axisMap": axisMap, "xmax": xmax, "xmin": xmin};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "idealValues": idealValues,
+        "utcCycleStarts": utcCycleStarts,
+        "axisMap": axisMap,
+        "xmax": xmax,
+        "xmin": xmin
+    };
     const bookkeepingParams = {"dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
     var result = matsDataProcessUtils.processDataXYCurve(dataset, appParams, curveInfoParams, plotParams, bookkeepingParams);
     plotFunction(result);

@@ -808,25 +808,25 @@ const doPlotGraph = function () {
     if (matsCollections.PlotGraphFunctions.find().count() == 0) {
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.timeSeries,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.profile,
-            graphFunction: "graphProfile",
+            graphFunction: "graphPlotly",
             dataFunction: "dataProfile",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,
-            graphFunction: "graphXYLine",
+            graphFunction: "graphPlotly",
             dataFunction: "dataDieOff",
             checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.histogram,
-            graphFunction: "graphHistogram",
+            graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
             checked: false
         });
@@ -907,9 +907,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "ruc_ua", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-
     matsCollections.appName.insert({name: "appName", app: "upperair"});
-
 });
 
 // this object is global so that the reset code can get to it

@@ -63,8 +63,8 @@ dataHistogram = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var validTimeClause =" ";
-        if (validTimes.length > 0){
+        var validTimeClause = " ";
+        if (validTimes.length > 0) {
             validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -90,7 +90,7 @@ dataHistogram = function (plotParams, plotFunction) {
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
         curves[curveIndex].binNum = binNum; // stash the binNum to use it later for bar chart options
 
-        var d = [];
+        var d;
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
@@ -101,9 +101,9 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
                 "and m0.date >= '{{fromDate}}' " +
                 "and m0.date <= '{{toDate}}' " +
+                "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
@@ -137,9 +137,9 @@ dataHistogram = function (plotParams, plotFunction) {
                 };
                 // get the data back from the query
                 d = queryResult.data;
-                allReturnedSubStats.push(d.curveSubStats); // save returned data so that we can calculate histogram stats once all the queries are done
-                allReturnedSubSecs.push(d.curveSubSecs);
-                allReturnedSubLevs.push(d.curveSubLevs);
+                allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
+                allReturnedSubSecs.push(d.subSecs);
+                allReturnedSubLevs.push(d.subLevs);
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -162,8 +162,18 @@ dataHistogram = function (plotParams, plotFunction) {
         }
     }
     const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
-    const curveInfoParams = {"curves": curves, "curvesLength": curvesLength, "dataFoundForCurve": dataFoundForCurve, "axisMap": axisMap, "yAxisFormat": yAxisFormat};
-    const bookkeepingParams = {"alreadyMatched": alreadyMatched, "dataRequests": dataRequests, "totalProcessingStart": totalProcessingStart};
+    const curveInfoParams = {
+        "curves": curves,
+        "curvesLength": curvesLength,
+        "dataFoundForCurve": dataFoundForCurve,
+        "axisMap": axisMap,
+        "yAxisFormat": yAxisFormat
+    };
+    const bookkeepingParams = {
+        "alreadyMatched": alreadyMatched,
+        "dataRequests": dataRequests,
+        "totalProcessingStart": totalProcessingStart
+    };
     var result = matsDataProcessUtils.processDataHistogram(allReturnedSubStats, allReturnedSubSecs, allReturnedSubLevs, dataset, appParams, curveInfoParams, plotParams, binParams, bookkeepingParams);
     plotFunction(result);
 };
