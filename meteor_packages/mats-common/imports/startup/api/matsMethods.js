@@ -1329,7 +1329,7 @@ const getGraphData = new ValidatedMethod({
                     }
                     var sizeof = require('object-sizeof');
                     console.log("result.data size is ", sizeof(results));
-                    return;
+                    return ret;
                 }
             } catch (dataFunctionError) {
                 if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
