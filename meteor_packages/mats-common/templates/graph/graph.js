@@ -1,6 +1,7 @@
 import {Meteor} from 'meteor/meteor';
 import {Hooks} from 'meteor/differential:event-hooks';
-import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
+// import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
+import Plotly from '../../imports/startup/client/lib/plotly.js';
 import {
     matsCollections,
     matsCurveUtils,

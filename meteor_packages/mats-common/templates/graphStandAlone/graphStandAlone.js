@@ -13,7 +13,8 @@ import {
 import {Template} from 'meteor/templating';
 import {FlowRouter} from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
-import Plotly from "../../imports/startup/client/lib/plotly-latest.min";
+// import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
+import Plotly from '../../imports/startup/client/lib/plotly.js';
 
 var annotation = "";
 

@@ -1,4 +1,5 @@
-import Plotly from "../../imports/startup/client/lib/plotly-latest.min";
+// import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
+import Plotly from '../../imports/startup/client/lib/plotly.js';
 
 Template.map.onRendered(function () {
 
