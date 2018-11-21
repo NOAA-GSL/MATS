@@ -94,6 +94,14 @@ var getJSON = function (params, req, res, next) {
     }
 };
 
+// define a middleware for clearing the cache
+var clearCache = function (params, req, res, next) {
+    if (Meteor.isServer) {
+        matsCache.clear();
+        res.end();
+    }
+};
+
 // initialize collections used for pop-out window functionality
 const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
@@ -135,8 +143,8 @@ if (Meteor.isServer) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
-    Picker.route('/clearCache', function () {
-        matsCache.clear();
+    Picker.route('/clearCache', function (params, req, res, next) {
+        Picker.middleware(clearCache(params, req, res, next));
     });
 }
 
