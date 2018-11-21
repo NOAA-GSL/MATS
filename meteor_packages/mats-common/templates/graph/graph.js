@@ -162,7 +162,7 @@ Template.graph.helpers({
         // by getting the yaxis keys - filtering them to be unique, then using an Array.apply on the resulting array
         // to assign a number to each value
         var yaxis = {};
-        if ($("#placeholder")[0] === undefined || plotType === matsTypes.PlotTypes.map) {
+        if ($("#placeholder")[0] === undefined || $("#placeholder")[0].layout === undefined || plotType === matsTypes.PlotTypes.map) {
             return;
         }
         Object.keys($("#placeholder")[0].layout).filter(function (k) {
