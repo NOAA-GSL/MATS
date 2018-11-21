@@ -1,6 +1,3 @@
-// import Plotly from '../../imports/startup/client/lib/plotly-latest.min.js';
-// import Plotly from 'https://cdn.plot.ly/plotly-latest.min.js';
-
 Template.map.onRendered(function () {
 
     var targetId = '';
