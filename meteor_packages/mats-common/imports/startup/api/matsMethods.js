@@ -134,6 +134,10 @@ if (Meteor.isServer) {
     Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
+
+    Picker.route('/clearCache', function () {
+        matsCache.clear();
+    });
 }
 
 // private method for getting pagenated data
@@ -994,9 +998,9 @@ const resetApp = function (metaDataTableRecords) {
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
-    // if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === "development") {
         matsCache.clear();  // DISABLE FOR PRODUCTION *********
-    // }
+    }
 };
 
 // refreshes the metadata for the app that's running
@@ -1301,9 +1305,9 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             var ret;
             try {
-                // if (process.env.NODE_ENV === "development") {
+                if (process.env.NODE_ENV === "development") {
                     matsCache.clear();  // DISABLE FOR PRODUCTION *********
-                // }
+                }
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
                 var results = matsCache.getResult(key);
