@@ -960,76 +960,10 @@ const showSpinner = function () {
     if (document.getElementById("spinner")) {
         document.getElementById("spinner").style.display = "block";
     }
-}
+};
 const hideSpinner = function () {
     if (document.getElementById("spinner")) {
         document.getElementById("spinner").style.display = "none";
-    }
-}
-
-const squareWidth = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
-    if (min < 400) {
-        return (.9 * min).toString() + "px";
-    } else {
-        return (.7 * min).toString() + "px";
-    }
-};
-const squareHeight = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    var min = Math.min(vpw, vph);
-    if (min < 400) {
-        return (.9 * min).toString() + "px";
-    } else {
-        return (.7 * min).toString() + "px";
-    }
-};
-const rectangleWidth = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    if (vpw < 400) {
-        return (.9 * vpw).toString() + "px";
-    } else {
-        return (.8 * vpw).toString() + "px";
-    }
-};
-const rectangleHeight = function () {
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    if (vph < 400) {
-        return (.8 * vph).toString() + "px";
-    } else {
-        return (.6 * vph).toString() + "px";
-    }
-};
-
-const resizeGraph = function (plotType) {
-    console.log("resizing graph type is ", plotType);
-    switch (plotType) {
-        case matsTypes.PlotTypes.profile:
-            // set the width square
-            document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.height = squareHeight();
-            break;
-        case matsTypes.PlotTypes.scatter2d:
-            // set the width square
-            document.getElementById('placeholder').style.width = squareWidth();
-            document.getElementById('placeholder').style.height = squareHeight();
-            break;
-        case matsTypes.PlotTypes.timeSeries:
-            // set the width wide
-            document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.height = rectangleHeight();
-            break;
-        case matsTypes.PlotTypes.dieoff:
-            // set the width wide
-            document.getElementById('placeholder').style.width = rectangleWidth();
-            document.getElementById('placeholder').style.height = rectangleHeight();
-            break;
-        default:
-            break;
-
     }
 };
 
@@ -1064,8 +998,7 @@ export default matsCurveUtils = {
     resetGraphResult: resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
-    resizeGraph: resizeGraph,
-    plot: plot
+    plot: plot  // DON'T REMOVE THIS FOR NOW -- plotly seems to need it??
 };
 
             

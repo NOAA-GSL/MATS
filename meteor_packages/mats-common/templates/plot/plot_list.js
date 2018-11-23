@@ -337,8 +337,9 @@ Template.plotList.events({
                 return false;
                 break;
             case "plot":
-                matsCurveUtils.resizeGraph(matsPlotUtils.getPlotType());
                 var pt = matsPlotUtils.getPlotType();
+                console.log("resizing graph type is ", pt);
+                matsGraphUtils.resizeGraph(pt);
                 var pgf = matsCollections.PlotGraphFunctions.findOne({plotType: pt});
                 if (pgf === undefined) {
                     setError(new Error("plot_list.js - plot -do not have a plotGraphFunction for this plotType: " + pt));
@@ -367,7 +368,7 @@ Template.plotList.events({
                     Session.set ('PlotResultsUpDated', new Date());
                     console.log("after successful getGraphData call time:", new Date(), ":Session key: ",  ret.key, " graphFunction:", graphFunction);
 
-                    matsGraphUtils.setGraphView();
+                    matsGraphUtils.setGraphView(pt);
                 });
                 break;
             default:

@@ -9,8 +9,6 @@ graphPlotly = function (key) {
 
     // get dataset info and options
     var resultSet = matsCurveUtils.getGraphResult();
-    console.log("From graphPlotly");
-    console.log(resultSet);
     if (resultSet === null || resultSet === undefined || resultSet.data === undefined) {
         return false;
     }
@@ -24,8 +22,6 @@ graphPlotly = function (key) {
     // initialize show/hide button labels
     if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
         var dataset = resultSet.data;
-        console.log("From button init");
-        console.log(dataset);
         matsGraphUtils.setNoDataLabels(dataset);
     }
 };

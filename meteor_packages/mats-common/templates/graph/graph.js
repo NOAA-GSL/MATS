@@ -19,8 +19,7 @@ var currentXMax = undefined;
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
     $(window).resize(function () {
-        document.getElementById('placeholder').style.width = matsGraphUtils.width();
-        document.getElementById('placeholder').style.height = matsGraphUtils.height();
+        matsGraphUtils.resizeGraph(matsPlotUtils.getPlotType());
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         Plotly.newPlot($("#placeholder")[0], dataset, options);
@@ -81,10 +80,10 @@ Template.graph.helpers({
         }
     },
     width: function () {
-        return matsGraphUtils.width();
+        return matsGraphUtils.width(matsPlotUtils.getPlotType());
     },
     height: function () {
-        return matsGraphUtils.height();
+        return matsGraphUtils.height(matsPlotUtils.getPlotType());
     },
     curves: function () {
         return Session.get('Curves');
@@ -361,13 +360,13 @@ Template.graph.events({
         window[graphFunction](dataset, options);
     },
     'click .plotButton': function () {
-        matsGraphUtils.setGraphView();
+        matsGraphUtils.setGraphView(Session.get('plotType'));
         var graphView = document.getElementById('graphView');
         Session.set('graphViewMode', matsTypes.PlotView.graph);
         matsCurveUtils.hideSpinner();
     },
     'click .textButton': function () {
-        matsGraphUtils.setTextView();
+        matsGraphUtils.setTextView(Session.get('plotType'));
         Session.set('graphViewMode', matsTypes.PlotView.text);
         Session.set("pageIndex", 0);
         Session.set("newPageIndex", 1);

@@ -29,8 +29,8 @@ Template.GraphStandAlone.onCreated(function () {
 Template.GraphStandAlone.onRendered(function () {
     // the window resize event needs to also resize the graph
     $(window).resize(function () {
-        document.getElementById('placeholder').style.width = matsGraphUtils.width();
-        document.getElementById('placeholder').style.height = matsGraphUtils.height();
+        document.getElementById('placeholder').style.width = matsGraphUtils.standAloneWidth();
+        document.getElementById('placeholder').style.height = matsGraphUtils.standAloneHeight();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         Plotly.newPlot($("#placeholder")[0], dataset, options);

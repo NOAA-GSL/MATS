@@ -1,7 +1,7 @@
+import {matsTypes} from 'meteor/randyp:mats-common';
+
 // set the label for the hide show buttons (NO DATA) for the initial time here
 const setNoDataLabels = function (dataset) {
-    console.log("From setNoDataLabels");
-    console.log(dataset);
     for (var c = 0; c < dataset.length; c++) {
         if (dataset[c].x.length === 0) {
             Session.set(dataset[c].curveId + "hideButtonText", 'NO DATA');
@@ -70,22 +70,46 @@ const setNoDataLabels = function (dataset) {
 };
 
 // plot width helper used in multiple places
-var width = function () {
-    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
-    if (vpw < 400) {
-        return (.9 * vpw).toString() + "px";
-    } else {
-        return (.9 * vpw).toString() + "px";
+var width = function (plotType) {
+    switch (plotType) {
+        case matsTypes.PlotTypes.profile:
+        case matsTypes.PlotTypes.scatter2d:
+            // set the width square
+            return squareWidthHeight();
+            break;
+        case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dailyModelCycle:
+        case matsTypes.PlotTypes.dieoff:
+        case matsTypes.PlotTypes.threshold:
+        case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.map:
+        case matsTypes.PlotTypes.histogram:
+        default:
+            // set the width wide
+            return rectangleWidth();
+            break;
     }
 };
 
 // plot height helper used in multiple places
-var height = function () {
-    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
-    if (vph < 400) {
-        return (.8 * vph).toString() + "px";
-    } else {
-        return (.7 * vph).toString() + "px";
+var height = function (plotType) {
+    switch (plotType) {
+        case matsTypes.PlotTypes.profile:
+        case matsTypes.PlotTypes.scatter2d:
+            // set the height square
+            return squareWidthHeight();
+            break;
+        case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dailyModelCycle:
+        case matsTypes.PlotTypes.dieoff:
+        case matsTypes.PlotTypes.threshold:
+        case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.map:
+        case matsTypes.PlotTypes.histogram:
+        default:
+            // set the height wide
+            return rectangleHeight();
+            break;
     }
 };
 
@@ -98,11 +122,43 @@ var standAloneHeight = function () {
     return (.825 * vph).toString() + "px";
 };
 
+const squareWidthHeight = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    var min = Math.min(vpw, vph);
+    if (min < 400) {
+        return (.9 * min).toString() + "px";
+    } else {
+        return (.7 * min).toString() + "px";
+    }
+};
+const rectangleWidth = function () {
+    var vpw = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+    if (vpw < 400) {
+        return (.9 * vpw).toString() + "px";
+    } else {
+        return (.9 * vpw).toString() + "px";
+    }
+};
+const rectangleHeight = function () {
+    var vph = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
+    if (vph < 400) {
+        return (.8 * vph).toString() + "px";
+    } else {
+        return (.7 * vph).toString() + "px";
+    }
+};
+
+const resizeGraph = function (plotType) {
+    document.getElementById('placeholder').style.width = width(plotType);
+    document.getElementById('placeholder').style.height = height(plotType);
+};
+
 // helper to bring up the text page
-var setTextView = function () {
+var setTextView = function (plotType) {
     //shows text page and proper text output, hides everything else
-    document.getElementById('placeholder').style.width = width();
-    document.getElementById('placeholder').style.height = height();
+    document.getElementById('placeholder').style.width = width(plotType);
+    document.getElementById('placeholder').style.height = height(plotType);
     document.getElementById("text-page-button-group").style.display = "block";
     document.getElementById("plot-page-button-group").style.display = "none";
     document.getElementById("curves").style.display = "none";
@@ -112,7 +168,9 @@ var setTextView = function () {
 };
 
 // helper to bring up the graph page
-var setGraphView = function () {
+var setGraphView = function (plotType) {
+    document.getElementById('placeholder').style.width = width(plotType);
+    document.getElementById('placeholder').style.height = height(plotType);
     //shows graph page, hides everything else
     document.getElementById('graph-container').style.display = 'block';
     document.getElementById('plotType').style.display = 'none';
@@ -128,8 +186,6 @@ var setGraphView = function () {
     if (document.getElementById("scatterView")) {
         document.getElementById("scatterView").style.display = "none";
     }
-    document.getElementById('placeholder').style.width = width();
-    document.getElementById('placeholder').style.height = height();
     document.getElementById("text-page-button-group").style.display = "none";
     document.getElementById("plot-page-button-group").style.display = "block";
     document.getElementById("curves").style.display = "block";
@@ -145,9 +201,9 @@ var setGraphView = function () {
 // helper to bring up the graph page in a pop-up window
 var standAloneSetGraphView = function () {
     //shows graph page, hides everything else
+    document.getElementById('placeholder').style.width = standAloneWidth();
+    document.getElementById('placeholder').style.height = standAloneHeight();
     document.getElementById('graph-container').style.display = 'block';
-    document.getElementById('placeholder').style.width = width();
-    document.getElementById('placeholder').style.height = height();
     document.getElementById("curves").style.display = "block";
     document.getElementById("graphView").style.display = "block";
 };
@@ -189,6 +245,7 @@ export default matsGraphUtils = {
     height: height,
     standAloneWidth: standAloneWidth,
     standAloneHeight: standAloneHeight,
+    resizeGraph: resizeGraph,
     setTextView: setTextView,
     setGraphView: setGraphView,
     standAloneSetGraphView: standAloneSetGraphView,
