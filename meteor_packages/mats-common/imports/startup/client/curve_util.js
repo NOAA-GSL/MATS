@@ -998,7 +998,6 @@ export default matsCurveUtils = {
     resetGraphResult: resetGraphResult,
     showSpinner: showSpinner,
     hideSpinner: hideSpinner,
-    plot: plot  // DON'T REMOVE THIS FOR NOW -- plotly seems to need it??
 };
 
             

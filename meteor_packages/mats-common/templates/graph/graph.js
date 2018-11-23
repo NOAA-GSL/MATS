@@ -22,7 +22,9 @@ Template.graph.onCreated(function () {
         matsGraphUtils.resizeGraph(matsPlotUtils.getPlotType());
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
-        Plotly.newPlot($("#placeholder")[0], dataset, options);
+        if (dataset !== undefined && options !== undefined) {
+            Plotly.newPlot($("#placeholder")[0], dataset, options);
+        }
     });
 });
 
@@ -43,7 +45,7 @@ Template.graph.helpers({
             Session.set('options', options);
             $("#legendContainer").empty();
             $("#placeholder").empty();
-            if (dataset === undefined) {
+            if (!dataset || !options) {
                 return false;
             }
 
