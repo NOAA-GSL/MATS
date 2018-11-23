@@ -10,128 +10,128 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "1.8.4-2018.11.21.19.23",
-      "buildDate": "2018.11.21.19.23",
+      "version": "1.8.4-2018.11.23.06.38",
+      "buildDate": "2018.11.23.06.38",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.8.4-2018.11.21.21.10",
-      "buildDate": "2018.11.21.21.10",
+      "version": "1.8.4-2018.11.23.06.27",
+      "buildDate": "2018.11.23.06.27",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "1.8.4-2018.11.21.19.20",
-      "buildDate": "2018.11.21.19.20",
+      "version": "1.8.4-2018.11.23.06.36",
+      "buildDate": "2018.11.23.06.36",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "1.8.4-2018.11.21.21.31",
-      "buildDate": "2018.11.21.21.31",
+      "version": "1.8.4-2018.11.23.06.30",
+      "buildDate": "2018.11.23.06.30",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "1.8.4-2018.11.21.18.59",
-      "buildDate": "2018.11.21.18.59",
+      "version": "1.8.4-2018.11.23.06.14",
+      "buildDate": "2018.11.23.06.14",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "1.8.4-2018.11.21.19.18",
-      "buildDate": "2018.11.21.19.18",
+      "version": "1.8.4-2018.11.23.06.33",
+      "buildDate": "2018.11.23.06.33",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "1.8.4-2018.11.21.19.04",
-      "buildDate": "2018.11.21.19.04",
+      "version": "1.8.4-2018.11.23.06.19",
+      "buildDate": "2018.11.23.06.19",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "1.8.4-2018.11.21.18.56",
-      "buildDate": "2018.11.21.18.56",
+      "version": "1.8.4-2018.11.23.06.11",
+      "buildDate": "2018.11.23.06.11",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "1.8.4-2018.11.21.18.53",
-      "buildDate": "2018.11.21.18.53",
+      "version": "1.8.4-2018.11.23.06.08",
+      "buildDate": "2018.11.23.06.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "1.8.4-2018.11.21.18.50",
-      "buildDate": "2018.11.21.18.50",
+      "version": "1.8.4-2018.11.23.06.06",
+      "buildDate": "2018.11.23.06.06",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "1.8.4-2018.11.21.18.48",
-      "buildDate": "2018.11.21.18.48",
+      "version": "1.8.4-2018.11.23.06.03",
+      "buildDate": "2018.11.23.06.03",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "1.8.4-2018.11.21.18.45",
-      "buildDate": "2018.11.21.18.45",
+      "version": "1.8.4-2018.11.23.06.00",
+      "buildDate": "2018.11.23.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "1.8.4-2018.11.21.19.07",
-      "buildDate": "2018.11.21.19.07",
+      "version": "1.8.4-2018.11.23.06.22",
+      "buildDate": "2018.11.23.06.22",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "1.8.4-2018.11.21.19.09",
-      "buildDate": "2018.11.21.19.09",
+      "version": "1.8.4-2018.11.23.06.25",
+      "buildDate": "2018.11.23.06.25",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "1.8.4-2018.11.21.19.26",
-      "buildDate": "2018.11.21.19.26",
+      "version": "1.8.4-2018.11.23.06.41",
+      "buildDate": "2018.11.23.06.41",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "1.8.4-2018.11.21.19.01",
-      "buildDate": "2018.11.21.19.01",
+      "version": "1.8.4-2018.11.23.06.16",
+      "buildDate": "2018.11.23.06.16",
       "last_test_run": "",
       "last_test_status": ""
     },
