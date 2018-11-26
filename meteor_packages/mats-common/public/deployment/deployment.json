@@ -305,8 +305,8 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "1.8.3",
-      "buildDate": "2018.10.25.20.24",
+      "version": "2.0.0",
+      "buildDate": "2018.11.26.20.32",
       "last_test_run": "",
       "last_test_status": ""
     },
