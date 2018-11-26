@@ -20,8 +20,10 @@ graphPlotly = function (key) {
     }
 
     // initialize show/hide button labels
+    var dataset = resultSet.data;
     if (Session.get('plotType') !== matsTypes.PlotTypes.map) {
-        var dataset = resultSet.data;
         matsGraphUtils.setNoDataLabels(dataset);
+    } else {
+        matsGraphUtils.setNoDataLabelsMap(dataset);
     }
 };

@@ -48,10 +48,10 @@ const setNoDataLabels = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-points').style["background-color"] = dataset[c].color;
             }
             Session.set(dataset[c].curveId + "errorBarButtonText", 'hide error bars');
-            if (document.getElementById(dataset[c].curveId + '-curve-errorbars')) {
-                document.getElementById(dataset[c].curveId + '-curve-errorbars').value = 'hide error bars';
-                document.getElementById(dataset[c].curveId + '-curve-errorbars').disabled = false;
-                document.getElementById(dataset[c].curveId + '-curve-errorbars').style["background-color"] = dataset[c].color;
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').value = 'hide error bars';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-errorbars').style["background-color"] = dataset[c].color;
             }
             Session.set(dataset[c].curveId + "barChartButtonText", 'hide bars');
             if (document.getElementById(dataset[c].curveId + '-curve-show-hide-bar')) {
@@ -64,6 +64,26 @@ const setNoDataLabels = function (dataset) {
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').value = 'hide annotation';
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').disabled = false;
                 document.getElementById(dataset[c].curveId + '-curve-show-hide-annotate').style["background-color"] = dataset[c].color;
+            }
+        }
+    }
+};
+
+const setNoDataLabelsMap = function (dataset) {
+    for (var c = 0; c < dataset.length; c++) {
+        if (dataset[c].lat.length === 0) {
+            Session.set(dataset[c].curveId + "heatMapButtonText", 'NO DATA');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = 'NO DATA';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = dataset[c].color;
+            }
+        } else {
+            Session.set(dataset[c].curveId + "heatMapButtonText", 'show heat map');
+            if (document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap')) {
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').value = 'show heat map';
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').disabled = false;
+                document.getElementById(dataset[c].curveId + '-curve-show-hide-heatmap').style["background-color"] = dataset[c].color;
             }
         }
     }
@@ -241,6 +261,7 @@ var setDefaultView = function () {
 
 export default matsGraphUtils = {
     setNoDataLabels: setNoDataLabels,
+    setNoDataLabelsMap: setNoDataLabelsMap,
     width: width,
     height: height,
     standAloneWidth: standAloneWidth,
