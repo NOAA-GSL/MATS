@@ -370,6 +370,7 @@ Template.GraphStandAlone.events({
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
+        var plotType = Session.get('plotType');
         var dataset = matsCurveUtils.getGraphResult().data;
         const id = event.target.id;
         const label = id.replace('-curve-show-hide-errorbars', '');
@@ -377,14 +378,27 @@ Template.GraphStandAlone.events({
             return d.curveId === label;
         });
         if (dataset[myDataIdx].x.length > 0) {
-            var update = {
+            var update;
+            if (plotType !== matsTypes.PlotTypes.profile) {
+                update = {
                 error_y: dataset[myDataIdx].error_y
             };
             update.error_y.visible = !update.error_y.visible;
             if (dataset[myDataIdx].error_y.visible) {
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+                } else {
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
+                }
             } else {
+                update = {
+                    error_x: dataset[myDataIdx].error_x
+                };
+                update.error_x.visible = !update.error_x.visible;
+                if (dataset[myDataIdx].error_x.visible) {
                 $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+                } else {
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
+                }
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
