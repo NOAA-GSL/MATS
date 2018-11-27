@@ -10,7 +10,7 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "2.0.1-2018.11.26.23.46",
+      "version": "2.0.0-2018.11.26.23.46",
       "buildDate": "2018.11.26.23.46",
       "last_test_run": "",
       "last_test_status": ""
@@ -18,7 +18,7 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "2.0.1-2018.11.26.23.36",
+      "version": "2.0.0-2018.11.26.23.36",
       "buildDate": "2018.11.26.23.36",
       "last_test_run": "",
       "last_test_status": ""
@@ -26,7 +26,7 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.0.1-2018.11.26.23.43",
+      "version": "2.0.0-2018.11.26.23.43",
       "buildDate": "2018.11.26.23.43",
       "last_test_run": "",
       "last_test_status": ""
@@ -34,7 +34,7 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.0.1-2018.11.26.23.38",
+      "version": "2.0.0-2018.11.26.23.38",
       "buildDate": "2018.11.26.23.38",
       "last_test_run": "",
       "last_test_status": ""
@@ -42,7 +42,7 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.1-2018.11.26.23.23",
+      "version": "2.0.0-2018.11.26.23.23",
       "buildDate": "2018.11.26.23.23",
       "last_test_run": "",
       "last_test_status": ""
@@ -50,7 +50,7 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.0.1-2018.11.26.23.41",
+      "version": "2.0.0-2018.11.26.23.41",
       "buildDate": "2018.11.26.23.41",
       "last_test_run": "",
       "last_test_status": ""
@@ -58,7 +58,7 @@
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.1-2018.11.26.23.28",
+      "version": "2.0.0-2018.11.26.23.28",
       "buildDate": "2018.11.26.23.28",
       "last_test_run": "",
       "last_test_status": ""
@@ -66,7 +66,7 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.1-2018.11.26.23.20",
+      "version": "2.0.0-2018.11.26.23.20",
       "buildDate": "2018.11.26.23.20",
       "last_test_run": "",
       "last_test_status": ""
@@ -74,7 +74,7 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.1-2018.11.26.23.18",
+      "version": "2.0.0-2018.11.26.23.18",
       "buildDate": "2018.11.26.23.18",
       "last_test_run": "",
       "last_test_status": ""
@@ -82,7 +82,7 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.1-2018.11.26.23.15",
+      "version": "2.0.0-2018.11.26.23.15",
       "buildDate": "2018.11.26.23.15",
       "last_test_run": "",
       "last_test_status": ""
@@ -90,7 +90,7 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.1-2018.11.26.23.13",
+      "version": "2.0.0-2018.11.26.23.13",
       "buildDate": "2018.11.26.23.13",
       "last_test_run": "",
       "last_test_status": ""
@@ -98,15 +98,15 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.1-2018.11.26.23.10",
-      "buildDate": "2018.11.26.23.10",
+      "version": "2.0.1-2018.11.27.16.58",
+      "buildDate": "2018.11.27.16.58",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.1-2018.11.26.23.31",
+      "version": "2.0.0-2018.11.26.23.31",
       "buildDate": "2018.11.26.23.31",
       "last_test_run": "",
       "last_test_status": ""
@@ -114,7 +114,7 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.0.1-2018.11.26.23.33",
+      "version": "2.0.0-2018.11.26.23.33",
       "buildDate": "2018.11.26.23.33",
       "last_test_run": "",
       "last_test_status": ""
@@ -122,7 +122,7 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.0.1-2018.11.26.23.48",
+      "version": "2.0.0-2018.11.26.23.48",
       "buildDate": "2018.11.26.23.48",
       "last_test_run": "",
       "last_test_status": ""
@@ -130,7 +130,7 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.1-2018.11.26.23.26",
+      "version": "2.0.0-2018.11.26.23.26",
       "buildDate": "2018.11.26.23.26",
       "last_test_run": "",
       "last_test_status": ""
@@ -298,7 +298,7 @@
       "app": "upperair",
       "title": "Upper Air",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.45",
+      "buildDate": "2018.11.27.01.07",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -306,7 +306,7 @@
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.35",
+      "buildDate": "2018.11.27.00.57",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -314,7 +314,7 @@
       "app": "anomalycor",
       "title": "Anomaly Correlation",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.42",
+      "buildDate": "2018.11.27.01.04",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -322,7 +322,7 @@
       "app": "ceiling",
       "title": "Ceiling",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.37",
+      "buildDate": "2018.11.27.00.59",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -330,7 +330,7 @@
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.27",
+      "buildDate": "2018.11.27.00.45",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -338,7 +338,7 @@
       "app": "visibility",
       "title": "Visibility",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.40",
+      "buildDate": "2018.11.27.01.02",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -346,7 +346,7 @@
       "app": "visibility15",
       "title": "Visibility 15 Min",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.32",
+      "buildDate": "2018.11.27.00.49",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -354,7 +354,7 @@
       "app": "surface",
       "title": "Surface",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.24",
+      "buildDate": "2018.11.27.00.42",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -362,7 +362,7 @@
       "app": "landuse",
       "title": "Surface Land Use",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.48",
+      "buildDate": "2018.11.27.01.10",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -370,7 +370,7 @@
       "app": "surfrad",
       "title": "Surface Radiation",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.29",
+      "buildDate": "2018.11.27.00.47",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -378,7 +378,7 @@
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.21.22",
+      "buildDate": "2018.11.27.00.40",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -386,7 +386,7 @@
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.22.11",
+      "buildDate": "2018.11.27.00.38",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -394,7 +394,7 @@
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.22.08",
+      "buildDate": "2018.11.27.00.35",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -402,7 +402,7 @@
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.22.06",
+      "buildDate": "2018.11.27.00.33",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -410,7 +410,7 @@
       "app": "vil",
       "title": "Vertically Integrated Liquid",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.22.01",
+      "buildDate": "2018.11.27.00.52",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -418,7 +418,7 @@
       "app": "echotop",
       "title": "Echo Top",
       "version": "2.0.0",
-      "buildDate": "2018.11.26.22.03",
+      "buildDate": "2018.11.27.00.54",
       "last_test_run": "",
       "last_test_status": ""
     },
