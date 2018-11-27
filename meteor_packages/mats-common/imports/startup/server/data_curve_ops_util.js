@@ -26,6 +26,7 @@ const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
 
     const valueLine = {
         "label": cLabel,
+        "curveId": cLabel,
         "annotation": "",
         "name": "y = " + yValue.toString(),
         "mode": "lines",
@@ -62,6 +63,7 @@ const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
 
     const valueLine = {
         "label": cLabel,
+        "curveId": cLabel,
         "annotation": "",
         "name": "x = " + xValue.toString(),
         "mode": "lines",
@@ -285,6 +287,8 @@ const generateMapCurveOptions = function (curve, dataSeries) {
     const curveOptions = {
         ...{
             label: label,
+            curveId: label,
+            name: label,
             type: 'scattermapbox',
             mode: 'markers',
             marker: {
