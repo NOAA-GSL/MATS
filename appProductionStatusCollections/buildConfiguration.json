@@ -355,39 +355,45 @@
       "deploymentStatus": "disabled"
     },
     {
+      "app": "precipAQPI",
+      "displayName": "AQPI Precipitation",
+      "displayOrder": 11,
+      "deploymentStatus": "disabled"
+    },
+    {
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
-      "displayOrder": 11,
+      "displayOrder": 12,
       "deploymentStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
-      "displayOrder": 12,
+      "displayOrder": 13,
       "deploymentStatus": "disabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
-      "displayOrder": 13,
+      "displayOrder": 14,
       "deploymentStatus": "disabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
-      "displayOrder": 14,
+      "displayOrder": 15,
       "deploymentStatus": "disabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
-      "displayOrder": 15,
+      "displayOrder": 16,
       "deploymentStatus": "disabled"
     },
     {
       "app": "wfip2",
       "displayName": "Wfip2",
-      "displayOrder": 16,
+      "displayOrder": 17,
       "deploymentStatus": "disabled"
     }
   ]
