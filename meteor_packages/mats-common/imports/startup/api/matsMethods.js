@@ -102,6 +102,14 @@ var clearCache = function (params, req, res, next) {
     }
 };
 
+// define a middleware for clearing the cache
+var refreshMetadataMW = function (params, req, res, next) {
+    if (Meteor.isServer) {
+        checkMetaDataRefresh();
+        res.end();
+    }
+};
+
 // initialize collections used for pop-out window functionality
 const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
@@ -153,6 +161,18 @@ if (Meteor.isServer) {
 
     Picker.route('/gsd/mats/:app/clearCache', function (params, req, res, next) {
         Picker.middleware(clearCache(params, req, res, next));
+    });
+
+    Picker.route('/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(refreshMetadataMW(params, req, res, next));
+    });
+
+    Picker.route('/:app/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(refreshMetadataMW(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(refreshMetadataMW(params, req, res, next));
     });
 }
 
@@ -912,6 +932,7 @@ const checkMetaDataRefresh = function () {
             const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
             if (lastRefreshedEpoch < updatedEpoch) {
                 refresh = true;
+                console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
                 break;
             }
         }
