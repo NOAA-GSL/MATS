@@ -351,8 +351,9 @@ Template.plotList.events({
 
                 var graphFunction = pgf.graphFunction;
                 console.log("prior to getGraphData call time:", new Date() );
+                // the following line converts a null expireKey to false.
                 var expireKey = Session.get('expireKey') === true ? true : false;
-                matsMethods.getGraphData.call({plotParams: p, plotType: pt, expireKey: false}, function (error, ret) {
+                matsMethods.getGraphData.call({plotParams: p, plotType: pt, expireKey: expireKey}, function (error, ret) {
                     if (error !== undefined) {
                         //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
                         setError(error);
