@@ -17,6 +17,10 @@ if (Meteor.isServer) {
         console.log('asked to clear result cache');
         Results.clear();
     }
+    var expireKey = function(key) {
+        console.log('asked to clear result cache for key ', key);
+        Results.expire(key);
+    }
 }
 
 
@@ -24,5 +28,6 @@ export default
     matsCache = {
         getResult: getResult,
         storeResult: storeResult,
-        clear: clear
+        clear: clear,
+        expireKey: expireKey
     }

@@ -351,7 +351,8 @@ Template.plotList.events({
 
                 var graphFunction = pgf.graphFunction;
                 console.log("prior to getGraphData call time:", new Date() );
-                matsMethods.getGraphData.call({plotParams: p, plotType: pt}, function (error, ret) {
+                var expireKey = Session.get('expireKey') === true ? true : false;
+                matsMethods.getGraphData.call({plotParams: p, plotType: pt, expireKey: false}, function (error, ret) {
                     if (error !== undefined) {
                         //setError(new Error("matsMethods.getGraphData from plot_list.js : error: " + error ));
                         setError(error);
@@ -359,15 +360,16 @@ Template.plotList.events({
                         //Session.set ('PlotResultsUpDated', new Date());
                         Session.set("spinner_img", "spinner.gif");
                         matsCurveUtils.hideSpinner();
+                        Session.set('expireKey', false);
                         return false;
                     }
+                    Session.set('expireKey', false);
                     matsCurveUtils.setGraphResult(ret.result);
                     Session.set("plotResultKey", ret.key);
                     delete ret;
                     Session.set('graphFunction', graphFunction);
                     Session.set ('PlotResultsUpDated', new Date());
                     console.log("after successful getGraphData call time:", new Date(), ":Session key: ",  ret.key, " graphFunction:", graphFunction);
-
                     matsGraphUtils.setGraphView(pt);
                 });
                 break;

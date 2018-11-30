@@ -485,6 +485,16 @@ Template.graph.events({
             document.getElementById("plot-curves").click();
         }
     },
+    'click .reCacheButton': function () {
+        var plotType = Session.get('plotType');
+        var params = Session.get('params');
+        var actionId = "plotUnmatched";
+        if (params.plotAction === "matched") {
+            actionId = plotMatched;
+        }
+        Session.set('expireCache',true);
+        document.getElementById("plot-curves").click();
+    },
     'click .curveVisibility': function (event) {
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;

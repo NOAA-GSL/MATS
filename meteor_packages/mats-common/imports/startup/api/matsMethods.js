@@ -1014,9 +1014,7 @@ const resetApp = function (metaDataTableRecords) {
     for (var ai = 0; ai < asrKeys.length; ai++) {
         global.appSpecificResetRoutines[asrKeys[ai]]();
     }
-    if (process.env.NODE_ENV === "development") {
-        matsCache.clear();  // DISABLE FOR PRODUCTION *********
-    }
+    matsCache.clear();
 };
 
 // refreshes the metadata for the app that's running
@@ -1026,6 +1024,7 @@ const refreshMetaData = new ValidatedMethod({
     run() {
         if (Meteor.isServer) {
             try {
+                console.log ("Asked to refresh metadata");
                 checkMetaDataRefresh();
             } catch (e) {
                 console.log(e);
@@ -1313,6 +1312,9 @@ const getGraphData = new ValidatedMethod({
         },
         plotType: {
             type: String
+        },
+        expireKey: {
+            type: Boolean
         }
     }).validator(),
     run(params) {
@@ -1321,11 +1323,11 @@ const getGraphData = new ValidatedMethod({
             var dataFunction = plotGraphFunction.dataFunction;
             var ret;
             try {
-                if (process.env.NODE_ENV === "development") {
-                    matsCache.clear();  // DISABLE FOR PRODUCTION *********
-                }
                 var hash = require('object-hash');
                 var key = hash(params.plotParams);
+                if (process.env.NODE_ENV === "development" || params.expireKey) {
+                    matsCache.expireKey(key);
+                }
                 var results = matsCache.getResult(key);
                 if (results === undefined) {
                     // results aren't in the cache - need to process data routine
