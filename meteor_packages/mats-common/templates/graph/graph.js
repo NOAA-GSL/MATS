@@ -594,20 +594,20 @@ Template.graph.events({
                     error_y: dataset[myDataIdx].error_y
                 };
                 update.error_y.visible = !update.error_y.visible;
-                if (dataset[myDataIdx].error_y.visible) {
-                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+                if (update.error_y.visible) {
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
                 } else {
-                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
                 }
             } else {
                 update = {
                     error_x: dataset[myDataIdx].error_x
                 };
                 update.error_x.visible = !update.error_x.visible;
-                if (dataset[myDataIdx].error_x.visible) {
-                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide errorbars";
+                if (update.error_x.visible) {
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
                 } else {
-                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "show errorbars";
+                    $('#' + label + "-curve-show-hide-errorbars")[0].value = "show error bars";
                 }
             }
         }
@@ -625,7 +625,7 @@ Template.graph.events({
             var update = {
                 visible: !dataset[myDataIdx].visible
             };
-            if (dataset[myDataIdx].visible) {
+            if (update.visible) {
                 $('#' + label + "-curve-show-hide-bars")[0].value = "hide bars";
             } else {
                 $('#' + label + "-curve-show-hide-bars")[0].value = "show bars";
