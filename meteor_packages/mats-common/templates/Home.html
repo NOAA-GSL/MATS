@@ -1,8 +1,8 @@
 <template name="Home">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <div id='main'  class=" main row">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    <div id='main' class=" main row">
         {{>topNav}}
         {{>administration}}
         {{>spinner}}
@@ -40,13 +40,13 @@
                     </div>
                     {{resetDefaults}}
                 {{/if}}
-             {{else}}
-                    Loading...
-             {{/if}}
-         </div>
-    <div>
-                {{>graph}}
-         </div>
+            {{else}}
+                Loading...
+            {{/if}}
+        </div>
+        <div>
+            {{>graph}}
+        </div>
     </div>
 
     {{>footer}}
