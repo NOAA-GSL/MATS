@@ -1,9 +1,12 @@
+import {matsParamUtils} from 'meteor/randyp:mats-common';
+
 Template.map.onRendered(function () {
 
     var defaultAttrs = this;    // save for when we need to reset to defaults
 
     $.getScript("https://cdn.plot.ly/plotly-latest.min.js", function () {
         var targetId = '';
+        var peerName = '';
         var markers = [];
         var thisMarkers = [];
         var peerOptions = [];
@@ -17,7 +20,7 @@ Template.map.onRendered(function () {
         var initializeSelectorMap = function (item) {
             var defaultPoint = item.data.defaultMapView.point;
             var defaultZoomLevel = item.data.defaultMapView.zoomLevel;
-            var peerName = item.data.peerName;
+            peerName = item.data.peerName;
 
             var targetElement = document.getElementsByName(peerName)[0];
             if (!targetElement) {
@@ -148,6 +151,8 @@ Template.map.onRendered(function () {
             var update = {'marker': {color: dataset.marker.color, opacity: 1}};
             Plotly.restyle($(divId)[0], update, eventdata.points[0].curveNumber);
             $(targetId).val(selectedValues).trigger("change");
+            matsParamUtils.collapseParam(peerName);
+            $(targetId).select2("close");
         });
 
         // event handler for outlining multiple stations
@@ -172,6 +177,8 @@ Template.map.onRendered(function () {
                 var update = {'marker': {color: dataset.marker.color, opacity: 1}};
                 Plotly.restyle($(divId)[0], update, eventdata.points[0].curveNumber);
                 $(targetId).val(selectedValues).trigger("change");
+                matsParamUtils.collapseParam(peerName);
+                $(targetId).select2("close");
 
                 // As per the comment block above, we're done here, so make sure plotly's area select is disabled.
                 // otherwise the user won't be able to choose individual stations after choosing an area select.
@@ -185,6 +192,8 @@ Template.map.onRendered(function () {
             event.preventDefault();
             // fill the selected values array with all available options and change the marker to its highlight color
             $(targetId).val(peerOptions).trigger("change");
+            matsParamUtils.collapseParam(peerName);
+            $(targetId).select2("close");
             for (var sidx = 0; sidx < thisMarkers.length; sidx++) {
                 dataset.marker.color[sidx] = thisMarkers[sidx].options.highLightColor;
             }
@@ -197,6 +206,8 @@ Template.map.onRendered(function () {
             event.preventDefault();
             // empty the selected values array and return the marker to its original color
             $(targetId).val([]).trigger("change");
+            matsParamUtils.collapseParam(peerName);
+            $(targetId).select2("close");
             for (var sidx = 0; sidx < thisMarkers.length; sidx++) {
                 dataset.marker.color[sidx] = thisMarkers[sidx].options.color;
             }
