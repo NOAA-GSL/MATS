@@ -871,7 +871,7 @@ var doCurveTextPatterns = function () {
                 [' valid-time:', 'valid-time', ' ']
             ],
             displayParams: [
-                "data-source", "sites", "variable", "forecast-length", "valid-time"
+                "data-source", "sites", "sitesMap", "variable", "forecast-length", "valid-time"
             ],
             groupSize: 6
         });

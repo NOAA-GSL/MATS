@@ -185,7 +185,7 @@ Template.curveParamItemGroup.helpers({
         if (visibilityControllingParam !== undefined) {
             const curve = Session.get("Curves")[elem.index];
             const hideOtherFor = visibilityControllingParam.hideOtherFor[elem.name][0];
-            if (curve!== undefined && visibilityControllingParam !== undefined && (curve[visibilityControllingParam.name] === undefined || curve[visibilityControllingParam.name] === hideOtherFor)) {
+            if (curve!== undefined && visibilityControllingParam !== undefined && curve[visibilityControllingParam.name] !== undefined && curve[visibilityControllingParam.name] === hideOtherFor) {
                 return "none";
             }
         }
