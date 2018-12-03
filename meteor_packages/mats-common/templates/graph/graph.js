@@ -732,6 +732,7 @@ Template.graph.events({
             if (elem.value !== undefined && elem.value !== "") {
                 if (plotType === matsTypes.PlotTypes.profile) {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.type'] = 'linear';
                 } else {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
                 }
@@ -741,6 +742,7 @@ Template.graph.events({
             if (elem.value !== undefined && elem.value !== "") {
                 if (plotType === matsTypes.PlotTypes.profile) {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.type'] = 'linear';
                 } else {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
