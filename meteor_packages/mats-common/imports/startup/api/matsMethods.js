@@ -123,31 +123,31 @@ if (Meteor.isServer) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/getJSON/:key', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
+    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getCSV(params, req, res, next));
     });
 
     Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
-    });
-
     Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getCSV(params, req, res, next));
     });
 
-    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route('/getJSON/:key', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
-    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getCSV(params, req, res, next));
+    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
     });
 
-    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(getJSON(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
         Picker.middleware(getJSON(params, req, res, next));
     });
 
