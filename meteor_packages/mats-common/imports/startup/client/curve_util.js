@@ -686,7 +686,6 @@ const showDailyModelCycleFace = function () {
 const showMapFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.map).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions;
         faceOptions = {
             'curve-dates': 'none',
