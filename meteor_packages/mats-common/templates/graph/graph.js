@@ -66,8 +66,8 @@ Template.graph.helpers({
                 currentXMin = options.xaxis.range[0];
                 currentXMax = options.xaxis.range[1];
                 $("#placeholder")[0].on('plotly_relayout', function (eventdata) {
-                    currentXMin = eventdata['xaxis.range[0]'];
-                    currentXMax = eventdata['xaxis.range[1]'];
+                    currentXMin = eventdata['xaxis.range[0]'] === undefined ? currentXMin : eventdata['xaxis.range[0]'];
+                    currentXMax = eventdata['xaxis.range[1]'] === undefined ? currentXMax : eventdata['xaxis.range[1]'];
                 });
             }
             matsCurveUtils.hideSpinner();
