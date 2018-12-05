@@ -400,7 +400,7 @@ const setAllParamsToDefault = function () {
             const targetElem = document.getElementById(targetId);
             const resetMapEvent = new CustomEvent("reset", {
                 detail: {
-                    refElement: (event !== null) ? event.target : null
+                    refElement: null
                 }
             });
             targetElem.dispatchEvent(resetMapEvent);
