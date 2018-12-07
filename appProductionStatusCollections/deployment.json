@@ -74,8 +74,8 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.1-2018.12.07.06.08",
-      "buildDate": "2018.12.07.06.08",
+      "version": "2.0.2-2018.12.07.21.51",
+      "buildDate": "2018.12.07.21.51",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -354,7 +354,7 @@
       "app": "visibility15",
       "title": "Visibility 15 Min",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.34",
+      "buildDate": "2018.12.07.21.49",
       "last_test_run": "",
       "last_test_status": ""
     },
