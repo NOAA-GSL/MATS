@@ -42,8 +42,8 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.1-2018.12.07.06.14",
-      "buildDate": "2018.12.07.06.14",
+      "version": "2.0.2-2018.12.07.21.57",
+      "buildDate": "2018.12.07.21.57",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -314,7 +314,7 @@
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.42",
+      "buildDate": "2018.12.07.21.57",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -426,7 +426,7 @@
       "app": "echotop",
       "title": "Echo Top",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.40",
+      "buildDate": "2018.12.07.21.54",
       "last_test_run": "",
       "last_test_status": ""
     },
