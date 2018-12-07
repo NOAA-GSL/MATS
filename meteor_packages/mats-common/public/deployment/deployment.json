@@ -66,8 +66,8 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.1-2018.12.07.06.11",
-      "buildDate": "2018.12.07.06.11",
+      "version": "2.0.2-2018.12.07.21.54",
+      "buildDate": "2018.12.07.21.54",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -418,7 +418,7 @@
       "app": "vil",
       "title": "Vertically Integrated Liquid",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.37",
+      "buildDate": "2018.12.07.21.51",
       "last_test_run": "",
       "last_test_status": ""
     },
