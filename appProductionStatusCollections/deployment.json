@@ -10,7 +10,7 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "2.0.2-2018.12.07.06.41",
+      "version": "2.0.1-2018.12.07.06.41",
       "buildDate": "2018.12.07.06.41",
       "last_test_run": "",
       "last_test_status": ""
@@ -18,7 +18,7 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "2.0.2-2018.12.07.06.29",
+      "version": "2.0.1-2018.12.07.06.29",
       "buildDate": "2018.12.07.06.29",
       "last_test_run": "",
       "last_test_status": ""
@@ -26,7 +26,7 @@
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.0.2-2018.12.07.06.38",
+      "version": "2.0.1-2018.12.07.06.38",
       "buildDate": "2018.12.07.06.38",
       "last_test_run": "",
       "last_test_status": ""
@@ -34,7 +34,7 @@
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.0.2-2018.12.07.06.32",
+      "version": "2.0.1-2018.12.07.06.32",
       "buildDate": "2018.12.07.06.32",
       "last_test_run": "",
       "last_test_status": ""
@@ -42,7 +42,7 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.2-2018.12.07.06.14",
+      "version": "2.0.1-2018.12.07.06.14",
       "buildDate": "2018.12.07.06.14",
       "last_test_run": "",
       "last_test_status": ""
@@ -50,7 +50,7 @@
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.0.2-2018.12.07.06.35",
+      "version": "2.0.1-2018.12.07.06.35",
       "buildDate": "2018.12.07.06.35",
       "last_test_run": "",
       "last_test_status": ""
@@ -58,7 +58,7 @@
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.2-2018.12.07.06.20",
+      "version": "2.0.1-2018.12.07.06.20",
       "buildDate": "2018.12.07.06.20",
       "last_test_run": "",
       "last_test_status": ""
@@ -66,7 +66,7 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.2-2018.12.07.06.11",
+      "version": "2.0.1-2018.12.07.06.11",
       "buildDate": "2018.12.07.06.11",
       "last_test_run": "",
       "last_test_status": ""
@@ -74,7 +74,7 @@
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.2-2018.12.07.06.08",
+      "version": "2.0.1-2018.12.07.06.08",
       "buildDate": "2018.12.07.06.08",
       "last_test_run": "",
       "last_test_status": ""
@@ -82,7 +82,7 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.2-2018.12.07.06.06",
+      "version": "2.0.1-2018.12.07.06.06",
       "buildDate": "2018.12.07.06.06",
       "last_test_run": "",
       "last_test_status": ""
@@ -90,7 +90,7 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.2-2018.12.07.06.03",
+      "version": "2.0.1-2018.12.07.06.03",
       "buildDate": "2018.12.07.06.03",
       "last_test_run": "",
       "last_test_status": ""
@@ -98,7 +98,7 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.2-2018.12.07.06.00",
+      "version": "2.0.1-2018.12.07.06.00",
       "buildDate": "2018.12.07.06.00",
       "last_test_run": "",
       "last_test_status": ""
@@ -106,7 +106,7 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.2-2018.12.07.06.23",
+      "version": "2.0.1-2018.12.07.06.23",
       "buildDate": "2018.12.07.06.23",
       "last_test_run": "",
       "last_test_status": ""
@@ -114,7 +114,7 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.0.2-2018.12.07.06.26",
+      "version": "2.0.1-2018.12.07.06.26",
       "buildDate": "2018.12.07.06.26",
       "last_test_run": "",
       "last_test_status": ""
@@ -122,7 +122,7 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.0.2-2018.12.07.06.44",
+      "version": "2.0.1-2018.12.07.06.44",
       "buildDate": "2018.12.07.06.44",
       "last_test_run": "",
       "last_test_status": ""
@@ -130,7 +130,7 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.2-2018.12.07.06.17",
+      "version": "2.0.1-2018.12.07.06.17",
       "buildDate": "2018.12.07.06.17",
       "last_test_run": "",
       "last_test_status": ""
@@ -410,7 +410,7 @@
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.13",
+      "buildDate": "2018.12.07.21.29",
       "last_test_run": "",
       "last_test_status": ""
     },
