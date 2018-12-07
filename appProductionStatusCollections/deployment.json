@@ -82,8 +82,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.1-2018.12.07.06.06",
-      "buildDate": "2018.12.07.06.06",
+      "version": "2.0.2-2018.12.07.21.48",
+      "buildDate": "2018.12.07.21.48",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -378,7 +378,7 @@
       "app": "surfrad",
       "title": "Surface Radiation",
       "version": "2.0.1",
-      "buildDate": "2018.12.06.00.32",
+      "buildDate": "2018.12.07.21.46",
       "last_test_run": "",
       "last_test_status": ""
     },
