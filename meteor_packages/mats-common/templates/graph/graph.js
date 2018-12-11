@@ -13,8 +13,7 @@ import {
 var pageIndex = 0;
 var annotation = "";
 var openWindows = [];
-var currentXMin = undefined;
-var currentXMax = undefined;
+var yAxes = [];
 
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
@@ -62,12 +61,11 @@ Template.graph.helpers({
                 }
                 $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
 
-                // if the layout changes, store the new x axis limits in case someone presses replot.
-                currentXMin = options.xaxis.range[0];
-                currentXMax = options.xaxis.range[1];
-                $("#placeholder")[0].on('plotly_relayout', function (eventdata) {
-                    currentXMin = eventdata['xaxis.range[0]'] === undefined ? currentXMin : eventdata['xaxis.range[0]'];
-                    currentXMax = eventdata['xaxis.range[1]'] === undefined ? currentXMax : eventdata['xaxis.range[1]'];
+                // store the existing y axes.
+                Object.keys($("#placeholder")[0].layout).filter(function (k) {
+                    if (k.startsWith('yaxis')) {
+                        yAxes.push(k);
+                    }
                 });
             }
             matsCurveUtils.hideSpinner();
@@ -172,6 +170,9 @@ Template.graph.helpers({
             }
         });
         return Array.apply(null, {length: Object.keys(yaxis).length}).map(Number.call, Number);
+    },
+    isProfile: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.profile)
     },
     isNotMap: function () {
         return (Session.get('plotType') !== matsTypes.PlotTypes.map)
@@ -330,7 +331,6 @@ Template.graph.events({
         }
     },
     'click .preview': function () {
-        var plotType = Session.get('plotType');
         // capture the layout
         const layout = $("#placeholder")[0].layout;
         var key = Session.get('plotResultKey');
@@ -394,6 +394,17 @@ Template.graph.events({
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
+    },
+    'click .axisYScale': function () {
+        event.preventDefault();
+        // get all yaxes and change their scales
+        var newOpts = {};
+        var yAxis;
+        for (var k = 0; k < yAxes.length; k++) {
+            yAxis = yAxes[k];
+            newOpts[yAxis + '.type'] = $("#placeholder")[0].layout[yAxis].type ==='linear' ? 'log' : 'linear';
+        }
+        Plotly.relayout($("#placeholder")[0], newOpts);
     },
     'click .firstPageButton': function () {
         var pageIndex = Session.get("pageIndex");
@@ -475,7 +486,8 @@ Template.graph.events({
     'click .replotZoomButton': function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
-            var newDateRange = moment.utc(currentXMin).format('M/DD/YYYY HH:mm') + " - " + moment.utc(currentXMax).format('M/DD/YYYY HH:mm');
+            var newDateRange = moment.utc($("#placeholder")[0].layout['xaxis'].range[0]).format('M/DD/YYYY HH:mm') + " - " + moment.utc($("#placeholder")[0].layout['xaxis'].range[1]).format('M/DD/YYYY HH:mm');
+            console.log(newDateRange);
             document.getElementById('controlButton-dates-value').innerHTML = newDateRange;
             var params = Session.get('params');
             var actionId = "plotUnmatched";
@@ -492,7 +504,7 @@ Template.graph.events({
         if (params.plotAction === "matched") {
             actionId = plotMatched;
         }
-        Session.set('expireCache',true);
+        Session.set('expireCache', true);
         document.getElementById("plot-curves").click();
     },
     'click .curveVisibility': function (event) {
@@ -692,7 +704,7 @@ Template.graph.events({
     'click #axisSubmit': function (event) {
         event.preventDefault();
         var plotType = Session.get('plotType');
-        var options = Session.get('options');
+        var changeYScaleBack = false;
         var newOpts = {};
         // get input axis limits and labels
         $("input[id^=x][id$=AxisLabel]").get().forEach(function (elem, index) {
@@ -732,7 +744,11 @@ Template.graph.events({
             if (elem.value !== undefined && elem.value !== "") {
                 if (plotType === matsTypes.PlotTypes.profile) {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
-                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.type'] = 'linear';
+                    // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
+                    if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
+                        $("#axisYScale").click();
+                        changeYScaleBack = true;
+                    }
                 } else {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
                 }
@@ -742,13 +758,21 @@ Template.graph.events({
             if (elem.value !== undefined && elem.value !== "") {
                 if (plotType === matsTypes.PlotTypes.profile) {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
-                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.type'] = 'linear';
+                    // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
+                    if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
+                        $("#axisYScale").click();
+                        changeYScaleBack = true;
+                    }
                 } else {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
             }
         });
         Plotly.relayout($("#placeholder")[0], newOpts);
+        // if needed, restore the log axis
+        if (changeYScaleBack) {
+            $("#axisYScale").click();
+        }
         $("#axisLimitModal").modal('hide');
     }
 });
