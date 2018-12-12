@@ -15,7 +15,7 @@ const refreshPeer = function (event, param) {
             const targetElem = document.getElementById(targetId);
             const refreshMapEvent = new CustomEvent("refresh", {
                 detail: {
-                    refElement: (event !== null) ? event.target : null
+                    refElement: null
                 }
             });
             targetElem.dispatchEvent(refreshMapEvent);

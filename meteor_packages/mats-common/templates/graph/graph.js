@@ -396,7 +396,6 @@ Template.graph.events({
         $("#axisLimitModal").modal('show');
     },
     'click .axisYScale': function () {
-        event.preventDefault();
         // get all yaxes and change their scales
         var newOpts = {};
         var yAxis;
