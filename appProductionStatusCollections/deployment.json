@@ -10,128 +10,128 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "2.0.3-2018.12.12.06.39",
-      "buildDate": "2018.12.12.06.39",
+      "version": "2.0.3-2018.12.14.06.41",
+      "buildDate": "2018.12.14.06.41",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "2.0.3-2018.12.12.06.28",
-      "buildDate": "2018.12.12.06.28",
+      "version": "2.0.3-2018.12.14.06.29",
+      "buildDate": "2018.12.14.06.29",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.0.3-2018.12.12.06.36",
-      "buildDate": "2018.12.12.06.36",
+      "version": "2.0.3-2018.12.14.06.38",
+      "buildDate": "2018.12.14.06.38",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.0.3-2018.12.12.06.31",
-      "buildDate": "2018.12.12.06.31",
+      "version": "2.0.3-2018.12.14.06.32",
+      "buildDate": "2018.12.14.06.32",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.3-2018.12.12.06.14",
-      "buildDate": "2018.12.12.06.14",
+      "version": "2.0.3-2018.12.14.06.14",
+      "buildDate": "2018.12.14.06.14",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.0.3-2018.12.12.06.33",
-      "buildDate": "2018.12.12.06.33",
+      "version": "2.0.3-2018.12.14.06.35",
+      "buildDate": "2018.12.14.06.35",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.3-2018.12.12.06.19",
-      "buildDate": "2018.12.12.06.19",
+      "version": "2.0.3-2018.12.14.06.20",
+      "buildDate": "2018.12.14.06.20",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.3-2018.12.12.06.11",
-      "buildDate": "2018.12.12.06.11",
+      "version": "2.0.3-2018.12.14.06.12",
+      "buildDate": "2018.12.14.06.12",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.3-2018.12.12.06.08",
-      "buildDate": "2018.12.12.06.08",
+      "version": "2.0.3-2018.12.14.06.09",
+      "buildDate": "2018.12.14.06.09",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.3-2018.12.12.06.05",
-      "buildDate": "2018.12.12.06.05",
+      "version": "2.0.3-2018.12.14.06.06",
+      "buildDate": "2018.12.14.06.06",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.3-2018.12.12.06.03",
-      "buildDate": "2018.12.12.06.03",
+      "version": "2.0.3-2018.12.14.06.03",
+      "buildDate": "2018.12.14.06.03",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.3-2018.12.12.06.00",
-      "buildDate": "2018.12.12.06.00",
+      "version": "2.0.3-2018.12.14.06.00",
+      "buildDate": "2018.12.14.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.3-2018.12.12.06.22",
-      "buildDate": "2018.12.12.06.22",
+      "version": "2.0.3-2018.12.14.06.23",
+      "buildDate": "2018.12.14.06.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.0.3-2018.12.12.06.25",
-      "buildDate": "2018.12.12.06.25",
+      "version": "2.0.3-2018.12.14.06.26",
+      "buildDate": "2018.12.14.06.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.0.3-2018.12.12.06.42",
-      "buildDate": "2018.12.12.06.42",
+      "version": "2.0.3-2018.12.14.06.44",
+      "buildDate": "2018.12.14.06.44",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.3-2018.12.12.06.16",
-      "buildDate": "2018.12.12.06.16",
+      "version": "2.0.3-2018.12.14.06.17",
+      "buildDate": "2018.12.14.06.17",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -158,128 +158,128 @@
     {
       "app": "upperair",
       "title": "Upper Air",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.22.08",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.51",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.57",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.40",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.22.05",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.48",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.22.00",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.43",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.43",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.26",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.22.02",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.46",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.49",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.32",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.40",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.23",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.22.11",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.54",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.46",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.29",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.38",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.20",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.35",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.17",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.32",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.14",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.29",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.10",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.51",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.34",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.0.1",
-      "buildDate": "2018.12.07.21.54",
+      "version": "2.0.2",
+      "buildDate": "2018.12.12.01.37",
       "last_test_run": "",
       "last_test_status": ""
     },

@@ -274,7 +274,7 @@ const doCurveParams = function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metar_mats_test.desc from metar_mats_test order by name;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars where lat <= 9000 and lat >= -9000 order by name;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
@@ -1024,7 +1024,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
+    mdr.addRecord("sitePool", "madis3", ['metars']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "surface"});
