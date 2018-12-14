@@ -23,7 +23,7 @@ const doPlotParams = function () {
                 options: [''],
                 startDate: startInit,
                 stopDate: stopInit,
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 default: dstr,
                 controlButtonVisibility: 'block',
@@ -358,7 +358,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: regionModelOptionsMap,
                 options: regionModelOptionsMap[myDBs[0]][Object.keys(regionModelOptionsMap[myDBs[0]])[0]],   // convenience
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: regionModelOptionsMap[myDBs[0]][Object.keys(regionModelOptionsMap[myDBs[0]])[0]][0],  // always use the first region for the first model
@@ -414,7 +414,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: variableOptionsMap,
                 options: variableOptionsMap[myDBs[0]][Object.keys(variableOptionsMap[myDBs[0]])[0]],   // convenience
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -445,7 +445,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]],
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -574,7 +574,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: levelOptionsMap,
                 options: levelOptionsMap[myDBs[0]][Object.keys(levelOptionsMap[myDBs[0]])[0]],   // convenience
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
@@ -617,7 +617,7 @@ const doCurveParams = function () {
                 options: Object.keys(optionsMap).sort(),
                 startDate: startInit,
                 stopDate: stopInit,
-                superiorNames: ['data-source'],
+                superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 unique: false,
                 default: dstr,
