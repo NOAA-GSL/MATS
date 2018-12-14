@@ -160,10 +160,15 @@ const refresh = function (event, paramName) {
     }
     const param = matsParamUtils.getParameterForName(paramName);
     const elem = matsParamUtils.getInputElementForParamName(paramName);
-    // disabledOptions are the indicator that the options are to be grouped
-    // if there are disabledOptions they are the keys in the optionsGroups
-    // and they are the sort order of those keys.
-    // also they are to be disabled options
+
+    /*
+    OptionsGroups are a mechanism for displaying the select options in groups.
+    A disabled option is used for the group header. Disabled options simply show up
+    in the selector list in bold font and act as group titles. They are disabled so that
+    they cannot be clicked. DisabledOptions are the headers that the options are to be grouped under.
+    disabledOptions are optional so if there are disabledOptions they are the keys in the optionsGroups
+    and they are the sort order of those keys.
+    */
     const disabledOptions = matsParamUtils.getDisabledOptionsForParamName(paramName);
     const optionsGroups = param.optionsGroups;
     const plotTypeDependent = param.plotTypeDependent;
@@ -181,15 +186,84 @@ const refresh = function (event, paramName) {
         }
     }
     /*
+     Axis-brothers:
+     Axis-brothers are for scatter plots. They are a second hidden set of parameters that apply to a different axis.
      Because there may be axis "brothers" This refresh must go and
-     see if there are any such elements that are essentially hidden copies
+     see if there are any brother elements that are essentially hidden copies
      of this one, and also refresh their options lists
-     */
-    /*
+
+     TODO: Consider if PlotTypeDependent should be integrated into Superior heirarchy
+      by making plotType a firstSuperior instead of a special heirarchy.
+     PlotTypeDependent:
+     plotTypeDependent is a specialization of Superior heirarchy by plotType.
      plotTypeDependent means that the optionsMap has a top level plotType. i.e
      optionsMap = { matsTypes.PlotTypes.profile: {all my options for profile},
      matsTypes.PlotTypes.scatter2d : {all my options for scatter2d},
      matsTypes.PlotTypes.timeSeries: {all my options for time series}
+
+     Superior Heirarchy:
+     There can be a heirarchy of superiors and dependents. A firstSuperior is superior to the plain old superior,
+     a secondSuperior is superior to a firstSuperior which is superior to the plain old superior, and so on.
+     The Refresh uses the superiors to get the appropriate options for a given options map.
+     The way it works is that superiors are always refreshed first. The superior heirarchy selections are then used by a
+     dependent to retrieve its appropriate optionsMap from the superiorOptionsMap.
+     superiorOptionsMap = {
+        superiorName: {
+            superior-val1: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val2: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val3: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            ...
+        },
+        firstSuperiorName: {
+            superior-val1: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val2: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val3: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            ...
+        },
+        secondSuperiorName: {
+            superior-val1: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val2: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            superior-val3: {option1:value1,
+                            option2:value2,
+                            option3:value3,
+                            ...
+                            },
+            ...
+        },
+        ...
+     }
      */
 
     // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
@@ -239,7 +313,7 @@ const refresh = function (event, paramName) {
                  matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
                  for this element (this superior) is hidden.
 
-                 Also the unused is tested against the superior...
+                 Also the unused is tested against the superior according to the truth table...
                  used && unused  -> use the used
                  unused and used -> use the used
                  used and used -> use the intersection
