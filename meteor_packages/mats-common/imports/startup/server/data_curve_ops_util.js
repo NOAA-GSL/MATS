@@ -279,7 +279,7 @@ const generateBarChartCurveOptions = function (curve, curveIndex, axisMap, dataB
 const generateMapCurveOptions = function (curve, dataSeries) {
 
     const markerSizes = dataSeries.queryVal.map(function (val) {
-        return Math.ceil(Math.abs(val * 9)) + 1;
+        return Math.ceil(Math.abs(val * 4)) + 2;
     });
 
     const label = curve['label'];
