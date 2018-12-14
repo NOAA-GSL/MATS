@@ -491,7 +491,6 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
-        optionsMap = {};
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',

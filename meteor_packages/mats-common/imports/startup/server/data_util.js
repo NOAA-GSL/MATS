@@ -77,6 +77,20 @@ const findArrayInSubArray = function (superArray, subArray) {
     return -1;
 };
 
+//this function checks if an object is a value in another object
+const objectContainsObject = function (superObject, subObject) {
+    const superObjectKeys = Object.keys(superObject);
+    var currentObject;
+    for (var i = 0; i < superObjectKeys.length; i++) {
+        currentObject = superObject[superObjectKeys[i]];
+        if (areObjectsEqual(subObject,currentObject)) {
+            return true;
+        }
+    }
+    // if the loop completes, the subObject was not found
+    return false;
+};
+
 //utility for calculating the average of an array
 const average = function (data) {
     var sum = data.reduce(function (sum, value) {
@@ -859,6 +873,7 @@ export default matsDataUtils = {
     arrayContainsSubArray: arrayContainsSubArray,
     arraysEqual: arraysEqual,
     findArrayInSubArray: findArrayInSubArray,
+    objectContainsObject: objectContainsObject,
     average: average,
     stdev: stdev,
     dateConvert: dateConvert,
