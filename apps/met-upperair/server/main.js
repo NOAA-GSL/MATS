@@ -190,7 +190,7 @@ const doCurveParams = function () {
     }
     var myDBs = [];
     var modelOptionsMap = {};
-    var modelDateRangeMap = {};
+    var dbDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
     var levelOptionsMap = {};
@@ -212,7 +212,7 @@ const doCurveParams = function () {
         for (var k = 0; k < myDBs.length; k++) {
             thisDB = myDBs[k];
             modelOptionsMap[thisDB] = {};
-            modelDateRangeMap[thisDB] = {};
+            dbDateRangeMap[thisDB] = {};
             forecastLengthOptionsMap[thisDB] = {};
             levelOptionsMap[thisDB] = {};
             variableOptionsMap[thisDB] = {};
@@ -227,7 +227,7 @@ const doCurveParams = function () {
 
                 var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
                 var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
-                modelDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
+                dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -289,6 +289,7 @@ const doCurveParams = function () {
                 name: 'database',
                 type: matsTypes.InputTypes.select,
                 options: myDBs,
+                dates: dbDateRangeMap,
                 dependentNames: ["data-source"],
                 controlButtonCovered: true,
                 default: myDBs[0],
@@ -320,7 +321,6 @@ const doCurveParams = function () {
                 name: 'data-source',
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
-                dates: modelDateRangeMap,
                 options: Object.keys(modelOptionsMap[myDBs[0]]),   // convenience
                 superiorNames: ["database"],
                 dependentNames: ["region", "variable", "forecast-length", "pres-level", "dates", "curve-dates"],
@@ -336,7 +336,7 @@ const doCurveParams = function () {
         // it is defined but check for necessary update
         var currentParam = matsCollections.CurveParams.findOne({name: 'data-source'});
         if ((!matsDataUtils.areObjectsEqual(modelOptionsMap, currentParam.optionsMap)) ||
-            (!matsDataUtils.areObjectsEqual(modelDateRangeMap, currentParam.dates))) {
+            (!matsDataUtils.areObjectsEqual(dbDateRangeMap, currentParam.dates))) {
             // have to reload model data
             if (process.env.NODE_ENV === "development") {
                 console.log("updating model data")
@@ -344,7 +344,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
-                    dates: modelDateRangeMap,
+                    dates: dbDateRangeMap,
                     options: Object.keys(modelOptionsMap[myDBs[0]])
                 }
             });
