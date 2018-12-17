@@ -510,7 +510,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: optionsArr[1],
+                default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
                 displayOrder: 7,

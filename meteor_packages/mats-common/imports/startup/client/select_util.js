@@ -181,21 +181,17 @@ const refresh = function (event, paramName) {
         }
         for (var sn = 0; sn < sNames.length; sn++) {
             var superiorElement = matsParamUtils.getInputElementForParamName(sNames[sn]);
-            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? undefined : superiorElement.options[superiorElement.selectedIndex].text;
-            if (selectedSuperiorValue) {
-                superiors[0] = superiors[0] === undefined ? [] : superiors[0];
-                superiors.push({element: superiorElement, value: selectedSuperiorValue});
-            }
+            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? matsParamUtils.getParameterForName(sNames[sn]).default : superiorElement.options[superiorElement.selectedIndex].text;
+            superiors[0] = superiors[0] === undefined ? [] : superiors[0];
+            superiors[0].push({element: superiorElement, value: selectedSuperiorValue});
         }
         for (var sNameIndex = 1; sNameIndex < superiorDimensionality; sNameIndex++) {
             sNames = superiorNames[sNameIndex];
             for (var sn = 0; sn < sNames.length; sn++) {
                 var superiorElement = matsParamUtils.getInputElementForParamName(sNames[sn]);
-                var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? undefined : superiorElement.options[superiorElement.selectedIndex].text;
-                if (selectedSuperiorValue) {
-                    superiors[sNameIndex] = superiors[sNameIndex] === undefined ? [] : superiors[sNameIndex];
-                    superiors[sNameIndex].push({element: superiorElement, value: selectedSuperiorValue});
-                }
+                var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? matsParamUtils.getParameterForName(sNames[sn]).default : superiorElement.options[superiorElement.selectedIndex].text;
+                superiors[sNameIndex] = superiors[sNameIndex] === undefined ? [] : superiors[sNameIndex];
+                superiors[sNameIndex].push({element: superiorElement, value: selectedSuperiorValue});
             }
         }
     }
@@ -245,7 +241,7 @@ const refresh = function (event, paramName) {
     const elems = document.getElementsByClassName("data-input") === undefined ? [] : document.getElementsByClassName("data-input");
     Session.set('selected', $(elem).val());
 
-    if (elem && elem.options && elem.optionsMap) {
+    if (elem && elem.options) {
         if (elem.selectedIndex === undefined || elem.selectedIndex === -1) {
             if (param.default !== matsTypes.InputTypes.unused) {
                 elem.selectedIndex = 0;
@@ -266,14 +262,18 @@ const refresh = function (event, paramName) {
             // starting with the most superior down through the least superior
             // and get the options list for the first set of superiors.
             // These are the ancestral options.
-            var firstSuperiorOptions = optionsMap;
-            var theseSuperiors = superiors === undefined || superiors.length === 0 ? [] : superiors[0];
-            for (var theseSuperiorsIndex = 0; theseSuperiorsIndex < theseSuperiors.length; theseSuperiorsIndex++) {
-                var superior = theseSuperiors[theseSuperiorsIndex];
-                var selectedSuperiorValue = superior.value;
-                firstSuperiorOptions = firstSuperiorOptions[selectedSuperiorValue];
+            if (param.optionsMap) {
+                var firstSuperiorOptions = optionsMap;
+                var theseSuperiors = superiors === undefined || superiors.length === 0 ? [] : superiors[0];
+                for (var theseSuperiorsIndex = 0; theseSuperiorsIndex < theseSuperiors.length; theseSuperiorsIndex++) {
+                    var superior = theseSuperiors[theseSuperiorsIndex];
+                    var selectedSuperiorValue = superior.value;
+                    firstSuperiorOptions = firstSuperiorOptions[selectedSuperiorValue];
+                }
+                myOptions = Array.isArray(firstSuperiorOptions) ? firstSuperiorOptions : Object.keys(firstSuperiorOptions);
+            } else {
+                myOptions = param.options;
             }
-            myOptions = firstSuperiorOptions;
 
             // need to get the ancestral truth options because we may need to intersect the options
 
@@ -323,7 +323,7 @@ const refresh = function (event, paramName) {
                     nextSuperiorOptions = nextSuperiorOptions[selectedSuperiorValue];
                 }
                 // since we now have multiple options we have to intersect them
-                myOptions = _.intersection(myOptions,nextSuperiorOptions);
+                myOptions = _.intersection(myOptions, nextSuperiorOptions);
             }
             if (myOptions === []) {  // none used - set to []
                 matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
