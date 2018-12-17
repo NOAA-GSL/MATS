@@ -13,7 +13,7 @@ Template.plotList.helpers({
     } ,
     PlotParamGroups: function () {
         var groupNums = [];
-        var params = matsCollections.CurveParams.find({},{fields:{displayGroup:1}}).fetch();
+        var params = matsCollections.PlotParams.find({},{fields:{displayGroup:1}}).fetch();
         for (var i = 0; i < params.length; i++) {
             groupNums.push(params[i].displayGroup);
         }
