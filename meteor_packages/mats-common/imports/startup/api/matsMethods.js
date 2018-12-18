@@ -939,9 +939,10 @@ const checkMetaDataRefresh = function () {
         if (refresh === true) {
             // refresh the app metadata
             // app specific routines
-            const asrKeys = Object.keys(appSpecificResetRoutines);
+            //const asrKeys = Object.keys(appSpecificResetRoutines);
+            const asrKeys = appSpecificResetRoutines;
             for (var ai = 0; ai < asrKeys.length; ai++) {
-                global.appSpecificResetRoutines[asrKeys[ai]]();
+                global.appSpecificResetRoutines[ai]();
             }
             // remember that we updated ALL the metadata tables just now
             metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: moment().format()}});
@@ -1031,9 +1032,10 @@ const resetApp = function (metaDataTableRecords) {
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
 // app specific routines
-    const asrKeys = Object.keys(appSpecificResetRoutines);
+    //const asrKeys = Object.keys(appSpecificResetRoutines);
+    const asrKeys = appSpecificResetRoutines;
     for (var ai = 0; ai < asrKeys.length; ai++) {
-        global.appSpecificResetRoutines[asrKeys[ai]]();
+        global.appSpecificResetRoutines[ai]();
     }
     matsCache.clear();
 };

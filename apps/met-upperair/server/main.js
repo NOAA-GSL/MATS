@@ -5,11 +5,10 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
 
-const dateInitStr = matsCollections.dateInitStr();
-const dateInitStrParts = dateInitStr.split(' - ');
-const startInit = dateInitStrParts[0];
-const stopInit = dateInitStrParts[1];
-const dstr = startInit + ' - ' + stopInit;
+// determined in doCurveParanms
+var minDate;
+var maxDate;
+var dstr;
 
 const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -21,8 +20,8 @@ const doPlotParams = function () {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: startInit,
-                stopDate: stopInit,
+                startDate: minDate,
+                stopDate: maxDate,
                 superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 default: dstr,
@@ -183,6 +182,7 @@ const doPlotParams = function () {
             });
     }
 };
+
 
 const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -350,6 +350,15 @@ const doCurveParams = function () {
             });
         }
     }
+
+    // determine date defaults for dates and curveDates
+    var defaultDb = matsCollections.CurveParams.findOne({name:"database"},{default:1}).default;
+    var dbDateRangeMap = matsCollections.CurveParams.findOne({name:"database"},{dates:1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
+    maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
+    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -615,8 +624,8 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap).sort(),
-                startDate: startInit,
-                stopDate: stopInit,
+                startDate: minDate,
+                stopDate: maxDate,
                 superiorNames: ['database','data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -820,10 +829,10 @@ Meteor.startup(function () {
 // These are application specific mongo data - like curve params
 // The appSpecificResetRoutines object is a special name,
 // as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
-appSpecificResetRoutines = {
-    doPlotGraph: doPlotGraph,
-    doCurveParams: doCurveParams,
-    doSavedCurveParams: doSavedCurveParams,
-    doPlotParams: doPlotParams,
-    doCurveTextPatterns: doCurveTextPatterns
-};
+appSpecificResetRoutines = [
+    doPlotGraph,
+    doCurveParams,
+    doSavedCurveParams,
+    doPlotParams,
+    doCurveTextPatterns ]
+;
