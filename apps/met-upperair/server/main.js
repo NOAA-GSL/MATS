@@ -4,6 +4,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
 
 // determined in doCurveParanms
 var minDate;
@@ -183,7 +184,6 @@ const doPlotParams = function () {
     }
 };
 
-
 const doCurveParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
         matsCollections.CurveParams.remove({});
@@ -350,15 +350,6 @@ const doCurveParams = function () {
             });
         }
     }
-
-    // determine date defaults for dates and curveDates
-    var defaultDb = matsCollections.CurveParams.findOne({name:"database"},{default:1}).default;
-    var dbDateRangeMap = matsCollections.CurveParams.findOne({name:"database"},{dates:1}).dates;
-    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
-    minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
-    maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'region'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -608,6 +599,16 @@ const doCurveParams = function () {
             });
         }
     }
+
+    // determine date defaults for dates and curveDates
+    var defaultDb = matsCollections.CurveParams.findOne({name:"database"},{default:1}).default;
+    var dbDateRangeMap = matsCollections.CurveParams.findOne({name:"database"},{dates:1}).dates;
+    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
+    maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
+    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minDate + ' - ' + maxDate;
+
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {
             '1 day': ['1 day'],
@@ -822,6 +823,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['upperair_mats_metadata']);
     matsMethods.resetApp(mdr);
+    matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "met-upperair"});
 });
 
@@ -834,5 +836,5 @@ appSpecificResetRoutines = [
     doCurveParams,
     doSavedCurveParams,
     doPlotParams,
-    doCurveTextPatterns ]
-;
+    doCurveTextPatterns
+];
