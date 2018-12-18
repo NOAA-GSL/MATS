@@ -821,7 +821,7 @@ Meteor.startup(function () {
 
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['upperair_mats_metadata']);
-    matsMethods.resetApp(mdr);
+    matsMethods.resetApp(mdr, matsTypes.AppTypes.metexpress);
     matsCollections.appName.insert({name: "appName", app: "met-upperair"});
 });
 

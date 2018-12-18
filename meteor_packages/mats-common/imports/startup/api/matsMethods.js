@@ -952,7 +952,7 @@ const checkMetaDataRefresh = function () {
 };
 
 // makes sure all of the parameters display appropriate selections in relation to one another
-const resetApp = function (metaDataTableRecords) {
+const resetApp = function (metaDataTableRecords, type) {
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText === undefined || deploymentText == null) {
@@ -993,7 +993,7 @@ const resetApp = function (metaDataTableRecords) {
     const appVersion = app ? app.version : "unknown";
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
-
+    const appType = type ? type : matsTypes.AppTypes.mats;
     // remember that we updated the metadata tables just now - create metaDataTableUpdates
     /*
         metaDataTableUpdates:
@@ -1027,7 +1027,7 @@ const resetApp = function (metaDataTableRecords) {
     matsCollections.ColorScheme.remove({});
     matsDataUtils.doColorScheme();
     matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate);
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
     matsCollections.CurveParams.remove({});
     matsCollections.PlotParams.remove({});
     matsCollections.CurveTextPatterns.remove({});
@@ -1322,6 +1322,60 @@ const getAuthorizations = new ValidatedMethod({
             roles = matsCollections.Authorization.findOne({email: userEmail}).roles;
         }
         return roles;
+    }
+});
+
+
+// execs an mvbatch
+const execMvBatch = new ValidatedMethod({
+    name: 'matsMethods.execMvBatch',
+    validate: new SimpleSchema({
+        plotParams: {
+            type: Object,
+            blackbox: true
+        },
+        plotType: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
+            var xlateFunction = plotGraphFunction.xlateFunction;
+            var ret;
+            try {
+                var hash = require('object-hash');
+                var key = hash(params.plotParams);
+                if (process.env.NODE_ENV === "development" || params.expireKey) {
+                    matsCache.expireKey(key);
+                }
+                var plotSpec = matsCache.getResult(key);
+                if (plotSpec === undefined) {
+                    // plotSpec isn't in the cache - need to process xlate routine
+                    const Future = require('fibers/future');
+                    var future = new Future();
+                    global[xlateFunction](params.plotParams, function (plotSpec) {
+                        ret = saveResultData(plotSpec);
+                        future["return"](ret);
+                    });
+                    return future.wait();
+                } else { // plotSpec was already in the Results collection (same params and not yet expired)
+                        ret = plotSpec;  // {key:someKey, createdAt:date, result:plotSpec}
+                        // refresh expire time? I only know how to re - set the item
+                        matsCache.storeResult(plotSpec.key, plotSpec);
+                    }
+                // exec mv batch with this plotSpec
+
+                return plotSpec.key;
+            } catch (xlateFunctionError) {
+                if (xlateFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
+                    throw new Meteor.Error(xlateFunctionError.message);
+                } else {
+                    throw new Meteor.Error("Error in execMvBatch function:" + xlateFunction + " : " + xlateFunctionError.message);
+                }
+            }
+            return undefined; // probably won't get here
+        }
     }
 });
 

@@ -1,6 +1,10 @@
 /**
  * Created by pierce on 8/31/16.
  */
+var AppTypes = {
+    mats: 'mats',
+    metexpress: 'metexpress'
+};
 
 var InputTypes = {
     textInput: 'textInput',
@@ -155,6 +159,7 @@ export default matsTypes = {
     ForecastTypes: ForecastTypes,
     ReservedWords: ReservedWords,
     selectorsToHide: selectorsToHide,
-    MetaDataDBRecord: MetaDataDBRecord
+    MetaDataDBRecord: MetaDataDBRecord,
+    AppTypes: AppTypes
 }
 
