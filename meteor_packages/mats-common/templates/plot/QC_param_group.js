@@ -4,15 +4,15 @@ import { plotParamHandler } from 'meteor/randyp:mats-common';
 Template.QCParamGroup.helpers({
     completenessNumber: function () {
         var appName = matsParamUtils.getAppName();
-        if (appName === 'anomalycor') {
+        if (appName === 'anomalycor' || appName.startsWith('met-')) {
             return '0';
         } else {
             return '75';
         }
     },
-    isACC: function () {
+    noQC: function () {
         var appName = matsParamUtils.getAppName();
-        return appName === 'anomalycor'
+        return appName === 'anomalycor' || appName.startsWith('met-')
     }
 });
 

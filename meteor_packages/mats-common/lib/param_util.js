@@ -363,16 +363,16 @@ const getDefaultDateRange = function(name) {
     const stopInit = dateParam.stopDate;
     const dstr = dateParam.default;
     return {startInit:startInit,stopInit:stopInit,dstr:dstr};
-}
+};
 
 const getMinMaxDates = function(minDate, maxDate) {
     var minMoment = moment(minDate,"MM/DD/YYYY HH:mm");
     var maxMoment = moment(maxDate, "MM/DD/YYYY HH:mm");
     if (maxMoment.diff(minMoment, 'days') > 30) {
-        minDate = moment(maxMoment.subtract(30, 'days'), "MM/DD/YYYY HH:mm");
+        minDate = moment(maxMoment.subtract(30, 'days')).format("MM/DD/YYYY HH:mm");
     }
     return {minDate:minDate,maxDate:maxDate};
-}
+};
 
 const setAllParamsToDefault = function () {
     // default the superiors and refresh them so that they cause the dependent options to refresh
@@ -407,7 +407,7 @@ const setAllParamsToDefault = function () {
     params.forEach(function (param) {
         if (param.type === matsTypes.InputTypes.dateRange) {
             const dstr = getDefaultDateRange(param.name).dstr;
-            matsParamUtils.setValueTextForParamName(param.name, dstr);
+            setValueTextForParamName(param.name, dstr);
         } else if (param.type === matsTypes.InputTypes.selectMap) {
             const targetId = param.name + '-' + param.type;
             const targetElem = document.getElementById(targetId);
@@ -424,7 +424,7 @@ const setAllParamsToDefault = function () {
     matsCollections.PlotParams.find({}).fetch().forEach(function (param) {
         if (param.type === matsTypes.InputTypes.dateRange) {
             const dstr = getDefaultDateRange(param.name).dstr;
-            matsParamUtils.setValueTextForParamName(param.name, dstr);
+            setValueTextForParamName(param.name, dstr);
         } else {
             setDefaultForParamName(param);
         }
