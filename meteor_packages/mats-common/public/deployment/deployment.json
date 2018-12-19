@@ -42,8 +42,8 @@
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.3-2018.12.19.06.14",
-      "buildDate": "2018.12.19.06.14",
+      "version": "2.0.3-2018.12.19.19.06",
+      "buildDate": "2018.12.19.19.06",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -66,40 +66,40 @@
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.3-2018.12.19.06.11",
-      "buildDate": "2018.12.19.06.11",
+      "version": "2.0.3-2018.12.19.19.04",
+      "buildDate": "2018.12.19.19.04",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.3-2018.12.19.06.09",
-      "buildDate": "2018.12.19.06.09",
+      "version": "2.0.3-2018.12.19.19.01",
+      "buildDate": "2018.12.19.19.01",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.3-2018.12.19.06.06",
-      "buildDate": "2018.12.19.06.06",
+      "version": "2.0.3-2018.12.19.18.58",
+      "buildDate": "2018.12.19.18.58",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.3-2018.12.19.06.03",
-      "buildDate": "2018.12.19.06.03",
+      "version": "2.0.3-2018.12.19.18.55",
+      "buildDate": "2018.12.19.18.55",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.3-2018.12.19.06.00",
-      "buildDate": "2018.12.19.06.00",
+      "version": "2.0.3-2018.12.19.18.52",
+      "buildDate": "2018.12.19.18.52",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -409,8 +409,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.2",
-      "buildDate": "2018.12.12.01.10",
+      "version": "2.0.3",
+      "buildDate": "2018.12.19.19.08",
       "last_test_run": "",
       "last_test_status": ""
     },
