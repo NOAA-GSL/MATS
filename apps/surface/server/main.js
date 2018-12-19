@@ -274,7 +274,7 @@ const doCurveParams = function () {
 
     try {
         matsCollections.SiteMap.remove({});
-        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metars.desc from metars where lat <= 9000 and lat >= -9000 order by name;");
+        rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(sitePool, "select madis_id,name,lat,lon,elev,metar_mats_test.desc from metar_mats_test order by name;");
         for (var i = 0; i < rows.length; i++) {
 
             var site_name = rows[i].name;
@@ -540,6 +540,9 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
             'None': ['(m0.valid_day)+3600*m0.hour'],
+            '3hr': ['ceil(' + 60 * 60 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 3 + ')+' + 60 * 60 * 3 + '/2)'],
+            '6hr': ['ceil(' + 60 * 60 * 6 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 6 + ')+' + 60 * 60 * 6 + '/2)'],
+            '12hr': ['ceil(' + 60 * 60 * 12 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 12 + ')+' + 60 * 60 * 12 + '/2)'],
             '1D': ['ceil(' + 60 * 60 * 24 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
             '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
             '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor(((m0.valid_day)+3600*m0.hour)/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
@@ -1024,7 +1027,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
-    mdr.addRecord("sitePool", "madis3", ['metars']);
+    mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
     matsMethods.resetApp(mdr);
 
     matsCollections.appName.insert({name: "appName", app: "surface"});
