@@ -122,8 +122,8 @@
     {
       "app": "landuse",
       "title": "Surface Land Use",
-      "version": "2.0.3-2018.12.19.06.43",
-      "buildDate": "2018.12.19.06.43",
+      "version": "2.0.3-2018.12.19.19.36",
+      "buildDate": "2018.12.19.19.36",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -353,8 +353,8 @@
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.2",
-      "buildDate": "2018.12.12.01.32",
+      "version": "2.0.3",
+      "buildDate": "2018.12.19.19.33",
       "last_test_run": "",
       "last_test_status": ""
     },
