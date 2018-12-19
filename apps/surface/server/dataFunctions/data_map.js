@@ -21,6 +21,8 @@ dataMap = function (plotParams, plotFunction) {
     var diffFrom = curve.diffFrom;
     var dataSource = curve['data-source'];
     var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var obsTable = (model.includes('ret_') || model.includes('Ret_')) ? 'obs_retro' : 'obs';
+    var modelTable = (model.includes('ret_') || model.includes('Ret_')) ? model + "p" : model + "qp";
     var sitesList = curve['sites'];
     var siteLength = sitesList.length;
     var siteMap = matsCollections.StationMap.findOne({name: 'stations'}, {optionsMap: 1})['optionsMap'];
@@ -56,7 +58,7 @@ dataMap = function (plotParams, plotFunction) {
                 "min(m0.time) as min_time, " +
                 "max(m0.time) as max_time, " +
                 "sum({{variable}} - {{variable}})/count(distinct m0.time) as model_ob_diff " +
-                "from metars as s, obs as o, {{model}} as m0 " +
+                "from metars as s, {{obsTable}} as o, {{model}} as m0 " +
                 "where 1=1 " +
                 "and s.madis_id = m0.sta_id " +
                 "and s.madis_id = o.sta_id " +
@@ -74,7 +76,7 @@ dataMap = function (plotParams, plotFunction) {
                 statement = statement.replace('{{model}}', model + "qp1f");
                 statement = statement.replace('and m0.fcst_len = {{forecastLength}}', "");
             } else {
-                statement = statement.replace('{{model}}', model + "qp");
+                statement = statement.replace('{{model}}', modelTable);
                 statement = statement.replace('{{forecastLength}}', forecastLength);
             }
             if (variable == "temp" || variable == "dp") {
@@ -88,6 +90,7 @@ dataMap = function (plotParams, plotFunction) {
                 statement = statement.replace('{{variable}}', "o." + variable + "*0.44704");
             }
             statement = statement.replace('{{station}}', siteOptions.siteId);
+            statement = statement.replace('{{obsTable}}', obsTable);
             var validTimeClause = " ";
             if (validTimes.length > 0) {
                 validTimeClause = " and ((m0.time%3600<1800 and FROM_UNIXTIME((m0.time-(m0.time%3600)),'%H') IN(" + validTimes + "))" +

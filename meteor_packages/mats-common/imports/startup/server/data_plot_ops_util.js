@@ -96,7 +96,7 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         tickfont: {color: '#000000', size: 14},
         tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
         ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
-        type: 'log',
+        type: 'linear',
         autorange: 'reversed',
         range: [25, 1075]
     };
