@@ -106,8 +106,8 @@
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.3-2018.12.19.06.23",
-      "buildDate": "2018.12.19.06.23",
+      "version": "2.0.3-2018.12.19.19.15",
+      "buildDate": "2018.12.19.19.15",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -393,8 +393,8 @@
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.2",
-      "buildDate": "2018.12.12.01.17",
+      "version": "2.0.3",
+      "buildDate": "2018.12.19.19.18",
       "last_test_run": "",
       "last_test_status": ""
     },
