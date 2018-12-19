@@ -58,8 +58,8 @@
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.3-2018.12.19.06.20",
-      "buildDate": "2018.12.19.06.20",
+      "version": "2.0.3-2018.12.19.19.12",
+      "buildDate": "2018.12.19.19.12",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -130,8 +130,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.3-2018.12.19.06.17",
-      "buildDate": "2018.12.19.06.17",
+      "version": "2.0.3-2018.12.19.19.09",
+      "buildDate": "2018.12.19.19.09",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -401,8 +401,8 @@
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.2",
-      "buildDate": "2018.12.12.01.14",
+      "version": "2.0.3",
+      "buildDate": "2018.12.19.19.15",
       "last_test_run": "",
       "last_test_status": ""
     },
