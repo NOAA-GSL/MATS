@@ -442,6 +442,9 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
         optionsMap = {
             'None': ['ceil(3600*floor((unix_timestamp(m0.date)+3600*m0.hour)/3600))'],
+            '3hr': ['ceil(10800*floor((unix_timestamp(m0.date)+3600*m0.hour)/10800)+10800/2)'],
+            '6hr': ['ceil(21600*floor((unix_timestamp(m0.date)+3600*m0.hour)/21600)+21600/2)'],
+            '12hr': ['ceil(43200*floor((unix_timestamp(m0.date)+3600*m0.hour)/43200)+43200/2)'],
             '1D': ['ceil(86400*floor((unix_timestamp(m0.date)+3600*m0.hour)/86400)+86400/2)'],
             '3D': ['ceil(259200*floor((unix_timestamp(m0.date)+3600*m0.hour)/259200)+259200/2)'],
             '7D': ['ceil(604800*floor((unix_timestamp(m0.date)+3600*m0.hour)/604800)+604800/2)'],

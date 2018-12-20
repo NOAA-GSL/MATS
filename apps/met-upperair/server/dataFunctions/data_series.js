@@ -10,7 +10,7 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "upperair";
+    const appName = "met-upperair";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.timeSeries;
     const hasLevels = true;
@@ -37,45 +37,35 @@ dataSeries = function (plotParams, plotFunction) {
         var curve = curves[curveIndex];
         var diffFrom = curve.diffFrom;
         const label = curve['label'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        const tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
-        const regionStr = curve['region'];
-        const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        const variableStr = curve['variable'];
-        const variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        const variable = variableOptionsMap[variableStr];
-        const top = curve['top'];
-        const bottom = curve['bottom'];
-        var statisticSelect = curve['statistic'];
+        const database = curve['database'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        const region = curve['region'];
+        const variable = curve['variable'];
+        const statisticStr = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-        var statistic;
-        var statKey;
-        if (variableStr === 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-            statKey = statisticSelect + '-winds';
-            statistic = statistic + "," + statAuxMap[statKey];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-            statKey = statisticSelect + '-other';
-            statistic = statistic + "," + statAuxMap[statKey];
-        }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
-        var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        const statistic = statisticOptionsMap[statisticStr][0];
+        const forecastLength = curve['forecast-length'];
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var forecastLength = curve['forecast-length'];
+        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        for (var levIdx = 0; levIdx < levels.length; levIdx++) {
+            levels[levIdx] = "'" + levels[levIdx].toString() + "'"
+        }
+        var levelClause = "";
+        if (levels.length > 0) {
+            levelClause = "and h.fcst_lev IN(" + levels + ")";
+        }
+        var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var validTimeClause = "";
+        if (vts.length > 0) {
+            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+        }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = varUnits;
+        var axisKey = statisticStr;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
@@ -83,44 +73,46 @@ dataSeries = function (plotParams, plotFunction) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
             var statement = "select {{average}} as avtime, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+                "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
+                "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
+                "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "{{statistic}} " +
-                "from {{model}} as m0 " +
+                "from {{database}}.stat_header h, " +
+                "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
+                "and h.model = '{{model}}' " +
+                "and h.vx_mask = '{{region}}' " +
+                "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
+                "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
+                "and ld.fcst_lead = '{{forecastLength}}' " +
+                "and h.fcst_var = '{{variable}}' " +
+                "{{levelClause}} " +
+                "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{model}}', tablePrefix + region);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
+            statement = statement.replace('{{average}}', average);
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{database}}', database);
+            statement = statement.replace('{{database}}', database);
+            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-            statement = statement.replace('{{average}}', average);
+            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{levelClause}}', levelClause);
             dataRequests[curve.label] = statement;
-
-            // math is done on forecastLength later on -- set all analyses to 0
-            if (forecastLength === "-99") {
-                forecastLength = "0";
-            }
 
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, hasLevels, true);
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -143,7 +135,7 @@ dataSeries = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }
