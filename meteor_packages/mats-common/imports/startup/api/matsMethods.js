@@ -574,7 +574,7 @@ const getFlattenedResultData = function (rk, p, np) {
 };
 
 // save the result from the query into mongo and downsample if that result's size is greater than 1Mb
-const saveResultData = function (result) {
+const  saveResultData = function (result) {
     if (Meteor.isServer) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
@@ -1340,8 +1340,9 @@ const execMvBatch = new ValidatedMethod({
     }).validator(),
     run(params) {
         if (Meteor.isServer) {
+            var mvbatch = process.env.MV_HOME + "/bin/mv_batch.sh";
             var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
-            var xlateFunction = plotGraphFunction.xlateFunction;
+            var plotSpecFunction = plotGraphFunction.plotSpecFunction;
             var ret;
             try {
                 var hash = require('object-hash');
@@ -1349,29 +1350,47 @@ const execMvBatch = new ValidatedMethod({
                 if (process.env.NODE_ENV === "development" || params.expireKey) {
                     matsCache.expireKey(key);
                 }
-                var plotSpec = matsCache.getResult(key);
-                if (plotSpec === undefined) {
-                    // plotSpec isn't in the cache - need to process xlate routine
+                var cachedPlotSpec = matsCache.getResult(key);
+                if (cachedPlotSpec === undefined) {
+                    // plotSpec isn't in the cache - need to process plotSpecFunction routine
                     const Future = require('fibers/future');
                     var future = new Future();
-                    global[xlateFunction](params.plotParams, function (plotSpec) {
-                        ret = saveResultData(plotSpec);
+                    // translate the plotparams to a plotSpec and use the key in the plotSpec reference
+                    global[plotSpecFunction](params.plotParams, key, function (plotSpec) {
+                        ret = savePlotSpec(plotSpec); //ret = {key:key, createdAt:date, plotSpec:plotSpec};
                         future["return"](ret);
                     });
                     return future.wait();
                 } else { // plotSpec was already in the Results collection (same params and not yet expired)
-                        ret = plotSpec;  // {key:someKey, createdAt:date, result:plotSpec}
-                        // refresh expire time? I only know how to re - set the item
+                        ret = cachedPlotSpec;  // {key:key, createdAt:date, plotSpec:plotSpec}
                         matsCache.storeResult(plotSpec.key, plotSpec);
                     }
+                // now I have a plotSpec (ret.plotSpec) - either new or from cache
+                // save the plotSpec to the file system
+                const fse = require('fs-extra');
+                const path = require('path');
+                const plotSpecFilePath = process.env.MV_PLOTSPEC_DIR + path.sep + "plot_spec_" + key;
+                const mvBatchCmd = process.env.MV_HOME + path.sep + "bin/mv_batch.sh " + plotSpecFilePath;
+                fse.outputFileSync(filePath, ret.plotSpec);
                 // exec mv batch with this plotSpec
-
-                return plotSpec.key;
-            } catch (xlateFunctionError) {
-                if (xlateFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
-                    throw new Meteor.Error(xlateFunctionError.message);
+                const { exec } = require('child_process');
+                exec(mvBatchCmd, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`exec error: ${error}`);
+                        // remove plotspec
+                        fse.remove(plotSpecFilePath);
+                        return error;
+                    }
+                    // remove plotspec
+                    fse.remove(plotSpecFilePath);
+                    // return the key so that it can be used to retrieve the artifacts
+                    return ret.key;
+                });
+            } catch (plotSpecFunctionError) {
+                if (plotSpecFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
+                    throw new Meteor.Error(plotSpecFunctionError.message);
                 } else {
-                    throw new Meteor.Error("Error in execMvBatch function:" + xlateFunction + " : " + xlateFunctionError.message);
+                    throw new Meteor.Error("Error in execMvBatch function:" + plotSpecFunction + " : " + plotSpecFunctionError.message);
                 }
             }
             return undefined; // probably won't get here
