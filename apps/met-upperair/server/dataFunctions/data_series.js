@@ -89,7 +89,7 @@ dataSeries = function (plotParams, plotFunction) {
                 "and h.fcst_var = '{{variable}}' " +
                 "{{levelClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
-                "group by avtime, stat " +
+                "group by avtime " +
                 "order by avtime" +
                 ";";
 

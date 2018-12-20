@@ -423,12 +423,15 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
         var sub_values;
         var sub_secs;
         var sub_levs;
-        if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
             try {
                 sub_values = rows[rowIndex].sub_values0.toString().split(',').map(Number);
                 sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
                 if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
+                    if (!isNaN(Number(sub_levs[0]))) {
+                        sub_levs = sub_levs.map(Number);
+                    }
                 }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
@@ -613,12 +616,15 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         var sub_stats;
         var sub_secs;
         var sub_levs;
-        if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
             try {
                 sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
                 sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
                 if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
+                    if (!isNaN(Number(sub_levs[0]))) {
+                        sub_levs = sub_levs.map(Number);
+                    }
                 }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
@@ -792,14 +798,17 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
         var sub_secs;
         var sub_levs;
 
-        if (stat !== null && rows[rowIndex].sub_values0 !== undefined) {
+        if (stat !== null && stat !== "NULL" && rows[rowIndex].sub_values0 !== undefined) {
             try {
                 sub_stats = rows[rowIndex].sub_values0.toString().split(',').map(Number);
                 curveSubStatsRaw.push(sub_stats);
                 sub_secs = rows[rowIndex].sub_secs0.toString().split(',').map(Number);
                 curveSubSecsRaw.push(sub_secs);
                 if (hasLevels) {
-                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',').map(Number);
+                    sub_levs = rows[rowIndex].sub_levs0.toString().split(',');
+                    if (!isNaN(Number(sub_levs[0]))) {
+                        sub_levs = sub_levs.map(Number);
+                    }
                     curveSubLevsRaw.push(sub_levs);
                 }
             } catch (e) {
