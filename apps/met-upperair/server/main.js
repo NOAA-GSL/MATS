@@ -384,11 +384,11 @@ const doCurveParams = function () {
 
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
-            'RMS': ['sqrt(m0.ffbar*m0.oobar - 2*m0.fobar) as stat, sum(m0.total) as N0, group_concat(sqrt(m0.ffbar*m0.oobar - 2*m0.fobar) order by unix_timestamp(m0.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(m0.fcst_valid_beg) order by unix_timestamp(m0.fcst_valid_beg)) as sub_secs0, group_concat(m0.fcst_lev order by unix_timestamp(m0.fcst_valid_beg)) as sub_levs0'],
-            'Bias (Model - Obs)': ['m0.fbar - m0.obar as stat, sum(m0.total) as N0, group_concat(m0.fbar - m0.obar order by unix_timestamp(m0.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(m0.fcst_valid_beg) order by unix_timestamp(m0.fcst_valid_beg)) as sub_secs0, group_concat(m0.fcst_lev order by unix_timestamp(m0.fcst_valid_beg)) as sub_levs0'],
-            'N': ['sum(m0.total) as stat, sum(m0.total) as N0, group_concat(m0.total order by unix_timestamp(m0.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(m0.fcst_valid_beg) order by unix_timestamp(m0.fcst_valid_beg)) as sub_secs0, group_concat(m0.fcst_lev order by unix_timestamp(m0.fcst_valid_beg)) as sub_levs0'],
-            'Model average': ['m0.fbar as stat, sum(m0.total) as N0, group_concat(m0.fbar order by unix_timestamp(m0.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(m0.fcst_valid_beg) order by unix_timestamp(m0.fcst_valid_beg)) as sub_secs0, group_concat(m0.fcst_lev order by unix_timestamp(m0.fcst_valid_beg)) as sub_levs0'],
-            'Obs average': ['m0.obar as stat, sum(m0.total) as N0, group_concat(m0.obar order by unix_timestamp(m0.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(m0.fcst_valid_beg) order by unix_timestamp(m0.fcst_valid_beg)) as sub_secs0, group_concat(m0.fcst_lev order by unix_timestamp(m0.fcst_valid_beg)) as sub_levs0']
+            'RMS': ['sqrt(ld.ffbar*ld.oobar - 2*ld.fobar) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar*ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'Bias (Model - Obs)': ['ld.fbar - ld.obar as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'N': ['sum(ld.total) as stat, sum(ld.total) as N0, group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'Model average': ['ld.fbar as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'Obs average': ['ld.obar as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0']
         };
 
         matsCollections.CurveParams.insert(
@@ -519,36 +519,35 @@ const doCurveParams = function () {
             });
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'valid-time'}) == undefined) {
-        var optionsMap = {both: [''], '0-UTC': ['and m0.hour = 0'], '12-UTC': ['and m0.hour = 12']};
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
                 name: 'valid-time',
                 type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: ['both', '0-UTC', '12-UTC',],
+                options: ['0', '6', '12', '18'],
+                selected: [],
                 controlButtonCovered: true,
-                selected: 'both',
                 unique: false,
-                default: 'both',
+                default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
                 displayOrder: 8,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 3,
+                multiple: true
             });
     }
 
     if (matsCollections.CurveParams.findOne({name: 'average'}) == undefined) {
         optionsMap = {
-            'None': ['unix_timestamp(m0.fcst_valid_beg)'],
-            '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
-            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
-            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
-            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
-            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
-            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
-            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((unix_timestamp(m0.fcst_valid_beg))/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
+            'None': ['unix_timestamp(ld.fcst_valid_beg)'],
+            '1D': ['ceil(' + 60 * 60 * 24 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 + ')+' + 60 * 60 * 24 + '/2)'],
+            '3D': ['ceil(' + 60 * 60 * 24 * 3 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 3 + ')+' + 60 * 60 * 24 * 3 + '/2)'],
+            '7D': ['ceil(' + 60 * 60 * 24 * 7 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 7 + ')+' + 60 * 60 * 24 * 7 + '/2)'],
+            '30D': ['ceil(' + 60 * 60 * 24 * 30 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 30 + ')+' + 60 * 60 * 24 * 30 + '/2)'],
+            '60D': ['ceil(' + 60 * 60 * 24 * 60 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 60 + ')+' + 60 * 60 * 24 * 60 + '/2)'],
+            '90D': ['ceil(' + 60 * 60 * 24 * 90 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 90 + ')+' + 60 * 60 * 24 * 90 + '/2)'],
+            '180D': ['ceil(' + 60 * 60 * 24 * 180 + '*floor((unix_timestamp(ld.fcst_valid_beg))/' + 60 * 60 * 24 * 180 + ')+' + 60 * 60 * 24 * 180 + '/2)']
         };
         matsCollections.CurveParams.insert(
             {
