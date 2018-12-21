@@ -10,7 +10,7 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "upperair";
+    const appName = "met-upperair";
     const plotType = matsTypes.PlotTypes.histogram;
     const hasLevels = true;
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
@@ -38,38 +38,32 @@ dataHistogram = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
-        var regionStr = curve['region'];
-        var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-        var variableStr = curve['variable'];
-        var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
-        var variable = variableOptionsMap[variableStr];
-        var top = curve['top'];
-        var bottom = curve['bottom'];
-        var statisticSelect = curve['statistic'];
+        const database = curve['database'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        const region = curve['region'];
+        const variable = curve['variable'];
+        const statisticStr = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statAuxMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {statAuxMap: 1})['statAuxMap'];
-        var statistic;
-        var statKey;
-        if (variableStr === 'winds') {
-            statistic = statisticOptionsMap[statisticSelect][1];
-            statKey = statisticSelect + '-winds';
-            statistic = statistic + "," + statAuxMap[statKey];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][0];
-            statKey = statisticSelect + '-other';
-            statistic = statistic + "," + statAuxMap[statKey];
+        const statistic = statisticOptionsMap[statisticStr][0];
+        const forecastLengthStr = curve['forecast-length'];
+        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+        const forecastLength = forecastValueMap[forecastLengthStr];
+        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        for (var levIdx = 0; levIdx < levels.length; levIdx++) {
+            levels[levIdx] = "'" + levels[levIdx].toString() + "'"
         }
-        statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
-        statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
-        var validTimeStr = curve['valid-time'];
-        var validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        var validTimeClause = validTimeOptionsMap[validTimeStr][0];
+        var levelClause = "";
+        if (levels.length > 0) {
+            levelClause = "and h.fcst_lev IN(" + levels + ")";
+        }
+        var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var validTimeClause = "";
+        if (vts.length > 0) {
+            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
+        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLength = curve['forecast-length'];
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
@@ -85,32 +79,38 @@ dataHistogram = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select unix_timestamp(m0.date)+3600*m0.hour as avtime, " +
-                "count(distinct unix_timestamp(m0.date)+3600*m0.hour) as N_times, " +
-                "min(unix_timestamp(m0.date)+3600*m0.hour) as min_secs, " +
-                "max(unix_timestamp(m0.date)+3600*m0.hour) as max_secs, " +
+            var statement = "select unix_timestamp(ld.fcst_valid_beg) as avtime, " +
+                "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
+                "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
+                "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
                 "{{statistic}} " +
-                "from {{model}} as m0 " +
+                "from {{database}}.stat_header h, " +
+                "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
-                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
-                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
+                "and h.model = '{{model}}' " +
+                "and h.vx_mask = '{{region}}' " +
+                "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
+                "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
-                "and m0.fcst_len = {{forecastLength}} " +
-                "and m0.mb10 >= {{top}}/10 " +
-                "and m0.mb10 <= {{bottom}}/10 " +
+                "and ld.fcst_lead = '{{forecastLength}}' " +
+                "and h.fcst_var = '{{variable}}' " +
+                "{{levelClause}} " +
+                "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{model}}', tablePrefix + region);
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
+            statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{database}}', database);
+            statement = statement.replace('{{database}}', database);
+            statement = statement.replace('{{model}}', model);
+            statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
-
+            statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{levelClause}}', levelClause);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -144,7 +144,7 @@ dataHistogram = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }
