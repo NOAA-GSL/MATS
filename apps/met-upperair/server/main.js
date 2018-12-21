@@ -684,7 +684,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
+                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });

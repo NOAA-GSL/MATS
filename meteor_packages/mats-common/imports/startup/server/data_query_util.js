@@ -1,4 +1,4 @@
-import {matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils, matsTypes, matsCollections} from 'meteor/randyp:mats-common';
 import {Meteor} from "meteor/meteor";
 
 //const Future = require('fibers/future');
@@ -197,6 +197,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
         const Future = require('fibers/future');
         const plotParams = matsDataUtils.getPlotParamsFromStack();
         const completenessQCParam = Number(plotParams["completeness"]) / 100;
+        const appType = matsCollections.Settings.findOne({}).appType;
 
         var dFuture = new Future();
         var d = {// d will contain the curve data
@@ -229,7 +230,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
             } else {
                 var parsedData;
                 if (plotType !== matsTypes.PlotTypes.histogram) {
-                    parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, hasLevels);
+                    parsedData = parseQueryDataSpecialtyCurve(rows, d, completenessQCParam, plotType, appType, hasLevels);
                 } else {
                     parsedData = parseQueryDataHistogram(d, rows, hasLevels);
                 }
@@ -569,7 +570,7 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
 };
 
 //this method parses the returned query data for specialty curves such as profiles, dieoffs, threshold plots, and valid time plots
-const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, hasLevels) {
+const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plotType, appType, hasLevels) {
     /*
         var d = {// d will contain the curve data
             x: [],
@@ -602,7 +603,7 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
         if (plotType === matsTypes.PlotTypes.validtime) {
             independentVar = Number(rows[rowIndex].hr_of_day);
         } else if (plotType === matsTypes.PlotTypes.profile) {
-            independentVar = Number(rows[rowIndex].avVal);
+            independentVar = Number((rows[rowIndex].avVal).toString().replace('P',''));
         } else if (plotType === matsTypes.PlotTypes.dailyModelCycle) {
             independentVar = Number(rows[rowIndex].avtime) * 1000;
         } else {
@@ -735,6 +736,37 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
             }
         }
     }
+
+    // the met levels are ordered as strings, so we need to re-sort them
+    if (plotType === matsTypes.PlotTypes.profile && appType === matsTypes.AppTypes.metexpress) {
+        var dSorted = [];
+        for (var didx = 0; didx < d.y.length; didx++) {
+            dSorted.push({
+                y: d.y[didx],
+                x: d.x[didx],
+                error_x: d.error_x[didx],
+                subVals: d.subVals[didx],
+                subSecs: d.subSecs[didx],
+                subLevs: d.subLevs[didx]
+            });
+        }
+        d.y = [];
+        d.x = [];
+        d.error_x = [];
+        d.subVals = [];
+        d.subSecs = [];
+        d.subLevs = [];
+        dSorted.sort(function(a,b) { return a.y - b.y; });
+        dSorted.map(function (elem) {
+            d.y.push(elem.y);
+            d.x.push(elem.x);
+            d.error_x.push(elem.error_x);
+            d.subVals.push(elem.subVals);
+            d.subSecs.push(elem.subSecs);
+            d.subLevs.push(elem.subLevs);
+        });
+    }
+
     const filteredx = d.x.filter(x => x);
     const filteredy = d.y.filter(y => y);
     d.xmin = Math.min(...filteredx);
