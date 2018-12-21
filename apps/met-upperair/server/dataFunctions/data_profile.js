@@ -41,7 +41,9 @@ dataProfile = function (plotParams, plotFunction) {
         const statisticStr = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         const statistic = statisticOptionsMap[statisticStr][0];
-        const forecastLength = curve['forecast-length'];
+        const forecastLengthStr = curve['forecast-length'];
+        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+        const forecastLength = forecastValueMap[forecastLengthStr];
         var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
         if (vts.length > 0) {

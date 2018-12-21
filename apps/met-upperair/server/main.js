@@ -193,6 +193,7 @@ const doCurveParams = function () {
     var dbDateRangeMap = {};
     var regionModelOptionsMap = {};
     var forecastLengthOptionsMap = {};
+    var forecastValueOptionsMap = {};
     var levelOptionsMap = {};
     var variableOptionsMap = {};
 
@@ -214,11 +215,12 @@ const doCurveParams = function () {
             modelOptionsMap[thisDB] = {};
             dbDateRangeMap[thisDB] = {};
             forecastLengthOptionsMap[thisDB] = {};
+            forecastValueOptionsMap[thisDB] = {};
             levelOptionsMap[thisDB] = {};
             variableOptionsMap[thisDB] = {};
             regionModelOptionsMap[thisDB] = {};
 
-            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,variables,mindate,maxdate from upperair_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,variables,mindate,maxdate order by model;");
+            rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, "select model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate from upperair_mats_metadata where db = '" + thisDB + "' group by model,display_text,regions,levels,fcst_lens,fcst_orig,variables,mindate,maxdate order by model;");
             for (var i = 0; i < rows.length; i++) {
 
                 var model_value = rows[i].model.trim();
@@ -230,11 +232,18 @@ const doCurveParams = function () {
                 dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
+                var forecastValues = rows[i].fcst_orig;
                 var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
+                var forecastValueArr = forecastValues.split(',').map(Function.prototype.call, String.prototype.trim);
+                var forecastValue;
+                var lengthValMap = {};
                 for (var j = 0; j < forecastLengthArr.length; j++) {
                     forecastLengthArr[j] = forecastLengthArr[j].replace(/'|\[|\]/g, "");
+                    forecastValue = forecastValueArr[j].replace(/'|\[|\]/g, "");
+                    lengthValMap[forecastLengthArr[j]] = forecastValue;
                 }
                 forecastLengthOptionsMap[thisDB][model] = forecastLengthArr;
+                forecastValueOptionsMap[thisDB][model] = lengthValMap;
 
                 var levels = rows[i].levels;
                 var levelArr = levels.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -385,10 +394,10 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.findOne({name: 'statistic'}) == undefined) {
         const statOptionsMap = {
             'RMS': ['avg(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar)) as stat, sum(ld.total) as N0, group_concat(sqrt(ld.ffbar+ld.oobar - 2*ld.fobar) order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
-            'Bias (Model - Obs)': ['ld.fbar - ld.obar as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'Bias (Model - Obs)': ['avg(ld.fbar - ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.fbar - ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
             'N': ['sum(ld.total) as stat, sum(ld.total) as N0, group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
-            'Model average': ['ld.fbar as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
-            'Obs average': ['ld.obar as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0']
+            'Model average': ['avg(ld.fbar) as stat, sum(ld.total) as N0, group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0'],
+            'Obs average': ['avg(ld.obar) as stat, sum(ld.total) as N0, group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg)) as sub_values0, group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg)) as sub_secs0, group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg)) as sub_levs0']
         };
 
         matsCollections.CurveParams.insert(
@@ -445,6 +454,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
                 options: forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]],
+                valuesMap: forecastValueOptionsMap,
                 superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,

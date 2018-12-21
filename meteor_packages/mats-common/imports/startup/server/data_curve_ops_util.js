@@ -98,7 +98,6 @@ const getVerticalValueLine = function (ymax, ymin, xValue, cLabel) {
 const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSeries) {
 
     const label = curve['label'];
-    debugger;
     const annotation = curve['annotation'];
 
     // adjust axes for later setting of the plot options
