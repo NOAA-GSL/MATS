@@ -26,6 +26,24 @@ plotSpecTimeSeries = function (plotParams, key,plotSpecCallback) {
         .ele('r_scripts','r scripts path')
 };
 
+/*
+"<plot_spec>"
+    + "<connection>"
+    + "<host>" + databaseManager.getDatabaseInfo().getHost() + "</host>"
+    + "<database>" + databases + "</database>"
+    + "<user>" + "******" + "</user>"
+    + "<password>" + "******" + "</password>"
+    + "</connection>"
+    + (rscript.equals("") ? "" : "<rscript>" + rscript + "</rscript>")
+    + "<folders>"
+    + "<r_tmpl>" + rTmpl + "</r_tmpl>"
+    + "<r_work>" + rWork + "</r_work>"
+    + "<plots>" + plots + "</plots>"
+    + "<data>" + data + "</data>"
+    + "<scripts>" + scripts + "</scripts>"
+    + "</folders>"
+    + strPlotXML
+    + "</plot_spec>";                                                       */
 
 /*
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>

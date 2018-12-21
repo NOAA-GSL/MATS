@@ -596,7 +596,6 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
     var subVals = [];
     var subSecs = [];
     var subLevs = [];
-
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         var independentVar;
         if (plotType === matsTypes.PlotTypes.validtime) {
