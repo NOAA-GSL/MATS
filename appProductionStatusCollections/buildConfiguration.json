@@ -298,97 +298,97 @@
       "app": "upperair",
       "displayName": "Upper Air",
       "displayOrder": 1,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "aircraft",
       "displayName": "Aircraft (AMDAR)",
       "displayOrder": 2,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 4,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "ceiling15",
       "displayName": "Ceiling 15 Min",
       "displayOrder": 5,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 6,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "visibility15",
       "displayName": "Visibility 15 Min",
       "displayOrder": 7,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 8,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 9,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 10,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipAQPI",
       "displayName": "AQPI Precipitation",
       "displayOrder": 11,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 12,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 13,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 14,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 15,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 16,
-      "deploymentStatus": "disabled"
+      "deploymentStatus": "enabled"
     },
     {
       "app": "wfip2",
