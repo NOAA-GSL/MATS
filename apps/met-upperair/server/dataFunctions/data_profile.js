@@ -41,7 +41,9 @@ dataProfile = function (plotParams, plotFunction) {
         const statisticStr = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         const statistic = statisticOptionsMap[statisticStr][0];
-        const forecastLength = curve['forecast-length'];
+        const forecastLengthStr = curve['forecast-length'];
+        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+        const forecastLength = forecastValueMap[forecastLengthStr];
         var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
         if (vts.length > 0) {
@@ -121,7 +123,7 @@ dataProfile = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }

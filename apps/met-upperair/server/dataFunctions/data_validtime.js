@@ -8,18 +8,15 @@ import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-dataSeries = function (plotParams, plotFunction) {
+dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appName = "met-upperair";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
-    const plotType = matsTypes.PlotTypes.timeSeries;
+    const plotType = matsTypes.PlotTypes.validtime;
     const hasLevels = true;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
-    var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromSecs = dateRange.fromSeconds;
-    var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
@@ -47,9 +44,9 @@ dataSeries = function (plotParams, plotFunction) {
         const forecastLengthStr = curve['forecast-length'];
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
         const forecastLength = forecastValueMap[forecastLengthStr];
-        const averageStr = curve['average'];
-        const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
-        const average = averageOptionsMap[averageStr][0];
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         for (var levIdx = 0; levIdx < levels.length; levIdx++) {
             levels[levIdx] = "'" + levels[levIdx].toString() + "'"
@@ -57,11 +54,6 @@ dataSeries = function (plotParams, plotFunction) {
         var levelClause = "";
         if (levels.length > 0) {
             levelClause = "and h.fcst_lev IN(" + levels + ")";
-        }
-        var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var validTimeClause = "";
-        if (vts.length > 0) {
-            validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
@@ -74,7 +66,7 @@ dataSeries = function (plotParams, plotFunction) {
         if (diffFrom == null) {
             // this is a database driven curve, not a difference curve
             // prepare the query from the above parameters
-            var statement = "select {{average}} as avtime, " +
+            var statement = "select floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) as hr_of_day, " +
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
@@ -86,16 +78,14 @@ dataSeries = function (plotParams, plotFunction) {
                 "and h.vx_mask = '{{region}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
-                "{{validTimeClause}} " +
                 "and ld.fcst_lead = '{{forecastLength}}' " +
                 "and h.fcst_var = '{{variable}}' " +
                 "{{levelClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
-                "group by avtime " +
-                "order by avtime" +
+                "group by hr_of_day " +
+                "order by hr_of_day" +
                 ";";
 
-            statement = statement.replace('{{average}}', average);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
@@ -103,7 +93,6 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{region}}', region);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelClause}}', levelClause);
@@ -114,7 +103,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
+                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
@@ -155,6 +144,8 @@ dataSeries = function (plotParams, plotFunction) {
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
+
+            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
