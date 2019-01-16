@@ -1,235 +1,188 @@
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {Meteor} from 'meteor/meteor';
+import {
+    matsCollections,
+    matsDataCurveOpsUtils,
+    matsDataDiffUtils,
+    matsDataProcessUtils,
+    matsDataQueryUtils,
+    matsDataUtils,
+    matsTypes,
+    matsMethods
+} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
-plotSpecTimeSeries = function (plotParams, key,plotSpecCallback) {
+// adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
+const _addDateElementsBetween = function(element,start, end, inc_seconds) {
+    // this function is an example of javascript pass-by-copy-of-reference
+    var currDate = start;
+    element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
+    while (currDate.add(inc_seconds, 'seconds').diff(end) <= 0) {
+        element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
+    }
+}
+
+plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
+    var host = sumPool.config.connectionConfig.host;
+    //var database = sumPool.config.connectionConfig.database;
+    var database = "mv_gsd";
+    var port = sumPool.config.connectionConfig.port;
+    var user = sumPool.config.connectionConfig.user;
+    var password = sumPool.config.connectionConfig.password;
+    var MV_RSCRIPT = Meteor.settings.private.MV_RSCRIPT;
     var builder = require('xmlbuilder');
-    var xml = builder.create('plot_spec',
-        {version: '1.0', encoding: 'UTF-8', standalone: no});
-    xml.ele('connection')
-        .ele('host','a host name')
-        .ele('database','aDataBase')
-        .ele('user','some user')
-        .ele('password','some password');
-    xml.ele('rscript',"rscript path");
-    xml.ele('folders')
-        .ele('r_tmpl','r tmpl path')
-        .ele('r_work','r work path')
-        .ele('r_plots','r plots path')
-        .ele('r_data','r data path')
-        .ele('r_scripts','r scripts path')
+    const fs = require('fs');
+    const Future = require('fibers/future');
+    var dFuture = new Future();
+    var xml;
+    try {
+        xml = builder.create('plot_spec',
+            {version: '1.0', encoding: 'UTF-8', standalone: 'no'});
+        var connection = xml.ele('connection');
+        connection.ele('host', host + ":" + port);
+        connection.ele('database', database);
+        connection.ele('user', user);
+        connection.ele('password', password);
+        xml.ele('rscript', MV_RSCRIPT);
+        var folders = xml.ele('folders');
+        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/r_tmpl");
+        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/r_work");
+        folders.ele('plots', matsMethods.MV_DIRS.PLOTSDIR);
+        folders.ele('data', matsMethods.MV_DIRS.DATADIR);
+        folders.ele('scripts', matsMethods.MV_DIRS.SCRIPTSDIR);
+        var plot = xml.ele('plot');
+        plot.ele('template','series_plot.R_tmpl');
+        var dep = plot.ele('dep');
+        var dep1 = dep.ele('dep1');
+        var fcst_var = dep1.ele('fcst_var',{'name':'HGT'});
+        fcst_var.ele('stat','RMSE');
+        var dep2 = dep.ele('dep2');
+        var series1 = plot.ele('series1')
+            .ele('field',{'name':'model'})
+            .ele('val','GFS');
+
+        var series2 = plot.ele('series2');
+        var plot_fix = plot.ele('plot_fix');
+        plot_fix.ele('field',{'equalize':'false','name':'fcst_lead'})
+            .ele('set',{'name':'fcst_lead_0'})
+            .ele('val','0');
+        plot_fix.ele('field',{'equalize':'false','name':'vx_mask'})
+            .ele('set',{'name':'vx_mask_1'})
+            .ele('val','G2');
+        xml.end({pretty: true});
+        plot.ele('plot_cond');
+        var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
+        _addDateElementsBetween(indep, moment("2018-11-01 00:00:00"), moment("2018-11-04 00:00:00"), 6*60*60);
+        plot.ele('calc_stat').ele('calc_sl1l2',true);
+        plot.ele('plot_stat','mean');
+        var tmpl = plot.ele('tmpl');
+        tmpl.ele('data_file',key + '.data');
+        tmpl.ele('plot_file',key + '.png');
+        tmpl.ele('r_file',key + '.R');
+        tmpl.ele('title','test title');
+        tmpl.ele('x_label','test x_label');
+        tmpl.ele('y1_label','test y_label');
+        tmpl.ele('y2_label');
+        tmpl.ele('caption');
+        tmpl.ele('job_title');
+        tmpl.ele('keep_revisions','false');
+        tmpl.ele('listdiffseries1','list()');
+        tmpl.ele('listdiffseries2','list()');
+        plot.ele('event_equal','false');
+        plot.ele('vert_plot','false');
+        plot.ele('x_reverse','false');
+        plot.ele('num_stats','false');
+        plot.ele('indy1_stag','false');
+        plot.ele('indy2_stag','false');
+        plot.ele('grid_on','true');
+        plot.ele('sync_axes','false');
+        plot.ele('dump_points1','false');
+        plot.ele('dump_points2','false');
+        plot.ele('log_y1','false');
+        plot.ele('log_y2','false');
+        plot.ele('varianceinflationfactor','true');
+        plot.ele('plot_type','png16m');
+        plot.ele('plot_height','8.5');
+        plot.ele('plot_width','11');
+        plot.ele('plot_res','72');
+        plot.ele('plot_units','in');
+        plot.ele('mar','c(8,4,5,4)');
+        plot.ele('mgp','c(1,1,0)');
+        plot.ele('cex','1');
+        plot.ele('title_weight','2');
+        plot.ele('title_size','1.4');
+        plot.ele('title_offset','-2');
+        plot.ele('title_align','0.5');
+        plot.ele('xtlab_orient','1');
+        plot.ele('xtlab_perp','-0.75');
+        plot.ele('xtlab_horiz','0.5');
+        plot.ele('xtlab_freq','0');
+        plot.ele('xtlab_size','1');
+        plot.ele('xlab_weight','1');
+        plot.ele('xlab_size','1');
+        plot.ele('xlab_offset','2');
+        plot.ele('xlab_align','0.5');
+        plot.ele('ytlab_orient','1');
+        plot.ele('ytlab_perp','0.5');
+        plot.ele('ytlab_horiz','0.5');
+        plot.ele('ytlab_size','1');
+        plot.ele('ylab_weight','1');
+        plot.ele('ylab_size','1');
+        plot.ele('ylab_offset','-2');
+        plot.ele('ylab_align','0.5');
+        plot.ele('grid_lty','3');
+        plot.ele('grid_col','#cccccc');
+        plot.ele('grid_lwd','1');
+        plot.ele('grid_x','listX');
+        plot.ele('x2tlab_orient','1');
+        plot.ele('x2tlab_perp','1');
+        plot.ele('x2tlab_horiz','0.5');
+        plot.ele('x2tlab_size','0.8');
+        plot.ele('x2lab_size','0.8');
+        plot.ele('x2lab_offset','-0.5');
+        plot.ele('x2lab_align','0.5');
+        plot.ele('y2tlab_orient','1');
+        plot.ele('y2tlab_perp','0.5');
+        plot.ele('y2tlab_horiz','0.5');
+        plot.ele('y2tlab_size','1');
+        plot.ele('y2lab_size','1');
+        plot.ele('y2lab_offset','1');
+        plot.ele('y2lab_align','0.5');
+        plot.ele('legend_box','o');
+        plot.ele('legend_inset','c(0, -.25)');
+        plot.ele('legend_ncol','3');
+        plot.ele('legend_size','0.8');
+        plot.ele('caption_weight','1');
+        plot.ele('caption_col','#333333');
+        plot.ele('caption_size','0.8');
+        plot.ele('caption_offset','3');
+        plot.ele('caption_align','0');
+        plot.ele('ci_alpha','0.05');
+        plot.ele('plot_ci','c("none")');
+        plot.ele('show_signif','c(FALSE)');
+        plot.ele('plot_disp','c(TRUE)');
+        plot.ele('colors','c("#ff0000FF")');
+        plot.ele('pch','c(20)');
+        plot.ele('type','c("b")');
+        plot.ele('lty','c(1)');
+        plot.ele('lwd','c(1)');
+        plot.ele('con_series','c(1)');
+        plot.ele('order_series','c(1)');
+        plot.ele('plot_cmd');
+        plot.ele('legend','c("")');
+        plot.ele('y1_lim','c()');
+        plot.ele('y1_bufr','0.04');
+        plot.ele('y2_lim','c()');
+        dFuture['return']();
+
+    } catch (error) {
+        return (error);
+    }
+    dFuture.wait();
+    return xml.toString();
 };
 
 /*
-"<plot_spec>"
-    + "<connection>"
-    + "<host>" + databaseManager.getDatabaseInfo().getHost() + "</host>"
-    + "<database>" + databases + "</database>"
-    + "<user>" + "******" + "</user>"
-    + "<password>" + "******" + "</password>"
-    + "</connection>"
-    + (rscript.equals("") ? "" : "<rscript>" + rscript + "</rscript>")
-    + "<folders>"
-    + "<r_tmpl>" + rTmpl + "</r_tmpl>"
-    + "<r_work>" + rWork + "</r_work>"
-    + "<plots>" + plots + "</plots>"
-    + "<data>" + data + "</data>"
-    + "<scripts>" + scripts + "</scripts>"
-    + "</folders>"
-    + strPlotXML
-    + "</plot_spec>";                                                       */
-
-/*
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<plot_spec>
-    <connection>
-        <host>137.75.129.120:3312</host>
-        <database>mv_prod_vsdb_gfs_prfv3rt1</database>
-        <user>******</user>
-        <password>******</password>
-    </connection>
-    <rscript>/bin/Rscript</rscript>
-    <folders>
-        <r_tmpl>/usr/share/tomcat/webapps/metviewer-mysql/R_tmpl</r_tmpl>
-        <r_work>/usr/share/tomcat/webapps/metviewer-mysql/R_work</r_work>
-        <plots>/usr/share/tomcat/webapps/metviewer_mysql_output/plots</plots>
-        <data>/usr/share/tomcat/webapps/metviewer_mysql_output/data</data>
-        <scripts>/usr/share/tomcat/webapps/metviewer_mysql_output/scripts</scripts>
-    </folders>
-    <plot>
-        <template>series_plot.R_tmpl</template>
-        <dep>
-            <dep1>
-                <fcst_var name="T">
-                    <stat>RMSE</stat>
-                </fcst_var>
-            </dep1>
-            <dep2/>
-        </dep>
-        <series1>
-            <field name="model">
-                <val>GFS</val>
-            </field>
-        </series1>
-        <series2/>
-        <plot_fix>
-            <field equalize="false" name="vx_mask">
-                <set name="vx_mask_0">
-                    <val>G2</val>
-                </set>
-            </field>
-            <field equalize="false" name="fcst_lead">
-                <set name="fcst_lead_1">
-                    <val>12</val>
-                </set>
-            </field>
-            <field equalize="false" name="fcst_lev">
-                <set name="fcst_lev_2">
-                    <val>P500</val>
-                </set>
-            </field>
-        </plot_fix>
-        <plot_cond/>
-        <indep equalize="false" name="fcst_valid_beg">
-            <val label="2018-07-06 00:00:00" plot_val="">2018-07-06 00:00:00</val>
-            <val label="2018-07-06 06:00:00" plot_val="">2018-07-06 06:00:00</val>
-            <val label="2018-07-06 12:00:00" plot_val="">2018-07-06 12:00:00</val>
-            <val label="2018-07-06 18:00:00" plot_val="">2018-07-06 18:00:00</val>
-            <val label="2018-07-07 00:00:00" plot_val="">2018-07-07 00:00:00</val>
-            <val label="2018-07-07 06:00:00" plot_val="">2018-07-07 06:00:00</val>
-            <val label="2018-07-07 12:00:00" plot_val="">2018-07-07 12:00:00</val>
-            <val label="2018-07-07 18:00:00" plot_val="">2018-07-07 18:00:00</val>
-            <val label="2018-07-08 00:00:00" plot_val="">2018-07-08 00:00:00</val>
-            <val label="2018-07-08 06:00:00" plot_val="">2018-07-08 06:00:00</val>
-            <val label="2018-07-08 12:00:00" plot_val="">2018-07-08 12:00:00</val>
-            <val label="2018-07-08 18:00:00" plot_val="">2018-07-08 18:00:00</val>
-            <val label="2018-07-09 00:00:00" plot_val="">2018-07-09 00:00:00</val>
-            <val label="2018-07-09 06:00:00" plot_val="">2018-07-09 06:00:00</val>
-            <val label="2018-07-09 12:00:00" plot_val="">2018-07-09 12:00:00</val>
-            <val label="2018-07-09 18:00:00" plot_val="">2018-07-09 18:00:00</val>
-            <val label="2018-07-10 00:00:00" plot_val="">2018-07-10 00:00:00</val>
-            <val label="2018-07-10 06:00:00" plot_val="">2018-07-10 06:00:00</val>
-            <val label="2018-07-10 12:00:00" plot_val="">2018-07-10 12:00:00</val>
-            <val label="2018-07-10 18:00:00" plot_val="">2018-07-10 18:00:00</val>
-            <val label="2018-07-11 00:00:00" plot_val="">2018-07-11 00:00:00</val>
-            <val label="2018-07-11 06:00:00" plot_val="">2018-07-11 06:00:00</val>
-            <val label="2018-07-11 12:00:00" plot_val="">2018-07-11 12:00:00</val>
-            <val label="2018-07-11 18:00:00" plot_val="">2018-07-11 18:00:00</val>
-            <val label="2018-07-12 00:00:00" plot_val="">2018-07-12 00:00:00</val>
-            <val label="2018-07-12 06:00:00" plot_val="">2018-07-12 06:00:00</val>
-            <val label="2018-07-12 12:00:00" plot_val="">2018-07-12 12:00:00</val>
-            <val label="2018-07-12 18:00:00" plot_val="">2018-07-12 18:00:00</val>
-            <val label="2018-07-13 00:00:00" plot_val="">2018-07-13 00:00:00</val>
-        </indep>
-        <calc_stat>
-            <calc_sl1l2>true</calc_sl1l2>
-        </calc_stat>
-        <plot_stat>mean</plot_stat>
-        <tmpl>
-            <data_file>plot_20181220_202506.data</data_file>
-            <plot_file>plot_20181220_202506.png</plot_file>
-            <r_file>plot_20181220_202506.R</r_file>
-            <title>test title</title>
-            <x_label>test x_label</x_label>
-            <y1_label>test y_label</y1_label>
-            <y2_label/>
-            <caption/>
-            <job_title/>
-            <keep_revisions>false</keep_revisions>
-            <listdiffseries1>list()</listdiffseries1>
-            <listdiffseries2>list()</listdiffseries2>
-        </tmpl>
-        <event_equal>false</event_equal>
-        <vert_plot>false</vert_plot>
-        <x_reverse>false</x_reverse>
-        <num_stats>false</num_stats>
-        <indy1_stag>false</indy1_stag>
-        <indy2_stag>false</indy2_stag>
-        <grid_on>true</grid_on>
-        <sync_axes>false</sync_axes>
-        <dump_points1>false</dump_points1>
-        <dump_points2>false</dump_points2>
-        <log_y1>false</log_y1>
-        <log_y2>false</log_y2>
-        <varianceinflationfactor>true</varianceinflationfactor>
-        <plot_type>png16m</plot_type>
-        <plot_height>8.5</plot_height>
-        <plot_width>11</plot_width>
-        <plot_res>72</plot_res>
-        <plot_units>in</plot_units>
-        <mar>c(8,4,5,4)</mar>
-        <mgp>c(1,1,0)</mgp>
-        <cex>1</cex>
-        <title_weight>2</title_weight>
-        <title_size>1.4</title_size>
-        <title_offset>-2</title_offset>
-        <title_align>0.5</title_align>
-        <xtlab_orient>1</xtlab_orient>
-        <xtlab_perp>-0.75</xtlab_perp>
-        <xtlab_horiz>0.5</xtlab_horiz>
-        <xtlab_freq>0</xtlab_freq>
-        <xtlab_size>1</xtlab_size>
-        <xlab_weight>1</xlab_weight>
-        <xlab_size>1</xlab_size>
-        <xlab_offset>2</xlab_offset>
-        <xlab_align>0.5</xlab_align>
-        <ytlab_orient>1</ytlab_orient>
-        <ytlab_perp>0.5</ytlab_perp>
-        <ytlab_horiz>0.5</ytlab_horiz>
-        <ytlab_size>1</ytlab_size>
-        <ylab_weight>1</ylab_weight>
-        <ylab_size>1</ylab_size>
-        <ylab_offset>-2</ylab_offset>
-        <ylab_align>0.5</ylab_align>
-        <grid_lty>3</grid_lty>
-        <grid_col>#cccccc</grid_col>
-        <grid_lwd>1</grid_lwd>
-        <grid_x>listX</grid_x>
-        <x2tlab_orient>1</x2tlab_orient>
-        <x2tlab_perp>1</x2tlab_perp>
-        <x2tlab_horiz>0.5</x2tlab_horiz>
-        <x2tlab_size>0.8</x2tlab_size>
-        <x2lab_size>0.8</x2lab_size>
-        <x2lab_offset>-0.5</x2lab_offset>
-        <x2lab_align>0.5</x2lab_align>
-        <y2tlab_orient>1</y2tlab_orient>
-        <y2tlab_perp>0.5</y2tlab_perp>
-        <y2tlab_horiz>0.5</y2tlab_horiz>
-        <y2tlab_size>1</y2tlab_size>
-        <y2lab_size>1</y2lab_size>
-        <y2lab_offset>1</y2lab_offset>
-        <y2lab_align>0.5</y2lab_align>
-        <legend_box>o</legend_box>
-        <legend_inset>c(0, -.25)</legend_inset>
-        <legend_ncol>3</legend_ncol>
-        <legend_size>0.8</legend_size>
-        <caption_weight>1</caption_weight>
-        <caption_col>#333333</caption_col>
-        <caption_size>0.8</caption_size>
-        <caption_offset>3</caption_offset>
-        <caption_align>0</caption_align>
-        <ci_alpha>0.05</ci_alpha>
-        <plot_ci>c("none")</plot_ci>
-        <show_signif>c(FALSE)</show_signif>
-        <plot_disp>c(TRUE)</plot_disp>
-        <colors>c("#ff0000FF")</colors>
-        <pch>c(20)</pch>
-        <type>c("b")</type>
-        <lty>c(1)</lty>
-        <lwd>c(1)</lwd>
-        <con_series>c(1)</con_series>
-        <order_series>c(1)</order_series>
-        <plot_cmd/>
-        <legend>c("")</legend>
-        <y1_lim>c()</y1_lim>
-        <y1_bufr>0.04</y1_bufr>
-        <y2_lim>c()</y2_lim>
-    </plot>
-</plot_spec>
+
 */

@@ -14,7 +14,7 @@ Template.QCParamGroup.helpers({
     },
     noQC: function () {
         var appType = matsCollections.Settings.findOne({}).appType;
-        return appName === 'anomalycor' || appType === matsTypes.AppTypes.metexpress
+        return appType === 'anomalycor' || appType === matsTypes.AppTypes.metexpress
     }
 });
 

@@ -116,6 +116,15 @@ Template.graph.helpers({
         }
 
     },
+    mvSpanDisplay: function () {
+        var updated = Session.get("MvResultsUpDated");
+        if (Session.get("mvResultKey") != null) {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+
     plotText: function () {
         var p = Session.get('PlotParams');
         if (p !== undefined) {
@@ -305,10 +314,39 @@ Template.graph.helpers({
         } else {
             return "none";
         }
+    },
+    mvFiles: function() {
+      var updated = Session.get('MvResultsUpDated');
+      var key = Session.get('mvResultKey');
+        var mvs = Session.get('mvs');
+        if (mvs != null) {
+            return mvs;
+        } else {
+            return [];
+        }
+    },
+    mvDisabled: function() {
+        var updated = Session.get('MvResultsUpDated');
+        if (Session.get('mvs') == null) {
+            return "none";
+        } else {
+            return "block";
+        }
+    },
+    mvLoading: function() {
+        var updated = Session.get('MvResultsUpDated');
+        if (Session.get('mvs') == null) {
+            return "block";
+        } else {
+            return "none";
+        }
     }
 });
 
 Template.graph.events({
+    'click .mvCtrlButton': function() {
+        window.open(this.url, "mv", "height=200,width=200");
+    },
     'click .back': function () {
         matsPlotUtils.enableActionButtons();
         matsGraphUtils.setDefaultView();

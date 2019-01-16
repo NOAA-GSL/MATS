@@ -8,7 +8,6 @@ if (Meteor.isServer) {
         return result === null ? undefined : result;
     }
     var storeResult = function (key, result) {
-
         console.log('asked to set result in cache for app: ',process.env.PWD, ' key:', key);
         Results.set(key, result);
         console.log('set result in cache for app: ', process.env.PWD, 'key:', key);

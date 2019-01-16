@@ -773,7 +773,7 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             graphFunction: "graphPlotly",
             dataFunction: "dataSeries",
-            plotSpecFunction: "plotSpecTimeSeries",
+            plotSpecFunction: "plotSpecDataSeries",
             checked: true
         });
         matsCollections.PlotGraphFunctions.insert({
@@ -810,30 +810,15 @@ const doPlotGraph = function () {
 
 Meteor.startup(function () {
     matsCollections.Databases.remove({});
-    if (matsCollections.Databases.find().count() == 0) {
-        matsCollections.Databases.insert({
-            name: "sumSetting",
-            role: "sum_data",
-            status: "active",
-            host: '137.75.129.120',
-            port: '3312',
-            user: 'met_admin',
-            password: 'MaPass4mvmay2018##',
-            database: 'metviewerDBstatus',
-            connectionLimit: 10
-        });
-        matsCollections.Databases.insert({
-            name: "metadataSetting",
-            role: "metadata",
-            status: "active",
-            host: '137.75.129.120',
-            port: '3312',
-            user: 'met_admin',
-            password: 'MaPass4mvmay2018##',
-            database: 'mats_metadata',
-            connectionLimit: 10
-        });
+    if (matsCollections.Databases.find({}).count() === 0) {
+        var databases = Meteor.settings.private.databases;
+        if (databases !== null && databases !== undefined && Array.isArray(databases)) {
+            for (var di = 0; di < databases.length; di++) {
+                matsCollections.Databases.insert(databases[di]);
+            }
+        }
     }
+
     var sumSettings = matsCollections.Databases.findOne({role: "sum_data", status: "active"}, {
         host: 1,
         port: 1,
@@ -856,8 +841,6 @@ Meteor.startup(function () {
     });
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
-
-
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['upperair_mats_metadata']);
     matsMethods.resetApp(mdr, matsTypes.AppTypes.metexpress);
     matsCollections.appName.remove({});
