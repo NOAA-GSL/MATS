@@ -11,6 +11,7 @@ import {
 } from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
+var xmlBuilder = require('xmlbuilder');
 
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
 const _addDateElementsBetween = function(element,start, end, inc_seconds) {
@@ -21,35 +22,45 @@ const _addDateElementsBetween = function(element,start, end, inc_seconds) {
         element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
     }
 }
+// parse the databases from the curves and add a database string
+const _addDatabaseElement = function(element, curves){
+    databases = [];
+    for (var ci=0; ci < curves.length; ci++) {
+        databases.push(curves[ci].database);
+    }
+    databasesStr = databases.join("'");
+    element.ele('database',databasesStr);
+    return element;
+}
+// add the required metviewer folders
+const _addFolders = function(element) {
+    element.ele('rscript', Meteor.settings.private.MV_RSCRIPT);
+    var folders = element.ele('folders');
+    folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/r_tmpl");
+    folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/r_work");
+    folders.ele('plots', matsMethods.MV_DIRS.PLOTSDIR);
+    folders.ele('data', matsMethods.MV_DIRS.DATADIR);
+    folders.ele('scripts', matsMethods.MV_DIRS.SCRIPTSDIR);
+    return element;
+}
+// start the plotspec
+_startPlotSpec = function(pool, plotParams) {
+    var xml = xmlBuilder.create('plot_spec',{version: '1.0', encoding: 'UTF-8', standalone: 'no'});
+    var connection = xml.ele('connection');
+    connection.ele('host', sumPool.config.connectionConfig.host + ":" + sumPool.config.connectionConfig.port);
+    connection.ele('user', sumPool.config.connectionConfig.user);
+    connection.ele('password', sumPool.config.connectionConfig.password);
+    _addDatabaseElement(connection, plotParams.curves);
+    _addFolders(xml);
+    return xml;
+}
 
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
-    var host = sumPool.config.connectionConfig.host;
-    //var database = sumPool.config.connectionConfig.database;
-    var database = "mv_gsd";
-    var port = sumPool.config.connectionConfig.port;
-    var user = sumPool.config.connectionConfig.user;
-    var password = sumPool.config.connectionConfig.password;
-    var MV_RSCRIPT = Meteor.settings.private.MV_RSCRIPT;
-    var builder = require('xmlbuilder');
     const fs = require('fs');
     const Future = require('fibers/future');
     var dFuture = new Future();
-    var xml;
     try {
-        xml = builder.create('plot_spec',
-            {version: '1.0', encoding: 'UTF-8', standalone: 'no'});
-        var connection = xml.ele('connection');
-        connection.ele('host', host + ":" + port);
-        connection.ele('database', database);
-        connection.ele('user', user);
-        connection.ele('password', password);
-        xml.ele('rscript', MV_RSCRIPT);
-        var folders = xml.ele('folders');
-        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/r_tmpl");
-        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/r_work");
-        folders.ele('plots', matsMethods.MV_DIRS.PLOTSDIR);
-        folders.ele('data', matsMethods.MV_DIRS.DATADIR);
-        folders.ele('scripts', matsMethods.MV_DIRS.SCRIPTSDIR);
+        var xml = _startPlotSpec(sumPool,plotParams);
         var plot = xml.ele('plot');
         plot.ele('template','series_plot.R_tmpl');
         var dep = plot.ele('dep');
@@ -173,16 +184,14 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         plot.ele('y1_lim','c()');
         plot.ele('y1_bufr','0.04');
         plot.ele('y2_lim','c()');
+        xml.end({ pretty: true});
         dFuture['return']();
 
     } catch (error) {
-        return (error);
+        console.log(error);
+        dFuture['return'](error);
     }
     dFuture.wait();
-    return xml.toString();
+    return xml.doc().toString();
 };
 
-/*
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-
-*/

@@ -700,7 +700,6 @@ const _getPagenatedData = function (rky, p, np) {
     }
 };
 
-
 //private middleware for getting metviewer data file
 const _mvGetData = function(params, req, res, next) {
     const fse = require("fs-extra");
@@ -728,7 +727,7 @@ const _mvGetXml = function(params, req, res, next) {
     const fileName = filePath + '/' + baseName;
     try {
         fse.readFile(fileName, function(err, data) {
-            res.setHeader('Content-Type', 'text/xml');
+            res.setHeader('Content-Type', 'text/plain');
             if (err) throw err; // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
