@@ -170,7 +170,11 @@ Template.item.events({
             }
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name + " it must be between " + event.currentTarget.min + " and " + event.currentTarget.max + " -- resetting to default value: " + default_value));
         } else {
-            setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name ) );
+            var errMsg = Session.get('errorMessage');
+            if (errMsg === "") {
+                errMsg = 'invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name;
+            }
+            setError(new Error(errMsg));
         }
         const default_value = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} ).default;
         event.currentTarget.value = default_value;

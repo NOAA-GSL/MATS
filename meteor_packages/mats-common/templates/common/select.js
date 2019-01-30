@@ -227,6 +227,8 @@ Template.select.events({
                         // is valid all prior options were selected
                         event.target.setCustomValidity(this.name,"");
                     } else {
+                        // HACK ALERT! the customValidity stuff seems to have been overridden in the invalid event event handler of item.js
+                        Session.set('errorMessage',"The prior option: " + unusedOption + " was not selected for this selector, you must use that first.")
                         event.target.setCustomValidity(this.name,"The prior option: " + unusedOption + " was not selected for this selector, you must use that first.");
                         event.target.checkValidity();
 //                        matsParamUtils.setInputForParamName(this.name,this.default);
