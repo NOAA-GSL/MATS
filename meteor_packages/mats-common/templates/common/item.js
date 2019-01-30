@@ -32,7 +32,13 @@ Template.item.helpers({
       return this.help !== undefined;
     },
     isSelect: function () {
-        return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.select));
+        /* A selectOrderEnforced differs from a select
+            only in that the options - other than the default first option -
+            must be chosen in order. In other words if the user attempts to select
+            the second option prior to selecting the first option a validation error occurs.
+         */
+        return ((typeof this.type !== 'undefined') &&
+            ((this.type == matsTypes.InputTypes.select) ||(this.type == matsTypes.InputTypes.selectOrderEnforced)));
     },
     isSelectMap: function () {
         return ((typeof this.type !== 'undefined') && (this.type == matsTypes.InputTypes.selectMap));
@@ -162,12 +168,12 @@ Template.item.events({
             if (param === undefined) {
                 return;
             }
-            const default_value = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} ).default;
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name + " it must be between " + event.currentTarget.min + " and " + event.currentTarget.max + " -- resetting to default value: " + default_value));
-            event.currentTarget.value = default_value;
         } else {
             setError(new Error('invalid value (' + event.currentTarget.value + ') for ' + event.currentTarget.name ) );
         }
+        const default_value = matsCollections.CurveParams.findOne( {name: event.currentTarget.name} ).default;
+        event.currentTarget.value = default_value;
     }
 });
 

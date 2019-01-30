@@ -1481,7 +1481,7 @@ const mvBatch = new ValidatedMethod({
             var mvFuture = new Future();
             // generate the real file paths (these are not exposed to clients)
             const plotSpecFilePath = MV_DIRS.XMLDIR + key + ".xml";
-            const pngFilePath = MV_DIRS.PLOTSSDIR + key + ".png";
+            const pngFilePath = MV_DIRS.PLOTSDIR + key + ".png";
             const sqlFilePath = MV_DIRS.SQLDIR + key + ".sql";
             const logFilePath = MV_DIRS.LOGDIR + key + ".log";
             const errFilePath = MV_DIRS.ERRDIR + key + ".err";
@@ -1494,6 +1494,28 @@ const mvBatch = new ValidatedMethod({
             }
             if (process.env.NODE_ENV === "development" || params.expireKey) {
                 matsCache.expireKey(key);
+                // in development just blow away the files too
+                try {
+                    fse.unlinkSync(plotSpecFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(pngFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(sqlFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(logFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(errFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(scriptFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(dataFilePath);
+                } catch (ignore){}
             }
             // try to get the key from the cache
             var artifactPaths = matsCache.getResult(key);

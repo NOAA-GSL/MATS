@@ -9,6 +9,7 @@ var AppTypes = {
 var InputTypes = {
     textInput: 'textInput',
     select: 'select',
+    selectOrderEnforced: 'selectOrderEnforced',
     numberSpinner: 'numberSpinner',
     dateRange: 'dateRange',
     radioGroup: 'radioGroup',

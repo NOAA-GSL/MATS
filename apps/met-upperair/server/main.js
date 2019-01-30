@@ -291,6 +291,24 @@ const doCurveParams = function () {
             }
         );
     }
+    if (matsCollections.CurveParams.find({name: 'yaxes'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'yaxes',
+                type: matsTypes.InputTypes.selectOrderEnforced,
+                options: ['auto-by-variable','y1', 'y2'],
+                selected: ['auto-by-variable'],
+                controlButtonCovered: true,
+                unique: false,
+                default: 'auto-by-variable',
+                controlButtonVisibility: 'block',
+                controlButtonText: "y axes",
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 1,
+                multiple: false
+            });
+    }
 
     if (matsCollections.CurveParams.findOne({name: 'database'}) == undefined) {
         matsCollections.CurveParams.insert(
@@ -304,9 +322,9 @@ const doCurveParams = function () {
                 default: myDBs[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
@@ -337,9 +355,9 @@ const doCurveParams = function () {
                 default: Object.keys(modelOptionsMap[myDBs[0]])[0],
                 unique: false,
                 controlButtonVisibility: 'block',
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
@@ -374,7 +392,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: 'region.html'
             });
     } else {
@@ -666,6 +684,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.timeSeries,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
@@ -676,7 +695,7 @@ const doCurveTextPatterns = function () {
                 ['avg: ', 'average', ' ']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable","valid-time", "average", "forecast-length", "pres-level"
+                "label", "yaxes","database", "data-source", "region", "statistic", "variable","valid-time", "average", "forecast-length", "pres-level"
             ],
             groupSize: 6
         });
@@ -684,6 +703,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.profile,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
@@ -694,7 +714,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "curve-dates"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "curve-dates"
             ],
             groupSize: 6
         });
@@ -702,6 +722,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
@@ -713,7 +734,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -721,6 +742,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.validtime,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
@@ -730,7 +752,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "forecast-length", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });
@@ -738,6 +760,7 @@ const doCurveTextPatterns = function () {
             plotType: matsTypes.PlotTypes.histogram,
             textPattern: [
                 ['', 'label', ': '],
+                ['', 'database', '.'],
                 ['', 'data-source', ' in '],
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
@@ -748,7 +771,7 @@ const doCurveTextPatterns = function () {
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });

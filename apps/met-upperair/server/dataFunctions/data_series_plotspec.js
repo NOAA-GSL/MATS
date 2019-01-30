@@ -13,6 +13,71 @@ import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 var xmlBuilder = require('xmlbuilder');
 
+
+const _title = function () {
+    if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
+        return "";
+    } else {
+        return matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
+    }
+}
+
+const _plotText = function () {
+    var format = p.plotFormat;
+    if (matsCollections.PlotParams.findOne({name: 'plotFormat'}) &&
+        matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap &&
+        matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[p.plotFormat] !== undefined) {
+        format = matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[p.plotFormat];
+    }
+    if (format === undefined) {
+        format = "Unmatched";
+    }
+    const plotType = (_.invert(plotParams.plotTypes))[true];
+    switch (plotType) {
+        case matsTypes.PlotTypes.timeSeries:
+            return "TimeSeries " + p.dates + " : " + format;
+            break;
+        case matsTypes.PlotTypes.profile:
+            return "Profile: " + format;
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            return "DieOff: " + format;
+            break;
+        case matsTypes.PlotTypes.threshold:
+            return "Threshold: " + format;
+            break;
+        case matsTypes.PlotTypes.validtime:
+            return "ValidTime: " + format;
+            break;
+        case matsTypes.PlotTypes.dailyModelCycle:
+            return "DailyModelCycle " + p.dates + " : " + format;
+            break;
+        case matsTypes.PlotTypes.map:
+            return "Map " + p.dates + " ";
+            break;
+        case matsTypes.PlotTypes.histogram:
+            return "Histogram: " + format;
+            break;
+        default:
+            return "Scatter: " + p.dates + " : " + format;
+    }
+}
+
+const _componentToHex = function(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+const _rgbToHex = function(color) {
+    const cParts = color.replace('rgb(','').replace(')','').split(',');
+    const r = Number(cParts[0]);
+    const g = Number(cParts[1]);
+    const b = Number(cParts[2]);
+    return "#" + _componentToHex(r) + _componentToHex(g) + _componentToHex(b);
+}
+
+
+
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
 const _addDateElementsBetween = function(element,start, end, inc_seconds) {
     // this function is an example of javascript pass-by-copy-of-reference
@@ -44,7 +109,7 @@ const _addFolders = function(element) {
     return element;
 }
 // start the plotspec
-_startPlotSpec = function(pool, plotParams) {
+const _startPlotSpec = function(pool, plotParams) {
     var xml = xmlBuilder.create('plot_spec',{version: '1.0', encoding: 'UTF-8', standalone: 'no'});
     var connection = xml.ele('connection');
     connection.ele('host', sumPool.config.connectionConfig.host + ":" + sumPool.config.connectionConfig.port);
@@ -55,31 +120,56 @@ _startPlotSpec = function(pool, plotParams) {
     return xml;
 }
 
+const _addColors = function(element,curves) {
+    var cListHex = [];
+    var cList = [];
+    for (var ci=0; ci < curves.length; ci++) {
+        cList.push(curves[ci].color);
+    }
+    for (var ci=0; ci < cList.length; ci++) {
+        var ch = _rgbToHex(cList[ci]) + "FF";
+        cListHex.push('"' + ch + '"');
+    }
+    const cListStr = cListHex.join(',');
+    element.ele('colors',cListStr);
+}
+
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
     const fs = require('fs');
     const Future = require('fibers/future');
     var dFuture = new Future();
+    // there are two possible axis for metviewer. We want to collect all the mean variables
+    // into groups. We will take the two largest groups.
+    var axisVars = {y1:[],y2:[]};
     try {
         var xml = _startPlotSpec(sumPool,plotParams);
         var plot = xml.ele('plot');
         plot.ele('template','series_plot.R_tmpl');
+        /*
+            variables:
+            variables that share an axis are different dependent variables. Put them in dep1.
+            variables that have differing axis must go in different Y axis vars (and you can only have two of those)
+         */
+        var variables = plotParams.curves.map( curve => curve.variable);
+        // sort these variables by units
+
         var dep = plot.ele('dep');
         var dep1 = dep.ele('dep1');
-        var fcst_var = dep1.ele('fcst_var',{'name':'HGT'});
+        var fcst_var = dep1.ele('fcst_var',{'name':plotParams.curves[0].variable});
         fcst_var.ele('stat','RMSE');
         var dep2 = dep.ele('dep2');
         var series1 = plot.ele('series1')
             .ele('field',{'name':'model'})
-            .ele('val','GFS');
+            .ele('val',plotParams.curves[0]['data-source']);
 
         var series2 = plot.ele('series2');
         var plot_fix = plot.ele('plot_fix');
         plot_fix.ele('field',{'equalize':'false','name':'fcst_lead'})
             .ele('set',{'name':'fcst_lead_0'})
-            .ele('val','0');
+            .ele('val',plotParams.curves[0]['forecast-length']);
         plot_fix.ele('field',{'equalize':'false','name':'vx_mask'})
             .ele('set',{'name':'vx_mask_1'})
-            .ele('val','G2');
+            .ele('val',plotParams.curves[0].region);
         xml.end({pretty: true});
         plot.ele('plot_cond');
         var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
@@ -90,7 +180,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         tmpl.ele('data_file',key + '.data');
         tmpl.ele('plot_file',key + '.png');
         tmpl.ele('r_file',key + '.R');
-        tmpl.ele('title','test title');
+        tmpl.ele('title',_title + " : " + _plotText + " " + plotParams.plotAction);
         tmpl.ele('x_label','test x_label');
         tmpl.ele('y1_label','test y_label');
         tmpl.ele('y2_label');
@@ -172,6 +262,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         plot.ele('plot_ci','c("none")');
         plot.ele('show_signif','c(FALSE)');
         plot.ele('plot_disp','c(TRUE)');
+        //_addColors(plot,plotParams.curves);
         plot.ele('colors','c("#ff0000FF")');
         plot.ele('pch','c(20)');
         plot.ele('type','c("b")');
