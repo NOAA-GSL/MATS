@@ -10,33 +10,34 @@ import {Mongo} from 'meteor/mongo';
 
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
-// initialize collections used for pop-out window functionality
-const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
+const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection"); // initialize collection used for pop-out window functionality
 const DownSampleResults = new Mongo.Collection("DownSampleResults");
+
 var MV_DIRS = {};
 // Define routes for server
 if (Meteor.isServer) {
-    const _MV_OUT = Meteor.settings.private.MV_OUTPUT;
-    const _MV_HOME = Meteor.settings.private.MV_HOME;
-    const _MV_LOGDIR = _MV_OUT + "/xml/";
-    const _MV_ERRDIR = _MV_OUT + "/xml/";
-    const _MV_DATADIR = _MV_OUT + "/data/";
-    const _MV_SQLDIR = _MV_OUT + "/xml/";  // sql output goes with the xml output
-    const _MV_XMLDIR = _MV_OUT + "/xml/";
-    const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
-    const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
+    if (Meteor.settings.private !== undefined && Meteor.settings.private !== null) {
+        const _MV_OUT = Meteor.settings.private.MV_OUTPUT;
+        const _MV_HOME = Meteor.settings.private.MV_HOME;
+        const _MV_LOGDIR = _MV_OUT + "/xml/";
+        const _MV_ERRDIR = _MV_OUT + "/xml/";
+        const _MV_DATADIR = _MV_OUT + "/data/";
+        const _MV_SQLDIR = _MV_OUT + "/xml/";  // sql output goes with the xml output
+        const _MV_XMLDIR = _MV_OUT + "/xml/";
+        const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
+        const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
 
-    MV_DIRS = {
-        LOGDIR: _MV_LOGDIR,
-        ERRDIR:_MV_ERRDIR,
-        DATADIR: _MV_DATADIR,
-        SQLDIR: _MV_SQLDIR,
-        XMLDIR: _MV_XMLDIR,
-        SCRIPTSDIR: _MV_SCRIPTSDIR,
-        PLOTSDIR: _MV_PLOTSSDIR,
-        HOME:_MV_HOME
+        MV_DIRS = {
+            LOGDIR: _MV_LOGDIR,
+            ERRDIR: _MV_ERRDIR,
+            DATADIR: _MV_DATADIR,
+            SQLDIR: _MV_SQLDIR,
+            XMLDIR: _MV_XMLDIR,
+            SCRIPTSDIR: _MV_SCRIPTSDIR,
+            PLOTSDIR: _MV_PLOTSSDIR,
+            HOME: _MV_HOME
+        };
     }
-
 
     // add indexes to result and axes collections
     DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
