@@ -1520,7 +1520,7 @@ const mvBatch = new ValidatedMethod({
                     fse.unlinkSync(dataFilePath);
                 } catch (ignore){}
             }
-//            try to get the key from the cache
+            // try to get the key from the cache
             var artifactPaths = matsCache.getResult(key);
             var filesExist = false;
             if (artifactPaths != null) {

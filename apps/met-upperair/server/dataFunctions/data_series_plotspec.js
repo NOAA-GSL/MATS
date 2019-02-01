@@ -94,8 +94,12 @@ const _rgbToHex = function(color) {
 
 
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
-const _addDateElementsBetween = function(element,start, end, inc_seconds) {
-try {
+const _addDateElementsBetween = function(element,plotParams) {
+    const dateParts = plotParams.dates.split(" - ");
+    const start = moment(dateParts[0]);
+    const end = moment(dateParts[1]);
+    const inc_seconds = 6*60*60;
+    try {
     // this function is an example of javascript pass-by-copy-of-reference
         var currDate = start;
         element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
@@ -373,7 +377,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         xml.end({pretty: true});
         plot.ele('plot_cond');
         var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
-        _addDateElementsBetween(indep, moment("2018-11-01 00:00:00"), moment("2018-11-04 00:00:00"), 6*60*60);
+        _addDateElementsBetween(indep, plotParams);
         plot.ele('calc_stat').ele('calc_sl1l2',true);
         plot.ele('plot_stat','mean');
         var tmpl = plot.ele('tmpl');
