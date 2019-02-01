@@ -33,7 +33,7 @@ Template.GraphStandAlone.onRendered(function () {
         document.getElementById('placeholder').style.height = matsGraphUtils.standAloneHeight();
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
-        Plotly.newPlot($("#placeholder")[0], dataset, options);
+        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
     });
     document.getElementById('graph-container').style.backgroundColor = 'white';
 });
@@ -88,7 +88,7 @@ Template.GraphStandAlone.helpers({
                         options.mapbox.zoom = 2.75;
                     }
                     // initial plot
-                    Plotly.newPlot($("#placeholder")[0], dataset, options);
+                    Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
 
                     if (plotType !== matsTypes.PlotTypes.map) {
                         // append annotations
