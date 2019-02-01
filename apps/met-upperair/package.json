@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.1.2",
+    "childprocess": "^2.0.2",
     "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
     "fibers": "^2.0.0",
     "find": "^0.2.9",
