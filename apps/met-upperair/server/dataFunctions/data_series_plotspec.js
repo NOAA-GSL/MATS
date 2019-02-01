@@ -96,9 +96,9 @@ const _rgbToHex = function(color) {
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
 const _addDateElementsBetween = function(element,plotParams) {
     const dateParts = plotParams.dates.split(" - ");
-    const start = moment(dateParts[0]);
-    const end = moment(dateParts[1]);
-    const inc_seconds = 6*60*60;
+    const start = moment.utc(dateParts[0]);
+    const end = moment.utc(dateParts[1]);
+    const inc_seconds = 60*60;
     try {
     // this function is an example of javascript pass-by-copy-of-reference
         var currDate = start;
