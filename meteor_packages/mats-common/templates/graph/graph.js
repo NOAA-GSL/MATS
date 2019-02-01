@@ -22,7 +22,7 @@ Template.graph.onCreated(function () {
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         if (dataset !== undefined && options !== undefined) {
-            Plotly.newPlot($("#placeholder")[0], dataset, options);
+            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
         }
     });
 });
@@ -49,7 +49,7 @@ Template.graph.helpers({
             }
 
             // initial plot
-            Plotly.newPlot($("#placeholder")[0], dataset, options);
+            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
 
             if (plotType !== matsTypes.PlotTypes.map) {
                 // append annotations
