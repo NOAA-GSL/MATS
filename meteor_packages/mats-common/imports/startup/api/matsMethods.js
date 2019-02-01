@@ -26,6 +26,8 @@ if (Meteor.isServer) {
         const _MV_XMLDIR = _MV_OUT + "/xml/";
         const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
         const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
+        process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
+        process.env.MV_HOME = Meteor.settings.private.MV_HOME;
 
         MV_DIRS = {
             LOGDIR: _MV_LOGDIR,
@@ -1638,7 +1640,7 @@ const mvBatch = new ValidatedMethod({
                                 MV_OUTPUT/xml/key.xml is the plotSpec
                         */
                         mvFuture['return']();
-                    }); //ret = {key:key, result:{artifacts:artifacts}}
+                        }); //ret = {key:key, result:{artifacts:artifacts}}
                     // return the key and the artifacts
                 } else {
                     // the files actually already existed but we needed the plotspec - so just refresh the cache and return the key right away

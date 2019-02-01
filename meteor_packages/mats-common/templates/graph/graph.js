@@ -315,9 +315,16 @@ Template.graph.helpers({
             return "none";
         }
     },
+    metApp: function() {
+        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress) {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
     mvFiles: function() {
-      var updated = Session.get('MvResultsUpDated');
-      var key = Session.get('mvResultKey');
+        var updated = Session.get('MvResultsUpDated');
+        var key = Session.get('mvResultKey');
         var mvs = Session.get('mvs');
         if (mvs != null) {
             return mvs;

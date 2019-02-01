@@ -48,7 +48,7 @@
                     <button id="refresh-plot" type="button" class="btn btn-info fa fa-refresh" style="border-radius: 15px; background-color: #00badb;" data-toggle="tooltip" data-placement="top" title="reset plot to original (or last re-sample)"></button>
                 </span>
                 <span>
-                    <div id="mv-controls" class="btn-group btn-group-xs" style="display:block" role="group" aria-label="touchcontrol">
+                    <div id="mv-controls" class="btn-group btn-group-xs" style="display:{{metApp}}" role="group" aria-label="touchcontrol">
                         <button type="button" id="mvloading" class="btn btn-xs btn-warning" style="display:{{mvLoading}}">mvbatch</button>
                         <span class="btn btn-xs btn-warning fas fa-spinner fa-pulse" style="display:{{mvLoading}}"></span>
                         {{#each mvFiles}}
