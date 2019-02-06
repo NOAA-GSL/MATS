@@ -6,7 +6,8 @@ import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
+import {PythonShell} from 'python-shell';
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -109,12 +110,27 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{levelClause}}', levelClause);
             dataRequests[curve.label] = statement;
 
+            const QCParams = matsDataUtils.getPlotParamsFromStack();
+            const completenessQCParam = Number(QCParams["completeness"]) / 100;
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
+                // send the query statement to the python query function
+                const pyOptions = {
+                    mode: 'text',
+                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
+                    pythonOptions: ['-u'], // get print results in real-time
+                    scriptPath: '../../../../meteor_packages/mats-common/private',
+                    args: [sumPool, statement, plotType, hasLevels, completenessQCParam]
+                };
+                PythonShell.run('python_query_util.py', pyOptions, function (err) {
+                    if (err) throw err;
+                    console.log('finished');
+                });
+
+
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
