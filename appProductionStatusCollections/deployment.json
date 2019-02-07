@@ -18,104 +18,104 @@
     {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
-      "version": "2.0.4-2019.02.06.21.47",
-      "buildDate": "2019.02.06.21.47",
+      "version": "2.0.5-2019.02.07.06.28",
+      "buildDate": "2019.02.07.06.28",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "anomalycor",
       "title": "Anomaly Correlation",
-      "version": "2.0.4-2019.02.06.21.56",
-      "buildDate": "2019.02.06.21.56",
+      "version": "2.0.5-2019.02.07.06.37",
+      "buildDate": "2019.02.07.06.37",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling",
       "title": "Ceiling",
-      "version": "2.0.4-2019.02.06.21.50",
-      "buildDate": "2019.02.06.21.50",
+      "version": "2.0.5-2019.02.07.06.31",
+      "buildDate": "2019.02.07.06.31",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "ceiling15",
       "title": "Ceiling 15 Min",
-      "version": "2.0.4-2019.02.06.21.33",
-      "buildDate": "2019.02.06.21.33",
+      "version": "2.0.5-2019.02.07.06.14",
+      "buildDate": "2019.02.07.06.14",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility",
       "title": "Visibility",
-      "version": "2.0.4-2019.02.06.21.53",
-      "buildDate": "2019.02.06.21.53",
+      "version": "2.0.5-2019.02.07.06.34",
+      "buildDate": "2019.02.07.06.34",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "visibility15",
       "title": "Visibility 15 Min",
-      "version": "2.0.4-2019.02.06.21.39",
-      "buildDate": "2019.02.06.21.39",
+      "version": "2.0.5-2019.02.07.06.20",
+      "buildDate": "2019.02.07.06.20",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "surface",
       "title": "Surface",
-      "version": "2.0.4-2019.02.06.21.30",
-      "buildDate": "2019.02.06.21.30",
+      "version": "2.0.5-2019.02.07.06.11",
+      "buildDate": "2019.02.07.06.11",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipAQPI",
       "title": "AQPI Precipitation",
-      "version": "2.0.4-2019.02.06.21.27",
-      "buildDate": "2019.02.06.21.27",
+      "version": "2.0.5-2019.02.07.06.08",
+      "buildDate": "2019.02.07.06.08",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitation24hr",
       "title": "24 Hour Precipitation",
-      "version": "2.0.4-2019.02.06.21.24",
-      "buildDate": "2019.02.06.21.24",
+      "version": "2.0.5-2019.02.07.06.05",
+      "buildDate": "2019.02.07.06.05",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "precipitationSub24hr",
       "title": "Sub 24 Hour Precipitation",
-      "version": "2.0.4-2019.02.06.21.22",
-      "buildDate": "2019.02.06.21.22",
+      "version": "2.0.5-2019.02.07.06.03",
+      "buildDate": "2019.02.07.06.03",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.0.4-2019.02.06.21.19",
-      "buildDate": "2019.02.06.21.19",
+      "version": "2.0.5-2019.02.07.06.00",
+      "buildDate": "2019.02.07.06.00",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "vil",
       "title": "Vertically Integrated Liquid",
-      "version": "2.0.4-2019.02.06.21.42",
-      "buildDate": "2019.02.06.21.42",
+      "version": "2.0.5-2019.02.07.06.22",
+      "buildDate": "2019.02.07.06.22",
       "last_test_run": "",
       "last_test_status": ""
     },
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.0.4-2019.02.06.21.44",
-      "buildDate": "2019.02.06.21.44",
+      "version": "2.0.5-2019.02.07.06.25",
+      "buildDate": "2019.02.07.06.25",
       "last_test_run": "",
       "last_test_status": ""
     },
@@ -130,8 +130,8 @@
     {
       "app": "surfrad",
       "title": "Surface Radiation",
-      "version": "2.0.4-2019.02.06.21.36",
-      "buildDate": "2019.02.06.21.36",
+      "version": "2.0.5-2019.02.07.06.17",
+      "buildDate": "2019.02.07.06.17",
       "last_test_run": "",
       "last_test_status": ""
     },
