@@ -79,7 +79,21 @@ dataSeries = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
-                "{{statistic}} " +
+                "sum(ld.total) as N0, " +
+                "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "avg(ld.ffbar) as ffbar, " +
+                "avg(ld.oobar) as oobar, " +
+                "avg(ld.fobar) as fobar, " +
+                "avg(ld.fobar) as total, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
+                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
@@ -97,7 +111,6 @@ dataSeries = function (plotParams, plotFunction) {
                 ";";
 
             statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
@@ -123,7 +136,7 @@ dataSeries = function (plotParams, plotFunction) {
                     pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: '../../../../meteor_packages/mats-common/private',
-                    args: [sumPool, statement, plotType, hasLevels, completenessQCParam]
+                    args: [sumPool, statement, statisticStr, plotType, hasLevels, completenessQCParam]
                 };
                 PythonShell.run('python_query_util.py', pyOptions, function (err) {
                     if (err) throw err;
