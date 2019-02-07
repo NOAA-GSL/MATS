@@ -8,32 +8,7 @@
       "bcrypt": "$2a$10$CB/EVGSW6IKRoDxY8yPlvOpxbQrqzb9/2K4G.9TeVp/TYodM538fm"
     },
     "resume": {
-      "loginTokens": [
-        {
-          "when": {
-            "$date": "2018-10-19T15:55:48.207+0000"
-          },
-          "hashedToken": "lAoXa131ewGBqgVsJFFf0u2g8G3/b6cMuGUM+NkT/lo="
-        },
-        {
-          "when": {
-            "$date": "2018-10-19T15:55:48.388+0000"
-          },
-          "hashedToken": "fgul3+XZ6Kf4X9bHawbJPf6jKT781MCglPEwqTFdixc="
-        },
-        {
-          "when": {
-            "$date": "2018-10-23T23:22:41.419+0000"
-          },
-          "hashedToken": "UAXwmGPb+9DzD7TxXJKJCu2/GT0TSxQj6AFMDs1oYN0="
-        },
-        {
-          "when": {
-            "$date": "2018-10-23T23:22:41.630+0000"
-          },
-          "hashedToken": "FoZE2C0evje7d51WoK7+LChkGhBQM3GB3drqUExutIE="
-        }
-      ]
+      "loginTokens": []
     }
   },
   "username": "randy.pierce@noaa.gov"
