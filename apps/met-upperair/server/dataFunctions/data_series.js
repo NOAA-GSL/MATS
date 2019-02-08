@@ -135,24 +135,26 @@ dataSeries = function (plotParams, plotFunction) {
                     mode: 'text',
                     pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
                     pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: '../../../../meteor_packages/mats-common/private',
-                    args: [sumPool, statement, statisticStr, plotType, hasLevels, completenessQCParam]
+                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
+                    args: [statement, statisticStr, plotType, hasLevels, completenessQCParam]
                 };
-                PythonShell.run('python_query_util.py', pyOptions, function (err) {
+                const Future = require('fibers/future');
+                var future = new Future();
+                PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
                     if (err) throw err;
-                    console.log('finished');
+                    queryResult = JSON.parse(results);
+                    // get the data back from the query
+                    d = queryResult.data;
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                        recordCount: queryResult.data.x.length
+                    };
+                    future["return"]();
                 });
-
-
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
-                };
-                // get the data back from the query
-                d = queryResult.data;
+                future.wait();
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

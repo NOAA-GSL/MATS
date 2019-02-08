@@ -9,7 +9,7 @@ error = ""          # one of the five fields to return at the end -- records any
 n0 = []             # one of the five fields to return at the end -- number of sub_values for each independent variable
 n_times = []        # one of the five fields to return at the end -- number of sub_secs for each independent variable
 cycles = []         # one of the five fields to return at the end -- model cadence (only used for timeseries)
-d = {               # one of the five fields to return at the end -- the parsed data structure
+data = {               # one of the five fields to return at the end -- the parsed data structure
     "x": [],
     "y": [],
     "error_x": [],
@@ -42,7 +42,7 @@ def connect_to_mysql():
     global error
     global error_bool
     try:
-        cnx = MySQLdb.connect(read_default_file="../../../apps/met-upperair/settings/settings-mysql.cnf")
+        cnx = MySQLdb.connect(read_default_file="/Users/molly.b.smith/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         return cnx, cursor
@@ -70,9 +70,9 @@ def construct_output_json():
     global n0
     global n_times
     global cycles
-    global d
+    global data
     output_JSON = {
-        "d": d,
+        "data": data,
         "N0": n0,
         "N_times": n_times,
         "cycles": cycles,
@@ -148,9 +148,9 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
     args_switch = {     # dispatcher of arguments for statistical calculation functions
         'RMS': (ffbar, oobar, fobar),
         'Bias (Model - Obs)': (fbar, obar),
-        'N': total,
-        'Model average': fbar,
-        'Obs average': obar
+        'N': (total,),
+        'Model average': (fbar,),
+        'Obs average': (obar,)
     }
     try:
         stat_args = args_switch[statistic]              # get args
@@ -176,9 +176,9 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
     global n0
     global n_times
     global cycles
-    global d
+    global data
 
-    d['error_x'] = 'null'   # timeseries don't have x-oriented errorbars
+    data['error_x'] = 'null'   # timeseries don't have x-oriented errorbars
     xmax = float("-inf")
     xmin = float("inf")
     curve_times = []
@@ -189,7 +189,7 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
 
     # get query data and calculate starting time interval of the returned data
     query_data = cursor.fetchall()
-    time_interval = int(query_data[1]['avtime']) - int(query_data[0]['avtime']) if len(query_data) > 1 else None
+    time_interval = int(query_data[1]['avtime']) - int(query_data[0]['avtime']) if len(query_data) > 1 else np.nan
 
     # loop through the query results and store the returned values
     for row in query_data:
@@ -261,18 +261,18 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
         # timeseries. The query only returns the data that it actually has.
         if loop_time not in curve_times:
             if has_levels:
-                d['x'].append(loop_time)
-                d['y'].append('null')
-                d['error_y'].append('null')
-                d['subVals'].append(np.nan)
-                d['subSecs'].append(np.nan)
-                d['subLevs'].append(np.nan)
+                data['x'].append(loop_time)
+                data['y'].append('null')
+                data['error_y'].append('null')
+                data['subVals'].append(np.nan)
+                data['subSecs'].append(np.nan)
+                data['subLevs'].append(np.nan)
             else:
-                d['x'].append(loop_time)
-                d['y'].append('null')
-                d['error_y'].append('null')
-                d['subVals'].append(np.nan)
-                d['subSecs'].append(np.nan)
+                data['x'].append(loop_time)
+                data['y'].append('null')
+                data['error_y'].append('null')
+                data['subVals'].append(np.nan)
+                data['subSecs'].append(np.nan)
         else:
             d_idx = curve_times.index(loop_time)
             this_n0 = n0[d_idx]
@@ -280,50 +280,50 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
             # add a null if there were too many missing sub-values
             if this_n0 < 0.1 * n0_max or this_n_times < float(completeness_qc_param) * n_times_max:
                 if has_levels:
-                    d['x'].append(loop_time)
-                    d['y'].append('null')
-                    d['error_y'].append('null')
-                    d['subVals'].append(np.nan)
-                    d['subSecs'].append(np.nan)
-                    d['subLevs'].append(np.nan)
+                    data['x'].append(loop_time)
+                    data['y'].append('null')
+                    data['error_y'].append('null')
+                    data['subVals'].append(np.nan)
+                    data['subSecs'].append(np.nan)
+                    data['subLevs'].append(np.nan)
                 else:
-                    d['x'].append(loop_time)
-                    d['y'].append('null')
-                    d['error_y'].append('null')
-                    d['subVals'].append(np.nan)
-                    d['subSecs'].append(np.nan)
+                    data['x'].append(loop_time)
+                    data['y'].append('null')
+                    data['error_y'].append('null')
+                    data['subVals'].append(np.nan)
+                    data['subSecs'].append(np.nan)
 
             else:
                 # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
                 loop_sum += curve_stats[d_idx]
                 if has_levels:
-                    d['x'].append(loop_time)
-                    d['y'].append(curve_stats[d_idx])
-                    d['error_y'].append('null')
-                    d['subVals'].append(sub_vals_all[d_idx].tolist())
-                    d['subSecs'].append(sub_secs_all[d_idx].tolist())
-                    d['subLevs'].append(sub_levs_all[d_idx].tolist())
+                    data['x'].append(loop_time)
+                    data['y'].append(curve_stats[d_idx])
+                    data['error_y'].append('null')
+                    data['subVals'].append(sub_vals_all[d_idx].tolist())
+                    data['subSecs'].append(sub_secs_all[d_idx].tolist())
+                    data['subLevs'].append(sub_levs_all[d_idx].tolist())
                 else:
-                    d['x'].append(loop_time)
-                    d['y'].append(curve_stats[d_idx])
-                    d['error_y'].append('null')
-                    d['subVals'].append(sub_vals_all[d_idx].tolist())
-                    d['subSecs'].append(sub_secs_all[d_idx].tolist())
+                    data['x'].append(loop_time)
+                    data['y'].append(curve_stats[d_idx])
+                    data['error_y'].append('null')
+                    data['subVals'].append(sub_vals_all[d_idx].tolist())
+                    data['subSecs'].append(sub_secs_all[d_idx].tolist())
 
         loop_time = loop_time + time_interval
 
     cycles = [time_interval]
 
-    d['xmin'] = min(x for x in d['x'] if is_number(x))
-    d['xmax'] = max(x for x in d['x'] if is_number(x))
-    d['ymin'] = min(y for y in d['y'] if is_number(y))
-    d['ymax'] = max(y for y in d['y'] if is_number(y))
-    d['sum'] = loop_sum
+    data['xmin'] = min(x for x in data['x'] if is_number(x))
+    data['xmax'] = max(x for x in data['x'] if is_number(x))
+    data['ymin'] = min(y for y in data['y'] if is_number(y))
+    data['ymax'] = max(y for y in data['y'] if is_number(y))
+    data['sum'] = loop_sum
 
 
 # function for querying the database and sending the returned data to the parser
 def query_db(cnx, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param):
-    global d
+    global data
     global n0
     global n_times
     global cycles
@@ -338,7 +338,7 @@ def query_db(cnx, cursor, statement, statistic, plot_type, has_levels, completen
 
     if not error_bool:
         if cursor.rowcount == 0:
-            error = "NO_DATA_FOUND"
+            error = "INFO:0 data records found"
             error_bool = True
         else:
             if plot_type == 'TimeSeries':
