@@ -40,46 +40,51 @@ dataSeries = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-
+        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
         var regionsClause = "";
-        if (curve['region'].length > 0) {
-            const regions = curve['region'].map(function (r) {
+        if (regions_raw.length > 0) {
+            const regions = regions_raw.map(function (r) {
                 return "'" + r + "'";
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-
         const variable = curve['variable'];
-        const statisticStr = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statistic = statisticOptionsMap[statisticStr][0];
-
+        const statistic = curve['statistic'];
         // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        if (curve['forecast-length'].length >0 ) {
+        var fcsts_raw = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        if (fcsts_raw.length > 0 ) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const forecastLengths = curve['forecast-length'].map(function (fl) {
+            const forecastLengths = fcsts_raw.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
         }
-
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
-        for (var levIdx = 0; levIdx < levels.length; levIdx++) {
-            levels[levIdx] = "'" + levels[levIdx].toString() + "'"
-        }
+        var levels_raw = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelsClause = "";
-        if (levels.length > 0) {
+        if (levels_raw.length > 0) {
+            const levels = levels_raw.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // var levels = matsCollections.CurveParams.findOne({name: 'pres-level'}).optionsMap[database][curve['data-source']];
+            // levels = levels.map(function (l) {
+            //     return "'" + l + "'";
+            // }).join(',');
+            // levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
-        if (vts.length > 0) {
+        if (vts_raw.length > 0) {
+            const vts = vts_raw.map(function (vt) {
+                return "'" + vt + "'";
+            }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
         }
         // axisKey is used to determine which axis a curve should use.
@@ -100,10 +105,6 @@ dataSeries = function (plotParams, plotFunction) {
                 "sum(ld.total) as N0, " +
                 "avg(ld.fbar) as fbar, " +
                 "avg(ld.obar) as obar, " +
-                "avg(ld.ffbar) as ffbar, " +
-                "avg(ld.oobar) as oobar, " +
-                "avg(ld.fobar) as fobar, " +
-                "avg(ld.fobar) as total, " +
                 "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
                 "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
                 "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
@@ -151,15 +152,19 @@ dataSeries = function (plotParams, plotFunction) {
                 // send the query statement to the python query function
                 const pyOptions = {
                     mode: 'text',
-                    pythonPath: '/Users/pierce/anaconda2/bin/python',
+                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [statement, statisticStr, plotType, hasLevels, completenessQCParam]
+                    args: [statement, statistic, plotType, hasLevels, completenessQCParam]
                 };
+                var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
                 PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
-                    if (err) throw err;
+                    if (err) {
+                        pyError = err;
+                        future["return"]();
+                    };
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
@@ -173,6 +178,9 @@ dataSeries = function (plotParams, plotFunction) {
                     future["return"]();
                 });
                 future.wait();
+                if (pyError != null) {
+                    throw new Error(pyError);
+                }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -186,7 +194,7 @@ dataSeries = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }

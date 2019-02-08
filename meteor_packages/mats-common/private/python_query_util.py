@@ -48,9 +48,10 @@ def connect_to_mysql():
     global error
     global error_bool
     try:
-        cnx = MySQLdb.connect(read_default_file="/Users/pierce/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf")
+        cnx = MySQLdb.connect(read_default_file="/Users/molly.b.smith/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf")
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('set group_concat_max_len = 4294967295')
         return cnx, cursor
     except MySQLdb.Error as e:
         error = "Error connecting to db: " + str(e)
