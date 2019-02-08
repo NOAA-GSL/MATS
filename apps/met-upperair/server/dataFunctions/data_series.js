@@ -158,8 +158,13 @@ dataSeries = function (plotParams, plotFunction) {
                 };
                 const Future = require('fibers/future');
                 var future = new Future();
+                var error = null;
                 PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
-                    if (err) throw err;
+                    if (err) {
+                        // what to do with err?
+                        error = err;
+                        future["return"];
+                    }
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
@@ -173,6 +178,9 @@ dataSeries = function (plotParams, plotFunction) {
                     future["return"]();
                 });
                 future.wait();
+                if (error != null) {
+                    throw new Error(err);
+                }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;

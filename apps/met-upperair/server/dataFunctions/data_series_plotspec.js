@@ -29,55 +29,54 @@ const _title = function () {
         if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
             return "";
         } else {
-            //return matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
-            return "Title";
+            return matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title;
         }
     } catch (someError) {
         return "";
     }
 };
 
-// const _plotText = function (p) {
-//     var format = p.plotFormat;
-//
-//     if (matsCollections.PlotParams.findOne({name: 'plotFormat'}) &&
-//         matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap &&
-//         matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[p.plotFormat] !== undefined) {
-//         format = matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[p.plotFormat];
-//     }
-//     if (format === undefined) {
-//         format = "Unmatched";
-//     }
-//     const plotType = (_.invert(plotParams.plotTypes))[true];
-//     switch (plotType) {
-//         case matsTypes.PlotTypes.timeSeries:
-//             return "TimeSeries " + p.dates + " : " + format;
-//             break;
-//         case matsTypes.PlotTypes.profile:
-//             return "Profile: " + format;
-//             break;
-//         case matsTypes.PlotTypes.dieoff:
-//             return "DieOff: " + format;
-//             break;
-//         case matsTypes.PlotTypes.threshold:
-//             return "Threshold: " + format;
-//             break;
-//         case matsTypes.PlotTypes.validtime:
-//             return "ValidTime: " + format;
-//             break;
-//         case matsTypes.PlotTypes.dailyModelCycle:
-//             return "DailyModelCycle " + p.dates + " : " + format;
-//             break;
-//         case matsTypes.PlotTypes.map:
-//             return "Map " + p.dates + " ";
-//             break;
-//         case matsTypes.PlotTypes.histogram:
-//             return "Histogram: " + format;
-//             break;
-//         default:
-//             return "Scatter: " + p.dates + " : " + format;
-//     }
-// }
+const _plotText = function (plotParams) {
+    var format = plotParams.plotFormat;
+
+    if (matsCollections.PlotParams.findOne({name: 'plotFormat'}) &&
+        matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap &&
+        matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[plotParams.plotFormat] !== undefined) {
+        format = matsCollections.PlotParams.findOne({name: 'plotFormat'}).optionsMap[plotParams.plotFormat];
+    }
+    if (format === undefined) {
+        format = "Unmatched";
+    }
+    const plotType = (_.invert(plotParams.plotTypes))[true];
+    switch (plotType) {
+        case matsTypes.PlotTypes.timeSeries:
+            return "TimeSeries " + plotParams.dates + " : " + format;
+            break;
+        case matsTypes.PlotTypes.profile:
+            return "Profile: " + format;
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            return "DieOff: " + format;
+            break;
+        case matsTypes.PlotTypes.threshold:
+            return "Threshold: " + format;
+            break;
+        case matsTypes.PlotTypes.validtime:
+            return "ValidTime: " + format;
+            break;
+        case matsTypes.PlotTypes.dailyModelCycle:
+            return "DailyModelCycle " + plotParams.dates + " : " + format;
+            break;
+        case matsTypes.PlotTypes.map:
+            return "Map " + plotParams.dates + " ";
+            break;
+        case matsTypes.PlotTypes.histogram:
+            return "Histogram: " + format;
+            break;
+        default:
+            return "Scatter: " + plotParams.dates + " : " + format;
+    }
+}
 
 const _componentToHex = function(c) {
     var hex = c.toString(16);
@@ -104,6 +103,7 @@ const _addDateElementsBetween = function (element, plotParams) {
     var dates = [];
     for (var ci = 0; ci < curves.length; ci++) {
         var curve = curves[ci];
+        const validTimes = curve['valid-time'];
         //example 2018-11-06 00:00:00
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
@@ -144,8 +144,23 @@ const _addDateElementsBetween = function (element, plotParams) {
             console.log(matsTypes.Messages.NO_DATA_FOUND);
         } else {
             for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                const dstr = moment(rows[rowIndex].avtime).format('YYYY-MM-DD HH:mm:ss').trim();
-                if (dates.indexOf(dstr) === -1) {
+                const dstrMoment = moment(rows[rowIndex].avtime);
+                const dstr = dstrMoment.format('YYYY-MM-DD HH:mm:ss').trim();
+                // apply the valid-time filter here.....
+                var valid = true;
+                if (validTimes != null && validTimes.length > 0) {
+                    valid = false;
+                    const momentSdiHour = dstrMoment.format("HH");
+                    for (var vti=0; vti<validTimes.length;vti++) {
+                        const thisvt = validTimes[vti];
+                        if (momentSdiHour === thisvt) {
+                            // it is valid
+                            valid = true;
+                            break;
+                        }
+                    }
+                }
+                if (valid === true && dates.indexOf(dstr) === -1) {
                     dates.push(dstr);
                 }
             }
@@ -158,7 +173,6 @@ const _addDateElementsBetween = function (element, plotParams) {
             return new moment(a) - new moment(b);
         });
     for (var sdi = 0; sdi < sortedDates.length; sdi++) {
-        // apply the valid-time filter here.....
         element.ele('val', {
             'label': sortedDates[sdi],
             'plot_val': ""
@@ -403,7 +417,7 @@ const _addSeries = function(plot, dependentAxes, plotParams) {
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
         if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
             series1.ele('field', {'name': 'fcst_lev'})
-                .ele('val', curve['pres-level']);
+                .ele('val', curve['pres-level'].join(','));
         }
     }
     var series2 = plot.ele('series2');
@@ -431,7 +445,7 @@ const _addSeries = function(plot, dependentAxes, plotParams) {
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
         if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
             series2.ele('field', {'name': 'fcst_lev'})
-                .ele('val', curve['pres-level']);
+                .ele('val', curve['pres-level'].join(','));
         }
     }
 }
@@ -493,7 +507,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         _addSeries(plot, dependentAxes, plotParams);
         plot_fix = plot.ele('plot_fix'); // unused for time series
         plot.ele('plot_cond');
-        var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
+        var indep = plot.ele('indep', {'equalize':'false','name':'fcst_valid_beg'});
         _addDateElementsBetween(indep, plotParams);
         plot.ele('calc_stat').ele('calc_sl1l2',true);
         plot.ele('plot_stat','mean');
@@ -501,8 +515,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         tmpl.ele('data_file',key + '.data');
         tmpl.ele('plot_file',key + '.png');
         tmpl.ele('r_file',key + '.R');
-        //tmpl.ele('title',_title() + " : " + plotParams.plotAction + " " + plotParams.plotAction);
-        tmpl.ele('title',"unknown");
+        tmpl.ele('title',_title() + " : " + _plotText(plotParams) + " " + plotParams.plotAction);
         tmpl.ele('x_label','test x_label');
         tmpl.ele('y1_label','test y_label');
         tmpl.ele('y2_label');
