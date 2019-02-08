@@ -75,7 +75,7 @@ dataValidTime = function (plotParams, plotFunction) {
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
-                "and h.vx_mask = '{{region}}' " +
+                "and h.vx_mask = ({{region}}) " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
                 "and ld.fcst_lead = '{{forecastLength}}' " +

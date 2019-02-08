@@ -393,6 +393,7 @@ const doCurveParams = function () {
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2,
+                multiple: true,
                 help: 'region.html'
             });
     } else {
@@ -480,6 +481,7 @@ const doCurveParams = function () {
                 default: forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]][0],
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
+                multiple: true,
                 displayOrder: 6,
                 displayPriority: 1,
                 displayGroup: 3
@@ -498,7 +500,7 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) == undefined) {
+    if (matsCollections.CurveParams.findOne({name: 'dieoff-type'}) == undefined) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
             "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
@@ -506,7 +508,7 @@ const doCurveParams = function () {
         };
         matsCollections.CurveParams.insert(
             {
-                name: 'dieoff-forecast-length',
+                name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: dieoffOptionsMap,
                 options: Object.keys(dieoffOptionsMap),
@@ -728,13 +730,13 @@ const doCurveTextPatterns = function () {
                 ['', 'variable', ' '],
                 ['', 'statistic', ', '],
                 ['level: ', 'pres-level', ', '],
-                ['', 'dieoff-forecast-length', ', '],
+                ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "dieoff-type", "valid-time", "utc-cycle-start", "pres-level", "curve-dates"
             ],
             groupSize: 6
         });

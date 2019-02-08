@@ -1539,77 +1539,18 @@ const mvBatch = new ValidatedMethod({
             if (artifactPaths == null || filesExist === false) {
                 // artifactPaths are not in the cache - or the files are not there - need to process plotSpecFunction routine
                 // translate the plotparams to a plotSpec and use the key in the plotSpec reference
-                plotSpec = global[plotSpecFunction](params.plotParams, key); // synchronous
-                // no error and we have a plot spec
-                // see if the artifacts exist as files. They might have been run before and are still hanging around.
-                // NOTE: the MV_OUTPUT aren't cached at all (i.e. no expiration) -
-                // therefore the expiration of the MATS cache plotSpec and the actual artifacts is sloppy.
+                global[plotSpecFunction](params.plotParams, key, function (err, plotSpec) {
+                    // callback
+                    if (err) {
+                        console.log(err);
+                    } else {
 
-                // check for file existence
-                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
-                var plotExists = fse.existsSync(pngFilePath);
-                var scriptExists = fse.existsSync(scriptFilePath);
-                var dataExists = fse.existsSync(dataFilePath);
-                var sqlExists = fse.existsSync(sqlFilePath);
-                var logExists = fse.existsSync(logFilePath);
-                var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
-                if (!filesExist) {
-                    const mvBatchCmd = MV_DIRS.HOME + "/bin/mv_batch.sh " + ' ' + plotSpecFilePath;
-                    const cp = require('child_process');
-                    // save the plotSpec
-                    fse.outputFileSync(plotSpecFilePath, plotSpec);
-                    // exec mv batch with this plotSpec - this should be synchronous
-                    cp.exec(mvBatchCmd, (error, stdout, stderr) => {
-                        if (stderr) {
-                            fse.outputFileSync(errFilePath, stderr, function (err) {
-                                if (err) {
-                                    console.log("Error:couldn't write error file" + err); //null
-                                }
-                            });
-                            return error;
-                        } else {
-                            fse.outputFileSync(errFilePath, "no stderr for key: " + key, function (err) {
-                                if (err) {
-                                    console.log("Error:couldn't write error file" + err); //null
-                                }
-                            });
-                        }
-                        if (stdout) {
-                            if (stdout.match(/ERROR/)) {
-                                fse.outputFileSync(errFilePath, stdout, function (err) {
-                                    if (err) {
-                                        console.log("Error:couldn't write log/err file" + err);
-                                    }
-                                });
-                            }
-                            fse.outputFileSync(logFilePath, stdout, function (err) {
-                                if (err) {
-                                    console.log("Error:couldn't write log file" + err);
-                                }
-                            });
-                            var sqlout = stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/) == null ? null : stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/)[1];
-                            if (sqlout == null) {
-                                fse.outputFileSync(sqlFilePath, "no sql statement found in output for key: " + key, function (err) {
-                                    if (err) {
-                                        console.log("Error:couldn't write sql file" + err);
-                                    }
-                                });
-                            }  else {
-                                fse.outputFileSync(sqlFilePath, sqlout, function (err) {
-                                    if (err) {
-                                        console.log("Error:couldn't write sql file" + err);
-                                    }
-                                });
-                            }
-                        } else {
-                            fse.outputFileSync(logFilePath, "No stdout captured for: " + key, function (err) {
-                                if (err) {
-                                    console.log("Error:couldn't write log file" + err);
-                                }
-                            });
-                        }
+                        // no error and we have a plot spec
+                        // see if the artifacts exist as files. They might have been run before and are still hanging around.
+                        // NOTE: the MV_OUTPUT aren't cached at all (i.e. no expiration) -
+                        // therefore the expiration of the MATS cache plotSpec and the actual artifacts is sloppy.
 
-                        // no error - check for the files and cache the spec and filePaths
+                        // check for file existence
                         var xmlSpecExists = fse.existsSync(plotSpecFilePath);
                         var plotExists = fse.existsSync(pngFilePath);
                         var scriptExists = fse.existsSync(scriptFilePath);
@@ -1618,37 +1559,105 @@ const mvBatch = new ValidatedMethod({
                         var logExists = fse.existsSync(logFilePath);
                         var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
                         if (!filesExist) {
-                            console.error('exec error: expected files do not exist');
-                        }
-                        matsCache.storeResult(key, artifacts);
-                        /*
-                            The mvbatch should have saved the plot artifacts according to the following plotSpec elements
-                                <data_file>key.data</data_file>
-                                <plot_file>key.png</plot_file>
-                                <r_file>key.R</r_file>
-                            where key is the same as the key for the matsCache
-                            The stored artifacts shoulkd be like ...
-                                MV_OUTPUT/plots/key.png
-                                MV_OUTPUT/xml/key.xml
-                                MV_OUTPUT/xml/key.sql
-                                MV_OUTPUT/xml/key.log
-                                MV_OUTPUT/scripts/key.R
-                                MV_OUTPUT/data/key.data
-                                MV_OUTPUT/data/key.sum_stat.info
-                                MV_OUTPUT/data/key.data.sum_stat
+                            const mvBatchCmd = MV_DIRS.HOME + "/bin/mv_batch.sh " + ' ' + plotSpecFilePath;
+                            const cp = require('child_process');
+                            // save the plotSpec
+                            fse.outputFileSync(plotSpecFilePath, plotSpec);
+                            // exec mv batch with this plotSpec - this should be synchronous
+                            cp.exec(mvBatchCmd, (error, stdout, stderr) => {
+                                if (stderr) {
+                                    fse.outputFileSync(errFilePath, stderr, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write error file" + err); //null
+                                        }
+                                    });
+                                } else {
+                                    fse.outputFileSync(errFilePath, "no stderr for key: " + key, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write error file" + err); //null
+                                        }
+                                    });
+                                }
+                                if (stdout) {
+                                    if (stdout.match(/ERROR/)) {
+                                        fse.outputFileSync(errFilePath, stdout, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write log/err file" + err);
+                                            }
+                                        });
+                                    }
+                                    fse.outputFileSync(logFilePath, stdout, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write log file" + err);
+                                        }
+                                    });
+                                    var sqlout = stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/) == null ? null : stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/)[1];
+                                    if (sqlout == null) {
+                                        fse.outputFileSync(sqlFilePath, "no sql statement found in output for key: " + key, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write sql file" + err);
+                                            }
+                                        });
+                                    } else {
+                                        fse.outputFileSync(sqlFilePath, sqlout, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write sql file" + err);
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    fse.outputFileSync(logFilePath, "No stdout captured for: " + key, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write log file" + err);
+                                        }
+                                    });
+                                }
 
-                                MV_OUTPUT/xml/key.xml is the plotSpec
-                        */
+                                // no error - check for the files and cache the spec and filePaths
+                                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
+                                var plotExists = fse.existsSync(pngFilePath);
+                                var scriptExists = fse.existsSync(scriptFilePath);
+                                var dataExists = fse.existsSync(dataFilePath);
+                                var sqlExists = fse.existsSync(sqlFilePath);
+                                var logExists = fse.existsSync(logFilePath);
+                                var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
+                                if (!filesExist) {
+                                    console.error('exec error: expected files do not exist');
+                                }
+                                matsCache.storeResult(key, artifacts);
+                                /*
+                                    The mvbatch should have saved the plot artifacts according to the following plotSpec elements
+                                        <data_file>key.data</data_file>
+                                        <plot_file>key.png</plot_file>
+                                        <r_file>key.R</r_file>
+                                    where key is the same as the key for the matsCache
+                                    The stored artifacts shoulkd be like ...
+                                        MV_OUTPUT/plots/key.png
+                                        MV_OUTPUT/xml/key.xml
+                                        MV_OUTPUT/xml/key.sql
+                                        MV_OUTPUT/xml/key.log
+                                        MV_OUTPUT/scripts/key.R
+                                        MV_OUTPUT/data/key.data
+                                        MV_OUTPUT/data/key.sum_stat.info
+                                        MV_OUTPUT/data/key.data.sum_stat
+
+                                        MV_OUTPUT/xml/key.xml is the plotSpec
+                                */
                         mvFuture['return']();
-                        }); //ret = {key:key, result:{artifacts:artifacts}}
-                    // return the key and the artifacts
-                } else {
-                    // the files actually already existed but we needed the plotspec - so just refresh the cache and return the key right away
-                    matsCache.storeResult(key, artifacts);
-                    mvFuture['return']();
-                }
-            } else {
-                // artifacts and plotspec existed - refresh the cache
+                            }); //ret = {key:key, result:{artifacts:artifacts}}
+                            // return the key and the artifacts
+                        }  // plotspec did not exist
+                        else {
+                            // the files actually already existed but we needed the plotspec
+                            // so just refresh the cache and return the key right away
+                            matsCache.storeResult(key, artifacts);
+                            mvFuture['return']();
+                        }
+                    }
+                });
+            } // either artifactPaths == null || filesExist === false
+            else {
+                // artifacts existed and plotspec existed - refresh the cache
                 matsCache.storeResult(key, artifacts);
                 mvFuture['return']();
             }

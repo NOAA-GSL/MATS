@@ -403,7 +403,7 @@ const showTimeseriesFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'block',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -451,7 +451,7 @@ const showProfileFace = function () {
             'threshold': 'block',
             'pres-level': 'none',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -499,7 +499,7 @@ const showDieOffFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'none',
-            'dieoff-forecast-length': 'block',
+            'dieoff-type': 'block',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -524,8 +524,8 @@ const showDieOffFace = function () {
                 elem.style.display = faceOptions[faceSelectors[fidx]];
             }
         }
-        // reset the value for dieoff-forecast-length, so that the checkHideOther routine will work
-        const param = matsParamUtils.getParameterForName('dieoff-forecast-length');
+        // reset the value for dieoff-type, so that the checkHideOther routine will work
+        const param = matsParamUtils.getParameterForName('dieoff-type');
         matsParamUtils.setValueTextForParamName(param.name, param.default);
 
         elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
@@ -551,7 +551,7 @@ const showThresholdFace = function () {
             'threshold': 'none',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -599,7 +599,7 @@ const showValidTimeFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'none',
             'utc-cycle-start': 'none',
@@ -647,7 +647,7 @@ const showDailyModelCycleFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'none',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'none',
             'utc-cycle-start': 'block',
@@ -695,7 +695,7 @@ const showMapFace = function () {
             'threshold': 'none',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -738,7 +738,7 @@ const showHistogramFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
@@ -785,7 +785,7 @@ const showScatterFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',

@@ -51,8 +51,8 @@ dataDieOff = function (plotParams, plotFunction) {
         toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var forecastLengthStr = curve['dieoff-forecast-length'];
-        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}, {optionsMap: 1})['optionsMap'];
+        var forecastLengthStr = curve['dieoff-type'];
+        var forecastLengthOptionsMap = matsCollections.CurveParams.findOne({name: 'dieoff-type'}, {optionsMap: 1})['optionsMap'];
         var forecastLength = forecastLengthOptionsMap[forecastLengthStr][0];
         var validTimeClause = "";
         var utcCycleStart;
