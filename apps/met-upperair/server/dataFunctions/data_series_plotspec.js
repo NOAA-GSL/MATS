@@ -22,7 +22,7 @@ const statMvTranslation = {
     'N': "",
     'Model average': "FBAR",
     'Obs average': "OBAR"
-}
+};
 
 const _title = function () {
     try {
@@ -35,7 +35,7 @@ const _title = function () {
     } catch (someError) {
         return "";
     }
-}
+};
 
 // const _plotText = function (p) {
 //     var format = p.plotFormat;
@@ -82,7 +82,7 @@ const _title = function () {
 const _componentToHex = function(c) {
     var hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;
-}
+};
 
 const _rgbToHex = function(color) {
     const cParts = color.replace('rgb(','').replace(')','').split(',');
@@ -90,7 +90,7 @@ const _rgbToHex = function(color) {
     const g = Number(cParts[1]);
     const b = Number(cParts[2]);
     return "#" + _componentToHex(r) + _componentToHex(g) + _componentToHex(b);
-}
+};
 
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
 //To Do - don't forget to add valid times processing!!!!
@@ -148,7 +148,8 @@ const _addDateElementsBetween = function (element, plotParams) {
                 }
             }
         }
-    }
+    };
+
     // sort the dates
     const sortedDates = dates.sort(
         function (a, b) {
@@ -179,7 +180,8 @@ const _addDatabaseElement = function(element, curves){
     } catch (someError) {
         return "";
     }
-}
+};
+
 // add the required metviewer folders
 const _addFolders = function(element) {
     try {
@@ -193,7 +195,8 @@ const _addFolders = function(element) {
         return element;
     } catch (e) {
     }
-}
+};
+
 // start the plotspec
 const _startPlotSpec = function(pool, plotParams) {
     try {
@@ -209,7 +212,7 @@ const _startPlotSpec = function(pool, plotParams) {
         return xml;
     } catch (e) {
     }
-}
+};
 
 const _add_plot_ci = function(element,plotParams){
     try { //example c("none","none")
@@ -223,7 +226,7 @@ const _add_plot_ci = function(element,plotParams){
         element.ele('plot_ci', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_show_signif = function(element,plotParams){
     try { //example c(FALSE,FALSE)
@@ -237,7 +240,7 @@ const _add_show_signif = function(element,plotParams){
         element.ele('show_signif', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_plot_disp = function(element,plotParams){
     try { //example c(TRUE,TRUE)
@@ -251,7 +254,7 @@ const _add_plot_disp = function(element,plotParams){
         element.ele('plot_disp', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _addColors = function(element,plotParams){
     try { //  example  'c("#ff0000FF","#8000ffFF")'
@@ -266,7 +269,7 @@ const _addColors = function(element,plotParams){
         element.ele('colors', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_pch = function(element,plotParams){
     try { //example c(20,20)
@@ -280,7 +283,7 @@ const _add_pch = function(element,plotParams){
         element.ele('pch', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_type = function(element,plotParams){
     try { //example c("b","b")
@@ -294,7 +297,7 @@ const _add_type = function(element,plotParams){
         element.ele('type', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_lty = function(element,plotParams){
     try { // example c(1,1)
@@ -308,7 +311,7 @@ const _add_lty = function(element,plotParams){
         element.ele('lty', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_lwd = function(element,plotParams){
     try { // example c(1,1)
@@ -322,7 +325,7 @@ const _add_lwd = function(element,plotParams){
         element.ele('lwd', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_con_series = function(element,plotParams){
     try { // example c(1,1)
@@ -336,7 +339,7 @@ const _add_con_series = function(element,plotParams){
         element.ele('con_series', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_order_series = function(element,plotParams){
     try { // example c(1,2)
@@ -350,7 +353,7 @@ const _add_order_series = function(element,plotParams){
         element.ele('order_series', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _add_legend = function(element,plotParams){
     try { // example c("","")
@@ -364,7 +367,7 @@ const _add_legend = function(element,plotParams){
         element.ele('legend', cListStr);
     } catch (e) {
     }
-}
+};
 
 const _addSeries = function(plot, dependentAxes, plotParams) {
 // data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)

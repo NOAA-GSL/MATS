@@ -1,14 +1,13 @@
-import {
-    matsCollections,
-    matsDataCurveOpsUtils,
-    matsDataDiffUtils,
-    matsDataProcessUtils,
-    matsDataQueryUtils,
-    matsDataUtils,
-    matsTypes
-} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsDataUtils} from 'meteor/randyp:mats-common';
+import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
+import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
+import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
+import {PythonShell} from 'python-shell';
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -98,7 +97,21 @@ dataSeries = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
-                "{{statistic}} " +
+                "sum(ld.total) as N0, " +
+                "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "avg(ld.ffbar) as ffbar, " +
+                "avg(ld.oobar) as oobar, " +
+                "avg(ld.fobar) as fobar, " +
+                "avg(ld.fobar) as total, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
+                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
@@ -116,7 +129,6 @@ dataSeries = function (plotParams, plotFunction) {
                 ";";
 
             statement = statement.replace('{{average}}', average);
-            statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
@@ -129,21 +141,38 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
 
+            const QCParams = matsDataUtils.getPlotParamsFromStack();
+            const completenessQCParam = Number(QCParams["completeness"]) / 100;
+
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, 0, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                // send the query statement to the python query function
+                const pyOptions = {
+                    mode: 'text',
+                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
+                    pythonOptions: ['-u'], // get print results in real-time
+                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
+                    args: [statement, statisticStr, plotType, hasLevels, completenessQCParam]
                 };
-                // get the data back from the query
-                d = queryResult.data;
+                const Future = require('fibers/future');
+                var future = new Future();
+                PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
+                    if (err) throw err;
+                    queryResult = JSON.parse(results);
+                    // get the data back from the query
+                    d = queryResult.data;
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                        recordCount: queryResult.data.x.length
+                    };
+                    future["return"]();
+                });
+                future.wait();
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
