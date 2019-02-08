@@ -6,12 +6,13 @@ import {
     matsDataProcessUtils,
     matsDataQueryUtils,
     matsDataUtils,
-    matsTypes,
     matsMethods,
-    matsParamUtils
+    matsParamUtils,
+    matsTypes
 } from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
+
 var xmlBuilder = require('xmlbuilder');
 
 
@@ -91,25 +92,77 @@ const _rgbToHex = function(color) {
     return "#" + _componentToHex(r) + _componentToHex(g) + _componentToHex(b);
 }
 
-
-
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
-const _addDateElementsBetween = function(element,plotParams) {
-    const dateParts = plotParams.dates.split(" - ");
-    const start = moment(dateParts[0]);
-    const end = moment(dateParts[1]);
-    const inc_seconds = 6*60*60;
-    try {
-    // this function is an example of javascript pass-by-copy-of-reference
-        var currDate = start;
-        element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
-        while (currDate.add(inc_seconds, 'seconds').diff(end) <= 0) {
-            element.ele('val',{'label':currDate.format('YYYY-MM-DD HH:mm:ss'),'plot_val':""},currDate.format('YYYY-MM-DD HH:mm:ss'));
+//To Do - don't forget to add valid times processing!!!!
+const _addDateElementsBetween = function (element, plotParams) {
+    const dateRange = matsDataUtils.getDateRange(plotParams.dates);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const curves = plotParams.curves;
+    // have to get all the valid dates for each curve then union them
+    // to get a complete date list
+    var dates = [];
+    for (var ci = 0; ci < curves.length; ci++) {
+        var curve = curves[ci];
+        //example 2018-11-06 00:00:00
+
+        var regionsClause = "";
+        if (curve['region'].length > 0) {
+            const regions = curve['region'].map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
-    } catch (someError) {
-        return "";
+
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the varias databases
+        // so they have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        forecastLengthsClause = "";
+        if (curve['forecast-length'].length >0 ) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = curve['forecast-length'].map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+        }
+
+        var statement = "select ld.fcst_valid_beg as avtime " +
+            "from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld " +
+            "where 1=1 and h.model = '" + curve['data-source'] + "' " +
+            regionsClause +
+            "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
+            "and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' " +
+            forecastLengthsClause +
+            "and h.fcst_var = '" + curve['variable'] + "' " +
+            "and ld.stat_header_id = h.stat_header_id " +
+            "group by avtime order by avtime;";
+
+        var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, statement);
+        if (rows === undefined || rows === null || rows.length === 0) {
+            console.log(matsTypes.Messages.NO_DATA_FOUND);
+        } else {
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                const dstr = moment(rows[rowIndex].avtime).format('YYYY-MM-DD HH:mm:ss').trim();
+                if (dates.indexOf(dstr) === -1) {
+                    dates.push(dstr);
+                }
+            }
+        }
+    }
+    // sort the dates
+    const sortedDates = dates.sort(
+        function (a, b) {
+            return new moment(a) - new moment(b);
+        });
+    for (var sdi = 0; sdi < sortedDates.length; sdi++) {
+        // apply the valid-time filter here.....
+        element.ele('val', {
+            'label': sortedDates[sdi],
+            'plot_val': ""
+        }, sortedDates[sdi]);
     }
 }
+
 // parse the databases from the curves and add a database string
 const _addDatabaseElement = function(element, curves){
     try {
@@ -147,9 +200,11 @@ const _startPlotSpec = function(pool, plotParams) {
         var xml = xmlBuilder.create('plot_spec', {version: "1.0", encoding: "UTF-8", standalone: false});
         var connection = xml.ele('connection');
         connection.ele('host', sumPool.config.connectionConfig.host + ":" + sumPool.config.connectionConfig.port);
+        _addDatabaseElement(connection, plotParams.curves);
         connection.ele('user', sumPool.config.connectionConfig.user);
         connection.ele('password', sumPool.config.connectionConfig.password);
-        _addDatabaseElement(connection, plotParams.curves);
+        const management_system = Meteor.settings.private.MV_DB_MANAGEMENT_SYSTEM != null ? Meteor.settings.private.MV_DB_MANAGEMENT_SYSTEM : "mysql";
+        connection.ele('management_system', management_system);
         _addFolders(xml);
         return xml;
     } catch (e) {
@@ -311,70 +366,119 @@ const _add_legend = function(element,plotParams){
     }
 }
 
+const _addSeries = function(plot, dependentAxes, plotParams) {
+// data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
+    // valid_time(), and average()
+    // are series variables multiple select are MV grouped - they are associated with different curves.
+    // They go on the axis that is associated with the curve that the region parameter is on.
+    // i.e. Y1 Series variables or Y2 Series variables
+    var series1 = plot.ele('series1');
+    for (var daci = 0; daci < dependentAxes['y1'].length; daci++) {
+        series1.ele('field', {'name': 'model'})
+            .ele('val', dependentAxes['y1'][daci]['data-source']);
+        // only add the vx_mask tag if there are regions requested - leaving it out will get them all
+        if (dependentAxes['y1'][daci]['region'].length > 0) {
+            series1.ele('field', {'name': 'vx_mask'})
+                .ele('val', dependentAxes['y1'][daci]['region'].join(','));
+        }
+        // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
+        if (dependentAxes['y1'][daci]['forecast-length'].length > 0) {
+            // have to get the unsanitized values..
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][plotParams.database][model];
+            const forecastLengths = dependentAxes['y1'][daci]['forecast-length'].map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            series1.ele('field', {'name': 'fcst_lead'})
+                .ele('val', forecastLengths);
+        }
+        // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
+        if (dependentAxes['y1'][daci]['pres-level'].length > 0) {
+            series1.ele('field', {'name': 'fcst_lev'})
+                .ele('val', dependentAxes['y1'][daci]['pres-level']);
+        }
+    }
+    var series2 = plot.ele('series2');
+    for (var daci = 0; daci < dependentAxes['y2'].length; daci++) {
+        series2.ele('field', {'name': 'model'})
+            .ele('val', dependentAxes['y2'][daci]['data-source']);
+        // only add the vx_mask tag if there are regions requested - leaving it out will get them all
+        if (dependentAxes['y2'][daci]['region'].length > 0) {
+            series2.ele('field', {'name': 'vx_mask'})
+                .ele('val', dependentAxes['y2'][daci]['region'].join(','));
+        }
+        // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
+        if (dependentAxes['y2'][daci]['forecast-length'].length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = dependentAxes['y2'][daci]['forecast-length'].map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            series2.ele('field', {'name': 'fcst_lead'})
+                .ele('val', forecastLengths);
+        }
+        // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
+        if (dependentAxes['y2'][daci]['pres-level'].length > 0) {
+            series2.ele('field', {'name': 'fcst_lev'})
+                .ele('val', dependentAxes['y2'][daci]['pres-level']);
+        }
+    }
+}
+
+ const _getDependentAxis = function(plotParams) {
+     // there are two possible axis for metviewer. We want to collect all the variables
+     // into groups. We will take the two largest groups.
+     // variables and statistics go together. They are dependent variabales in MV.
+     // variables always are associated with different curves, and will always be on different axis
+     // if possible, but might be assigned an axis via dependentAxes.
+    const yaxesDefault = "auto-by-variable";
+    var curves = plotParams['curves'];
+    var dependentAxes = {'y1': [], 'y2': []};
+    dependentAxes['y1'].push(curves[0]);
+    var dependentAxesVariables = {'y1': [curves[0]['variable']], 'y2': []};
+    for (var ci = 1; ci < curves.length; ci++) {
+        if (curves[ci].yaxes != yaxesDefault) {
+            // sort it into its selectedYaxes
+            dependentAxes[curves[ci].yaxes].push(curves[ci]);
+        } else {
+            // sort it into an axis by its variable
+            //     variables:
+            //     variables that share an axis are different dependent variables. Put them in dep1.
+            //     variables that have differing axis must go in different Y axis vars (and you can only have two of those)
+
+            const variable = curves[ci].variable;
+            if (dependentAxesVariables['y1'].includes(variable)) {
+                dependentAxes['y1'].push(curves[ci]);
+            } else {
+                dependentAxes['y2'].push(curves[ci]);
+            }
+        }
+    }
+    return dependentAxes;
+}
+
+function _addDeps(plot, dependentAxes) {
+    var dep = plot.ele('dep');
+    for (var daci = 0; daci < dependentAxes['y1'].length; daci++) {
+        dep.ele('dep1').ele('fcst_var', {'name': dependentAxes['y1'][daci]['variable']})
+            .ele('stat', statMvTranslation[dependentAxes['y1'][daci]['statistic']]);
+    }
+    // dep2 depends on if we have any variables assigned to the send axis.
+    var dep2 = dep.ele('dep2');
+    for (var daci = 0; daci < dependentAxes['y2'].length; daci++) {
+        dep2.ele('fcst_var', {'name': dependentAxes['y2'][daci]['variable']})
+            .ele('stat', statMvTranslation[dependentAxes['y2'][daci]['statistic']]);
+    }
+}
+
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
     const fs = require('fs');
-    const Future = require('fibers/future');
-    var dFuture = new Future();
-    // there are two possible axis for metviewer. We want to collect all the mean variables
-    // into groups. We will take the two largest groups.
-    var axisVars = {'y1':[],'y2':[]};
     try {
         var xml = _startPlotSpec(sumPool,plotParams);
         var plot = xml.ele('plot');
         plot.ele('template','series_plot.R_tmpl');
-        /*
-            variables:
-            variables that share an axis are different dependent variables. Put them in dep1.
-            variables that have differing axis must go in different Y axis vars (and you can only have two of those)
-         */
-        var curves = plotParams.curves;
-        var yaxesDefault = "auto-by-variable";
-        var dependentAxes = {'y1':[],'y2':[]};
-        dependentAxes['y1'].push(curves[0]);
-        var dependentAxesVariables = {'y1':[curves[0]['variable']],'y2':[]};
-        for (var ci=1; ci < curves.length; ci++) {
-            if (curves[ci].yaxes != yaxesDefault) {
-                // sort it into its selectedYaxes
-                dependentAxes[curves[ci].yaxes].push(curves[ci]);
-            } else {
-                // sort it into an axis by its variable
-                const variable = curves[ci].variable;
-                 if (dependentAxesVariables['y1'].includes(variable)) {
-                     dependentAxes['y1'].push(curves[ci]);
-                 } else {
-                     dependentAxes['y2'].push(curves[ci]);
-                 }
-            }
-        }
-        var dep = plot.ele('dep');
-        for (var daci=0; daci < dependentAxes['y1'].length; daci++) {
-            dep.ele('dep1').ele('fcst_var', {'name': dependentAxes['y1'][daci]['variable']})
-            .ele('stat', statMvTranslation[dependentAxes['y1'][daci]['statistic']]);
-        }
-
-        var dep2 = dep.ele('dep2');
-        for (var daci=0; daci < dependentAxes['y2'].length; daci++) {
-            dep2.ele('fcst_var', {'name': dependentAxes['y2'][daci]['variable']})
-            .ele('stat', statMvTranslation[dependentAxes['y2'][daci]['statistic']]);
-        }
-        for (var daci=0; daci < dependentAxes['y1'].length; daci++) {
-            plot.ele('series1').ele('field', {'name': 'model'})
-                .ele('val', dependentAxes['y1'][daci]['data-source']);
-        }
-        var series2 = plot.ele('series2');
-        for (var daci=0; daci < dependentAxes['y2'].length; daci++) {
-            series2.ele('field', {'name': 'model'})
-                .ele('val', dependentAxes['y2'][daci]['data-source']);
-        }
-
-        var plot_fix = plot.ele('plot_fix');
-        plot_fix.ele('field',{'equalize':'false','name':'fcst_lead'})
-            .ele('set',{'name':'fcst_lead_0'})
-            .ele('val',plotParams.curves[0]['forecast-length']);
-        plot_fix.ele('field',{'equalize':'false','name':'vx_mask'})
-            .ele('set',{'name':'vx_mask_1'})
-            .ele('val',plotParams.curves[0].region);
-        xml.end({pretty: true});
+        const dependentAxes = _getDependentAxis(plotParams);
+        _addDeps(plot, dependentAxes);
+        _addSeries(plot, dependentAxes, plotParams);
+        var plot_fix = plot.ele('plot_fix'); // unused for time series
         plot.ele('plot_cond');
         var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
         _addDateElementsBetween(indep, plotParams);
@@ -480,13 +584,10 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         plot.ele('y1_bufr','0.04');
         plot.ele('y2_lim','c()');
         xml.end({ pretty: true});
-        dFuture['return']();
-
     } catch (error) {
         console.log(error);
-        dFuture['return'](error);
+        plotSpecCallback (error.toString(), null);
     }
-    dFuture.wait();
-    return xml.doc().toString();
+    plotSpecCallback (null, xml.doc().toString());
 };
 

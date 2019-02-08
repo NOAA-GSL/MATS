@@ -550,7 +550,7 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'dieoff-type'}).count() == 0) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
             "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
@@ -558,7 +558,7 @@ const doCurveParams = function () {
         };
         matsCollections.CurveParams.insert(
             {
-                name: 'dieoff-forecast-length',
+                name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: dieoffOptionsMap,
                 options: Object.keys(dieoffOptionsMap),
@@ -698,13 +698,13 @@ const doCurveTextPatterns = function () {
                 ['', 'threshold', ' '],
                 ['', 'scale', ', '],
                 ['', 'statistic', ', '],
-                ['', 'dieoff-forecast-length', ', '],
+                ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "scale", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "scale", "dieoff-type", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });

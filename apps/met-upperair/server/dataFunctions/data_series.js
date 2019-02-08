@@ -1,10 +1,12 @@
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsDataUtils} from 'meteor/randyp:mats-common';
-import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
-import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
-import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
+import {
+    matsCollections,
+    matsDataCurveOpsUtils,
+    matsDataDiffUtils,
+    matsDataProcessUtils,
+    matsDataQueryUtils,
+    matsDataUtils,
+    matsTypes
+} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
 
@@ -39,14 +41,32 @@ dataSeries = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        const region = curve['region'];
+
+        var regionsClause = "";
+        if (curve['region'].length > 0) {
+            const regions = curve['region'].map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        }
+
         const variable = curve['variable'];
         const statisticStr = curve['statistic'];
         const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         const statistic = statisticOptionsMap[statisticStr][0];
-        const forecastLengthStr = curve['forecast-length'];
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-        const forecastLength = forecastValueMap[forecastLengthStr];
+
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        if (curve['forecast-length'].length >0 ) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = curve['forecast-length'].map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+        }
+
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
@@ -54,9 +74,9 @@ dataSeries = function (plotParams, plotFunction) {
         for (var levIdx = 0; levIdx < levels.length; levIdx++) {
             levels[levIdx] = "'" + levels[levIdx].toString() + "'"
         }
-        var levelClause = "";
+        var levelsClause = "";
         if (levels.length > 0) {
-            levelClause = "and h.fcst_lev IN(" + levels + ")";
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
@@ -83,13 +103,13 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
-                "and h.vx_mask = '{{region}}' " +
+                "{{regionsClause}} " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
-                "and ld.fcst_lead = '{{forecastLength}}' " +
+                "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
-                "{{levelClause}} " +
+                "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
@@ -100,13 +120,13 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{region}}', region);
+            statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -114,7 +134,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, forecastLength, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
+                queryResult = matsDataQueryUtils.queryDBTimeSeries(sumPool, statement, averageStr, model, 0, fromSecs, toSecs, hasLevels, true);   // metexpress is all forceRegularCadence = true until further notice
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),

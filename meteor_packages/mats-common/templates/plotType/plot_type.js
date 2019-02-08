@@ -174,8 +174,8 @@ Template.plotType.events({
                     if (!curves[ci]['threshold'] && matsCollections.CurveParams.findOne({name: 'threshold'}) && matsCollections.CurveParams.findOne({name: 'threshold'}).default) {
                         curves[ci]['threshold'] = matsCollections.CurveParams.findOne({name: 'threshold'}).default;
                     }
-                    if (!curves[ci]['dieoff-forecast-length'] && matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}) && matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}).default) {
-                        curves[ci]['dieoff-forecast-length'] = matsCollections.CurveParams.findOne({name: 'dieoff-forecast-length'}).default;
+                    if (!curves[ci]['dieoff-type'] && matsCollections.CurveParams.findOne({name: 'dieoff-type'}) && matsCollections.CurveParams.findOne({name: 'dieoff-type'}).default) {
+                        curves[ci]['dieoff-type'] = matsCollections.CurveParams.findOne({name: 'dieoff-type'}).default;
                     }
                     if (!curves[ci]['region'] && matsCollections.CurveParams.findOne({name: 'region'}) && matsCollections.CurveParams.findOne({name: 'region'}).default) {
                         curves[ci]['region'] = matsCollections.CurveParams.findOne({name: 'region'}).default;
