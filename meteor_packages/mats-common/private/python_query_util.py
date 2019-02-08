@@ -1,8 +1,8 @@
 import sys
-from datetime import datetime
 import MySQLdb
 import numpy as np
 import json
+from datetime import datetime
 
 error_bool = False  # global variable to keep track of whether we've had an error
 error = ""          # one of the five fields to return at the end -- records any error message
@@ -30,6 +30,11 @@ output_JSON = {}    # JSON structure to pass the five output fields back to the 
 
 # function to check if a certain value is a float or int
 def is_number(s):
+    try:
+        if np.isnan(s):
+            return False
+    except TypeError:
+        return False
     try:
         float(s)
         return True
@@ -86,18 +91,16 @@ def calculate_rms(ffbar, oobar, fobar):
     global error
     global error_bool
     try:
-        rms = np.sqrt(abs(ffbar + oobar - 2*fobar))
-        return rms
+        rms = np.sqrt(ffbar + oobar - 2*fobar)
     except TypeError as e:
         error = "Error calculating RMS: " + str(e)
         error_bool = True
         rms = np.empty(len(ffbar))
-        return rms
     except ValueError as e:
         error = "Error calculating RMS: " + str(e)
         error_bool = True
         rms = np.empty(len(ffbar))
-        return rms
+    return rms
 
 
 # function for calculating bias from MET partial sums
@@ -106,17 +109,15 @@ def calculate_bias(fbar, obar):
     global error_bool
     try:
         bias = fbar - obar
-        return bias
     except TypeError as e:
         error = "Error calculating bias: " + str(e)
         error_bool = True
         bias = np.empty(len(fbar))
-        return bias
     except ValueError as e:
         error = "Error calculating bias: " + str(e)
         error_bool = True
         bias = np.empty(len(fbar))
-        return bias
+    return bias
 
 
 # function for calculating N from MET partial sums
@@ -189,7 +190,9 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
 
     # get query data and calculate starting time interval of the returned data
     query_data = cursor.fetchall()
-    time_interval = int(query_data[1]['avtime']) - int(query_data[0]['avtime']) if len(query_data) > 1 else np.nan
+
+    # default the time interval to an hour. It won't matter since it won't be used for only 0 or 1 data points.
+    time_interval = int(query_data[1]['avtime']) - int(query_data[0]['avtime']) if len(query_data) > 1 else 3600
 
     # loop through the query results and store the returned values
     for row in query_data:
@@ -234,10 +237,10 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
         else:
             # there's no data at this time point
             stat = 'null'
-            sub_values = np.nan
-            sub_secs = np.nan
+            sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+            sub_secs = 'NaN'
             if has_levels:
-                sub_levs = np.nan
+                sub_levs = 'NaN'
 
         # store parsed data for later
         curve_times.append(av_time)
@@ -260,55 +263,49 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
         # the reason we need to loop through everything again is to add in nulls for any missing points along the
         # timeseries. The query only returns the data that it actually has.
         if loop_time not in curve_times:
+            data['x'].append(loop_time)
+            data['y'].append('null')
+            data['error_y'].append('null')
+            data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+            data['subSecs'].append('NaN')
             if has_levels:
-                data['x'].append(loop_time)
-                data['y'].append('null')
-                data['error_y'].append('null')
-                data['subVals'].append(np.nan)
-                data['subSecs'].append(np.nan)
-                data['subLevs'].append(np.nan)
-            else:
-                data['x'].append(loop_time)
-                data['y'].append('null')
-                data['error_y'].append('null')
-                data['subVals'].append(np.nan)
-                data['subSecs'].append(np.nan)
+                data['subLevs'].append('NaN')
         else:
             d_idx = curve_times.index(loop_time)
             this_n0 = n0[d_idx]
             this_n_times = n_times[d_idx]
             # add a null if there were too many missing sub-values
             if this_n0 < 0.1 * n0_max or this_n_times < float(completeness_qc_param) * n_times_max:
+                data['x'].append(loop_time)
+                data['y'].append('null')
+                data['error_y'].append('null')
+                data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                data['subSecs'].append('NaN')
                 if has_levels:
-                    data['x'].append(loop_time)
-                    data['y'].append('null')
-                    data['error_y'].append('null')
-                    data['subVals'].append(np.nan)
-                    data['subSecs'].append(np.nan)
-                    data['subLevs'].append(np.nan)
-                else:
-                    data['x'].append(loop_time)
-                    data['y'].append('null')
-                    data['error_y'].append('null')
-                    data['subVals'].append(np.nan)
-                    data['subSecs'].append(np.nan)
+                    data['subLevs'].append('NaN')
 
             else:
                 # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
                 loop_sum += curve_stats[d_idx]
+                list_vals = sub_vals_all[d_idx].tolist()
+                list_secs = sub_secs_all[d_idx].tolist()
                 if has_levels:
-                    data['x'].append(loop_time)
-                    data['y'].append(curve_stats[d_idx])
-                    data['error_y'].append('null')
-                    data['subVals'].append(sub_vals_all[d_idx].tolist())
-                    data['subSecs'].append(sub_secs_all[d_idx].tolist())
-                    data['subLevs'].append(sub_levs_all[d_idx].tolist())
-                else:
-                    data['x'].append(loop_time)
-                    data['y'].append(curve_stats[d_idx])
-                    data['error_y'].append('null')
-                    data['subVals'].append(sub_vals_all[d_idx].tolist())
-                    data['subSecs'].append(sub_secs_all[d_idx].tolist())
+                    list_levs = sub_levs_all[d_idx].tolist()
+                # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
+                bad_value_indices = [index for index, value in enumerate(list_vals) if not is_number(value)]
+                for bad_value_index in reversed(bad_value_indices):
+                    del list_vals[bad_value_index]
+                    del list_secs[bad_value_index]
+                    if has_levels:
+                        del list_levs[bad_value_index]
+                # store data
+                data['x'].append(loop_time)
+                data['y'].append(curve_stats[d_idx])
+                data['error_y'].append('null')
+                data['subVals'].append(list_vals)
+                data['subSecs'].append(list_secs)
+                if has_levels:
+                    data['subLevs'].append(list_levs)
 
         loop_time = loop_time + time_interval
 
