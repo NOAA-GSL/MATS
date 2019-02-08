@@ -1,5 +1,6 @@
 import sys
 import MySQLdb
+import math
 import numpy as np
 import json
 from datetime import datetime
@@ -170,7 +171,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
     return sub_stats, stat
 
 
-# fuction for parsing the data returned by a timeseries query
+# function for parsing the data returned by a timeseries query
 def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param):
     global error
     global error_bool
@@ -318,6 +319,165 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
     data['sum'] = loop_sum
 
 
+# function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
+def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param):
+    global error
+    global error_bool
+    global n0
+    global n_times
+    global data
+
+    if plot_type == 'Profile':
+        data['error_y'] = 'null'  # profiles don't have y-oriented errorbars
+    else:
+        data['error_x'] = 'null'  # non-profiles don't have x-oriented errorbars
+
+    curve_ind_vars = []
+    curve_stats = []
+    sub_vals_all = []
+    sub_secs_all = []
+    sub_levs_all = []
+
+    # get query data and calculate starting time interval of the returned data
+    query_data = cursor.fetchall()
+
+    # loop through the query results and store the returned values
+    for row in query_data:
+        row_idx = query_data.index(row)
+        if plot_type == 'ValidTime':
+            ind_var = float(row['hr_of_day'])
+        elif plot_type == 'Profile':
+            ind_var = float(str(row['avVal']).replace('P',''))
+        elif plot_type == 'DailyModelCycle':
+            ind_var = int(row['avtime']) * 1000
+        else:
+            ind_var = int(row['avtime'])
+        fbar = row['fbar']
+        obar = row['obar']
+        n0.append(int(row['N0']))
+        n_times.append(int(row['N_times']))
+
+        if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            try:
+                # get all of the partial sums for each time
+                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
+                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
+                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
+                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
+                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+                sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+                sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                if has_levels:
+                    sub_levs_raw = str(row['sub_levs']).split(',')
+                    if is_number(sub_levs_raw[0]):
+                        sub_levs = np.array([int(i) for i in sub_levs])
+                    else:
+                        sub_levs = np.array(sub_levs_raw)
+            except KeyError as e:
+                error = "Error in parseQueryDataSpecialtyCurve. The expected fields don't seem to be present " \
+                        "in the results cache: " + str(e)
+                error_bool = True
+                # if we don't have the data we expect just stop now and return an empty data object
+                return
+            # if we do have the data we expect, calculate the requested statistic
+            sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
+        else:
+            # there's no data at this time point
+            stat = 'null'
+            sub_values = 'NaN'  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+            sub_secs = 'NaN'
+            if has_levels:
+                sub_levs = 'NaN'
+
+        # deal with missing forecast cycles for dailyModelCycle plot type
+        if plot_type == 'DailyModelCycle' and row_idx > 0 and (int(ind_var) - int(query_data[row_idx - 1]['avtime']*1000)) > 3600*24*1000:
+            cycles_missing = math.floor(int(ind_var) - int(query_data[row_idx - 1]['avtime']*1000) / (3600*24*1000))
+            for missing_cycle in reversed(range(1, cycles_missing+1)):
+                curve_ind_vars.append(ind_var - 3600*24*1000 * missing_cycle)
+                curve_stats.append('null')
+                sub_vals_all.append('NaN')
+                sub_secs_all.append('NaN')
+                if has_levels:
+                    sub_levs_all.append('NaN')
+
+        # store parsed data for later
+        curve_ind_vars.append(ind_var)
+        curve_stats.append(stat)
+        sub_vals_all.append(sub_values)
+        sub_secs_all.append(sub_secs)
+        if has_levels:
+            sub_levs_all.append(sub_levs)
+
+    n0_max = max(n0)
+    n_times_max = max(n_times)
+    loop_sum = 0
+
+    for ind_var in curve_ind_vars:
+        # the reason we need to loop through everything again is to add in nulls
+        # for any bad data points along the curve.
+        d_idx = curve_ind_vars.index(ind_var)
+        this_n0 = n0[d_idx]
+        this_n_times = n_times[d_idx]
+        # add a null if there were too many missing sub-values
+        if this_n0 < 0.1 * n0_max or this_n_times < float(completeness_qc_param) * n_times_max:
+            if plot_type == 'Profile':
+                # profile has the stat first, and then the ind_var. The others have ind_var and then stat.
+                # this is in the pattern of x-plotted-variable, y-plotted-variable.
+                data['x'].append('null')
+                data['y'].append(ind_var)
+                data['error_x'].append('null')
+                data['subVals'].append('NaN')
+                data['subSecs'].append('NaN')
+                data['subLevs'].append('NaN')
+            elif plot_type != 'DieOff':
+                # for dieoffs, we don't want to add a null for missing data. Just don't have a point for that FHR.
+                data['x'].append(ind_var)
+                data['y'].append('null')
+                data['error_y'].append('null')
+                data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                data['subSecs'].append('NaN')
+                if has_levels:
+                    data['subLevs'].append('NaN')
+        else:
+            # put the data in our final data dictionary, converting the numpy arrays to lists so we can jsonify
+            loop_sum += curve_stats[d_idx]
+            list_vals = sub_vals_all[d_idx].tolist()
+            list_secs = sub_secs_all[d_idx].tolist()
+            if has_levels:
+                list_levs = sub_levs_all[d_idx].tolist()
+            # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
+            bad_value_indices = [index for index, value in enumerate(list_vals) if not is_number(value)]
+            for bad_value_index in reversed(bad_value_indices):
+                del list_vals[bad_value_index]
+                del list_secs[bad_value_index]
+                if has_levels:
+                    del list_levs[bad_value_index]
+            # store data
+            if plot_type == 'Profile':
+                # profile has the stat first, and then the ind_var. The others have ind_var and then stat.
+                # this is in the pattern of x-plotted-variable, y-plotted-variable.
+                data['x'].append(curve_stats[d_idx])
+                data['y'].append(ind_var)
+                data['error_x'].append('null')
+                data['subVals'].append(list_vals)
+                data['subSecs'].append(list_secs)
+                data['subLevs'].append(list_levs)
+            else:
+                data['x'].append(ind_var)
+                data['y'].append(curve_stats[d_idx])
+                data['error_y'].append('null')
+                data['subVals'].append(list_vals)
+                data['subSecs'].append(list_secs)
+                if has_levels:
+                    data['subLevs'].append(list_levs)
+
+    data['xmin'] = min(x for x in data['x'] if is_number(x))
+    data['xmax'] = max(x for x in data['x'] if is_number(x))
+    data['ymin'] = min(y for y in data['y'] if is_number(y))
+    data['ymax'] = max(y for y in data['y'] if is_number(y))
+    data['sum'] = loop_sum
+
+
 # function for querying the database and sending the returned data to the parser
 def query_db(cnx, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param):
     global data
@@ -343,9 +503,9 @@ def query_db(cnx, cursor, statement, statistic, plot_type, has_levels, completen
             # elif plot_type == 'Histogram':
             #     parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
             # elif plot_type == 'Map':
-            #     parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
-            # else:
-            #     parse_query_data_specialty_curve(cursor, statistic, has_levels, completeness_qc_param)
+            #     parse_query_data_map(cursor, statistic, has_levels, completeness_qc_param)
+            else:
+                parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param)
 
 
 def main(args):
