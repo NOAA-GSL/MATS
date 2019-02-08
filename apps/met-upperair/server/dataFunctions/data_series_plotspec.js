@@ -105,6 +105,8 @@ const _addDateElementsBetween = function (element, plotParams) {
     for (var ci = 0; ci < curves.length; ci++) {
         var curve = curves[ci];
         //example 2018-11-06 00:00:00
+        const database = curve['database'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
 
         var regionsClause = "";
         if (curve['region'].length > 0) {
@@ -377,51 +379,59 @@ const _addSeries = function(plot, dependentAxes, plotParams) {
     // i.e. Y1 Series variables or Y2 Series variables
     var series1 = plot.ele('series1');
     for (var daci = 0; daci < dependentAxes['y1'].length; daci++) {
+        const curve = dependentAxes['y1'][daci];
+        const database = curve['database'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+
         series1.ele('field', {'name': 'model'})
-            .ele('val', dependentAxes['y1'][daci]['data-source']);
+            .ele('val', model);
         // only add the vx_mask tag if there are regions requested - leaving it out will get them all
-        if (dependentAxes['y1'][daci]['region'].length > 0) {
+        if (curve['region'] != null && curve['region'].length > 0) {
             series1.ele('field', {'name': 'vx_mask'})
-                .ele('val', dependentAxes['y1'][daci]['region'].join(','));
+                .ele('val', curve['region'].join(','));
         }
         // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
-        if (dependentAxes['y1'][daci]['forecast-length'].length > 0) {
+        if (curve['forecast-length'] != null && curve['forecast-length'].length > 0) {
             // have to get the unsanitized values..
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][plotParams.database][model];
-            const forecastLengths = dependentAxes['y1'][daci]['forecast-length'].map(function (fl) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = curve['forecast-length'].map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             series1.ele('field', {'name': 'fcst_lead'})
                 .ele('val', forecastLengths);
         }
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
-        if (dependentAxes['y1'][daci]['pres-level'].length > 0) {
+        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
             series1.ele('field', {'name': 'fcst_lev'})
-                .ele('val', dependentAxes['y1'][daci]['pres-level']);
+                .ele('val', curve['pres-level']);
         }
     }
     var series2 = plot.ele('series2');
     for (var daci = 0; daci < dependentAxes['y2'].length; daci++) {
+        const curve = dependentAxes['y2'][daci];
+        const database = curve['database'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+
         series2.ele('field', {'name': 'model'})
-            .ele('val', dependentAxes['y2'][daci]['data-source']);
+            .ele('val', model);
         // only add the vx_mask tag if there are regions requested - leaving it out will get them all
-        if (dependentAxes['y2'][daci]['region'].length > 0) {
+        if (curve['region'] != null && curve['region'].length > 0) {
             series2.ele('field', {'name': 'vx_mask'})
-                .ele('val', dependentAxes['y2'][daci]['region'].join(','));
+                .ele('val', curve['region'].join(','));
         }
         // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
-        if (dependentAxes['y2'][daci]['forecast-length'].length > 0) {
+        if (curve['forecast-length'] != null && curve['forecast-length'].length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const forecastLengths = dependentAxes['y2'][daci]['forecast-length'].map(function (fl) {
+            const forecastLengths = curve['forecast-length'].map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             series2.ele('field', {'name': 'fcst_lead'})
                 .ele('val', forecastLengths);
         }
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
-        if (dependentAxes['y2'][daci]['pres-level'].length > 0) {
+        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
             series2.ele('field', {'name': 'fcst_lev'})
-                .ele('val', dependentAxes['y2'][daci]['pres-level']);
+                .ele('val', curve['pres-level']);
         }
     }
 }
@@ -481,7 +491,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         const dependentAxes = _getDependentAxis(plotParams);
         _addDeps(plot, dependentAxes);
         _addSeries(plot, dependentAxes, plotParams);
-        var plot_fix = plot.ele('plot_fix'); // unused for time series
+        plot_fix = plot.ele('plot_fix'); // unused for time series
         plot.ele('plot_cond');
         var indep = plot.ele('indep', {'equalize':'false','name':'fcst_init_beg'});
         _addDateElementsBetween(indep, plotParams);
