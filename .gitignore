@@ -1,4 +1,4 @@
-.idea/workspace.xml
+.idea/*
 apps/*/.idea/workspace.xml
 apps/*/.idea/*
 meteor_packages/.idea/workspace.xml
