@@ -429,7 +429,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(statOptionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -448,7 +448,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: variableOptionsMap[myDBs[0]][Object.keys(variableOptionsMap[myDBs[0]])[0]][0],  // always use the first region for the first model
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -482,7 +482,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
                 multiple: true,
-                displayOrder: 6,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -522,9 +522,9 @@ const doCurveParams = function () {
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'dieoff type',
-                displayOrder: 6,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     }
 
@@ -543,9 +543,9 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
-                displayOrder: 7,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
             });
     }
 
@@ -561,9 +561,9 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 8,
+                displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 multiple: true
             });
     }
@@ -590,9 +590,9 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 9,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     }
 
@@ -610,9 +610,9 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
-                displayOrder: 10,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 multiple: true
             });
     } else {
@@ -663,7 +663,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: "dateHelp.html"
             });
     }

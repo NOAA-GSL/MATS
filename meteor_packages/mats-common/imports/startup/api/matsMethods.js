@@ -712,7 +712,7 @@ const _mvGetData = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'text/plain')
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
@@ -731,7 +731,7 @@ const _mvGetXml = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'text/plain');
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
@@ -750,7 +750,7 @@ const _mvGetPlot = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'image/png');
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
@@ -769,7 +769,7 @@ const _mvGetScript = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'text/plain');
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
@@ -787,7 +787,7 @@ const _mvGetSql = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'text/sql');
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
@@ -806,7 +806,7 @@ const _mvGetLog = function(params, req, res, next) {
     try {
         fse.readFile(fileName, function(err, data) {
             res.setHeader('Content-Type', 'text/plain');
-            if (err) throw err; // Fail if the file can't be read.
+            if (err) {console.log(err);} // Fail if the file can't be read.
             res.end(data); // Send the file data to the browser.
         });
     }
