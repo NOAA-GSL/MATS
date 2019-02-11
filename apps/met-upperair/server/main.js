@@ -349,6 +349,7 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.select,
                 optionsMap: modelOptionsMap,
                 options: Object.keys(modelOptionsMap[myDBs[0]]),   // convenience
+                levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
                 dependentNames: ["region", "variable", "forecast-length", "pres-level", "dates", "curve-dates"],
                 controlButtonCovered: true,
@@ -371,6 +372,7 @@ const doCurveParams = function () {
             matsCollections.CurveParams.update({name: 'data-source'}, {
                 $set: {
                     optionsMap: modelOptionsMap,
+                    levelsMap: levelOptionsMap,
                     dates: dbDateRangeMap,
                     options: Object.keys(modelOptionsMap[myDBs[0]])
                 }

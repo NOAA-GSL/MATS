@@ -6,7 +6,8 @@ import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
+import {PythonShell} from 'python-shell';
 
 dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -36,30 +37,51 @@ dataValidTime = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        const region = curve['region'];
+        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
+        var regionsClause = "";
+        if (regions_raw.length > 0) {
+            const regions = regions_raw.map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        }
         const variable = curve['variable'];
-        const statisticStr = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statistic = statisticOptionsMap[statisticStr][0];
-        const forecastLengthStr = curve['forecast-length'];
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-        const forecastLength = forecastValueMap[forecastLengthStr];
+        const statistic = curve['statistic'];
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        var fcsts_raw = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        if (fcsts_raw.length > 0 ) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = fcsts_raw.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+        }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
-        for (var levIdx = 0; levIdx < levels.length; levIdx++) {
-            levels[levIdx] = "'" + levels[levIdx].toString() + "'"
-        }
-        var levelClause = "";
-        if (levels.length > 0) {
-            levelClause = "and h.fcst_lev IN(" + levels + ")";
+        var levels_raw = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levelsClause = "";
+        if (levels_raw.length > 0) {
+            const levels = levels_raw.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}).levelsMap[database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
-        // units (axisKey) it will use the same axis.
+        // variable (axisKey) it will use the same axis.
         // The axis number is assigned to the axisKeySet value, which is the axisKey.
-        var axisKey = statisticStr;
+        var axisKey = variable;
         curves[curveIndex].axisKey = axisKey; // stash the axisKey to use it later for axis options
 
         var d;
@@ -70,49 +92,83 @@ dataValidTime = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
-                "{{statistic}} " +
+                "sum(ld.total) as N0, " +
+                "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
+                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
-                "and h.vx_mask = ({{region}}) " +
+                "{{regionsClause}} " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
-                "and ld.fcst_lead = '{{forecastLength}}' " +
+                "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
-                "{{levelClause}} " +
+                "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by hr_of_day " +
                 "order by hr_of_day" +
                 ";";
 
-            statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{region}}', region);
+            statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
+            // console.log(statement);
+
+            const QCParams = matsDataUtils.getPlotParamsFromStack();
+            const completenessQCParam = Number(QCParams["completeness"]) / 100;
 
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
+                // send the query statement to the python query function
+                const pyOptions = {
+                    mode: 'text',
+                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
+                    pythonOptions: ['-u'], // get print results in real-time
+                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
+                    args: [statement, statistic, plotType, hasLevels, completenessQCParam]
+                };
+                var pyError = null;
+                const Future = require('fibers/future');
+                var future = new Future();
+                PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
+                    if (err) {
+                        pyError = err;
+                        future["return"]();
+                    };
+                    queryResult = JSON.parse(results);
+                    // get the data back from the query
+                    d = queryResult.data;
                 finishMoment = moment();
                 dataRequests["data retrieval (query) time - " + curve.label] = {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                        recordCount: queryResult.data.x.length
                 };
-                // get the data back from the query
-                d = queryResult.data;
+                    future["return"]();
+                });
+                future.wait();
+                if (pyError != null) {
+                    throw new Error(pyError);
+                }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -126,7 +182,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }
@@ -144,8 +200,6 @@ dataValidTime = function (plotParams, plotFunction) {
         } else {
             // this is a difference curve
             const diffResult = matsDataDiffUtils.getDataForDiffCurve(dataset, diffFrom, plotType, hasLevels);
-
-            // adjust axis stats based on new data from diff curve
             d = diffResult.dataset;
             xmin = xmin < d.xmin ? xmin : d.xmin;
             xmax = xmax > d.xmax ? xmax : d.xmax;
