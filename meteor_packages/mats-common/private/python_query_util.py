@@ -20,10 +20,10 @@ data = {               # one of the five fields to return at the end -- the pars
     "subLevs": [],
     "stats": [],
     "text": [],
-    "xmin": float('inf'),
-    "xmax": float('-inf'),
-    "ymin": float('inf'),
-    "ymax": float('-inf'),
+    "xmin": sys.float_info.max,
+    "xmax": -1 * sys.float_info.max,
+    "ymin": sys.float_info.max,
+    "ymax": -1 * sys.float_info.max,
     "sum": 0
 }
 output_JSON = {}    # JSON structure to pass the five output fields back to the MATS JS
@@ -295,7 +295,7 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
                     list_levs = sub_levs_all[d_idx].tolist()
                 # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
                 bad_value_indices = [index for index, value in enumerate(list_vals) if not is_number(value)]
-                for bad_value_index in reversed(bad_value_indices):
+                for bad_value_index in sorted(bad_value_indices, reverse=True):
                     del list_vals[bad_value_index]
                     del list_secs[bad_value_index]
                     if has_levels:
@@ -348,7 +348,7 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
         if plot_type == 'ValidTime':
             ind_var = float(row['hr_of_day'])
         elif plot_type == 'Profile':
-            ind_var = float(str(row['avVal']).replace('P',''))
+            ind_var = float(str(row['avVal']).replace('P', ''))
         elif plot_type == 'DailyModelCycle':
             ind_var = int(row['avtime']) * 1000
         else:
@@ -448,7 +448,7 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
                 list_levs = sub_levs_all[d_idx].tolist()
             # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
             bad_value_indices = [index for index, value in enumerate(list_vals) if not is_number(value)]
-            for bad_value_index in reversed(bad_value_indices):
+            for bad_value_index in sorted(bad_value_indices, reverse=True):
                 del list_vals[bad_value_index]
                 del list_secs[bad_value_index]
                 if has_levels:
@@ -480,7 +480,7 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
 
 
 # function for querying the database and sending the returned data to the parser
-def query_db(cnx, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param):
+def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_qc_param):
     global data
     global n0
     global n_times
@@ -514,11 +514,10 @@ def main(args):
     global output_JSON
     cnx, cursor = connect_to_mysql()
     if not error_bool:
-        query_db(cnx, cursor, args[1], args[2], args[3], args[4], args[5])
-    if not error_bool:
-        construct_output_json()
-        disconnect_mysql(cnx, cursor)
-        print(output_JSON)
+        query_db(cursor, args[1], args[2], args[3], args[4], args[5])
+    construct_output_json()
+    disconnect_mysql(cnx, cursor)
+    print(output_JSON)
 
 
 if __name__ == '__main__':
