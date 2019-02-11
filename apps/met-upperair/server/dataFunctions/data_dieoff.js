@@ -55,11 +55,12 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // var levels = matsCollections.CurveParams.findOne({name: 'pres-level'}).optionsMap[database][curve['data-source']];
-            // levels = levels.map(function (l) {
-            //     return "'" + l + "'";
-            // }).join(',');
-            // levelsClause = "and h.fcst_lev IN(" + levels + ")";
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}).levelsMap[database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromDate = dateRange.fromDate;

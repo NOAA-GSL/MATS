@@ -73,11 +73,12 @@ dataSeries = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // var levels = matsCollections.CurveParams.findOne({name: 'pres-level'}).optionsMap[database][curve['data-source']];
-            // levels = levels.map(function (l) {
-            //     return "'" + l + "'";
-            // }).join(',');
-            // levelsClause = "and h.fcst_lev IN(" + levels + ")";
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}).levelsMap[database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = "";
@@ -141,6 +142,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
+            // console.log(statement);
 
             const QCParams = matsDataUtils.getPlotParamsFromStack();
             const completenessQCParam = Number(QCParams["completeness"]) / 100;
