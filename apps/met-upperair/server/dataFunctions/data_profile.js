@@ -121,6 +121,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
             dataRequests[curve.label] = statement;
+            // console.log(statement);
 
             const QCParams = matsDataUtils.getPlotParamsFromStack();
             const completenessQCParam = Number(QCParams["completeness"]) / 100;

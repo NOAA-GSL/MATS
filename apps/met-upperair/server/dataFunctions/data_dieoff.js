@@ -141,6 +141,7 @@ dataDieOff = function (plotParams, plotFunction) {
             statement = statement.replace('{{variable}}', variable);
             statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
+            // console.log(statement);
 
             const QCParams = matsDataUtils.getPlotParamsFromStack();
             const completenessQCParam = Number(QCParams["completeness"]) / 100;
