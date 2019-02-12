@@ -153,7 +153,7 @@ dataDieOff = function (plotParams, plotFunction) {
                 // send the query statement to the python query function
                 const pyOptions = {
                     mode: 'text',
-                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
+                    pythonPath: '/Users/pierce/anaconda2/bin/python',
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
                     args: [statement, statistic, plotType, hasLevels, completenessQCParam]

@@ -133,7 +133,7 @@ dataProfile = function (plotParams, plotFunction) {
                 // send the query statement to the python query function
                 const pyOptions = {
                     mode: 'text',
-                    pythonPath: '/Users/molly.b.smith/anaconda/bin/python',
+                    pythonPath: '/Users/pierce/anaconda2/bin/python',
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
                     args: [statement, statistic, plotType, hasLevels, completenessQCParam]
@@ -196,7 +196,7 @@ dataProfile = function (plotParams, plotFunction) {
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const annotation = label + "- mean = " + mean.toPrecision(4);
+        const annotation = "";
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
