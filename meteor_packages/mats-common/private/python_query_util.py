@@ -44,11 +44,11 @@ def is_number(s):
 
 
 # function to open a connection to a mysql database
-def connect_to_mysql():
+def connect_to_mysql(mysql_conf_path):
     global error
     global error_bool
     try:
-        cnx = MySQLdb.connect(read_default_file="/Users/pierce/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf")
+        cnx = MySQLdb.connect(read_default_file=mysql_conf_path)
         cnx.autocommit = True
         cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('set group_concat_max_len = 4294967295')
@@ -512,9 +512,9 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
 def main(args):
     global error_bool
     global output_JSON
-    cnx, cursor = connect_to_mysql()
+    cnx, cursor = connect_to_mysql(args[1])
     if not error_bool:
-        query_db(cursor, args[1], args[2], args[3], args[4], args[5])
+        query_db(cursor, args[2], args[3], args[4], args[5], args[6])
     construct_output_json()
     disconnect_mysql(cnx, cursor)
     print(output_JSON)

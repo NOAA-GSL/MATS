@@ -140,10 +140,10 @@ dataValidTime = function (plotParams, plotFunction) {
                 // send the query statement to the python query function
                 const pyOptions = {
                     mode: 'text',
-                    pythonPath: '/Users/pierce/anaconda2/bin/python',
+                    pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');
