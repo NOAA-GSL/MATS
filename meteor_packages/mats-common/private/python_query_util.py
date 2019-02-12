@@ -181,7 +181,6 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
     global cycles
     global data
 
-    data['error_x'] = 'null'   # timeseries don't have x-oriented errorbars
     xmax = float("-inf")
     xmin = float("inf")
     curve_times = []
@@ -328,11 +327,6 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
     global n_times
     global data
 
-    if plot_type == 'Profile':
-        data['error_y'] = 'null'  # profiles don't have y-oriented errorbars
-    else:
-        data['error_x'] = 'null'  # non-profiles don't have x-oriented errorbars
-
     curve_ind_vars = []
     curve_stats = []
     sub_vals_all = []
@@ -412,6 +406,14 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
     n0_max = max(n0)
     n_times_max = max(n_times)
     loop_sum = 0
+
+    # profiles have the levels sorted as strings, not numbers. Need to fix that
+    if plot_type == 'Profile':
+        curve_stats = [x for _, x in sorted(zip(curve_ind_vars, curve_stats))]
+        sub_vals_all = [x for _, x in sorted(zip(curve_ind_vars, sub_vals_all))]
+        sub_secs_all = [x for _, x in sorted(zip(curve_ind_vars, sub_secs_all))]
+        sub_levs_all = [x for _, x in sorted(zip(curve_ind_vars, sub_levs_all))]
+        curve_ind_vars = sorted(curve_ind_vars)
 
     for ind_var in curve_ind_vars:
         # the reason we need to loop through everything again is to add in nulls

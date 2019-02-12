@@ -8,6 +8,7 @@ import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
 import {PythonShell} from 'python-shell';
+import {Meteor} from "meteor/meteor";
 
 dataProfile = function (plotParams, plotFunction) {
     // initialize variables common to all curves
