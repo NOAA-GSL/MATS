@@ -130,15 +130,27 @@ const simplePoolQueryWrapSynchronous = function (pool, statement) {
 };
 
 //this method queries the database for timeseries plots
-const queryDBTimeSeries = function (pool, statement, averageStr, dataSource, forecastOffset, startDate, endDate, hasLevels, forceRegularCadence) {
+const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset, startDate, endDate, averageStr, validTimes, hasLevels, forceRegularCadence) {
     //upper air is only verified at 00Z and 12Z, so you need to force irregular models to verify at that regular cadence
     const Future = require('fibers/future');
     if (Meteor.isServer) {
         const plotParams = matsDataUtils.getPlotParamsFromStack();
         const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
-        var cycles = getModelCadence(pool, dataSource, startDate, endDate); //if irregular model cadence, get cycle times. If regular, get empty array.
-        const regular = !(!forceRegularCadence && averageStr === "None" && (cycles !== null && cycles.length !== 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
+        var cycles = getModelCadence(pool, dataSource, startDate, endDate); // if irregular model cadence, get cycle times. If regular, get empty array.
+        if (validTimes.length > 0) {
+            var vtCycles = validTimes.map(function (x) {
+                return (Number(x) - forecastOffset) * 3600 * 1000;
+            }); // selecting validTimes makes the cadence irregular
+            vtCycles = vtCycles.map(function (x) {
+                return x < 0 ? (x + 24 * 3600 * 1000) : x;
+            }); // make sure no cycles are negative
+            vtCycles = vtCycles.sort(function (a, b) {
+                return Number(a) - Number(b);
+            }); //sort 'em
+            cycles = cycles.length > 0 ? _.intersection(cycles, vtCycles) : vtCycles; // if we already had cycles get the ones that correspond to valid times
+        }
+        const regular = (forceRegularCadence || averageStr !== "None" || !(cycles !== null && cycles.length > 0)); // If curves have averaging, the cadence is always regular, i.e. it's the cadence of the average
 
         var dFuture = new Future();
         var d = {// d will contain the curve data
@@ -548,17 +560,17 @@ const parseQueryDataTimeSeries = function (pool, rows, d, completenessQCParam, h
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
 
-    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)){
+    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
         d.xmin = 0;
     }
-    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)){
+    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
         d.ymin = 0;
     }
 
-    if (d.xmax == "-Infinity"){
+    if (d.xmax == "-Infinity") {
         d.xmax = 0;
     }
-    if (d.ymax == "-Infinity"){
+    if (d.ymax == "-Infinity") {
         d.ymax = 0;
     }
     return {
@@ -774,17 +786,17 @@ const parseQueryDataSpecialtyCurve = function (rows, d, completenessQCParam, plo
     d.ymax = Math.max(...filteredy);
     d.sum = sum;
 
-    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)){
+    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
         d.xmin = 0;
     }
-    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)){
+    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
         d.ymin = 0;
     }
 
-    if (d.xmax == "-Infinity"){
+    if (d.xmax == "-Infinity") {
         d.xmax = 0;
     }
-    if (d.ymax == "-Infinity"){
+    if (d.ymax == "-Infinity") {
         d.ymax = 0;
     }
 
