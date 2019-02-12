@@ -558,6 +558,24 @@ function _addDeps(plot, dependentAxes) {
     }
 }
 
+const _add_series_labels = function(element,dependentAxes) {
+    element.ele('x_label', 'Time');
+    var y1vars = [];
+    for (var y1i=0; y1i < dependentAxes['y1'].length; y1i++) {
+        if (!y1vars.includes(dependentAxes['y1'][y1i]['variable'])) {
+            y1vars.push(dependentAxes['y1'][y1i]['variable']);
+        }
+    }
+    element.ele('y1_label', y1vars.join(','));
+    var y2vars = [];
+    for (var y2i=0; y2i < dependentAxes['y2'].length; y2i++) {
+        if (!y2vars.includes(dependentAxes['y2'][y2i]['variable'])) {
+            y2vars.push(dependentAxes['y2'][y2i]['variable']);
+        }
+    }
+    element.ele('y2_label', y2vars.join(','));
+}
+
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
     const fs = require('fs');
     try {
@@ -578,9 +596,7 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         tmpl.ele('plot_file',key + '.png');
         tmpl.ele('r_file',key + '.R');
         tmpl.ele('title',_title() + " : " + _plotText(plotParams) + " " + plotParams.plotAction);
-        tmpl.ele('x_label','test x_label');
-        tmpl.ele('y1_label','test y_label');
-        tmpl.ele('y2_label');
+        _add_series_labels(tmpl,dependentAxes);
         tmpl.ele('caption');
         tmpl.ele('job_title');
         tmpl.ele('keep_revisions','false');
