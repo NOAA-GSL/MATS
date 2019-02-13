@@ -90,9 +90,80 @@ const _rgbToHex = function(color) {
     return "#" + _componentToHex(r) + _componentToHex(g) + _componentToHex(b);
 };
 
+
+const _getUniqDates = function(dates, database, model, dataSource, region, variable, forecastLength, fromSecs, toSecs, validTimes ) {
+    var regionsClause = "";
+    if (region != null && region.length > 0) {
+        const regions = region.map(function (r) {
+            return "'" + r + "'";
+        }).join(',');
+        regionsClause = "and h.vx_mask IN(" + regions + ")";
+    }
+
+    // the forecast lengths appear to have sometimes been inconsistent (by format) in the varias databases
+    // so they have been sanitized for display purposes in the forecastValueMap.
+    // now we have to go get the damn ole unsanitary ones for the database.
+    var forecastLengthsClause = "";
+    if (forecastLength != null && forecastLength.length > 0) {
+        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+        const forecastLengths = forecastLength.map(function (fl) {
+            return forecastValueMap[fl];
+        }).join(',');
+        forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+    }
+
+    var statement = "select ld.fcst_valid_beg as avtime " +
+        "from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld " +
+        "where 1=1 and h.model = '" + dataSource + "' " +
+        regionsClause +
+        "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
+        "and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' " +
+        forecastLengthsClause +
+        "and h.fcst_var = '" + variable + "' " +
+        "and ld.stat_header_id = h.stat_header_id " +
+        "group by avtime order by avtime;";
+
+    var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, statement);
+    if (rows === undefined || rows === null || rows.length === 0) {
+        console.log(matsTypes.Messages.NO_DATA_FOUND);
+    } else {
+
+        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+            const dstrMoment = moment(rows[rowIndex].avtime);
+            const dstr = dstrMoment.format('YYYY-MM-DD HH:mm:ss').trim();
+            // apply the valid-time filter here.....
+            var valid = true;
+            if (validTimes != null && validTimes.length > 0) {
+                valid = false;
+                const momentSdiHour = Number(dstrMoment.format("HH"));
+                for (var vti = 0; vti < validTimes.length; vti++) {
+                    const thisvt = Number(validTimes[vti]);
+                    if (momentSdiHour === thisvt) {
+                        // it is valid
+                        valid = true;
+                        break;
+                    }
+                }
+            }
+            if (valid === true && dates.indexOf(dstr) === -1) {
+                dates.push(dstr);
+            }
+        }
+    }
+    return dates;
+}
+
+
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
-//To Do - don't forget to add valid times processing!!!!
-const addDateElementsBetween = function (element, plotParams) {
+// series variables can be grouped or ungrouped.
+// e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
+// e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
+//                       <val>2018-11-01 06:00:00</val>
+//                       <val>2018-11-01 12:00:00</val>
+//                       <val>2018-11-01</val>
+
+// for time series valid_beg is always ungrouped.
+const _getSortedDatesForIndepRange = function(plotParams) {
     const dateRange = matsDataUtils.getDateRange(plotParams.dates);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
@@ -103,74 +174,53 @@ const addDateElementsBetween = function (element, plotParams) {
     for (var ci = 0; ci < curves.length; ci++) {
         var curve = curves[ci];
         const validTimes = curve['valid-time'];
+        const region = curve['region'];
+        const forecastLength = curve['forecast-length'];
+        const variable = curve['variable'];
         //example 2018-11-06 00:00:00
         const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-
-        var regionsClause = "";
-        if (curve['region'] != null && curve['region'].length > 0) {
-            const regions = curve['region'].map(function (r) {
-                return "'" + r + "'";
-            }).join(',');
-            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        const dataSource = curve['data-source'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][dataSource][0];
+        dates = _getUniqDates(dates, database, model, dataSource, region, variable, forecastLength, fromSecs, toSecs, validTimes);
+    }
+    // sort the dates
+    const sortedDates = dates.sort(
+        function (a, b) {
+            return new moment(a) - new moment(b);
         }
+    );
+    return sortedDates;
+}
 
-        // the forecast lengths appear to have sometimes been inconsistent (by format) in the varias databases
-        // so they have been sanitized for display purposes in the forecastValueMap.
-        // now we have to go get the damn ole unsanitary ones for the database.
-        forecastLengthsClause = "";
-        if (curve['forecast-length'] != null && curve['forecast-length'].length >0 ) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const forecastLengths = curve['forecast-length'].map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
-        }
-
-        var statement = "select ld.fcst_valid_beg as avtime " +
-            "from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld " +
-            "where 1=1 and h.model = '" + curve['data-source'] + "' " +
-            regionsClause +
-            "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
-            "and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' " +
-            forecastLengthsClause +
-            "and h.fcst_var = '" + curve['variable'] + "' " +
-            "and ld.stat_header_id = h.stat_header_id " +
-            "group by avtime order by avtime;";
-
-        var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(metadataPool, statement);
-        if (rows === undefined || rows === null || rows.length === 0) {
-            console.log(matsTypes.Messages.NO_DATA_FOUND);
-        } else {
-            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                const dstrMoment = moment(rows[rowIndex].avtime);
-                const dstr = dstrMoment.format('YYYY-MM-DD HH:mm:ss').trim();
-                // apply the valid-time filter here.....
-                var valid = true;
-                if (validTimes != null && validTimes.length > 0) {
-                    valid = false;
-                    const momentSdiHour = Number(dstrMoment.format("HH"));
-                    for (var vti=0; vti<validTimes.length;vti++) {
-                        const thisvt = Number(validTimes[vti]);
-                        if (momentSdiHour === thisvt) {
-                            // it is valid
-                            valid = true;
-                            break;
-                        }
-                    }
-                }
-                if (valid === true && dates.indexOf(dstr) === -1) {
-                    dates.push(dstr);
-                }
-            }
-        }
-    };
+const _getSortedDatesForDepRange = function(curve) {
+    var dates = [];
+    const dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+    const fromSecs = dateRange.fromSeconds;
+    const toSecs = dateRange.toSeconds;
+    const validTimes = curve['valid-time'];
+    const region = curve['region'];
+    const forecastLength = curve['forecast-length'];
+    const variable = curve['variable'];
+    //example 2018-11-06 00:00:00
+    const database = curve['database'];
+    const dataSource = curve['data-source'];
+    const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][dataSource][0];
+    dates = _getUniqDates(dates, database, model, dataSource, region, variable, forecastLength, fromSecs, toSecs, validTimes);
 
     // sort the dates
     const sortedDates = dates.sort(
         function (a, b) {
             return new moment(a) - new moment(b);
-        });
+        }
+    );
+    return sortedDates;
+}
+
+
+// for profiles valid_beg is always grouped.
+const addIndepUngroupedDateElementsBetween = function (element, plotParams) {
+    const sortedDates = _getSortedDatesForIndepRange(plotParams);
+    //these must be ungrouped
     for (var sdi = 0; sdi < sortedDates.length; sdi++) {
         element.ele('val', {
             'label': sortedDates[sdi],
@@ -389,15 +439,23 @@ const addSeries = function(plot, dependentAxes, plotParams) {
 // data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
     //  (and average()?)
     // are series variables multiple selections are MV grouped - they are associated with different curves.
-    // We can differentiate series it axis or by dependent variables. For every dependent variable I have to have another series.
+    // We can differentiate series by axis or by dependent variables. For every dependent variable I have to have another series.
 
-    // MV cannot have a different model/stat pair on the same axis.
+    // MV cannot have a different model/stat/fcst_lead/fcst_lvl pair on the same axis.
 
     // They can also go on the axis that is associated with the curve that the region parameter is on.
     // In other words force a new series.
     // i.e. Y1 Series variables or Y2 Series variables
     // The name-val pairs in a series must be uniq. If two curves repeat them they don't get added
     // to the plotspec twice.
+
+    // series variables can be grouped or ungrouped.
+    // e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
+    // e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
+    //                       <val>2018-11-01 06:00:00</val>
+    //                       <val>2018-11-01 12:00:00</val>
+    //                       <val>2018-11-01</val>
+
 
     var models = [];
     var vx_masks = [];
@@ -443,6 +501,18 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                 series1.ele('field', {'name': 'fcst_lev'})
                     .ele('val', presLvls);
             }
+        }
+        // for profiles, dieoffs, validTimes, thresholds, and histograms dates are series variables
+        const type = (_.invert(plotParams.plotTypes))[true];
+        if (type === matsTypes.PlotTypes.profile ||
+            type === matsTypes.PlotTypes.dieoff ||
+            type === matsTypes.PlotTypes.validtime ||
+            type === matsTypes.PlotTypes.threshold ||
+            type === matsTypes.PlotTypes.histogram ) {
+            // these have series variable curve-dates.
+            const sortedDates = _getSortedDatesForDepRange(curve);
+            series1.ele('field', {'name': 'fcst_valid_beg'})
+                .ele('val', sortedDates.join(','));
         }
     }
     models = [];
@@ -549,7 +619,7 @@ function addDeps(plot, dependentAxes) {
         }
         var vars = Object.keys(variableStatisticPairs);
         for (var v = 0; v < vars.length; v++) {
-            const stats = variableStatisticPairs[vars[v]];
+            const stats = Array.from(new Set(variableStatisticPairs[vars[v]]));
             var dep1Elem = subDep.ele('fcst_var', {'name': vars[v]});
             for (var si=0;si<stats.length;si++) {
                 dep1Elem.ele('stat',stats[si]);
@@ -581,9 +651,30 @@ const addTemplate = function(plot,templateStr)
     plot.ele('template', templateStr);
 }
 
-const addIndep = function(plot, plotParams) {
+const addIndepDates = function(plot, plotParams) {
     var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_valid_beg'});
-    addDateElementsBetween(indep, plotParams);
+    addIndepUngroupedDateElementsBetween(indep, plotParams);
+}
+
+const addIndepLevels = function(plot, plotParams) {
+    // for profiles we use a union of all the levels available for all the data-sources
+
+    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_valid_beg'});
+    var curves = plotParams.curves;
+    var lvls = new Set();
+    for (var ci=0; ci<curves.length;ci++) {
+
+    }
+    // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
+        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
+            const presLvls = curve['pres-level'].join(',');
+            if (fcst_levls.indexOf(presLvls) === -1) {
+                fcst_leads.push(presLvls);
+                series2.ele('field', {'name': 'fcst_lev'})
+                    .ele('val', presLvls);
+            }
+        }
+
 }
 
 const addTmpl = function(plot, key, plotParams, dependentAxes) {
@@ -713,7 +804,6 @@ export default matsPlotSpecUtils = {
     startPlotSpec:startPlotSpec,
     addDeps:addDeps,
     getDependentAxis:getDependentAxis,
-    addDateElementsBetween:addDateElementsBetween,
     addDatabaseElement:addDatabaseElement,
     addFolders:addFolders,
     addPlotCi:addPlotCi,
@@ -730,7 +820,7 @@ export default matsPlotSpecUtils = {
     addSeries:addSeries,
     addSeriesLabels:addSeriesLabels,
     addTemplate:addTemplate,
-    addIndep:addIndep,
+    addIndepDates:addIndepDates,
     addTmpl:addTmpl,
     addPlotFix:addPlotFix,
     addPlotCond:addPlotCond,
@@ -741,5 +831,6 @@ export default matsPlotSpecUtils = {
     addY1Bufr:addY1Bufr,
     addY2Lim:addY2Lim,
     addMiscellaneous:addMiscellaneous,
-    endPlotSpec:endPlotSpec
+    endPlotSpec:endPlotSpec,
+    addIndepLevels:addIndepLevels
 }
