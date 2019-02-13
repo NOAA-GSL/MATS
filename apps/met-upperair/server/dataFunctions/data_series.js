@@ -55,10 +55,10 @@ dataSeries = function (plotParams, plotFunction) {
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        var fcsts_raw = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
-        if (fcsts_raw.length > 0 ) {
+        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        if (fcsts.length > 0 ) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            const forecastLengths = fcsts_raw.map(function (fl) {
+            const forecastLengths = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
@@ -81,10 +81,11 @@ dataSeries = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
-        if (vts_raw.length > 0) {
-            const vts = vts_raw.map(function (vt) {
+        if (curve['valid-time'] !== undefined) {
+            vts = curve['valid-time'];
+            vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
@@ -158,7 +159,7 @@ dataSeries = function (plotParams, plotFunction) {
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');

@@ -52,10 +52,10 @@ dataValidTime = function (plotParams, plotFunction) {
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        var fcsts_raw = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
-        if (fcsts_raw.length > 0 ) {
+        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        if (fcsts.length > 0 ) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            const forecastLengths = fcsts_raw.map(function (fl) {
+            const forecastLengths = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
@@ -78,6 +78,7 @@ dataValidTime = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
+        var vts = "";   // have an empty string that we can pass to the python script.
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // variable (axisKey) it will use the same axis.
@@ -144,7 +145,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');

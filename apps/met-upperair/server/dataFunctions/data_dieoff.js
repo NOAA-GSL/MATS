@@ -78,9 +78,10 @@ dataDieOff = function (plotParams, plotFunction) {
         var utcCycleStartClause = "";
         var dateRangeClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
         if (dieoffType === matsTypes.ForecastTypes.dieoff) {
-            var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (vts_raw.length > 0) {
-                const vts = vts_raw.map(function (vt) {
+            var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
+            if (curve['valid-time'] !== undefined) {
+                vts = curve['valid-time'];
+                vts = vts.map(function (vt) {
                     return "'" + vt + "'";
                 }).join(',');
                 validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
@@ -157,7 +158,7 @@ dataDieOff = function (plotParams, plotFunction) {
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');
