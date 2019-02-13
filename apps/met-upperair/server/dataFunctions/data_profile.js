@@ -38,10 +38,11 @@ dataProfile = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
+        var regions = curve['region'] === undefined ? [] : curve['region'];
+        regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
-        if (regions_raw.length > 0) {
-            const regions = regions_raw.map(function (r) {
+        if (regions.length > 0) {
+            regions = regions.map(function (r) {
                 return "'" + r + "'";
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
@@ -53,17 +54,25 @@ dataProfile = function (plotParams, plotFunction) {
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
         var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
-        if (fcsts.length > 0 ) {
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            const forecastLengths = fcsts.map(function (fl) {
+             fcsts = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
+        // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+        var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        const levelsClause = "and h.fcst_lev IN(" + levels + ")";
         var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
         if (curve['valid-time'] !== undefined) {
             vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
             vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
@@ -108,6 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
+                "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avVal " +
                 "order by avVal" +
@@ -122,6 +132,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -147,17 +158,17 @@ dataProfile = function (plotParams, plotFunction) {
                     if (err) {
                         pyError = err;
                         future["return"]();
-                    };
+                    }
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                         recordCount: queryResult.data.x.length
-                };
+                    };
                     future["return"]();
                 });
                 future.wait();

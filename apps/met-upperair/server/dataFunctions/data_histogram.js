@@ -6,14 +6,16 @@ import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
-import {moment} from 'meteor/momentjs:moment'
+import {moment} from 'meteor/momentjs:moment';
+import {PythonShell} from 'python-shell';
+import {Meteor} from "meteor/meteor";
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
     const appName = "met-upperair";
+    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.histogram;
     const hasLevels = true;
-    const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     var alreadyMatched = false;
     var dataRequests = {}; // used to store data queries
     var dataFoundForCurve = [];
@@ -39,26 +41,55 @@ dataHistogram = function (plotParams, plotFunction) {
         dataFoundForCurve[curveIndex] = true;
         var label = curve['label'];
         const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        const region = curve['region'];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
+        var regions = curve['region'] === undefined ? [] : curve['region'];
+        regions = Array.isArray(regions) ? regions : [regions];
+        var regionsClause = "";
+        if (regions.length > 0) {
+            regions = regions.map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        }
         const variable = curve['variable'];
-        const statisticStr = curve['statistic'];
-        const statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        const statistic = statisticOptionsMap[statisticStr][0];
-        const forecastLengthStr = curve['forecast-length'];
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-        const forecastLength = forecastValueMap[forecastLengthStr];
+        const statistic = curve['statistic'];
+        // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
+        // have been sanitized for display purposes in the forecastValueMap.
+        // now we have to go get the damn ole unsanitary ones for the database.
+        var forecastLengthsClause = "";
+        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+             fcsts = fcsts.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
+        }
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
-        for (var levIdx = 0; levIdx < levels.length; levIdx++) {
-            levels[levIdx] = "'" + levels[levIdx].toString() + "'"
-        }
-        var levelClause = "";
+        var levelsClause = "";
+        levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
-            levelClause = "and h.fcst_lev IN(" + levels + ")";
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        } else {
+            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = levels.map(function (l) {
+                return "'" + l + "'";
+            }).join(',');
+            levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
-        var vts = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
-        if (vts.length > 0) {
+        if (curve['valid-time'] !== undefined) {
+            vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
+            vts = vts.map(function (vt) {
+                return "'" + vt + "'";
+            }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
@@ -67,7 +98,7 @@ dataHistogram = function (plotParams, plotFunction) {
         // axisKey is used to determine which axis a curve should use.
         // This axisKeySet object is used like a set and if a curve has the same
         // units (axisKey) it will use the same axis.
-        // The axis number is assigned to the axisKeySet value, which is the axisKey.
+        // Histograms should have everything under the same axisKey.
         var axisKey = yAxisFormat;
         if (yAxisFormat === 'Relative frequency') {
             axisKey = axisKey + " (x100)"
@@ -83,54 +114,88 @@ dataHistogram = function (plotParams, plotFunction) {
                 "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
                 "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
                 "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
-                "{{statistic}} " +
+                "sum(ld.total) as N0, " +
+                "avg(ld.fbar) as fbar, " +
+                "avg(ld.obar) as obar, " +
+                "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
+                "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
+                "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
+                "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
+                "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
+                "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
+                "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
+                "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
                 "from {{database}}.stat_header h, " +
                 "{{database}}.line_data_sl1l2 ld " +
                 "where 1=1 " +
                 "and h.model = '{{model}}' " +
-                "and h.vx_mask in ({{region}}) " +
+                "{{regionsClause}} " +
                 "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
                 "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
-                "and ld.fcst_lead = '{{forecastLength}}' " +
+                "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
-                "{{levelClause}} " +
+                "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avtime " +
                 "order by avtime" +
                 ";";
 
-            statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{database}}', database);
             statement = statement.replace('{{model}}', model);
-            statement = statement.replace('{{region}}', region);
+            statement = statement.replace('{{regionsClause}}', regionsClause);
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
-            statement = statement.replace('{{forecastLength}}', forecastLength);
+            statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
-            statement = statement.replace('{{levelClause}}', levelClause);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
+            // console.log(statement);
+
+            const QCParams = matsDataUtils.getPlotParamsFromStack();
+            const completenessQCParam = Number(QCParams["completeness"]) / 100;
 
             var queryResult;
             var startMoment = moment();
             var finishMoment;
             try {
-                // send the query statement to the query function
-                queryResult = matsDataQueryUtils.queryDBSpecialtyCurve(sumPool, statement, plotType, hasLevels);
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                // send the query statement to the python query function
+                const pyOptions = {
+                    mode: 'text',
+                    pythonPath: Meteor.settings.private.PYTHON_PATH,
+                    pythonOptions: ['-u'], // get print results in real-time
+                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
-                // get the data back from the query
-                d = queryResult.data;
-                allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
-                allReturnedSubSecs.push(d.subSecs);
-                allReturnedSubLevs.push(d.subLevs);
+                var pyError = null;
+                const Future = require('fibers/future');
+                var future = new Future();
+                PythonShell.run('python_query_util.py', pyOptions, function (err, results) {
+                    if (err) {
+                        pyError = err;
+                        future["return"]();
+                    }
+                    queryResult = JSON.parse(results);
+                    // get the data back from the query
+                    d = queryResult.data;
+                    allReturnedSubStats.push(d.subVals); // save returned data so that we can calculate histogram stats once all the queries are done
+                    allReturnedSubSecs.push(d.subSecs);
+                    allReturnedSubLevs.push(d.subLevs);
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                        recordCount: queryResult.data.x.length
+                    };
+                    future["return"]();
+                });
+                future.wait();
+                if (pyError != null) {
+                    throw new Error(pyError);
+                }
             } catch (e) {
                 // this is an error produced by a bug in the query function, not an error returned by the mysql database
                 e.message = "Error in queryDB: " + e.message + " for statement: " + statement;
@@ -144,7 +209,7 @@ dataHistogram = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statisticStr + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
                     } else {
                         throw new Error(error);
                     }

@@ -41,10 +41,11 @@ dataSeries = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
+        var regions = curve['region'] === undefined ? [] : curve['region'];
+        regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
-        if (regions_raw.length > 0) {
-            const regions = regions_raw.map(function (r) {
+        if (regions.length > 0) {
+            regions = regions.map(function (r) {
                 return "'" + r + "'";
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
@@ -56,26 +57,28 @@ dataSeries = function (plotParams, plotFunction) {
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
         var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
-        if (fcsts.length > 0 ) {
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            const forecastLengths = fcsts.map(function (fl) {
+             fcsts = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
         const averageStr = curve['average'];
         const averageOptionsMap = matsCollections.CurveParams.findOne({name: 'average'}, {optionsMap: 1})['optionsMap'];
         const average = averageOptionsMap[averageStr][0];
-        var levels_raw = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelsClause = "";
-        if (levels_raw.length > 0) {
-            const levels = levels_raw.map(function (l) {
+        levels = Array.isArray(levels) ? levels : [levels];
+        if (levels.length > 0) {
+            levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
             // we can't just leave the level clause out, because we might end up with some surface levels in the mix
-            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
@@ -85,6 +88,7 @@ dataSeries = function (plotParams, plotFunction) {
         var validTimeClause = "";
         if (curve['valid-time'] !== undefined) {
             vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
             vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
@@ -168,7 +172,7 @@ dataSeries = function (plotParams, plotFunction) {
                     if (err) {
                         pyError = err;
                         future["return"]();
-                    };
+                    }
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;

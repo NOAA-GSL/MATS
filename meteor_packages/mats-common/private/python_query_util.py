@@ -6,10 +6,10 @@ import json
 from datetime import datetime
 
 error_bool = False  # global variable to keep track of whether we've had an error
-error = ""          # one of the four fields to return at the end -- records any error message
-n0 = []             # one of the four fields to return at the end -- number of sub_values for each independent variable
-n_times = []        # one of the four fields to return at the end -- number of sub_secs for each independent variable
-data = {            # one of the four fields to return at the end -- the parsed data structure
+error = ""  # one of the four fields to return at the end -- records any error message
+n0 = []  # one of the four fields to return at the end -- number of sub_values for each independent variable
+n_times = []  # one of the four fields to return at the end -- number of sub_secs for each independent variable
+data = {  # one of the four fields to return at the end -- the parsed data structure
     "x": [],
     "y": [],
     "error_x": [],
@@ -25,7 +25,7 @@ data = {            # one of the four fields to return at the end -- the parsed 
     "ymax": -1 * sys.float_info.max,
     "sum": 0
 }
-output_JSON = {}    # JSON structure to pass the five output fields back to the MATS JS
+output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
 
 
 # function to check if a certain value is a float or int
@@ -90,7 +90,7 @@ def calculate_rms(ffbar, oobar, fobar):
     global error
     global error_bool
     try:
-        rms = np.sqrt(ffbar + oobar - 2*fobar)
+        rms = np.sqrt(ffbar + oobar - 2 * fobar)
     except TypeError as e:
         error = "Error calculating RMS: " + str(e)
         error_bool = True
@@ -138,14 +138,14 @@ def calculate_o_avg(obar):
 def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
     global error
     global error_bool
-    stat_switch = {     # dispatcher of statistical calculation functions
+    stat_switch = {  # dispatcher of statistical calculation functions
         'RMS': calculate_rms,
         'Bias (Model - Obs)': calculate_bias,
         'N': calculate_n,
         'Model average': calculate_m_avg,
         'Obs average': calculate_o_avg
     }
-    args_switch = {     # dispatcher of arguments for statistical calculation functions
+    args_switch = {  # dispatcher of arguments for statistical calculation functions
         'RMS': (ffbar, oobar, fobar),
         'Bias (Model - Obs)': (fbar, obar),
         'N': (total,),
@@ -153,9 +153,9 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
         'Obs average': (obar,)
     }
     try:
-        stat_args = args_switch[statistic]              # get args
+        stat_args = args_switch[statistic]  # get args
         sub_stats = stat_switch[statistic](*stat_args)  # call stat function
-        stat = np.nanmean(sub_stats)                    # calculate overall stat
+        stat = np.nanmean(sub_stats)  # calculate overall stat
     except KeyError as e:
         error = "Error choosing statistic: " + str(e)
         error_bool = True
@@ -228,7 +228,7 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
         n0.append(int(row['N0']))
         n_times.append(int(row['N_times']))
 
-        if row_idx < len(query_data) - 1:   # make sure we have the smallest time interval for the while loop later
+        if row_idx < len(query_data) - 1:  # make sure we have the smallest time interval for the while loop later
             time_diff = int(query_data[row_idx + 1]['avtime']) - int(row['avtime'])
             time_interval = time_diff if time_diff < time_interval else time_interval
 
@@ -288,7 +288,8 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
             data['x'].append(loop_time)
             data['y'].append('null')
             data['error_y'].append('null')
-            data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+            data['subVals'].append(
+                'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
             data['subSecs'].append('NaN')
             if has_levels:
                 data['subLevs'].append('NaN')
@@ -301,7 +302,8 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
                 data['x'].append(loop_time)
                 data['y'].append('null')
                 data['error_y'].append('null')
-                data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                data['subVals'].append(
+                    'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
                 data['subSecs'].append('NaN')
                 if has_levels:
                     data['subLevs'].append('NaN')
@@ -407,10 +409,12 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
                 sub_levs = 'NaN'
 
         # deal with missing forecast cycles for dailyModelCycle plot type
-        if plot_type == 'DailyModelCycle' and row_idx > 0 and (int(ind_var) - int(query_data[row_idx - 1]['avtime']*1000)) > 3600*24*1000:
-            cycles_missing = math.floor(int(ind_var) - int(query_data[row_idx - 1]['avtime']*1000) / (3600*24*1000))
-            for missing_cycle in reversed(range(1, cycles_missing+1)):
-                curve_ind_vars.append(ind_var - 3600*24*1000 * missing_cycle)
+        if plot_type == 'DailyModelCycle' and row_idx > 0 and (
+                int(ind_var) - int(query_data[row_idx - 1]['avtime'] * 1000)) > 3600 * 24 * 1000:
+            cycles_missing = math.floor(
+                int(ind_var) - int(query_data[row_idx - 1]['avtime'] * 1000) / (3600 * 24 * 1000))
+            for missing_cycle in reversed(range(1, cycles_missing + 1)):
+                curve_ind_vars.append(ind_var - 3600 * 24 * 1000 * missing_cycle)
                 curve_stats.append('null')
                 sub_vals_all.append('NaN')
                 sub_secs_all.append('NaN')
@@ -459,7 +463,8 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
                 data['x'].append(ind_var)
                 data['y'].append('null')
                 data['error_y'].append('null')
-                data['subVals'].append('NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
+                data['subVals'].append(
+                    'NaN')  # These are string NaNs instead of numerical NaNs because the JSON encoder can't figure out what to do with np.nan or float('nan')
                 data['subSecs'].append('NaN')
                 if has_levels:
                     data['subLevs'].append('NaN')
@@ -503,6 +508,73 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
     data['sum'] = loop_sum
 
 
+# function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
+def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param):
+    global error
+    global error_bool
+    global n0
+    global n_times
+    global data
+
+    sub_vals_all = []
+    sub_secs_all = []
+    sub_levs_all = []
+
+    # get query data and calculate starting time interval of the returned data
+    query_data = cursor.fetchall()
+
+    # loop through the query results and store the returned values
+    for row in query_data:
+        fbar = row['fbar']
+        obar = row['obar']
+        n0.append(int(row['N0']))
+        n_times.append(int(row['N_times']))
+
+        if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            try:
+                # get all of the partial sums for each time
+                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
+                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
+                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
+                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
+                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+                sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+                sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+                if has_levels:
+                    sub_levs_raw = str(row['sub_levs']).split(',')
+                    if is_number(sub_levs_raw[0]):
+                        sub_levs = np.array([int(i) for i in sub_levs])
+                    else:
+                        sub_levs = np.array(sub_levs_raw)
+            except KeyError as e:
+                error = "Error in parseQueryDataSpecialtyCurve. The expected fields don't seem to be present " \
+                        "in the results cache: " + str(e)
+                error_bool = True
+                # if we don't have the data we expect just stop now and return an empty data object
+                return
+            # if we do have the data we expect, calculate the requested statistic
+            sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
+
+            # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
+            if np.isnan(sub_values).any():
+                bad_value_indices = np.argwhere(np.isnan(sub_values))
+                sub_values = np.delete(sub_values, bad_value_indices)
+                sub_secs = np.delete(sub_secs, bad_value_indices)
+                sub_levs = np.delete(sub_levs, bad_value_indices)
+
+            # store parsed data for later
+            sub_vals_all.append(sub_values)
+            sub_secs_all.append(sub_secs)
+            if has_levels:
+                sub_levs_all.append(sub_levs)
+
+    # we don't have bins yet, so we want all of the data in one array
+    data['subVals'] = [item for sublist in sub_vals_all for item in sublist]
+    data['subSecs'] = [item for sublist in sub_secs_all for item in sublist]
+    if has_levels:
+        data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
+
+
 # function for querying the database and sending the returned data to the parser
 def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
     global data
@@ -535,8 +607,8 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
                 else:
                     vts = []
                 parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts)
-            # elif plot_type == 'Histogram':
-            #     parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
+            elif plot_type == 'Histogram':
+                parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
             # elif plot_type == 'Map':
             #     parse_query_data_map(cursor, statistic, has_levels, completeness_qc_param)
             else:
