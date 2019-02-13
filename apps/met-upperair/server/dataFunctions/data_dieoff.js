@@ -37,7 +37,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var diffFrom = curve.diffFrom;
         const label = curve['label'];
         const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
+        const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
         var regions_raw = curve['region'] === undefined ? [] : curve['region'];
         var regionsClause = "";
         if (regions_raw.length > 0) {
@@ -57,7 +57,7 @@ dataDieOff = function (plotParams, plotFunction) {
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
             // we can't just leave the level clause out, because we might end up with some surface levels in the mix
-            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}).levelsMap[database][curve['data-source']];
+            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
