@@ -55,7 +55,7 @@ Template.graph.helpers({
                 // append annotations
                 annotation = "";
                 for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile && dataset[i].curveId !== undefined) {
+                    if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
                         annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                     }
                 }

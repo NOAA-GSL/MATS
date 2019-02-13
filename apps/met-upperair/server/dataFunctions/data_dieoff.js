@@ -38,26 +38,28 @@ dataDieOff = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
+        var regions = curve['region'] === undefined ? [] : curve['region'];
+        regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
-        if (regions_raw.length > 0) {
-            const regions = regions_raw.map(function (r) {
+        if (regions.length > 0) {
+            regions = regions.map(function (r) {
                 return "'" + r + "'";
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
         }
         const variable = curve['variable'];
-       const statistic = curve['statistic'];
-       var levels_raw = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        const statistic = curve['statistic'];
+        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelsClause = "";
-        if (levels_raw.length > 0) {
-            const levels = levels_raw.map(function (l) {
+        levels = Array.isArray(levels) ? levels : [levels];
+        if (levels.length > 0) {
+            levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
             // we can't just leave the level clause out, because we might end up with some surface levels in the mix
-            var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
             }).join(',');
@@ -78,9 +80,11 @@ dataDieOff = function (plotParams, plotFunction) {
         var utcCycleStartClause = "";
         var dateRangeClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
         if (dieoffType === matsTypes.ForecastTypes.dieoff) {
-            var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-            if (vts_raw.length > 0) {
-                const vts = vts_raw.map(function (vt) {
+            var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
+            if (curve['valid-time'] !== undefined) {
+                vts = curve['valid-time'];
+                vts = Array.isArray(vts) ? vts : [vts];
+                vts = vts.map(function (vt) {
                     return "'" + vt + "'";
                 }).join(',');
                 validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
@@ -157,7 +161,7 @@ dataDieOff = function (plotParams, plotFunction) {
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');
@@ -166,17 +170,17 @@ dataDieOff = function (plotParams, plotFunction) {
                     if (err) {
                         pyError = err;
                         future["return"]();
-                    };
+                    }
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                         recordCount: queryResult.data.x.length
-                };
+                    };
                     future["return"]();
                 });
                 future.wait();

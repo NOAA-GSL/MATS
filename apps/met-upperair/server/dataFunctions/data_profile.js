@@ -38,10 +38,11 @@ dataProfile = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions_raw = curve['region'] === undefined ? [] : curve['region'];
+        var regions = curve['region'] === undefined ? [] : curve['region'];
+        regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
-        if (regions_raw.length > 0) {
-            const regions = regions_raw.map(function (r) {
+        if (regions.length > 0) {
+            regions = regions.map(function (r) {
                 return "'" + r + "'";
             }).join(',');
             regionsClause = "and h.vx_mask IN(" + regions + ")";
@@ -52,18 +53,27 @@ dataProfile = function (plotParams, plotFunction) {
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        var fcsts_raw = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
-        if (fcsts_raw.length > 0 ) {
+        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
+        if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-            const forecastLengths = fcsts_raw.map(function (fl) {
+             fcsts = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
-            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+            forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
         }
-        var vts_raw = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+        // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+        var levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        const levelsClause = "and h.fcst_lev IN(" + levels + ")";
+        var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
         var validTimeClause = "";
-        if (vts_raw.length > 0) {
-            const vts = vts_raw.map(function (vt) {
+        if (curve['valid-time'] !== undefined) {
+            vts = curve['valid-time'];
+            vts = Array.isArray(vts) ? vts : [vts];
+            vts = vts.map(function (vt) {
                 return "'" + vt + "'";
             }).join(',');
             validTimeClause = "and floor(unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600) IN(" + vts + ")";
@@ -107,6 +117,7 @@ dataProfile = function (plotParams, plotFunction) {
                 "{{validTimeClause}} " +
                 "{{forecastLengthsClause}} " +
                 "and h.fcst_var = '{{variable}}' " +
+                "{{levelsClause}} " +
                 "and ld.stat_header_id = h.stat_header_id " +
                 "group by avVal " +
                 "order by avVal" +
@@ -121,6 +132,7 @@ dataProfile = function (plotParams, plotFunction) {
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{forecastLengthsClause}}', forecastLengthsClause);
             statement = statement.replace('{{variable}}', variable);
+            statement = statement.replace('{{levelsClause}}', levelsClause);
             dataRequests[curve.label] = statement;
             // console.log(statement);
 
@@ -137,7 +149,7 @@ dataProfile = function (plotParams, plotFunction) {
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
                     scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam]
+                    args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
                 const Future = require('fibers/future');
@@ -146,17 +158,17 @@ dataProfile = function (plotParams, plotFunction) {
                     if (err) {
                         pyError = err;
                         future["return"]();
-                    };
+                    }
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
-                finishMoment = moment();
-                dataRequests["data retrieval (query) time - " + curve.label] = {
-                    begin: startMoment.format(),
-                    finish: finishMoment.format(),
-                    duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
+                    finishMoment = moment();
+                    dataRequests["data retrieval (query) time - " + curve.label] = {
+                        begin: startMoment.format(),
+                        finish: finishMoment.format(),
+                        duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
                         recordCount: queryResult.data.x.length
-                };
+                    };
                     future["return"]();
                 });
                 future.wait();
@@ -197,7 +209,8 @@ dataProfile = function (plotParams, plotFunction) {
 
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
-        const annotation = "";
+        const mean = d.sum / d.y.length;
+        const annotation = label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;

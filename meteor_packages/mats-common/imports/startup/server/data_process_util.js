@@ -393,7 +393,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0, matsTypes.ReservedWords.zero);
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1100, 0, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     //add ideal value lines, if any
@@ -401,7 +401,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var idealLabel;
     for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
         idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        idealValueLine = matsDataCurveOpsUtils.getVerticalValueLine(1100, 0, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
         dataset.push(idealValueLine);
     }
 
