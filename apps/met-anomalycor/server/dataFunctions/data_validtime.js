@@ -12,7 +12,6 @@ import {Meteor} from "meteor/meteor";
 
 dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "met-upperair";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.validtime;
     const hasLevels = true;
@@ -233,7 +232,7 @@ dataValidTime = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

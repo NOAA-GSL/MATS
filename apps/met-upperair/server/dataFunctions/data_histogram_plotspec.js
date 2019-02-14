@@ -1,4 +1,4 @@
-import {Meteor} from "meteor/meteor";
+import {Meteor} from 'meteor/meteor';
 import {
     matsCollections,
     matsDataCurveOpsUtils,
@@ -11,17 +11,18 @@ import {
     matsTypes
 } from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
-import {moment} from 'meteor/momentjs:moment';
+import {moment} from 'meteor/momentjs:moment'
+
+var xmlBuilder = require('xmlbuilder');
+
 
 const statMvTranslation = {
-    'ACC': "ANOM_CORR",
     'RMS': 'RMSE',
     'Bias (Model - Obs)': 'ME',
+    'N': "",
     'Model average': "FBAR",
     'Obs average': "OBAR"
 };
-
-const xmlBuilder = require('xmlbuilder');
 
 const _title = function () {
     try {
@@ -92,7 +93,7 @@ const _rgbToHex = function(color) {
 
 // adds date elements to an element of the current xml between a start and an end date, incremented by specific seconds
 //To Do - don't forget to add valid times processing!!!!
-const addDateElementsBetween = function (element, plotParams) {
+const _addDateElementsBetween = function (element, plotParams) {
     const dateRange = matsDataUtils.getDateRange(plotParams.dates);
     const fromSecs = dateRange.fromSeconds;
     const toSecs = dateRange.toSeconds;
@@ -180,7 +181,7 @@ const addDateElementsBetween = function (element, plotParams) {
 }
 
 // parse the databases from the curves and add a database string
-const addDatabaseElement = function(element, curves){
+const _addDatabaseElement = function(element, curves){
     try {
         databases = [];
 
@@ -198,7 +199,7 @@ const addDatabaseElement = function(element, curves){
 };
 
 // add the required metviewer folders
-const addFolders = function(element) {
+const _addFolders = function(element) {
     try {
         element.ele('rscript', Meteor.settings.private.MV_RSCRIPT);
         var folders = element.ele('folders');
@@ -213,24 +214,23 @@ const addFolders = function(element) {
 };
 
 // start the plotspec
-const startPlotSpec = function(pool, plotParams) {
+const _startPlotSpec = function(pool, plotParams) {
     try {
         var xml = xmlBuilder.create('plot_spec', {version: "1.0", encoding: "UTF-8", standalone: false});
         var connection = xml.ele('connection');
         connection.ele('host', sumPool.config.connectionConfig.host + ":" + sumPool.config.connectionConfig.port);
-        addDatabaseElement(connection, plotParams.curves);
+        _addDatabaseElement(connection, plotParams.curves);
         connection.ele('user', sumPool.config.connectionConfig.user);
         connection.ele('password', sumPool.config.connectionConfig.password);
         const management_system = Meteor.settings.private.MV_DB_MANAGEMENT_SYSTEM != null ? Meteor.settings.private.MV_DB_MANAGEMENT_SYSTEM : "mysql";
         connection.ele('management_system', management_system);
-        addFolders(xml);
-        var plot = xml.ele('plot');
-        return {xml:xml,plot:plot};
+        _addFolders(xml);
+        return xml;
     } catch (e) {
     }
 };
 
-const addPlotCi = function(element,plotParams){
+const _add_plot_ci = function(element,plotParams){
     try { //example c("none","none")
         var curves = plotParams.curves;
         var cList = [];
@@ -244,7 +244,7 @@ const addPlotCi = function(element,plotParams){
     }
 };
 
-const addShowSignif = function(element,plotParams){
+const _add_show_signif = function(element,plotParams){
     try { //example c(FALSE,FALSE)
         var curves = plotParams.curves;
         var cList = [];
@@ -258,7 +258,7 @@ const addShowSignif = function(element,plotParams){
     }
 };
 
-const addPlotDisp = function(element,plotParams){
+const _add_plot_disp = function(element,plotParams){
     try { //example c(TRUE,TRUE)
         var curves = plotParams.curves;
         var cList = [];
@@ -272,7 +272,7 @@ const addPlotDisp = function(element,plotParams){
     }
 };
 
-const addColors = function(element,plotParams){
+const _addColors = function(element,plotParams){
     try { //  example  'c("#ff0000FF","#8000ffFF")'
         var curves = plotParams.curves;
         var cList = [];
@@ -287,7 +287,7 @@ const addColors = function(element,plotParams){
     }
 };
 
-const addPch = function(element,plotParams){
+const _add_pch = function(element,plotParams){
     try { //example c(20,20)
         var curves = plotParams.curves;
         var cList = [];
@@ -301,7 +301,7 @@ const addPch = function(element,plotParams){
     }
 };
 
-const addType = function(element,plotParams){
+const _add_type = function(element,plotParams){
     try { //example c("b","b")
         var curves = plotParams.curves;
         var cList = [];
@@ -315,7 +315,7 @@ const addType = function(element,plotParams){
     }
 };
 
-const addLty = function(element,plotParams){
+const _add_lty = function(element,plotParams){
     try { // example c(1,1)
         var curves = plotParams.curves;
         var cList = [];
@@ -329,7 +329,7 @@ const addLty = function(element,plotParams){
     }
 };
 
-const addLwd = function(element,plotParams){
+const _add_lwd = function(element,plotParams){
     try { // example c(1,1)
         var curves = plotParams.curves;
         var cList = [];
@@ -343,7 +343,7 @@ const addLwd = function(element,plotParams){
     }
 };
 
-const addConSeries = function(element,plotParams){
+const _add_con_series = function(element,plotParams){
     try { // example c(1,1)
         var curves = plotParams.curves;
         var cList = [];
@@ -357,7 +357,7 @@ const addConSeries = function(element,plotParams){
     }
 };
 
-const addOrderSeries = function(element,plotParams){
+const _add_order_series = function(element,plotParams){
     try { // example c(1,2)
         var curves = plotParams.curves;
         var cList = [];
@@ -371,7 +371,7 @@ const addOrderSeries = function(element,plotParams){
     }
 };
 
-const addLegend = function(element,plotParams){
+const _add_legend = function(element,plotParams){
     try { // example c("","")
         var curves = plotParams.curves;
         var cList = [];
@@ -385,7 +385,7 @@ const addLegend = function(element,plotParams){
     }
 };
 
-const addSeries = function(plot, dependentAxes, plotParams) {
+const _addSeries = function(plot, dependentAxes, plotParams) {
 // data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
     //  (and average()?)
     // are series variables multiple selections are MV grouped - they are associated with different curves.
@@ -479,7 +479,7 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             if (fcst_leads.indexOf(forecastLengths) === -1) {
                 fcst_leads.push(forecastLengths);
                 series2.ele('field', {'name': 'fcst_lead'})
-                    .ele('val', forecastLengths);
+                .ele('val', forecastLengths);
             }
         }
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
@@ -494,12 +494,12 @@ const addSeries = function(plot, dependentAxes, plotParams) {
     }
 }
 
-const getDependentAxis = function(plotParams) {
-    // there are two possible axis for metviewer. We want to collect all the variables
-    // into groups. We will take the two largest groups.
-    // variables and statistics go together. They are dependent variabales in MV.
-    // variable/stat pairs always are associated with different curves, and will always be on different axis
-    // if possible, but might be assigned an axis via dependentAxes.
+ const _getDependentAxis = function(plotParams) {
+     // there are two possible axis for metviewer. We want to collect all the variables
+     // into groups. We will take the two largest groups.
+     // variables and statistics go together. They are dependent variabales in MV.
+     // variable/stat pairs always are associated with different curves, and will always be on different axis
+     // if possible, but might be assigned an axis via dependentAxes.
     const yaxesDefault = "auto-by-variable";
     var curves = plotParams['curves'];
     var dependentAxes = {'y1': [], 'y2': []};
@@ -527,7 +527,7 @@ const getDependentAxis = function(plotParams) {
     return dependentAxes;
 }
 
-function addDeps(plot, dependentAxes) {
+function _addDeps(plot, dependentAxes) {
     // If the same variable/statistic pair is present for two curves, we don't assign it twice,
     // once is enough...
     var dep = plot.ele('dep');
@@ -558,188 +558,124 @@ function addDeps(plot, dependentAxes) {
     }
 }
 
-const addSeriesLabels = function(element,dependentAxes) {
-    element.ele('x_label', 'Time');
-    var y1vars = [];
-    for (var y1i=0; y1i < dependentAxes['y1'].length; y1i++) {
-        if (!y1vars.includes(dependentAxes['y1'][y1i]['variable'])) {
-            y1vars.push(dependentAxes['y1'][y1i]['variable']);
-        }
+plotSpecHistogram = function (plotParams, key, plotSpecCallback) {
+    const fs = require('fs');
+    try {
+        var xml = _startPlotSpec(sumPool,plotParams);
+        var plot = xml.ele('plot');
+        plot.ele('template','series_plot.R_tmpl');
+        const dependentAxes = _getDependentAxis(plotParams);
+        _addDeps(plot, dependentAxes);
+        _addSeries(plot, dependentAxes, plotParams);
+        plot_fix = plot.ele('plot_fix'); // unused for time series
+        plot.ele('plot_cond');
+        var indep = plot.ele('indep', {'equalize':'false','name':'fcst_valid_beg'});
+        _addDateElementsBetween(indep, plotParams);
+        plot.ele('calc_stat').ele('calc_sl1l2',true);
+        plot.ele('plot_stat','mean');
+        var tmpl = plot.ele('tmpl');
+        tmpl.ele('data_file',key + '.data');
+        tmpl.ele('plot_file',key + '.png');
+        tmpl.ele('r_file',key + '.R');
+        tmpl.ele('title',_title() + " : " + _plotText(plotParams) + " " + plotParams.plotAction);
+        tmpl.ele('x_label','test x_label');
+        tmpl.ele('y1_label','test y_label');
+        tmpl.ele('y2_label');
+        tmpl.ele('caption');
+        tmpl.ele('job_title');
+        tmpl.ele('keep_revisions','false');
+        tmpl.ele('listdiffseries1','list()');
+        tmpl.ele('listdiffseries2','list()');
+        plot.ele('event_equal','false');
+        plot.ele('vert_plot','false');
+        plot.ele('x_reverse','false');
+        plot.ele('num_stats','false');
+        plot.ele('indy1_stag','false');
+        plot.ele('indy2_stag','false');
+        plot.ele('grid_on','true');
+        plot.ele('sync_axes','false');
+        plot.ele('dump_points1','false');
+        plot.ele('dump_points2','false');
+        plot.ele('log_y1','false');
+        plot.ele('log_y2','false');
+        plot.ele('varianceinflationfactor','true');
+        plot.ele('plot_type','png16m');
+        plot.ele('plot_height','8.5');
+        plot.ele('plot_width','11');
+        plot.ele('plot_res','72');
+        plot.ele('plot_units','in');
+        plot.ele('mar','c(8,4,5,4)');
+        plot.ele('mgp','c(1,1,0)');
+        plot.ele('cex','1');
+        plot.ele('title_weight','2');
+        plot.ele('title_size','1.4');
+        plot.ele('title_offset','-2');
+        plot.ele('title_align','0.5');
+        plot.ele('xtlab_orient','1');
+        plot.ele('xtlab_perp','-0.75');
+        plot.ele('xtlab_horiz','0.5');
+        plot.ele('xtlab_freq','0');
+        plot.ele('xtlab_size','1');
+        plot.ele('xlab_weight','1');
+        plot.ele('xlab_size','1');
+        plot.ele('xlab_offset','2');
+        plot.ele('xlab_align','0.5');
+        plot.ele('ytlab_orient','1');
+        plot.ele('ytlab_perp','0.5');
+        plot.ele('ytlab_horiz','0.5');
+        plot.ele('ytlab_size','1');
+        plot.ele('ylab_weight','1');
+        plot.ele('ylab_size','1');
+        plot.ele('ylab_offset','-2');
+        plot.ele('ylab_align','0.5');
+        plot.ele('grid_lty','3');
+        plot.ele('grid_col','#cccccc');
+        plot.ele('grid_lwd','1');
+        plot.ele('grid_x','listX');
+        plot.ele('x2tlab_orient','1');
+        plot.ele('x2tlab_perp','1');
+        plot.ele('x2tlab_horiz','0.5');
+        plot.ele('x2tlab_size','0.8');
+        plot.ele('x2lab_size','0.8');
+        plot.ele('x2lab_offset','-0.5');
+        plot.ele('x2lab_align','0.5');
+        plot.ele('y2tlab_orient','1');
+        plot.ele('y2tlab_perp','0.5');
+        plot.ele('y2tlab_horiz','0.5');
+        plot.ele('y2tlab_size','1');
+        plot.ele('y2lab_size','1');
+        plot.ele('y2lab_offset','1');
+        plot.ele('y2lab_align','0.5');
+        plot.ele('legend_box','o');
+        plot.ele('legend_inset','c(0, -.25)');
+        plot.ele('legend_ncol','3');
+        plot.ele('legend_size','0.8');
+        plot.ele('caption_weight','1');
+        plot.ele('caption_col','#333333');
+        plot.ele('caption_size','0.8');
+        plot.ele('caption_offset','3');
+        plot.ele('caption_align','0');
+        plot.ele('ci_alpha','0.05');
+        _add_plot_ci(plot,plotParams);
+        _add_show_signif(plot,plotParams);
+        _add_plot_disp(plot,plotParams);
+        _addColors(plot,plotParams);
+        _add_pch(plot,plotParams);
+        _add_type(plot,plotParams);
+        _add_lty(plot,plotParams);
+        _add_lwd(plot,plotParams);
+        _add_con_series(plot,plotParams);
+        _add_order_series(plot,plotParams);
+        plot.ele('plot_cmd');
+        _add_legend(plot,plotParams);
+        plot.ele('y1_lim','c()');
+        plot.ele('y1_bufr','0.04');
+        plot.ele('y2_lim','c()');
+        xml.end({ pretty: true});
+    } catch (error) {
+        console.log(error);
+        plotSpecCallback (error.toString(), null);
     }
-    element.ele('y1_label', y1vars.join(','));
-    var y2vars = [];
-    for (var y2i=0; y2i < dependentAxes['y2'].length; y2i++) {
-        if (!y2vars.includes(dependentAxes['y2'][y2i]['variable'])) {
-            y2vars.push(dependentAxes['y2'][y2i]['variable']);
-        }
-    }
-    element.ele('y2_label', y2vars.join(','));
-}
+    plotSpecCallback (null, xml.doc().toString());
+};
 
-const addTemplate = function(plot,templateStr)
-{
-    plot.ele('template', templateStr);
-}
-
-const addIndep = function(plot, plotParams) {
-    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_valid_beg'});
-    addDateElementsBetween(indep, plotParams);
-}
-
-const addTmpl = function(plot, key, plotParams, dependentAxes) {
-    var tmpl = plot.ele('tmpl');
-    tmpl.ele('data_file', key + '.data');
-    tmpl.ele('plot_file', key + '.png');
-    tmpl.ele('r_file', key + '.R');
-    tmpl.ele('title', _title() + " : " + _plotText(plotParams) + " " + plotParams.plotAction);
-    addSeriesLabels(tmpl, dependentAxes);
-    tmpl.ele('caption');
-    tmpl.ele('job_title');
-    tmpl.ele('keep_revisions', 'false');
-    tmpl.ele('listdiffseries1', 'list()');
-    tmpl.ele('listdiffseries2', 'list()');
-}
-
-const addPlotFix = function(plot) {
-    plot.ele('plot_fix');
-}
-
-const addPlotCond = function(plot,plotParams)
-{
-    plot.ele('plot_cond');
-}
-
-const addCalcStat = function(plot,statType){
-    plot.ele('calc_stat').ele(statType,true);
-} // unused for time series
-
-const addPlotStat = function(plot,stat){
-    //Statistics --- We always do Summary with Mean - so there
-    plot.ele('plot_stat',stat);
-}
-
-
-const addPlotCmd = function (plot){
-    plot.ele('plot_cmd');
-}
-const addY1Lim = function(plot){
-    plot.ele('y1_lim','c()');
-}
-const addY1Bufr = function(plot){
-    plot.ele('y1_bufr','0.04');
-}
-const addY2Lim = function(plot) {
-    plot.ele('y2_lim','c()');
-}
-
-const addMiscellaneous = function(plot) {
-    plot.ele('event_equal', 'false');
-    plot.ele('vert_plot', 'false');
-    plot.ele('x_reverse', 'false');
-    plot.ele('num_stats', 'false');
-    plot.ele('indy1_stag', 'false');
-    plot.ele('indy2_stag', 'false');
-    plot.ele('grid_on', 'true');
-    plot.ele('sync_axes', 'false');
-    plot.ele('dump_points1', 'false');
-    plot.ele('dump_points2', 'false');
-    plot.ele('log_y1', 'false');
-    plot.ele('log_y2', 'false');
-    plot.ele('varianceinflationfactor', 'true');
-    plot.ele('plot_type', 'png16m');
-    plot.ele('plot_height', '8.5');
-    plot.ele('plot_width', '11');
-    plot.ele('plot_res', '72');
-    plot.ele('plot_units', 'in');
-    plot.ele('mar', 'c(8,4,5,4)');
-    plot.ele('mgp', 'c(1,1,0)');
-    plot.ele('cex', '1');
-    plot.ele('title_weight', '2');
-    plot.ele('title_size', '1.4');
-    plot.ele('title_offset', '-2');
-    plot.ele('title_align', '0.5');
-    plot.ele('xtlab_orient', '1');
-    plot.ele('xtlab_perp', '-0.75');
-    plot.ele('xtlab_horiz', '0.5');
-    plot.ele('xtlab_freq', '0');
-    plot.ele('xtlab_size', '1');
-    plot.ele('xlab_weight', '1');
-    plot.ele('xlab_size', '1');
-    plot.ele('xlab_offset', '2');
-    plot.ele('xlab_align', '0.5');
-    plot.ele('ytlab_orient', '1');
-    plot.ele('ytlab_perp', '0.5');
-    plot.ele('ytlab_horiz', '0.5');
-    plot.ele('ytlab_size', '1');
-    plot.ele('ylab_weight', '1');
-    plot.ele('ylab_size', '1');
-    plot.ele('ylab_offset', '-2');
-    plot.ele('ylab_align', '0.5');
-    plot.ele('grid_lty', '3');
-    plot.ele('grid_col', '#cccccc');
-    plot.ele('grid_lwd', '1');
-    plot.ele('grid_x', 'listX');
-    plot.ele('x2tlab_orient', '1');
-    plot.ele('x2tlab_perp', '1');
-    plot.ele('x2tlab_horiz', '0.5');
-    plot.ele('x2tlab_size', '0.8');
-    plot.ele('x2lab_size', '0.8');
-    plot.ele('x2lab_offset', '-0.5');
-    plot.ele('x2lab_align', '0.5');
-    plot.ele('y2tlab_orient', '1');
-    plot.ele('y2tlab_perp', '0.5');
-    plot.ele('y2tlab_horiz', '0.5');
-    plot.ele('y2tlab_size', '1');
-    plot.ele('y2lab_size', '1');
-    plot.ele('y2lab_offset', '1');
-    plot.ele('y2lab_align', '0.5');
-    plot.ele('legend_box', 'o');
-    plot.ele('legend_inset', 'c(0, -.25)');
-    plot.ele('legend_ncol', '3');
-    plot.ele('legend_size', '0.8');
-    plot.ele('caption_weight', '1');
-    plot.ele('caption_col', '#333333');
-    plot.ele('caption_size', '0.8');
-    plot.ele('caption_offset', '3');
-    plot.ele('caption_align', '0');
-    plot.ele('ci_alpha', '0.05');
-}
-
-const endPlotSpec = function(xml) {
-    xml.end({pretty: true});
-}
-
-export default matsPlotSpecUtils = {
-    startPlotSpec:startPlotSpec,
-    addDeps:addDeps,
-    getDependentAxis:getDependentAxis,
-    addDateElementsBetween:addDateElementsBetween,
-    addDatabaseElement:addDatabaseElement,
-    addFolders:addFolders,
-    addPlotCi:addPlotCi,
-    addShowSignif:addShowSignif,
-    addPlotDisp:addPlotDisp,
-    addColors:addColors,
-    addPch:addPch,
-    addType:addType,
-    addLty:addLty,
-    addLwd:addLwd,
-    addConSeries:addConSeries,
-    addOrderSeries:addOrderSeries,
-    addLegend:addLegend,
-    addSeries:addSeries,
-    addSeriesLabels:addSeriesLabels,
-    addTemplate:addTemplate,
-    addIndep:addIndep,
-    addTmpl:addTmpl,
-    addPlotFix:addPlotFix,
-    addPlotCond:addPlotCond,
-    addCalcStat:addCalcStat,
-    addPlotStat:addPlotStat,
-    addPlotCmd:addPlotCmd,
-    addY1Lim:addY1Lim,
-    addY1Bufr:addY1Bufr,
-    addY2Lim:addY2Lim,
-    addMiscellaneous:addMiscellaneous,
-    endPlotSpec:endPlotSpec
-}

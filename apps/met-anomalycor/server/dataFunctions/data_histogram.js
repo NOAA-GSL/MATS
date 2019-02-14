@@ -12,7 +12,6 @@ import {Meteor} from "meteor/meteor";
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "met-upperair";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.histogram;
     const hasLevels = true;
@@ -217,7 +216,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,
