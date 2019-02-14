@@ -16,6 +16,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/example-app/.meteor/platforms" />
       <excludeFolder url="file://$MODULE_DIR$/apps/landuse/.meteor/local" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/met-anomalycor/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/met-upperair/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/metproto/.meteor/local" />
       <excludeFolder url="file://$MODULE_DIR$/apps/precipAQPI/.meteor/local" />
