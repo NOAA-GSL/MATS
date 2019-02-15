@@ -86,11 +86,13 @@ def is_number(s):
 
 
 # function for calculating anomaly correlation from MET partial sums
-def calculate_acc(ffbar, oobar, fobar):
+def calculate_acc(fbar, obar, ffbar, oobar, fobar, total):
     global error
     global error_bool
     try:
-        acc = fobar / (np.sqrt(ffbar) * np.sqrt(oobar))
+        denom = (np.power(total, 2) * ffbar - np.power(total, 2) * np.power(fbar, 2)) \
+                * (np.power(total, 2) * oobar - np.power(total, 2) * np.power(obar, 2))
+        acc = (np.power(total, 2) * fobar - np.power(total, 2) * fbar * obar) / np.sqrt(denom)
     except TypeError as e:
         error = "Error calculating RMS: " + str(e)
         error_bool = True
@@ -164,7 +166,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
         'Obs average': calculate_o_avg
     }
     args_switch = {  # dispatcher of arguments for statistical calculation functions
-        'ACC': (ffbar, oobar, fobar),
+        'ACC': (fbar, obar, ffbar, oobar, fobar, total),
         'RMS': (ffbar, oobar, fobar),
         'Bias (Model - Obs)': (fbar, obar),
         'N': (total,),
