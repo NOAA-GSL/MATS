@@ -140,7 +140,7 @@ dataHistogram = function (plotParams, plotFunction) {
             }
         }
     }
-    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

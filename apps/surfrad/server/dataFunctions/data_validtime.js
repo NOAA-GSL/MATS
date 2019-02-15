@@ -176,7 +176,7 @@ dataValidTime = function (plotParams, plotFunction) {
     }  // end for curves
 
     // process the data returned by the query
-    const appParams = {"appName": appName, "plotType": plotType, "hasLevels": hasLevels, "matching": matching};
+    const appParams = {"plotType": plotType, "hasLevels": hasLevels, "matching": matching};
     const curveInfoParams = {
         "curves": curves,
         "curvesLength": curvesLength,

@@ -28,20 +28,6 @@ data = {  # one of the four fields to return at the end -- the parsed data struc
 output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
 
 
-# function to check if a certain value is a float or int
-def is_number(s):
-    try:
-        if np.isnan(s):
-            return False
-    except TypeError:
-        return False
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
 # function to open a connection to a mysql database
 def connect_to_mysql(mysql_conf_path):
     global error
@@ -83,6 +69,37 @@ def construct_output_json():
         "error": error
     }
     output_JSON = json.dumps(output_JSON)
+
+
+# function to check if a certain value is a float or int
+def is_number(s):
+    try:
+        if np.isnan(s):
+            return False
+    except TypeError:
+        return False
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+# function for calculating anomaly correlation from MET partial sums
+def calculate_acc(ffbar, oobar, fobar):
+    global error
+    global error_bool
+    try:
+        acc = fobar / (np.sqrt(ffbar) * np.sqrt(oobar))
+    except TypeError as e:
+        error = "Error calculating RMS: " + str(e)
+        error_bool = True
+        acc = np.empty(len(ffbar))
+    except ValueError as e:
+        error = "Error calculating RMS: " + str(e)
+        error_bool = True
+        acc = np.empty(len(ffbar))
+    return acc
 
 
 # function for calculating RMS from MET partial sums
@@ -139,6 +156,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
     global error
     global error_bool
     stat_switch = {  # dispatcher of statistical calculation functions
+        'ACC': calculate_acc,
         'RMS': calculate_rms,
         'Bias (Model - Obs)': calculate_bias,
         'N': calculate_n,
@@ -146,6 +164,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
         'Obs average': calculate_o_avg
     }
     args_switch = {  # dispatcher of arguments for statistical calculation functions
+        'ACC': (ffbar, oobar, fobar),
         'RMS': (ffbar, oobar, fobar),
         'Bias (Model - Obs)': (fbar, obar),
         'N': (total,),
@@ -167,6 +186,41 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
         sub_stats = np.empty(len(fbar))
         stat = 'null'
     return sub_stats, stat
+
+
+# function for processing the sub-values from the query and calling calculate_stat
+def get_scalar_stat(has_levels, row, statistic):
+    global error
+    global error_bool
+    try:
+        # get all of the partial sums for each time
+        # fbar, obar, ffbar, fobar, and oobar may have different names in different partial sums tables,
+        # but we're using these names for all scalar sums in order to have common code.
+        # METviewer also does this variable name fudging, I checked.
+        sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
+        sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
+        sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
+        sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
+        sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
+        sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
+        sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
+        if has_levels:
+            sub_levs_raw = str(row['sub_levs']).split(',')
+            if is_number(sub_levs_raw[0]):
+                sub_levs = np.array([int(i) for i in sub_levs_raw])
+            else:
+                sub_levs = np.array(sub_levs_raw)
+        else:
+            sub_levs = np.empty(len(sub_secs))
+    except KeyError as e:
+        error = "Error parsing query data. The expected fields don't seem to be present " \
+                "in the results cache: " + str(e)
+        error_bool = True
+        # if we don't have the data we expect just stop now and return empty data objects
+        return np.nan, np.empty(0), np.empty(0), np.empty(0)
+    # if we do have the data we expect, calculate the requested statistic
+    sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
+    return stat, sub_levs, sub_secs, sub_values
 
 
 #  function for calculating the interval between the current time and the next time for models with irregular vts
@@ -233,29 +287,13 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
             time_interval = time_diff if time_diff < time_interval else time_interval
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-            try:
-                # get all of the partial sums for each time
-                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-                sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
-                if has_levels:
-                    sub_levs_raw = str(row['sub_levs']).split(',')
-                    if is_number(sub_levs_raw[0]):
-                        sub_levs = np.array([int(i) for i in sub_levs])
-                    else:
-                        sub_levs = np.array(sub_levs_raw)
-            except KeyError as e:
-                error = "Error in parseQueryDataTimeSeries. The expected fields don't seem to be present " \
-                        "in the results cache: " + str(e)
-                error_bool = True
-                # if we don't have the data we expect just stop now and return an empty data object
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
+            stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
+            # if the previous function failed because we don't have the data we expect,
+            # just stop now and return an empty data object.
+            if np.isnan(stat):
                 return
-            # if we do have the data we expect, calculate the requested statistic
-            sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
         else:
             # there's no data at this time point
             stat = 'null'
@@ -377,29 +415,13 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
         n_times.append(int(row['N_times']))
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-            try:
-                # get all of the partial sums for each time
-                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-                sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
-                if has_levels:
-                    sub_levs_raw = str(row['sub_levs']).split(',')
-                    if is_number(sub_levs_raw[0]):
-                        sub_levs = np.array([int(i) for i in sub_levs])
-                    else:
-                        sub_levs = np.array(sub_levs_raw)
-            except KeyError as e:
-                error = "Error in parseQueryDataSpecialtyCurve. The expected fields don't seem to be present " \
-                        "in the results cache: " + str(e)
-                error_bool = True
-                # if we don't have the data we expect just stop now and return an empty data object
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
+            stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
+            # if the previous function failed because we don't have the data we expect,
+            # just stop now and return an empty data object.
+            if np.isnan(stat):
                 return
-            # if we do have the data we expect, calculate the requested statistic
-            sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
         else:
             # there's no data at this time point
             stat = 'null'
@@ -531,36 +553,20 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
         n_times.append(int(row['N_times']))
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
-            try:
-                # get all of the partial sums for each time
-                sub_fbar = np.array([float(i) for i in (str(row['sub_fbar']).split(','))])
-                sub_obar = np.array([float(i) for i in (str(row['sub_obar']).split(','))])
-                sub_ffbar = np.array([float(i) for i in (str(row['sub_ffbar']).split(','))])
-                sub_oobar = np.array([float(i) for i in (str(row['sub_oobar']).split(','))])
-                sub_fobar = np.array([float(i) for i in (str(row['sub_fobar']).split(','))])
-                sub_total = np.array([float(i) for i in (str(row['sub_total']).split(','))])
-                sub_secs = np.array([float(i) for i in (str(row['sub_secs']).split(','))])
-                if has_levels:
-                    sub_levs_raw = str(row['sub_levs']).split(',')
-                    if is_number(sub_levs_raw[0]):
-                        sub_levs = np.array([int(i) for i in sub_levs])
-                    else:
-                        sub_levs = np.array(sub_levs_raw)
-            except KeyError as e:
-                error = "Error in parseQueryDataSpecialtyCurve. The expected fields don't seem to be present " \
-                        "in the results cache: " + str(e)
-                error_bool = True
-                # if we don't have the data we expect just stop now and return an empty data object
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
+            stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
+            # if the previous function failed because we don't have the data we expect,
+            # just stop now and return an empty data object.
+            if np.isnan(stat):
                 return
-            # if we do have the data we expect, calculate the requested statistic
-            sub_values, stat = calculate_stat(statistic, sub_fbar, sub_obar, sub_ffbar, sub_oobar, sub_fobar, sub_total)
-
             # JSON can't deal with numpy nans in subarrays for some reason, so we remove them
             if np.isnan(sub_values).any():
                 bad_value_indices = np.argwhere(np.isnan(sub_values))
                 sub_values = np.delete(sub_values, bad_value_indices)
                 sub_secs = np.delete(sub_secs, bad_value_indices)
-                sub_levs = np.delete(sub_levs, bad_value_indices)
+                if has_levels:
+                    sub_levs = np.delete(sub_levs, bad_value_indices)
 
             # store parsed data for later
             sub_vals_all.append(sub_values)
@@ -609,8 +615,6 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
                 parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts)
             elif plot_type == 'Histogram':
                 parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
-            # elif plot_type == 'Map':
-            #     parse_query_data_map(cursor, statistic, has_levels, completeness_qc_param)
             else:
                 parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param)
 

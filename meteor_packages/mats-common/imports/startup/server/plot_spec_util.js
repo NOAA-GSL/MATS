@@ -14,9 +14,9 @@ import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment';
 
 const statMvTranslation = {
+    'ACC': "ANOM_CORR",
     'RMS': 'RMSE',
     'Bias (Model - Obs)': 'ME',
-    'N': "",
     'Model average': "FBAR",
     'Obs average': "OBAR"
 };

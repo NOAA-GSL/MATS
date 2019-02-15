@@ -227,8 +227,8 @@ const doCurveParams = function () {
                 var model = rows[i].display_text.trim();
                 modelOptionsMap[thisDB][model] = [model_value];
 
-                var minDate = moment.unix(rows[i].mindate).format("MM/DD/YYYY HH:mm");
-                var maxDate = moment.unix(rows[i].maxdate).format("MM/DD/YYYY HH:mm");
+                var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
                 dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
@@ -524,9 +524,9 @@ const doCurveParams = function () {
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'dieoff type',
-                displayOrder: 1,
+                displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 3
             });
     }
 
@@ -545,7 +545,7 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4,
             });
@@ -563,7 +563,7 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true
