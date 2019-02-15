@@ -436,27 +436,33 @@ const addLegend = function(element,plotParams){
 };
 
 const addSeries = function(plot, dependentAxes, plotParams) {
-// data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
-    //  (and average()?)
-    // are series variables multiple selections are MV grouped - they are associated with different curves.
-    // We can differentiate series by axis or by dependent variables. For every dependent variable I have to have another series.
+/***
+    data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
+    are series variables multiple selections for a given curve are MV grouped (join'd)
+    If they are associated with different curves they are seerate <val> tags.
 
-    // MV cannot have a different model/stat/fcst_lead/fcst_lvl pair on the same axis.
+    We can differentiate series by axis or dependent variable. Each dependent variable requires a new series.
 
-    // They can also go on the axis that is associated with the curve that the region parameter is on.
-    // In other words force a new series.
-    // i.e. Y1 Series variables or Y2 Series variables
-    // The name-val pairs in a series must be uniq. If two curves repeat them they don't get added
-    // to the plotspec twice.
+    MV cannot have a different model/stat/fcst_lead/fcst_lvl pair on the same axis because I don't know
+    how to associate a different statistic with a different fcst_lead, for example. I cannot group sets of variables.
 
-    // series variables can be grouped or ungrouped.
-    // e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
-    // e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
-    //                       <val>2018-11-01 06:00:00</val>
-    //                       <val>2018-11-01 12:00:00</val>
-    //                       <val>2018-11-01</val>
+    They can also go on the axis that is associated with the curve that the region parameter is on.
+    In other words force a new series.
+    i.e. Y1 Series variables or Y2 Series variables
+    The name-val pairs in a series must be uniq. If two curves repeat them they don't get added
+    to the plotspec twice.
+
+    series variables can be grouped or ungrouped.
+    e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
+    e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
+                          <val>2018-11-01 06:00:00</val>
+                          <val>2018-11-01 12:00:00</val>
+                          <val>2018-11-01</val>
+
+ In MV there are independent variables. These are times for time series, and levels for profiles.
 
 
+***/
     var models = [];
     var vx_masks = [];
     var fcst_leads = [];
@@ -473,33 +479,31 @@ const addSeries = function(plot, dependentAxes, plotParams) {
         }
         // only add the vx_mask tag if there are regions requested - leaving it out will get them all
         if (curve['region'] != null && curve['region'].length > 0) {
-            const regions = curve['region'].join(',');
-            if (vx_masks.indexOf(regions) === -1) {
-                vx_masks.push(regions);
-                series1.ele('field', {'name': 'vx_mask'})
-                    .ele('val', regions);
+            const valSet = new Set().add(curve['region']);
+            var series1Elem = series1.ele('field', {'name': 'vx_mask'});
+            const vals = Array.from(valSet)[0];
+            for (var i=0; i<vals.length;i++) {
+                series1Elem.ele('val', vals[i]);
             }
         }
         // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
         if (curve['forecast-length'] != null && curve['forecast-length'].length > 0) {
             // have to get the unsanitized values..
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const forecastLengths = curve['forecast-length'].map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            if (fcst_leads.indexOf(forecastLengths) === -1) {
-                fcst_leads.push(forecastLengths);
-                series1.ele('field', {'name': 'fcst_lead'})
-                    .ele('val', forecastLengths);
+            const valSet = new Set().add(curve['forecast-length'].map(function (fl) {return forecastValueMap[fl];}));
+            var series1Elem = series1.ele('field', {'name': 'fcst_lead'});
+            const vals = Array.from(valSet)[0];
+            for (var i=0; i<vals.length;i++) {
+                series1Elem.ele('val', vals[i]);
             }
         }
         // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
         if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
-            const presLvls = curve['pres-level'].join(',');
-            if (fcst_levls.indexOf(presLvls) === -1) {
-                fcst_leads.push(presLvls);
-                series1.ele('field', {'name': 'fcst_lev'})
-                    .ele('val', presLvls);
+            const valSet = new Set().add(curve['pres-level']);
+            var series1Elem = series1.ele('field', {'name': 'fcst_lev'});
+            const vals = Array.from(valSet)[0];
+            for (var i=0; i<vals.length;i++) {
+                series1Elem.ele('val', vals[i]);
             }
         }
         // for profiles, dieoffs, validTimes, thresholds, and histograms dates are series variables
@@ -519,12 +523,11 @@ const addSeries = function(plot, dependentAxes, plotParams) {
     vx_masks = [];
     fcst_leads = [];
     fcst_levls = [];
-    series2 = plot.ele('series2');
+    var series2 = plot.ele('series2');
     for (var daci = 0; daci < dependentAxes['y2'].length; daci++) {
         const curve = dependentAxes['y2'][daci];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        console.log ("series2 model:", model);
         if (models.indexOf(model) === -1) {
             models.push(model);
             series2.ele('field', {'name': 'model'})
@@ -560,6 +563,18 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                 series2.ele('field', {'name': 'fcst_lev'})
                     .ele('val', presLvls);
             }
+        }
+        // for profiles, dieoffs, validTimes, thresholds, and histograms dates are series variables
+        const type = (_.invert(plotParams.plotTypes))[true];
+        if (type === matsTypes.PlotTypes.profile ||
+            type === matsTypes.PlotTypes.dieoff ||
+            type === matsTypes.PlotTypes.validtime ||
+            type === matsTypes.PlotTypes.threshold ||
+            type === matsTypes.PlotTypes.histogram ) {
+            // these have series variable curve-dates.
+            const sortedDates = _getSortedDatesForDepRange(curve);
+            series2.ele('field', {'name': 'fcst_valid_beg'})
+                .ele('val', sortedDates.join(','));
         }
     }
 }
@@ -658,23 +673,23 @@ const addIndepDates = function(plot, plotParams) {
 
 const addIndepLevels = function(plot, plotParams) {
     // for profiles we use a union of all the levels available for all the data-sources
-
-    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_valid_beg'});
+    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_lev'});
     var curves = plotParams.curves;
-    var lvls = new Set();
+    var lvlSet = new Set(); // use a set to accumulate all the levels
     for (var ci=0; ci<curves.length;ci++) {
-
+        const curve = curves[ci];
+        const database = curve['database'];
+        const dataSource = curve['data-source'];
+        const levelVals = matsCollections.CurveParams.findOne({name: 'data-source'})['levelsMap'][database][dataSource];
+        lvlSet.add(levelVals);
     }
     // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
-        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
-            const presLvls = curve['pres-level'].join(',');
-            if (fcst_levls.indexOf(presLvls) === -1) {
-                fcst_leads.push(presLvls);
-                series2.ele('field', {'name': 'fcst_lev'})
-                    .ele('val', presLvls);
-            }
-        }
-
+    const lvls = Array.from(lvlSet)[0];
+    for (var li=0; li<lvls.length;li++) {
+        var val = indep.ele('val',lvls[li]);
+        val.att('label',lvls[li]);
+        val.att('plot_val',"");
+    }
 }
 
 const addTmpl = function(plot, key, plotParams, dependentAxes) {
@@ -723,20 +738,39 @@ const addY2Lim = function(plot) {
     plot.ele('y2_lim','c()');
 }
 
-const addMiscellaneous = function(plot) {
+const addMiscellaneous = function(plot,plotParams) {
     plot.ele('event_equal', 'false');
-    plot.ele('vert_plot', 'false');
-    plot.ele('x_reverse', 'false');
+
+    const plotType = (_.invert(plotParams.plotTypes))[true];
+    switch (plotType) {
+        case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dailyModelCycle:
+            plot.ele('vert_plot', 'false');
+            plot.ele('x_reverse', 'false');
+            break;
+        case matsTypes.PlotTypes.histogram:
+        case matsTypes.PlotTypes.profile:
+        case matsTypes.PlotTypes.dieoff:
+        case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.threshold:
+            plot.ele('vert_plot', 'true');
+            plot.ele('x_reverse', 'true');
+            break;
+        default:
+            plot.ele('vert_plot', 'false');
+            plot.ele('x_reverse', 'false');
+    }
+
     plot.ele('num_stats', 'false');
     plot.ele('indy1_stag', 'false');
     plot.ele('indy2_stag', 'false');
     plot.ele('grid_on', 'true');
     plot.ele('sync_axes', 'false');
-    plot.ele('dump_points1', 'false');
-    plot.ele('dump_points2', 'false');
+    plot.ele('dump_points1', 'true');
+    plot.ele('dump_points2', 'true');
     plot.ele('log_y1', 'false');
     plot.ele('log_y2', 'false');
-    plot.ele('varianceinflationfactor', 'true');
+    plot.ele('varianceinflationfactor', 'false');
     plot.ele('plot_type', 'png16m');
     plot.ele('plot_height', '8.5');
     plot.ele('plot_width', '11');
