@@ -233,8 +233,8 @@ const doCurveParams = function () {
                     modelOptionsGroups[label] = [];
                 }
             }
-            var minDate = moment(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
-            var maxDate = moment(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var minDate = moment.utc(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var maxDate = moment.utc(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
             myModels.push(model);
             // modelOptionsGroups
             modelOptionsGroups[label].push(model);
