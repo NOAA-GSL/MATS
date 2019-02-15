@@ -287,6 +287,8 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
             time_interval = time_diff if time_diff < time_interval else time_interval
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
             stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
             # if the previous function failed because we don't have the data we expect,
             # just stop now and return an empty data object.
@@ -413,6 +415,8 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
         n_times.append(int(row['N_times']))
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
             stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
             # if the previous function failed because we don't have the data we expect,
             # just stop now and return an empty data object.
@@ -549,6 +553,8 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
         n_times.append(int(row['N_times']))
 
         if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
             stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
             # if the previous function failed because we don't have the data we expect,
             # just stop now and return an empty data object.
