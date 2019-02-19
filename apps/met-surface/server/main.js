@@ -718,25 +718,6 @@ const doCurveTextPatterns = function () {
             groupSize: 6
         });
         matsCollections.CurveTextPatterns.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            textPattern: [
-                ['', 'label', ': '],
-                ['', 'database', '.'],
-                ['', 'data-source', ' in '],
-                ['', 'region', ', '],
-                ['', 'variable', ' '],
-                ['', 'statistic', ', '],
-                ['level: ', 'pres-level', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
-                ['valid-time: ', 'valid-time', ', '],
-                ['', 'curve-dates', '']
-            ],
-            displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "curve-dates"
-            ],
-            groupSize: 6
-        });
-        matsCollections.CurveTextPatterns.insert({
             plotType: matsTypes.PlotTypes.dieoff,
             textPattern: [
                 ['', 'label', ': '],
@@ -816,13 +797,6 @@ const doPlotGraph = function () {
             dataFunction: "dataSeries",
             plotSpecFunction: "plotSpecDataSeries",
             checked: true
-        });
-        matsCollections.PlotGraphFunctions.insert({
-            plotType: matsTypes.PlotTypes.profile,
-            graphFunction: "graphPlotly",
-            dataFunction: "dataProfile",
-            plotSpecFunction: "plotSpecProfile",
-            checked: false
         });
         matsCollections.PlotGraphFunctions.insert({
             plotType: matsTypes.PlotTypes.dieoff,

@@ -48,6 +48,8 @@ dataDieOff = function (plotParams, plotFunction) {
         }
         const variable = curve['variable'];
         const statistic = "ACC";
+        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
+        const forecastKeys = Object.keys(forecastValueMap);
         var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
@@ -169,6 +171,14 @@ dataDieOff = function (plotParams, plotFunction) {
                     queryResult = JSON.parse(results);
                     // get the data back from the query
                     d = queryResult.data;
+                    // might need to sanitize fhrs
+                    if (d.x.length > 0) {
+                        d.x = d.x.map(function (fl) {
+                            return Number(forecastKeys.find(key => forecastValueMap[key] == fl));
+                        });
+                        d.xmax = Number(forecastKeys.find(key => forecastValueMap[key] == d.xmax));
+                        d.xmin = Number(forecastKeys.find(key => forecastValueMap[key] == d.xmin));
+                    }
                     finishMoment = moment();
                     dataRequests["data retrieval (query) time - " + curve.label] = {
                         begin: startMoment.format(),
