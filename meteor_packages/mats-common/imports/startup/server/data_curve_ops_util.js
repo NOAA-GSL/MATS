@@ -139,6 +139,7 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             label: label,
             curveId: label,
             name: label,
+            xaxis: "x1",
             yaxis: "y" + (axisNumber + 1),
             annotation: annotation,
             annotateColor: curve['color'],
@@ -190,6 +191,8 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
         };
     }
 
+    const axisNumber = Object.keys(axisMap).indexOf(axisKey);
+
     var error_x_temp = {
         error_x: {
             array: dataProfile.error_x,
@@ -204,6 +207,7 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             label: label,
             curveId: label,
             name: label,
+            xaxis: "x" + (axisNumber + 1),
             yaxis: "y1",
             annotation: annotation,
             annotateColor: curve['color'],
