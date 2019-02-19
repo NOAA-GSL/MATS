@@ -65,10 +65,6 @@ dataDieOff = function (plotParams, plotFunction) {
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
         var dieoffTypeStr = curve['dieoff-type'];

@@ -29,7 +29,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 6,
                 help: "dateHelp.html"
             });
 
@@ -48,7 +48,21 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 8
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'metexpress-mode',
+                type: matsTypes.InputTypes.radioGroup,
+                optionsMap: {'mats':'mats','matsmv':'matsmv'},
+                options: ['mats', 'matsmv'],
+                default: 'mats',
+                controlButtonCovered: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 8
             });
 
         var yAxisOptionsMap = {
@@ -66,7 +80,7 @@ const doPlotParams = function () {
                 controlButtonText: 'Y-axis mode',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         var binOptionsMap = {
@@ -97,7 +111,7 @@ const doPlotParams = function () {
                 controlButtonText: 'customize bins',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         matsCollections.PlotParams.insert(
@@ -114,7 +128,7 @@ const doPlotParams = function () {
                 controlButtonText: "number of bins",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         matsCollections.PlotParams.insert(
@@ -131,7 +145,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin pivot value",
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         matsCollections.PlotParams.insert(
@@ -148,7 +162,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin start",
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         matsCollections.PlotParams.insert(
@@ -165,7 +179,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin stride",
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
 
         matsCollections.PlotParams.insert(
@@ -179,7 +193,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 7
             });
     }
 };
@@ -520,9 +534,9 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
-                displayOrder: 3,
+                displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
             });
     }
 

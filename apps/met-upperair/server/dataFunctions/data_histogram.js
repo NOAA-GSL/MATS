@@ -12,7 +12,6 @@ import {Meteor} from "meteor/meteor";
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "met-upperair";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.histogram;
     const hasLevels = true;
@@ -61,7 +60,7 @@ dataHistogram = function (plotParams, plotFunction) {
         fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
         if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
-             fcsts = fcsts.map(function (fl) {
+            fcsts = fcsts.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
             forecastLengthsClause = "and ld.fcst_lead IN (" + fcsts + ")";
