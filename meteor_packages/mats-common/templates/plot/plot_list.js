@@ -374,7 +374,7 @@ Template.plotList.events({
                     console.log("after successful getGraphData call time:", new Date(), ":Session key: ",  ret.key, " graphFunction:", graphFunction);
                     matsGraphUtils.setGraphView(pt);
                 });
-                if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress) {
+                if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && p['metexpress-mode'] === "matsmv") {
                     p['mvPlot'] = true;   // mark this as a metviewer plot so that the key is uniq wrt the mats plot
                     Session.set('mvs', null);
                     Session.set("mvResultKey", null);

@@ -118,7 +118,7 @@ Template.graph.helpers({
     },
     mvSpanDisplay: function () {
         var updated = Session.get("MvResultsUpDated");
-        if (Session.get("mvResultKey") != null) {
+        if (Session.get("mvResultKey") != null || Session.get('plotParams')['metexpress-mode'] == "matsmv") {
             return "block";
         } else {
             return "none";
@@ -316,7 +316,9 @@ Template.graph.helpers({
         }
     },
     metApp: function() {
-        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress) {
+        Session.get("PlotParams");
+        Session.get('PlotResultsUpDated');
+        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
         } else {
             return "none";
@@ -334,7 +336,7 @@ Template.graph.helpers({
     },
     mvDisabled: function() {
         var updated = Session.get('MvResultsUpDated');
-        if (Session.get('mvs') == null) {
+        if (Session.get('mvs') == null || Session.get('PlotParams')['metexpress-mode'] == "mats") {
             return "none";
         } else {
             return "block";
@@ -342,7 +344,7 @@ Template.graph.helpers({
     },
     mvLoading: function() {
         var updated = Session.get('MvResultsUpDated');
-        if (Session.get('mvs') == null) {
+        if (Session.get('mvs') == null && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
         } else {
             return "none";

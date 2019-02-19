@@ -436,155 +436,107 @@ const addLegend = function(element,plotParams){
 };
 
 const addSeries = function(plot, dependentAxes, plotParams) {
-/***
-    data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
-    are series variables multiple selections for a given curve are MV grouped (join'd)
-    If they are associated with different curves they are seerate <val> tags.
+    /***
+     data-source(models), region(vx_mask),forecast_length (fcst_lead), and pres-level(fcst_lev)
+     are series variables. Multiple selections for a given curve are MV grouped (join'd)
+     Multiple selections associated with different curves are seperate <val> tags.
 
-    We can differentiate series by axis or dependent variable. Each dependent variable requires a new series.
+     All of the non grouped combinations are added which results in possibly too many curves. The redundant ones are later hidden.
 
-    MV cannot have a different model/stat/fcst_lead/fcst_lvl pair on the same axis because I don't know
-    how to associate a different statistic with a different fcst_lead, for example. I cannot group sets of variables.
+     They can also go on the axis that is associated with the curve that the region parameter is on.
+     In other words force a new series.
+     i.e. Y1 Series variables or Y2 Series variables
 
-    They can also go on the axis that is associated with the curve that the region parameter is on.
-    In other words force a new series.
-    i.e. Y1 Series variables or Y2 Series variables
-    The name-val pairs in a series must be uniq. If two curves repeat them they don't get added
-    to the plotspec twice.
+     series variables can be grouped or ungrouped.
+     e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
+     e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
+     <val>2018-11-01 06:00:00</val>
+     <val>2018-11-01 12:00:00</val>
+     <val>2018-11-01</val>
+     For MATS curves they are grouped for each curve and added ase series variables. This results in redundant curves in MV and so the
+     redundant curves will be hidden.
+     Curves that were assigned to different axis were figured out and assigned in getDependents and are assigned in the dependentAxes structure.
+     ***/
+    var hiddenCurves = [];
+    var sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead'};
+    const type = (_.invert(plotParams.plotTypes))[true];
+    const seriesAxisMap = {'series1':'y1', 'series2':'y2'};
+    Object.keys(seriesAxisMap).forEach(function (series) {
+        var models = [];
+        var vx_masks = [];
+        var fcst_leads = [];
+        var fcst_levls = [];
+        var seriesElem = plot.ele(series);
+        const axis = seriesAxisMap[series];
 
-    series variables can be grouped or ungrouped.
-    e.g. grouped ...    <val>2018-11-01 00:00:00,2018-11-01 06:00:00,2018-11-01 12:00:00,2018-11-01</val>
-    e.g. ungrouped ...    <val>2018-11-01 00:00:00</val>
-                          <val>2018-11-01 06:00:00</val>
-                          <val>2018-11-01 12:00:00</val>
-                          <val>2018-11-01</val>
-
- In MV there are independent variables. These are times for time series, and levels for profiles.
-
-
-***/
-    var models = [];
-    var vx_masks = [];
-    var fcst_leads = [];
-    var fcst_levls = [];
-    var series1 = plot.ele('series1');
-    for (var daci = 0; daci < dependentAxes['y1'].length; daci++) {
-        const curve = dependentAxes['y1'][daci];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        if (models.indexOf(model) === -1) {
-            models.push(model);
-            series1.ele('field', {'name': 'model'})
-                .ele('val', model);
+        if (type === matsTypes.PlotTypes.profile) {
+            delete sVars['pres-level'];
+        } else {
+            // we only consider pressure levels when it isn't a profile
+            sVars['pres-level'] = 'fcst_lev';
         }
-        // only add the vx_mask tag if there are regions requested - leaving it out will get them all
-        if (curve['region'] != null && curve['region'].length > 0) {
-            const valSet = new Set().add(curve['region']);
-            var series1Elem = series1.ele('field', {'name': 'vx_mask'});
-            const vals = Array.from(valSet)[0];
-            for (var i=0; i<vals.length;i++) {
-                series1Elem.ele('val', vals[i]);
+        var seriesElements = {};
+        var seriesElementValues = {};
+        for (var daci = 0; daci < dependentAxes[axis].length; daci++) {
+            const curve = dependentAxes[axis][daci];
+            const database = curve['database'];
+            const dataSource = curve['data-source'];
+                Object.keys(sVars).forEach(function(sVar) {
+                    try {
+                        // models - not multiple - ungrouped
+                        sValues = [];
+                        if (sVar === 'data-source') {
+                            // convert data-source to single element array
+                            sValues = [matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource][0]];
+                        } else {
+                            sValues = curve[sVar];
+                            if (sValues == null || sValues.length === 0) {
+                                sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the region
+                            }
+                        }
+                        // check to see if this element was already added.
+                        // if not added then add the element.
+                        // if element was already added see if we need to add this value.
+                        // multiples are always grouped.
+                        const sValuesStr = sValues.join(',');
+                        if (seriesElements[sVars[sVar]] == null) {
+                            seriesElements[sVars[sVar]] = seriesElem.ele('field', {'name': sVars[sVar]});
+                            seriesElements[sVars[sVar]].ele('val', sValuesStr);
+                            seriesElementValues[sVars[sVar]] = [sValuesStr];
+                        } else {
+                            // already exists
+                            if (seriesElementValues[sVars[sVar]].indexOf(sValuesStr) === -1) {
+                                seriesElements[sVars[sVar]].ele('val', sValuesStr);
+                                seriesElementValues[sVars[sVar]].push(sValuesStr);
+                            }
+                        }
+                } catch (error) {
+                    console.log(error)
+                    throw new Meteor.error(error);
+                }
+            });
+            // for profiles, dieoffs, validTimes, thresholds, and histograms, dates are series variables so they get added here
+            // for the other types dates are independent variables so they get added there instead.
+            if (type === matsTypes.PlotTypes.profile ||
+                type === matsTypes.PlotTypes.dieoff ||
+                type === matsTypes.PlotTypes.validtime ||
+                type === matsTypes.PlotTypes.threshold ||
+                type === matsTypes.PlotTypes.histogram) {
+                // these have series variable curve-dates.
+                const sortedDates = _getSortedDatesForDepRange(curve);
+                seriesElem.ele('field', {'name': 'fcst_valid_beg'})
+                    .ele('val', sortedDates.join(','));
             }
         }
-        // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
-        if (curve['forecast-length'] != null && curve['forecast-length'].length > 0) {
-            // have to get the unsanitized values..
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const valSet = new Set().add(curve['forecast-length'].map(function (fl) {return forecastValueMap[fl];}));
-            var series1Elem = series1.ele('field', {'name': 'fcst_lead'});
-            const vals = Array.from(valSet)[0];
-            for (var i=0; i<vals.length;i++) {
-                series1Elem.ele('val', vals[i]);
-            }
-        }
-        // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
-        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
-            const valSet = new Set().add(curve['pres-level']);
-            var series1Elem = series1.ele('field', {'name': 'fcst_lev'});
-            const vals = Array.from(valSet)[0];
-            for (var i=0; i<vals.length;i++) {
-                series1Elem.ele('val', vals[i]);
-            }
-        }
-        // for profiles, dieoffs, validTimes, thresholds, and histograms dates are series variables
-        const type = (_.invert(plotParams.plotTypes))[true];
-        if (type === matsTypes.PlotTypes.profile ||
-            type === matsTypes.PlotTypes.dieoff ||
-            type === matsTypes.PlotTypes.validtime ||
-            type === matsTypes.PlotTypes.threshold ||
-            type === matsTypes.PlotTypes.histogram ) {
-            // these have series variable curve-dates.
-            const sortedDates = _getSortedDatesForDepRange(curve);
-            series1.ele('field', {'name': 'fcst_valid_beg'})
-                .ele('val', sortedDates.join(','));
-        }
-    }
-    models = [];
-    vx_masks = [];
-    fcst_leads = [];
-    fcst_levls = [];
-    var series2 = plot.ele('series2');
-    for (var daci = 0; daci < dependentAxes['y2'].length; daci++) {
-        const curve = dependentAxes['y2'][daci];
-        const database = curve['database'];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[database][curve['data-source']][0];
-        if (models.indexOf(model) === -1) {
-            models.push(model);
-            series2.ele('field', {'name': 'model'})
-                .ele('val', model);
-        }
-        // only add the vx_mask tag if there are regions requested - leaving it out will get them all
-        if (curve['region'] != null && curve['region'].length > 0) {
-            const regions = curve['region'].join(',');
-            if (vx_masks.indexOf(regions) === -1) {
-                vx_masks.push(regions);
-                series2.ele('field', {'name': 'vx_mask'})
-                    .ele('val', regions);
-            }
-        }
-        // only add the fcst_lead tag if there are forecast-lengths requested - leaving it out will get them all
-        if (curve['forecast-length'] != null && curve['forecast-length'].length > 0) {
-            // have to get the unsanitized values..
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-            const forecastLengths = curve['forecast-length'].map(function (fl) {
-                return forecastValueMap[fl];
-            }).join(',');
-            if (fcst_leads.indexOf(forecastLengths) === -1) {
-                fcst_leads.push(forecastLengths);
-                series2.ele('field', {'name': 'fcst_lead'})
-                    .ele('val', forecastLengths);
-            }
-        }
-        // only add the fcst_lev tag if there are pres-levels requested - leaving it out will get them all
-        if (curve['pres-level'] != null && curve['pres-level'].length > 0) {
-            const presLvls = curve['pres-level'].join(',');
-            if (fcst_levls.indexOf(presLvls) === -1) {
-                fcst_leads.push(presLvls);
-                series2.ele('field', {'name': 'fcst_lev'})
-                    .ele('val', presLvls);
-            }
-        }
-        // for profiles, dieoffs, validTimes, thresholds, and histograms dates are series variables
-        const type = (_.invert(plotParams.plotTypes))[true];
-        if (type === matsTypes.PlotTypes.profile ||
-            type === matsTypes.PlotTypes.dieoff ||
-            type === matsTypes.PlotTypes.validtime ||
-            type === matsTypes.PlotTypes.threshold ||
-            type === matsTypes.PlotTypes.histogram ) {
-            // these have series variable curve-dates.
-            const sortedDates = _getSortedDatesForDepRange(curve);
-            series2.ele('field', {'name': 'fcst_valid_beg'})
-                .ele('val', sortedDates.join(','));
-        }
-    }
+    });
 }
 
 const getDependentAxis = function(plotParams) {
     // there are two possible axis for metviewer. We want to collect all the variables
     // into groups. We will take the two largest groups.
     // variables and statistics go together. They are dependent variabales in MV.
-    // variable/stat pairs always are associated with different curves, and will always be on different axis
-    // if possible, but might be assigned an axis via dependentAxes.
+    // The variable/stat pairs always are associated with different curves, and will always be on different axis,
+    // if possible, but might be assigned an axis via an axes parameter.
     const yaxesDefault = "auto-by-variable";
     var curves = plotParams['curves'];
     var dependentAxes = {'y1': [], 'y2': []};
@@ -592,7 +544,7 @@ const getDependentAxis = function(plotParams) {
     var dependentAxesVariables = {'y1': [curves[0]['variable']], 'y2': []};
     for (var ci = 1; ci < curves.length; ci++) {
         if (curves[ci].yaxes != yaxesDefault) {
-            // sort it into its selectedYaxes
+            // it was assigned an axis by the axis param so sort it into its selectedYaxes
             dependentAxes[curves[ci].yaxes].push(curves[ci]);
         } else {
             // sort it into an axis by its variable/stat combination
@@ -613,16 +565,14 @@ const getDependentAxis = function(plotParams) {
 }
 
 function addDeps(plot, dependentAxes) {
-    // If the same variable/statistic pair is present for two curves, we don't assign it twice,
-    // once is enough...
     var dep = plot.ele('dep');
     const deps = {"dep1":"y1","dep2":"y2"};
-    for (var di=0; di<Object.keys(deps).length;di++) {
-        var depKey = Object.keys(deps)[di];
+    for (var di=0; di<Object.keys(deps).length;di++) {  // [dep1, dep2]
+        var depKey = Object.keys(deps)[di];  // dep1 or dep2
         var depAxis = deps[depKey];
-        var subDep = dep.ele(depKey);
+        var subDep = dep.ele(depKey); //<dep><dep1/><dep2/>
         var variableStatisticPairs = {};
-        for (var daci = 0; daci < dependentAxes[depAxis].length; daci++) {
+        for (var daci = 0; daci < dependentAxes[depAxis].length; daci++) {    //[y1,y2]
             // record the variable-statistic pair
             const variable = dependentAxes[depAxis][daci]['variable'];
             const stat = statMvTranslation[dependentAxes[depAxis][daci]['statistic']];
@@ -632,12 +582,12 @@ function addDeps(plot, dependentAxes) {
                 variableStatisticPairs[variable].push(stat);
             }
         }
-        var vars = Object.keys(variableStatisticPairs);
+        var vars = Object.keys(variableStatisticPairs);  //['T','HGT','WIND'...]
         for (var v = 0; v < vars.length; v++) {
             const stats = Array.from(new Set(variableStatisticPairs[vars[v]]));
-            var dep1Elem = subDep.ele('fcst_var', {'name': vars[v]});
+            var depElem = subDep.ele('fcst_var', {'name': vars[v]}); //<dep><dep1><fcst_var name='T'><stat>RMS</stat></fcst_var> </dep1><dep2/>
             for (var si=0;si<stats.length;si++) {
-                dep1Elem.ele('stat',stats[si]);
+                depElem.ele('stat',stats[si]);
             }
         }
     }

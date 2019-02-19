@@ -110,6 +110,20 @@ if (Meteor.isServer) {
         Picker.middleware(_mvGetData(params, req, res, next));
     });
 
+    Picker.route('/:app/mvpoints1/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints1(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvpoints1/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints1(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvpoints2/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints2(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvpoints2/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints2(params, req, res, next));
+    });
+
     Picker.route('/:app/mvxml/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetXml(params, req, res, next));
     });
@@ -141,7 +155,7 @@ if (Meteor.isServer) {
     Picker.route('/:app/mvlog/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetLog(params, req, res, next));
     });
-    Picker.route('/gsd/mats/:app/mvslog/:key', function (params, req, res, next) {
+    Picker.route('/gsd/mats/:app/mvlog/:key', function (params, req, res, next) {
         Picker.middleware(_mvGetLog(params, req, res, next));
     });
 
@@ -722,6 +736,48 @@ const _mvGetData = function(params, req, res, next) {
         res.end();
     }
 }
+
+//private middleware for getting metviewer points1 file
+const _mvGetPoints1 = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.DATADIR;
+    const baseName = params.key + ".points1";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain')
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting data file :" + baseName);
+        res.end();
+    }
+}
+
+
+//private middleware for getting metviewer points1 file
+const _mvGetPoints2 = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.DATADIR;
+    const baseName = params.key + ".points2";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain')
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting data file :" + baseName);
+        res.end();
+    }
+}
+
 //private middleware for getting metviewer xml file
 const _mvGetXml = function(params, req, res, next) {
     const fse = require("fs-extra");
@@ -860,7 +916,7 @@ const _saveResultData = function (result) {
         var ret = {};
         try {
             var dSize = sizeof(result.data);
-            console.log("result.basis.data size is ", dSize);
+            //console.log("result.basis.data size is ", dSize);
             // TimeSeries and DailyModelCycle are the only plot types that require downSampling
             if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
                 // greater than threshold need to downsample
@@ -1478,7 +1534,9 @@ const mvBatch = new ValidatedMethod({
                 log: appName + "/mvlog/" + key,
                 err: appName + "/mverr/" + key,
                 R: appName + "/mvscript/" + key,
-                data: appName + "/mvdata/" + key
+                data: appName + "/mvdata/" + key,
+                points1: appName + "/mvpoints1/" + key,
+                points2: appName + "/mvpoints2/" + key,
             };
             const Future = require('fibers/future');
             var mvFuture = new Future();
@@ -1490,6 +1548,8 @@ const mvBatch = new ValidatedMethod({
             const errFilePath = MV_DIRS.ERRDIR + key + ".err";
             const scriptFilePath = MV_DIRS.SCRIPTSDIR + key + ".R";
             const dataFilePath = MV_DIRS.DATADIR + key + ".data";
+            const points1Path = MV_DIRS.DATADIR + key + ".points1";
+            const points2Path = MV_DIRS.DATADIR + key + ".points2";
             // NOTE: the plotParams should include an mvPlot:true parameter.
             // This should have been set in the caller. This makes the mv plotSpec cache entry unique from a MATS plot
             if (params.plotParams.mvPlot !== true) {
@@ -1518,6 +1578,12 @@ const mvBatch = new ValidatedMethod({
                 } catch (ignore){}
                 try {
                     fse.unlinkSync(dataFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(points1Path);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(points2Path);
                 } catch (ignore){}
             }
             // try to get the key from the cache
@@ -1703,7 +1769,7 @@ const refreshMetaData = new ValidatedMethod({
     run() {
         if (Meteor.isServer) {
             try {
-                console.log("Asked to refresh metadata");
+                //console.log("Asked to refresh metadata");
                 _checkMetaDataRefresh();
             } catch (e) {
                 console.log(e);

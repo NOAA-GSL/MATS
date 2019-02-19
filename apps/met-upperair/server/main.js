@@ -29,7 +29,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: "dateHelp.html"
             });
 
@@ -44,6 +44,20 @@ const doPlotParams = function () {
                 optionsMap: plotFormats,
                 options: [matsTypes.PlotFormats.matching, matsTypes.PlotFormats.pairwise, matsTypes.PlotFormats.none],
                 default: matsTypes.PlotFormats.none,
+                controlButtonCovered: false,
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+
+        matsCollections.PlotParams.insert(
+            {
+                name: 'metexpress-mode',
+                type: matsTypes.InputTypes.radioGroup,
+                optionsMap: {'mats':'mats','matsmv':'matsmv'},
+                options: ['mats', 'matsmv'],
+                default: 'mats',
                 controlButtonCovered: false,
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
@@ -592,9 +606,9 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 1,
+                displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 5
+                displayGroup: 4
             });
     }
 
@@ -612,9 +626,9 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
-                displayOrder: 2,
+                displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 4,
                 multiple: true
             });
     } else {
@@ -665,7 +679,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 5,
                 help: "dateHelp.html"
             });
     }
@@ -836,6 +850,10 @@ const doPlotGraph = function () {
 
 
 Meteor.startup(function () {
+    if (Meteor.settings.private == null) {
+        console.log ("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = Meteor.settings.private.databases;
