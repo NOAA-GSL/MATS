@@ -30,8 +30,7 @@ output_JSON = {}  # JSON structure to pass the five output fields back to the MA
 
 # function to open a connection to a mysql database
 def connect_to_mysql(mysql_conf_path):
-    global error
-    global error_bool
+    global error, error_bool
     try:
         cnx = MySQLdb.connect(read_default_file=mysql_conf_path)
         cnx.autocommit = True
@@ -45,8 +44,7 @@ def connect_to_mysql(mysql_conf_path):
 
 # function for closing a connection to a mysql database
 def disconnect_mysql(cnx, cursor):
-    global error
-    global error_bool
+    global error, error_bool
     try:
         cursor.close()
         cnx.close()
@@ -57,11 +55,7 @@ def disconnect_mysql(cnx, cursor):
 
 # function for constructing and jsonifying a dictionary of the output variables
 def construct_output_json():
-    global output_JSON
-    global error
-    global n0
-    global n_times
-    global data
+    global output_JSON, error, n0, n_times, data
     output_JSON = {
         "data": data,
         "N0": n0,
@@ -86,11 +80,12 @@ def is_number(s):
 
 
 # function for calculating anomaly correlation from MET partial sums
-def calculate_acc(ffbar, oobar, fobar):
-    global error
-    global error_bool
+def calculate_acc(fbar, obar, ffbar, oobar, fobar, total):
+    global error, error_bool
     try:
-        acc = fobar / (np.sqrt(ffbar) * np.sqrt(oobar))
+        denom = (np.power(total, 2) * ffbar - np.power(total, 2) * np.power(fbar, 2)) \
+                * (np.power(total, 2) * oobar - np.power(total, 2) * np.power(obar, 2))
+        acc = (np.power(total, 2) * fobar - np.power(total, 2) * fbar * obar) / np.sqrt(denom)
     except TypeError as e:
         error = "Error calculating RMS: " + str(e)
         error_bool = True
@@ -104,8 +99,7 @@ def calculate_acc(ffbar, oobar, fobar):
 
 # function for calculating RMS from MET partial sums
 def calculate_rms(ffbar, oobar, fobar):
-    global error
-    global error_bool
+    global error, error_bool
     try:
         rms = np.sqrt(ffbar + oobar - 2 * fobar)
     except TypeError as e:
@@ -121,8 +115,7 @@ def calculate_rms(ffbar, oobar, fobar):
 
 # function for calculating bias from MET partial sums
 def calculate_bias(fbar, obar):
-    global error
-    global error_bool
+    global error, error_bool
     try:
         bias = fbar - obar
     except TypeError as e:
@@ -153,8 +146,7 @@ def calculate_o_avg(obar):
 
 # function for determining and calling the appropriate statistical calculation function
 def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
-    global error
-    global error_bool
+    global error, error_bool
     stat_switch = {  # dispatcher of statistical calculation functions
         'ACC': calculate_acc,
         'RMS': calculate_rms,
@@ -164,7 +156,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
         'Obs average': calculate_o_avg
     }
     args_switch = {  # dispatcher of arguments for statistical calculation functions
-        'ACC': (ffbar, oobar, fobar),
+        'ACC': (fbar, obar, ffbar, oobar, fobar, total),
         'RMS': (ffbar, oobar, fobar),
         'Bias (Model - Obs)': (fbar, obar),
         'N': (total,),
@@ -190,8 +182,7 @@ def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
 
 # function for processing the sub-values from the query and calling calculate_stat
 def get_scalar_stat(has_levels, row, statistic):
-    global error
-    global error_bool
+    global error, error_bool
     try:
         # get all of the partial sums for each time
         # fbar, obar, ffbar, fobar, and oobar may have different names in different partial sums tables,
@@ -249,11 +240,7 @@ def get_time_interval(curr_time, time_interval, vts):
 
 # function for parsing the data returned by a timeseries query
 def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts):
-    global error
-    global error_bool
-    global n0
-    global n_times
-    global data
+    global error, error_bool, n0, n_times, data
 
     xmax = float("-inf")
     xmin = float("inf")
@@ -383,11 +370,7 @@ def parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_p
 
 # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
 def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param):
-    global error
-    global error_bool
-    global n0
-    global n_times
-    global data
+    global error, error_bool, n0, n_times, data
 
     curve_ind_vars = []
     curve_stats = []
@@ -532,11 +515,7 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
 
 # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
 def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param):
-    global error
-    global error_bool
-    global n0
-    global n_times
-    global data
+    global error, error_bool, n0, n_times, data
 
     sub_vals_all = []
     sub_secs_all = []
@@ -583,11 +562,7 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
 
 # function for querying the database and sending the returned data to the parser
 def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
-    global data
-    global n0
-    global n_times
-    global error
-    global error_bool
+    global error, error_bool, n0, n_times, data
 
     try:
         cursor.execute(statement)
@@ -620,8 +595,7 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
 
 
 def main(args):
-    global error_bool
-    global output_JSON
+    global output_JSON, error_bool
     cnx, cursor = connect_to_mysql(args[1])
     if not error_bool:
         query_db(cursor, args[2], args[3], args[4], args[5], args[6], args[7])
