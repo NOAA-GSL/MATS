@@ -99,23 +99,29 @@ const _rgbToHex = function(color) {
 
 const _getUniqDates = function(dates, database, model, dataSource, region, variable, forecastLength, fromSecs, toSecs, validTimes ) {
     var regionsClause = "";
-    if (region != null && region.length > 0) {
-        const regions = region.map(function (r) {
-            return "'" + r + "'";
-        }).join(',');
-        regionsClause = "and h.vx_mask IN(" + regions + ")";
+    if (region != null) {
+        region = Array.isArray(region) ? region : [region];
+        if (region.length > 0) {
+            const regions = region.map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        }
     }
 
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the varias databases
     // so they have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
     var forecastLengthsClause = "";
-    if (forecastLength != null && forecastLength.length > 0) {
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-        const forecastLengths = forecastLength.map(function (fl) {
-            return forecastValueMap[fl];
-        }).join(',');
-        forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+    if (forecastLength != null) {
+        forecastLength = Array.isArray(forecastLength) ? forecastLength : [forecastLength];
+        if (forecastLength.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = forecastLength.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+        }
     }
 
     var statement = "select ld.fcst_valid_beg as avtime " +
@@ -561,18 +567,21 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                         // if not added then add the element.
                         // if element was already added see if we need to add this value.
                         // multiples are always grouped.
-                        if (sValues !== undefined && sValues.length > 0) {
-                            const sValuesStr = sValues.join(',');
-                            if (sValuesStr !== undefined) {
-                                const thisVar = sVars[sVar];
-                                if (seriesElements[thisVar] == null) {
-                                    seriesElements[thisVar] = seriesElem.ele('field', {'name': sVars[sVar]});
-                                    seriesElementValues[thisVar] = new Set();
-                                    seriesElementValues[thisVar].add(sValuesStr);
-                                } else {
-                                    // already exists
-                                    if (seriesElementValues[thisVar].has(sValuesStr) === false) {
+                        if (sValues !== undefined) {
+                            sValues = Array.isArray(sValues) ? sValues : [sValues];
+                            if (sValues.length > 0) {
+                                const sValuesStr = sValues.join(',');
+                                if (sValuesStr !== undefined) {
+                                    const thisVar = sVars[sVar];
+                                    if (seriesElements[thisVar] == null) {
+                                        seriesElements[thisVar] = seriesElem.ele('field', {'name': sVars[sVar]});
+                                        seriesElementValues[thisVar] = new Set();
                                         seriesElementValues[thisVar].add(sValuesStr);
+                                    } else {
+                                        // already exists
+                                        if (seriesElementValues[thisVar].has(sValuesStr) === false) {
+                                            seriesElementValues[thisVar].add(sValuesStr);
+                                        }
                                     }
                                 }
                             }

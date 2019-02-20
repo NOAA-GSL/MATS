@@ -409,7 +409,6 @@ const doCurveParams = function () {
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2,
-                multiple: true,
                 help: 'region.html'
             });
     } else {
