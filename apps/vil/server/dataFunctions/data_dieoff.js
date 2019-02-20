@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataDieOff = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "vil";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.dieoff;
     const hasLevels = false;

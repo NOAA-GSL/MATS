@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "precipAQPI";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.validtime;
     const hasLevels = false;

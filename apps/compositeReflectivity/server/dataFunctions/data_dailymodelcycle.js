@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataDailyModelCycle = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "compositeReflectivity";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.dailyModelCycle;
     const hasLevels = false;
