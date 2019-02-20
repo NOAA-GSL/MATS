@@ -569,7 +569,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: 12,
                 controlButtonVisibility: 'block',
-                controlButtonText: "utc cycle start time",
+                controlButtonText: "utc cycle init hour",
                 displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4,
