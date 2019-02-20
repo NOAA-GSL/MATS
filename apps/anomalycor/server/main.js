@@ -455,8 +455,8 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'dieoff-type'}).count() == 0) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
-            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
-            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
+            "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
         };
         matsCollections.CurveParams.insert(
             {
@@ -465,8 +465,8 @@ const doCurveParams = function () {
                 optionsMap: dieoffOptionsMap,
                 options: Object.keys(dieoffOptionsMap),
                 hideOtherFor: {
-                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
-                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                    'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
                 },
                 selected: '',
                 controlButtonCovered: true,
@@ -514,7 +514,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: optionsArr[1],
                 controlButtonVisibility: 'block',
-                controlButtonText: "utc cycle start time",
+                controlButtonText: "utc cycle init hour",
                 displayOrder: 9,
                 displayPriority: 1,
                 displayGroup: 3,

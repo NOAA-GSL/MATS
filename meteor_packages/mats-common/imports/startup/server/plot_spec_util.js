@@ -99,23 +99,29 @@ const _rgbToHex = function(color) {
 
 const _getUniqDates = function(dates, database, model, dataSource, region, variable, forecastLength, fromSecs, toSecs, validTimes ) {
     var regionsClause = "";
-    if (region != null && region.length > 0) {
-        const regions = region.map(function (r) {
-            return "'" + r + "'";
-        }).join(',');
-        regionsClause = "and h.vx_mask IN(" + regions + ")";
+    if (region != null) {
+        region = Array.isArray(region) ? region : [region];
+        if (region.length > 0) {
+            const regions = region.map(function (r) {
+                return "'" + r + "'";
+            }).join(',');
+            regionsClause = "and h.vx_mask IN(" + regions + ")";
+        }
     }
 
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the varias databases
     // so they have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
     var forecastLengthsClause = "";
-    if (forecastLength != null && forecastLength.length > 0) {
-        const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
-        const forecastLengths = forecastLength.map(function (fl) {
-            return forecastValueMap[fl];
-        }).join(',');
-        forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+    if (forecastLength != null) {
+        forecastLength = Array.isArray(forecastLength) ? forecastLength : [forecastLength];
+        if (forecastLength.length > 0) {
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastLengths = forecastLength.map(function (fl) {
+                return forecastValueMap[fl];
+            }).join(',');
+            forecastLengthsClause = "and ld.fcst_lead IN (" + forecastLengths + ")";
+        }
     }
 
     var statement = "select ld.fcst_valid_beg as avtime " +
@@ -502,7 +508,7 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                 sVars = {'data-source': 'model', 'region': 'vx_mask', 'pres-level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
                 for (var ci=0; ci < plotParams.curves.length;ci++) {
                     const c = plotParams.curves[ci];
-                    if (c['dieoff-type'] === 'Dieoff for a specific UTC cycle start time') {
+                    if (c['dieoff-type'] === 'Dieoff for a specified UTC cycle init hour') {
                         initHours.add(c['utc-cycle-start']);
                     } else if (c.dieoff - type === matsTypes.ForecastTypes.singleCycle) {
                         // placeholder for if issue 60313 gets resolved
@@ -561,18 +567,21 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                         // if not added then add the element.
                         // if element was already added see if we need to add this value.
                         // multiples are always grouped.
-                        if (sValues !== undefined && sValues.length > 0) {
-                            const sValuesStr = sValues.join(',');
-                            if (sValuesStr !== undefined) {
-                                const thisVar = sVars[sVar];
-                                if (seriesElements[thisVar] == null) {
-                                    seriesElements[thisVar] = seriesElem.ele('field', {'name': sVars[sVar]});
-                                    seriesElementValues[thisVar] = new Set();
-                                    seriesElementValues[thisVar].add(sValuesStr);
-                                } else {
-                                    // already exists
-                                    if (seriesElementValues[thisVar].has(sValuesStr) === false) {
+                        if (sValues !== undefined) {
+                            sValues = Array.isArray(sValues) ? sValues : [sValues];
+                            if (sValues.length > 0) {
+                                const sValuesStr = sValues.join(',');
+                                if (sValuesStr !== undefined) {
+                                    const thisVar = sVars[sVar];
+                                    if (seriesElements[thisVar] == null) {
+                                        seriesElements[thisVar] = seriesElem.ele('field', {'name': sVars[sVar]});
+                                        seriesElementValues[thisVar] = new Set();
                                         seriesElementValues[thisVar].add(sValuesStr);
+                                    } else {
+                                        // already exists
+                                        if (seriesElementValues[thisVar].has(sValuesStr) === false) {
+                                            seriesElementValues[thisVar].add(sValuesStr);
+                                        }
                                     }
                                 }
                             }
@@ -761,7 +770,7 @@ const addIndepLevels = function(plot, plotParams) {
 }
 
 const addIndepValidHours = function(plot, plotParams) {
-    // for profiles we use a union of all the levels available for all the data-sources
+    // for validTimes we use a union of all the vts available for all the data-sources
     var indep = plot.ele('indep', {'equalize': 'false', 'name': 'valid_hour'});
     const hours = _getSortedHoursForIndepRange(plotParams);
     for (var hi=0; hi<hours.length;hi++) {
@@ -772,7 +781,7 @@ const addIndepValidHours = function(plot, plotParams) {
 }
 
 const addIndepForecastHours = function(plot, plotParams) {
-    // for profiles we use a union of all the levels available for all the data-sources
+    // for dieoffs we use a union of all the fhrs available for all the data-sources
     var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_lead'});
     var curves = plotParams.curves;
     var leadSet = new Set(); // use a set to accumulate all the levels
