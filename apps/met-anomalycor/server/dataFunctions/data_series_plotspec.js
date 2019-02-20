@@ -8,17 +8,17 @@ plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
         var spec = matsPlotSpecUtils.startPlotSpec(sumPool,plotParams);
         var xml = spec.xml;
         var plot = spec.plot;
-        matsPlotSpecUtils.addTemplate(plot,'series_plot.R_tmpl');
         const dependentAxes = matsPlotSpecUtils.getDependentAxis(plotParams);
-        matsPlotSpecUtils.addDeps(plot, dependentAxes);
+        matsPlotSpecUtils.addTemplate(plot,'series_plot.R_tmpl');
+        matsPlotSpecUtils.addAnomalycorrDeps(plot, dependentAxes);
         matsPlotSpecUtils.addSeries(plot, dependentAxes, plotParams);
-        matsPlotSpecUtils.addPlotFix(plot); // unused for time series
-        matsPlotSpecUtils.addPlotCond(plot); // unused for time series
-        matsPlotSpecUtils.addIndep(plot, plotParams);
-        matsPlotSpecUtils.addCalcStat(plot,'calc_sl1l2'); // unused for time series
+        matsPlotSpecUtils.addPlotFix(plot); // unused
+        matsPlotSpecUtils.addPlotCond(plot); // unused
+        matsPlotSpecUtils.addIndepDates(plot, plotParams);
+        matsPlotSpecUtils.addCalcStat(plot,'calc_sal1l2'); // unused for time series
         matsPlotSpecUtils.addPlotStat(plot,'mean'); //We always do Summary with Mean
         matsPlotSpecUtils.addTmpl(plot, key, plotParams, dependentAxes);
-        matsPlotSpecUtils.addMiscellaneous(plot);
+        matsPlotSpecUtils.addMiscellaneous(plot, plotParams);
         matsPlotSpecUtils.addPlotCi(plot,plotParams);
         matsPlotSpecUtils.addShowSignif(plot,plotParams);
         matsPlotSpecUtils.addPlotDisp(plot,plotParams);

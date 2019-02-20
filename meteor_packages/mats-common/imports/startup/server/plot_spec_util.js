@@ -660,6 +660,25 @@ function addDeps(plot, dependentAxes) {
     }
 }
 
+function addAnomalycorrDeps(plot, dependentAxes) {
+    var dep = plot.ele('dep');
+    const deps = {"dep1":"y1","dep2":"y2"};
+    for (var di=0; di<Object.keys(deps).length;di++) {  // [dep1, dep2]
+        var depKey = Object.keys(deps)[di];  // dep1 or dep2
+        var depAxis = deps[depKey];
+        var subDep = dep.ele(depKey); //<dep><dep1/><dep2/>
+        var variables = new Set();
+        for (var daci = 0; daci < dependentAxes[depAxis].length; daci++) {    //[y1,y2]
+            const variable = dependentAxes[depAxis][daci]['variable'];
+            variables.add(variable);
+        }
+        var vars = Array.from(variables);
+        for (var v = 0; v < vars.length; v++) {
+            subDep.ele('fcst_var', {'name': vars[v]}).ele('stat','ANOM_CORR');
+        }
+    }
+}
+
 const _addSeriesLabels = function(element,dependentAxes, plotParams) {
     const plotType = (_.invert(plotParams.plotTypes))[true];
     var label;
@@ -761,7 +780,7 @@ const addIndepForecastHours = function(plot, plotParams) {
         const curve = curves[ci];
         const database = curve['database'];
         const dataSource = curve['data-source'];
-        const forecastLengths = matsCollections.CurveParams.findOne({name: 'fcst_lead'})['optionsMap'][database][dataSource];
+        const forecastLengths = matsCollections.CurveParams.findOne({name: 'forecast-length'})['optionsMap'][database][dataSource];
         leadSet.add(forecastLengths);
     }
     const leads = Array.from(leadSet)[0];
@@ -917,6 +936,7 @@ const endPlotSpec = function(xml) {
 export default matsPlotSpecUtils = {
     startPlotSpec:startPlotSpec,
     addDeps:addDeps,
+    addAnomalycorrDeps:addAnomalycorrDeps,
     getDependentAxis:getDependentAxis,
     addDatabaseElement:addDatabaseElement,
     addFolders:addFolders,
