@@ -502,7 +502,7 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                 sVars = {'data-source': 'model', 'region': 'vx_mask', 'pres-level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
                 for (var ci=0; ci < plotParams.curves.length;ci++) {
                     const c = plotParams.curves[ci];
-                    if (c['dieoff-type'] === 'Dieoff for a specific UTC cycle start time') {
+                    if (c['dieoff-type'] === 'Dieoff for a specified UTC cycle init hour') {
                         initHours.add(c['utc-cycle-start']);
                     } else if (c.dieoff - type === matsTypes.ForecastTypes.singleCycle) {
                         // placeholder for if issue 60313 gets resolved
