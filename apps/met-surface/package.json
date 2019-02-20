@@ -5,7 +5,7 @@
     "start": "meteor run"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.2",
+    "@babel/runtime": "^7.3.1",
     "childprocess": "^2.0.2",
     "downsample-lttb": "git+https://github.com/pingec/downsample-lttb.git",
     "fibers": "^2.0.0",
