@@ -1608,7 +1608,8 @@ const mvBatch = new ValidatedMethod({
                 global[plotSpecFunction](params.plotParams, key, function (err, plotSpec) {
                     // callback
                     if (err) {
-                        console.log(err);
+                        console.log(err, "plotspecFunction:", plotSpecFunction);
+                        throw new Meteor.Error(err + "plotspecFunction: " + plotSpecFunction);
                     } else {
 
                         // no error and we have a plot spec

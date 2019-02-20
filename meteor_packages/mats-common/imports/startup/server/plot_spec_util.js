@@ -23,6 +23,12 @@ const statMvTranslation = {
 
 const xmlBuilder = require('xmlbuilder');
 
+const _pad = function(num, size){
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+}
+
 const _title = function () {
     try {
         if (matsCollections.Settings === undefined || matsCollections.Settings.findOne({}, {fields: {Title: 1}}) === undefined) {
@@ -190,6 +196,16 @@ const _getSortedDatesForIndepRange = function(plotParams) {
         }
     );
     return sortedDates;
+}
+
+const _getSortedHoursForIndepRange = function(plotParams) {
+    const sortedDates = _getSortedDatesForIndepRange(plotParams);
+    var hours = new Set();
+    for (var di=0;di<sortedDates.length;di++) {
+        const hour = moment(sortedDates[di]).format("HH");
+        hours.add(hour);
+    }
+    return Array.from(hours).sort();
 }
 
 const _getSortedDatesForDepRange = function(curve) {
@@ -458,7 +474,7 @@ const addSeries = function(plot, dependentAxes, plotParams) {
      Curves that were assigned to different axis were figured out and assigned in getDependents and are assigned in the dependentAxes structure.
      ***/
     var hiddenCurves = [];
-    var sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead'};
+    var sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
     const type = (_.invert(plotParams.plotTypes))[true];
     const seriesAxisMap = {'series1':'y1', 'series2':'y2'};
     Object.keys(seriesAxisMap).forEach(function (series) {
@@ -468,6 +484,43 @@ const addSeries = function(plot, dependentAxes, plotParams) {
         var fcst_levls = [];
         var seriesElem = plot.ele(series);
         const axis = seriesAxisMap[series];
+        var initHours = new Set();
+        switch (type) {
+            case matsTypes.PlotTypes.timeSeries:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+                break;
+            case matsTypes.PlotTypes.dailyModelCycle:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+                break;
+            case matsTypes.PlotTypes.histogram:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
+            case matsTypes.PlotTypes.profile:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','curve-dates':'fcst_valid_beg'};
+                break;
+            case matsTypes.PlotTypes.dieoff:
+                sVars = {'data-source': 'model', 'region': 'vx_mask', 'pres-level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
+                for (var ci=0; ci < plotParams.curves.length;ci++) {
+                    const c = plotParams.curves[ci];
+                    if (c['dieoff-type'] === 'Dieoff for a specific UTC cycle start time') {
+                        initHours.add(c['utc-cycle-start']);
+                    } else if (c.dieoff - type === matsTypes.ForecastTypes.singleCycle) {
+                        // placeholder for if issue 60313 gets resolved
+                    }
+                }
+               if (initHours.size > 0) {
+                   sVars['utc-cycle-start'] = 'init_hour';
+               }
+                break;
+            case matsTypes.PlotTypes.validtime:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
+            case matsTypes.PlotTypes.threshold:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev','curve-dates':'fcst_valid_beg'};
+                break;
+            default:
+                sVars = {'data-source':'model','region':'vx_mask','forecast-length':'fcst_lead','pres-level':'fcst_lev'};
+        }
 
         if (type === matsTypes.PlotTypes.profile) {
             delete sVars['pres-level'];
@@ -484,51 +537,65 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                 Object.keys(sVars).forEach(function(sVar) {
                     try {
                         // models - not multiple - ungrouped
-                        sValues = [];
-                        if (sVar === 'data-source') {
-                            // convert data-source to single element array
-                            sValues = [matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource][0]];
-                        } else {
-                            sValues = curve[sVar];
-                            if (sValues == null || sValues.length === 0) {
-                                sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the region
-                            }
+                        var sValues = [];
+                        switch(sVar) {
+                            case 'data-source':
+                                // convert data-source to single element array
+                                sValues = [matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource][0]];
+                                break;
+                            case 'curve-dates':
+                                sValues = _getSortedDatesForDepRange(curve);
+                                break;
+                            case 'utc-cycle-start':
+                                const v = curve['utc-cycle-start']
+                                const paddedV = _pad(v,2);
+                                sValues = [paddedV]; // turn single selection padded value into array
+                                break;
+                            default:
+                                sValues = curve[sVar];
+                                if (sValues == null || sValues.length === 0) {
+                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the region
+                                }
                         }
                         // check to see if this element was already added.
                         // if not added then add the element.
                         // if element was already added see if we need to add this value.
                         // multiples are always grouped.
-                        const sValuesStr = sValues.join(',');
-                        if (seriesElements[sVars[sVar]] == null) {
-                            seriesElements[sVars[sVar]] = seriesElem.ele('field', {'name': sVars[sVar]});
-                            seriesElements[sVars[sVar]].ele('val', sValuesStr);
-                            seriesElementValues[sVars[sVar]] = [sValuesStr];
-                        } else {
-                            // already exists
-                            if (seriesElementValues[sVars[sVar]].indexOf(sValuesStr) === -1) {
-                                seriesElements[sVars[sVar]].ele('val', sValuesStr);
-                                seriesElementValues[sVars[sVar]].push(sValuesStr);
+                        if (sValues !== undefined && sValues.length > 0) {
+                            const sValuesStr = sValues.join(',');
+                            if (sValuesStr !== undefined) {
+                                const thisVar = sVars[sVar];
+                                if (seriesElements[thisVar] == null) {
+                                    seriesElements[thisVar] = seriesElem.ele('field', {'name': sVars[sVar]});
+                                    seriesElementValues[thisVar] = new Set();
+                                    seriesElementValues[thisVar].add(sValuesStr);
+                                } else {
+                                    // already exists
+                                    if (seriesElementValues[thisVar].has(sValuesStr) === false) {
+                                        seriesElementValues[thisVar].add(sValuesStr);
+                                    }
+                                }
                             }
                         }
                 } catch (error) {
                     console.log(error)
-                    throw new Meteor.error(error);
+                    throw new Meteor.Error(error);
                 }
             });
-            // for profiles, dieoffs, validTimes, thresholds, and histograms, dates are series variables so they get added here
-            // for the other types dates are independent variables so they get added there instead.
-            if (type === matsTypes.PlotTypes.profile ||
-                type === matsTypes.PlotTypes.dieoff ||
-                type === matsTypes.PlotTypes.validtime ||
-                type === matsTypes.PlotTypes.threshold ||
-                type === matsTypes.PlotTypes.histogram) {
-                // these have series variable curve-dates.
-                const sortedDates = _getSortedDatesForDepRange(curve);
-                seriesElem.ele('field', {'name': 'fcst_valid_beg'})
-                    .ele('val', sortedDates.join(','));
-            }
+        }
+        const sElementKeys = Object.keys(seriesElements);
+        for (var sei=0; sei < sElementKeys.length; sei++) {
+            const seVar = sElementKeys[sei];
+            const svars = Array.from(seriesElementValues[seVar]).sort();
+            for (var svi=0; svi < svars.length; svi++){
+                const v = svars[svi];
+                if (v !== "undefined") {
+                    seriesElements[seVar].ele('val', v);
+                }
+            };
         }
     });
+
 }
 
 const getDependentAxis = function(plotParams) {
@@ -593,8 +660,40 @@ function addDeps(plot, dependentAxes) {
     }
 }
 
-const addSeriesLabels = function(element,dependentAxes) {
-    element.ele('x_label', 'Time');
+const _addSeriesLabels = function(element,dependentAxes, plotParams) {
+    const plotType = (_.invert(plotParams.plotTypes))[true];
+    var label;
+    switch (plotType) {
+        case matsTypes.PlotTypes.timeSeries:
+            label = "Time";
+            break;
+        case matsTypes.PlotTypes.dieoff:
+            label = "Forecast Hour";
+            break;
+        case matsTypes.PlotTypes.dailyModelCycle:
+            label = "Time";
+            break;
+        case matsTypes.PlotTypes.histogram:
+            label = "Bin";
+            break;
+        case matsTypes.PlotTypes.validtime:
+            label = "Hour of Day";
+            break;
+        case matsTypes.PlotTypes.threshold:
+            label = "Threshold";
+            break;
+        case matsTypes.PlotTypes.profile:
+            var vars = new Set();
+            plotParams.curves.forEach(function(c){
+                vars.add(c.variable);
+            });
+            label = Array.from(vars).join(' - ');
+            break;
+        default:
+            label = "Time";
+    }
+    element.ele('x_label', label);
+
     var y1vars = [];
     for (var y1i=0; y1i < dependentAxes['y1'].length; y1i++) {
         if (!y1vars.includes(dependentAxes['y1'][y1i]['variable'])) {
@@ -642,13 +741,45 @@ const addIndepLevels = function(plot, plotParams) {
     }
 }
 
+const addIndepValidHours = function(plot, plotParams) {
+    // for profiles we use a union of all the levels available for all the data-sources
+    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'valid_hour'});
+    debugger
+    const hours = _getSortedHoursForIndepRange(plotParams);
+    for (var hi=0; hi<hours.length;hi++) {
+        var val = indep.ele('val',hours[hi]);
+        val.att('label',hours[hi]);
+        val.att('plot_val',"");
+    }
+}
+
+const addIndepForecastHours = function(plot, plotParams) {
+    // for profiles we use a union of all the levels available for all the data-sources
+    var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_lead'});
+    var curves = plotParams.curves;
+    var leadSet = new Set(); // use a set to accumulate all the levels
+    for (var ci=0; ci<curves.length;ci++) {
+        const curve = curves[ci];
+        const database = curve['database'];
+        const dataSource = curve['data-source'];
+        const forecastLengths = matsCollections.CurveParams.findOne({name: 'fcst_lead'})['optionsMap'][database][dataSource];
+        leadSet.add(forecastLengths);
+    }
+    const leads = Array.from(leadSet)[0];
+    for (var li=0; li<leads.length;li++) {
+        var val = indep.ele('val',leads[li]);
+        val.att('label',leads[li]);
+        val.att('plot_val',"");
+    }
+}
+
 const addTmpl = function(plot, key, plotParams, dependentAxes) {
     var tmpl = plot.ele('tmpl');
     tmpl.ele('data_file', key + '.data');
     tmpl.ele('plot_file', key + '.png');
     tmpl.ele('r_file', key + '.R');
     tmpl.ele('title', _title() + " : " + _plotText(plotParams) + " " + plotParams.plotAction);
-    addSeriesLabels(tmpl, dependentAxes);
+    _addSeriesLabels(tmpl, dependentAxes, plotParams);
     tmpl.ele('caption');
     tmpl.ele('job_title');
     tmpl.ele('keep_revisions', 'false');
@@ -694,15 +825,15 @@ const addMiscellaneous = function(plot,plotParams) {
     const plotType = (_.invert(plotParams.plotTypes))[true];
     switch (plotType) {
         case matsTypes.PlotTypes.timeSeries:
+        case matsTypes.PlotTypes.dieoff:
         case matsTypes.PlotTypes.dailyModelCycle:
+        case matsTypes.PlotTypes.histogram:
+        case matsTypes.PlotTypes.validtime:
+        case matsTypes.PlotTypes.threshold:
             plot.ele('vert_plot', 'false');
             plot.ele('x_reverse', 'false');
             break;
-        case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.profile:
-        case matsTypes.PlotTypes.dieoff:
-        case matsTypes.PlotTypes.validtime:
-        case matsTypes.PlotTypes.threshold:
             plot.ele('vert_plot', 'true');
             plot.ele('x_reverse', 'true');
             break;
@@ -802,7 +933,6 @@ export default matsPlotSpecUtils = {
     addOrderSeries:addOrderSeries,
     addLegend:addLegend,
     addSeries:addSeries,
-    addSeriesLabels:addSeriesLabels,
     addTemplate:addTemplate,
     addIndepDates:addIndepDates,
     addTmpl:addTmpl,
@@ -816,5 +946,7 @@ export default matsPlotSpecUtils = {
     addY2Lim:addY2Lim,
     addMiscellaneous:addMiscellaneous,
     endPlotSpec:endPlotSpec,
-    addIndepLevels:addIndepLevels
+    addIndepLevels:addIndepLevels,
+    addIndepForecastHours:addIndepForecastHours,
+    addIndepValidHours:addIndepValidHours
 }
