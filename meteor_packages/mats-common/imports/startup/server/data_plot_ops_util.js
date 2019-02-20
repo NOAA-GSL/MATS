@@ -84,8 +84,8 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
         }
     }
     const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
-    xmax = moment.utc(xmax + xPad * Math.ceil(yAxisNumber/2)).format("YYYY-MM-DD HH:mm");
-    xmin = moment.utc(xmin - xPad * Math.ceil(yAxisNumber/2)).format("YYYY-MM-DD HH:mm");
+    xmax = moment.utc(xmax + xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
+    xmin = moment.utc(xmin - xPad * Math.ceil(yAxisNumber / 2)).format("YYYY-MM-DD HH:mm");
     layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
@@ -183,8 +183,8 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         }
     }
     const yPad = ((ymax - ymin) * 0.25) !== 0 ? (ymax - ymin) * 0.25 : 0.25;
-    ymax = ymax + (yPad * Math.ceil(xAxisNumber/2));
-    ymin = ymin - (yPad * Math.ceil(xAxisNumber/2));
+    ymax = ymax + (yPad * Math.ceil(xAxisNumber / 2));
+    ymin = ymin - (yPad * Math.ceil(xAxisNumber / 2));
     layout['yaxis']['range'] = [ymin, ymax];
     return layout;
 };
@@ -271,8 +271,8 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
         }
     }
     const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
-    xmax = xmax + (xPad * Math.ceil(yAxisNumber/2));
-    xmin = xmin - (xPad * Math.ceil(yAxisNumber/2));
+    xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
+    xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
@@ -359,8 +359,8 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
         }
     }
     const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
-    xmax = xmax + (xPad * Math.ceil(yAxisNumber/2));
-    xmin = xmin - (xPad * Math.ceil(yAxisNumber/2));
+    xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
+    xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
@@ -447,8 +447,8 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
         }
     }
     const xPad = ((xmax - xmin) * 0.075) !== 0 ? (xmax - xmin) * 0.075 : 0.075;
-    xmax = xmax + (xPad * Math.ceil(yAxisNumber/2));
-    xmin = xmin - (xPad * Math.ceil(yAxisNumber/2));
+    xmax = xmax + (xPad * Math.ceil(yAxisNumber / 2));
+    xmin = xmin - (xPad * Math.ceil(yAxisNumber / 2));
     layout['xaxis']['range'] = [xmin, xmax];
     return layout;
 };
