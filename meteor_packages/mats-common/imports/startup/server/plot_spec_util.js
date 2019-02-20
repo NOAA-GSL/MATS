@@ -742,9 +742,8 @@ const addIndepLevels = function(plot, plotParams) {
 }
 
 const addIndepValidHours = function(plot, plotParams) {
-    // for profiles we use a union of all the levels available for all the data-sources
+    // for validTimes we use a union of all the vts available for all the data-sources
     var indep = plot.ele('indep', {'equalize': 'false', 'name': 'valid_hour'});
-    debugger
     const hours = _getSortedHoursForIndepRange(plotParams);
     for (var hi=0; hi<hours.length;hi++) {
         var val = indep.ele('val',hours[hi]);
@@ -754,7 +753,7 @@ const addIndepValidHours = function(plot, plotParams) {
 }
 
 const addIndepForecastHours = function(plot, plotParams) {
-    // for profiles we use a union of all the levels available for all the data-sources
+    // for dieoffs we use a union of all the fhrs available for all the data-sources
     var indep = plot.ele('indep', {'equalize': 'false', 'name': 'fcst_lead'});
     var curves = plotParams.curves;
     var leadSet = new Set(); // use a set to accumulate all the levels
