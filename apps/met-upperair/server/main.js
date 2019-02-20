@@ -483,18 +483,29 @@ const doCurveParams = function () {
     }
 
     if (matsCollections.CurveParams.findOne({name: 'forecast-length'}) == undefined) {
+
+        const fhrOptions = forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]];
+        var fhrDefault;
+        if (fhrOptions.indexOf("24") !== -1) {
+            fhrDefault = "24";
+        } else if (fhrOptions.indexOf("12") !== -1) {
+            fhrDefault = "12";
+        } else {
+            fhrDefault = fhrOptions[0];
+        }
+
         matsCollections.CurveParams.insert(
             {
                 name: 'forecast-length',
                 type: matsTypes.InputTypes.select,
                 optionsMap: forecastLengthOptionsMap,
-                options: forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]],
+                options: fhrOptions,
                 valuesMap: forecastValueOptionsMap,
                 superiorNames: ['database','data-source'],
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: forecastLengthOptionsMap[myDBs[0]][Object.keys(forecastLengthOptionsMap[myDBs[0]])[0]][0],
+                default: fhrDefault,
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
                 multiple: true,
