@@ -11,6 +11,8 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
+    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
         if (appParams.hasLevels) {
@@ -25,11 +27,11 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
 
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
-        if (appParams.appName !== "surfrad") {
+        if (appName !== "surfrad") {
             axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         }
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
-        var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
+        var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
@@ -70,8 +72,8 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.y[di];
             // this ungainly if statement is because the surfrad3 database doesn't support recalculating some stats.
-            if (appParams.appName !== "surfrad" ||
-                !(appParams.appName === "surfrad" &&
+            if (appName !== "surfrad" ||
+                !(appName === "surfrad" &&
                     (statisticSelect === 'Std deviation (do not plot matched)' || statisticSelect === 'RMS (do not plot matched)') &&
                     !appParams.matching)) {
                 if ((diffFrom === null || diffFrom === undefined) || !appParams.matching) {
@@ -174,7 +176,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         dataset[curveIndex]['glob_stats'] = stats;
 
         // recalculate axis options after QC and matching
-        if (appParams.appName !== "surfrad") {
+        if (appName !== "surfrad") {
             const minx = Math.min(...indVars);
             const maxx = Math.max(...indVars);
             curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] = (curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'] < maxy || !axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey]) ? maxy : curveInfoParams.axisMap[curveInfoParams.curves[curveIndex].axisKey]['ymax'];
@@ -255,6 +257,8 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var errorMax = Number.MIN_VALUE;
     var error = "";
 
+    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+
     // if matching, pare down dataset to only matching data
     if (curveInfoParams.curvesLength > 1 && appParams.matching) {
         dataset = matsDataMatchUtils.getMatchedDataSetWithLevels(dataset, curveInfoParams.curvesLength, appParams.plotType);
@@ -267,7 +271,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
         axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] = axisLimitReprocessed[curveInfoParams.curves[curveIndex].axisKey] !== undefined;
         var diffFrom = curveInfoParams.curves[curveIndex].diffFrom;
-        var statisticSelect = curveInfoParams.curves[curveIndex]['statistic'];
+        var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
@@ -393,7 +397,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, 0, matsTypes.ReservedWords.zero);
+    const zeroLine = matsDataCurveOpsUtils.getVerticalValueLine(1100, 0, 0, matsTypes.ReservedWords.zero);
     dataset.push(zeroLine);
 
     //add ideal value lines, if any
@@ -401,7 +405,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
     var idealLabel;
     for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
         idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getVerticalValueLine(1050, 50, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+        idealValueLine = matsDataCurveOpsUtils.getVerticalValueLine(1100, 0, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
         dataset.push(idealValueLine);
     }
 
