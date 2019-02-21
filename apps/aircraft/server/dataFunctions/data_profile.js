@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataProfile = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "aircraft";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.profile;
     const hasLevels = true;

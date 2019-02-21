@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataHistogram = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "landuse";
     const plotType = matsTypes.PlotTypes.histogram;
     const hasLevels = false;
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;

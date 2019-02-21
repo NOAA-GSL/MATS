@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataThreshold = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "precipAQPI";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.threshold;
     const hasLevels = false;
