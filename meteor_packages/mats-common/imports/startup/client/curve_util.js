@@ -394,7 +394,6 @@ const checkDiffs = function () {
 const showTimeseriesFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.timeSeries).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
@@ -411,15 +410,12 @@ const showTimeseriesFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -442,7 +438,6 @@ const showTimeseriesFace = function () {
 const showProfileFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.profile).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
@@ -459,15 +454,12 @@ const showProfileFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -490,7 +482,6 @@ const showProfileFace = function () {
 const showDieOffFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dieoff).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
@@ -507,15 +498,12 @@ const showDieOffFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -542,7 +530,6 @@ const showDieOffFace = function () {
 const showThresholdFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.threshold).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
@@ -559,15 +546,12 @@ const showThresholdFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -590,7 +574,6 @@ const showThresholdFace = function () {
 const showValidTimeFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.validtime).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
@@ -607,15 +590,12 @@ const showValidTimeFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -638,7 +618,6 @@ const showValidTimeFace = function () {
 const showDailyModelCycleFace = function () {
     // move dates selector to plot parameters - one date range for all curves
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.dailyModelCycle).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
@@ -655,15 +634,12 @@ const showDailyModelCycleFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -705,7 +681,9 @@ const showMapFace = function () {
             'bin-bounds': 'none',
             'truth': 'none',
             'sites': 'block',
-            'sitesMap': 'block'
+            'sitesMap': 'block',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
@@ -729,7 +707,6 @@ const showMapFace = function () {
 const showHistogramFace = function () {
     // move dates selector to curve parameters - one date range for each curve
     if (document.getElementById('plot-type-' + matsTypes.PlotTypes.histogram).checked === true) {
-        var appName = matsParamUtils.getAppName();
         var faceOptions = {
             'curve-dates': 'block',
             'dates': 'none',
@@ -746,15 +723,12 @@ const showHistogramFace = function () {
             'histogram-yaxis-controls': 'block',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
-        }
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -773,10 +747,10 @@ const showHistogramFace = function () {
     }
 };
 
-// method to display the appropriate selectors for a scatter plot
-const showScatterFace = function () {
-    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
-        var appName = matsParamUtils.getAppName();
+// method to display the appropriate selectors for a contour plot
+const showContourFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true) {
         var faceOptions = {
             'curve-dates': 'none',
             'dates': 'block',
@@ -793,15 +767,76 @@ const showScatterFace = function () {
             'histogram-yaxis-controls': 'none',
             'bin-number': 'none',
             'bin-bounds': 'none',
-            'truth': 'block'
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'block',
+            'y-axis-parameter': 'block'
         };
-        if (appName !== 'wfip2') {
-            faceOptions['sites'] = 'none';
-            faceOptions['sitesMap'] = 'none';
-        } else {
-            faceOptions['sites'] = 'block';
-            faceOptions['sitesMap'] = 'block';
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
         }
+        // //need to be consistent with the x and y axis 'hideOtherFor' settings
+        // const xAxisVal = matsParamUtils.getValueForParamName('x-axis-parameter');
+        // const yAxisVal = matsParamUtils.getValueForParamName('y-axis-parameter');
+        // if (xAxisVal === 'Fcst lead time' || yAxisVal === 'Fcst lead time') {
+        //     elem = document.getElementById('forecast-length-item');
+        //     if (elem && elem.style) {
+        //         elem.style.display = 'none';
+        //     }
+        // }
+        // if (xAxisVal === 'Valid UTC hour' || yAxisVal === 'Valid UTC hour') {
+        //     elem = document.getElementById('valid-time-item');
+        //     if (elem && elem.style) {
+        //         elem.style.display = 'none';
+        //     }
+        // }
+        // if (xAxisVal === 'Pressure level' || yAxisVal === 'Pressure level') {
+        //     elem = document.getElementById('pres-level-item');
+        //     if (elem && elem.style) {
+        //         elem.style.display = 'none';
+        //     }
+        // }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.contour);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
+// method to display the appropriate selectors for a scatter plot
+const showScatterFace = function () {
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.scatter2d).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'none',
+            'dates': 'block',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'pres-level': 'block',
+            'forecast-length': 'block',
+            'dieoff-forecast-length': 'none',
+            'average': 'none',
+            'valid-time': 'block',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
+        };
         const faceSelectors = Object.keys(faceOptions);
         var elem;
         for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
@@ -988,6 +1023,7 @@ export default matsCurveUtils = {
     showDailyModelCycleFace: showDailyModelCycleFace,
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,
+    showContourFace: showContourFace,
     get_err: get_err,
     getPlotResultData: getPlotResultData,
     //setPlotResultData: setPlotResultData,

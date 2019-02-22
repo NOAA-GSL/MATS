@@ -28,7 +28,8 @@ var PlotTypes = {
     validtime: "ValidTime",
     dailyModelCycle: "DailyModelCycle",
     map: "Map",
-    histogram: "Histogram"
+    histogram: "Histogram",
+    contour: "Contour"
 };
 
 var ForecastTypes = {
@@ -99,7 +100,7 @@ var Messages = {
 };
 
 //hide non-timeseries selectors at startup
-var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds'];
+var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
 
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.

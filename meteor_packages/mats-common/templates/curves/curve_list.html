@@ -24,9 +24,10 @@
             <button id='remove-all' class="remove-all btn btn-danger fa fa-times fa-sm">&nbsp;&nbsp;Remove All </button>
             <button type="button" name="save" id="save " class="save-settings btn btn-success fa fa-cloud-upload" style="display:{{displaySaveSettings}};">&nbsp;&nbsp;Save All Curve Settings</button>
             <button type="button" class="btn spacebutton" id="cl-spacer"></button>
-            <button type="button" name="plotUnMatched" id="plotUnmatched"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style="display:{{displayPlotUnMatched}};">&nbsp;&nbsp;Plot Unmatched</button>
-            <button type="button" name="plotMatched" id="plotMatched"  class="plot-curves-matched btn btn-success  fa fa-area-chart" style="display:{{displayPlotMatched}};" {{averagesdisabled}}>  Plot Matched</button>
+            <button type="button" name="plotUnMatched" id="plotUnmatched"  class="plot-curves-unmatched btn btn-success  fa fa-area-chart" style="display:{{displayPlotUnMatched}};"  {{identicalContourDisabled}}>&nbsp;&nbsp;Plot Unmatched</button>
+            <button type="button" name="plotMatched" id="plotMatched"  class="plot-curves-matched btn btn-success  fa fa-area-chart" style="display:{{displayPlotMatched}};" {{averagesDisabled}} {{identicalContourDisabled}}>  Plot Matched</button>
             <div id="disabledPlots" style="display:{{disabledPlotsHidden}}"><span style="color: red;">Matched plotting is disabled because curve averages are disparate</span></div>
+            <div id="identicalContour" style="display:{{identicalContourHidden}}"><span style="color: red;">Making contour plots with the same parameter on both axes is not recommended</span></div>
         </div>
     </div>
 </template>

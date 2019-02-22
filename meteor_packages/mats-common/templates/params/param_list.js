@@ -101,6 +101,7 @@ Template.paramList.events({
         }
         var isScatter = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.scatter2d;
         var isMap = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.map;
+        var isContour = matsPlotUtils.getPlotType() === matsTypes.PlotTypes.contour;
         var curves = Session.get('Curves');
         var p = {};
         var elems = event.target.valueOf().elements;
@@ -221,6 +222,9 @@ Template.paramList.events({
         } else {
             if (isMap && curves.length >= 1) {
                 setError(new Error('ERROR: Map plot-type can only have one curve!'));
+                return false;
+            } else if (isContour && curves.length >= 1) {
+                setError(new Error('ERROR: Contour plot-type can only have one curve!'));
                 return false;
             } else {
                 for (var i = 0; i < l; i++) {

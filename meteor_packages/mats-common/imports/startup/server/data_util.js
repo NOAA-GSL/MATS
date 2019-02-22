@@ -63,6 +63,16 @@ const arraysEqual = function (a, b) {
     return true;
 };
 
+const arrayUnique = function(a) {
+    var arr = [];
+    for(var i = 0; i < a.length; i++) {
+        if(!arr.includes(a[i])) {
+            arr.push(a[i]);
+        }
+    }
+    return arr;
+};
+
 //this function finds the position of the array subArray in superArray
 const findArrayInSubArray = function (superArray, subArray) {
     var i, j, current;
@@ -858,6 +868,7 @@ export default matsDataUtils = {
     arrayContainsArray: arrayContainsArray,
     arrayContainsSubArray: arrayContainsSubArray,
     arraysEqual: arraysEqual,
+    arrayUnique: arrayUnique,
     findArrayInSubArray: findArrayInSubArray,
     average: average,
     stdev: stdev,

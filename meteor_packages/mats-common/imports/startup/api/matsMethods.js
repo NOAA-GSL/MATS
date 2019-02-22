@@ -495,6 +495,34 @@ const getFlattenedResultData = function (rk, p, np) {
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
+                case matsTypes.PlotTypes.contour:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of maps
+                    var stats = {};
+                    stats['label'] = data[0].label;
+                    stats['total number of points'] = data[0].glob_stats.n;
+                    stats['mean stat'] = data[0].glob_stats.mean;
+                    stats['minimum time'] = data[0].glob_stats.minDate;
+                    stats['minimum time'] = moment.utc(stats['minimum time'] * 1000).format('YYYY-MM-DD HH:mm');
+                    stats['maximum time'] = data[0].glob_stats.maxDate;
+                    stats['maximum time'] = moment.utc(stats['maximum time'] * 1000).format('YYYY-MM-DD HH:mm');
+
+                    returnData.stats[data[0].label] = stats;
+
+                    var curveData = [];  // map of maps
+                    for (var si = 0; si < data[0].xTextOutput.length; si++) {
+                        var curveDataElement = {};
+                        curveDataElement['xVal'] = data[0].xTextOutput[si];
+                        curveDataElement['yVal'] = data[0].yTextOutput[si];
+                        curveDataElement['stat'] = data[0].zTextOutput[si];
+                        curveDataElement['N'] = data[0].nTextOutput[si];
+                        curveDataElement['Start Date'] = moment.utc((data[0].minDateTextOutput[si]) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveDataElement['End Date'] = moment.utc((data[0].maxDateTextOutput[si]) * 1000).format('YYYY-MM-DD HH:mm');
+                        curveData.push(curveDataElement);
+                    }
+                    returnData.data[data[0].label] = curveData;
+                    break;
                 case matsTypes.PlotTypes.scatter2d:
                     var returnData = {}; // returns a map of arrays of maps
                     /*
