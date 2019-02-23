@@ -62,18 +62,13 @@ dataHistogram = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
-        var validTimeClause = " ";
-        if (validTimes.length > 0) {
+        var validTimeClause = "";
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        // convert dates for sql
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
         var forecastLength = curve['forecast-length'];
         var phaseStr = curve['phase'];
         var phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
@@ -100,8 +95,8 @@ dataHistogram = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -116,8 +111,8 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{phase}}', phase);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
 
             dataRequests[curve.label] = statement;
 

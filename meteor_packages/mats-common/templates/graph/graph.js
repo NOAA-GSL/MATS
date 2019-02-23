@@ -145,7 +145,7 @@ Template.graph.helpers({
             } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
                 return "Histogram: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
-                return "Contour: " + format;
+                return "Contour " + p.dates + " : " + format;
             } else {
                 return "Scatter: " + p.dates + " : " + format;
             }

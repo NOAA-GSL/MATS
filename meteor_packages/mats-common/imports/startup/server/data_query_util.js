@@ -928,7 +928,7 @@ const parseQueryDataContour = function (rows, d) {
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
         var stat = rows[rowIndex].stat;
-        var n = rows[rowIndex].sub_values0.toString().split(',').length;
+        var n = rows[rowIndex].sub_values0 !== null ? rows[rowIndex].sub_values0.toString().split(',').length : 0;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
         if (stat === undefined || stat === null || stat === 'NULL') {
