@@ -524,11 +524,12 @@ const doCurveParams = function () {
     if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
 
         const optionsMap = {
-            'Fcst lead time': "select m0.fcst_len as xVal,",
-            'Pressure level': "select m0.level as xVal,",
-            'Valid UTC hour': "select m0.valid_hour as xVal,",
-            'Init UTC hour': "select (unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal,",
-            'Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as xVal,"
+            'Fcst lead time': "select m0.fcst_len as xVal, ",
+            'Pressure level': "select m0.level as xVal, ",
+            'Valid UTC hour': "select m0.valid_hour as xVal, ",
+            'Init UTC hour': "select (unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour as xVal, ",
+            'Init Date': "select unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as xVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -560,7 +561,8 @@ const doCurveParams = function () {
             'Pressure level': "m0.level as yVal,",
             'Valid UTC hour': "m0.valid_hour as yVal,",
             'Init UTC hour': "(unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600)%(24*3600)/3600 as yVal,",
-            'Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour as yVal,"
+            'Valid Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour as yVal, ",
+            'Init Date': "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600 as yVal, "
         };
 
         matsCollections.CurveParams.insert(
@@ -708,7 +710,6 @@ const doCurveTextPatterns = function () {
                 ['level: ', 'pres-level', ' hPa, '],
                 ['fcst_len: ', 'forecast-length', 'h, '],
                 ['valid-time: ', 'valid-time', ', '],
-                ['start utc: ', 'utc-cycle-start', ', '],
                 ['x-axis: ', 'x-axis-parameter', ', '],
                 ['y-axis: ', 'y-axis-parameter', '']
 

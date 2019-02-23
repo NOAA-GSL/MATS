@@ -388,6 +388,7 @@ const queryDBContour = function (pool, statement, plotType, hasLevels) {
             x: [],
             y: [],
             z: [],
+            n: [],
             text: [],
             xTextOutput: [],
             yTextOutput: [],
@@ -418,8 +419,6 @@ const queryDBContour = function (pool, statement, plotType, hasLevels) {
             } else {
                 const parsedData = parseQueryDataContour(rows, d);
                 d = parsedData.d;
-                N0 = parsedData.N0;
-                N_times = parsedData.N_times;
             }
             dFuture['return']();
         });
@@ -428,9 +427,7 @@ const queryDBContour = function (pool, statement, plotType, hasLevels) {
         dFuture.wait();
         return {
             data: d,
-            error: error,
-            N0: N0,
-            N_times: N_times,
+            error: error
         };
     }
 };
@@ -924,15 +921,14 @@ const parseQueryDataContour = function (rows, d) {
         };
     */
     var curveStatLookup = {};
-    var N0Lookup = {};
-    var N_timesLookup = {};
+    var curveNLookup = {};
     // get all the data out of the query array
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         var rowXVal = rows[rowIndex].xVal;
         var rowYVal = rows[rowIndex].yVal;
         var statKey = rowXVal.toString() + '_' + rowYVal.toString();
         var stat = rows[rowIndex].stat;
-        var n = rows[rowIndex].N0;
+        var n = rows[rowIndex].sub_values0.toString().split(',').length;
         var minDate = rows[rowIndex].min_secs;
         var maxDate = rows[rowIndex].max_secs;
         if (stat === undefined || stat === null || stat === 'NULL') {
@@ -948,8 +944,7 @@ const parseQueryDataContour = function (rows, d) {
         d.minDateTextOutput.push(minDate);
         d.maxDateTextOutput.push(maxDate);
         curveStatLookup[statKey] = stat;
-        N0Lookup[statKey] = n;
-        N_timesLookup[statKey] = rows[rowIndex].N_times;
+        curveNLookup[statKey] = n;
     }
     // get the unique x and y values and sort the stats in to the z array accordingly
     d.x = matsDataUtils.arrayUnique(d.xTextOutput).sort(function (a, b) {
@@ -963,30 +958,33 @@ const parseQueryDataContour = function (rows, d) {
     var currX;
     var currY;
     var currStat;
+    var currN;
     var currStatKey;
     var currYStatArray;
-    var currYN0Array;
-    var currYN_timesArray;
+    var currYNArray;
     var sum = 0;
-    var N0 = [];
-    var N_times = [];
+    var nPoints = 0;
     for (j = 0; j < d.y.length; j++) {
         currY = d.y[j];
         currYStatArray = [];
-        currYN0Array = [];
-        currYN_timesArray = [];
+        currYNArray = [];
         for (i = 0; i < d.x.length; i++) {
             currX = d.x[i];
             currStatKey = currX.toString() + '_' + currY.toString();
             currStat = curveStatLookup[currStatKey];
-            sum = currStat === null ? sum : sum += currStat;
-            currYStatArray.push(currStat);
-            currYN0Array.push(N0Lookup[currStatKey]);
-            currYN_timesArray.push(N_timesLookup[currStatKey]);
+            currN = curveNLookup[currStatKey];
+            if (currStat === undefined) {
+                currYStatArray.push(null);
+                currYNArray.push(0);
+            } else {
+                sum = sum += currStat;
+                nPoints = nPoints + 1;
+                currYStatArray.push(currStat);
+                currYNArray.push(currN);
+            }
         }
         d.z.push(currYStatArray);
-        N0.push(currYN0Array);
-        N_times.push(currYN_timesArray);
+        d.n.push(currYNArray);
     }
 
     // calculate statistics
@@ -1023,15 +1021,13 @@ const parseQueryDataContour = function (rows, d) {
 
     const filteredMinDate = d.minDateTextOutput.filter(t => t);
     const filteredMaxDate = d.maxDateTextOutput.filter(t => t);
-    d.glob_stats['mean'] = sum / (d.x.length * d.y.length);
+    d.glob_stats['mean'] = sum / nPoints;
     d.glob_stats['minDate'] = Math.min(...filteredMinDate);
     d.glob_stats['maxDate'] = Math.max(...filteredMaxDate);
-    d.glob_stats['n'] = d.nTextOutput.reduce(function(a, b) { return a + b; }, 0);
+    d.glob_stats['n'] = nPoints;
 
     return {
-        d: d,
-        N0: N0,
-        N_times: N_times
+        d: d
     };
 };
 

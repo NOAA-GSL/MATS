@@ -589,15 +589,15 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
 const processDataContour = function (dataset, curveInfoParams, plotParams, bookkeepingParams) {
     var error = "";
     const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
-    var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curves[0]['statistic'];
+    var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curve[0]['statistic'];
     var data = dataset[0];
     const label = dataset[0].label;
 
-    if (data.xAxisKey === "Date") {
+    if (data.xAxisKey.indexOf("Date") !== -1) {
         data.x = data.x.map(function (val) {
             return moment.utc(val * 1000).format("YYYY-MM-DD HH:mm");
         });
-    } else if (data.yAxisKey === "Date") {
+    } else if (data.yAxisKey.indexOf("Date") !== -1) {
         data.y = data.y.map(function (val) {
             return moment.utc(val * 1000).format("YYYY-MM-DD HH:mm");
         });

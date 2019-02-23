@@ -30,18 +30,33 @@ dataContour = function (plotParams, plotFunction) {
 
     // initialize variables specific to the curve
     var curve = curves[0];
-    const label = curve['label'];
-    const xAxisParam = curve['x-axis-parameter'];
-    const yAxisParam = curve['y-axis-parameter'];
-    const xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
-    const yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-    const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-    const regionStr = curve['region'];
-    const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
-    var dbtable = data_source + "_anomcorr_" + region;
-    const variable = curve['variable'];
-    curve['statistic'] = "Correlation";
-    var levelClause = "";
+    var label = curve['label'];
+    var xAxisParam = curve['x-axis-parameter'];
+    var yAxisParam = curve['y-axis-parameter'];
+    var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
+    var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
+    var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
+    var metarStringStr = curve['truth'];
+    var metarString = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === metarStringStr);
+    var regionStr = curve['region'];
+    var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+    var variableStr = curve['variable'];
+    var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
+    var variable = variableOptionsMap[variableStr];
+    var statisticSelect = curve['statistic'];
+    var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
+    var statistic;
+    if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
+        statistic = statisticOptionsMap[statisticSelect][0];
+    } else if (variableStr === '10m wind') {
+        statistic = statisticOptionsMap[statisticSelect][2];
+    } else {
+        statistic = statisticOptionsMap[statisticSelect][1];
+    }
+    statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
+    statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+    var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
+    var varUnits = statVarUnitMap[statisticSelect][variableStr];
     var validTimeClause = "";
     var forecastLengthClause = "";
     var dateClause = "";
@@ -50,27 +65,19 @@ dataContour = function (plotParams, plotFunction) {
         forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
     }
     if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-        const validTimeStr = curve['valid-time'];
-        const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-        const validTimes = validTimeOptionsMap[validTimeStr][0];
+        var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         if (validTimes.length > 0) {
-            validTimeClause = validTimes;
-        }
-    }
-    if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
-        if (levels.length > 0) {
-            levelClause = " and m0.level IN(" + levels + ")";
+            validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
     }
     if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-        dateClause = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour-m0.fcst_len*3600";
+        dateClause = "m0.valid_day+3600*m0.hour-m0.fcst_len*3600";
     } else {
-        dateClause = "unix_timestamp(m0.valid_date)+3600*m0.valid_hour";
+        dateClause = "m0.valid_day+3600*m0.hour";
     }
 
     // For contours, this functions as the colorbar label.
-    curve['unitKey'] = curve['statistic'];
+    curve['unitKey'] = varUnits;
 
     var d;
     // this is a database driven curve, not a difference curve
@@ -80,33 +87,26 @@ dataContour = function (plotParams, plotFunction) {
         "count(distinct {{dateClause}}) as N_times, " +
         "min({{dateClause}}) as min_secs, " +
         "max({{dateClause}}) as max_secs, " +
-        "avg(m0.wacorr/100) as stat, " +
-        "group_concat(m0.wacorr/100 order by {{dateClause}}) as sub_values0, " +
-        "count(m0.wacorr) as N0 " +
-        "from {{dbtable}} as m0 " +
+        "{{statistic}} " +
+        "from {{model}} as m0 " +
         "where 1=1 " +
         "and {{dateClause}} >= '{{fromSecs}}' " +
         "and {{dateClause}} <= '{{toSecs}}' " +
-        "and m0.variable = '{{variable}}' " +
         "{{validTimeClause}} " +
         "{{forecastLengthClause}} " +
-        "{{levelClause}} " +
         "group by xVal,yVal " +
         "order by xVal,yVal" +
         ";";
 
     statement = statement.replace('{{xValClause}}', xValClause);
     statement = statement.replace('{{yValClause}}', yValClause);
-    statement = statement.replace('{{dbtable}}', dbtable);
-    statement = statement.replace('{{data_source}}', data_source);
-    statement = statement.replace('{{region}}', region);
-    statement = statement.replace('{{variable}}', variable);
-    statement = statement.replace('{{validTimeClause}}', validTimeClause);
-    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-    statement = statement.replace('{{levelClause}}', levelClause);
-    statement = statement.split('{{dateClause}}').join(dateClause);
+    statement = statement.replace('{{statistic}}', statistic);
+    statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
     statement = statement.replace('{{fromSecs}}', fromSecs);
     statement = statement.replace('{{toSecs}}', toSecs);
+    statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
+    statement = statement.replace('{{validTimeClause}}', validTimeClause);
+    statement = statement.split('{{dateClause}}').join(dateClause);
     dataRequests[curve.label] = statement;
 
     // math is done on forecastLength later on -- set all analyses to 0
@@ -141,7 +141,11 @@ dataContour = function (plotParams, plotFunction) {
         } else {
             // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-            throw (new Error(error));
+            if (error.includes('Unknown column')) {
+                throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+            } else {
+                throw new Error(error);
+            }
         }
     }
 
