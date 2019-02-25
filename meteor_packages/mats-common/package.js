@@ -15,7 +15,7 @@ Package.onUse(function (api) {
     Npm.depends({
         'fibers': '2.0.0',
         'fs-extra': '7.0.0',
-        "@babel/runtime": "7.1.2",
+        "@babel/runtime": "7.3.1",
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
