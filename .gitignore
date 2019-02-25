@@ -1,14 +1,1 @@
-.idea/
-.idea/*
-apps/*/.idea/
-apps/*/.idea/*
-meteor_packages/.idea/
-meteor_packages/.idea/*
-apps/*/node_modules
-apps/*/node_modules/*
-static/node_modules/
-static/node_modules/*
-static/npm-debug.log
-static/img/image00.png
-static/applist.json
-.DS_Store
+node_modules
