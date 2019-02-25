@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "surface";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.validtime;
     const hasLevels = false;
@@ -103,7 +102,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;

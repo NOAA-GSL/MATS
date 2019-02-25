@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataValidTime = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "aircraft";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.validtime;
     const hasLevels = true;
@@ -61,10 +60,8 @@ dataValidTime = function (plotParams, plotFunction) {
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
-        var fromDate = dateRange.fromDate;
-        var toDate = dateRange.toDate;
-        fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-        toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         var forecastLength = curve['forecast-length'];
         const phaseStr = curve['phase'];
         const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
@@ -87,8 +84,8 @@ dataValidTime = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
                 "and m0.mb10 <= {{bottom}}/10 " +
@@ -101,8 +98,8 @@ dataValidTime = function (plotParams, plotFunction) {
             statement = statement.replace('{{phase}}', phase);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
@@ -121,7 +118,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;

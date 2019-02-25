@@ -153,6 +153,8 @@ Template.graph.helpers({
                 return "Map " + p.dates + " ";
             } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
                 return "Histogram: " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
+                return "Contour " + p.dates + " : " + format;
             } else {
                 return "Scatter: " + p.dates + " : " + format;
             }
@@ -238,7 +240,7 @@ Template.graph.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
             return 'none';
         } else {
             return 'block';
@@ -246,7 +248,7 @@ Template.graph.helpers({
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
             return 'none';
         } else {
             return 'block';
@@ -255,7 +257,7 @@ Template.graph.helpers({
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
             return 'none';
         } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
             return 'block';

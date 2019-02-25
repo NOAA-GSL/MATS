@@ -264,6 +264,7 @@ const queryDBSpecialtyCurve = function (pool, statement, plotType, hasLevels) {
     }
 };
 
+//this method queries the database for map plots
 const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource, variable, varUnits, site, siteIndex, siteMap) {
     if (Meteor.isServer) {
         if (d === undefined) {
@@ -374,6 +375,60 @@ const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource
             dataBlack: dBlack,    // [sub_values,sub_secs] as arrays
             dataRed: dRed,    // [sub_values,sub_secs] as arrays
             error: error,
+        };
+    }
+};
+
+//this method queries the database for contour plots
+const queryDBContour = function (pool, statement, plotType, hasLevels) {
+    if (Meteor.isServer) {
+        const Future = require('fibers/future');
+
+        var dFuture = new Future();
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            z: [],
+            n: [],
+            text: [],
+            xTextOutput: [],
+            yTextOutput: [],
+            zTextOutput: [],
+            nTextOutput: [],
+            minDateTextOutput: [],
+            maxDateTextOutput: [],
+            glob_stats: {},
+            xmin: Number.MAX_VALUE,
+            xmax: Number.MIN_VALUE,
+            ymin: Number.MAX_VALUE,
+            ymax: Number.MIN_VALUE,
+            zmin: Number.MAX_VALUE,
+            zmax: Number.MIN_VALUE,
+            sum: 0
+        };
+
+        var error = "";
+        var N0 = [];
+        var N_times = [];
+
+        pool.query(statement, function (err, rows) {
+            // query callback - build the curve data from the results - or set an error
+            if (err !== undefined && err !== null) {
+                error = err.message;
+            } else if (rows === undefined || rows === null || rows.length === 0) {
+                error = matsTypes.Messages.NO_DATA_FOUND;
+            } else {
+                const parsedData = parseQueryDataContour(rows, d);
+                d = parsedData.d;
+            }
+            dFuture['return']();
+        });
+
+        // wait for future to finish
+        dFuture.wait();
+        return {
+            data: d,
+            error: error
         };
     }
 };
@@ -881,12 +936,148 @@ const parseQueryDataHistogram = function (d, rows, hasLevels) {
     };
 };
 
+//this method parses the returned query data for contour plots
+const parseQueryDataContour = function (rows, d) {
+    /*
+        var d = {// d will contain the curve data
+            x: [],
+            y: [],
+            z: [],
+            text: [],
+            xTextOutput: [],
+            yTextOutput: [],
+            zTextOutput: [],
+            nTextOutput: [],
+            minDateTextOutput: [],
+            maxDateTextOutput: [],
+            glob_stats: {},
+            xmin:num,
+            ymin:num,
+            zmin:num,
+            xmax:num,
+            ymax:num,
+            zmax:num,
+            sum:num;
+        };
+    */
+    var curveStatLookup = {};
+    var curveNLookup = {};
+    // get all the data out of the query array
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        var rowXVal = rows[rowIndex].xVal;
+        var rowYVal = rows[rowIndex].yVal;
+        var statKey = rowXVal.toString() + '_' + rowYVal.toString();
+        var stat = rows[rowIndex].stat;
+        var n = rows[rowIndex].sub_values0 !== null ? rows[rowIndex].sub_values0.toString().split(',').length : 0;
+        var minDate = rows[rowIndex].min_secs;
+        var maxDate = rows[rowIndex].max_secs;
+        if (stat === undefined || stat === null || stat === 'NULL') {
+            stat = null;
+            n = 0;
+            minDate = null;
+            maxDate = null;
+        }
+        d.xTextOutput.push(Number(rowXVal));
+        d.yTextOutput.push(Number(rowYVal));
+        d.zTextOutput.push(stat);
+        d.nTextOutput.push(n);
+        d.minDateTextOutput.push(minDate);
+        d.maxDateTextOutput.push(maxDate);
+        curveStatLookup[statKey] = stat;
+        curveNLookup[statKey] = n;
+    }
+    // get the unique x and y values and sort the stats in to the z array accordingly
+    d.x = matsDataUtils.arrayUnique(d.xTextOutput).sort(function (a, b) {
+        return a - b
+    });
+    d.y = matsDataUtils.arrayUnique(d.yTextOutput).sort(function (a, b) {
+        return a - b
+    });
+    var i;
+    var j;
+    var currX;
+    var currY;
+    var currStat;
+    var currN;
+    var currStatKey;
+    var currYStatArray;
+    var currYNArray;
+    var sum = 0;
+    var nPoints = 0;
+    for (j = 0; j < d.y.length; j++) {
+        currY = d.y[j];
+        currYStatArray = [];
+        currYNArray = [];
+        for (i = 0; i < d.x.length; i++) {
+            currX = d.x[i];
+            currStatKey = currX.toString() + '_' + currY.toString();
+            currStat = curveStatLookup[currStatKey];
+            currN = curveNLookup[currStatKey];
+            if (currStat === undefined) {
+                currYStatArray.push(null);
+                currYNArray.push(0);
+            } else {
+                sum = sum += currStat;
+                nPoints = nPoints + 1;
+                currYStatArray.push(currStat);
+                currYNArray.push(currN);
+            }
+        }
+        d.z.push(currYStatArray);
+        d.n.push(currYNArray);
+    }
+
+    // calculate statistics
+    const filteredx = d.x.filter(x => x);
+    const filteredy = d.y.filter(y => y);
+    const filteredz = d.zTextOutput.filter(z => z);
+    d.xmin = Math.min(...filteredx);
+    d.xmax = Math.max(...filteredx);
+    d.ymin = Math.min(...filteredy);
+    d.ymax = Math.max(...filteredy);
+    d.zmin = Math.min(...filteredz);
+    d.zmax = Math.max(...filteredz);
+    d.sum = sum;
+
+    if (d.xmin == "-Infinity" || (d.x.indexOf(0) !== -1 && 0 < d.xmin)) {
+        d.xmin = 0;
+    }
+    if (d.ymin == "-Infinity" || (d.y.indexOf(0) !== -1 && 0 < d.ymin)) {
+        d.ymin = 0;
+    }
+    if (d.zmin == "-Infinity" || (d.zTextOutput.indexOf(0) !== -1 && 0 < d.zmin)) {
+        d.zmin = 0;
+    }
+
+    if (d.xmax == "-Infinity") {
+        d.xmax = 0;
+    }
+    if (d.ymax == "-Infinity") {
+        d.ymax = 0;
+    }
+    if (d.zmax == "-Infinity") {
+        d.zmax = 0;
+    }
+
+    const filteredMinDate = d.minDateTextOutput.filter(t => t);
+    const filteredMaxDate = d.maxDateTextOutput.filter(t => t);
+    d.glob_stats['mean'] = sum / nPoints;
+    d.glob_stats['minDate'] = Math.min(...filteredMinDate);
+    d.glob_stats['maxDate'] = Math.max(...filteredMaxDate);
+    d.glob_stats['n'] = nPoints;
+
+    return {
+        d: d
+    };
+};
+
 export default matsDataQueryUtils = {
 
     simplePoolQueryWrapSynchronous: simplePoolQueryWrapSynchronous,
     queryDBTimeSeries: queryDBTimeSeries,
     queryDBSpecialtyCurve: queryDBSpecialtyCurve,
-    queryMapDB: queryMapDB
+    queryMapDB: queryMapDB,
+    queryDBContour: queryDBContour
 
 }
 

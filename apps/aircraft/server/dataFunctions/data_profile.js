@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataProfile = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "aircraft";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.profile;
     const hasLevels = true;
@@ -60,16 +59,12 @@ dataProfile = function (plotParams, plotFunction) {
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
-        var curveDates = curve['curve-dates'];
-        var fromDateStr = curveDates.split(' - ')[0]; // get the from part
-        fromDateStr = fromDateStr.split(' ')[0];  // strip off time field
-        var toDateStr = curveDates.split(' - ')[1]; // get the to part
-        toDateStr = toDateStr.split(' ')[0];  // strip off time field
-        var curveDatesDateRangeFrom = moment.utc(fromDateStr, "MM-DD-YYYY").format('YYYY-M-D');
-        var curveDatesDateRangeTo = moment.utc(toDateStr, "MM-DD-YYYY").format('YYYY-M-D');
+        var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
+        var fromSecs = dateRange.fromSeconds;
+        var toSecs = dateRange.toSeconds;
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = " ";
-        if (validTimes.length > 0) {
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
         const forecastLength = curve['forecast-length'];
@@ -94,8 +89,8 @@ dataProfile = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -104,14 +99,14 @@ dataProfile = function (plotParams, plotFunction) {
                 "order by avVal" +
                 ";";
 
-            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
-            statement = statement.replace('{{top}}', top);
-            statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', curveDatesDateRangeFrom);
-            statement = statement.replace('{{toDate}}', curveDatesDateRangeTo);
             statement = statement.replace('{{statistic}}', statistic);
+            statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
             statement = statement.replace('{{phase}}', phase);
+            statement = statement.replace('{{top}}', top);
+            statement = statement.replace('{{bottom}}', bottom);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
             var queryResult;
@@ -125,7 +120,7 @@ dataProfile = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.y.length
                 };
                 // get the data back from the query
                 d = queryResult.data;

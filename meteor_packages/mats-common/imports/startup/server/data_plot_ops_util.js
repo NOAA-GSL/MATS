@@ -491,7 +491,7 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: 20,
             pad: 4
         },
         zeroline: false,
@@ -520,6 +520,52 @@ const generateHistogramPlotOptions = function (dataset, curves, axisMap, plotBin
 
 };
 
+// sets plot options for valid time graphs
+const generateContourPlotOptions = function (dataset, axisMap) {
+    const xAxisKey = dataset[0]['xAxisKey'];
+    const yAxisKey = dataset[0]['yAxisKey'];
+
+    var layout = {
+        margin: {
+            l: 80,
+            r: 80,
+            b: 80,
+            t: 20,
+            pad: 4
+        },
+        zeroline: false,
+        hovermode: 'closest',
+        hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}}
+    };
+
+    layout['xaxis'] = {
+        title: xAxisKey,
+        titlefont: {color: '#000000', size: 22},
+        tickfont: {color: '#000000', size: 12},
+    };
+
+    if (yAxisKey === "Pressure level") {
+        layout['yaxis'] = {
+            title: yAxisKey,
+            titlefont: {color: '#000000', size: 22},
+            tickfont: {color: '#000000', size: 14},
+            tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
+            ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
+            range: [1100, 0],
+            type: 'linear',
+            autorange: 'reversed'
+        };
+    } else {
+        layout['yaxis'] = {
+            title: yAxisKey,
+            titlefont: {color: '#000000', size: 22},
+            tickfont: {color: '#000000', size: 14},
+        };
+    }
+    return layout;
+
+};
+
 export default matsDataPlotOpsUtils = {
 
     generateSeriesPlotOptions: generateSeriesPlotOptions,
@@ -528,6 +574,7 @@ export default matsDataPlotOpsUtils = {
     generateThresholdPlotOptions: generateThresholdPlotOptions,
     generateValidTimePlotOptions: generateValidTimePlotOptions,
     generateMapPlotOptions: generateMapPlotOptions,
-    generateHistogramPlotOptions: generateHistogramPlotOptions
+    generateHistogramPlotOptions: generateHistogramPlotOptions,
+    generateContourPlotOptions: generateContourPlotOptions
 
 }

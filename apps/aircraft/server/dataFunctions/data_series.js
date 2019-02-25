@@ -10,7 +10,6 @@ import {moment} from 'meteor/momentjs:moment'
 
 dataSeries = function (plotParams, plotFunction) {
     // initialize variables common to all curves
-    const appName = "aircraft";
     const matching = plotParams['plotAction'] === matsTypes.PlotActions.matched;
     const plotType = matsTypes.PlotTypes.timeSeries;
     const hasLevels = true;
@@ -18,13 +17,8 @@ dataSeries = function (plotParams, plotFunction) {
     var dataFoundForCurve = true;
     var totalProcessingStart = moment();
     var dateRange = matsDataUtils.getDateRange(plotParams.dates);
-    var fromDate = dateRange.fromDate;
-    var toDate = dateRange.toDate;
     var fromSecs = dateRange.fromSeconds;
     var toSecs = dateRange.toSeconds;
-    // convert dates for sql
-    fromDate = moment.utc(fromDate, "MM-DD-YYYY").format('YYYY-M-D');
-    toDate = moment.utc(toDate, "MM-DD-YYYY").format('YYYY-M-D');
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
     var curvesLength = curves.length;
@@ -70,7 +64,7 @@ dataSeries = function (plotParams, plotFunction) {
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
         var validTimeClause = " ";
-        if (validTimes.length > 0) {
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             validTimeClause = " and  m0.hour IN(" + validTimes + ")";
         }
         const averageStr = curve['average'];
@@ -98,8 +92,8 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{data_source}} as m0 " +
                 "where 1=1 " +
-                "and m0.date >= '{{fromDate}}' " +
-                "and m0.date <= '{{toDate}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour >= '{{fromSecs}}' " +
+                "and unix_timestamp(m0.date)+3600*m0.hour <= '{{toSecs}}' " +
                 "{{validTimeClause}} " +
                 "{{phase}} " +
                 "and m0.mb10 >= {{top}}/10 " +
@@ -115,8 +109,8 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{phase}}', phase);
             statement = statement.replace('{{top}}', top);
             statement = statement.replace('{{bottom}}', bottom);
-            statement = statement.replace('{{fromDate}}', fromDate);
-            statement = statement.replace('{{toDate}}', toDate);
+            statement = statement.replace('{{fromSecs}}', fromSecs);
+            statement = statement.replace('{{toSecs}}', toSecs);
             dataRequests[curve.label] = statement;
 
             // math is done on forecastLength later on -- set all analyses to 0
@@ -135,7 +129,7 @@ dataSeries = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;
