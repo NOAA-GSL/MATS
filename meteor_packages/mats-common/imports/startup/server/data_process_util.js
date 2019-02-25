@@ -1,4 +1,3 @@
-import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
