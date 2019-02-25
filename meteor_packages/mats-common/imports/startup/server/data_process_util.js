@@ -1,5 +1,5 @@
-import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
+import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataMatchUtils} from 'meteor/randyp:mats-common';
 import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
@@ -166,10 +166,10 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         const filteredMeans = means.filter(x => x);
         var miny = Math.min(...filteredMeans);
         var maxy = Math.max(...filteredMeans);
-        if (means.indexOf(0) !== -1 && 0 < miny){
+        if (means.indexOf(0) !== -1 && 0 < miny) {
             miny = 0;
         }
-        if (means.indexOf(0) !== -1 && 0 > maxy){
+        if (means.indexOf(0) !== -1 && 0 > maxy) {
             maxy = 0;
         }
         stats.miny = miny;
@@ -376,10 +376,10 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         const filteredMeans = means.filter(x => x);
         var minx = Math.min(...filteredMeans);
         var maxx = Math.max(...filteredMeans);
-        if (means.indexOf(0) !== -1 && 0 < minx){
+        if (means.indexOf(0) !== -1 && 0 < minx) {
             minx = 0;
         }
-        if (means.indexOf(0) !== -1 && 0 > maxx){
+        if (means.indexOf(0) !== -1 && 0 > maxx) {
             maxx = 0;
         }
         stats.minx = minx;
@@ -583,12 +583,74 @@ const processDataHistogram = function (allReturnedSubStats, allReturnedSubSecs, 
             queries: bookkeepingParams.dataRequests
         }
     };
+
+};
+
+const processDataContour = function (dataset, curveInfoParams, plotParams, bookkeepingParams) {
+    var error = "";
+    const appName = matsCollections.appName.findOne({name: 'appName'}, {app: 1}).app;
+    var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curve[0]['statistic'];
+    var data = dataset[0];
+    const label = dataset[0].label;
+
+    if (data.xAxisKey.indexOf("Date") !== -1) {
+        data.x = data.x.map(function (val) {
+            return moment.utc(val * 1000).format("YYYY-MM-DD HH:mm");
+        });
+    } else if (data.yAxisKey.indexOf("Date") !== -1) {
+        data.y = data.y.map(function (val) {
+            return moment.utc(val * 1000).format("YYYY-MM-DD HH:mm");
+        });
+    }
+
+    var i;
+    var j;
+    var currX;
+    var currY;
+    var currText;
+    var currYTextArray;
+    for (j = 0; j < data.y.length; j++) {
+        currY = data.y[j];
+        currYTextArray = [];
+        for (i = 0; i < data.x.length; i++) {
+            currX = data.x[i];
+            currText = label +
+                "<br>" + data['xAxisKey'] + ": " + data.x[i] +
+                "<br>" + data['yAxisKey'] + ": " + data.y[j] +
+                "<br>" + statisticSelect + ": " + (data.z[j][i] === null ? null : data.z[j][i].toPrecision(4)) +
+                "<br>n: " + data['n'][j][i];
+            currYTextArray.push(currText);
+        }
+        data.text.push(currYTextArray);
+    }
+
+    // generate plot options
+    const resultOptions = matsDataPlotOpsUtils.generateContourPlotOptions(dataset, curveInfoParams.axisMap);
+
+    var totalProcessingFinish = moment();
+    bookkeepingParams.dataRequests["total retrieval and processing time for curve set"] = {
+        begin: bookkeepingParams.totalProcessingStart.format(),
+        finish: totalProcessingFinish.format(),
+        duration: moment.duration(totalProcessingFinish.diff(bookkeepingParams.totalProcessingStart)).asSeconds() + ' seconds'
+    };
+
+    // pass result to client-side plotting functions
+    return {
+        error: error,
+        data: dataset,
+        options: resultOptions,
+        basis: {
+            plotParams: plotParams,
+            queries: bookkeepingParams.dataRequests
+        }
+    };
 };
 
 export default matsDataProcessUtils = {
 
     processDataXYCurve: processDataXYCurve,
     processDataProfile: processDataProfile,
-    processDataHistogram: processDataHistogram
+    processDataHistogram: processDataHistogram,
+    processDataContour: processDataContour
 
 }

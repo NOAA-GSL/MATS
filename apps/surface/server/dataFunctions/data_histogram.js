@@ -97,7 +97,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             var validTimeClause = " ";
-            if (validTimes.length > 0) {
+            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = " and  m0.hour IN(" + validTimes + ")";
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);

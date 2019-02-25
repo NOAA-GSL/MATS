@@ -42,6 +42,9 @@ Template.curveParamItemGroup.helpers({
             case matsTypes.PlotTypes.histogram:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.histogram});
                 break;
+            case matsTypes.PlotTypes.contour:
+                pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.contour});
+                break;
             case matsTypes.PlotTypes.scatter2d:
                 pattern = matsCollections.CurveTextPatterns.findOne({plotType: matsTypes.PlotTypes.scatter2d});
                 break;

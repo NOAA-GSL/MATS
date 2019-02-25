@@ -50,7 +50,7 @@ Template.curveList.helpers({
     log: function () {
         console.log(this);
     },
-    averagesdisabled: function () {
+    averagesDisabled: function () {
         var curves = Session.get('Curves');
         if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.timeSeries)) {
             return "";
@@ -72,6 +72,30 @@ Template.curveList.helpers({
             if (average != curves[i].average) {
                 return "block";
             }
+        }
+        return "none"
+    },
+    identicalContourDisabled: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
+            return "";
+        }
+        var xAxis = curves[0]['x-axis-parameter'];
+        var yAxis = curves[0]['y-axis-parameter'];
+        if (xAxis === yAxis) {
+            return "disabled";
+        }
+        return "";
+    },
+    identicalContourHidden: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length == 0 || (Session.get('plotType') !== matsTypes.PlotTypes.contour)) {
+            return "none";
+        }
+        var xAxis = curves[0]['x-axis-parameter'];
+        var yAxis = curves[0]['y-axis-parameter'];
+        if (xAxis === yAxis) {
+            return "block";
         }
         return "none"
     },

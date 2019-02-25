@@ -95,6 +95,13 @@ Template.textOutput.helpers({
                     <th>minimum</th>\
                     <th>maximum</th>";
                 break;
+            case matsTypes.PlotTypes.contour:
+                header += "<th>label</th>\
+                    <th>mean stat</th>\
+                    <th>n</th>\
+                    <th>minimum time</th>\
+                    <th>maximum time</th>";
+                break;
             default:
                 break;
         }
@@ -171,6 +178,14 @@ Template.textOutput.helpers({
                         <th>Start Date</th>\
                         <th>End Date</th>\
                         <th>Average Difference</th>";
+                break;
+            case matsTypes.PlotTypes.contour:
+                header += "<th>X Value</th>\
+                        <th>Y Value</th>\
+                        <th>Stat</th>\
+                        <th>Number</th>\
+                        <th>Start Date</th>\
+                        <th>End Date</th>";
                 break;
             default:
                 break;
@@ -274,6 +289,14 @@ Template.textOutput.helpers({
                     "<td>" + (element['End Date'] != undefined && element['End Date'] !== null ? element['End Date'] : fillStr) + "</td>" +
                     "<td>" + (element['Average Difference'] != undefined && element['Average Difference'] !== null ? element['Average Difference'] : fillStr) + "</td>";
                 break;
+            case matsTypes.PlotTypes.contour:
+                line += "<td>" + element["xVal"] + "</td>" +
+                    "<td>" + element["yVal"] + "</td>" +
+                    "<td>" + (element['stat'] != undefined && element['stat'] !== null ? element['stat'] : fillStr) + "</td>" +
+                    "<td>" + (element['N'] != undefined && element['N'] !== null ? element['N'] : fillStr) + "</td>" +
+                    "<td>" + (element['Start Date'] != undefined && element['Start Date'] !== null ? element['Start Date'] : fillStr) + "</td>" +
+                    "<td>" + (element['End Date'] != undefined && element['End Date'] !== null ? element['End Date'] : fillStr) + "</td>";
+                break;
             case matsTypes.PlotTypes.scatter2d:
                 line += "<td>" + (element['xAxis'] != undefined && element['xAxis'] !== null ? element['xAxis'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (element['yAxis'] != undefined && element['yAxis'] !== null ? element['yAxis'].toPrecision(4) : fillStr) + "</td>" +
@@ -357,6 +380,13 @@ Template.textOutput.helpers({
                     "<td>" + (stats['n']).toString() + "</td>" +
                     "<td>" + (stats['minimum'] != undefined && stats['minimum'] != null ? stats['minimum'].toPrecision(4) : "undefined").toString() + "</td>" +
                     "<td>" + (stats['maximum'] != undefined && stats['maximum'] != null ? stats['maximum'].toPrecision(4) : "undefined").toString() + "</td>";
+                break;
+            case matsTypes.PlotTypes.contour:
+                line += "<td>" + curve['label'] + "</td>" +
+                    "<td>" + (stats['mean stat'] != undefined && stats['mean stat'] !== null ? stats['mean stat'].toPrecision(4) : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['total number of points'] != undefined && stats['total number of points'] !== null ? stats['total number of points'] : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['minimum time'] != undefined && stats['minimum time'] != null ? stats['minimum time'] : "undefined").toString() + "</td>" +
+                    "<td>" + (stats['maximum time'] != undefined && stats['maximum time'] != null ? stats['maximum time'] : "undefined").toString() + "</td>";
                 break;
             default:
                 break;

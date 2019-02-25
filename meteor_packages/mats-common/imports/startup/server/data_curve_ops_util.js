@@ -333,6 +333,54 @@ const generateMapColorTextOptions = function (label, dataSeries) {
     return curveOptions;
 };
 
+const generateContourCurveOptions = function (curve, axisMap, dataset) {
+
+    const label = curve['label'];
+    const annotation = curve['annotation'];
+    const unitKey = curve['unitKey'];
+
+    const curveOptions = {
+        ...{
+            label: label,
+            curveId: label,
+            name: label,
+            annotation: annotation,
+            annotateColor: curve['color'],
+            xAxisKey: curve['xAxisKey'],
+            yAxisKey: curve['yAxisKey'],
+            line: {
+                // smoothing: 0.85     // smooths contour line divisions
+            },
+            marker: {
+                color: curve['color'],
+            },
+            type: 'contour',
+            contours: {
+                // showlabels: true,       // shows labels on contours
+                // labelfont: {
+                //     family: 'Raleway',
+                //     size: 12,
+                //     color: 'white',
+                // }
+            },
+            // colorscale: 'Jet',
+            // reversescale: true,
+            colorbar:{
+                title: unitKey,
+                titleside: 'right',
+                titlefont: {
+                    size: 14,
+                    family: 'Arial, sans-serif'
+                }
+            },
+            // connectgaps: true,   // this option will interpolate to fill in nulls
+            visible: true
+        }, ...dataset
+    };
+
+    return curveOptions;
+};
+
 export default matsDataCurveOpsUtils = {
 
     getPointSymbol: getPointSymbol,
@@ -343,6 +391,7 @@ export default matsDataCurveOpsUtils = {
     generateProfileCurveOptions: generateProfileCurveOptions,
     generateBarChartCurveOptions: generateBarChartCurveOptions,
     generateMapCurveOptions: generateMapCurveOptions,
-    generateMapColorTextOptions: generateMapColorTextOptions
+    generateMapColorTextOptions: generateMapColorTextOptions,
+    generateContourCurveOptions: generateContourCurveOptions
 
 }
