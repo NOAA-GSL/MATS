@@ -824,7 +824,7 @@ Meteor.startup(function () {
     mdr.addRecord("sumPool", "ceiling_5min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-
+    matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "ceiling15"});
 
 });

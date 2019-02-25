@@ -880,7 +880,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-
+    matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "aircraft"});
 
 });

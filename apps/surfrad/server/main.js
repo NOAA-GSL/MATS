@@ -796,7 +796,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "surfrad3", ['scale_descriptions', 'station_descriptions', 'regions_per_model_mats_all_categories']);
     matsMethods.resetApp(mdr);
-
+    matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "surfrad"});
 
 });

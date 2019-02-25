@@ -1120,7 +1120,7 @@ Meteor.startup(function () {
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
     matsMethods.resetApp(mdr);
-
+    matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "surface"});
 
 });
