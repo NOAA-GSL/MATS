@@ -73,9 +73,9 @@ dataSeries = function (plotParams, plotFunction) {
                 "{{statistic}} " +
                 "from {{model}}_{{region}} as m0 " +
                 "where 1=1 " +
-                "{{validTimeClause}} " +
                 "and m0.time >= {{fromSecs}} " +
                 "and m0.time <  {{toSecs}} " +
+                "{{validTimeClause}} " +
                 "and m0.yy+m0.ny+m0.yn+m0.nn > 0 " +
                 "and m0.trsh = {{threshold}} " +
                 "and m0.fcst_len = {{forecastLength}} " +
@@ -94,7 +94,7 @@ dataSeries = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause = " ";
-            if (validTimes.length > 0) {
+            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = " and (m0.time)%(24*3600)/3600 IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
@@ -117,7 +117,7 @@ dataSeries = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;

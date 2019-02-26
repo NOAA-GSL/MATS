@@ -417,7 +417,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: Object.keys(optionsMap)[0],
                 controlButtonVisibility: 'block',
-                displayOrder: 4,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -436,7 +436,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: thresholdsModelOptionsMap[Object.keys(thresholdsModelOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
-                displayOrder: 5,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -470,7 +470,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: truthsModelOptionsMap[Object.keys(truthsModelOptionsMap)[0]][1],
                 controlButtonVisibility: 'block',
-                displayOrder: 6,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 2
             });
@@ -489,6 +489,43 @@ const doCurveParams = function () {
         }
     }
 
+    if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
+        optionsMap = {
+            'None': ['m0.time'],
+            '15m': ['ceil(900*floor(m0.time/900)+900/2)'],
+            '30m': ['ceil(1800*floor(m0.time/1800)+1800/2)'],
+            '1h': ['ceil(3600*floor(m0.time/3600)+3600/2)'],
+            '90m': ['ceil(5400*floor(m0.time/5400)+5400/2)'],
+            '2h': ['ceil(7200*floor(m0.time/7200)+7200/2)'],
+            '3h': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
+            '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
+            '12h': ['ceil(43200*floor(m0.time/43200)+43200/2)'],
+            '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
+            '3D': ['ceil(259200*floor(m0.time/259200)+259200/2)'],
+            '7D': ['ceil(604800*floor(m0.time/604800)+604800/2)'],
+            '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
+            '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)'],
+            '90D': ['ceil(7776000*floor(m0.time/7776000)+7776000/2)'],
+            '180D': ['ceil(15552000*floor(m0.time/15552000)+15552000/2)']
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'average',
+                type: matsTypes.InputTypes.select,
+                optionsMap: optionsMap,
+                options: Object.keys(optionsMap),   // convenience
+                controlButtonCovered: true,
+                unique: false,
+                selected: 'None',
+                default: 'None',
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3
+            });
+    }
+
     if (matsCollections.CurveParams.find({name: 'forecast-length'}).count() == 0) {
         matsCollections.CurveParams.insert(
             {
@@ -503,7 +540,7 @@ const doCurveParams = function () {
                 default: forecastLengthOptionsMap[Object.keys(forecastLengthOptionsMap)[0]][0],
                 controlButtonVisibility: 'block',
                 controlButtonText: "forecast lead time",
-                displayOrder: 7,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -543,44 +580,7 @@ const doCurveParams = function () {
                 default: Object.keys(dieoffOptionsMap)[0],
                 controlButtonVisibility: 'block',
                 controlButtonText: 'dieoff type',
-                displayOrder: 7,
-                displayPriority: 1,
-                displayGroup: 3
-            });
-    }
-
-    if (matsCollections.CurveParams.find({name: 'average'}).count() == 0) {
-        optionsMap = {
-            'None': ['m0.time'],
-            '15m': ['ceil(900*floor(m0.time/900)+900/2)'],
-            '30m': ['ceil(1800*floor(m0.time/1800)+1800/2)'],
-            '1h': ['ceil(3600*floor(m0.time/3600)+3600/2)'],
-            '90m': ['ceil(5400*floor(m0.time/5400)+5400/2)'],
-            '2h': ['ceil(7200*floor(m0.time/7200)+7200/2)'],
-            '3h': ['ceil(10800*floor(m0.time/10800)+10800/2)'],
-            '6h': ['ceil(21600*floor(m0.time/21600)+21600/2)'],
-            '12h': ['ceil(43200*floor(m0.time/43200)+43200/2)'],
-            '1D': ['ceil(86400*floor(m0.time/86400)+86400/2)'],
-            '3D': ['ceil(259200*floor(m0.time/259200)+259200/2)'],
-            '7D': ['ceil(604800*floor(m0.time/604800)+604800/2)'],
-            '30D': ['ceil(2592000*floor(m0.time/2592000)+2592000/2)'],
-            '60D': ['ceil(5184000*floor(m0.time/5184000)+5184000/2)'],
-            '90D': ['ceil(7776000*floor(m0.time/7776000)+7776000/2)'],
-            '180D': ['ceil(15552000*floor(m0.time/15552000)+15552000/2)']
-        };
-
-        matsCollections.CurveParams.insert(
-            {
-                name: 'average',
-                type: matsTypes.InputTypes.select,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap),   // convenience
-                controlButtonCovered: true,
-                unique: false,
-                selected: 'None',
-                default: 'None',
-                controlButtonVisibility: 'block',
-                displayOrder: 8,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 3
             });
@@ -602,7 +602,7 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "valid utc hour",
-                displayOrder: 9,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3,
                 multiple: true
@@ -624,9 +624,75 @@ const doCurveParams = function () {
                 default: optionsArr[12],
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle start time",
-                displayOrder: 10,
+                displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "select m0.fcst_len+m0.fcst_min/60 as xVal, ",
+            'Threshold': "select m0.trsh/100 as xVal, ",
+            'Valid UTC hour': "select m0.time%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select (m0.time-(m0.fcst_len*3600+m0.fcst_min*60))%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select m0.time as xVal, ",
+            'Init Date': "select m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as xVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[3],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "m0.fcst_len+m0.fcst_min/60 as yVal, ",
+            'Threshold': "m0.trsh/100 as yVal, ",
+            'Valid UTC hour': "m0.time%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "(m0.time-(m0.fcst_len*3600+m0.fcst_min*60))%(24*3600)/3600 as yVal, ",
+            'Valid Date': "m0.time as yVal, ",
+            'Init Date': "m0.time-(m0.fcst_len*3600+m0.fcst_min*60) as yVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5,
             });
     }
 
@@ -655,7 +721,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: "dateHelp.html"
             });
     }
@@ -763,6 +829,27 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'threshold', ' '],
+                ['', 'statistic', ', '],
+                ['', 'truth', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "data-source", "region", "statistic", "threshold", "truth", "forecast-length", "valid-time", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
@@ -808,6 +895,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.histogram,
             graphFunction: "graphPlotly",
             dataFunction: "dataHistogram",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContour",
             checked: false
         });
     }

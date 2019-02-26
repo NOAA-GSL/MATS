@@ -116,7 +116,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;

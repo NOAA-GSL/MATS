@@ -138,7 +138,7 @@ const queryDBTimeSeries = function (pool, statement, dataSource, forecastOffset,
         const completenessQCParam = Number(plotParams["completeness"]) / 100;
 
         var cycles = getModelCadence(pool, dataSource, startDate, endDate); // if irregular model cadence, get cycle times. If regular, get empty array.
-        if (validTimes.length > 0) {
+        if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
             var vtCycles = validTimes.map(function (x) {
                 return (Number(x) - forecastOffset) * 3600 * 1000;
             }); // selecting validTimes makes the cadence irregular

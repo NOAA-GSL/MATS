@@ -88,7 +88,7 @@ dataHistogram = function (plotParams, plotFunction) {
             statement = statement.replace('{{toSecs}}', toSecs);
             statement = statement.replace('{{statistic}}', statistic);
             var validTimeClause = " ";
-            if (validTimes.length > 0) {
+            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = " and floor((m0.time)%(24*3600)/3600) IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
