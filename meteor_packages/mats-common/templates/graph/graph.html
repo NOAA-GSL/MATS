@@ -94,34 +94,37 @@
                             <h4>* Only data from your original time range has been queried and is available to plot. </h4>
                         </div>
                         <div class="modal-body">
-                            <div id="xAxisCustomControls" style="display:block;">
-                                <div class="row">
-                                    <label class="col-sm-2">X label: </label>
-                                    <input id="xAxisLabel" class="y-axis-label data-input textInput col-sm-3" type="text" value="" name="xAxisLabel"/>
+                            {{#each xAxis in xAxes}}
+                                <div><br></div>
+                                <div id="x{{xAxis.label}}AxisCustomControls" style="display:block;">
+                                    <div class="row">
+                                        <label class="col-sm-2">X{{xAxis}} label: </label>
+                                        <input id="x{{xAxis}}AxisLabel" class="x{{xAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisLabel"/>
+                                    </div>
+                                    <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
+                                        <div class="row">
+                                            <label class="col-sm-2">X{{xAxis}}_min: </label>
+                                            <input id="x{{xAxis}}AxisMin" class="x{{xAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="x{{xAxis}}AxisMin"/>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-2">X{{xAxis}}_max: </label>
+                                            <input id="x{{xAxis}}AxisMax" class="x{{xAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="x{{xAxis}}AxisMax"/>
+                                        </div>
+                                    </div>
+                                    <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
+                                        <div class="row">
+                                            <label class="col-sm-2">X{{xAxis}}_min: </label>
+                                            <input id="x{{xAxis}}AxisMinText" class="x{{xAxis}}-axis-min data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisMinText"/>
+                                            <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-2">X{{xAxis}}_max: </label>
+                                            <input id="x{{xAxis}}AxisMaxText" class="x{{xAxis}}-axis-max data-input textInput col-sm-3" type="text" value="" name="x{{xAxis}}AxisMaxText"/>
+                                            <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div id="xAxisControlsNumber" style="display:{{xAxisControlsNumberVisibility}};">
-                                    <div class="row">
-                                        <label class="col-sm-2">X_min: </label>
-                                        <input id="xAxisMin" class="x-axis-min data-input numberInput col-sm-3" type="number" value="" name="xAxisMin"/>
-                                    </div>
-                                    <div class="row">
-                                        <label class="col-sm-2">X_max: </label>
-                                        <input id="xAxisMax" class="x-axis-max data-input numberInput col-sm-3" type="number" value="" name="xAxisMax"/>
-                                    </div>
-                                </div>
-                                <div id="xAxisControlsText" style="display:{{xAxisControlsTextVisibility}};">
-                                    <div class="row">
-                                        <label class="col-sm-2">X_min: </label>
-                                        <input id="xAxisMinText" class="x-axis-min data-input textInput col-sm-3" type="text" value="" name="xAxisMinText"/>
-                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                    </div>
-                                    <div class="row">
-                                        <label class="col-sm-2">X_max: </label>
-                                        <input id="xAxisMaxText" class="x-axis-max data-input textInput col-sm-3" type="text" value="" name="xAxisMaxText"/>
-                                        <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
-                                    </div>
-                                </div>
-                            </div>
+                            {{/each}}
                             {{#each yAxis in yAxes}}
                                 <div><br></div>
                                 <div id="y{{yAxis.label}}AxisCustomControls" style="display:block;">
@@ -129,7 +132,7 @@
                                         <label class="col-sm-2">Y{{yAxis}} label: </label>
                                         <input id="y{{yAxis}}AxisLabel" class="y{{yAxis}}-axis-label data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisLabel"/>
                                     </div>
-                                    <div id="yAxisControlsNumber" style="display:block;">
+                                    <div id="yAxisControlsNumber" style="display:{{yAxisControlsNumberVisibility}};">
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_min: </label>
                                             <input id="y{{yAxis}}AxisMin" class="y{{yAxis}}-axis-min data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMin"/>
@@ -137,6 +140,18 @@
                                         <div class="row">
                                             <label class="col-sm-2">Y{{yAxis}}_max: </label>
                                             <input id="y{{yAxis}}AxisMax" class="y{{yAxis}}-axis-max data-input numberInput col-sm-3" type="number" value="" name="y{{yAxis}}AxisMax"/>
+                                        </div>
+                                    </div>
+                                    <div id="yAxisControlsText" style="display:{{yAxisControlsTextVisibility}};">
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_min: </label>
+                                            <input id="y{{yAxis}}AxisMinText" class="y{{yAxis}}-axis-min data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisMinText"/>
+                                            <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-2">Y{{yAxis}}_max: </label>
+                                            <input id="y{{yAxis}}AxisMaxText" class="y{{yAxis}}-axis-max data-input textInput col-sm-3" type="text" value="" name="y{{yAxis}}AxisMaxText"/>
+                                            <span class="col-sm-5">YYYY-MM-DD HH:MM format</span>
                                         </div>
                                     </div>
                                 </div>
