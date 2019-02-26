@@ -13,6 +13,7 @@ import {
 var pageIndex = 0;
 var annotation = "";
 var openWindows = [];
+var xAxes = [];
 var yAxes = [];
 
 Template.graph.onCreated(function () {
@@ -22,7 +23,7 @@ Template.graph.onCreated(function () {
         var dataset = matsCurveUtils.getGraphResult().data;
         var options = matsCurveUtils.getGraphResult().options;
         if (dataset !== undefined && options !== undefined) {
-            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
         }
     });
 });
@@ -49,7 +50,7 @@ Template.graph.helpers({
             }
 
             // initial plot
-            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+            Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
             if (plotType !== matsTypes.PlotTypes.map) {
                 // append annotations
@@ -61,8 +62,11 @@ Template.graph.helpers({
                 }
                 $("#legendContainer").append("<div id='annotationContainer' style='font-size:smaller'>" + annotation + "</div>");
 
-                // store the existing y axes.
+                // store the existing axes.
                 Object.keys($("#placeholder")[0].layout).filter(function (k) {
+                    if (k.startsWith('xaxis')) {
+                        xAxes.push(k);
+                    }
                     if (k.startsWith('yaxis')) {
                         yAxes.push(k);
                     }
@@ -155,6 +159,23 @@ Template.graph.helpers({
     },
     color: function () {
         return this.color;
+    },
+    xAxes: function () {
+        Session.get('PlotResultsUpDated');
+        var plotType = Session.get('plotType');
+        // create an array like [0,1,2...] for each unique xaxis
+        // by getting the xaxis keys - filtering them to be unique, then using an Array.apply on the resulting array
+        // to assign a number to each value
+        var xaxis = {};
+        if ($("#placeholder")[0] === undefined || $("#placeholder")[0].layout === undefined || plotType === matsTypes.PlotTypes.map) {
+            return;
+        }
+        Object.keys($("#placeholder")[0].layout).filter(function (k) {
+            if (k.startsWith('xaxis')) {
+                xaxis[k] = $("#placeholder")[0].layout[k];
+            }
+        });
+        return Array.apply(null, {length: Object.keys(xaxis).length}).map(Number.call, Number);
     },
     yAxes: function () {
         Session.get('PlotResultsUpDated');
@@ -281,16 +302,36 @@ Template.graph.helpers({
         }
     },
     xAxisControlsNumberVisibility: function () {
+        Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
+            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             return "none";
         } else {
             return "block";
         }
     },
     xAxisControlsTextVisibility: function () {
+        Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
+            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    yAxisControlsNumberVisibility: function () {
+        Session.get('PlotResultsUpDated');
+        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
+            return "none";
+        } else {
+            return "block";
+        }
+    },
+    yAxisControlsTextVisibility: function () {
+        Session.get('PlotResultsUpDated');
+        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "block";
         } else {
             return "none";
@@ -403,7 +444,7 @@ Template.graph.events({
         var yAxis;
         for (var k = 0; k < yAxes.length; k++) {
             yAxis = yAxes[k];
-            newOpts[yAxis + '.type'] = $("#placeholder")[0].layout[yAxis].type ==='linear' ? 'log' : 'linear';
+            newOpts[yAxis + '.type'] = $("#placeholder")[0].layout[yAxis].type === 'linear' ? 'log' : 'linear';
         }
         Plotly.relayout($("#placeholder")[0], newOpts);
     },
@@ -713,7 +754,8 @@ Template.graph.events({
                 newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
-        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle) {
+        if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
+            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
@@ -741,34 +783,48 @@ Template.graph.events({
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
-        $("input[id^=y][id$=AxisMin]").get().forEach(function (elem, index) {
-            if (elem.value !== undefined && elem.value !== "") {
-                if (plotType === matsTypes.PlotTypes.profile) {
-                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
-                    // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
-                    if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
-                        $("#axisYScale").click();
-                        changeYScaleBack = true;
-                    }
-                } else {
+        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
+            $("input[id^=y][id$=AxisMinText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
                 }
-            }
-        });
-        $("input[id^=y][id$=AxisMax]").get().forEach(function (elem, index) {
-            if (elem.value !== undefined && elem.value !== "") {
-                if (plotType === matsTypes.PlotTypes.profile) {
-                    newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
-                    // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
-                    if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
-                        $("#axisYScale").click();
-                        changeYScaleBack = true;
-                    }
-                } else {
+            });
+            $("input[id^=y][id$=AxisMaxText]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
                 }
-            }
-        });
+            });
+        } else {
+            $("input[id^=y][id$=AxisMin]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    if (plotType === matsTypes.PlotTypes.profile) {
+                        newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                        // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
+                        if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
+                            $("#axisYScale").click();
+                            changeYScaleBack = true;
+                        }
+                    } else {
+                        newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                    }
+                }
+            });
+            $("input[id^=y][id$=AxisMax]").get().forEach(function (elem, index) {
+                if (elem.value !== undefined && elem.value !== "") {
+                    if (plotType === matsTypes.PlotTypes.profile) {
+                        newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
+                        // plotly can't seem to set axis limits on a log axis, so this needs to be changed to linear
+                        if ($("#placeholder")[0].layout['yaxis' + (index === 0 ? "" : index + 1)].type === 'log') {
+                            $("#axisYScale").click();
+                            changeYScaleBack = true;
+                        }
+                    } else {
+                        newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[1]'] = elem.value;
+                    }
+                }
+            });
+        }
+        console.log(newOpts);
         Plotly.relayout($("#placeholder")[0], newOpts);
         // if needed, restore the log axis
         if (changeYScaleBack) {
