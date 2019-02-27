@@ -3,7 +3,8 @@
  */
 var AppTypes = {
     mats: 'mats',
-    metexpress: 'metexpress'
+    metexpress: 'metexpress',
+    mats4met: 'mats4met'
 };
 
 var InputTypes = {
