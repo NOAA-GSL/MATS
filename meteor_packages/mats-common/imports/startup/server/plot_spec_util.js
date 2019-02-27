@@ -184,6 +184,10 @@ const _getSortedDatesForIndepRange = function(plotParams) {
     // to get a complete date list
     var dates = [];
     for (var ci = 0; ci < curves.length; ci++) {
+        if (curves[ci]['diffFrom']) {
+            // currrently we do not do mv differencing
+            continue;
+        }
         var curve = curves[ci];
         const validTimes = curve['valid-time'];
         const region = curve['region'];
@@ -257,6 +261,10 @@ const addDatabaseElement = function(element, curves){
         databases = [];
 
         for (var ci=0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             if (!databases.includes(curves[ci].database)) {
                 databases.push(curves[ci].database);
             }
@@ -308,6 +316,10 @@ const addPlotCi = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push('"none"');
         }
         cListStr += cList.join(',') + ')';
@@ -322,6 +334,10 @@ const addShowSignif = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push('FALSE');
         }
         cListStr += cList.join(',') + ')';
@@ -350,6 +366,10 @@ const addColors = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             var ch = _rgbToHex(curves[ci].color) + "FF";
             cList.push('"' + ch + '"');
         }
@@ -365,6 +385,10 @@ const addPch = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push('20');
         }
         cListStr += cList.join(',') + ')';
@@ -379,6 +403,10 @@ const addType = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push('"b"');
         }
         cListStr += cList.join(',') + ')';
@@ -393,6 +421,10 @@ const addLty = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push(1);
         }
         cListStr += cList.join(',') + ')';
@@ -407,6 +439,10 @@ const addLwd = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push(1);
         }
         cListStr += cList.join(',') + ')';
@@ -421,6 +457,10 @@ const addConSeries = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push(1);
         }
         cListStr += cList.join(',') + ')';
@@ -435,6 +475,10 @@ const addOrderSeries = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push(ci + 1);
         }
         cListStr += cList.join(',') + ')';
@@ -449,6 +493,10 @@ const addLegend = function(element,plotParams){
         var cList = [];
         var cListStr = 'c(';
         for (var ci = 0; ci < curves.length; ci++) {
+            if (curves[ci]['diffFrom']) {
+                // currrently we do not do mv differencing
+                continue;
+            }
             cList.push('""');
         }
         cListStr += cList.join(',') + ')';
@@ -507,6 +555,10 @@ const addSeries = function(plot, dependentAxes, plotParams) {
             case matsTypes.PlotTypes.dieoff:
                 sVars = {'data-source': 'model', 'region': 'vx_mask', 'pres-level': 'fcst_lev', 'curve-dates': 'fcst_valid_beg'};
                 for (var ci=0; ci < plotParams.curves.length;ci++) {
+                    if (curves[ci]['diffFrom']) {
+                        // currrently we do not do mv differencing
+                        continue;
+                    }
                     const c = plotParams.curves[ci];
                     if (c['dieoff-type'] === 'Dieoff for a specified UTC cycle init hour') {
                         initHours.add(c['utc-cycle-start']);
@@ -619,6 +671,10 @@ const getDependentAxis = function(plotParams) {
     dependentAxes['y1'].push(curves[0]);
     var dependentAxesVariables = {'y1': [curves[0]['variable']], 'y2': []};
     for (var ci = 1; ci < curves.length; ci++) {
+        if (curves[ci]['diffFrom']) {
+            // currrently we do not do mv differencing
+            continue;
+        }
         if (curves[ci].yaxes != yaxesDefault) {
             // it was assigned an axis by the axis param so sort it into its selectedYaxes
             dependentAxes[curves[ci].yaxes].push(curves[ci]);
@@ -754,6 +810,10 @@ const addIndepLevels = function(plot, plotParams) {
     var curves = plotParams.curves;
     var lvlSet = new Set(); // use a set to accumulate all the levels
     for (var ci=0; ci<curves.length;ci++) {
+        if (curves[ci]['diffFrom']) {
+            // currrently we do not do mv differencing
+            continue;
+        }
         const curve = curves[ci];
         const database = curve['database'];
         const dataSource = curve['data-source'];
@@ -786,6 +846,10 @@ const addIndepForecastHours = function(plot, plotParams) {
     var curves = plotParams.curves;
     var leadSet = new Set(); // use a set to accumulate all the levels
     for (var ci=0; ci<curves.length;ci++) {
+        if (curves[ci]['diffFrom']) {
+            // currrently we do not do mv differencing
+            continue;
+        }
         const curve = curves[ci];
         const database = curve['database'];
         const dataSource = curve['data-source'];

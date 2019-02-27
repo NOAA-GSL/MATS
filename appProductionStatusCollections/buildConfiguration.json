@@ -275,6 +275,27 @@
       "displayOrder": 17,
       "deploymentStatus": "disabled",
       "buildStatus": "disabled"
+    },
+    {
+      "app": "met-upperair",
+      "displayName": "MET Upper Air",
+      "displayOrder": 18,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-anomalycor",
+      "displayName": "MET Anomaly Correlation",
+      "displayOrder": 19,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
+    },
+    {
+      "app": "met-surface",
+      "displayName": "MET Surface",
+      "displayOrder": 20,
+      "deploymentStatus": "enabled",
+      "buildStatus": "enabled"
     }
   ]
 }
