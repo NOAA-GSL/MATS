@@ -1,0 +1,35 @@
+{
+  "private": {
+    "databases": [
+      {
+        "name": "sumSetting",
+        "role": "sum_data",
+        "status": "active",
+        "host": "localhost",
+        "port": "3306",
+        "user": "met_admin",
+        "password": "MaPass4mvmay2018##",
+        "database": "metviewerDBstatus",
+        "connectionLimit": 10
+      },
+      {
+        "name": "metadataSetting",
+        "role": "metadata",
+        "status": "active",
+        "host": "localhost",
+        "port": "3306",
+        "user": "met_admin",
+        "password": "MaPass4mvmay2018##",
+        "database": "mats_metadata",
+        "connectionLimit": 10
+      }
+    ],
+    "MV_HOME": "/Users/molly.b.smith/IdeaProjects/METViewer",
+    "MV_OUTPUT": "/Users/molly.b.smith/mv_output",
+    "JAVA_HOME": "/usr/bin/java",
+    "MV_RSCRIPT": "/Users/molly.b.smith/anaconda/bin/Rscript",
+    "PYTHON_PATH": "/usr/local/bin/python2.7",
+    "MYSQL_CONF_PATH": "/Users/jeffrey.a.hamilton/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf"
+  },
+  "public": {}
+}
