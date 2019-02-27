@@ -2,7 +2,7 @@
 
 # source the build environment and mongo utilities
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
-# assign all the top level environment valuse from the build configuration to shell variables
+# assign all the top level environment values from the build configuration to shell variables
 # set up logging
 logDir="/builds/buildArea/logs"
 logname="$logDir/"`basename $0 | cut -f1 -d"."`.log
