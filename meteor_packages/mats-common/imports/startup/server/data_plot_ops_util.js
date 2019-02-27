@@ -12,7 +12,7 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: 20,
             pad: 4
         },
         zeroline: false,
@@ -94,13 +94,14 @@ const generateSeriesPlotOptions = function (dataset, curves, axisMap, errorMax) 
 const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax) {
     var ymin = 10;
     var ymax = 1075;
+    const xAxisNumber = Object.keys(axisMap).length;
 
     var layout = {
         margin: {
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: xAxisNumber > 1 ? 80 : 20,
             pad: 4
         },
         zeroline: false,
@@ -131,7 +132,6 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
     const axisSide = {0: 'bottom', 1: 'top', 2: 'bottom', 3: 'top', 4: 'bottom', 5: 'top', 6: 'bottom', 7: 'top'};
     const axisPosition = {0: 0, 1: 1, 2: 0.15, 3: 0.85, 4: 0.3, 5: 0.7, 6: 0.45, 7: 0.55};
 
-    const xAxisNumber = Object.keys(axisMap).length;
     var axisKey;
     var axisIdx;
     var axisLabel;
@@ -199,7 +199,7 @@ const generateDieoffPlotOptions = function (dataset, curves, axisMap, errorMax) 
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: 20,
             pad: 4
         },
         zeroline: false,
@@ -287,7 +287,7 @@ const generateThresholdPlotOptions = function (dataset, curves, axisMap, errorMa
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: 20,
             pad: 4
         },
         zeroline: false,
@@ -375,7 +375,7 @@ const generateValidTimePlotOptions = function (dataset, curves, axisMap, errorMa
             l: 80,
             r: 80,
             b: 80,
-            t: 80,
+            t: 20,
             pad: 4
         },
         zeroline: false,

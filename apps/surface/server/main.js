@@ -676,7 +676,7 @@ const doCurveParams = function () {
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
-                default: 'METAR',
+                default: 'QC-METAR',
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,

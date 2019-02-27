@@ -82,7 +82,7 @@ dataThreshold = function (plotParams, plotFunction) {
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{forecastLength}}', forecastLength);
             var validTimeClause = " ";
-            if (validTimes.length > 0) {
+            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
                 validTimeClause = " and floor((m0.valid_time)%(24*3600)/3600) IN(" + validTimes + ")"
             }
             statement = statement.replace('{{validTimeClause}}', validTimeClause);
@@ -100,7 +100,7 @@ dataThreshold = function (plotParams, plotFunction) {
                     begin: startMoment.format(),
                     finish: finishMoment.format(),
                     duration: moment.duration(finishMoment.diff(startMoment)).asSeconds() + " seconds",
-                    recordCount: queryResult.data.length
+                    recordCount: queryResult.data.x.length
                 };
                 // get the data back from the query
                 d = queryResult.data;
@@ -141,7 +141,7 @@ dataThreshold = function (plotParams, plotFunction) {
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.sum / d.x.length;
-        const annotation = label + "- mean = " + mean.toPrecision(4);
+        const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
