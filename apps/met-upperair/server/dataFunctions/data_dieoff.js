@@ -37,7 +37,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions = curve['region'] === undefined ? [] : curve['region'];
+        var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
         if (regions.length > 0) {
@@ -50,7 +50,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const statistic = curve['statistic'];
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -78,7 +78,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRangeClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
         if (dieoffType === matsTypes.ForecastTypes.dieoff) {
             var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
-            if (curve['valid-time'] !== undefined) {
+            if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
                 vts = curve['valid-time'];
                 vts = Array.isArray(vts) ? vts : [vts];
                 vts = vts.map(function (vt) {
@@ -233,7 +233,7 @@ dataDieOff = function (plotParams, plotFunction) {
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.sum / d.x.length;
-        const annotation = label + "- mean = " + mean.toPrecision(4);
+        const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;
