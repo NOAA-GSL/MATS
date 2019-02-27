@@ -1,10 +1,15 @@
 /**
  * Created by pierce on 8/31/16.
  */
+var AppTypes = {
+    mats: 'mats',
+    metexpress: 'metexpress'
+};
 
 var InputTypes = {
     textInput: 'textInput',
     select: 'select',
+    selectOrderEnforced: 'selectOrderEnforced',
     numberSpinner: 'numberSpinner',
     dateRange: 'dateRange',
     radioGroup: 'radioGroup',
@@ -100,7 +105,7 @@ var Messages = {
 };
 
 //hide non-timeseries selectors at startup
-var selectorsToHide = ['dieoff-forecast-length', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
+var selectorsToHide = ['dieoff--type', 'utc-cycle-start', 'histogram-bin-controls', 'histogram-yaxis-controls', 'bin-number', 'bin-pivot', 'bin-start', 'bin-stride', 'bin-bounds', 'x-axis-parameter', 'y-axis-parameter'];
 
 /*
 Class for holding metaData records. These are stored in an array. An app can have multiple metadata databases and each database has a pool for connections.
@@ -156,6 +161,7 @@ export default matsTypes = {
     ForecastTypes: ForecastTypes,
     ReservedWords: ReservedWords,
     selectorsToHide: selectorsToHide,
-    MetaDataDBRecord: MetaDataDBRecord
+    MetaDataDBRecord: MetaDataDBRecord,
+    AppTypes: AppTypes
 }
 

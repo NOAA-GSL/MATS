@@ -188,6 +188,53 @@ Template.select.events({
     'change, blur .item' : function (event) {
         try {
             var text = "";
+            if (this.type == matsTypes.InputTypes.selectOrderEnforced) {
+                /* check the validity of the order enforcement.
+                   The requirement for order enforced selectors is that
+                   some curve must have previously selected the earlier (lower ordered)
+                   options in the options array, not counting the default option to make this a valid selection.
+                   For example if my options are... ['auto by variable','y1','y2',y3'] and 'auto by variable'
+                   is the selectors default then choosing 'y2' or 'y3' prior to choosing 'y1' is not valid and
+                   choosing 'y3' prior to choosing 'y1' and 'y2' is not valid.
+                 */
+                // what is the default?
+                var defaultOption = this.default;
+                var selection = $(event.target).val();
+                var curves = Session.get('Curves');
+                var options = this.options;
+                var priorSelected = [defaultOption];
+                for (var ci = 0; ci < curves.length; ci++) {
+                    var curve = curves[ci];
+                    var curveOption = curve[this.name];
+                    priorSelected.push(curveOption);
+                }
+                var unusedOption = "";
+                if (!priorSelected.includes(selection)) {
+                    // this option has not been selected prior
+                    // check to see if all the prior options to this one are selected
+                    for (var oi = 0; oi < options.length; oi++) {
+                        var option = options[oi];
+                        // We reached the selected option
+                        if (option == selection) {
+                            break;
+                        }
+                        if (!priorSelected.includes(option)) {
+                            unusedOption = option;
+                            break;
+                        }
+                    }
+                    if (unusedOption === "") {
+                        // is valid all prior options were selected
+                        event.target.setCustomValidity(this.name,"");
+                    } else {
+                        // HACK ALERT! the customValidity stuff seems to have been overridden in the invalid event event handler of item.js
+                        Session.set('errorMessage',"The prior option: " + unusedOption + " was not selected for this selector, you must use that first.")
+                        event.target.setCustomValidity(this.name,"The prior option: " + unusedOption + " was not selected for this selector, you must use that first.");
+                        event.target.checkValidity();
+//                        matsParamUtils.setInputForParamName(this.name,this.default);
+                    }
+                }
+            }
             if (event.target.multiple) {
                 const values = $(event.target).val();
                 if (values === null) { // happens if unused or empty

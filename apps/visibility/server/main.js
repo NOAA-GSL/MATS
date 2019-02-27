@@ -4,12 +4,12 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
+import {matsParamUtils} from 'meteor/randyp:mats-common';
 
-const dateInitStr = matsCollections.dateInitStr();
-const dateInitStrParts = dateInitStr.split(' - ');
-const startInit = dateInitStrParts[0];
-const stopInit = dateInitStrParts[1];
-const dstr = startInit + ' - ' + stopInit;
+// determined in doCurveParanms
+var minDate;
+var maxDate;
+var dstr;
 
 const doPlotParams = function () {
     if (matsCollections.Settings.findOne({}) === undefined || matsCollections.Settings.findOne({}).resetFromCode === undefined || matsCollections.Settings.findOne({}).resetFromCode == true) {
@@ -21,8 +21,8 @@ const doPlotParams = function () {
                 name: 'dates',
                 type: matsTypes.InputTypes.dateRange,
                 options: [''],
-                startDate: startInit,
-                stopDate: stopInit,
+                startDate: minDate,
+                stopDate: maxDate,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 default: dstr,
@@ -492,21 +492,21 @@ const doCurveParams = function () {
         }
     }
 
-    if (matsCollections.CurveParams.find({name: 'dieoff-forecast-length'}).count() == 0) {
+    if (matsCollections.CurveParams.find({name: 'dieoff-type'}).count() == 0) {
         var dieoffOptionsMap = {
             "Dieoff": [matsTypes.ForecastTypes.dieoff],
-            "Dieoff for a specific UTC cycle start time": [matsTypes.ForecastTypes.utcCycle],
-            "Single cycle forecast": [matsTypes.ForecastTypes.singleCycle]
+            "Dieoff for a specified UTC cycle init hour": [matsTypes.ForecastTypes.utcCycle],
+            "Single cycle forecast (uses first date in range)": [matsTypes.ForecastTypes.singleCycle]
         };
         matsCollections.CurveParams.insert(
             {
-                name: 'dieoff-forecast-length',
+                name: 'dieoff-type',
                 type: matsTypes.InputTypes.select,
                 optionsMap: dieoffOptionsMap,
                 options: Object.keys(dieoffOptionsMap),
                 hideOtherFor: {
-                    'valid-time': ["Dieoff for a specific UTC cycle start time", "Single cycle forecast"],
-                    'utc-cycle-start': ["Dieoff", "Single cycle forecast"],
+                    'valid-time': ["Dieoff for a specified UTC cycle init hour", "Single cycle forecast (uses first date in range)"],
+                    'utc-cycle-start': ["Dieoff", "Single cycle forecast (uses first date in range)"],
                 },
                 selected: '',
                 controlButtonCovered: true,
@@ -553,7 +553,7 @@ const doCurveParams = function () {
                 unique: false,
                 default: optionsArr[12],
                 controlButtonVisibility: 'block',
-                controlButtonText: "utc cycle start time",
+                controlButtonText: "utc cycle init hour",
                 displayOrder: 3,
                 displayPriority: 1,
                 displayGroup: 3,
@@ -626,6 +626,14 @@ const doCurveParams = function () {
             });
     }
 
+    // determine date defaults for dates and curveDates
+    var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
+    modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
+    minDate = modelDateRangeMap[defaultDataSource].minDate;
+    maxDate = modelDateRangeMap[defaultDataSource].maxDate;
+    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minDate + ' - ' + maxDate;
+
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {
             '1 day': ['1 day'],
@@ -642,8 +650,8 @@ const doCurveParams = function () {
                 type: matsTypes.InputTypes.dateRange,
                 optionsMap: optionsMap,
                 options: Object.keys(optionsMap).sort(),
-                startDate: startInit,
-                stopDate: stopInit,
+                startDate: minDate,
+                stopDate: maxDate,
                 superiorNames: ['data-source'],
                 controlButtonCovered: true,
                 unique: false,
@@ -696,13 +704,13 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'threshold', ' '],
                 ['', 'statistic', ', '],
-                ['', 'dieoff-forecast-length', ', '],
+                ['', 'dieoff-type', ', '],
                 ['valid-time: ', 'valid-time', ', '],
                 ['start utc: ', 'utc-cycle-start', ', '],
                 ['', 'curve-dates', '']
             ],
             displayParams: [
-                "label", "data-source", "region", "statistic", "threshold", "dieoff-forecast-length", "valid-time", "utc-cycle-start", "curve-dates"
+                "label", "data-source", "region", "statistic", "threshold", "dieoff-type", "valid-time", "utc-cycle-start", "curve-dates"
             ],
             groupSize: 6
         });
@@ -908,17 +916,16 @@ Meteor.startup(function () {
     matsMethods.resetApp(mdr);
     matsCollections.appName.remove({});
     matsCollections.appName.insert({name: "appName", app: "visibility"});
-
 });
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
-appSpecificResetRoutines = {
-    doPlotGraph: doPlotGraph,
-    doCurveParams: doCurveParams,
-    doSavedCurveParams: doSavedCurveParams,
-    doPlotParams: doPlotParams,
-    doCurveTextPatterns: doCurveTextPatterns
-};
-
-
+// The appSpecificResetRoutines object is a special name,
+// as is doCurveParams. The refreshMetaData mechanism depends on them being named that way.
+appSpecificResetRoutines = [
+    doPlotGraph,
+    doCurveParams,
+    doSavedCurveParams,
+    doPlotParams,
+    doCurveTextPatterns
+];

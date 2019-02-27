@@ -16,6 +16,14 @@
       "last_test_status": ""
     },
     {
+      "app": "met-upperair",
+      "title": "METexpress Upper Air",
+      "version": "2.0.5-2019.02.20.06.41",
+      "buildDate": "2019.02.20.06.41",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
       "app": "aircraft",
       "title": "Aircraft (AMDAR)",
       "version": "2.0.5-2019.02.27.06.30",

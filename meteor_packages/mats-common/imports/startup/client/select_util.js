@@ -1,8 +1,4 @@
-import {matsMethods} from 'meteor/randyp:mats-common';
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsPlotUtils} from 'meteor/randyp:mats-common';
-import {matsParamUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsMethods, matsParamUtils, matsPlotUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 // method to refresh the peers of the current selector
 const refreshPeer = function (event, param) {
@@ -62,8 +58,7 @@ const refreshDependents = function (event, param) {
                             elements[i1].selected = select;
                         }
                         matsParamUtils.setValueTextForParamName(name, "");
-                    }
-                    else {
+                    } else {
                         const previously_selected = Session.get('selected');
                         for (var i2 = 0; i2 < elements.length; i2++) {
                             if (_.indexOf(previously_selected, elements[i2].text) != -1) {
@@ -160,36 +155,85 @@ const refresh = function (event, paramName) {
     }
     const param = matsParamUtils.getParameterForName(paramName);
     const elem = matsParamUtils.getInputElementForParamName(paramName);
-    // disabledOptions are the indicator that the options are to be grouped
-    // if there are disabledOptions they are the keys in the optionsGroups
-    // and they are the sort order of those keys.
-    // also they are to be disabled options
+
+    /*
+    OptionsGroups are a mechanism for displaying the select options in groups.
+    A disabled option is used for the group header. Disabled options simply show up
+    in the selector list in bold font and act as group titles. They are disabled so that
+    they cannot be clicked. DisabledOptions are the headers that the options are to be grouped under.
+    disabledOptions are optional so if there are disabledOptions they are the keys in the optionsGroups
+    and they are the sort order of those keys.
+    */
     const disabledOptions = matsParamUtils.getDisabledOptionsForParamName(paramName);
     const optionsGroups = param.optionsGroups;
-    const plotTypeDependent = param.plotTypeDependent;
     const optionsMap = param.optionsMap;
 
     const superiorNames = param.superiorNames;
+    const superiorDimensionality = superiorNames !== undefined && superiorNames !== null && superiorNames.length > 0 && Array.isArray(superiorNames[0]) ? superiorNames.length : 1;
     var superiors = [];
+    // get a list of the current superior selected values - in order of superiority i.e. [databaseValue,dataSourceValue]
+    var sNames;
     if (superiorNames !== undefined) {
-        for (var sn = 0; sn < superiorNames.length; sn++) {
-            var superiorElement = matsParamUtils.getInputElementForParamName(superiorNames[sn]);
-            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? undefined : superiorElement.options[superiorElement.selectedIndex].text;
-            if (selectedSuperiorValue) {
-                superiors.push({element: superiorElement, value: selectedSuperiorValue});
+        if (superiorDimensionality === 1) {
+            sNames = superiorNames;
+        } else {
+            sNames = superiorNames[0];
+        }
+        for (var sn = 0; sn < sNames.length; sn++) {
+            var superiorElement = matsParamUtils.getInputElementForParamName(sNames[sn]);
+            var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? matsParamUtils.getParameterForName(sNames[sn]).default : superiorElement.options[superiorElement.selectedIndex].text;
+            superiors[0] = superiors[0] === undefined ? [] : superiors[0];
+            superiors[0].push({element: superiorElement, value: selectedSuperiorValue});
+        }
+        for (var sNameIndex = 1; sNameIndex < superiorDimensionality; sNameIndex++) {
+            sNames = superiorNames[sNameIndex];
+            for (var sn = 0; sn < sNames.length; sn++) {
+                var superiorElement = matsParamUtils.getInputElementForParamName(sNames[sn]);
+                var selectedSuperiorValue = superiorElement.options[superiorElement.selectedIndex] === undefined ? matsParamUtils.getParameterForName(sNames[sn]).default : superiorElement.options[superiorElement.selectedIndex].text;
+                superiors[sNameIndex] = superiors[sNameIndex] === undefined ? [] : superiors[sNameIndex];
+                superiors[sNameIndex].push({element: superiorElement, value: selectedSuperiorValue});
             }
         }
     }
     /*
+    So what are superiors now.....
+    superiors = [[{element:anElement,value:aValue},{element:anElement,value:aValue}...]]
+    or they might be [[{element:anElement,value:aValue},{element:anElement,value:aValue}...],[{element:anElement,value:aValue},{element:anElement,value:aValue}...],...]
+
+
+     Axis-brothers:
+     Axis-brothers are for scatter plots. They are a second hidden set of parameters that apply to a different axis.
      Because there may be axis "brothers" This refresh must go and
-     see if there are any such elements that are essentially hidden copies
+     see if there are any brother elements that are essentially hidden copies
      of this one, and also refresh their options lists
-     */
-    /*
-     plotTypeDependent means that the optionsMap has a top level plotType. i.e
-     optionsMap = { matsTypes.PlotTypes.profile: {all my options for profile},
-     matsTypes.PlotTypes.scatter2d : {all my options for scatter2d},
-     matsTypes.PlotTypes.timeSeries: {all my options for time series}
+
+     Superior Heirarchy:
+     There can be a heirarchy of superiors and dependents. The superiorNames are a list of paramNames. The most superior has the 0th index and
+     the least superior has the highest index.
+     The Refresh uses the superiors to get the appropriate options for a given options map.
+     The way it works is that superiors are always refreshed first. The superior heirarchy selections are then used by a
+     dependent to retrieve its appropriate optionsMap from the superiorOptionsMap.
+     superiorsOptionsMap = {
+        mostSuperiorValue0: {  // optionsMap for the most superior first value
+            nextSuperiorValue0: [value0,value1,value2,value3,...],
+            nextSuperiorValue1: [value0,value1,value2,value3,...],
+            nextSuperiorValue2: [value0,value1,value2,value3,...],
+            ...
+        },
+        mostSuperiorValue1:{  // optionsMap for the most superior second value
+            nextSuperiorValue0: [value0,value1,value2,value3,...],
+            nextSuperiorValue1: [value0,value1,value2,value3,...],
+            nextSuperiorValue2: [value0,value1,value2,value3,...],
+            ...
+        },
+        ...,
+        mostSuperiorValue2:{  // optionsMap for the most superior third value
+            nextSuperiorValue0: [value0,value1,value2,value3,...],
+            nextSuperiorValue1: [value0,value1,value2,value3,...],
+            nextSuperiorValue2: [value0,value1,value2,value3,...],
+            ...
+        },
+     }
      */
 
     // find all the elements that have ids like .... "x|y|z" + "axis-" + this.name
@@ -210,115 +254,130 @@ const refresh = function (event, paramName) {
                 brothers.push(elems[i]);
         }
 
-        var options = null;
+        var myOptions = [];
         var selectedSuperiorValues = [];
-        for (var superiorIndex = 0; superiorIndex < superiors.length; superiorIndex++) {
-            try {
-                var superior = superiors[superiorIndex];
-                var selectedSuperiorValue = superior.value;
-                selectedSuperiorValues.push(selectedSuperiorValue);
-                var superiorOptions = [];
-                if (plotTypeDependent && matsPlotUtils.getPlotType()) {
-                    superiorOptions = optionsMap[matsPlotUtils.getPlotType()][selectedSuperiorValue];
-                } else {
-                    superiorOptions = optionsMap[selectedSuperiorValue];
-                }
-                /* tricky little bit here:
-                 If the controlButton for this superior element is hidden ....
-                 matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null
-                 ....
-                 it has been hidden
-                 because it has a visibility dependency on another param i.e. truth-data-source and truth-variable
-                 are dependent upon statistic such that if the statistic is "mean" the truth-data-source and truth-variable
-                 are hidden. See the wfip2 main.js statistic param as an example....
-                 "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
-                 and
-                 "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
-                 are the fields that cause the truth-data-source to be hidden when statistic is set to "mean".
-                 In that condition (controlButton is hidden) the superior should not be used as an intersection in the selected sites.
-                 matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
-                 for this element (this superior) is hidden.
 
-                 Also the unused is tested against the superior...
-                 used && unused  -> use the used
-                 unused and used -> use the used
-                 used and used -> use the intersection
-                 unused and unused - set the options to []
-
-                 A select may have a list of disabledOptions. These are used as optionGroup markers.
-                 */
-                var superiorOptionsUsed = (superiorOptions !== null) && (superiorOptions !== matsTypes.InputTypes.unused) && superiorOptions !== [];
-                var myOptionsUsed = (options !== undefined) && (options !== null) && (options !== matsTypes.InputTypes.unused) && options !== [];
-                if (matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null) {
-                    if (!superiorOptionsUsed && !myOptionsUsed) {  // none used - set to []
-                        options = [];
-                        matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
-                    } else if (!myOptionsUsed && superiorOptionsUsed) { // superiors - use those
-                        options = superiorOptions;
-                    } else if (myOptionsUsed && !superiorOptionsUsed) {  // mine - use mine
-                        //options = options;
-                    } else if (myOptionsUsed && superiorOptionsUsed) { // both - use the intersection
-                        if ((options !== undefined && options.length === 0) || (superiorOptions !== undefined && superiorOptions.length === 0)) {
-                            //options = matsParamUtils.typeSort(_.union(options, superiorOptions));
-                            options = _.union(options, superiorOptions);
-                        } else {
-                            options = _.intersection(options, superiorOptions);
-                        }
-                    } else {
-                        options = []; // last resort - prevent an exception
-                        matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
-                    }
+        try {
+            // index down through the options for the list of superiors
+            // starting with the most superior down through the least superior
+            // and get the options list for the first set of superiors.
+            // These are the ancestral options.
+            if (param.optionsMap) {
+                var firstSuperiorOptions = optionsMap;
+                var theseSuperiors = superiors === undefined || superiors.length === 0 ? [] : superiors[0];
+                for (var theseSuperiorsIndex = 0; theseSuperiorsIndex < theseSuperiors.length; theseSuperiorsIndex++) {
+                    var superior = theseSuperiors[theseSuperiorsIndex];
+                    var selectedSuperiorValue = superior.value;
+                    firstSuperiorOptions = firstSuperiorOptions[selectedSuperiorValue];
                 }
-            } catch (e) {
-                e.message = "INFO: Error in select.js refresh: determining options from superiors: " + e.message;
-                setInfo(e.message);
+                myOptions = Array.isArray(firstSuperiorOptions) ? firstSuperiorOptions : Object.keys(firstSuperiorOptions);
+            } else {
+                myOptions = param.options;
             }
+
+            // need to get the ancestral truth options because we may need to intersect the options
+
+
+            /* tricky little bit here:
+            SuperiorDimensionality:
+             It is possible to have two superior options maps.. i.e. datasource and truth.
+             In that case the superiorNames won't look like ["something","somethingelse"],
+             instead it will look like [["something","somethingelse"],["someotherthing","someotherthingelse"]]
+             i.e. it will be a multidimensional array.
+
+             If the controlButton for one of these multi-dimensional superior elements is hidden ....
+             matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent !== null
+             it has been hidden because it has a visibility dependency on another param
+             i.e. truth-data-source and truth-variable (for mean there would be no truth, but for bias
+             there must always be truth...).
+             In this case these are dependent upon statistic such that if the statistic is "mean" the truth-data-source and truth-variable
+             are hidden. See the wfip2 main.js statistic param as an example....
+             "disableOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+             and
+             "hideOtherFor:{'truth-data-source':[statisticOptionsMap.mean][0]},"
+             are the fields that cause the truth-data-source to be hidden when statistic is set to "mean".
+             In that condition (the controlButton is hidden) the superior should not be used as an intersection in the selected sites.
+             matsParamUtils.getControlElementForParamName(superior.element.name).offsetParent will be null if the controlButton
+             for this element (this superior) is hidden. That is the tricky part ... it will be null.
+
+             Also the unused superior is tested against the superior according to the truth table...
+             used && unused  -> use the used
+             unused and used -> use the used
+             used and used -> use the intersection
+             unused and unused - set the options to []
+
+             A select may have a list of disabledOptions. These are used as optionGroup markers.
+             */
+
+            // need to get the actual options here
+            for (var sNameIndex = 1; sNameIndex < superiorDimensionality; sNameIndex++) {
+                // index down through the options for the list of superiors
+                // starting with the most superior down through the least superior
+                // and get the options list for the first set of superiors.
+                // These are the ancestral options.
+                var nextSuperiorOptions = optionsMap;
+                var theseSuperiors = superiors === undefined || superiors.length === 0 ? [] : superiors[sNameIndex];
+                for (var theseSuperiorsIndex = 0; theseSuperiorsIndex < theseSuperiors.length; theseSuperiorsIndex++) {
+                    var superior = theseSuperiors[theseSuperiorsIndex];
+                    var selectedSuperiorValue = superior.value;
+                    nextSuperiorOptions = nextSuperiorOptions[selectedSuperiorValue];
+                }
+                // since we now have multiple options we have to intersect them
+                myOptions = _.intersection(myOptions, nextSuperiorOptions);
+            }
+            if (myOptions === []) {  // none used - set to []
+                matsParamUtils.setValueTextForParamName(name, matsTypes.InputTypes.unused);
+            }
+        } catch (e) {
+            e.message = "INFO: Error in select.js refresh: determining options from superiors: " + e.message;
+            setInfo(e.message);
         }
+
         try {
             // reset the options of the select
             // if the options are null it might be that this is the initial setup.
             // so use the optionsmap and the default options for the map
             // it might also mean that there are no superiors for this param
-            if (options == null) {
+            if (myOptions == null) {
                 // get the default options
                 if (optionsGroups) {
                     // optionGroups are an ordered map. It probably has options that are in the disabledOption list
                     // which are used as markers in the select options pulldown. This is typical for models
                     const optionsGroupsKeys = Object.keys(optionsGroups);
                     for (var k = 0; k < optionsGroupsKeys.length; k++) {
-                        if (options === null) {
-                            options = [];
-                            options.push(optionsGroupsKeys[k]);
-                            options = options.concat(optionsGroups[optionsGroupsKeys[k]]); // the primary group does not get sorted
+                        if (myOptions === null) {
+                            myOptions = [];
+                            myOptions.push(optionsGroupsKeys[k]);
+                            myOptions = myOptions.concat(optionsGroups[optionsGroupsKeys[k]]); // the primary group does not get sorted
                         } else {
-                            options.push(optionsGroupsKeys[k]);
-                            options = options.concat(optionsGroups[optionsGroupsKeys[k]].sort()); // non primary  groups get sorted
+                            myOptions.push(optionsGroupsKeys[k]);
+                            myOptions = myOptions.concat(optionsGroups[optionsGroupsKeys[k]].sort()); // non primary  groups get sorted
                         }
                     }
                 } else {
-                    options = param.options;
+                    myOptions = param.options;
                 }
             }
             var optionsAsString = "";
-            if (options === undefined || options == null) {
+            if (myOptions === undefined || myOptions == null) {
                 return;
             }
             var firstGroup = true;
-            for (var i = 0; i < options.length; i++) {
-                var dIndex = disabledOptions === undefined ? -1 : disabledOptions.indexOf(options[i]);
+            for (var i = 0; i < myOptions.length; i++) {
+                var dIndex = disabledOptions === undefined ? -1 : disabledOptions.indexOf(myOptions[i]);
                 if (dIndex >= 0) {   // the option was found in the disabled options so it needs to be an optgroup label
                     // disabled option
                     if (firstGroup === true) {
                         // first in group
-                        optionsAsString += "<optgroup label=" + options[i] + ">";
+                        optionsAsString += "<optgroup label=" + myOptions[i] + ">";
                         firstGroup = false;
                     } else {
                         optionsAsString += "</optgroup>";
-                        optionsAsString += "<optgroup label=" + options[i] + ">";
+                        optionsAsString += "<optgroup label=" + myOptions[i] + ">";
                     }
                 } else {
                     //regular option - the option was not found in the disabled options
-                    optionsAsString += "<option value='" + options[i] + "'>" + options[i] + "</option>";
+                    optionsAsString += "<option value='" + myOptions[i] + "'>" + myOptions[i] + "</option>";
                 }
             }
             if (disabledOptions !== undefined) {
@@ -328,9 +387,9 @@ const refresh = function (event, paramName) {
             //reset the selected index if it had been set prior (the list may have changed so the index may have changed)
             var selectedOptionIndex;
             if (selectedText === 'initial') {
-                selectedOptionIndex = options.indexOf(param.default);
+                selectedOptionIndex = myOptions.indexOf(param.default);
             } else {
-                selectedOptionIndex = options.indexOf(selectedText);
+                selectedOptionIndex = myOptions.indexOf(selectedText);
             }
             var sviText = "";
             if (selectedOptionIndex == -1 && elem.selectedIndex >= 0) {
@@ -343,7 +402,7 @@ const refresh = function (event, paramName) {
                         sviText += selectedSuperiorValues[svi]
                     }
                 }
-                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + options[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
+                setInfo("I changed your selected " + name + ": '" + selectedText + "' to '" + myOptions[0] + "' because '" + selectedText + "' is no longer an option for " + sviText);
             }
             // if the selectedText existed in the new options list then the selectedOptionIndex won't be -1 and we have to choose the default option
             if (selectedOptionIndex === -1) {
@@ -368,8 +427,8 @@ const refresh = function (event, paramName) {
                 }).get();
                 if (belemSelectedOptions === undefined || belemSelectedOptions.length === 0) {
                     belem.options = [];
-                    for (var i1 = 0; i1 < options.length; i1++) {
-                        belem.options[belem.options.length] = new Option(options[i1], options[i1], i1 == 0, i1 == 0);
+                    for (var i1 = 0; i1 < myOptions.length; i1++) {
+                        belem.options[belem.options.length] = new Option(myOptions[i1], myOptions[i1], i1 == 0, i1 == 0);
                     }
                 }
             }

@@ -1,3 +1,5 @@
+import {matsCollections} from 'meteor/randyp:mats-common';
+import {matsTypes} from 'meteor/randyp:mats-common';
 import {moment} from 'meteor/momentjs:moment'
 
 // sets plot options for timeseries graphs
@@ -107,12 +109,21 @@ const generateProfilePlotOptions = function (dataset, curves, axisMap, errorMax)
         hoverlabel: {'font': {'size': 14, 'family': 'Arial', 'color': '#FFFFFF'}},
         showlegend: false
     };
+    var tickVals;
+    var tickText;
+    if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress) {
+        tickVals = [1000, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 50, 10];
+        tickText = ['1000', '850', '700', '600', '500', '400', '300', '250', '200', '150', '100', '50', '10'];
+    } else {
+        tickVals = [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100];
+        tickText = ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'];
+    }
     layout['yaxis'] = {
         title: 'Pressure Level',
         titlefont: {color: '#000000', size: 22},
         tickfont: {color: '#000000', size: 14},
-        tickvals: [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100],
-        ticktext: ['1000', '900', '800', '700', '600', '500', '400', '300', '200', '100'],
+        tickvals: tickVals,
+        ticktext: tickText,
         type: 'linear',
         autorange: 'reversed'
     };

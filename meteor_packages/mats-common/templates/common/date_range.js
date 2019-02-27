@@ -1,7 +1,4 @@
-import {matsTypes} from 'meteor/randyp:mats-common';
-import {matsParamUtils} from 'meteor/randyp:mats-common';
-import {matsCollections} from 'meteor/randyp:mats-common';
-import {matsCurveUtils} from 'meteor/randyp:mats-common';
+import {matsCollections, matsCurveUtils, matsParamUtils, matsTypes} from 'meteor/randyp:mats-common';
 
 Template.dateRange.onRendered(function () {
     //NOTE: Date fields are special in that they are qualified by plotType.
@@ -33,12 +30,12 @@ Template.dateRange.onRendered(function () {
     const idref = name + "-item";
     const elem = document.getElementById('element-' + name);
     const superiorNames = this.data.superiorNames;
-    const dateInitStr = matsCollections.dateInitStr();
-    const dateInitStrParts = dateInitStr.split(' - ');
-    const startInit = dateInitStrParts[0];
-    const stopInit = dateInitStrParts[1];
-    const dstr = startInit + ' - ' + stopInit;
-    $(function () {
+    const defaultDateRange = matsParamUtils.getDefaultDateRange(name);
+    const startInit = defaultDateRange.startDate;
+    const stopInit = defaultDateRange.stopDate;
+    const dstr = defaultDateRange.dstr;
+
+        $(function () {
         $('#' + idref).daterangepicker({
             "autoApply": true,
             "parentEL": $('#' + idref),
@@ -61,7 +58,7 @@ Template.dateRange.onRendered(function () {
                 'Last 60 Full Days': [moment().subtract(60, 'days').startOf('day'), moment().startOf('day')],
                 'Last 90 Full Days': [moment().subtract(90, 'days').startOf('day'), moment().startOf('day')],
                 'Last 180 Full Days': [moment().subtract(180, 'days').startOf('day'), moment().startOf('day')],
-            },"alwaysShowCalendars": true,
+            }, "alwaysShowCalendars": true,
         });
         matsParamUtils.setValueTextForParamName(name, dstr);
     });
@@ -95,56 +92,69 @@ Template.dateRange.onRendered(function () {
             var endDsr = moment(curVals[1], "MM/DD/YYYY HH:mm");
             if (!startDsr.isValid()) {
                 // error
-                setError ("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
+                setError("date_range refresh error: Your date range selector has an invalid start date-time: " + curVals[0]);
                 return false;
             }
             if (!endDsr.isValid()) {
                 // error
-                setError ("date_range refresh error: Your date range selector has an invalid end date-time:" + curVals[1]);
+                setError("date_range refresh error: Your date range selector has an invalid end date-time:" + curVals[1]);
                 return false;
             }
             if (startDsr.isAfter(endDsr)) {
                 // error
-                setError ("date_range refresh error: Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
+                setError("date_range refresh error: Your date range selector has a start date/time that is later than the end date-time " + startDsr.toString() + " is not prior to " + endDsr.toString());
                 return false;
             }
             // get superior values and check for errors
             var superiorVals = [];
-            var si;
-            for (si = 0; si < superiorNames.length; si++) {
-                const superiorName = superiorNames[si];
-                const datesMap = matsCollections.CurveParams.findOne({name: superiorName}).dates;
-                const sval = matsParamUtils.getValueForParamName(superiorName);
-                if (sval === matsTypes.InputTypes.unused ||
-                        sval === null ||
-                        matsParamUtils.getInputElementForParamName(superiorName) === undefined ||
-                        isNaN(matsParamUtils.getInputElementForParamName(superiorName).selectedIndex) ||
-                        matsParamUtils.getInputElementForParamName(superiorName).selectedIndex === -1) {
-                    // skip this superior - it isn't being used right now
-                    continue;
-                }
-                const superiorMinimumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].minDate;
-                const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
-                if (superiorMinimumMoment.isValid()) {
-                    superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
-                    superiorVals[si].min = superiorMinimumMoment;
-                } else {
-                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMinimumDateStr);
-                    return false;
-                }
-                const superiorMaximumDateStr = datesMap[matsParamUtils.getInputElementForParamName(superiorName).options[matsParamUtils.getInputElementForParamName(superiorName).selectedIndex].text].maxDate;
-                const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
-                if (superiorMaximumMoment.isValid()) {
-                    superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
-                    superiorVals[si].max = superiorMaximumMoment;
-                } else {
-                    setError ("date_range refresh error: The end date for the superiorName: " + superiorName + " is invalid: " +  superiorMaximumDateStr);
-                    return false;
-                }
-                if ((superiorVals[si].min).isAfter(superiorVals[si].max)) {
-                    // error
-                    setError ("date_range refresh error: The date range for the superiorName: " + superiorName + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
-                    return false;
+            if (superiorNames !== undefined) {
+                const superiorDimensionality = superiorNames !== null && superiorNames.length > 0 && Array.isArray(superiorNames[0]) ? superiorNames.length : 1;
+                for (var si = 0; si < superiorDimensionality; si++) {
+                    var superiors = [];
+                    if (superiorDimensionality === 1) {
+                        superiors = superiorNames;
+                    } else {
+                        superiors = superiorNames[si];
+                    }
+                    var datesMap = undefined;
+                    for (var si2 = 0; si2 < superiors.length; si2++) {
+                        const thisSuperior = superiors[si2];
+                        datesMap = datesMap === undefined ? matsCollections.CurveParams.findOne({name: thisSuperior}).dates : datesMap;
+                        const sval = matsParamUtils.getInputElementForParamName(thisSuperior).options[matsParamUtils.getInputElementForParamName(thisSuperior).selectedIndex].text;
+                        if (sval === matsTypes.InputTypes.unused ||
+                            sval === null ||
+                            datesMap === undefined ||
+                            matsParamUtils.getInputElementForParamName(thisSuperior) === undefined ||
+                            isNaN(matsParamUtils.getInputElementForParamName(thisSuperior).selectedIndex) ||
+                            matsParamUtils.getInputElementForParamName(thisSuperior).selectedIndex === -1) {
+                            // skip this superior - it isn't being used right now
+                            continue;
+                        }
+                        datesMap = datesMap[sval];
+                    }
+                    const superiorMinimumDateStr = datesMap.minDate;
+                    const superiorMinimumMoment = moment(superiorMinimumDateStr, "MM/DD/YYYY HH:mm");
+                    if (superiorMinimumMoment.isValid()) {
+                        superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
+                        superiorVals[si].min = superiorMinimumMoment;
+                    } else {
+                        setError("date_range refresh error: The end date for the superiors: " + superiors + " is invalid: " + superiorMinimumDateStr);
+                        return false;
+                    }
+                    const superiorMaximumDateStr = datesMap.maxDate;
+                    const superiorMaximumMoment = moment(superiorMaximumDateStr, "MM/DD/YYYY HH:mm");
+                    if (superiorMaximumMoment.isValid()) {
+                        superiorVals[si] = superiorVals[si] === undefined ? {} : superiorVals[si];
+                        superiorVals[si].max = superiorMaximumMoment;
+                    } else {
+                        setError("date_range refresh error: The end date for the superiors: " + superiors + " is invalid: " + superiorMaximumDateStr);
+                        return false;
+                    }
+                    if ((superiorVals[si].min).isAfter(superiorVals[si].max)) {
+                        // error
+                        setError("date_range refresh error: The date range for the superiors: " + superiors + " is invalid. It has a start date/time that is later than the end date/time - " + superiorVals[si].min.toString() + " is after " + superiorVals[si].max.toString());
+                        return false;
+                    }
                 }
             }
             // get data range from superiors
@@ -152,8 +162,11 @@ Template.dateRange.onRendered(function () {
                 // no superiors involved - just leave the DSR alone
                 return false;
             }
+
+            // these need to be the values for the superiors as they will be not as they are
             var dataStart = superiorVals[0].min;
             var dataEnd = superiorVals[0].max;
+
             if (superiorVals.length > 1) {
                 for (si = 1; si < superiorVals.length; si++) {
                     const tStart = superiorVals[si].min;
@@ -162,7 +175,7 @@ Template.dateRange.onRendered(function () {
                         // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +
                             dataStart.toString() + " to " + dataEnd.toString() + " and " + tStart.toString() + " to " + tEnd.toString());
-                        return  false;
+                        return false;
                     } else if (tEnd.isBefore(dataStart)) {
                         // NCD not coincindebtal data?
                         setInfo("You do not have any coincidental data with these two selections: The valid date ranges do not overlap - " +

@@ -15,7 +15,7 @@ Package.onUse(function (api) {
     Npm.depends({
         'fibers': '2.0.0',
         'fs-extra': '7.0.0',
-        "@babel/runtime": "7.1.2",
+        "@babel/runtime": "7.3.1",
         "meteor-node-stubs": "0.4.1",
         "url": "0.11.0",
         "jquery-ui": "1.12.1",
@@ -64,6 +64,7 @@ Package.onUse(function (api) {
     api.export("matsParamUtils", ['client', 'server']);
     api.export("matsMathUtils", ['client', 'server']);
     api.export("matsPlotUtils", ['client', 'server']);
+    api.export("matsPlotSpecUtils", ['server']);
     api.export("matsDataUtils", ['server']);
     api.export("matsDataQueryUtils", ['server']);
     api.export("matsDataDiffUtils", ['server']);
@@ -72,7 +73,6 @@ Package.onUse(function (api) {
     api.export("matsDataPlotOpsUtils", ['server']);
     api.export("matsDataProcessUtils", ['server']);
     api.export("regression", ['client', 'server']);
-    api.export("matsWfipUtils", ['server']);
     api.export("matsCache", ['server']);
 
     // add imports
@@ -107,9 +107,9 @@ Package.onUse(function (api) {
     api.addFiles('imports/startup/server/data_curve_ops_util.js');
     api.addFiles('imports/startup/server/data_plot_ops_util.js');
     api.addFiles('imports/startup/server/data_process_util.js');
+    api.addFiles('imports/startup/server/plot_spec_util.js');
     api.addFiles('imports/startup/server/index.js');
     api.addFiles('imports/startup/server/publications.js');
-    api.addFiles('imports/startup/server/wfiputil.js');
     api.addFiles('imports/startup/server/cache.js');
 
     // top level

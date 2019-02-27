@@ -2,6 +2,7 @@ import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsCurveUtils} from 'meteor/randyp:mats-common';
 import {matsPlotUtils} from 'meteor/randyp:mats-common';
+import {moment} from 'meteor/momentjs:moment'
 
 // get the document id for the control button element that corresponds to the param name
 const getControlButtonIdForParamName = function (paramName) {
@@ -353,6 +354,26 @@ const setDefaultForParamName = function (param) {
     }
 };
 
+const getDefaultDateRange = function(name) {
+    var dateParam = matsCollections.CurveParams.findOne({name: name});
+    if (dateParam === undefined) {
+        dateParam = matsCollections.PlotParams.findOne({name: name});
+    }
+    const startInit = dateParam.startDate;
+    const stopInit = dateParam.stopDate;
+    const dstr = dateParam.default;
+    return {startInit:startInit,stopInit:stopInit,dstr:dstr};
+};
+
+const getMinMaxDates = function(minDate, maxDate) {
+    var minMoment = moment(minDate,"MM/DD/YYYY HH:mm");
+    var maxMoment = moment(maxDate, "MM/DD/YYYY HH:mm");
+    if (maxMoment.diff(minMoment, 'days') > 30) {
+        minDate = moment(maxMoment.subtract(30, 'days')).format("MM/DD/YYYY HH:mm");
+    }
+    return {minDate:minDate,maxDate:maxDate};
+};
+
 const setAllParamsToDefault = function () {
     // default the superiors and refresh them so that they cause the dependent options to refresh
     var params = matsCollections.CurveParams.find({}).fetch();
@@ -372,12 +393,8 @@ const setAllParamsToDefault = function () {
     nonDependents.forEach(function (param) {
         setDefaultForParamName(param);
         if (param.type === matsTypes.InputTypes.dateRange) {
-            const dateInitStr = matsCollections.dateInitStr();
-            const dateInitStrParts = dateInitStr.split(' - ');
-            const startInit = dateInitStrParts[0];
-            const stopInit = dateInitStrParts[1];
-            const dstr = startInit + ' - ' + stopInit;
-            matsParamUtils.setValueTextForParamName(param.name, dstr);
+            const dstr = getDefaultDateRange(param.name).dstr;
+            setValueTextForParamName(param.name, dstr);
         } else {
             matsSelectUtils.refresh(null, param.name);
             // remove from params list - actually rewrite params list NOT with this param
@@ -389,12 +406,8 @@ const setAllParamsToDefault = function () {
     // reset everything else
     params.forEach(function (param) {
         if (param.type === matsTypes.InputTypes.dateRange) {
-            const dateInitStr = matsCollections.dateInitStr();
-            const dateInitStrParts = dateInitStr.split(' - ');
-            const startInit = dateInitStrParts[0];
-            const stopInit = dateInitStrParts[1];
-            const dstr = startInit + ' - ' + stopInit;
-            matsParamUtils.setValueTextForParamName(param.name, dstr);
+            const dstr = getDefaultDateRange(param.name).dstr;
+            setValueTextForParamName(param.name, dstr);
         } else if (param.type === matsTypes.InputTypes.selectMap) {
             const targetId = param.name + '-' + param.type;
             const targetElem = document.getElementById(targetId);
@@ -410,12 +423,8 @@ const setAllParamsToDefault = function () {
     });
     matsCollections.PlotParams.find({}).fetch().forEach(function (param) {
         if (param.type === matsTypes.InputTypes.dateRange) {
-            const dateInitStr = matsCollections.dateInitStr();
-            const dateInitStrParts = dateInitStr.split(' - ');
-            const startInit = dateInitStrParts[0];
-            const stopInit = dateInitStrParts[1];
-            const dstr = startInit + ' - ' + stopInit;
-            matsParamUtils.setValueTextForParamName(param.name, dstr);
+            const dstr = getDefaultDateRange(param.name).dstr;
+            setValueTextForParamName(param.name, dstr);
         } else {
             setDefaultForParamName(param);
         }
@@ -522,5 +531,7 @@ export default matsParamUtils = {
     getOptionsMapForParam: getOptionsMapForParam,
     getCurveItemValueForParamName: getCurveItemValueForParamName,
     visibilityControllerForParam: visibilityControllerForParam,
-    getAppName: getAppName
+    getAppName: getAppName,
+    getDefaultDateRange:getDefaultDateRange,
+    getMinMaxDates:getMinMaxDates
 };

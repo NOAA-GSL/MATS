@@ -56,7 +56,7 @@ Template.graph.helpers({
                 // append annotations
                 annotation = "";
                 for (var i = 0; i < dataset.length; i++) {
-                    if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile && dataset[i].curveId !== undefined) {
+                    if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
                         annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                     }
                 }
@@ -120,6 +120,15 @@ Template.graph.helpers({
         }
 
     },
+    mvSpanDisplay: function () {
+        var updated = Session.get("MvResultsUpDated");
+        if (Session.get("mvResultKey") != null || Session.get('plotParams')['metexpress-mode'] == "matsmv") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+
     plotText: function () {
         var p = Session.get('PlotParams');
         if (p !== undefined) {
@@ -348,10 +357,48 @@ Template.graph.helpers({
         } else {
             return "none";
         }
+    },
+    metApp: function() {
+        Session.get("PlotParams");
+        Session.get('PlotResultsUpDated');
+        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
+            return "block";
+        } else {
+            return "none";
+        }
+    },
+    mvFiles: function() {
+        var updated = Session.get('MvResultsUpDated');
+        var key = Session.get('mvResultKey');
+        var mvs = Session.get('mvs');
+        if (mvs != null) {
+            return mvs;
+        } else {
+            return [];
+        }
+    },
+    mvDisabled: function() {
+        var updated = Session.get('MvResultsUpDated');
+        if (Session.get('mvs') == null || Session.get('PlotParams')['metexpress-mode'] == "mats") {
+            return "none";
+        } else {
+            return "block";
+        }
+    },
+    mvLoading: function() {
+        var updated = Session.get('MvResultsUpDated');
+        if (Session.get('mvs') == null && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
+            return "block";
+        } else {
+            return "none";
+        }
     }
 });
 
 Template.graph.events({
+    'click .mvCtrlButton': function() {
+        window.open(this.url, "mv", "height=200,width=200");
+    },
     'click .back': function () {
         matsPlotUtils.enableActionButtons();
         matsGraphUtils.setDefaultView();

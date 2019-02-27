@@ -1,21 +1,247 @@
 import {Meteor} from "meteor/meteor";
 import {ValidatedMethod} from 'meteor/mdg:validated-method';
 import {SimpleSchema} from 'meteor/aldeed:simple-schema';
-import {matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes, matsCache} from 'meteor/randyp:mats-common';
+import {matsCache, matsCollections, matsDataQueryUtils, matsDataUtils, matsTypes} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {url} from 'url';
 import {Mongo} from 'meteor/mongo';
 
+// PRIVATE
+
 // local collection used to keep the table update times for refresh - won't ever be synchronized or persisted.
 const metaDataTableUpdates = new Mongo.Collection(null);
+const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection"); // initialize collection used for pop-out window functionality
+const DownSampleResults = new Mongo.Collection("DownSampleResults");
 
-// define a middleware for getCSV route
-var getCSV = function (params, req, res, next) {
+var MV_DIRS = {};
+// Define routes for server
+if (Meteor.isServer) {
+    if (Meteor.settings.private !== undefined && Meteor.settings.private !== null) {
+        const _MV_OUT = Meteor.settings.private.MV_OUTPUT;
+        const _MV_HOME = Meteor.settings.private.MV_HOME;
+        const _MV_LOGDIR = _MV_OUT + "/xml/";
+        const _MV_ERRDIR = _MV_OUT + "/xml/";
+        const _MV_DATADIR = _MV_OUT + "/data/";
+        const _MV_SQLDIR = _MV_OUT + "/xml/";  // sql output goes with the xml output
+        const _MV_XMLDIR = _MV_OUT + "/xml/";
+        const _MV_SCRIPTSDIR = _MV_OUT + "/scripts/";
+        const _MV_PLOTSSDIR = _MV_OUT + "/plots/";
+        process.env.JAVA_HOME = Meteor.settings.private.JAVA_HOME;
+        process.env.MV_HOME = Meteor.settings.private.MV_HOME;
+
+        MV_DIRS = {
+            LOGDIR: _MV_LOGDIR,
+            ERRDIR: _MV_ERRDIR,
+            DATADIR: _MV_DATADIR,
+            SQLDIR: _MV_SQLDIR,
+            XMLDIR: _MV_XMLDIR,
+            SCRIPTSDIR: _MV_SCRIPTSDIR,
+            PLOTSDIR: _MV_PLOTSSDIR,
+            HOME: _MV_HOME
+        };
+    }
+
+    // add indexes to result and axes collections
+    DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
+    LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
+
+    // define some server side routes
+    Picker.route('/_getCSV/:key', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getCSV(params, req, res, next));
+    });
+
+    Picker.route('/_getJSON/:key', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
+        Picker.middleware(_getJSON(params, req, res, next));
+    });
+
+    Picker.route('/_clearCache', function (params, req, res, next) {
+        Picker.middleware(_clearCache(params, req, res, next));
+    });
+
+    Picker.route('/:app/_clearCache', function (params, req, res, next) {
+        Picker.middleware(_clearCache(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/_clearCache', function (params, req, res, next) {
+        Picker.middleware(_clearCache(params, req, res, next));
+    });
+
+    Picker.route('/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
+    });
+
+    Picker.route('/:app/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
+    });
+
+    Picker.route('/gsd/mats/:app/refreshMetadata', function (params, req, res, next) {
+        Picker.middleware(_refreshMetadataMWltData(params, req, res, next));
+    });
+
+// create picker routes for metviewer middleware static files
+    Picker.route('/:app/mvdata/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetData(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvdata/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetData(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvpoints1/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints1(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvpoints1/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints1(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvpoints2/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints2(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvpoints2/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPoints2(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvxml/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetXml(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvxml/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetXml(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvplot/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPlot(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvplot/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetPlot(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvscript/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetScript(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvscript/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetScript(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvsql/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetSql(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvsql/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetSql(params, req, res, next));
+    });
+
+    Picker.route('/:app/mvlog/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetLog(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mvlog/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetLog(params, req, res, next));
+    });
+
+    Picker.route('/:app/mverr/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetErr(params, req, res, next));
+    });
+    Picker.route('/gsd/mats/:app/mverr/:key', function (params, req, res, next) {
+        Picker.middleware(_mvGetErr(params, req, res, next));
+    });
+}
+
+// private - used to see if the main page needs to update its selectors
+const _checkMetaDataRefresh = function () {
+    // This routine compares the current last modified time of the tables used for curveParameter metadata
+    // with the last update time to determine if an update is necessary. We really only do this for Curveparams
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
+    var refresh = false;
+    const tableUpdates = metaDataTableUpdates.find({}).fetch();
+    for (var tui = 0; tui < tableUpdates.length; tui++) {
+        var id = tableUpdates[tui]._id;
+        var poolName = tableUpdates[tui].pool;
+        var dbName = tableUpdates[tui].name;
+        var tableNames = tableUpdates[tui].tables;
+        var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
+        var updatedEpoch = Number.MAX_VALUE;
+        for (var ti = 0; ti < tableNames.length; ti++) {
+            var tName = tableNames[ti];
+            var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
+                "    FROM   information_schema.tables" +
+                "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
+                "    AND TABLE_NAME = '" + tName + "'");
+            for (var i = 0; i < rows.length; i++) {
+                try {
+                    updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
+                    break;
+                } catch (e) {
+                    throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
+                }
+                if (updatedEpoch === Number.MAX_VALUE) {
+                    throw new Error("_checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
+                }
+            }
+            const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
+            if (lastRefreshedEpoch < updatedEpoch) {
+                refresh = true;
+                console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
+                break;
+            }
+        }
+        if (refresh === true) {
+            // refresh the app metadata
+            // app specific routines
+            //const asrKeys = Object.keys(appSpecificResetRoutines);
+            const asrKeys = appSpecificResetRoutines;
+            for (var ai = 0; ai < asrKeys.length; ai++) {
+                global.appSpecificResetRoutines[ai]();
+            }
+            // remember that we updated ALL the metadata tables just now
+            metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: moment().format()}});
+        }
+    }
+    return true;
+};
+
+// private middleware for clearing the cache
+const _clearCache = function (params, req, res, next) {
+    if (Meteor.isServer) {
+        matsCache.clear();
+        res.end();
+    }
+};
+
+// private middleware for _getCSV route
+const _getCSV = function (params, req, res, next) {
     if (Meteor.isServer) {
         var stringify = require('csv-stringify');
         var csv = "";
         try {
-            var result = getFlattenedResultData(params.key, 0, -1000);
+            var result = _getFlattenedResultData(params.key, 0, -1000);
             var statArray = Object.values(result.stats);
             var dataArray = Object.values(result.data);
             var statResultArray = [];
@@ -43,7 +269,7 @@ var getCSV = function (params, req, res, next) {
             res.setHeader('Content-Type', 'attachment.ContentType');
             stringify(statResultArray, {header: true}, function (err, output) {
                 if (err) {
-                    console.log("error in getCSV:", err);
+                    console.log("error in _getCSV:", err);
                     res.write("error," + err.toLocaleString());
                     res.end();
                     return;
@@ -51,7 +277,7 @@ var getCSV = function (params, req, res, next) {
                 res.write(output);
                 stringify(dataResultArray, {header: true}, function (err, output) {
                     if (err) {
-                        console.log("error in getCSV:", err);
+                        console.log("error in _getCSV:", err);
                         res.write("error," + err.toLocaleString());
                         res.end();
                         return;
@@ -73,12 +299,12 @@ var getCSV = function (params, req, res, next) {
     }
 };
 
-// define a middleware for getJSON route
-var getJSON = function (params, req, res, next) {
+// private middleware for _getJSON route
+const _getJSON = function (params, req, res, next) {
     if (Meteor.isServer) {
         var flatJSON = "";
         try {
-            var result = getPagenatedData(params.key, 0, -1000);
+            var result = _getPagenatedData(params.key, 0, -1000);
             flatJSON = JSON.stringify(result);
         } catch (e) {
             console.log('error retrieving data: ', e);
@@ -94,180 +320,8 @@ var getJSON = function (params, req, res, next) {
     }
 };
 
-// define a middleware for clearing the cache
-var clearCache = function (params, req, res, next) {
-    if (Meteor.isServer) {
-        matsCache.clear();
-        res.end();
-    }
-};
-
-// define a middleware for clearing the cache
-var refreshMetadataMW = function (params, req, res, next) {
-    if (Meteor.isServer) {
-        checkMetaDataRefresh();
-        res.end();
-    }
-};
-
-// initialize collections used for pop-out window functionality
-const LayoutStoreCollection = new Mongo.Collection("LayoutStoreCollection");
-const DownSampleResults = new Mongo.Collection("DownSampleResults");
-if (Meteor.isServer) {
-    // add indexes to result and axes collections
-    DownSampleResults.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 3600 * 8}); // 8 hour expiration
-    LayoutStoreCollection.rawCollection().createIndex({"createdAt": 1}, {expireAfterSeconds: 900}); // 15 min expiration
-
-    // define some server side routes
-    Picker.route('/getCSV/:key', function (params, req, res, next) {
-        Picker.middleware(getCSV(params, req, res, next));
-    });
-
-    Picker.route('/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getCSV(params, req, res, next));
-    });
-
-    Picker.route('/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getCSV(params, req, res, next));
-    });
-
-    Picker.route('/gsd/mats/:app/CSV/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getCSV(params, req, res, next));
-    });
-
-    Picker.route('/getJSON/:key', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
-    });
-
-    Picker.route('/JSON/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
-    });
-
-    Picker.route('/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
-    });
-
-    Picker.route('/gsd/mats/:app/JSON/:f/:key/:m/:a', function (params, req, res, next) {
-        Picker.middleware(getJSON(params, req, res, next));
-    });
-
-    Picker.route('/clearCache', function (params, req, res, next) {
-        Picker.middleware(clearCache(params, req, res, next));
-    });
-
-    Picker.route('/:app/clearCache', function (params, req, res, next) {
-        Picker.middleware(clearCache(params, req, res, next));
-    });
-
-    Picker.route('/gsd/mats/:app/clearCache', function (params, req, res, next) {
-        Picker.middleware(clearCache(params, req, res, next));
-    });
-
-    Picker.route('/refreshMetadata', function (params, req, res, next) {
-        Picker.middleware(refreshMetadataMW(params, req, res, next));
-    });
-
-    Picker.route('/:app/refreshMetadata', function (params, req, res, next) {
-        Picker.middleware(refreshMetadataMW(params, req, res, next));
-    });
-
-    Picker.route('/gsd/mats/:app/refreshMetadata', function (params, req, res, next) {
-        Picker.middleware(refreshMetadataMW(params, req, res, next));
-    });
-}
-
-// private method for getting pagenated data
-// a newPageIndex of -1000 means get all the data (used for export)
-// a newPageIndex of -2000 means get just the last page
-const getPagenatedData = function (rky, p, np) {
-    if (Meteor.isServer) {
-        var key = rky;
-        var myPageIndex = p;
-        var newPageIndex = np;
-        var ret;
-        var rawReturn;
-
-        try {
-            var result = matsCache.getResult(key);
-            rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something,createdAt:date, result:resultObject}
-        } catch (e) {
-            console.log("getPagenatedData: Error - ", e);
-            return undefined;
-        }
-        ret = rawReturn === undefined ? undefined : JSON.parse(JSON.stringify(rawReturn));
-        var start;
-        var end;
-        var direction = 1;
-        if (newPageIndex === -1000) {
-            // all the data
-            start = 0;
-            end = Number.MAX_VALUE;
-        } else if (newPageIndex === -2000) {
-            // just the last page
-            start = -2000;
-            direction = -1;
-        } else if (myPageIndex <= newPageIndex) {
-            // proceed forward
-            start = (newPageIndex - 1) * 100;
-            end = newPageIndex * 100;
-        } else {
-            // move back
-            direction = -1;
-            start = newPageIndex * 100;
-            end = (newPageIndex + 1) * 100;
-        }
-
-        var dsiStart;
-        var dsiEnd;
-        for (var csi = 0; csi < ret.data.length; csi++) {
-            if (ret.data[csi].x === undefined || ret.data[csi].x === null || ret.data[csi].x.length <= 100) {
-                continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
-            }
-            dsiStart = start;
-            dsiEnd = end;
-            if (dsiStart > ret.data[csi].x.length || dsiStart === -2000) {
-                // show the last page if we either requested it specifically or are trying to navigate past it
-                dsiStart = Math.floor(rawReturn.data[csi].x.length / 100) * 100;
-                dsiEnd = rawReturn.data[csi].x.length;
-                if (dsiEnd === dsiStart) {
-                    // make sure the last page isn't empty--if rawReturn.data[csi].data.length/100 produces a whole number,
-                    // dsiStart and dsiEnd would be the same. This makes sure that the last full page is indeed the last page, without a phantom empty page afterwards
-                    dsiStart = dsiEnd - 100;
-                }
-            }
-            if (dsiStart < 0) {
-                // show the first page if we are trying to navigate before it
-                dsiStart = 0;
-                dsiEnd = 100;
-            }
-            if (dsiEnd < dsiStart) {
-                // make sure that the end is after the start
-                dsiEnd = dsiStart + 100;
-            }
-            if (dsiEnd > ret.data[csi].x.length) {
-                // make sure we don't request past the end -- if results are one page, this should convert the
-                // start and end from 0 and 100 to 0 and whatever the end is.
-                dsiEnd = ret.data[csi].x.length;
-            }
-            ret.data[csi].x = rawReturn.data[csi].x.slice(dsiStart, dsiEnd);
-            ret.data[csi].y = rawReturn.data[csi].y.slice(dsiStart, dsiEnd);
-            ret.data[csi].stats = rawReturn.data[csi].stats.slice(dsiStart, dsiEnd);
-            ret.data[csi].glob_stats = rawReturn.data[csi].glob_stats;
-        }
-
-        delete rawReturn;
-        if (direction === 1) {
-            ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
-        } else {
-            ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
-        }
-        ret.dsiTextDirection = direction;
-        return ret;
-    }
-};
-
 // private method for getting pagenated results and flattening them in order to be appropriate for text display.
-const getFlattenedResultData = function (rk, p, np) {
+const _getFlattenedResultData = function (rk, p, np) {
     if (Meteor.isServer) {
         var resp;
         try {
@@ -275,7 +329,7 @@ const getFlattenedResultData = function (rk, p, np) {
             var p = p;
             var np = np;
             // get the pagenated data
-            var result = getPagenatedData(r, p, np);
+            var result = _getPagenatedData(r, p, np);
             // find the type
             var plotTypes = result.basis.plotParams.plotTypes;
             var plotType = (_.invert(plotTypes))[true];
@@ -433,7 +487,7 @@ const getFlattenedResultData = function (rk, p, np) {
 
                     var stats = {};
                     stats['label'] = data[0].label;
-                    stats['total number of obs'] = data[0].stats.reduce(function(prev, curr) {
+                    stats['total number of obs'] = data[0].stats.reduce(function (prev, curr) {
                         return prev + curr.N_times;
                     }, 0);
                     stats['mean difference'] = matsDataUtils.average(data[0].queryVal);
@@ -596,13 +650,292 @@ const getFlattenedResultData = function (rk, p, np) {
             returnData.dsiTextDirection = dsiTextDirection;
             return returnData;
         } catch (error) {
-            throw new Meteor.Error("Error in getFlattenedResultData function: " + error.message);
+            throw new Meteor.Error("Error in _getFlattenedResultData function: " + error.message);
         }
     }
 };
 
-// save the result from the query into mongo and downsample if that result's size is greater than 1Mb
-const saveResultData = function (result) {
+// private method for getting pagenated data
+// a newPageIndex of -1000 means get all the data (used for export)
+// a newPageIndex of -2000 means get just the last page
+const _getPagenatedData = function (rky, p, np) {
+    if (Meteor.isServer) {
+        var key = rky;
+        var myPageIndex = p;
+        var newPageIndex = np;
+        var ret;
+        var rawReturn;
+
+        try {
+            var result = matsCache.getResult(key);
+            rawReturn = result === undefined ? undefined : result.result; // getResult structure is {key:something, result:resultObject}
+        } catch (e) {
+            console.log("_getPagenatedData: Error - ", e);
+            return undefined;
+        }
+        ret = rawReturn === undefined ? undefined : JSON.parse(JSON.stringify(rawReturn));
+        var start;
+        var end;
+        var direction = 1;
+        if (newPageIndex === -1000) {
+            // all the data
+            start = 0;
+            end = Number.MAX_VALUE;
+        } else if (newPageIndex === -2000) {
+            // just the last page
+            start = -2000;
+            direction = -1;
+        } else if (myPageIndex <= newPageIndex) {
+            // proceed forward
+            start = (newPageIndex - 1) * 100;
+            end = newPageIndex * 100;
+        } else {
+            // move back
+            direction = -1;
+            start = newPageIndex * 100;
+            end = (newPageIndex + 1) * 100;
+        }
+
+        var dsiStart;
+        var dsiEnd;
+        for (var csi = 0; csi < ret.data.length; csi++) {
+            if (ret.data[csi].x == null || ret.data[csi].x.length <= 100) {
+                continue; // don't bother pagenating datasets less than or equal to a page - ret is rawReturn
+            }
+            dsiStart = start;
+            dsiEnd = end;
+            if (dsiStart > ret.data[csi].x.length || dsiStart === -2000) {
+                // show the last page if we either requested it specifically or are trying to navigate past it
+                dsiStart = Math.floor(rawReturn.data[csi].x.length / 100) * 100;
+                dsiEnd = rawReturn.data[csi].x.length;
+                if (dsiEnd === dsiStart) {
+                    // make sure the last page isn't empty--if rawReturn.data[csi].data.length/100 produces a whole number,
+                    // dsiStart and dsiEnd would be the same. This makes sure that the last full page is indeed the last page, without a phantom empty page afterwards
+                    dsiStart = dsiEnd - 100;
+                }
+            }
+            if (dsiStart < 0) {
+                // show the first page if we are trying to navigate before it
+                dsiStart = 0;
+                dsiEnd = 100;
+            }
+            if (dsiEnd < dsiStart) {
+                // make sure that the end is after the start
+                dsiEnd = dsiStart + 100;
+            }
+            if (dsiEnd > ret.data[csi].x.length) {
+                // make sure we don't request past the end -- if results are one page, this should convert the
+                // start and end from 0 and 100 to 0 and whatever the end is.
+                dsiEnd = ret.data[csi].x.length;
+            }
+            ret.data[csi].x = rawReturn.data[csi].x.slice(dsiStart, dsiEnd);
+            ret.data[csi].y = rawReturn.data[csi].y.slice(dsiStart, dsiEnd);
+            ret.data[csi].stats = rawReturn.data[csi].stats.slice(dsiStart, dsiEnd);
+            ret.data[csi].glob_stats = rawReturn.data[csi].glob_stats;
+        }
+
+        delete rawReturn;
+        if (direction === 1) {
+            ret.dsiRealPageIndex = Math.floor(dsiEnd / 100);
+        } else {
+            ret.dsiRealPageIndex = Math.floor(dsiStart / 100);
+        }
+        ret.dsiTextDirection = direction;
+        return ret;
+    }
+};
+
+//private middleware for getting metviewer data file
+const _mvGetData = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.DATADIR;
+    const baseName = params.key + ".data";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain')
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting data file :" + baseName);
+        res.end();
+    }
+}
+
+//private middleware for getting metviewer points1 file
+const _mvGetPoints1 = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.DATADIR;
+    const baseName = params.key + ".points1";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain')
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting data file :" + baseName);
+        res.end();
+    }
+}
+
+
+//private middleware for getting metviewer points1 file
+const _mvGetPoints2 = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.DATADIR;
+    const baseName = params.key + ".points2";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain')
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting data file :" + baseName);
+        res.end();
+    }
+}
+
+//private middleware for getting metviewer xml file
+const _mvGetXml = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.XMLDIR;
+    const baseName = params.key + ".xml";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain');
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting xml file :" + baseName);
+        res.end();
+    }
+}
+//private middleware for getting metviewer plot file
+const _mvGetPlot = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.PLOTSDIR;
+    const baseName = params.key + ".png";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'image/png');
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'application/txt');
+        res.write("Error Error getting plot file :" + baseName);
+        res.end();
+    }
+}
+//private middleware for getting metviewer script file
+const _mvGetScript = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.SCRIPTSDIR;
+    const baseName = params.key + ".R";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain');
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting script file :" + baseName);
+        res.end();
+    }}
+//private middleware for getting metviewer sql file
+const _mvGetSql = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.SQLDIR;
+    const baseName = params.key + ".sql";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/sql');
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting sql file :" + baseName);
+        res.end();
+    }
+}
+//private middleware for getting metviewer log file
+const _mvGetLog = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.LOGDIR;
+    const baseName = params.key + ".log";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain');
+            if (err) {console.log(err);} // Fail if the file can't be read.
+            res.end(data); // Send the file data to the browser.
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting log file :" + baseName);
+        res.end();
+    }
+}
+//private middleware for getting metviewer err file
+const _mvGetErr = function(params, req, res, next) {
+    const fse = require("fs-extra");
+    const filePath = MV_DIRS.ERRDIR;
+    const baseName = params.key + ".err";
+    const fileName = filePath + '/' + baseName;
+    try {
+        fse.readFile(fileName, function(err, data) {
+            res.setHeader('Content-Type', 'text/plain');
+            if (err) {
+                res.setHeader('Content-Type', 'text/plain');
+                res.write("Error Error getting err file :" + baseName);
+                res.end();
+            } else {
+                res.end(data); // Send the file data to the browser.
+            }
+        });
+    }
+    catch (error) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Error Error getting plot file :" + baseName);
+        res.end();
+    }
+}
+
+
+// private define a middleware for clearing the cache
+const _refreshMetadataMWltData = function (params, req, res, next) {
+    if (Meteor.isServer) {
+        _checkMetaDataRefresh();
+        res.end();
+    }
+};
+
+// private save the result from the query into mongo and downsample if that result's size is greater than 1Mb
+const _saveResultData = function (result) {
     if (Meteor.isServer) {
         var sizeof = require('object-sizeof');
         var hash = require('object-hash');
@@ -611,7 +944,7 @@ const saveResultData = function (result) {
         var ret = {};
         try {
             var dSize = sizeof(result.data);
-            console.log("result.basis.data size is ", dSize);
+            //console.log("result.basis.data size is ", dSize);
             // TimeSeries and DailyModelCycle are the only plot types that require downSampling
             if (dSize > threshold && (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle)) {
                 // greater than threshold need to downsample
@@ -682,13 +1015,13 @@ const saveResultData = function (result) {
             } else {
                 ret = {key: key, result: result};
             }
-            // save original dataset
+            // save original dataset in the matsCache
             if (result.basis.plotParams.plotTypes.TimeSeries || result.basis.plotParams.plotTypes.DailyModelCycle) {
                 for (var ci = 0; ci < result.data.length; ci++) {
-                    delete(result.data[ci]['x_epoch']);     // we only needed this as an index for downsampling
+                    delete (result.data[ci]['x_epoch']);     // we only needed this as an index for downsampling
                 }
             }
-            matsCache.storeResult(key, {"createdAt": new Date(), key: key, result: result});
+            matsCache.storeResult(key, {key: key, result: result}); // lifespan is handled by lowDb (internally) in matscache
         } catch (error) {
             if (error.toLocaleString().indexOf("larger than the maximum size") != -1) {
                 throw new Meteor.Error(+": Requesting too much data... try averaging");
@@ -698,12 +1031,345 @@ const saveResultData = function (result) {
     }
 };
 
+// PUBLIC METHODS
+//administration tools
+const addSentAddress = new ValidatedMethod({
+    name: 'matsMethods.addSentAddress',
+    validate: new SimpleSchema({
+        toAddress: {type: String}
+    }).validator(),
+    run(toAddress) {
+        if (!Meteor.userId()) {
+            throw new Meteor.Error(401, "not-logged-in");
+        }
+        matsCollections.SentAddresses.upsert({address: toAddress}, {address: toAddress, userId: Meteor.userId()});
+        return false;
+    }
+});
+
+
+//  administation tool
+const applyAuthorization = new ValidatedMethod({
+    name: 'matsMethods.applyAuthorization',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+    run(settings) {
+        if (Meteor.isServer) {
+            var roles;
+            var roleName;
+            var authorization;
+
+            var userRoleName = settings.userRoleName;
+            var userRoleDescription = settings.userRoleDescription;
+            var authorizationRole = settings.authorizationRole;
+            var newUserEmail = settings.newUserEmail;
+            var existingUserEmail = settings.existingUserEmail;
+
+            if (authorizationRole) {
+                // existing role - the role roleName - no need to verify as the selection list came from the database
+                roleName = authorizationRole;
+            } else if (userRoleName && userRoleDescription) {
+                // possible new role - see if it happens to already exist
+                var role = matsCollections.Roles.findOne({name: userRoleName});
+                if (role === undefined) {
+                    // need to add new role using description
+                    matsCollections.Roles.upsert({name: userRoleName}, {$set: {description: userRoleDescription}});
+                    roleName = userRoleName;
+                } else {
+                    // see if the description matches...
+                    roleName = role.name;
+                    var description = role.description;
+                    if (description != userRoleDescription) {
+                        // have to update the description
+                        matsCollections.Roles.upsert({name: userRoleName}, {$set: {description: userRoleDescription}});
+                    }
+                }
+            }
+            // now we have a role roleName - now we need an email
+            if (existingUserEmail) {
+                // existing user -  no need to verify as the selection list came from the database
+                // see if it already has the role
+                authorization = matsCollections.Authorization.findOne({email: existingUserEmail});
+                roles = authorization.roles;
+                if (roles.indexOf(roleName) == -1) {
+                    // have to add the role
+                    if (roleName) {
+                        roles.push(roleName);
+                    }
+                    matsCollections.Authorization.upsert({email: existingUserEmail}, {$set: {roles: roles}});
+                }
+            } else if (newUserEmail) {
+                // possible new authorization - see if it happens to exist
+                authorization = matsCollections.Authorization.findOne({email: newUserEmail});
+                if (authorization !== undefined) {
+                    // authorization exists - add role to roles if necessary
+                    roles = authorization.roles;
+                    if (roles.indexOf(roleName) == -1) {
+                        // have to add the role
+                        if (roleName) {
+                            roles.push(roleName);
+                        }
+                        matsCollections.Authorization.upsert({email: existingUserEmail}, {$set: {roles: roles}});
+                    }
+                } else {
+                    // need a new authorization
+                    roles = [];
+                    if (roleName) {
+                        roles.push(roleName);
+                    }
+                    if (newUserEmail) {
+                        matsCollections.Authorization.upsert({email: newUserEmail}, {$set: {roles: roles}});
+                    }
+                }
+            }
+            return false;
+        }
+    }
+});
+
+// database controls
+const applyDatabaseSettings = new ValidatedMethod({
+    name: 'matsMethods.applyDatabaseSettings',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+
+    run(settings) {
+        if (Meteor.isServer) {
+            if (settings.name) {
+                matsCollections.Databases.upsert({name: settings.name}, {
+                    $set: {
+                        name: settings.name,
+                        role: settings.role,
+                        status: settings.status,
+                        host: settings.host,
+                        database: settings.database,
+                        user: settings.user,
+                        password: settings.password
+                    }
+                });
+            }
+            return false;
+        }
+    }
+});
+
+
+//administration tools
+const deleteSettings = new ValidatedMethod({
+    name: 'matsMethods.deleteSettings',
+    validate: new SimpleSchema({
+        name: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (!Meteor.userId()) {
+            throw new Meteor.Error("not-logged-in");
+        }
+        if (Meteor.isServer) {
+            matsCollections.CurveSettings.remove({name: params.name});
+        }
+    }
+});
+
+//administration tools
+const emailImage = new ValidatedMethod({
+    name: 'matsMethods.emailImage',
+    validate: new SimpleSchema({
+        imageStr: {type: String},
+        toAddress: {type: String},
+        subject: {type: String}
+    }).validator(),
+    run(params) {
+        var imageStr = params.imageStr;
+        var toAddress = params.toAddress;
+        var subject = params.subject;
+        if (!Meteor.userId()) {
+            throw new Meteor.Error(401, "not-logged-in");
+        }
+        var fromAddress = Meteor.user().services.google.email;
+        // these come from google - see
+        // http://masashi-k.blogspot.fr/2013/06/sending-mail-with-gmail-using-xoauth2.html
+        //http://stackoverflow.com/questions/24098461/nodemailer-gmail-what-exactly-is-a-refresh-token-and-how-do-i-get-one/24123550
+
+        // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
+        //var clientId = "339389735380-382sf11aicmgdgn7e72p4end5gnm9sad.apps.googleusercontent.com";
+        //var clientSecret = "7CfNN-tRl5QAL595JTW2TkRl";
+        //var refresh_token = "1/PDql7FR01N2gmq5NiTfnrT-OlCYC3U67KJYYDNPeGnA";
+        var credentials = matsCollections.Credentials.findOne({name: "oauth_google"}, {
+            clientId: 1,
+            clientSecret: 1,
+            refresh_token: 1
+        });
+        var clientId = credentials.clientId;
+        var clientSecret = credentials.clientSecret;
+        var refresh_token = credentials.refresh_token;
+
+        var smtpTransporter;
+        try {
+            smtpTransporter = Nodemailer.createTransport("SMTP", {
+                service: "Gmail",
+                auth: {
+                    XOAuth2: {
+                        user: "mats.gsd@noaa.gov",
+                        clientId: clientId,
+                        clientSecret: clientSecret,
+                        refreshToken: refresh_token
+                    }
+                }
+            });
+
+        } catch (e) {
+            throw new Meteor.Error(401, "Transport error " + e.message());
+        }
+        try {
+            var mailOptions = {
+                sender: fromAddress,
+                replyTo: fromAddress,
+                from: fromAddress,
+                to: toAddress,
+                subject: subject,
+                attachments: [
+                    {
+                        filename: "graph.png",
+                        contents: new Buffer(imageStr.split("base64,")[1], "base64")
+                    }
+                ]
+            };
+
+            smtpTransporter.sendMail(mailOptions, function (error, response) {
+                if (error) {
+                    console.log("smtpTransporter error " + error + " from:" + fromAddress + " to:" + toAddress);
+                } else {
+                    console.log(response + " from:" + fromAddress + " to:" + toAddress);
+                }
+                smtpTransporter.close();
+            });
+        } catch (e) {
+            throw new Meteor.Error(401, "Send error " + e.message());
+        }
+        return false;
+    }
+});
+
+// administation tool
+const getAuthorizations = new ValidatedMethod({
+    name: 'matsMethods.getAuthorizations',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        var roles = [];
+        if (Meteor.isServer) {
+            var userEmail = Meteor.user().services.google.email.toLowerCase();
+            roles = matsCollections.Authorization.findOne({email: userEmail}).roles;
+        }
+        return roles;
+    }
+});
+
 // administration tool
 const getDataFunctionFileList = new ValidatedMethod({
     name: 'matsMethods.getDataFunctionFileList',
     validate: new SimpleSchema({}).validator(),
     run() {
         if (Meteor.isServer) {
+        }
+    }
+});
+
+
+// retrieves the saved query results (or downsampled results)
+const getGraphData = new ValidatedMethod({
+    name: 'matsMethods.getGraphData',
+    validate: new SimpleSchema({
+        plotParams: {
+            type: Object,
+            blackbox: true
+        },
+        plotType: {
+            type: String
+        },
+        expireKey: {
+            type: Boolean
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
+            var dataFunction = plotGraphFunction.dataFunction;
+            var ret;
+            try {
+                var hash = require('object-hash');
+                var key = hash(params.plotParams);
+                if (process.env.NODE_ENV === "development" || params.expireKey) {
+                    matsCache.expireKey(key);
+                }
+                var results = matsCache.getResult(key);
+                if (results === undefined) {
+                    // results aren't in the cache - need to process data routine
+                    const Future = require('fibers/future');
+                    var future = new Future();
+                    global[dataFunction](params.plotParams, function (results) {
+                        ret = _saveResultData(results);
+                        future["return"](ret);
+                    });
+                    return future.wait();
+                } else { // results were already in the matsCache (same params and not yet expired)
+                    // are results in the downsampled collection?
+                    var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
+                    if (dsResults !== undefined) {
+                        // results are in the mongo cache downsampled collection - returned the downsampled graph data
+                        ret = dsResults;
+                        // update the expire time in the downsampled collection - this requires a new Date
+                        DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
+                    } else {
+                        ret = results;  // {key:someKey, result:resultObject}
+                        // refresh expire time. The only way to perform a refresh on matsCache is to re-save the result.
+                        matsCache.storeResult(results.key, results);
+                    }
+                    var sizeof = require('object-sizeof');
+                    console.log("result.data size is ", sizeof(results));
+                    return ret;
+                }
+            } catch (dataFunctionError) {
+                if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
+                    throw new Meteor.Error(dataFunctionError.message);
+                } else {
+                    throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
+                }
+            }
+            return undefined; // probably won't get here
+        }
+    }
+});
+
+// retrieves the saved query results (or downsampled results) for a specific key
+const getGraphDataByKey = new ValidatedMethod({
+    name: 'matsMethods.getGraphDataByKey',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var ret;
+            var key = params.resultKey;
+            try {
+                var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
+                if (dsResults !== undefined) {
+                    ret = dsResults;
+                } else {
+                    ret = matsCache.getResult(key); // {key:someKey, result:resultObject}
+                }
+                var sizeof = require('object-sizeof');
+                console.log("getGraphDataByKey results size is ", sizeof(dsResults));
+                return ret;
+            } catch (error) {
+                throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
+            }
+            return undefined;
         }
     }
 });
@@ -718,31 +1384,47 @@ const getGraphFunctionFileList = new ValidatedMethod({
     }
 });
 
-// administration tool
-const readFunctionFile = new ValidatedMethod({
-    name: 'matsMethods.readFunctionFile',
-    validate: new SimpleSchema({}).validator(),
-    run() {
+const getLayout = new ValidatedMethod({
+    name: 'matsMethods.getLayout',
+    validate: new SimpleSchema({
+        resultKey: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
         if (Meteor.isServer) {
-            var future = require('fibers/future');
-            var fs = require('fs');
-            var path = "";
-            var fData;
-            if (type == "data") {
-                path = "/web/static/dataFunctions/" + file;
-                console.log('exporting data file: ' + path);
-            } else if (type == "graph") {
-                path = "/web/static/displayFunctions/" + file;
-                console.log('exporting graph file: ' + path);
-            } else {
-                return ("error - wrong type");
+            var ret;
+            var key = params.resultKey;
+            try {
+                ret = LayoutStoreCollection.rawCollection().findOne({key: key});
+                return ret;
+            } catch (error) {
+                throw new Meteor.Error("Error in getLayout function:" + key + " : " + error.message);
             }
-            fs.readFile(path, function (err, data) {
-                if (err) throw err;
-                fData = data.toString();
-                future["return"](fData);
-            });
-            return future.wait();
+            return undefined;
+        }
+    }
+});
+
+// retrieves the saved artifacts (file urls) that were generated by nvBatch for a specific key
+const getMvArtifactsByKey = new ValidatedMethod({
+    name: 'matsMethods.getMvArtifactsByKey',
+    validate: new SimpleSchema({
+        key: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var ret;
+            var key = params.key;
+            try {
+                ret = matsCache.getResult(key); // {key:someKey, result:resultObject}
+                return ret;
+            } catch (error) {
+                throw new Meteor.Error("Error in getMvArtifactsByKey function:" + key + " : " + error.message);
+            }
+            return undefined;
         }
     }
 });
@@ -770,7 +1452,7 @@ const getPlotResult = new ValidatedMethod({
             var npi = params.newPageIndex;
             var ret = {};
             try {
-                ret = getFlattenedResultData(rKey, pi, npi);
+                ret = _getFlattenedResultData(rKey, pi, npi);
             } catch (e) {
                 console.log(e);
             }
@@ -779,6 +1461,514 @@ const getPlotResult = new ValidatedMethod({
     }
 });
 
+
+const getReleaseNotes = new ValidatedMethod({
+    name: 'matsMethods.getReleaseNotes',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        //     return Assets.getText('public/MATSReleaseNotes.html');
+        // }
+        if (Meteor.isServer) {
+            var future = require('fibers/future');
+            var fse = require('fs-extra');
+            var dFuture = new future();
+            var fData;
+            console.log(process.env.PWD);
+            var file;
+            if (process.env.NODE_ENV === "development") {
+                file = process.env.PWD + "/../../meteor_packages/mats-common/public/MATSReleaseNotes.html";
+            } else {
+                file = process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html";
+            }
+            try {
+                fse.readFile(file, 'utf8', function (err, data) {
+                    if (err) {
+                        fData = err.message;
+                        dFuture["return"]();
+                    } else {
+                        fData = data;
+                        dFuture["return"]();
+                    }
+                });
+            } catch (e) {
+                fData = e.message;
+                dFuture["return"]();
+            }
+            dFuture.wait();
+            return fData;
+        }
+    }
+});
+
+
+// administration tool
+const getUserAddress = new ValidatedMethod({
+    name: 'matsMethods.getUserAddress',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        if (Meteor.isServer) {
+            return Meteor.user().services.google.email.toLowerCase();
+        }
+    }
+});
+
+// app utility
+const insertColor = new ValidatedMethod({
+    name: 'matsMethods.insertColor',
+    validate: new SimpleSchema({
+        newColor: {type: String},
+        insertAfterIndex: {type: Number}
+    }).validator(),
+    run(params) {
+        if (params.newColor == "rgb(255,255,255)") {
+            return false;
+        }
+        var colorScheme = matsCollections.ColorScheme.findOne({});
+        colorScheme.colors.splice(params.insertAfterIndex, 0, newColor);
+        matsCollections.update({}, colorScheme);
+        return false;
+    }
+});
+
+
+// checks to see if the mv artifacts are cached (based on plotspec hash) if not execs an mvbatch and caches the results
+const mvBatch = new ValidatedMethod({
+    name: 'matsMethods.mvBatch',
+    validate: new SimpleSchema({
+        plotParams: {
+            type: Object,
+            blackbox: true
+        },
+        plotType: {
+            type: String
+        }
+    }).validator(),
+    run(params) {
+        if (Meteor.isServer) {
+            var mvbatch = MV_DIRS.HOME + "/bin/mv_batch.sh";
+            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
+            var plotSpecFunction = plotGraphFunction.plotSpecFunction;
+            var ret;
+            const appName = matsCollections.appName.findOne({}).app;
+            const fse = require('fs-extra');
+            // generate the key from the params
+            const hash = require('object-hash');
+            const key = hash(params.plotParams);
+            // generate the server router (Picker) urls according to the hash key.
+            const artifacts = {
+                png: appName + "/mvplot/" + key,
+                xml: appName + "/mvxml/" + key,
+                sql: appName + "/mvsql/" + key,
+                log: appName + "/mvlog/" + key,
+                err: appName + "/mverr/" + key,
+                R: appName + "/mvscript/" + key,
+                data: appName + "/mvdata/" + key,
+                points1: appName + "/mvpoints1/" + key,
+                points2: appName + "/mvpoints2/" + key,
+            };
+            const Future = require('fibers/future');
+            var mvFuture = new Future();
+            // generate the real file paths (these are not exposed to clients)
+            const plotSpecFilePath = MV_DIRS.XMLDIR + key + ".xml";
+            const pngFilePath = MV_DIRS.PLOTSDIR + key + ".png";
+            const sqlFilePath = MV_DIRS.SQLDIR + key + ".sql";
+            const logFilePath = MV_DIRS.LOGDIR + key + ".log";
+            const errFilePath = MV_DIRS.ERRDIR + key + ".err";
+            const scriptFilePath = MV_DIRS.SCRIPTSDIR + key + ".R";
+            const dataFilePath = MV_DIRS.DATADIR + key + ".data";
+            const points1Path = MV_DIRS.DATADIR + key + ".points1";
+            const points2Path = MV_DIRS.DATADIR + key + ".points2";
+            // NOTE: the plotParams should include an mvPlot:true parameter.
+            // This should have been set in the caller. This makes the mv plotSpec cache entry unique from a MATS plot
+            if (params.plotParams.mvPlot !== true) {
+                throw new Meteor.Error("Error in mvBatch: Not an mv plot request: no plotParams.mvPlot:true");
+            }
+            if (process.env.NODE_ENV === "development" || params.expireKey) {
+                matsCache.expireKey(key);
+                // in development just blow away the files too
+                try {
+                    fse.unlinkSync(plotSpecFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(pngFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(sqlFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(logFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(errFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(scriptFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(dataFilePath);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(points1Path);
+                } catch (ignore){}
+                try {
+                    fse.unlinkSync(points2Path);
+                } catch (ignore){}
+            }
+            // try to get the key from the cache
+            var artifactPaths = matsCache.getResult(key);
+            var filesExist = false;
+            if (artifactPaths != null) {
+                // artifact paths were already cached
+                // do the files exist?
+                // check for file existence
+                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
+                var plotExists = fse.existsSync(pngFilePath);
+                var scriptExists = fse.existsSync(scriptFilePath);
+                var dataExists = fse.existsSync(dataFilePath);
+                var sqlExists = fse.existsSync(sqlFilePath);
+                var logExists = fse.existsSync(logFilePath);
+                filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
+            }
+            // either the artifacts were cached but the files don't exist or the artifacts were not cached
+            if (artifactPaths == null || filesExist === false) {
+                // artifactPaths are not in the cache - or the files are not there - need to process plotSpecFunction routine
+                // translate the plotparams to a plotSpec and use the key in the plotSpec reference
+                global[plotSpecFunction](params.plotParams, key, function (err, plotSpec) {
+                    // callback
+                    if (err) {
+                        console.log(err, "plotspecFunction:", plotSpecFunction);
+                        throw new Meteor.Error(err + "plotspecFunction: " + plotSpecFunction);
+                    } else {
+
+                        // no error and we have a plot spec
+                        // see if the artifacts exist as files. They might have been run before and are still hanging around.
+                        // NOTE: the MV_OUTPUT aren't cached at all (i.e. no expiration) -
+                        // therefore the expiration of the MATS cache plotSpec and the actual artifacts is sloppy.
+
+                        // check for file existence
+                        var xmlSpecExists = fse.existsSync(plotSpecFilePath);
+                        var plotExists = fse.existsSync(pngFilePath);
+                        var scriptExists = fse.existsSync(scriptFilePath);
+                        var dataExists = fse.existsSync(dataFilePath);
+                        var sqlExists = fse.existsSync(sqlFilePath);
+                        var logExists = fse.existsSync(logFilePath);
+                        var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
+                        if (!filesExist) {
+                            const mvBatchCmd = MV_DIRS.HOME + "/bin/mv_batch.sh " + ' ' + plotSpecFilePath;
+                            const cp = require('child_process');
+                            // save the plotSpec
+                            fse.outputFileSync(plotSpecFilePath, plotSpec);
+                            // exec mv batch with this plotSpec - this should be synchronous
+                            cp.exec(mvBatchCmd, (error, stdout, stderr) => {
+                                if (stderr) {
+                                    fse.outputFileSync(errFilePath, stderr, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write error file" + err); //null
+                                        }
+                                    });
+                                } else {
+                                    fse.outputFileSync(errFilePath, "no stderr for key: " + key, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write error file" + err); //null
+                                        }
+                                    });
+                                }
+                                if (stdout) {
+                                    if (stdout.match(/ERROR/)) {
+                                        fse.outputFileSync(errFilePath, stdout, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write log/err file" + err);
+                                            }
+                                        });
+                                    }
+                                    fse.outputFileSync(logFilePath, stdout, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write log file" + err);
+                                        }
+                                    });
+                                    var sqlout = stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/) == null ? null : stdout.match(/[\s\S]*#*(SELECT[\s\S]*)Database/)[1];
+                                    if (sqlout == null) {
+                                        fse.outputFileSync(sqlFilePath, "no sql statement found in output for key: " + key, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write sql file" + err);
+                                            }
+                                        });
+                                    } else {
+                                        fse.outputFileSync(sqlFilePath, sqlout, function (err) {
+                                            if (err) {
+                                                console.log("Error:couldn't write sql file" + err);
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    fse.outputFileSync(logFilePath, "No stdout captured for: " + key, function (err) {
+                                        if (err) {
+                                            console.log("Error:couldn't write log file" + err);
+                                        }
+                                    });
+                                }
+
+                                // no error - check for the files and cache the spec and filePaths
+                                var xmlSpecExists = fse.existsSync(plotSpecFilePath);
+                                var plotExists = fse.existsSync(pngFilePath);
+                                var scriptExists = fse.existsSync(scriptFilePath);
+                                var dataExists = fse.existsSync(dataFilePath);
+                                var sqlExists = fse.existsSync(sqlFilePath);
+                                var logExists = fse.existsSync(logFilePath);
+                                var filesExist = xmlSpecExists && plotExists && scriptExists && dataExists && sqlExists && logExists;
+                                if (!filesExist) {
+                                    console.error('exec error: expected files do not exist');
+                                }
+                                matsCache.storeResult(key, artifacts);
+                                /*
+                                    The mvbatch should have saved the plot artifacts according to the following plotSpec elements
+                                        <data_file>key.data</data_file>
+                                        <plot_file>key.png</plot_file>
+                                        <r_file>key.R</r_file>
+                                    where key is the same as the key for the matsCache
+                                    The stored artifacts shoulkd be like ...
+                                        MV_OUTPUT/plots/key.png
+                                        MV_OUTPUT/xml/key.xml
+                                        MV_OUTPUT/xml/key.sql
+                                        MV_OUTPUT/xml/key.log
+                                        MV_OUTPUT/scripts/key.R
+                                        MV_OUTPUT/data/key.data
+                                        MV_OUTPUT/data/key.sum_stat.info
+                                        MV_OUTPUT/data/key.data.sum_stat
+
+                                        MV_OUTPUT/xml/key.xml is the plotSpec
+                                */
+                        mvFuture['return']();
+                            }); //ret = {key:key, result:{artifacts:artifacts}}
+                            // return the key and the artifacts
+                        }  // plotspec did not exist
+                        else {
+                            // the files actually already existed but we needed the plotspec
+                            // so just refresh the cache and return the key right away
+                            matsCache.storeResult(key, artifacts);
+                            mvFuture['return']();
+                        }
+                    }
+                });
+            } // either artifactPaths == null || filesExist === false
+            else {
+                // artifacts existed and plotspec existed - refresh the cache
+                matsCache.storeResult(key, artifacts);
+                mvFuture['return']();
+            }
+            mvFuture.wait();
+            return {'key': key, 'artifacts':artifacts};
+        } // if Meteor is Server
+    } // run
+});
+
+// administration tool
+const readFunctionFile = new ValidatedMethod({
+    name: 'matsMethods.readFunctionFile',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        if (Meteor.isServer) {
+            var future = require('fibers/future');
+            var fse = require('fs-extra');
+            var path = "";
+            var fData;
+            if (type == "data") {
+                path = "/web/static/dataFunctions/" + file;
+                console.log('exporting data file: ' + path);
+            } else if (type == "graph") {
+                path = "/web/static/displayFunctions/" + file;
+                console.log('exporting graph file: ' + path);
+            } else {
+                return ("error - wrong type");
+            }
+            fse.readFile(path, function (err, data) {
+                if (err) throw err;
+                fData = data.toString();
+                future["return"](fData);
+            });
+            return future.wait();
+        }
+    }
+});
+
+// refreshes the metadata for the app that's running
+const refreshMetaData = new ValidatedMethod({
+    name: 'matsMethods.refreshMetaData',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        if (Meteor.isServer) {
+            try {
+                //console.log("Asked to refresh metadata");
+                _checkMetaDataRefresh();
+            } catch (e) {
+                console.log(e);
+                throw new Meteor.Error("Server error: ", e.message);
+            }
+        }
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
+
+// administation tool
+const removeAuthorization = new ValidatedMethod({
+    name: 'matsMethods.removeAuthorization',
+    validate: new SimpleSchema({
+        settings: {type: Object, blackbox: true}
+    }).validator(),
+    run(settings) {
+        if (Meteor.isServer) {
+            var email;
+            var roleName;
+            var userRoleName = settings.userRoleName;
+            var authorizationRole = settings.authorizationRole;
+            var newUserEmail = settings.newUserEmail;
+            var existingUserEmail = settings.existingUserEmail;
+            if (authorizationRole) {
+                // existing role - the role roleName - no need to verify as the selection list came from the database
+                roleName = authorizationRole;
+            } else if (userRoleName) {
+                roleName = userRoleName;
+            }
+            if (existingUserEmail) {
+                email = existingUserEmail;
+            } else {
+                email = newUserEmail;
+            }
+
+            // if user and role remove the role from the user
+            if (email && roleName) {
+                matsCollections.Authorization.update({email: email}, {$pull: {roles: roleName}});
+            }
+            // if user and no role remove the user
+            if (email && !roleName) {
+                matsCollections.Authorization.remove({email: email});
+            }
+            // if role and no user remove role and remove role from all users
+            if (roleName && !email) {
+                // remove the role
+                matsCollections.Roles.remove({name: roleName});
+                // remove the roleName role from all the authorizations
+                matsCollections.Authorization.update({roles: roleName}, {$pull: {roles: roleName}}, {multi: true});
+            }
+            return false;
+        }
+    }
+});
+
+// app utility
+const removeColor = new ValidatedMethod({
+    name: 'matsMethods.removeColor',
+    validate: new SimpleSchema({
+        removeColor: {type: String}
+    }).validator(),
+    run(removeColor) {
+        var colorScheme = matsCollections.ColorScheme.findOne({});
+        var removeIndex = colorScheme.colors.indexOf(removeColor);
+        colorScheme.colors.splice(removeIndex, 1);
+        matsCollections.ColorScheme.update({}, colorScheme);
+        return false;
+    }
+});
+
+// database controls
+const removeDatabase = new ValidatedMethod({
+    name: 'matsMethods.removeDatabase',
+    validate: new SimpleSchema({
+        dbName: {type: String}
+    }).validator(),
+    run(dbName) {
+        if (Meteor.isServer) {
+            matsCollections.Databases.remove({name: dbName});
+        }
+    }
+});
+
+// makes sure all of the parameters display appropriate selections in relation to one another
+const resetApp = function (metaDataTableRecords, type) {
+    var deployment;
+    var deploymentText = Assets.getText('public/deployment/deployment.json');
+    if (deploymentText == null) {  // equivilent to deploymentText === null || deploymentText === undefined
+    }
+    deployment = JSON.parse(deploymentText);
+    const myUrlStr = Meteor.absoluteUrl();
+    var url = require('url');
+    var myUrl = url.parse(myUrlStr);
+    const hostName = myUrl.hostname.trim();
+    //console.log("url path is "+myUrl.pathname);
+    //console.log("PWD is "+process.env.PWD);
+    //console.log("CWD is "+process.cwd());
+    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
+    const urlPathParts = urlPath.split("/");
+    //console.log("path parts are "+urlPathParts);
+    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length - 6].trim() : urlPathParts[urlPathParts.length - 1];
+    var developmentApp = {};
+    var app = {};
+    for (var ai = 0; ai < deployment.length; ai++) {
+        var dep = deployment[ai];
+        if (dep.deployment_environment == "development") {
+            developmentApp = dep.apps.filter(function (app) {
+                return app.app === appReference
+            })[0];
+        }
+        if (dep.servers.indexOf(hostName) > -1) {
+            app = dep.apps.filter(function (app) {
+                return app.app === appReference
+            })[0];
+            break;
+        }
+    }
+    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
+        app = developmentApp;
+    }
+    const appVersion = app ? app.version : "unknown";
+    const appTitle = app ? app.title : "unknown";
+    const buildDate = app ? app.buildDate : "unknown";
+    const appType = type ? type : matsTypes.AppTypes.mats;
+    // remember that we updated the metadata tables just now - create metaDataTableUpdates
+    /*
+        metaDataTableUpdates:
+        {
+            name: dataBaseName,
+            tables: [tableName1, tableName2 ..],
+            lastRefreshed : timestamp
+        }
+     */
+    // only create metadata tables if the resetApp was called with a real metaDataTables object
+    if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
+        var metaDataTables = metaDataTableRecords.getRecords();
+        for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
+            const metaDataRef = metaDataTables[mdti];
+            metaDataRef.lastRefreshed = moment().format();
+            if (metaDataTableUpdates.find({name: metaDataRef.name}).count() == 0) {
+                metaDataTableUpdates.update({name: metaDataRef.name}, metaDataRef, {upsert: true});
+            }
+        }
+    } else {
+        throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
+    }
+
+    matsCollections.Roles.remove({});
+    matsDataUtils.doRoles();
+    matsCollections.Authorization.remove({});
+    matsDataUtils.doAuthorization();
+    matsCollections.Credentials.remove({});
+    matsDataUtils.doCredentials();
+    matsCollections.PlotGraphFunctions.remove({});
+    matsCollections.ColorScheme.remove({});
+    matsDataUtils.doColorScheme();
+    matsCollections.Settings.remove({});
+    matsDataUtils.doSettings(appTitle, appVersion, buildDate, appType);
+    matsCollections.CurveParams.remove({});
+    matsCollections.PlotParams.remove({});
+    matsCollections.CurveTextPatterns.remove({});
+// app specific routines
+    //const asrKeys = Object.keys(appSpecificResetRoutines);
+    const asrKeys = appSpecificResetRoutines;
+    for (var ai = 0; ai < asrKeys.length; ai++) {
+        global.appSpecificResetRoutines[ai]();
+    }
+    matsCache.clear();
+};
 
 // administration tool
 const restoreFromFile = new ValidatedMethod({
@@ -801,8 +1991,8 @@ const restoreFromFile = new ValidatedMethod({
                 return ("error - wrong tyoe");
             }
             console.log('importing ' + params.type + ' file: ' + path);
-            var fs = Npm.require('fs');
-            fs.writeFile(path, params.data.toString(), function (err) {
+            var fse = require('fs-extra');
+            fse.writeFile(path, params.data.toString(), function (err) {
                 if (err) {
                     return (err.toLocaleString());
                 }
@@ -908,538 +2098,25 @@ const restoreFromParameterFile = new ValidatedMethod({
     }
 });
 
-// administration tool
-const getUserAddress = new ValidatedMethod({
-    name: 'matsMethods.getUserAddress',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        if (Meteor.isServer) {
-            return Meteor.user().services.google.email.toLowerCase();
-        }
-    }
-});
-
-// used to see if the main page needs to update its selectors
-const checkMetaDataRefresh = function () {
-    // This routine compares the current last modified time of the tables used for curveParameter metadata
-    // with the last update time to determine if an update is necessary. We really only do this for Curveparams
-    /*
-        metaDataTableUpdates:
-        {
-            name: dataBaseName,
-            tables: [tableName1, tableName2 ..],
-            lastRefreshed : timestamp
-        }
-     */
-    var refresh = false;
-    const tableUpdates = metaDataTableUpdates.find({}).fetch();
-    for (var tui = 0; tui < tableUpdates.length; tui++) {
-        var id = tableUpdates[tui]._id;
-        var poolName = tableUpdates[tui].pool;
-        var dbName = tableUpdates[tui].name;
-        var tableNames = tableUpdates[tui].tables;
-        var lastRefreshed = tableUpdates[tui]['lastRefreshed'];
-        var updatedEpoch = Number.MAX_VALUE;
-        for (var ti = 0; ti < tableNames.length; ti++) {
-            var tName = tableNames[ti];
-            var rows = matsDataQueryUtils.simplePoolQueryWrapSynchronous(global[poolName], "SELECT UNIX_TIMESTAMP(UPDATE_TIME)" +
-                "    FROM   information_schema.tables" +
-                "    WHERE  TABLE_SCHEMA = '" + dbName + "'" +
-                "    AND TABLE_NAME = '" + tName + "'");
-            for (var i = 0; i < rows.length; i++) {
-                try {
-                    updatedEpoch = rows[i]['UNIX_TIMESTAMP(UPDATE_TIME)'];
-                    break;
-                } catch (e) {
-                    throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName + " ERROR:" + e.message);
-                }
-                if (updatedEpoch === Number.MAX_VALUE) {
-                    throw new Error("checkMetaDataRefresh - cannot find last update time for database: " + dbName + " and table: " + tName);
-                }
-            }
-            const lastRefreshedEpoch = moment(lastRefreshed).valueOf() / 1000;
-            if (lastRefreshedEpoch < updatedEpoch) {
-                refresh = true;
-                console.log("Refreshing the metadata in the app selectors because table " + dbName + "." + tName + " was updated at " + moment.utc(updatedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss") + " while the metadata was last refreshed at " + moment.utc(lastRefreshedEpoch * 1000).format("YYYY-MM-DD HH:mm:ss"));
-                break;
-            }
-        }
-        if (refresh === true) {
-            // refresh the app metadata
-            // app specific routines
-            const asrKeys = Object.keys(appSpecificResetRoutines);
-            for (var ai = 0; ai < asrKeys.length; ai++) {
-                global.appSpecificResetRoutines[asrKeys[ai]]();
-            }
-            // remember that we updated ALL the metadata tables just now
-            metaDataTableUpdates.update({_id: id}, {$set: {lastRefreshed: moment().format()}});
-        }
-    }
-    return true;
-};
-
-// makes sure all of the parameters display appropriate selections in relation to one another
-const resetApp = function (metaDataTableRecords) {
-    var deployment;
-    var deploymentText = Assets.getText('public/deployment/deployment.json');
-    if (deploymentText === undefined || deploymentText == null) {
-    }
-    deployment = JSON.parse(deploymentText);
-    const myUrlStr = Meteor.absoluteUrl();
-    var url = require('url');
-    var path = require('path');
-    //console.log("delimiter is "+path.sep);
-    var myUrl = url.parse(myUrlStr);
-    const hostName = myUrl.hostname.trim();
-    //console.log("url path is "+myUrl.pathname);
-    //console.log("PWD is "+process.env.PWD);
-    //console.log("CWD is "+process.cwd());
-    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
-    const urlPathParts = urlPath.split(path.sep);
-    //console.log("path parts are "+urlPathParts);
-    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length - 6].trim() : urlPathParts[urlPathParts.length - 1];
-    var developmentApp = {};
-    var app = {};
-    for (var ai = 0; ai < deployment.length; ai++) {
-        var dep = deployment[ai];
-        if (dep.deployment_environment == "development") {
-            developmentApp = dep.apps.filter(function (app) {
-                return app.app === appReference
-            })[0];
-        }
-        if (dep.servers.indexOf(hostName) > -1) {
-            app = dep.apps.filter(function (app) {
-                return app.app === appReference
-            })[0];
-            break;
-        }
-    }
-    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
-        app = developmentApp;
-    }
-    const appVersion = app ? app.version : "unknown";
-    const appTitle = app ? app.title : "unknown";
-    const buildDate = app ? app.buildDate : "unknown";
-
-    // remember that we updated the metadata tables just now - create metaDataTableUpdates
-    /*
-        metaDataTableUpdates:
-        {
-            name: dataBaseName,
-            tables: [tableName1, tableName2 ..],
-            lastRefreshed : timestamp
-        }
-     */
-    // only create metadata tables if the resetApp was called with a real metaDataTables object
-    if (metaDataTableRecords instanceof matsTypes.MetaDataDBRecord) {
-        var metaDataTables = metaDataTableRecords.getRecords();
-        for (var mdti = 0; mdti < metaDataTables.length; mdti++) {
-            const metaDataRef = metaDataTables[mdti];
-            metaDataRef.lastRefreshed = moment().format();
-            if (metaDataTableUpdates.find({name: metaDataRef.name}).count() == 0) {
-                metaDataTableUpdates.update({name: metaDataRef.name}, metaDataRef, {upsert: true});
-            }
-        }
-    } else {
-        throw new Meteor.Error("Server error: ", "resetApp: bad pool-database entry");
-    }
-
-    matsCollections.Roles.remove({});
-    matsDataUtils.doRoles();
-    matsCollections.Authorization.remove({});
-    matsDataUtils.doAuthorization();
-    matsCollections.Credentials.remove({});
-    matsDataUtils.doCredentials();
-    matsCollections.PlotGraphFunctions.remove({});
-    matsCollections.ColorScheme.remove({});
-    matsDataUtils.doColorScheme();
-    matsCollections.Settings.remove({});
-    matsDataUtils.doSettings(appTitle, appVersion, buildDate);
-    matsCollections.CurveParams.remove({});
-    matsCollections.PlotParams.remove({});
-    matsCollections.CurveTextPatterns.remove({});
-// app specific routines
-    const asrKeys = Object.keys(appSpecificResetRoutines);
-    for (var ai = 0; ai < asrKeys.length; ai++) {
-        global.appSpecificResetRoutines[asrKeys[ai]]();
-    }
-    matsCache.clear();
-};
-
-// refreshes the metadata for the app that's running
-const refreshMetaData = new ValidatedMethod({
-    name: 'matsMethods.refreshMetaData',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        if (Meteor.isServer) {
-            try {
-                console.log ("Asked to refresh metadata");
-                checkMetaDataRefresh();
-            } catch (e) {
-                console.log(e);
-                throw new Meteor.Error("Server error: ", e.message);
-            }
-        }
-        return metaDataTableUpdates.find({}).fetch();
-    }
-});
-
-// database controls
-const applyDatabaseSettings = new ValidatedMethod({
-    name: 'matsMethods.applyDatabaseSettings',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-
-    run(settings) {
-        if (Meteor.isServer) {
-            if (settings.name) {
-                matsCollections.Databases.upsert({name: settings.name}, {
-                    $set: {
-                        name: settings.name,
-                        role: settings.role,
-                        status: settings.status,
-                        host: settings.host,
-                        database: settings.database,
-                        user: settings.user,
-                        password: settings.password
-                    }
-                });
-            }
-            return false;
-        }
-    }
-});
-
-// database controls
-const removeDatabase = new ValidatedMethod({
-    name: 'matsMethods.removeDatabase',
-    validate: new SimpleSchema({
-        dbName: {type: String}
-    }).validator(),
-    run(dbName) {
-        if (Meteor.isServer) {
-            matsCollections.Databases.remove({name: dbName});
-        }
-    }
-});
-
-// app utility
-const insertColor = new ValidatedMethod({
-    name: 'matsMethods.insertColor',
-    validate: new SimpleSchema({
-        newColor: {type: String},
-        insertAfterIndex: {type: Number}
-    }).validator(),
-    run(params) {
-        if (params.newColor == "rgb(255,255,255)") {
-            return false;
-        }
-        var colorScheme = matsCollections.ColorScheme.findOne({});
-        colorScheme.colors.splice(params.insertAfterIndex, 0, newColor);
-        matsCollections.update({}, colorScheme);
-        return false;
-    }
-});
-
-// app utility
-const removeColor = new ValidatedMethod({
-    name: 'matsMethods.removeColor',
-    validate: new SimpleSchema({
-        removeColor: {type: String}
-    }).validator(),
-    run(removeColor) {
-        var colorScheme = matsCollections.ColorScheme.findOne({});
-        var removeIndex = colorScheme.colors.indexOf(removeColor);
-        colorScheme.colors.splice(removeIndex, 1);
-        matsCollections.ColorScheme.update({}, colorScheme);
-        return false;
-    }
-});
-
-// administation tool
-const setSettings = new ValidatedMethod({
-    name: 'matsMethods.setSettings',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var settings = params.settings;
-            var labelPrefix = settings.labelPrefix;
-            var title = settings.title;
-            var lineWidth = settings.lineWidth;
-            var nullFillString = settings.nullFillString;
-            var resetFromCode = settings.resetFromCode;
-            matsCollections.Settings.update({}, {
-                $set: {
-                    LabelPrefix: labelPrefix,
-                    Title: title,
-                    LineWidth: lineWidth,
-                    NullFillString: nullFillString,
-                    resetFromCode: resetFromCode
-                }
-            });
-        }
-        return false;
-    }
-});
-
-// administation tool
-const setCredentials = new ValidatedMethod({
-    name: 'matsMethods.setCredentials',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(settings) {
-        if (Meteor.isServer) {
-            var name = settings.name;
-            var clientId = settings.clientId;
-            var clientSecret = settings.clientSecret;
-            var clientRefreshToken = settings.clientRefreshToken;
-            matsCollections.Credentials.update({}, {
-                $set: {
-                    name: name,
-                    clientId: clientId,
-                    clientSecret: clientSecret,
-                    refresh_token: clientRefreshToken
-                }
-            });
-            return false;
-        }
-    }
-});
-
-// administation tool
-const removeAuthorization = new ValidatedMethod({
-    name: 'matsMethods.removeAuthorization',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(settings) {
-        if (Meteor.isServer) {
-            var email;
-            var roleName;
-            var userRoleName = settings.userRoleName;
-            var authorizationRole = settings.authorizationRole;
-            var newUserEmail = settings.newUserEmail;
-            var existingUserEmail = settings.existingUserEmail;
-            if (authorizationRole) {
-                // existing role - the role roleName - no need to verify as the selection list came from the database
-                roleName = authorizationRole;
-            } else if (userRoleName) {
-                roleName = userRoleName;
-            }
-            if (existingUserEmail) {
-                email = existingUserEmail;
-            } else {
-                email = newUserEmail;
-            }
-
-            // if user and role remove the role from the user
-            if (email && roleName) {
-                matsCollections.Authorization.update({email: email}, {$pull: {roles: roleName}});
-            }
-            // if user and no role remove the user
-            if (email && !roleName) {
-                matsCollections.Authorization.remove({email: email});
-            }
-            // if role and no user remove role and remove role from all users
-            if (roleName && !email) {
-                // remove the role
-                matsCollections.Roles.remove({name: roleName});
-                // remove the roleName role from all the authorizations
-                matsCollections.Authorization.update({roles: roleName}, {$pull: {roles: roleName}}, {multi: true});
-            }
-            return false;
-        }
-    }
-});
-
-
-// administation tool
-const applyAuthorization = new ValidatedMethod({
-    name: 'matsMethods.applyAuthorization',
-    validate: new SimpleSchema({
-        settings: {type: Object, blackbox: true}
-    }).validator(),
-    run(settings) {
-        if (Meteor.isServer) {
-            var roles;
-            var roleName;
-            var authorization;
-
-            var userRoleName = settings.userRoleName;
-            var userRoleDescription = settings.userRoleDescription;
-            var authorizationRole = settings.authorizationRole;
-            var newUserEmail = settings.newUserEmail;
-            var existingUserEmail = settings.existingUserEmail;
-
-            if (authorizationRole) {
-                // existing role - the role roleName - no need to verify as the selection list came from the database
-                roleName = authorizationRole;
-            } else if (userRoleName && userRoleDescription) {
-                // possible new role - see if it happens to already exist
-                var role = matsCollections.Roles.findOne({name: userRoleName});
-                if (role === undefined) {
-                    // need to add new role using description
-                    matsCollections.Roles.upsert({name: userRoleName}, {$set: {description: userRoleDescription}});
-                    roleName = userRoleName;
-                } else {
-                    // see if the description matches...
-                    roleName = role.name;
-                    var description = role.description;
-                    if (description != userRoleDescription) {
-                        // have to update the description
-                        matsCollections.Roles.upsert({name: userRoleName}, {$set: {description: userRoleDescription}});
-                    }
-                }
-            }
-            // now we have a role roleName - now we need an email
-            if (existingUserEmail) {
-                // existing user -  no need to verify as the selection list came from the database
-                // see if it already has the role
-                authorization = matsCollections.Authorization.findOne({email: existingUserEmail});
-                roles = authorization.roles;
-                if (roles.indexOf(roleName) == -1) {
-                    // have to add the role
-                    if (roleName) {
-                        roles.push(roleName);
-                    }
-                    matsCollections.Authorization.upsert({email: existingUserEmail}, {$set: {roles: roles}});
-                }
-            } else if (newUserEmail) {
-                // possible new authorization - see if it happens to exist
-                authorization = matsCollections.Authorization.findOne({email: newUserEmail});
-                if (authorization !== undefined) {
-                    // authorization exists - add role to roles if necessary
-                    roles = authorization.roles;
-                    if (roles.indexOf(roleName) == -1) {
-                        // have to add the role
-                        if (roleName) {
-                            roles.push(roleName);
-                        }
-                        matsCollections.Authorization.upsert({email: existingUserEmail}, {$set: {roles: roles}});
-                    }
-                } else {
-                    // need a new authorization
-                    roles = [];
-                    if (roleName) {
-                        roles.push(roleName);
-                    }
-                    if (newUserEmail) {
-                        matsCollections.Authorization.upsert({email: newUserEmail}, {$set: {roles: roles}});
-                    }
-                }
-            }
-            return false;
-        }
-    }
-});
-
-// administation tool
-const getAuthorizations = new ValidatedMethod({
-    name: 'matsMethods.getAuthorizations',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        var roles = [];
-        if (Meteor.isServer) {
-            var userEmail = Meteor.user().services.google.email.toLowerCase();
-            roles = matsCollections.Authorization.findOne({email: userEmail}).roles;
-        }
-        return roles;
-    }
-});
-
-// retrieves the saved query results (or downsampled results)
-const getGraphData = new ValidatedMethod({
-    name: 'matsMethods.getGraphData',
-    validate: new SimpleSchema({
-        plotParams: {
-            type: Object,
-            blackbox: true
-        },
-        plotType: {
-            type: String
-        },
-        expireKey: {
-            type: Boolean
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var plotGraphFunction = matsCollections.PlotGraphFunctions.findOne({plotType: params.plotType});
-            var dataFunction = plotGraphFunction.dataFunction;
-            var ret;
-            try {
-                var hash = require('object-hash');
-                var key = hash(params.plotParams);
-                if (process.env.NODE_ENV === "development" || params.expireKey) {
-                    matsCache.expireKey(key);
-                }
-                var results = matsCache.getResult(key);
-                if (results === undefined) {
-                    // results aren't in the cache - need to process data routine
-                    const Future = require('fibers/future');
-                    var future = new Future();
-                    global[dataFunction](params.plotParams, function (results) {
-                        ret = saveResultData(results);
-                        future["return"](ret);
-                    });
-                    return future.wait();
-                } else { // results were already in the Results collection (same params and not yet expired)
-                    // are results in the downsampled collection?
-                    var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
-                    if (dsResults !== undefined) {
-                        ret = dsResults;
-                        DownSampleResults.rawCollection().update({key: key}, {$set: {"createdAt": new Date()}});
-                    } else {
-                        ret = results;  // {key:someKey, createdAt:date, result:resultObject}
-                        // refresh expire time? I only know how to re - set the item
-                        matsCache.storeResult(results.key, results);
-                    }
-                    var sizeof = require('object-sizeof');
-                    console.log("result.data size is ", sizeof(results));
-                    return ret;
-                }
-            } catch (dataFunctionError) {
-                if (dataFunctionError.toLocaleString().indexOf("INFO:") !== -1) {
-                    throw new Meteor.Error(dataFunctionError.message);
-                } else {
-                    throw new Meteor.Error("Error in getGraphData function:" + dataFunction + " : " + dataFunctionError.message);
-                }
-            }
-            return undefined; // probably won't get here
-        }
-    }
-});
-
-// retrieves the saved query results (or downsampled results) for a specific key
-const getGraphDataByKey = new ValidatedMethod({
-    name: 'matsMethods.getGraphDataByKey',
+const saveLayout = new ValidatedMethod({
+    name: 'matsMethods.saveLayout',
     validate: new SimpleSchema({
         resultKey: {
             type: String
+        },
+        layout: {
+            type: Object, blackbox: true
         }
     }).validator(),
     run(params) {
         if (Meteor.isServer) {
-            var ret;
             var key = params.resultKey;
+            var layout = params.layout;
             try {
-                var dsResults = DownSampleResults.findOne({key: key}, {}, {disableOplog: true});
-                if (dsResults !== undefined) {
-                    ret = dsResults;
-                } else {
-                    ret = matsCache.getResult(key); // {key:someKey, createdAt:date, result:resultObject}
-                }
-                var sizeof = require('object-sizeof');
-                console.log("getGraphDataByKey results size is ", sizeof(dsResults));
-                return ret;
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
             } catch (error) {
-                throw new Meteor.Error("Error in getGraphDataByKey function:" + key + " : " + error.message);
+                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }
-            return undefined;
         }
     }
 });
@@ -1473,203 +2150,68 @@ const saveSettings = new ValidatedMethod({
     }
 });
 
-//administration tools
-const deleteSettings = new ValidatedMethod({
-    name: 'matsMethods.deleteSettings',
+// administation tool
+const setCredentials = new ValidatedMethod({
+    name: 'matsMethods.setCredentials',
     validate: new SimpleSchema({
-        name: {
-            type: String
-        }
+        settings: {type: Object, blackbox: true}
     }).validator(),
-    run(params) {
-        if (!Meteor.userId()) {
-            throw new Meteor.Error("not-logged-in");
-        }
+    run(settings) {
         if (Meteor.isServer) {
-            matsCollections.CurveSettings.remove({name: params.name});
+            var name = settings.name;
+            var clientId = settings.clientId;
+            var clientSecret = settings.clientSecret;
+            var clientRefreshToken = settings.clientRefreshToken;
+            matsCollections.Credentials.update({}, {
+                $set: {
+                    name: name,
+                    clientId: clientId,
+                    clientSecret: clientSecret,
+                    refresh_token: clientRefreshToken
+                }
+            });
+            return false;
         }
     }
 });
 
-//administration tools
-const addSentAddress = new ValidatedMethod({
-    name: 'matsMethods.addSentAddress',
+const setSettings = new ValidatedMethod({
+    name: 'matsMethods.setSettings',
     validate: new SimpleSchema({
-        toAddress: {type: String}
-    }).validator(),
-    run(toAddress) {
-        if (!Meteor.userId()) {
-            throw new Meteor.Error(401, "not-logged-in");
-        }
-        matsCollections.SentAddresses.upsert({address: toAddress}, {address: toAddress, userId: Meteor.userId()});
-        return false;
-    }
-});
-
-//administration tools
-const emailImage = new ValidatedMethod({
-    name: 'matsMethods.emailImage',
-    validate: new SimpleSchema({
-        imageStr: {type: String},
-        toAddress: {type: String},
-        subject: {type: String}
+        settings: {type: Object, blackbox: true}
     }).validator(),
     run(params) {
-        var imageStr = params.imageStr;
-        var toAddress = params.toAddress;
-        var subject = params.subject;
-        if (!Meteor.userId()) {
-            throw new Meteor.Error(401, "not-logged-in");
-        }
-        var fromAddress = Meteor.user().services.google.email;
-        // these come from google - see
-        // http://masashi-k.blogspot.fr/2013/06/sending-mail-with-gmail-using-xoauth2.html
-        //http://stackoverflow.com/questions/24098461/nodemailer-gmail-what-exactly-is-a-refresh-token-and-how-do-i-get-one/24123550
-
-        // the gmail account for the credentials is mats.mail.daemon@gmail.com - pwd mats2015!
-        //var clientId = "339389735380-382sf11aicmgdgn7e72p4end5gnm9sad.apps.googleusercontent.com";
-        //var clientSecret = "7CfNN-tRl5QAL595JTW2TkRl";
-        //var refresh_token = "1/PDql7FR01N2gmq5NiTfnrT-OlCYC3U67KJYYDNPeGnA";
-        var credentials = matsCollections.Credentials.findOne({name: "oauth_google"}, {
-            clientId: 1,
-            clientSecret: 1,
-            refresh_token: 1
-        });
-        var clientId = credentials.clientId;
-        var clientSecret = credentials.clientSecret;
-        var refresh_token = credentials.refresh_token;
-
-        var smtpTransporter;
-        try {
-            smtpTransporter = Nodemailer.createTransport("SMTP", {
-                service: "Gmail",
-                auth: {
-                    XOAuth2: {
-                        user: "mats.gsd@noaa.gov",
-                        clientId: clientId,
-                        clientSecret: clientSecret,
-                        refreshToken: refresh_token
-                    }
+        if (Meteor.isServer) {
+            var settings = params.settings;
+            var labelPrefix = settings.labelPrefix;
+            var title = settings.title;
+            var lineWidth = settings.lineWidth;
+            var nullFillString = settings.nullFillString;
+            var resetFromCode = settings.resetFromCode;
+            matsCollections.Settings.update({}, {
+                $set: {
+                    LabelPrefix: labelPrefix,
+                    Title: title,
+                    LineWidth: lineWidth,
+                    NullFillString: nullFillString,
+                    resetFromCode: resetFromCode
                 }
             });
-
-        } catch (e) {
-            throw new Meteor.Error(401, "Transport error " + e.message());
-        }
-        try {
-            var mailOptions = {
-                sender: fromAddress,
-                replyTo: fromAddress,
-                from: fromAddress,
-                to: toAddress,
-                subject: subject,
-                attachments: [
-                    {
-                        filename: "graph.png",
-                        contents: new Buffer(imageStr.split("base64,")[1], "base64")
-                    }
-                ]
-            };
-
-            smtpTransporter.sendMail(mailOptions, function (error, response) {
-                if (error) {
-                    console.log("smtpTransporter error " + error + " from:" + fromAddress + " to:" + toAddress);
-                } else {
-                    console.log(response + " from:" + fromAddress + " to:" + toAddress);
-                }
-                smtpTransporter.close();
-            });
-        } catch (e) {
-            throw new Meteor.Error(401, "Send error " + e.message());
         }
         return false;
     }
 });
 
-const getReleaseNotes = new ValidatedMethod({
-    name: 'matsMethods.getReleaseNotes',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        //     return Assets.getText('public/MATSReleaseNotes.html');
-        // }
-        if (Meteor.isServer) {
-            var future = require('fibers/future');
-            var fs = require('fs');
-            var dFuture = new future();
-            var fData;
-            console.log(process.env.PWD);
-            var file;
-            if (process.env.NODE_ENV === "development") {
-                file = process.env.PWD + "/../../meteor_packages/mats-common/public/MATSReleaseNotes.html";
-            } else {
-                file = process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/MATSReleaseNotes.html";
-            }
-            try {
-                fs.readFile(file, 'utf8', function (err, data) {
-                    if (err) {
-                        fData = err.message;
-                        dFuture["return"]();
-                    } else {
-                        fData = data;
-                        dFuture["return"]();
-                    }
-                });
-            } catch (e) {
-                fData = e.message;
-                dFuture["return"]();
-            }
-            dFuture.wait();
-            return fData;
-        }
-    }
-});
-
-const saveLayout = new ValidatedMethod({
-    name: 'matsMethods.saveLayout',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        },
-        layout: {
-            type: Object, blackbox: true
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var key = params.resultKey;
-            var layout = params.layout;
-            try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
-            } catch (error) {
-                throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
-            }
-        }
-    }
-});
-
-const getLayout = new ValidatedMethod({
-    name: 'matsMethods.getLayout',
-    validate: new SimpleSchema({
-        resultKey: {
-            type: String
-        }
-    }).validator(),
-    run(params) {
-        if (Meteor.isServer) {
-            var ret;
-            var key = params.resultKey;
-            try {
-                ret = LayoutStoreCollection.rawCollection().findOne({key: key});
-                return ret;
-            } catch (error) {
-                throw new Meteor.Error("Error in getLayout function:" + key + " : " + error.message);
-            }
-            return undefined;
-        }
-    }
-});
 
 /* test methods */
+
+const testGetMetaDataTableUpdates = new ValidatedMethod({
+    name: 'matsMethods.testGetMetaDataTableUpdates',
+    validate: new SimpleSchema({}).validator(),
+    run() {
+        return metaDataTableUpdates.find({}).fetch();
+    }
+});
 
 const testGetTables = new ValidatedMethod({
     name: 'matsMethods.testGetTables',
@@ -1718,44 +2260,38 @@ const testSetMetaDataTableUpdatesLastRefreshedBack = new ValidatedMethod({
     }
 });
 
-
-const testGetMetaDataTableUpdates = new ValidatedMethod({
-    name: 'matsMethods.testGetMetaDataTableUpdates',
-    validate: new SimpleSchema({}).validator(),
-    run() {
-        return metaDataTableUpdates.find({}).fetch();
-    }
-});
-
 export default matsMethods = {
-    getDataFunctionFileList: getDataFunctionFileList,
-    getGraphFunctionFileList: getGraphFunctionFileList,
-    readFunctionFile: readFunctionFile,
-    restoreFromFile: restoreFromFile,
-    restoreFromParameterFile: restoreFromParameterFile,
-    getUserAddress: getUserAddress,
-    refreshMetaData: refreshMetaData,
-    applyDatabaseSettings: applyDatabaseSettings,
-    removeDatabase: removeDatabase,
-    insertColor: insertColor,
-    removeColor: removeColor,
-    setSettings: setSettings,
-    setCredentials: setCredentials,
-    removeAuthorization: removeAuthorization,
-    getAuthorizations: getAuthorizations,
+    addSentAddress: addSentAddress,
     applyAuthorization: applyAuthorization,
+    applyDatabaseSettings: applyDatabaseSettings,
+    deleteSettings: deleteSettings,
+    emailImage: emailImage,
+    getAuthorizations: getAuthorizations,
+    getDataFunctionFileList: getDataFunctionFileList,
     getGraphData: getGraphData,
     getGraphDataByKey: getGraphDataByKey,
-    saveSettings: saveSettings,
-    deleteSettings: deleteSettings,
-    addSentAddress: addSentAddress,
-    emailImage: emailImage,
-    resetApp: resetApp,
-    testGetTables: testGetTables,
-    getPlotResult: getPlotResult,
-    testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
-    testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
-    getReleaseNotes: getReleaseNotes,
+    getGraphFunctionFileList: getGraphFunctionFileList,
     getLayout: getLayout,
-    saveLayout: saveLayout
+    getMvArtifactsByKey:getMvArtifactsByKey,
+    getPlotResult: getPlotResult,
+    getReleaseNotes: getReleaseNotes,
+    getUserAddress: getUserAddress,
+    insertColor: insertColor,
+    mvBatch: mvBatch,
+    readFunctionFile: readFunctionFile,
+    refreshMetaData: refreshMetaData,
+    removeAuthorization: removeAuthorization,
+    removeColor: removeColor,
+    removeDatabase: removeDatabase,
+    resetApp: resetApp,
+    restoreFromFile: restoreFromFile,
+    restoreFromParameterFile: restoreFromParameterFile,
+    saveLayout: saveLayout,
+    saveSettings: saveSettings,
+    setCredentials: setCredentials,
+    setSettings: setSettings,
+    testGetMetaDataTableUpdates: testGetMetaDataTableUpdates,
+    testGetTables: testGetTables,
+    testSetMetaDataTableUpdatesLastRefreshedBack: testSetMetaDataTableUpdatesLastRefreshedBack,
+    MV_DIRS: MV_DIRS
 };
