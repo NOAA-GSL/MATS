@@ -759,7 +759,7 @@ const showContourFace = function () {
             'threshold': 'block',
             'pres-level': 'block',
             'forecast-length': 'block',
-            'dieoff-forecast-length': 'none',
+            'dieoff-type': 'none',
             'average': 'none',
             'valid-time': 'block',
             'utc-cycle-start': 'none',
