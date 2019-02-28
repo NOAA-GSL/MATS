@@ -165,7 +165,9 @@ dataHistogram = function (plotParams, plotFunction) {
                     mode: 'text',
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.PWD + "/../../meteor_packages/mats-common/public/python/",
+                    scriptPath: process.env.NODE_ENV === "development" ?
+                        process.env.PWD + "/../../meteor_packages/mats-common/public/python/" :
+                        process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
                     args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
                 var pyError = null;
