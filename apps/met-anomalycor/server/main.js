@@ -29,7 +29,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 1,
                 help: "dateHelp.html"
             });
 
@@ -48,7 +48,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         matsCollections.PlotParams.insert(
@@ -62,7 +62,7 @@ const doPlotParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 8
+                displayGroup: 3
             });
 
         var yAxisOptionsMap = {
@@ -80,7 +80,7 @@ const doPlotParams = function () {
                 controlButtonText: 'Y-axis mode',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         var binOptionsMap = {
@@ -111,7 +111,7 @@ const doPlotParams = function () {
                 controlButtonText: 'customize bins',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -128,7 +128,7 @@ const doPlotParams = function () {
                 controlButtonText: "number of bins",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -145,7 +145,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin pivot value",
                 displayOrder: 4,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -162,7 +162,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin start",
                 displayOrder: 5,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -179,7 +179,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin stride",
                 displayOrder: 6,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
 
         matsCollections.PlotParams.insert(
@@ -193,7 +193,7 @@ const doPlotParams = function () {
                 controlButtonText: "bin bounds (enter numbers separated by commas)",
                 displayOrder: 7,
                 displayPriority: 1,
-                displayGroup: 7
+                displayGroup: 2
             });
     }
 };
@@ -286,7 +286,6 @@ const doCurveParams = function () {
         console.log(err.message);
     }
 
-    // all the rest
     if (matsCollections.CurveParams.findOne({name: 'label'}) == undefined) {
         matsCollections.CurveParams.insert(
             {
@@ -372,7 +371,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 1
             });
     } else {
         // it is defined but check for necessary update
@@ -408,7 +407,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 2,
+                displayGroup: 1,
                 help: 'region.html'
             });
     } else {
@@ -440,7 +439,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
@@ -485,7 +484,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
@@ -525,7 +524,26 @@ const doCurveParams = function () {
                 controlButtonText: 'dieoff type',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 2
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
+        matsCollections.CurveParams.insert(
+            {
+                name: 'valid-time',
+                type: matsTypes.InputTypes.select,
+                options: ['0', '6', '12', '18'],
+                selected: [],
+                controlButtonCovered: true,
+                unique: false,
+                default: matsTypes.InputTypes.unused,
+                controlButtonVisibility: 'block',
+                controlButtonText: "valid utc hour",
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 3,
+                multiple: true
             });
     }
 
@@ -544,28 +562,9 @@ const doCurveParams = function () {
                 default: 12,
                 controlButtonVisibility: 'block',
                 controlButtonText: "utc cycle init hour",
-                displayOrder: 1,
+                displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4,
-            });
-    }
-
-    if (matsCollections.CurveParams.find({name: 'valid-time'}).count() == 0) {
-        matsCollections.CurveParams.insert(
-            {
-                name: 'valid-time',
-                type: matsTypes.InputTypes.select,
-                options: ['0', '6', '12', '18'],
-                selected: [],
-                controlButtonCovered: true,
-                unique: false,
-                default: matsTypes.InputTypes.unused,
-                controlButtonVisibility: 'block',
-                controlButtonText: "valid utc hour",
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 4,
-                multiple: true
+                displayGroup: 3,
             });
     }
 
@@ -591,7 +590,7 @@ const doCurveParams = function () {
                 selected: 'None',
                 default: 'None',
                 controlButtonVisibility: 'block',
-                displayOrder: 2,
+                displayOrder: 1,
                 displayPriority: 1,
                 displayGroup: 4
             });
@@ -611,7 +610,7 @@ const doCurveParams = function () {
                 default: matsTypes.InputTypes.unused,
                 controlButtonVisibility: 'block',
                 controlButtonText: "Pressure Level",
-                displayOrder: 3,
+                displayOrder: 2,
                 displayPriority: 1,
                 displayGroup: 4,
                 multiple: true
@@ -628,6 +627,72 @@ const doCurveParams = function () {
                 }
             });
         }
+    }
+
+    if (matsCollections.CurveParams.find({name: 'x-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "select ld.fcst_lead as xVal, ",
+            'Pressure level': "select h.fcst_lev as xVal, ",
+            'Valid UTC hour': "select unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as xVal, ",
+            'Init UTC hour': "select unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as xVal, ",
+            'Valid Date': "select unix_timestamp(ld.fcst_valid_beg) as xVal, ",
+            'Init Date': "select unix_timestamp(ld.fcst_init_beg) as xVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'x-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[0],
+                controlButtonVisibility: 'block',
+                displayOrder: 1,
+                displayPriority: 1,
+                displayGroup: 5,
+            });
+    }
+
+    if (matsCollections.CurveParams.find({name: 'y-axis-parameter'}).count() == 0) {
+
+        const optionsMap = {
+            'Fcst lead time': "ld.fcst_lead as yVal, ",
+            'Pressure level': "h.fcst_lev as yVal, ",
+            'Valid UTC hour': "unix_timestamp(ld.fcst_valid_beg)%(24*3600)/3600 as yVal, ",
+            'Init UTC hour': "unix_timestamp(ld.fcst_init_beg)%(24*3600)/3600 as yVal, ",
+            'Valid Date': "unix_timestamp(ld.fcst_valid_beg) as yVal, ",
+            'Init Date': "unix_timestamp(ld.fcst_init_beg) as yVal, "
+        };
+
+        matsCollections.CurveParams.insert(
+            {
+                name: 'y-axis-parameter',
+                type: matsTypes.InputTypes.select,
+                options: Object.keys(optionsMap),
+                optionsMap: optionsMap,
+                // hideOtherFor: {
+                //     'forecast-length': ["Fcst lead time"],
+                //     'valid-time': ["Valid UTC hour"],
+                //     'pres-level': ["Pressure level"],
+                // },
+                selected: '',
+                controlButtonCovered: true,
+                unique: false,
+                default: Object.keys(optionsMap)[1],
+                controlButtonVisibility: 'block',
+                displayOrder: 2,
+                displayPriority: 1,
+                displayGroup: 5,
+            });
     }
 
     // determine date defaults for dates and curveDates
@@ -664,7 +729,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
                 help: "dateHelp.html"
             });
     }
@@ -772,6 +837,27 @@ const doCurveTextPatterns = function () {
             ],
             groupSize: 6
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'database', '.'],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ' ACC, '],
+                ['level: ', 'pres-level', ', '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "yaxes", "database", "data-source", "region", "variable", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
@@ -824,11 +910,22 @@ const doPlotGraph = function () {
             plotSpecFunction: "plotSpecHistogram",
             checked: false
         });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contour,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContour",
+            plotSpecFunction: "plotSpecContour",
+            checked: false
+        });
     }
 };
 
 
 Meteor.startup(function () {
+    if (Meteor.settings.private == null) {
+        console.log ("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+        throw new Meteor.Error("There is a problem with your Meteor.settings.private being undefined. Did you forget the -- settings argument?");
+    }
     matsCollections.Databases.remove({});
     if (matsCollections.Databases.find({}).count() === 0) {
         var databases = Meteor.settings.private.databases;
