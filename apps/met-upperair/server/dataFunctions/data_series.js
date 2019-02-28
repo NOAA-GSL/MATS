@@ -157,6 +157,7 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the python query function
+                console.log('process.env.NODE_ENV:',process.env.NODE_ENV);
                 const pyOptions = {
                     mode: 'text',
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
