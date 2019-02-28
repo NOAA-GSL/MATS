@@ -560,6 +560,118 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
         data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
 
 
+# function for parsing the data returned by a contour query
+def parse_query_data_contour(cursor, statistic, has_levels):
+    global error, error_bool, n0, n_times, data
+
+    # redefine the data array to include the fields needed for contour plots
+    data = {
+        "x": [],
+        "y": [],
+        "z": [],
+        "n": [],
+        "text": [],
+        "xTextOutput": [],
+        "yTextOutput": [],
+        "zTextOutput": [],
+        "nTextOutput": [],
+        "minDateTextOutput": [],
+        "maxDateTextOutput": [],
+        "glob_stats": {},
+        "xmin": sys.float_info.max,
+        "xmax": -1 * sys.float_info.max,
+        "ymin": sys.float_info.max,
+        "ymax": -1 * sys.float_info.max,
+        "zmin": sys.float_info.max,
+        "zmax": -1 * sys.float_info.max,
+        "sum": 0
+    }
+
+    curve_stat_lookup = {}
+    curve_n_lookup = {}
+
+    # get query data
+    query_data = cursor.fetchall()
+
+    # loop through the query results and store the returned values
+    for row in query_data:
+        row_x_val = float(str(row['xVal']).replace('P', ''))    # if it's a pressure level get rid of the P in front of the value
+        row_y_val = float(str(row['yVal']).replace('P', ''))    # if it's a pressure level get rid of the P in front of the value
+        stat_key = str(row_x_val) + '_' + str(row_y_val)
+        fbar = row['sub_fbar']
+        obar = row['sub_obar']
+        if fbar != "null" and fbar != "NULL" and obar != "null" and obar != "NULL":
+            # this function deals with sl1l2 and sal1l2 tables, which is all we have at the moment.
+            # other functions can be written for other table types
+            stat, sub_levs, sub_secs, sub_values = get_scalar_stat(has_levels, row, statistic)
+            # if the previous function failed because we don't have the data we expect,
+            # just stop now and return an empty data object.
+            if np.isnan(stat):
+                return
+            n = row['n']
+            min_date = row['min_secs']
+            max_date = row['max_secs']
+        else:
+            # there's no data at this time point
+            stat = 'null'
+            n = 0
+            min_date = 'null'
+            max_date = 'null'
+        # store flat arrays of all the parsed data, used by the text output and for some calculations later
+        data['xTextOutput'].append(row_x_val)
+        data['yTextOutput'].append(row_y_val)
+        data['zTextOutput'].append(stat)
+        data['nTextOutput'].append(n)
+        data['minDateTextOutput'].append(min_date)
+        data['maxDateTextOutput'].append(max_date)
+        curve_stat_lookup[stat_key] = stat
+        curve_n_lookup[stat_key] = n
+
+    # get the unique x and y values and sort the stats into the 2D z array accordingly
+    data['x'] = sorted(list(set(data['xTextOutput'])))
+    data['y'] = sorted(list(set(data['yTextOutput'])))
+
+    loop_sum = 0
+    n_points = 0
+    for curr_y in data['y']:
+        curr_y_stat_array = []
+        curr_y_n_array = []
+        for curr_x in data['x']:
+            curr_stat_key = str(curr_x) + '_' + str(curr_y)
+            if curr_stat_key in curve_stat_lookup:
+                curr_stat = curve_stat_lookup[curr_stat_key]
+                curr_n = curve_n_lookup[curr_stat_key]
+                loop_sum = loop_sum + curr_stat
+                n_points = n_points + 1
+                curr_y_stat_array.append(curr_stat)
+                curr_y_n_array.append(curr_n)
+            else:
+                curr_y_stat_array.append('null')
+                curr_y_n_array.append(0)
+        data['z'].append(curr_y_stat_array)
+        data['n'].append(curr_y_n_array)
+
+    # calculate statistics
+    data['xmin'] = min(x for x in data['x'] if x != 'null' and x != 'NaN')
+    data['xmax'] = max(x for x in data['x'] if x != 'null' and x != 'NaN')
+    data['ymin'] = min(y for y in data['y'] if y != 'null' and y != 'NaN')
+    data['ymax'] = max(y for y in data['y'] if y != 'null' and y != 'NaN')
+    data['zmin'] = min(z for z in data['z'] if z != 'null' and z != 'NaN')
+    data['zmax'] = max(z for z in data['z'] if z != 'null' and z != 'NaN')
+    data['sum'] = loop_sum
+
+    data['glob_stats'] = {
+        "mean": 0,
+        "minDate": 0,
+        "maxDate": 0,
+        "n": 0
+    }
+    data['glob_stats']['mean'] = loop_sum / n_points
+    data['glob_stats']['minDate'] = min(m for m in data['minDateTextOutput'] if m != 'null' and m != 'NaN')
+    data['glob_stats']['maxDate'] = max(m for m in data['minDateTextOutput'] if m != 'null' and m != 'NaN')
+    data['glob_stats']['n'] = n_points
+
+
 # function for querying the database and sending the returned data to the parser
 def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
     global error, error_bool, n0, n_times, data
@@ -590,6 +702,8 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
                 parse_query_data_timeseries(cursor, statistic, has_levels, completeness_qc_param, vts)
             elif plot_type == 'Histogram':
                 parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
+            elif plot_type == 'Contour':
+                parse_query_data_contour(cursor, statistic, has_levels)
             else:
                 parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param)
 

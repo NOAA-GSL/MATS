@@ -7,6 +7,8 @@ import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
 import {moment} from 'meteor/momentjs:moment'
+import {PythonShell} from 'python-shell';
+import {Meteor} from "meteor/meteor";
 
 dataContour = function (plotParams, plotFunction) {
     // initialize variables common to all curves
@@ -65,22 +67,20 @@ dataContour = function (plotParams, plotFunction) {
         }
     }
     var levelsClause = "";
-    if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
-        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
-        levels = Array.isArray(levels) ? levels : [levels];
-        if (levels.length > 0) {
-            levels = levels.map(function (l) {
-                return "'" + l + "'";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        } else {
-            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
-            levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-            levels = levels.map(function (l) {
-                return "'" + l + "'";
-            }).join(',');
-            levelsClause = "and h.fcst_lev IN(" + levels + ")";
-        }
+    var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
+    levels = Array.isArray(levels) ? levels : [levels];
+    if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level' && levels.length > 0) {
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        levelsClause = "and h.fcst_lev IN(" + levels + ")";
+    } else {
+        // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+        levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
+        levels = levels.map(function (l) {
+            return "'" + l + "'";
+        }).join(',');
+        levelsClause = "and h.fcst_lev IN(" + levels + ")";
     }
     var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
     var validTimeClause = "";
@@ -102,34 +102,32 @@ dataContour = function (plotParams, plotFunction) {
     }
 
     // For contours, this functions as the colorbar label.
-    curve['unitKey'] = variable;
+    curve['unitKey'] = variable + " " + statistic;
 
     var d;
     // this is a database driven curve, not a difference curve
     // prepare the query from the above parameters
+    // we query a lot of average values as sub values here, in order to comply with the common query routines from other plot types
     var statement = "{{xValClause}} " +
         "{{yValClause}} " +
-        "count(distinct unix_timestamp(ld.fcst_valid_beg)) as N_times, " +
-        "min(unix_timestamp(ld.fcst_valid_beg)) as min_secs, " +
-        "max(unix_timestamp(ld.fcst_valid_beg)) as max_secs, " +
-        "sum(ld.total) as N0, " +
-        "avg(ld.fbar) as fbar, " +
-        "avg(ld.obar) as obar, " +
-        "group_concat(ld.fbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fbar, " +
-        "group_concat(ld.obar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_obar, " +
-        "group_concat(ld.ffbar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_ffbar, " +
-        "group_concat(ld.oobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_oobar, " +
-        "group_concat(ld.fobar order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_fobar, " +
-        "group_concat(ld.total order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_total, " +
-        "group_concat(unix_timestamp(ld.fcst_valid_beg) order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_secs, " +
-        "group_concat(h.fcst_lev order by unix_timestamp(ld.fcst_valid_beg), h.fcst_lev) as sub_levs " +
+        "min({{dateClause}}) as min_secs, " +
+        "max({{dateClause}}) as max_secs, " +
+        "count(ld.fbar) as n, " +
+        "avg(ld.fbar) as sub_fbar, " +
+        "avg(ld.obar) as sub_obar, " +
+        "avg(ld.ffbar) as sub_ffbar, " +
+        "avg(ld.oobar) as sub_oobar, " +
+        "avg(ld.fobar) as sub_fobar, " +
+        "avg(ld.total) as sub_total, " +
+        "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
+        "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
         "from {{database}}.stat_header h, " +
         "{{database}}.line_data_sl1l2 ld " +
         "where 1=1 " +
         "and h.model = '{{model}}' " +
         "{{regionsClause}} " +
-        "and unix_timestamp(ld.fcst_valid_beg) >= '{{fromSecs}}' " +
-        "and unix_timestamp(ld.fcst_valid_beg) <= '{{toSecs}}' " +
+        "and {{dateClause}} >= '{{fromSecs}}' " +
+        "and {{dateClause}} <= '{{toSecs}}' " +
         "{{validTimeClause}} " +
         "{{forecastLengthsClause}} " +
         "and h.fcst_var = '{{variable}}' " +
@@ -155,9 +153,6 @@ dataContour = function (plotParams, plotFunction) {
     dataRequests[curve.label] = statement;
     // console.log(statement);
 
-    const QCParams = matsDataUtils.getPlotParamsFromStack();
-    const completenessQCParam = Number(QCParams["completeness"]) / 100;
-
     var queryResult;
     var startMoment = moment();
     var finishMoment;
@@ -168,7 +163,7 @@ dataContour = function (plotParams, plotFunction) {
             pythonPath: Meteor.settings.private.PYTHON_PATH,
             pythonOptions: ['-u'], // get print results in real-time
             scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
-            args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
+            args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, 0, vts]
         };
         var pyError = null;
         const Future = require('fibers/future');
@@ -207,7 +202,7 @@ dataContour = function (plotParams, plotFunction) {
             // this is an error returned by the mysql database
             error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
             if (error.includes('Unknown column')) {
-                throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/regions [" + model + " and " + regions + "].");
             } else {
                 throw new Error(error);
             }

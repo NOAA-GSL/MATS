@@ -380,7 +380,7 @@ const queryMapDB = function (pool, statement, d, dBlue, dBlack, dRed, dataSource
 };
 
 //this method queries the database for contour plots
-const queryDBContour = function (pool, statement, plotType, hasLevels) {
+const queryDBContour = function (pool, statement) {
     if (Meteor.isServer) {
         const Future = require('fibers/future');
 
@@ -408,9 +408,6 @@ const queryDBContour = function (pool, statement, plotType, hasLevels) {
         };
 
         var error = "";
-        var N0 = [];
-        var N_times = [];
-
         pool.query(statement, function (err, rows) {
             // query callback - build the curve data from the results - or set an error
             if (err !== undefined && err !== null) {
@@ -943,6 +940,7 @@ const parseQueryDataContour = function (rows, d) {
             x: [],
             y: [],
             z: [],
+            n: [],
             text: [],
             xTextOutput: [],
             yTextOutput: [],
@@ -957,7 +955,7 @@ const parseQueryDataContour = function (rows, d) {
             xmax:num,
             ymax:num,
             zmax:num,
-            sum:num;
+            sum:num
         };
     */
     var curveStatLookup = {};
@@ -977,6 +975,7 @@ const parseQueryDataContour = function (rows, d) {
             minDate = null;
             maxDate = null;
         }
+        // store flat arrays of all the parsed data, used by the text output and for some calculations later
         d.xTextOutput.push(Number(rowXVal));
         d.yTextOutput.push(Number(rowYVal));
         d.zTextOutput.push(stat);
@@ -986,7 +985,7 @@ const parseQueryDataContour = function (rows, d) {
         curveStatLookup[statKey] = stat;
         curveNLookup[statKey] = n;
     }
-    // get the unique x and y values and sort the stats in to the z array accordingly
+    // get the unique x and y values and sort the stats into the 2D z array accordingly
     d.x = matsDataUtils.arrayUnique(d.xTextOutput).sort(function (a, b) {
         return a - b
     });
@@ -1017,7 +1016,7 @@ const parseQueryDataContour = function (rows, d) {
                 currYStatArray.push(null);
                 currYNArray.push(0);
             } else {
-                sum = sum += currStat;
+                sum += currStat;
                 nPoints = nPoints + 1;
                 currYStatArray.push(currStat);
                 currYNArray.push(currN);

@@ -885,7 +885,7 @@ const doCurveTextPatterns = function () {
 
             ],
             displayParams: [
-                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "cloud-coverage", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
+                "label", "yaxes", "database", "data-source", "region", "statistic", "variable", "valid-time", "forecast-length", "pres-level", "x-axis-parameter", "y-axis-parameter"
             ],
             groupSize: 6
 

@@ -617,7 +617,7 @@ const processDataContour = function (dataset, curveInfoParams, plotParams, bookk
             currText = label +
                 "<br>" + data['xAxisKey'] + ": " + data.x[i] +
                 "<br>" + data['yAxisKey'] + ": " + data.y[j] +
-                "<br>" + statisticSelect + ": " + (data.z[j][i] === null ? null : data.z[j][i].toPrecision(4)) +
+                "<br>" + statisticSelect + ": " + (data.z[j][i] === undefined || data.z[j][i] === null || data.z[j][i] === 'null' ? null : data.z[j][i].toPrecision(4)) +
                 "<br>n: " + data['n'][j][i];
             currYTextArray.push(currText);
         }
