@@ -241,9 +241,9 @@ const doCurveParams = function () {
                 var model = rows[i].display_text.trim();
                 modelOptionsMap[thisDB][model] = [model_value];
 
-                var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-                var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-                dbDateRangeMap[thisDB][model] = {minDate: minDate, maxDate: maxDate};
+                var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+                var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+                dbDateRangeMap[thisDB][model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
                 var forecastLengths = rows[i].fcst_lens;
                 var forecastValues = rows[i].fcst_orig;
@@ -636,8 +636,8 @@ const doCurveParams = function () {
     var defaultDataSource = matsCollections.CurveParams.findOne({name:"data-source"},{default:1}).default;
     minDate = dbDateRangeMap[defaultDb][defaultDataSource].minDate;
     maxDate = dbDateRangeMap[defaultDb][defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {

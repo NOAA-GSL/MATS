@@ -362,7 +362,7 @@ const getDefaultDateRange = function(name) {
     const startInit = dateParam.startDate;
     const stopInit = dateParam.stopDate;
     const dstr = dateParam.default;
-    return {startInit:startInit,stopInit:stopInit,dstr:dstr};
+    return {startDate:startInit,stopDate:stopInit,dstr:dstr};
 };
 
 const getMinMaxDates = function(minDate, maxDate) {

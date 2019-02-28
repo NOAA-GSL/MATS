@@ -223,6 +223,7 @@ const doCurveParams = function () {
             var model_value = rows[i].model.trim();
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
+            myModels.push(model);
 
             var tableNamePrefix = rows[i].table_name_prefix.trim();
             var category = "──" + rows[i].display_category + "──";
@@ -234,14 +235,12 @@ const doCurveParams = function () {
                     modelOptionsGroups[label] = [];
                 }
             }
-            var minDate = moment.utc(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
-            var maxDate = moment.utc(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
-            myModels.push(model);
-            // modelOptionsGroups
             modelOptionsGroups[label].push(model);
-            // modelDates - holds the valid data date range for a model
-            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
             modelTableMap[model] = tableNamePrefix;
+
+            var rowMinDate = moment.utc(rows[i].mindate).add(rows[i].minhour, 'hours').format("MM/DD/YYYY HH:mm");
+            var rowMaxDate = moment.utc(rows[i].maxdate).add(rows[i].maxhour, 'hours').format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
             var forecastLengths = rows[i].fcst_lens;
             var forecastLengthArr = forecastLengths.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -733,8 +732,8 @@ const doCurveParams = function () {
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {

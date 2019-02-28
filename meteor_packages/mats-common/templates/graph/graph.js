@@ -361,7 +361,7 @@ Template.graph.helpers({
     metApp: function() {
         Session.get("PlotParams");
         Session.get('PlotResultsUpDated');
-        if (matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
+        if (matsCollections.Settings.findOne({}).appType && matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
         } else {
             return "none";
