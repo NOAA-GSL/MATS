@@ -165,9 +165,10 @@ dataHistogram = function (plotParams, plotFunction) {
                     mode: 'text',
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
                     pythonOptions: ['-u'], // get print results in real-time
-                    scriptPath: process.env.METEOR_PACKAGE_DIRS + '/mats-common/private/',
+                    scriptPath: process.env.PWD + "/../../meteor_packages/mats-common/public/python/",
                     args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
+                console.log('pyOptions:', pyOptions);
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
