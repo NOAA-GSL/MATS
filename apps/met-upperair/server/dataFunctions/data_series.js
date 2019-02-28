@@ -157,7 +157,6 @@ dataSeries = function (plotParams, plotFunction) {
             var finishMoment;
             try {
                 // send the query statement to the python query function
-                console.log('process.env.NODE_ENV:',process.env.NODE_ENV);
                 const pyOptions = {
                     mode: 'text',
                     pythonPath: Meteor.settings.private.PYTHON_PATH,
@@ -167,7 +166,8 @@ dataSeries = function (plotParams, plotFunction) {
                         process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
                     args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
-                console.log('pyOptions:', pyOptions);
+
+
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();

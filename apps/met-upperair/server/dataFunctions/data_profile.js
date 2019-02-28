@@ -152,7 +152,8 @@ dataProfile = function (plotParams, plotFunction) {
                         process.env.PWD + "/programs/server/assets/packages/randyp_mats-common/public/python/",
                     args: [Meteor.settings.private.MYSQL_CONF_PATH, statement, statistic, plotType, hasLevels, completenessQCParam, vts]
                 };
-                console.log('pyOptions:', pyOptions);
+
+
                 var pyError = null;
                 const Future = require('fibers/future');
                 var future = new Future();
