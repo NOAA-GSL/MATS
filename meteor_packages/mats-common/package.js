@@ -1,6 +1,6 @@
 Package.describe({
     name: 'randyp:mats-common',
-    version: '2.0.0',
+    version: '2.1.0',
     // Brief, one-line summary of the package.
     summary: 'MATS common files provides common functionality for mats apps',
     // URL to the Git repository containing the source code for this package.
