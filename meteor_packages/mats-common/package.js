@@ -279,7 +279,7 @@ Package.onUse(function (api) {
     api.addAssets('public/img/underConstruction.jpg', "client");
     api.addAssets('public/deployment/deployment.json', "server");
     api.addAssets('public/MATSReleaseNotes.html', "server");
-
+    api.addAssets('public/python/python_query_util.py', "server");
 });
 
 Package.onTest(function (api) {

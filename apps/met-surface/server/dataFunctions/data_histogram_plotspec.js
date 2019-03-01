@@ -203,8 +203,8 @@ const _addFolders = function(element) {
     try {
         element.ele('rscript', Meteor.settings.private.MV_RSCRIPT);
         var folders = element.ele('folders');
-        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/r_tmpl");
-        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/r_work");
+        folders.ele('r_tmpl', matsMethods.MV_DIRS.HOME + "/R_tmpl");
+        folders.ele('r_work', matsMethods.MV_DIRS.HOME + "/R_work");
         folders.ele('plots', matsMethods.MV_DIRS.PLOTSDIR);
         folders.ele('data', matsMethods.MV_DIRS.DATADIR);
         folders.ele('scripts', matsMethods.MV_DIRS.SCRIPTSDIR);

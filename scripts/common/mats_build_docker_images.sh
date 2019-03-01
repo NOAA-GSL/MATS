@@ -12,10 +12,11 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
+
+# process command line args
 usage="USAGE $0 -e dev|int [-a][-r appReference] -s settingsFile -d domain\n\
 	where '-a is force build all apps -r appReference' (like met-upperair ceiling etc..), \n\
 	and '-s settingsFile' (fully qualified path to settings file) -m "
-
 
 while getopts "e:r:s:d:" o; do
     case "${o}" in
@@ -64,6 +65,9 @@ if [ "X${build_env}" == "X" ]; then
     echo "${RED}Must exit now${NC}"
     exit 1
 fi
+
+
+# get the src code
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
@@ -92,6 +96,19 @@ if [ $? -ne 0 ]; then
     echo -e "${failed} to git the new HEAD commit - must exit now"
     exit 1
 fi
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 APP_PORT=3000
 MONGO_URL=localhost
