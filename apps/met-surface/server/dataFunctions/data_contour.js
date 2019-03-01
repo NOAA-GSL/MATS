@@ -50,7 +50,7 @@ dataContour = function (plotParams, plotFunction) {
         regionsClause = "and h.vx_mask IN(" + regions + ")";
     }
     const variable = curve['variable'];
-    const statistic = "ACC";
+    const statistic = curve['statistic'];
     // the forecast lengths appear to have sometimes been inconsistent (by format) in the database so they
     // have been sanitized for display purposes in the forecastValueMap.
     // now we have to go get the damn ole unsanitary ones for the database.
@@ -69,17 +69,14 @@ dataContour = function (plotParams, plotFunction) {
     var levelsClause = "";
     var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused) ? [] : curve['pres-level'];
     levels = Array.isArray(levels) ? levels : [levels];
-    if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level' && levels.length > 0) {
+    if (levels.length > 0) {
         levels = levels.map(function (l) {
             return "'" + l + "'";
         }).join(',');
         levelsClause = "and h.fcst_lev IN(" + levels + ")";
     } else {
-        // we can't just leave the level clause out, because we might end up with some weird levels in the mix
+        // we can't just leave the level clause out, because we might end up with some upper levels in the mix
         levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
-        if (xAxisParam === 'Pressure level' || yAxisParam === 'Pressure level') {
-            levels = levels.filter(lev => lev.toString().startsWith("P"));  // remove anything that isn't a pressure level for this plot.
-        }
         levels = levels.map(function (l) {
             return "'" + l + "'";
         }).join(',');
@@ -115,17 +112,17 @@ dataContour = function (plotParams, plotFunction) {
         "{{yValClause}} " +
         "min({{dateClause}}) as min_secs, " +
         "max({{dateClause}}) as max_secs, " +
-        "count(ld.fabar) as n, " +
-        "avg(ld.fabar) as sub_fbar, " +
-        "avg(ld.oabar) as sub_obar, " +
-        "avg(ld.ffabar) as sub_ffbar, " +
-        "avg(ld.ooabar) as sub_oobar, " +
-        "avg(ld.foabar) as sub_fobar, " +
+        "count(ld.fbar) as n, " +
+        "avg(ld.fbar) as sub_fbar, " +
+        "avg(ld.obar) as sub_obar, " +
+        "avg(ld.ffbar) as sub_ffbar, " +
+        "avg(ld.oobar) as sub_oobar, " +
+        "avg(ld.fobar) as sub_fobar, " +
         "avg(ld.total) as sub_total, " +
         "avg(ld.fcst_valid_beg) as sub_secs, " +    // this is just a dummy for the common python function -- the actual value doesn't matter
         "count(h.fcst_lev) as sub_levs " +      // this is just a dummy for the common python function -- the actual value doesn't matter
         "from {{database}}.stat_header h, " +
-        "{{database}}.line_data_sal1l2 ld " +
+        "{{database}}.line_data_sl1l2 ld " +
         "where 1=1 " +
         "and h.model = '{{model}}' " +
         "{{regionsClause}} " +

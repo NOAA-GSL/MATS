@@ -37,7 +37,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions = curve['region'] === undefined ? [] : curve['region'];
+        var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
         if (regions.length > 0) {
@@ -50,7 +50,7 @@ dataDieOff = function (plotParams, plotFunction) {
         const statistic = curve['statistic'];
         const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
         const forecastKeys = Object.keys(forecastValueMap);
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -59,7 +59,7 @@ dataDieOff = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            // we can't just leave the level clause out, because we might end up with some upper levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
@@ -78,7 +78,7 @@ dataDieOff = function (plotParams, plotFunction) {
         var dateRangeClause = "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' ";
         if (dieoffType === matsTypes.ForecastTypes.dieoff) {
             var vts = "";   // start with an empty string that we can pass to the python script if there aren't vts.
-            if (curve['valid-time'] !== undefined) {
+            if (curve['valid-time'] !== undefined && curve['valid-time'] !== matsTypes.InputTypes.unused) {
                 vts = curve['valid-time'];
                 vts = Array.isArray(vts) ? vts : [vts];
                 vts = vts.map(function (vt) {
@@ -205,7 +205,7 @@ dataDieOff = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/regions [" + model + " and " + regions + "].");
                     } else {
                         throw new Error(error);
                     }

@@ -371,7 +371,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 1
+                displayGroup: 2
             });
     } else {
         // it is defined but check for necessary update
@@ -407,7 +407,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 1,
+                displayGroup: 2,
                 help: 'region.html'
             });
     } else {
@@ -445,7 +445,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     }
 
@@ -464,7 +464,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 2
+                displayGroup: 3
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
@@ -509,7 +509,7 @@ const doCurveParams = function () {
                 multiple: true,
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     } else {
         // it is defined but check for necessary updates to forecastLengthOptionsMap
@@ -549,7 +549,7 @@ const doCurveParams = function () {
                 controlButtonText: 'dieoff type',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 3
+                displayGroup: 4
             });
     }
 
@@ -567,7 +567,7 @@ const doCurveParams = function () {
                 controlButtonText: "valid utc hour",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
                 multiple: true
             });
     }
@@ -589,7 +589,7 @@ const doCurveParams = function () {
                 controlButtonText: "utc cycle init hour",
                 displayOrder: 3,
                 displayPriority: 1,
-                displayGroup: 3,
+                displayGroup: 4,
             });
     }
 
@@ -617,7 +617,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 4
+                displayGroup: 5
             });
     }
 
@@ -637,7 +637,7 @@ const doCurveParams = function () {
                 controlButtonText: "Pressure Level",
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 4,
+                displayGroup: 5,
                 multiple: true
             });
     } else {
@@ -683,7 +683,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
             });
     }
 
@@ -716,7 +716,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 2,
                 displayPriority: 1,
-                displayGroup: 5,
+                displayGroup: 6,
             });
     }
 
@@ -754,7 +754,7 @@ const doCurveParams = function () {
                 controlButtonVisibility: 'block',
                 displayOrder: 1,
                 displayPriority: 1,
-                displayGroup: 6,
+                displayGroup: 7,
                 help: "dateHelp.html"
             });
     }
