@@ -42,6 +42,13 @@ Template.graph.helpers({
             var plotType = Session.get('plotType');
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
+            Session.set('colorbarResetOpts', {
+                'colorbar.title': dataset[0].colorbar.title,
+                'autocontour': true,
+                'ncontours': 15,
+                'reversescale': false,
+                'colorscale': 'RdBu'
+            });
             Session.set('options', options);
             $("#legendContainer").empty();
             $("#placeholder").empty();
@@ -206,6 +213,9 @@ Template.graph.helpers({
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile)
     },
+    isContour: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.contour)
+    },
     isNotMap: function () {
         return (Session.get('plotType') !== matsTypes.PlotTypes.map)
     },
@@ -358,7 +368,7 @@ Template.graph.helpers({
             return "none";
         }
     },
-    metApp: function() {
+    metApp: function () {
         Session.get("PlotParams");
         Session.get('PlotResultsUpDated');
         if (matsCollections.Settings.findOne({}).appType && matsCollections.Settings.findOne({}).appType === matsTypes.AppTypes.metexpress && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
@@ -367,7 +377,7 @@ Template.graph.helpers({
             return "none";
         }
     },
-    mvFiles: function() {
+    mvFiles: function () {
         var updated = Session.get('MvResultsUpDated');
         var key = Session.get('mvResultKey');
         var mvs = Session.get('mvs');
@@ -377,7 +387,7 @@ Template.graph.helpers({
             return [];
         }
     },
-    mvDisabled: function() {
+    mvDisabled: function () {
         var updated = Session.get('MvResultsUpDated');
         if (Session.get('mvs') == null || Session.get('PlotParams')['metexpress-mode'] == "mats") {
             return "none";
@@ -385,7 +395,7 @@ Template.graph.helpers({
             return "block";
         }
     },
-    mvLoading: function() {
+    mvLoading: function () {
         var updated = Session.get('MvResultsUpDated');
         if (Session.get('mvs') == null && Session.get('PlotParams')['metexpress-mode'] == "matsmv") {
             return "block";
@@ -396,7 +406,7 @@ Template.graph.helpers({
 });
 
 Template.graph.events({
-    'click .mvCtrlButton': function() {
+    'click .mvCtrlButton': function () {
         window.open(this.url, "mv", "height=200,width=200");
     },
     'click .back': function () {
@@ -484,6 +494,9 @@ Template.graph.events({
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
+    },
+    'click .colorbarButton': function () {
+        $("#colorbarModal").modal('show');
     },
     'click .axisYScale': function () {
         // get all yaxes and change their scales
@@ -786,8 +799,12 @@ Template.graph.events({
     // add refresh button
     'click #refresh-plot': function (event) {
         event.preventDefault();
+        var plotType = Session.get('plotType');
         var options = Session.get('options');
         Plotly.relayout($("#placeholder")[0], options);
+        if (plotType === matsTypes.PlotTypes.contour) {
+            Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+        }
     },
     // add axis customization modal submit button
     'click #axisSubmit': function (event) {
@@ -871,13 +888,70 @@ Template.graph.events({
                 }
             });
         }
-        console.log(newOpts);
         Plotly.relayout($("#placeholder")[0], newOpts);
         // if needed, restore the log axis
         if (changeYScaleBack) {
             $("#axisYScale").click();
         }
         $("#axisLimitModal").modal('hide');
+    },
+    // add colorbar customization modal submit button
+    'click #colorbarSubmit': function (event) {
+        event.preventDefault();
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var update = {};
+        // get input axis limits and labels
+        $("input[id=colorbarLabel]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['colorbar.title'] = elem.value;
+                update['colorbar.titleside'] = 'right';
+                update['colorbar.titlefont'] = {size: 16, family: 'Arial, sans-serif'};
+            }
+        });
+        $("input[id=colorbarNumber]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = true;
+                update['ncontours'] = elem.value;
+            }
+        });
+        $("input[id=colorbarMin]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['contours.start'] = elem.value;
+            }
+        });
+        $("input[id=colorbarMax]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['autocontour'] = false;
+                update['contours.end'] = elem.value;
+            }
+        });
+        $("input[id=colorbarStep]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                update['contours.size'] = elem.value;
+                if (update['ncontours'] === undefined) {
+                    update['autocontour'] = false;
+                }
+            }
+        });
+        if (update['ncontours'] !== undefined && !update['autocontour']) {
+            const startVal = update['contours.start'] !== undefined ? update['contours.start'] : dataset[0].zmin;
+            const endVal = update['contours.end'] !== undefined ? update['contours.end'] : dataset[0].zmax;
+            update['contours.size'] = (endVal - startVal) / (Number(update['ncontours']) + 1);
+        }
+        $("input[id=colorbarReverse]").get().forEach(function (elem, index) {
+            if (elem && elem.checked) {
+                update['reversescale'] = true;
+            } else {
+                update['reversescale'] = false;
+            }
+        });
+        var elem = document.getElementById("colormapSelect");
+        if (elem !== undefined && elem.value !== undefined) {
+            update['colorscale'] = elem.value;
+        }
+        Plotly.restyle($("#placeholder")[0], update, 0);
+        $("#colorbarModal").modal('hide');
     }
 });
 

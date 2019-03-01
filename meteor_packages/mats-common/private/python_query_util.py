@@ -656,8 +656,8 @@ def parse_query_data_contour(cursor, statistic, has_levels):
     data['xmax'] = max(x for x in data['x'] if x != 'null' and x != 'NaN')
     data['ymin'] = min(y for y in data['y'] if y != 'null' and y != 'NaN')
     data['ymax'] = max(y for y in data['y'] if y != 'null' and y != 'NaN')
-    data['zmin'] = min(z for z in data['z'] if z != 'null' and z != 'NaN')
-    data['zmax'] = max(z for z in data['z'] if z != 'null' and z != 'NaN')
+    data['zmin'] = min(min(z) for z in data['z'] if z != 'null' and z != 'NaN')
+    data['zmax'] = max(max(z) for z in data['z'] if z != 'null' and z != 'NaN')
     data['sum'] = loop_sum
 
     data['glob_stats'] = {
