@@ -259,9 +259,9 @@ const doCurveParams = function () {
             var model = rows[i].display_text.trim();
             modelOptionsMap[model] = [model_value];
 
-            var minDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
-            var maxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
-            modelDateRangeMap[model] = {minDate: minDate, maxDate: maxDate};
+            var rowMinDate = moment.utc(rows[i].mindate * 1000).format("MM/DD/YYYY HH:mm");
+            var rowMaxDate = moment.utc(rows[i].maxdate * 1000).format("MM/DD/YYYY HH:mm");
+            modelDateRangeMap[model] = {minDate: rowMinDate, maxDate: rowMaxDate};
 
             var fcstTypes = rows[i].fcst_types;
             var fcstTypesArrRaw = fcstTypes.split(',').map(Function.prototype.call, String.prototype.trim);
@@ -637,8 +637,8 @@ const doCurveParams = function () {
     modelDateRangeMap = matsCollections.CurveParams.findOne({name:"data-source"},{dates:1}).dates;
     minDate = modelDateRangeMap[defaultDataSource].minDate;
     maxDate = modelDateRangeMap[defaultDataSource].maxDate;
-    minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
-    dstr = minDate + ' - ' + maxDate;
+    var minusMonthMinDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
+    dstr = minusMonthMinDate + ' - ' + maxDate;
 
     if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
         optionsMap = {

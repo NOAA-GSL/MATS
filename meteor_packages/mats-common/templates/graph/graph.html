@@ -34,9 +34,14 @@
                 </span>
                 <span id="plot-page-button-group" class="btn-group btn-group-sm" style="display:block;">
                     <span id="plot-control-button-group" class="btn-group btn-group-sm" style="display:block;">
-                        <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;&nbsp;<strong>Axes</strong></button>
+                        {{#if isNotMap}}
+                            <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;&nbsp;<strong>Axes</strong></button>
+                        {{/if}}
                         {{#if isProfile}}
                             <button id="axisYScale" type="button" class="axisYScale btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="toggle linear/log Y axis">&nbsp;&nbsp;<strong>Y Linear/Log</strong></button>
+                        {{/if}}
+                        {{#if isContour}}
+                            <button id="colorbarButton" type="button" class="colorbarButton btn btn-primary fa fa-paint-brush" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify colorbar">&nbsp;&nbsp;<strong>Colorbar</strong></button>
                         {{/if}}
                         <button id="replotZoomButton" type="button" class="replotZoomButton btn btn-primary fa fa-line-chart" style="display:{{displayReplotZoom}};"  data-toggle="tooltip" data-placement="top" title="replot graph to current zoom setting">&nbsp;&nbsp;<strong>Re-sample</strong></button>
                         <button id="reCacheButton" type="button" class="reCacheButton btn btn-primary fa fa-line-chart" style="display:block;"  data-toggle="tooltip" data-placement="top" title="replot graph and refresh cache with new data">&nbsp;&nbsp;<strong>Re-cache</strong></button>
@@ -160,6 +165,83 @@
                         <div class="modal-footer btn-group">
                             <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
                             <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
+                            </button>
+                        </div>
+                    </div>
+                    <!-- /.modal-content -->
+                </div>
+                <!-- /.modal-dialog -->
+            </div>
+        {{/if}}
+        {{#if isContour}}
+            <div id="colorbarModal" class="modal container" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select colorbar limits and label: </h3>
+                            <h4>* Leave a field blank to preserve its original value. </h4>
+                            <h4>* Choose either a contour step OR a number of contours. If both are given, the number of contours will be used.</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div><br></div>
+                            <div id="colorbarCustomControls" style="display:block;">
+                                <div class="row">
+                                    <label class="col-sm-5">Colorbar label: </label>
+                                    <input id="colorbarLabel" class="colorbar-label data-input textInput col-sm-5" type="text" value="" name="colorbarLabel"/>
+                                </div>
+                                <div><br></div>
+                                <div class="row">
+                                    <label class="col-sm-5">Minimum contour value: </label>
+                                    <input id="colorbarMin" class="colorbar-min data-input numberInput col-sm-5" type="number" value="" name="colorbarMin"/>
+                                </div>
+                                <div class="row">
+                                    <label class="col-sm-5">Maximum contour value: </label>
+                                    <input id="colorbarMax" class="colorbar-max data-input numberInput col-sm-5" type="number" value="" name="colorbarMax"/>
+                                </div>
+                                <div><br></div>
+                                <div class="row">
+                                    <label class="col-sm-5">Number of contours: </label>
+                                    <input id="colorbarNumber" class="colorbar-number data-input numberInput col-sm-5" type="number" value="" name="colorbarNumber"/>
+                                </div>
+                                <div>OR</div>
+                                <div class="row">
+                                    <label class="col-sm-5">Contour value step: </label>
+                                    <input id="colorbarStep" class="colorbar-step data-input numberInput col-sm-5" type="number" value="" name="colorbarStep"/>
+                                </div>
+                                <div><br></div>
+                                <div class="row">
+                                    <label class="col-sm-5">Reverse contours: </label>
+                                    <input id="colorbarReverse" class="colorbar-reverse data-input checkboxInput col-sm-5" type="checkbox" value="" name="colorbarReverse"/>
+                                </div>
+                                <div><br></div>
+                                <div class="row">
+                                    <label class="col-sm-5">Select colormap: </label>
+                                    <select id="colormapSelect">
+                                        <option value="RdBu" selected="selected">RedBlue</option>
+                                        <option value="Jet">Jet</option>
+                                        <option value="Portland">Portland</option>
+                                        <option value="Rainbow">Rainbow</option>
+                                        <option value="Blackbody">Blackbody</option>
+                                        <option value="Earth">Earth</option>
+                                        <option value="Electric">Electric</option>
+                                        <option value="Hot">Hot</option>
+                                        <option value="Picnic">Picnic</option>
+                                        <option value="Reds">Reds</option>
+                                        <option value="Greens">Greens</option>
+                                        <option value="Blues">Blues</option>
+                                        <option value="Greys">Greys</option>
+                                        <option value="Viridis">Viridis</option>
+                                        <option value="Cividis">Cividis</option>
+                                        <option value="Bluered">BlueRed</option>
+                                        <option value="YlGnBu">YellowGreenBlue</option>
+                                        <option value="YlOrRd">YellowOrangeRed</option>
+                                    </select>
+                                </div>
+                           </div>
+                        </div>
+                        <div class="modal-footer btn-group">
+                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
+                            <button name="colorbarSubmit" id="colorbarSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
                             </button>
                         </div>
                     </div>

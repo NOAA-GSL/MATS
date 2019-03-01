@@ -37,7 +37,7 @@ dataValidTime = function (plotParams, plotFunction) {
         const label = curve['label'];
         const database = curve['database'];
         const model = matsCollections.CurveParams.findOne({name: 'data-source'}, {optionsMap: 1}).optionsMap[database][curve['data-source']][0];
-        var regions = curve['region'] === undefined ? [] : curve['region'];
+        var regions = (curve['region'] === undefined || curve['region'] === matsTypes.InputTypes.unused) ? [] : curve['region'];
         regions = Array.isArray(regions) ? regions : [regions];
         var regionsClause = "";
         if (regions.length > 0) {
@@ -52,7 +52,7 @@ dataValidTime = function (plotParams, plotFunction) {
         // have been sanitized for display purposes in the forecastValueMap.
         // now we have to go get the damn ole unsanitary ones for the database.
         var forecastLengthsClause = "";
-        var fcsts = curve['forecast-length'] === undefined ? [] : curve['forecast-length'];
+        var fcsts = (curve['forecast-length'] === undefined || curve['forecast-length'] === matsTypes.InputTypes.unused) ? [] : curve['forecast-length'];
         fcsts = Array.isArray(fcsts) ? fcsts : [fcsts];
         if (fcsts.length > 0) {
             const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][curve['data-source']];
@@ -64,7 +64,7 @@ dataValidTime = function (plotParams, plotFunction) {
         var dateRange = matsDataUtils.getDateRange(curve['curve-dates']);
         var fromSecs = dateRange.fromSeconds;
         var toSecs = dateRange.toSeconds;
-        var levels = curve['pres-level'] === undefined ? [] : curve['pres-level'];
+        var levels = (curve['pres-level'] === undefined || curve['pres-level'] === matsTypes.InputTypes.unused)  ? [] : curve['pres-level'];
         var levelsClause = "";
         levels = Array.isArray(levels) ? levels : [levels];
         if (levels.length > 0) {
@@ -73,7 +73,7 @@ dataValidTime = function (plotParams, plotFunction) {
             }).join(',');
             levelsClause = "and h.fcst_lev IN(" + levels + ")";
         } else {
-            // we can't just leave the level clause out, because we might end up with some surface levels in the mix
+            // we can't just leave the level clause out, because we might end up with some weird levels in the mix
             levels = matsCollections.CurveParams.findOne({name: 'data-source'}, {levelsMap: 1})['levelsMap'][database][curve['data-source']];
             levels = levels.map(function (l) {
                 return "'" + l + "'";
@@ -188,7 +188,7 @@ dataValidTime = function (plotParams, plotFunction) {
                     // this is an error returned by the mysql database
                     error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
                     if (error.includes('Unknown column')) {
-                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
+                        throw new Error("INFO:  The statistic/variable combination [" + statistic + " and " + variable + "] is not supported by the database for the model/regions [" + model + " and " + regions + "].");
                     } else {
                         throw new Error(error);
                     }
@@ -216,7 +216,7 @@ dataValidTime = function (plotParams, plotFunction) {
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.sum / d.x.length;
-        const annotation = label + "- mean = " + mean.toPrecision(4);
+        const annotation = mean === undefined ? label + "- mean = NaN" : label + "- mean = " + mean.toPrecision(4);
         curve['annotation'] = annotation;
         curve['xmin'] = d.xmin;
         curve['xmax'] = d.xmax;

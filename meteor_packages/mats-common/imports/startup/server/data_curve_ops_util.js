@@ -348,28 +348,26 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
             annotateColor: curve['color'],
             xAxisKey: curve['xAxisKey'],
             yAxisKey: curve['yAxisKey'],
-            line: {
-                // smoothing: 0.85     // smooths contour line divisions
-            },
             marker: {
                 color: curve['color'],
             },
             type: 'contour',
+            autocontour: true,
+            ncontours: 15,
             contours: {
-                // showlabels: true,       // shows labels on contours
-                // labelfont: {
-                //     family: 'Raleway',
-                //     size: 12,
-                //     color: 'white',
-                // }
+                // these are only used if autocontour is set to false and ncontour is disregarded
+                start: dataset.zmin + (dataset.zmax - dataset.zmin) / 16,
+                end: dataset.zmax - (dataset.zmax - dataset.zmin) / 16,
+                size:  (dataset.zmax - dataset.zmin) / 16,
+                showlabels: false
             },
-            // colorscale: 'Jet',
-            // reversescale: true,
+            colorscale: 'RdBu',
+            reversescale: false,
             colorbar:{
                 title: unitKey,
                 titleside: 'right',
                 titlefont: {
-                    size: 14,
+                    size: 16,
                     family: 'Arial, sans-serif'
                 }
             },

@@ -1555,17 +1555,34 @@ const mvBatch = new ValidatedMethod({
             const hash = require('object-hash');
             const key = hash(params.plotParams);
             // generate the server router (Picker) urls according to the hash key.
-            const artifacts = {
-                png: appName + "/mvplot/" + key,
-                xml: appName + "/mvxml/" + key,
-                sql: appName + "/mvsql/" + key,
-                log: appName + "/mvlog/" + key,
-                err: appName + "/mverr/" + key,
-                R: appName + "/mvscript/" + key,
-                data: appName + "/mvdata/" + key,
-                points1: appName + "/mvpoints1/" + key,
-                points2: appName + "/mvpoints2/" + key,
-            };
+            var artifacts = {};
+            if (process.env.NODE_ENV === "development") {
+                artifacts = {
+                    png: appName + "/mvplot/" + key,
+                    xml: appName + "/mvxml/" + key,
+                    sql: appName + "/mvsql/" + key,
+                    log: appName + "/mvlog/" + key,
+                    err: appName + "/mverr/" + key,
+                    R: appName + "/mvscript/" + key,
+                    data: appName + "/mvdata/" + key,
+                    points1: appName + "/mvpoints1/" + key,
+                    points2: appName + "/mvpoints2/" + key,
+                };
+            } else {
+                // in production the appName is already at the end of the location.href
+                // - which is used to form a url for retrieving the artifact
+                artifacts = {
+                    png: "/mvplot/" + key,
+                    xml: "/mvxml/" + key,
+                    sql: "/mvsql/" + key,
+                    log: "/mvlog/" + key,
+                    err: "/mverr/" + key,
+                    R: "/mvscript/" + key,
+                    data: "/mvdata/" + key,
+                    points1: "/mvpoints1/" + key,
+                    points2: "/mvpoints2/" + key,
+                };
+            }
             const Future = require('fibers/future');
             var mvFuture = new Future();
             // generate the real file paths (these are not exposed to clients)
