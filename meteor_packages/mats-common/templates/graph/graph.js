@@ -42,13 +42,15 @@ Template.graph.helpers({
             var plotType = Session.get('plotType');
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
-            Session.set('colorbarResetOpts', {
-                'colorbar.title': dataset[0].colorbar.title,
-                'autocontour': true,
-                'ncontours': 15,
-                'reversescale': false,
-                'colorscale': 'RdBu'
-            });
+            if (plotType === matsTypes.PlotTypes.contour) {
+                Session.set('colorbarResetOpts', {
+                    'colorbar.title': dataset[0].colorbar.title,
+                    'autocontour': true,
+                    'ncontours': 15,
+                    'reversescale': false,
+                    'colorscale': 'RdBu'
+                });
+            }
             Session.set('options', options);
             $("#legendContainer").empty();
             $("#placeholder").empty();
