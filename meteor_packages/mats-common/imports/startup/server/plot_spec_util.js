@@ -125,7 +125,7 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
     }
 
     var statement = "select ld.fcst_valid_beg as avtime " +
-        "from mv_gsd.stat_header h, mv_gsd.line_data_sl1l2 ld " +
+        "from " + database + ".stat_header h, " + database + ".line_data_sl1l2 ld " +
         "where 1=1 and h.model = '" + dataSource + "' " +
         regionsClause +
         "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
