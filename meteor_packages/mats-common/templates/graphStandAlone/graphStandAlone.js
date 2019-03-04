@@ -90,6 +90,18 @@ Template.GraphStandAlone.helpers({
                     // initial plot
                     Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
 
+                    // update changes to the curve ops
+                    const update = ret.curveOpsUpdate;
+                    var curveOpsUpdate = {};
+                    const updatedKeys = Object.keys(update);
+                    for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
+                        var jsonHappyKey = updatedKeys[uidx];
+                        // turn the json placeholder back into .
+                        var updatedKey = jsonHappyKey.split("____").join(".");
+                        curveOpsUpdate[updatedKey] = update[jsonHappyKey];
+                    }
+                    Plotly.restyle($("#placeholder")[0], curveOpsUpdate, 0);
+
                     if (plotType !== matsTypes.PlotTypes.map) {
                         // append annotations
                         annotation = "";

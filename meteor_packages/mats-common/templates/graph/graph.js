@@ -15,6 +15,7 @@ var annotation = "";
 var openWindows = [];
 var xAxes = [];
 var yAxes = [];
+var curveOpsUpdate = {};
 
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
@@ -436,7 +437,7 @@ Template.graph.events({
         // capture the layout
         const layout = $("#placeholder")[0].layout;
         var key = Session.get('plotResultKey');
-        matsMethods.saveLayout.call({resultKey: key, layout: layout}, function (error) {
+        matsMethods.saveLayout.call({resultKey: key, layout: layout, curveOpsUpdate: curveOpsUpdate}, function (error) {
             if (error !== undefined) {
                 setError(error);
             }
@@ -800,6 +801,7 @@ Template.graph.events({
     // add refresh button
     'click #refresh-plot': function (event) {
         event.preventDefault();
+        curveOpsUpdate = {};
         var plotType = Session.get('plotType');
         var options = Session.get('options');
         Plotly.relayout($("#placeholder")[0], options);
@@ -901,7 +903,7 @@ Template.graph.events({
         event.preventDefault();
         var dataset = matsCurveUtils.getGraphResult().data;
         var update = {};
-        // get input axis limits and labels
+        // get new formatting
         $("input[id=colorbarLabel]").get().forEach(function (elem, index) {
             if (elem.value !== undefined && elem.value !== "") {
                 update['colorbar.title'] = elem.value;
@@ -935,6 +937,7 @@ Template.graph.events({
                 }
             }
         });
+        // deal with situation where the user wants to automatically calculate the step but has also specified a max and/or min
         if (update['ncontours'] !== undefined && !update['autocontour']) {
             const startVal = update['contours.start'] !== undefined ? update['contours.start'] : dataset[0].zmin;
             const endVal = update['contours.end'] !== undefined ? update['contours.end'] : dataset[0].zmax;
@@ -951,8 +954,17 @@ Template.graph.events({
         if (elem !== undefined && elem.value !== undefined) {
             update['colorscale'] = elem.value;
         }
+        // apply new settings
         Plotly.restyle($("#placeholder")[0], update, 0);
         $("#colorbarModal").modal('hide');
+        // save the updates in case we want to pass them to a pop-out window.
+        const updatedKeys = Object.keys(update);
+        for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
+            var updatedKey = updatedKeys[uidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[jsonHappyKey] = update[updatedKey];
+        }
     }
 });
 
