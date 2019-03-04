@@ -5,6 +5,7 @@ import {moment} from 'meteor/momentjs:moment'
 
 plotSpecDataSeries = function (plotParams, key, plotSpecCallback) {
     try {
+        console.log('generating data_series_plotspec');
         var spec = matsPlotSpecUtils.startPlotSpec(sumPool,plotParams);
         var xml = spec.xml;
         var plot = spec.plot;
