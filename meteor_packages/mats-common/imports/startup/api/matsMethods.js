@@ -1583,8 +1583,6 @@ const mvBatch = new ValidatedMethod({
                     points2: "/mvpoints2/" + key,
                 };
             }
-            const Future = require('fibers/future');
-            var mvFuture = new Future();
             // generate the real file paths (these are not exposed to clients)
             const plotSpecFilePath = MV_DIRS.XMLDIR + key + ".xml";
             const pngFilePath = MV_DIRS.PLOTSDIR + key + ".png";
@@ -1676,7 +1674,7 @@ const mvBatch = new ValidatedMethod({
                             // save the plotSpec
                             fse.outputFileSync(plotSpecFilePath, plotSpec);
                             // exec mv batch with this plotSpec - this should be synchronous
-                            cp.exec(mvBatchCmd, (error, stdout, stderr) => {
+                            cp.execSync(mvBatchCmd, (error, stdout, stderr) => {
                                 if (stderr) {
                                     fse.outputFileSync(errFilePath, stderr, function (err) {
                                         if (err) {
@@ -1755,7 +1753,7 @@ const mvBatch = new ValidatedMethod({
 
                                         MV_OUTPUT/xml/key.xml is the plotSpec
                                 */
-                        mvFuture['return']();
+                                return {'key': key, 'artifacts':artifacts};
                             }); //ret = {key:key, result:{artifacts:artifacts}}
                             // return the key and the artifacts
                         }  // plotspec did not exist
@@ -1763,7 +1761,7 @@ const mvBatch = new ValidatedMethod({
                             // the files actually already existed but we needed the plotspec
                             // so just refresh the cache and return the key right away
                             matsCache.storeResult(key, artifacts);
-                            mvFuture['return']();
+                            return {'key': key, 'artifacts':artifacts};
                         }
                     }
                 });
@@ -1771,9 +1769,8 @@ const mvBatch = new ValidatedMethod({
             else {
                 // artifacts existed and plotspec existed - refresh the cache
                 matsCache.storeResult(key, artifacts);
-                mvFuture['return']();
+                return {'key': key, 'artifacts':artifacts};
             }
-            mvFuture.wait();
             return {'key': key, 'artifacts':artifacts};
         } // if Meteor is Server
     } // run
