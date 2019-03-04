@@ -25,8 +25,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("SiteMap");
     Meteor.subscribe("StationMap");
     Meteor.subscribe("appName");
-    //Meteor.subscribe("Results");
-    //Meteor.subscribe("DownSampleResults");
+    Meteor.subscribe("LayoutStoreCollection");
     Session.set('Curves', []);
     Session.set('PlotParams', []);
 

@@ -447,7 +447,6 @@ Template.graph.events({
         var wind = window.open(window.location + "/preview/" + Session.get("graphFunction") + "/" + Session.get("plotResultKey") + "/" + Session.get('plotParameter') + "/" + matsCollections.Settings.findOne({}, {fields: {Title: 1}}).Title, "_blank", "status=no,titlebar=no,toolbar=no,scrollbars=no,menubar=no,resizable=yes", "height=" + h + ",width=" + w);
         setTimeout(function () {
             wind.resizeTo(w, h);
-            ;
         }, 100);
         openWindows.push(wind);
     },
@@ -458,8 +457,8 @@ Template.graph.events({
         openWindows = [];
     },
     'click .reload': function () {
-        var dataset = Session.get('dataset');
-        var options = Session.get('options');
+        var dataset = matsCurveUtils.getGraphResult().data;
+        var options = matsCurveUtils.getGraphResult().options;
         var graphFunction = Session.get('graphFunction');
         window[graphFunction](dataset, options);
     },
