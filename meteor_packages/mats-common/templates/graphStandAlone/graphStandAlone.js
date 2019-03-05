@@ -15,6 +15,7 @@ import {FlowRouter} from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
 
 var annotation = "";
+var resizeOptions;
 
 Template.GraphStandAlone.onCreated(function () {
     // get the params for what this window will contain from the route
@@ -32,8 +33,7 @@ Template.GraphStandAlone.onRendered(function () {
         document.getElementById('placeholder').style.width = matsGraphUtils.standAloneWidth();
         document.getElementById('placeholder').style.height = matsGraphUtils.standAloneHeight();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
-        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+        Plotly.newPlot($("#placeholder")[0], dataset, resizeOptions, {showLink: true});
     });
     document.getElementById('graph-container').style.backgroundColor = 'white';
 });
@@ -72,8 +72,6 @@ Template.GraphStandAlone.helpers({
                 var plotType = Session.get('plotType');
                 var dataset = matsCurveUtils.getGraphResult().data;
                 var options = matsCurveUtils.getGraphResult().options;
-                $("#legendContainer").empty();
-                $("#placeholder").empty();
                 if (dataset === undefined) {
                     return false;
                 }
@@ -87,26 +85,32 @@ Template.GraphStandAlone.helpers({
                     if (plotType === matsTypes.PlotTypes.map) {
                         options.mapbox.zoom = 2.75;
                     }
+                    resizeOptions = options;
+
                     // initial plot
-                    Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+                    $("#legendContainer").empty();
+                    $("#placeholder").empty();
+                    Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
                     // update changes to the curve ops
-                    const update = ret.curveOpsUpdate;
-                    var curveOpsUpdate = {};
-                    const updatedKeys = Object.keys(update);
-                    for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
-                        var jsonHappyKey = updatedKeys[uidx];
-                        // turn the json placeholder back into .
-                        var updatedKey = jsonHappyKey.split("____").join(".");
-                        curveOpsUpdate[updatedKey] = update[jsonHappyKey];
+                    const updates = ret.curveOpsUpdate.curveOpsUpdate;
+                    for (var uidx = 0; uidx < updates.length; uidx++) {
+                        var curveOpsUpdate = {};
+                        var updatedKeys = Object.keys(updates[uidx]);
+                        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                            var jsonHappyKey = updatedKeys[kidx];
+                            // turn the json placeholder back into .
+                            var updatedKey = jsonHappyKey.split("____").join(".");
+                            curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                        }
+                        Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
                     }
-                    Plotly.restyle($("#placeholder")[0], curveOpsUpdate, 0);
 
+                    // append annotations
                     if (plotType !== matsTypes.PlotTypes.map) {
-                        // append annotations
                         annotation = "";
                         for (var i = 0; i < dataset.length; i++) {
-                            if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile && dataset[i].curveId !== undefined) {
+                            if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
                                 annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                             }
                         }

@@ -15,7 +15,7 @@ var annotation = "";
 var openWindows = [];
 var xAxes = [];
 var yAxes = [];
-var curveOpsUpdate = {};
+var curveOpsUpdate = [];
 
 Template.graph.onCreated(function () {
     // the window resize event needs to also resize the graph
@@ -43,7 +43,11 @@ Template.graph.helpers({
             var plotType = Session.get('plotType');
             var dataset = matsCurveUtils.getGraphResult().data;
             var options = matsCurveUtils.getGraphResult().options;
+            Session.set('options', options);
+
+            // need to save some curve options so that the reset button can undo Plotly.restyle
             if (plotType === matsTypes.PlotTypes.contour) {
+                //saved curve options for contours
                 Session.set('colorbarResetOpts', {
                     'colorbar.title': dataset[0].colorbar.title,
                     'autocontour': true,
@@ -51,19 +55,35 @@ Template.graph.helpers({
                     'reversescale': false,
                     'colorscale': 'RdBu'
                 });
+            } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
+                || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
+                || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
+                // saved curve options for line graphs
+                var lineTypeResetOpts = [];
+                for (var lidx = 0; lidx < dataset.length; lidx++) {
+                    if (dataset[lidx].label.startsWith("Curve")) {
+                        lineTypeResetOpts.push({
+                            'line.dash': dataset[lidx].line.dash,
+                            'line.width': dataset[lidx].line.width,
+                            'marker.symbol': dataset[lidx].marker.symbol,
+                        });
+                    } else {
+                        break;
+                    }
+                }
+                Session.set('lineTypeResetOpts', lineTypeResetOpts);
             }
-            Session.set('options', options);
+
+            // initial plot
             $("#legendContainer").empty();
             $("#placeholder").empty();
             if (!dataset || !options) {
                 return false;
             }
-
-            // initial plot
             Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
 
+            // append annotations
             if (plotType !== matsTypes.PlotTypes.map) {
-                // append annotations
                 annotation = "";
                 for (var i = 0; i < dataset.length; i++) {
                     if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
@@ -215,6 +235,11 @@ Template.graph.helpers({
     },
     isProfile: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.profile)
+    },
+    isLinePlot: function () {
+        return (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
+            || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
+            || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle)
     },
     isContour: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.contour)
@@ -437,7 +462,7 @@ Template.graph.events({
         // capture the layout
         const layout = $("#placeholder")[0].layout;
         var key = Session.get('plotResultKey');
-        matsMethods.saveLayout.call({resultKey: key, layout: layout, curveOpsUpdate: curveOpsUpdate}, function (error) {
+        matsMethods.saveLayout.call({resultKey: key, layout: layout, curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate}}, function (error) {
             if (error !== undefined) {
                 setError(error);
             }
@@ -496,6 +521,9 @@ Template.graph.events({
     },
     'click .axisLimitButton': function () {
         $("#axisLimitModal").modal('show');
+    },
+    'click .lineTypeButton': function () {
+        $("#lineTypeModal").modal('show');
     },
     'click .colorbarButton': function () {
         $("#colorbarModal").modal('show');
@@ -801,12 +829,27 @@ Template.graph.events({
     // add refresh button
     'click #refresh-plot': function (event) {
         event.preventDefault();
-        curveOpsUpdate = {};
         var plotType = Session.get('plotType');
         var options = Session.get('options');
-        Plotly.relayout($("#placeholder")[0], options);
-        if (plotType === matsTypes.PlotTypes.contour) {
-            Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+        if (curveOpsUpdate.length === 0) {
+            // we just need a relayout
+            Plotly.relayout($("#placeholder")[0], options);
+        } else {
+            // we need both a relayout and a restyle
+            curveOpsUpdate = [];
+            Plotly.relayout($("#placeholder")[0], options);
+            if (plotType === matsTypes.PlotTypes.contour) {
+                // restyle for contour plots
+                Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+            } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
+                || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
+                || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
+                // restyle for line plots
+                const lineTypeResetOpts = Session.get('lineTypeResetOpts');
+                for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
+                    Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
+                }
+            }
         }
     },
     // add axis customization modal submit button
@@ -898,6 +941,47 @@ Template.graph.events({
         }
         $("#axisLimitModal").modal('hide');
     },
+    // add line style modal submit button
+    'click #lineTypeSubmit': function (event) {
+        event.preventDefault();
+        var plotType = Session.get('plotType');
+        var updates = [];
+        // get input line style change
+        $("[id$=LineStyle]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['line.dash'] = elem.value;
+            }
+        });
+        $("input[id$=LineWeight]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['line.width'] = elem.value;
+            }
+        });
+        $("[id$=LineMarker]").get().forEach(function (elem, index) {
+            if (elem.value !== undefined && elem.value !== "") {
+                updates[index] = updates[index] === undefined ? {} : updates[index];
+                updates[index]['marker.symbol'] = elem.value;
+            }
+        });
+        for (var uidx = 0; uidx < updates.length; uidx++) {
+            // apply new settings
+            Plotly.restyle($("#placeholder")[0], updates[uidx], uidx);
+        }
+        $("#lineTypeModal").modal('hide');
+        // save the updates in case we want to pass them to a pop-out window.
+        for (uidx = 0; uidx < updates.length; uidx++) {
+            curveOpsUpdate[uidx] = {};
+            var updatedKeys = Object.keys(updates[uidx]);
+            for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                var updatedKey = updatedKeys[kidx];
+                // json doesn't like . to be in keys, so replace it with a placeholder
+                var jsonHappyKey = updatedKey.split(".").join("____");
+                curveOpsUpdate[uidx][jsonHappyKey] = updates[uidx][updatedKey];
+            }
+        }
+    },
     // add colorbar customization modal submit button
     'click #colorbarSubmit': function (event) {
         event.preventDefault();
@@ -958,12 +1042,13 @@ Template.graph.events({
         Plotly.restyle($("#placeholder")[0], update, 0);
         $("#colorbarModal").modal('hide');
         // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[0] = {};
         const updatedKeys = Object.keys(update);
         for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
             var updatedKey = updatedKeys[uidx];
             // json doesn't like . to be in keys, so replace it with a placeholder
             var jsonHappyKey = updatedKey.split(".").join("____");
-            curveOpsUpdate[jsonHappyKey] = update[updatedKey];
+            curveOpsUpdate[0][jsonHappyKey] = update[updatedKey];
         }
     }
 });

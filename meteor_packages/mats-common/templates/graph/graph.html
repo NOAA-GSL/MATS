@@ -37,6 +37,9 @@
                         {{#if isNotMap}}
                             <button id="axisLimitButton" type="button" class="axisLimitButton btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;&nbsp;<strong>Axes</strong></button>
                         {{/if}}
+                        {{#if isLinePlot}}
+                            <button id="lineTypeButton" type="button" class="lineTypeButton btn btn-primary fa fa-bars" style="display:block;"  data-toggle="tooltip" data-placement="top" title="modify axis">&nbsp;&nbsp;<strong>Line Styles</strong></button>
+                        {{/if}}
                         {{#if isProfile}}
                             <button id="axisYScale" type="button" class="axisYScale btn btn-primary fa fa-arrows" style="display:block;"  data-toggle="tooltip" data-placement="top" title="toggle linear/log Y axis">&nbsp;&nbsp;<strong>Y Linear/Log</strong></button>
                         {{/if}}
@@ -165,6 +168,59 @@
                         <div class="modal-footer btn-group">
                             <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
                             <button name="axisSubmit" id="axisSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
+                            </button>
+                        </div>
+                    </div>
+                    <!-- /.modal-content -->
+                </div>
+                <!-- /.modal-dialog -->
+            </div>
+        {{/if}}
+        {{#if isLinePlot}}
+            <div id="lineTypeModal" class="modal container" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select line styles and markers: </h3>
+                        </div>
+                        <div class="modal-body">
+                            <div><br></div>
+                            <div class="row">
+                                <label class="col-sm-2">&nbsp;&nbsp;</label>
+                                <label class="col-sm-3">Line style </label>
+                                <label class="col-sm-3">Line weight </label>
+                                <label class="col-sm-3">Line marker </label>
+                            </div>
+                            {{#each curves}}
+                                <div class="row">
+                                    <label class="col-sm-2">{{this.label}}: </label>
+                                    <select id="{{this.label}}LineStyle" class="{{this.label}}-line-style col-sm-3">
+                                        <option value="solid" selected="selected">Solid</option>
+                                        <option value="dash">Dash</option>
+                                        <option value="dot">Dot</option>
+                                        <option value="dashdot">Dash-dot</option>
+                                    </select>
+                                    <input id="{{this.label}}LineWeight" class="{{this.label}}-line-weight data-input numberInput col-sm-3" type="number" value="2" name="{{this.label}}Weight"/>
+                                    <select id="{{this.label}}LineMarker" class="{{this.label}}-line-marker col-sm-3">
+                                        <option value="circle" selected="selected">Solid circle</option>
+                                        <option value="circle-open">Open circle</option>
+                                        <option value="square">Solid Square</option>
+                                        <option value="square-open">Open Square</option>
+                                        <option value="star-square">Concave Square</option>
+                                        <option value="diamond-tall">Solid Diamond</option>
+                                        <option value="diamond-tall-open">Open Diamond</option>
+                                        <option value="star-diamond">Concave Diamond</option>
+                                        <option value="star">Solid star</option>
+                                        <option value="star-open">Open star</option>
+                                        <option value="x">Solid X</option>
+                                        <option value="x-open">Open X</option>
+                                    </select>
+                                </div>
+                            {{/each}}
+                        </div>
+                        <div class="modal-footer btn-group">
+                            <button type="button" class="cancel-send btn btn-info" data-dismiss="modal">&nbsp;&nbsp;Cancel</button>
+                            <button name="lineTypeSubmit" id="lineTypeSubmit" type="submit" class="send btn btn-primary">&nbsp;&nbsp;Submit
                             </button>
                         </div>
                     </div>

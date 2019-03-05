@@ -1,26 +1,3 @@
-// utility for supplying alternating data markers for plots
-const getPointSymbol = function (curveIndex) {
-    var pointSymbol = "circle";
-    switch (curveIndex % 5) {
-        case 0:
-            pointSymbol = "circle";
-            break;
-        case 1:
-            pointSymbol = "square";
-            break;
-        case 2:
-            pointSymbol = "diamond";
-            break;
-        case 3:
-            pointSymbol = "triangle";
-            break;
-        case 4:
-            pointSymbol = "cross";
-            break;
-    }
-    return pointSymbol;
-};
-
 // adds a horizontal black line along a specific y value
 const getHorizontalValueLine = function (xmax, xmin, yValue, cLabel) {
 
@@ -145,11 +122,14 @@ const generateSeriesCurveOptions = function (curve, curveIndex, axisMap, dataSer
             annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
+                symbol: "circle",
                 color: curve['color'],
                 size: 8
             },
             line: {
+                dash: 'solid',
                 color: curve['color'],
+                width: 2
             },
             visible: true
         }, ...dataSeries
@@ -213,11 +193,14 @@ const generateProfileCurveOptions = function (curve, curveIndex, axisMap, dataPr
             annotateColor: curve['color'],
             mode: "lines+markers",
             marker: {
+                symbol: "circle",
                 color: curve['color'],
                 size: 8
             },
             line: {
+                dash: 'solid',
                 color: curve['color'],
+                width: 2
             },
             visible: true
         }, ...dataProfile
@@ -381,7 +364,6 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
 
 export default matsDataCurveOpsUtils = {
 
-    getPointSymbol: getPointSymbol,
     getHorizontalValueLine: getHorizontalValueLine,
     getVerticalValueLine: getVerticalValueLine,
 
