@@ -441,8 +441,8 @@
     {
       "app": "echotop",
       "title": "Echo Top",
-      "version": "2.1.-1",
-      "buildDate": "2019.02.07.01.48",
+      "version": "2.1.0",
+      "buildDate": "2019.03.06.21.57",
       "last_test_run": "",
       "last_test_status": ""
     },
