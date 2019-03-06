@@ -35,6 +35,12 @@
             "$date": "2019-02-07T21:25:01.832+0000"
           },
           "hashedToken": "UZT+CSNXXEMQKZfm7a1g6GZHZt6y+uR+xJTbEVJB24Y="
+        },
+        {
+          "when": {
+            "$date": "2019-03-06T18:32:42.649+0000"
+          },
+          "hashedToken": "rqeOMJ69HTmK/+LIN/X1MZD6lJpzw43Y8cOBPYNXIck="
         }
       ]
     }

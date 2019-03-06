@@ -159,14 +159,14 @@
   "app_list": [
     {
       "app": "upperair",
-      "displayName": "Upper Air",
+      "displayName": "Upper Air (RAOBS)",
       "displayOrder": 1,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
     },
     {
       "app": "aircraft",
-      "displayName": "Aircraft (AMDAR)",
+      "displayName": "Upper Air (AMDAR)",
       "displayOrder": 2,
       "deploymentStatus": "enabled",
       "buildStatus": "enabled"
@@ -175,99 +175,99 @@
       "app": "anomalycor",
       "displayName": "Anomaly Correlation",
       "displayOrder": 3,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling",
       "displayName": "Ceiling",
       "displayOrder": 4,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "ceiling15",
       "displayName": "Ceiling 15 Min",
       "displayOrder": 5,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "visibility",
       "displayName": "Visibility",
       "displayOrder": 6,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "visibility15",
       "displayName": "Visibility 15 Min",
       "displayOrder": 7,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "surface",
       "displayName": "Surface",
       "displayOrder": 8,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "landuse",
       "displayName": "Surface Land Use",
       "displayOrder": 9,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "surfrad",
       "displayName": "Surface Radiation",
       "displayOrder": 10,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipAQPI",
       "displayName": "AQPI Precipitation",
       "displayOrder": 11,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipitation24hr",
       "displayName": "24 Hour Precipitation",
       "displayOrder": 12,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "precipitationSub24hr",
       "displayName": "Sub 24 Hour Precipitation",
       "displayOrder": 13,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "compositeReflectivity",
       "displayName": "Composite Reflectivity",
       "displayOrder": 14,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "echotop",
       "displayName": "Echo Top",
       "displayOrder": 15,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "vil",
       "displayName": "Vertically Integrated Liquid",
       "displayOrder": 16,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "wfip2",
@@ -280,22 +280,22 @@
       "app": "met-upperair",
       "displayName": "MET Upper Air",
       "displayOrder": 18,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "met-anomalycor",
       "displayName": "MET Anomaly Correlation",
       "displayOrder": 19,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     },
     {
       "app": "met-surface",
       "displayName": "MET Surface",
       "displayOrder": 20,
-      "deploymentStatus": "enabled",
-      "buildStatus": "enabled"
+      "deploymentStatus": "disabled",
+      "buildStatus": "disabled"
     }
   ]
 }
