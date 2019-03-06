@@ -433,8 +433,8 @@
     {
       "app": "compositeReflectivity",
       "title": "Composite Reflectivity",
-      "version": "2.1.-1",
-      "buildDate": "2019.02.07.01.10",
+      "version": "2.1.0",
+      "buildDate": "2019.03.06.21.04",
       "last_test_run": "",
       "last_test_status": ""
     },
