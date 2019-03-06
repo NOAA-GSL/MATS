@@ -9,7 +9,7 @@
   "apps": [
     {
       "app": "upperair",
-      "title": "Upper Air",
+      "title": "Upper Air (RAOBS)",
       "version": "2.0.5-2019.03.06.06.59",
       "buildDate": "2019.03.06.06.59",
       "last_test_run": "",
@@ -17,9 +17,9 @@
     },
     {
       "app": "aircraft",
-      "title": "Aircraft (AMDAR)",
-      "version": "2.0.5-2019.03.06.06.43",
-      "buildDate": "2019.03.06.06.43",
+      "title": "Upper Air (AMDAR)",
+      "version": "2.0.5-2019.03.06.18.35",
+      "buildDate": "2019.03.06.18.35",
       "last_test_run": "",
       "last_test_status": ""
     },
