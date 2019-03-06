@@ -328,12 +328,13 @@ const getPlotParamsFromStack = function () {
 };
 
 //calculates mean, stdev, and other statistics for curve data points in all apps and plot types
-const get_err = function (sVals, sSecs) {
+const get_err = function (sVals, sSecs, sLevs) {
     /* refer to perl error_library.pl sub  get_stats
      to see the perl implementation of these statics calculations.
      These should match exactly those, except that they are processed in reverse order.
      */
-
+    const autocorr_limit = 0.95;
+    const hasLevels = sLevs.length > 0;
     const plotParams = getPlotParamsFromStack();
     var outlierQCParam;
     if (plotParams["outliers"] !== "all") {
@@ -344,6 +345,7 @@ const get_err = function (sVals, sSecs) {
 
     var subVals = [];
     var subSecs = [];
+    var subLevs = [];
     var n = sVals.length;
     var n_good = 0;
     var sum_d = 0;
@@ -357,6 +359,9 @@ const get_err = function (sVals, sSecs) {
             sum2_d = sum2_d + sVals[i] * sVals[i];
             subVals.push(sVals[i]);
             subSecs.push(sSecs[i]);
+            if (hasLevels) {
+                subLevs.push(sLevs[i]);
+            }
         }
     }
     var d_mean = sum_d / n_good;
@@ -366,16 +371,18 @@ const get_err = function (sVals, sSecs) {
     //console.log("see error_library.pl l208 These are processed in reverse order to the perl code -  \nmean is " + d_mean + " sd_limit is +/- " + sd_limit + " n_good is " + n_good + " sum_d is" + sum_d + " sum2_d is " + sum2_d);
 
     // find minimum delta_time, if any value missing, set null
-    var last_secs = Number.MIN_VALUE;
+    var last_secs = 0;
     var minDelta = Number.MAX_VALUE;
     var minSecs = Number.MAX_VALUE;
     var max_secs = Number.MIN_VALUE;
     var minVal = Number.MAX_VALUE;
-    var maxVal = Number.MIN_VALUE;
+    var maxVal = -1 * Number.MAX_VALUE;
+    var secs;
+    var delta;
     for (i = 0; i < subSecs.length; i++) {
-        var secs = (subSecs[i]);
-        var delta = Math.abs(secs - last_secs);
-        if (delta < minDelta) {
+        secs = (subSecs[i]);
+        delta = Math.abs(secs - last_secs);
+        if (delta > 0 && delta < minDelta) {
             minDelta = delta;
         }
         if (secs < minSecs) {
@@ -392,7 +399,6 @@ const get_err = function (sVals, sSecs) {
     n_good = 0;
     var sum = 0;
     var sum2 = 0;
-    var loopTime = minSecs;
     if (minDelta < 0) {
         error = ("Invalid time interval - minDelta: " + minDelta);
         console.log("matsDataUtil.getErr: Invalid time interval - minDelta: " + minDelta)
@@ -424,29 +430,79 @@ const get_err = function (sVals, sSecs) {
         sd = Math.sqrt(sd2);
     }
     //console.log("new mean after throwing away outliers is " + sd + " n_good is " + n_good + " sum is " + sum  + " sum2 is " + sum2 + " d_mean is " + d_mean);
-    // look for gaps.... per Bill, we only need one gap per series of gaps...
-    var lastSecond = Number.MIN_VALUE;
+
+    // look for gaps
+    var lastSecond = -1 * Number.MAX_VALUE;
+    var lastPressure = -1 * Number.MAX_VALUE;
+    var n_pressures;
+    if (hasLevels) {
+        n_pressures = arrayUnique(subLevs).length;
+    } else {
+        n_pressures = 1;
+    }
+    // set lag1_t to the first time the time changes from its initial value + 1 (data zero based)
+    // set lag1_p to the first time the pressure changes from its initial value + 1 (data zero based)
+    var lag1_t = 0;
+    var lag1_p = 0;
+    var r1_t = 0;			// autocorrelation for time
+    var r1_p = 0;			// autocorrelation for pressure
+    var j = 0;              // i is loop index without gaps; j is loop index with gaps
+    var n_deltas = 0;
 
     for (i = 0; i < subSecs.length; i++) {
         var sec = subSecs[i];
+        var lev;
+        if (hasLevels) {
+            lev = subLevs[i];
+            // find first time the pressure changes
+            if (lag1_p === 0 && lastPressure > 0) {
+                if (lev !== lastPressure) {
+                    lag1_p = j;
+                }
+            }
+        }
         if (lastSecond >= 0) {
-            if (sec - lastSecond > minDelta) {
-                // insert a gap
-                data_wg.push(null);
-                n_gaps++;
+            if(lag1_t === 0 && sec !== lastSecond) {
+                lag1_t = j;
+            }
+            if (Math.abs(sec - lastSecond) > minDelta) {
+                n_deltas = (Math.abs(sec - lastSecond)/minDelta - 1) * n_pressures;
+                // for the Autocorrelation at lag 1, it doesn't matter how many missing
+                // data we put in within gaps! (But for the other AC's it does.)
+                // since we're using only the AC at lag 1 for calculating std err, let's
+                // save cpu time and only put in one missing datum per gap, no matter
+                // how long. WRM 2/22/2019
+                // but if we're using a different lag, which could happen, we'll need
+                // to insert all the missing data in each gap. WRM 2/22/2019
+                // $n_deltas=1;
+                for(var count = 0; count < n_deltas; count++) {
+                    data_wg.push(null);
+                    n_gaps++;
+                    j++;
+                }
             }
         }
         lastSecond = sec;
+        if (hasLevels) {
+            lastPressure = lev;
+        }
         data_wg.push(subVals[i]);
+        j++;
     }
-    //console.log ("n_gaps: " + n_gaps +  " time gaps in subseries");
 
     //from http://www.itl.nist.gov/div898/handbook/eda/section3/eda35c.htm
     var r = [];
-    for (var lag = 0; lag <= 1; lag++) {
+    var lag_by_r = {};
+    var lag1_max = lag1_p > lag1_t ? lag1_p : lag1_t;
+    var r_sum = 0;
+    var n_r = 0;
+    var n_in_lag;
+    var lag;
+    var t;
+    for (lag = 0; lag <= lag1_max; lag++) {
         r[lag] = 0;
-        var n_in_lag = 0;
-        for (var t = 0; t < ((n + n_gaps) - lag); t++) {
+        n_in_lag = 0;
+        for (t = 0; t < ((n + n_gaps) - lag); t++) {
             if (data_wg[t] != null && data_wg[t + lag] != null) {
                 r[lag] += +(data_wg[t] - d_mean) * (data_wg[t + lag] - d_mean);
                 n_in_lag++;
@@ -454,18 +510,34 @@ const get_err = function (sVals, sSecs) {
         }
         if (n_in_lag > 0 && sd > 0) {
             r[lag] /= (n_in_lag * sd * sd);
+            r_sum += r[lag];
+            n_r++;
         } else {
             r[lag] = null;
         }
-        //console.log('r for lag ' + lag + " is " + r[lag] + " n_in_lag is " + n_in_lag + " n_good is " + n_good);
+        if(lag >= 1 && lag < (n + n_gaps) / 2) {
+            lag_by_r[r[lag]] = lag;
+        }
     }
-    // Betsy Weatherhead's correction, based on lag 1
-    if (r[1] >= 1) {
-        r[1] = .99999;
+    if (lag1_t > 0) {
+        r1_t = r[lag1_t] !== undefined ? r[lag1_t] : 0;
     }
-    const betsy = Math.sqrt((n_good - 1) * (1 - r[1]));
+    if (lag1_p > 0) {
+        r1_p = r[lag1_p] !== undefined ? r[lag1_p] : 0;
+    }
+
+    // Betsy Weatherhead's correction, based on lag 1, augmented by the highest
+    // lag > 1 and < n/2
+    if (r1_p >= autocorr_limit) {
+        r1_p = autocorr_limit;
+    }
+    if(r1_t >= autocorr_limit) {
+        r1_t = autocorr_limit;
+    }
+
+    const betsy = Math.sqrt((n_good-1)*(1. - r1_p)*(1. - r1_t));
     var stde_betsy;
-    if (betsy != 0) {
+    if (betsy !== 0) {
         stde_betsy = sd / betsy;
     } else {
         stde_betsy = null;
@@ -609,7 +681,7 @@ const calculateHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     var binMeans = [];
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const globalStats = get_err(curveSubStats, curveSubSecs, []);   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
@@ -693,7 +765,7 @@ const prescribeHistogramBins = function (curveSubStats, curveSubSecs, binParams)
     var binStats = {};
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs);
+    const globalStats = get_err(curveSubStats, curveSubSecs, []);   // we don't need levels for the mean or sd calculations, so just pass in an empty array
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
 
@@ -763,7 +835,12 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     }
 
     // calculate the global stats across all of the data
-    const globalStats = get_err(curveSubStats, curveSubSecs);
+    var globalStats;
+    if (hasLevels) {
+        globalStats = get_err(curveSubStats, curveSubSecs, curveSubLevs);
+    } else {
+        globalStats = get_err(curveSubStats, curveSubSecs, []);
+    }
     const glob_mean = globalStats.d_mean;
     const glob_sd = globalStats.sd;
     const glob_n = globalStats.n_good;
@@ -801,7 +878,11 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     var sum = 0;
     var count = 0;
     for (b_idx = 0; b_idx < binNum; b_idx++) {
-        binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx]);
+        if (hasLevels) {
+            binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx], binSubLevs[b_idx]);
+        } else {
+            binStats = get_err(binSubStats[b_idx], binSubSecs[b_idx], []);
+        }
         bin_mean = binStats.d_mean;
         bin_sd = binStats.sd;
         bin_n = binStats.n_good;

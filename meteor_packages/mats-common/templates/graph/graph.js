@@ -334,7 +334,7 @@ Template.graph.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else {
             return 'block';

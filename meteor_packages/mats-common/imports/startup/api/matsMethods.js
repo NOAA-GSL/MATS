@@ -402,7 +402,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of map
-                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
