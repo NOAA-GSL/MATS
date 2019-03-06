@@ -270,7 +270,7 @@ getApplistJSONForServer() {
     openTunnel
     unset data
     local data=$(mongo  --port 27020 --quiet appProductionStatus <<-%EODgetBuildableAppsForServer
-		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,"app_list.displayName":1,_id:0});
+		db.getCollection('buildConfiguration').find( {\$and: [ {server:"${server}"},{'app_list.buildStatus':'enabled'} ]}, {"app_list.app":1,"app_list.displayName":1,"app_list.group":1,_id:0});
 	%EODgetBuildableAppsForServer
     )
     closeTunnel
