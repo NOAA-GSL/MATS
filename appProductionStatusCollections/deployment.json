@@ -162,8 +162,8 @@
     {
       "app": "met-surface",
       "title": "MET Surface",
-      "version": "2.1.0-2019.03.06.06.01",
-      "buildDate": "2019.03.06.06.01",
+      "version": "2.1.1-2019.03.07.06.00",
+      "buildDate": "2019.03.07.06.00",
       "last_test_run": "",
       "last_test_status": ""
     }
@@ -181,7 +181,7 @@
   "apps": [
     {
       "app": "upperair",
-      "title": "Upper Air",
+      "title": "Upper Air (RAOBS)",
       "version": "2.0.4",
       "buildDate": "2019.02.07.02.07",
       "last_test_run": "",
@@ -189,7 +189,7 @@
     },
     {
       "app": "aircraft",
-      "title": "Aircraft (AMDAR)",
+      "title": "Upper Air (AMDAR)",
       "version": "2.0.4",
       "buildDate": "2019.02.07.01.51",
       "last_test_run": "",
@@ -312,6 +312,30 @@
       "title": "WFIP2",
       "version": "1.8.3",
       "buildDate": "2018.10.25.20.36",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-upperair",
+      "title": "MET Upper Air",
+      "version": "2.0.4",
+      "buildDate": "2019.02.07.01.48",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-anomalycor",
+      "title": "MET Anomaly Correlation",
+      "version": "2.0.4",
+      "buildDate": "2019.02.07.01.48",
+      "last_test_run": "",
+      "last_test_status": ""
+    },
+    {
+      "app": "met-surface",
+      "title": "MET Surface",
+      "version": "2.0.4",
+      "buildDate": "2019.02.07.01.48",
       "last_test_run": "",
       "last_test_status": ""
     }
