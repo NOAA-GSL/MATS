@@ -146,19 +146,21 @@ EOF
 echo "=> Creating Dockerfile..."
 cat > Dockerfile <<EOF
 # Pull base image.
-FROM mhart/alpine-node:4
-# Install build tools to compile native npm modules
-RUN apk add — update build-base python
+FROM node:8.11.4-alpine
 # Create app directory
 RUN mkdir -p /usr/app
 COPY . /usr/app
-RUN cd /usr/app/programs/server && npm install — production
+RUN apk add --update --no-cache make gcc g++ python python-dev py-pip mariadb-dev
+RUN pip install --upgrade pip
+RUN pip2 install numpy
+RUN pip2 install mysqlclient
+RUN cd /usr/app/bundle/programs/server && npm install --production
 WORKDIR /usr/app
 ENV PORT=3000
-ENV MONGO_URL=mongodb://$MONGO_URL:$MONGO_PORT/$MONGO_DB
-ENV ROOT_URL=http://$APP_DOMAIN:$APP_PORT/
-CMD [ "npm", "start" ]
+#ENV MONGO_URL=mongodb://$MONGO_URL:$MONGO_PORT/$MONGO_DB
+#ENV ROOT_URL=http://$APP_DOMAIN:$APP_PORT/
 EXPOSE 3000
+CMD node main.js
 EOF
 
 # Build the docker image
