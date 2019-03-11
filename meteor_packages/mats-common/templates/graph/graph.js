@@ -46,14 +46,17 @@ Template.graph.helpers({
             Session.set('options', options);
 
             // need to save some curve options so that the reset button can undo Plotly.restyle
-            if (plotType === matsTypes.PlotTypes.contour) {
+            if (plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
                 //saved curve options for contours
                 Session.set('colorbarResetOpts', {
                     'colorbar.title': dataset[0].colorbar.title,
-                    'autocontour': true,
-                    'ncontours': 15,
+                    'autocontour': dataset[0].autocontour,
+                    'ncontours': dataset[0].ncontours,
+                    'contours.start': dataset[0].contours.start,
+                    'contours.end': dataset[0].contours.end,
+                    'contours.size': dataset[0].contours.size,
                     'reversescale': false,
-                    'colorscale': 'RdBu'
+                    'colorscale': dataset[0].colorscale
                 });
             } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
                 || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
@@ -120,6 +123,7 @@ Template.graph.helpers({
         return matsGraphUtils.height(matsPlotUtils.getPlotType());
     },
     curves: function () {
+        console.log(Session.get('Curves'));
         return Session.get('Curves');
     },
     plotName: function () {
@@ -143,7 +147,7 @@ Template.graph.helpers({
         }
     },
     confidenceDisplay: function () {
-        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram) {
+        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram && Session.get('plotType') !== matsTypes.PlotTypes.contour && Session.get('plotType') !== matsTypes.PlotTypes.contourDiff) {
             return "block";
         } else {
             return "none";
@@ -189,6 +193,8 @@ Template.graph.helpers({
                 return "Histogram: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
                 return "Contour " + p.dates + " : " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.contourDiff) {
+                return "ContourDiff " + p.dates + " : " + format;
             } else {
                 return "Scatter: " + p.dates + " : " + format;
             }
@@ -242,7 +248,7 @@ Template.graph.helpers({
             || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle)
     },
     isContour: function () {
-        return (Session.get('plotType') === matsTypes.PlotTypes.contour)
+        return (Session.get('plotType') === matsTypes.PlotTypes.contour || Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
     },
     isNotMap: function () {
         return (Session.get('plotType') !== matsTypes.PlotTypes.map)
@@ -299,7 +305,7 @@ Template.graph.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
             return 'none';
         } else {
             return 'block';
@@ -307,7 +313,7 @@ Template.graph.helpers({
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
             return 'none';
         } else {
             return 'block';
@@ -316,7 +322,7 @@ Template.graph.helpers({
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
             return 'none';
         } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
             return 'block';
@@ -352,7 +358,7 @@ Template.graph.helpers({
         Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             return "none";
         } else {
             return "block";
@@ -362,7 +368,7 @@ Template.graph.helpers({
         Session.get('PlotResultsUpDated');
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             return "block";
         } else {
             return "none";
@@ -370,7 +376,7 @@ Template.graph.helpers({
     },
     yAxisControlsNumberVisibility: function () {
         Session.get('PlotResultsUpDated');
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "none";
         } else {
             return "block";
@@ -378,7 +384,7 @@ Template.graph.helpers({
     },
     yAxisControlsTextVisibility: function () {
         Session.get('PlotResultsUpDated');
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.yaxis.title.text).indexOf("Date") > -1) {
             return "block";
         } else {
             return "none";
@@ -438,6 +444,11 @@ Template.graph.events({
         window.open(this.url, "mv", "height=200,width=200");
     },
     'click .back': function () {
+        const plotType = Session.get('plotType');
+        if (plotType === matsTypes.PlotTypes.contourDiff) {
+            const oldCurves = Session.get('oldCurves');
+            Session.set('Curves', oldCurves);
+        }
         matsPlotUtils.enableActionButtons();
         matsGraphUtils.setDefaultView();
         matsCurveUtils.resetPlotResultData();
@@ -838,7 +849,7 @@ Template.graph.events({
             // we need both a relayout and a restyle
             curveOpsUpdate = [];
             Plotly.relayout($("#placeholder")[0], options);
-            if (plotType === matsTypes.PlotTypes.contour) {
+            if (plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
                 // restyle for contour plots
                 Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
             } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
@@ -865,7 +876,7 @@ Template.graph.events({
             }
         });
         if (plotType === matsTypes.PlotTypes.timeSeries || plotType === matsTypes.PlotTypes.dailyModelCycle ||
-            (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
+            ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1)) {
             $("input[id^=x][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['xaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;
@@ -893,7 +904,7 @@ Template.graph.events({
                 newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.title'] = elem.value;
             }
         });
-        if (plotType === matsTypes.PlotTypes.contour && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
+        if ((plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) && ($("#placeholder")[0].layout.xaxis.title.text).indexOf("Date") > -1) {
             $("input[id^=y][id$=AxisMinText]").get().forEach(function (elem, index) {
                 if (elem.value !== undefined && elem.value !== "") {
                     newOpts['yaxis' + (index === 0 ? "" : index + 1) + '.range[0]'] = elem.value;

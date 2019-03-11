@@ -350,7 +350,7 @@ const generateContourCurveOptions = function (curve, axisMap, dataset) {
                 title: unitKey,
                 titleside: 'right',
                 titlefont: {
-                    size: 16,
+                    size: 20,
                     family: 'Arial, sans-serif'
                 }
             },

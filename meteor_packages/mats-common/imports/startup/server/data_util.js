@@ -948,6 +948,25 @@ const sortHistogramBins = function (curveSubStats, curveSubSecs, curveSubLevs, b
     return {d: d};
 };
 
+// utility that takes the curve params for two contour plots and collapses them into the curve params for one diff contour.
+const getDiffContourCurveParams = function (curves) {
+
+    var newCurve = {};
+    const curveKeys = Object.keys(curves[0]);
+    var currKey;
+    for (var ckidx = 0; ckidx < curveKeys.length; ckidx++) {
+        currKey = curveKeys[ckidx];
+        if (currKey === 'color') {
+            newCurve['color'] = "rgb(255,165,0)";
+        } else if (curves[0][currKey] === curves[1][currKey]) {
+            newCurve[currKey] = curves[0][currKey];
+        } else {
+            newCurve[currKey] = curves[1][currKey] + "-" + curves[0][currKey];
+        }
+    }
+    return [newCurve];
+};
+
 //used for sorting arrays
 const sortFunction = function (a, b) {
     if (a[0] === b[0]) {
@@ -983,6 +1002,7 @@ export default matsDataUtils = {
     calculateHistogramBins: calculateHistogramBins,
     prescribeHistogramBins: prescribeHistogramBins,
     sortHistogramBins: sortHistogramBins,
+    getDiffContourCurveParams: getDiffContourCurveParams,
     sortFunction: sortFunction,
 
 }

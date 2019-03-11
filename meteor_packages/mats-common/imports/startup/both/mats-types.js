@@ -34,7 +34,8 @@ var PlotTypes = {
     dailyModelCycle: "DailyModelCycle",
     map: "Map",
     histogram: "Histogram",
-    contour: "Contour"
+    contour: "Contour",
+    contourDiff: "ContourDiff"
 };
 
 var ForecastTypes = {
