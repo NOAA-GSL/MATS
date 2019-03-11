@@ -46,35 +46,47 @@ Template.graph.helpers({
             Session.set('options', options);
 
             // need to save some curve options so that the reset button can undo Plotly.restyle
-            if (plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
-                //saved curve options for contours
-                Session.set('colorbarResetOpts', {
-                    'colorbar.title': dataset[0].colorbar.title,
-                    'autocontour': dataset[0].autocontour,
-                    'ncontours': dataset[0].ncontours,
-                    'contours.start': dataset[0].contours.start,
-                    'contours.end': dataset[0].contours.end,
-                    'contours.size': dataset[0].contours.size,
-                    'reversescale': false,
-                    'colorscale': dataset[0].colorscale
-                });
-            } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
-                || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
-                || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
-                // saved curve options for line graphs
-                var lineTypeResetOpts = [];
-                for (var lidx = 0; lidx < dataset.length; lidx++) {
-                    if (dataset[lidx].label.startsWith("Curve")) {
-                        lineTypeResetOpts.push({
-                            'line.dash': dataset[lidx].line.dash,
-                            'line.width': dataset[lidx].line.width,
-                            'marker.symbol': dataset[lidx].marker.symbol,
-                        });
-                    } else {
-                        break;
+            switch (plotType) {
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                    //saved curve options for contours
+                    Session.set('colorbarResetOpts', {
+                        'colorbar.title': dataset[0].colorbar.title,
+                        'autocontour': dataset[0].autocontour,
+                        'ncontours': dataset[0].ncontours,
+                        'contours.start': dataset[0].contours.start,
+                        'contours.end': dataset[0].contours.end,
+                        'contours.size': dataset[0].contours.size,
+                        'reversescale': false,
+                        'colorscale': dataset[0].colorscale
+                    });
+                    break;
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    // saved curve options for line graphs
+                    var lineTypeResetOpts = [];
+                    for (var lidx = 0; lidx < dataset.length; lidx++) {
+                        if (dataset[lidx].label.startsWith("Curve")) {
+                            lineTypeResetOpts.push({
+                                'line.dash': dataset[lidx].line.dash,
+                                'line.width': dataset[lidx].line.width,
+                                'marker.symbol': dataset[lidx].marker.symbol,
+                            });
+                        } else {
+                            break;
+                        }
                     }
-                }
-                Session.set('lineTypeResetOpts', lineTypeResetOpts);
+                    Session.set('lineTypeResetOpts', lineTypeResetOpts);
+                    break;
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                default:
+                    break;
             }
 
             // initial plot
@@ -147,12 +159,27 @@ Template.graph.helpers({
         }
     },
     confidenceDisplay: function () {
-        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram && Session.get('plotType') !== matsTypes.PlotTypes.contour && Session.get('plotType') !== matsTypes.PlotTypes.contourDiff) {
-            return "block";
+        if (Session.get('plotParameter') === "matched") {
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    return "block";
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
             return "none";
         }
-
     },
     mvSpanDisplay: function () {
         var updated = Session.get("MvResultsUpDated");
@@ -175,28 +202,32 @@ Template.graph.helpers({
             if (format === undefined) {
                 format = "Unmatched";
             }
-            if ((Session.get("plotType") === undefined) || Session.get("plotType") === matsTypes.PlotTypes.timeSeries) {
-                return "TimeSeries " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
-                return "Profile: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
-                return "Threshold: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
-                return "ValidTime: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
-                return "DailyModelCycle " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-                return "Map " + p.dates + " ";
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
-                return "Histogram: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
-                return "Contour " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.contourDiff) {
-                return "ContourDiff " + p.dates + " : " + format;
-            } else {
-                return "Scatter: " + p.dates + " : " + format;
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                    return "TimeSeries " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.profile:
+                    return "Profile: " + format;
+                case matsTypes.PlotTypes.dieoff:
+                    return "DieOff: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.threshold:
+                    return "Threshold: " + format;
+                case matsTypes.PlotTypes.validtime:
+                    return "ValidTime: " + format;
+                case matsTypes.PlotTypes.map:
+                    return "Map " + p.dates + " ";
+                case matsTypes.PlotTypes.histogram:
+                    return "Histogram: " + format;
+                case matsTypes.PlotTypes.contour:
+                    return "Contour " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.contourDiff:
+                    return "ContourDiff " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.scatter2d:
+                    break;
+                default:
+                    return "Scatter: " + p.dates + " : " + format;
             }
         } else {
             return "no plot params";
@@ -243,9 +274,23 @@ Template.graph.helpers({
         return (Session.get('plotType') === matsTypes.PlotTypes.profile)
     },
     isLinePlot: function () {
-        return (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
-            || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
-            || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle)
+        var plotType = Session.get('plotType');
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+                return true;
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.scatter2d:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return false;
+        }
     },
     isContour: function () {
         return (Session.get('plotType') === matsTypes.PlotTypes.contour || Session.get('plotType') === matsTypes.PlotTypes.contourDiff)
@@ -305,29 +350,64 @@ Template.graph.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
-            return 'none';
-        } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
-            return 'block';
+        if (isMatched) {
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    return "block";
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
-            return 'none';
+            return "none";
         }
     },
     barsShowHideDisplay: function () {
@@ -473,7 +553,11 @@ Template.graph.events({
         // capture the layout
         const layout = $("#placeholder")[0].layout;
         var key = Session.get('plotResultKey');
-        matsMethods.saveLayout.call({resultKey: key, layout: layout, curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate}}, function (error) {
+        matsMethods.saveLayout.call({
+            resultKey: key,
+            layout: layout,
+            curveOpsUpdate: {curveOpsUpdate: curveOpsUpdate}
+        }, function (error) {
             if (error !== undefined) {
                 setError(error);
             }
@@ -849,17 +933,29 @@ Template.graph.events({
             // we need both a relayout and a restyle
             curveOpsUpdate = [];
             Plotly.relayout($("#placeholder")[0], options);
-            if (plotType === matsTypes.PlotTypes.contour || plotType === matsTypes.PlotTypes.contourDiff) {
-                // restyle for contour plots
-                Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
-            } else if (Session.get('plotType') === matsTypes.PlotTypes.timeSeries || Session.get('plotType') === matsTypes.PlotTypes.profile
-                || Session.get('plotType') === matsTypes.PlotTypes.dieoff || Session.get('plotType') === matsTypes.PlotTypes.threshold
-                || Session.get('plotType') === matsTypes.PlotTypes.validtime || Session.get('plotType') === matsTypes.PlotTypes.dailyModelCycle) {
-                // restyle for line plots
-                const lineTypeResetOpts = Session.get('lineTypeResetOpts');
-                for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
-                    Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
-                }
+            switch (plotType) {
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                    // restyle for contour plots
+                    Plotly.restyle($("#placeholder")[0], Session.get('colorbarResetOpts'), 0);
+                    break;
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    // restyle for line plots
+                    const lineTypeResetOpts = Session.get('lineTypeResetOpts');
+                    for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
+                        Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
+                    }
+                    break;
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                default:
+                    break;
             }
         }
     },
