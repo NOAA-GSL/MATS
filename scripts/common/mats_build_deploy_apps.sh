@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-
-# source the build environment and mongo utilities
+# Taken from https://blog.mvp-space.com/how-to-dockerize-a-meteor-app-with-just-one-script-4bccb26f6ff0
+# builds a dockerfile for a MATS app that has been built already by mats_build_deploy_apps.sh.
+# This script takes the bundle that was already built and adds a dockerfile, a settings file and a strtup package.json
+# and then builds the image from an appropriate node image that corresponds to the node verwsion of the app.
 . /builds/buildArea/MATS_for_EMB/scripts/common/app_production_utilities.source
 # assign all the top level environment values from the build configuration to shell variables
 # set up logging
