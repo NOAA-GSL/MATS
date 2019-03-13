@@ -750,8 +750,8 @@ const showHistogramFace = function () {
 // method to display the appropriate selectors for a contour plot
 const showContourFace = function () {
     // move dates selector to plot parameters - one date range for all curves
-    const isContour = document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true;
-    const isContourDiff = document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff).checked === true;
+    const isContour = document.getElementById('plot-type-' + matsTypes.PlotTypes.contour) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contour).checked === true;
+    const isContourDiff = document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff) !== null && document.getElementById('plot-type-' + matsTypes.PlotTypes.contourDiff).checked === true;
     if (isContour || isContourDiff) {
         var faceOptions = {
             'curve-dates': 'none',

@@ -135,7 +135,6 @@ Template.graph.helpers({
         return matsGraphUtils.height(matsPlotUtils.getPlotType());
     },
     curves: function () {
-        console.log(Session.get('Curves'));
         return Session.get('Curves');
     },
     plotName: function () {
