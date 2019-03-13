@@ -62,6 +62,22 @@ if [ "X${build_env}" == "X" ]; then
     exit 1
 fi
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
+# Environment vars are set from the appProduction databse. Example for int....
+#    "server" : "mats-int.gsd.esrl.noaa.gov",
+#    "deployment_environment" : "integration",
+#    "deployment_status" : "active",
+#    "deployment_directory" : "/builds/buildArea/MATS_for_EMB",
+#    "build_git_repo" : "gerrit:MATS_for_EMB",
+#    "build_code_branch" : "master",
+#    "build_directory" : "/builds/buildArea/",
+#    "build_cmd" : "sh /builds/buildArea/MATS_for_EMB/scripts/common/mats_build_deploy_apps.sh -e int",
+#    "cmd_execute_server" : "mats-int.gsd.esrl.noaa.gov",
+#    "test_git_repo" : "https://user@vlab.ncep.noaa.gov/git/mats-testing",
+#    "test_code_branch" : "master",
+#    "test_directory" : "/builds/buildArea/mats-testing",
+#    "test_command" : "sh ./matsTest -b phantomjs -s mats-int.gsd.esrl.noaa.gov -f progress:/builds/buildArea/test_results/mats-int-`/bin/date +%Y.%m.%d.%H.%M.%S`",
+#    "test_result_directory" : "/builds/buildArea/test_results",
+
 cd ${BUILD_DIRECTORY}
 if [ ! -d "${DEPLOYMENT_DIRECTORY}" ]; then
     echo -e "${DEPLOYMENT_DIRECTORY} does not exist,  clone ${DEPLOYMENT_DIRECTORY}"
@@ -210,43 +226,64 @@ for app in ${apps[*]}; do
 
     # build container....
     # loosely based on excellent post at https://github.com/Treecom/alpine-meteor
+    # copy docker scripts
+    cp -a ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts/ ${BUNDLE_DIRECTORY}
     cd ${BUNDLE_DIRECTORY}
     # Create the Dockerfile
     echo "=> Creating Dockerfile..."
-    cat > Dockerfile <<%EOFdockerfile
+    export app=met-upperair
+    export tag=2.0.1
+
+    #export DEPLOYMENT_DIRECTORY=/builds/buildArea/MATS_for_EMB
+    #export BUILD_DIRECTORY=/builds/buildArea/
+    export METEORD_DIR=/opt/meteord
+    export BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
+    export MONGO_URL=mongodb://mongo
+    export MONGO_PORT=27017
+    export MONGO_DB=met-upperair
+    export REPO=randytpierce/mats1
+    export TAG=${app}-${tag}
+    #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
+    cat <<-%EOFdockerfile > Dockerfile
+        # have to mount meteor settings as usr/app/settings/${app} - so that settings.json can get picked up by run_app.sh
+        # the corresponding usr/app/settings/${app}/settings-mysql.cnf file needs to be referenced by
+        # "MYSQL_CONF_PATH": "/usr/app/settings/${app}/settings-mysql.cnf" in the settings.json file
+        # and the MYSQL_CONF_PATH entry in the settings.json
         # Pull base image.
         FROM node:8.11.4-alpine
         # Create app directory
-        ENV METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
+        ENV APPNAME="${app}" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
         RUN mkdir -p /usr/app
         WORKDIR /usr/app
-        COPY docker_scripts $METEORD_DIR
-        RUN apk --update --no-cache add python ${BUILD_PACKAGES} \
-            && npm install -g npm@6.4 \
-            && npm install -g node-gyp \
-            && node-gyp install
-            && pip install --upgrade pip \
-            && pip2 install numpy \
-            && pip2 install mysqlclient
+        ADD ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts ${METEORD_DIR}
+        RUN apk --update --no-cache add python ${BUILD_PACKAGES} \\
+             && npm install -g npm@6.4 \\
+             && npm install -g node-gyp \\
+             && node-gyp install \\
+             && pip install --upgrade pip \\
+             && pip2 install numpy \\
+             && pip2 install mysqlclient
 
         ONBUILD COPY bundle /usr/app
         ONBUILD RUN sh $METEORD_DIR/build_app.sh
         ONBUILD RUN sh $METEORD_DIR/rebuild_npm_modules.sh
         ONBUILD RUN sh $METEORD_DIR/rebuild_npm_modules.sh
         ONBUILD RUN sh $METEORD_DIR/clean-final.sh
-
-        ENV MONGO_URL=mongodb://$MONGO_URL:$MONGO_PORT/$MONGO_DB
-        ENV ROOT_URL=http://localhost:3000/
-        EXPOSE 3000
+        ENV APPNAME=${app}
+        ENV MONGO_URL=mongodb://mongo:27017/${app}
+        ENV ROOT_URL=http://localhost:80/
+        EXPOSE 80
         ENTRYPOINT sh $METEORD_DIR/run_app.sh
-%EOFdockerfile
-    CONTAINER=MATS/${app}
-    TAG=${tag}
-    REGISTRY=false
-    # build container
-    docker build --rm -t ${CONTAINER}:${TAG} .
-    docker tag ${CONTAINER}:${TAG} ${CONTAINER}:${TAG}
 
+        # build container
+        #docker build --no-cache --rm -t ${REPO}:${TAG} .
+        #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
+        #docker push ${REPO}:${TAG}
+    %EOFdockerfile
+    # build container
+    docker build --no-cache --rm -t ${REPO}:${TAG} .
+    docker tag ${REPO}:${TAG} ${REPO}:${TAG}
+    docker push ${REPO}:${TAG}
     cd ${DEPLOYMENT_DIRECTORY}/apps
 done
 
@@ -265,33 +302,3 @@ echo -e "$0 trigger nginx restart"
 echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
 exit 0
 
-
-
-
-# Create the Dockerfile
-echo "=> Creating Dockerfile..."
-cat > Dockerfile <<EOF
-# Pull base image.
-FROM node:8.11.4-alpine
-# Create app directory
-ENV METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
-RUN mkdir -p /usr/app
-WORKDIR /usr/app
-COPY docker_scripts $METEOR_DIR
-RUN apk --update --no-cache add python ${BUILD_PACKAGES} \
-    && npm install -g npm@6.4 \
-    && npm install -g node-gyp \
-    && node-gyp install
-    && pip install --upgrade pip \
-    && pip2 install numpy \
-    && pip2 install mysqlclient
-
-ONBUILD COPY bundle /usr/app
-
-WORKDIR /usr/app
-ENV PORT=3000
-#ENV MONGO_URL=mongodb://$MONGO_URL:$MONGO_PORT/$MONGO_DB
-#ENV ROOT_URL=http://$APP_DOMAIN:$APP_PORT/
-EXPOSE 3000
-CMD node main.js
-EOF
