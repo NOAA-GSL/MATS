@@ -116,7 +116,7 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
     if (forecastLength != null) {
         forecastLength = Array.isArray(forecastLength) ? forecastLength : [forecastLength];
         if (forecastLength.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][dataSource];
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
             const forecastLengths = forecastLength.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
