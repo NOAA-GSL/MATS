@@ -206,7 +206,7 @@ for app in ${apps[*]}; do
     cd $app
     echo -e "$0 - building app ${GRN}${app}${NC}"
     /usr/local/bin/meteor reset
-    /usr/local/bin/meteor npm install
+    /usr/local/bin/meteor npm install --production
     if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
         rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
     else
