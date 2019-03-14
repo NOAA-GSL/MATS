@@ -247,7 +247,7 @@ for app in ${apps[*]}; do
     #export BUILD_DIRECTORY=/builds/buildArea/
     export METEORD_DIR=/opt/meteord
     export BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
-    export MONGO_URL=mongodb://mongo
+    export MONGO_URL="mongodb://mongo"
     export MONGO_PORT=27017
     export MONGO_DB=met-upperair
     export REPO=randytpierce/mats1
