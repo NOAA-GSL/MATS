@@ -21,7 +21,7 @@ requestedTag=""
 requestedBranch=""
 tag=""
 build_env=""
-while getopts "ar:e:t:" o; do
+while getopts "ar:e:t:b:" o; do
     case "${o}" in
         t)
             tag=${OPTARG}
