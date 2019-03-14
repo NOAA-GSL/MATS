@@ -7,5 +7,6 @@ BINARY_MODULES=$(find /bundle -name 'binding\.gyp' -exec dirname {} \; | grep -v
 
 for BINARY_MODULE in $BINARY_MODULES; do
     cd $BINARY_MODULE
+    echo "rebuild_npm_modules => rebuilding npm $BINARY_MODULE"
     node-gyp rebuild
 done
