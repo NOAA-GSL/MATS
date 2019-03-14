@@ -39,63 +39,79 @@ dataContourDiff = function (plotParams, plotFunction) {
         var yAxisParam = curve['y-axis-parameter'];
         var xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
         var yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-        var model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        var metarStringStr = curve['truth'];
-        var metarString = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === metarStringStr);
+        var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var regionClause;
+        if (region === 'all_stat') {
+            regionClause = "";
+        } else if (region === 'all_surf') {
+            regionClause = "and m0.id in(1,2,3,4,5,6,7) ";
+        } else if (region === 'all_sol') {
+            regionClause = "and m0.id in(8,9,10,11,12,13,14) ";
+        } else {
+            regionClause = "and m0.id in(" + region + ") ";
+        }
+        var scaleStr = curve['scale'];
+        var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var variableStr = curve['variable'];
         var variableOptionsMap = matsCollections.CurveParams.findOne({name: 'variable'}, {optionsMap: 1})['optionsMap'];
         var variable = variableOptionsMap[variableStr];
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
-        var statistic;
-        if (variableStr === '2m temperature' || variableStr === '2m dewpoint') {
-            statistic = statisticOptionsMap[statisticSelect][0];
-        } else if (variableStr === '10m wind') {
-            statistic = statisticOptionsMap[statisticSelect][2];
-        } else {
-            statistic = statisticOptionsMap[statisticSelect][1];
-        }
+        var statistic = statisticOptionsMap[statisticSelect][0];
         statistic = statistic.replace(/\{\{variable0\}\}/g, variable[0]);
         statistic = statistic.replace(/\{\{variable1\}\}/g, variable[1]);
+        statistic = statistic.replace(/\{\{variable2\}\}/g, variable[2]);
         var statVarUnitMap = matsCollections.CurveParams.findOne({name: 'variable'}, {statVarUnitMap: 1})['statVarUnitMap'];
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var validTimeClause = "";
         var forecastLengthClause = "";
         var dateClause = "";
         if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-            var forecastLength = curve['forecast-length'];
+            var forecastLength = Number(curve['forecast-length']) * 60;
             forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+                validTimeClause = " and (m0.secs)%(24*3600)/3600 IN(" + validTimes + ")";
             }
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-            dateClause = "m0.valid_day+3600*m0.hour-m0.fcst_len*3600";
+            dateClause = "m0.secs-m0.fcst_len*60";
         } else {
-            dateClause = "m0.valid_day+3600*m0.hour";
+            dateClause = "m0.secs";
         }
 
         // for two contours it's faster to just take care of matching in the query
         var matchModel = "";
         var matchDates = "";
+        var matchRegionClause = "";
+        var matchScaleClause = "";
         var matchValidTimeClause = "";
         var matchForecastLengthClause = "";
         var matchClause = "";
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
-            const otherMetar = Object.keys(matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'truth'}).valuesMap[key] === curves[otherCurveIndex]['truth']);
-            const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
-
-            matchModel = ", " + otherModel + "_" + otherMetar + "_" + otherRegion + " as a0";
+            matchModel = ", " + otherModel + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.valid_day = a0.valid_day and m0.hour = a0.hour";
+            matchClause = "and m0.secs = a0.secs";
+
+            const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
+            if (otherRegion === 'all_stat') {
+                matchRegionClause = "";
+            } else if (otherRegion === 'all_surf') {
+                matchRegionClause = "and a0.id in(1,2,3,4,5,6,7) ";
+            } else if (otherRegion === 'all_sol') {
+                matchRegionClause = "and a0.id in(8,9,10,11,12,13,14) ";
+            } else {
+                matchRegionClause = "and a0.id in(" + otherRegion + ") ";
+            }
+            var otherScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === curves[otherCurveIndex]['scale']);
+            matchScaleClause = "and a0.scale = '" + otherScale + "'";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
                 var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
@@ -104,7 +120,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
                 if (matchValidTimes.length > 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    matchValidTimeClause = " and a0.hour IN(" + matchValidTimes + ")";
+                    matchValidTimeClause = " and (a0.secs)%(24*3600)/3600 IN(" + matchValidTimes + ")";
                 }
             }
         }
@@ -121,16 +137,20 @@ dataContourDiff = function (plotParams, plotFunction) {
             "min({{dateClause}}) as min_secs, " +
             "max({{dateClause}}) as max_secs, " +
             "{{statistic}} " +
-            "from {{model}} as m0{{matchModel}} " +
+            "from surfrad as ob0, {{data_source}} as m0{{matchModel}} " +
             "where 1=1 " +
+            "and ob0.secs = m0.secs " +
+            "and ob0.id = m0.id " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
             "{{matchDates}} " +
-            "{{matchClause}} " +
+            "and m0.scale = '{{scale}}' " +
+            "{{matchScaleClause}} " +
+            "{{regionClause}} " +
+            "{{matchRegionClause}} " +
             "{{validTimeClause}} " +
-            "{{matchValidTimeClause}} " +
             "{{forecastLengthClause}} " +
-            "{{matchForecastLengthClause}} " +
+            "{{matchClause}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
@@ -138,18 +158,24 @@ dataContourDiff = function (plotParams, plotFunction) {
         statement = statement.replace('{{xValClause}}', xValClause);
         statement = statement.replace('{{yValClause}}', yValClause);
         statement = statement.replace('{{statistic}}', statistic);
-        statement = statement.replace('{{model}}', model + "_" + metarString + "_" + region);
+        statement = statement.replace('{{data_source}}', data_source);
         statement = statement.replace('{{matchModel}}', matchModel);
         statement = statement.replace('{{fromSecs}}', fromSecs);
         statement = statement.replace('{{toSecs}}', toSecs);
+        statement = statement.replace('{{scale}}', grid_scale);
+        statement = statement.replace('{{matchScaleClause}}', matchScaleClause);
         statement = statement.replace('{{matchDates}}', matchDates);
         statement = statement.replace('{{matchClause}}', matchClause);
         statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-        statement = statement.replace('{{matchForecastLengthClause}}', matchForecastLengthClause);
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
-        statement = statement.replace('{{matchValidTimeClause}}', matchValidTimeClause);
+        statement = statement.replace('{{regionClause}}', regionClause);
+        statement = statement.replace('{{matchRegionClause}}', matchRegionClause);
         statement = statement.split('{{dateClause}}').join(dateClause);
         dataRequests[curve.label] = statement;
+
+        if (data_source !== 'HRRR' && (variableStr !== 'dswrf' && statisticSelect !== 'Obs average')) {
+            throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is only available for the HRRR data-source.");
+        }
 
         // math is done on forecastLength later on -- set all analyses to 0
         if (forecastLength === "-99") {
@@ -183,15 +209,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             } else {
                 // this is an error returned by the mysql database
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                if (error.includes('Unknown column')) {
-                    throw new Error("INFO:  The statistic/variable combination [" + statisticSelect + " and " + variableStr + "] is not supported by the database for the model/region [" + model + " and " + region + "].");
-                } else {
-                    throw new Error(error);
-                }
+                throw (new Error(error));
             }
         }
 
         var postQueryStartMoment = moment();
+
         // set curve annotation to be the curve mean -- may be recalculated later
         // also pass previously calculated axis stats to curve options
         const mean = d.glob_stats.mean;
@@ -213,6 +236,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             finish: postQueryFinishMoment.format(),
             duration: moment.duration(postQueryFinishMoment.diff(postQueryStartMoment)).asSeconds() + ' seconds'
         };
+
     }
 
     // turn the two contours into one difference contour

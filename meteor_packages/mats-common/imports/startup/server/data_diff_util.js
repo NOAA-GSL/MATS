@@ -290,6 +290,7 @@ const getDataForDiffContour = function (dataset) {
             z: [[]],                        *****
             n: [[]],                        *****
             text: [],
+            stats: [],
             glob_stats: object,             -----
             type: string,
             autocontour: boolean,
@@ -344,6 +345,7 @@ const getDataForDiffContour = function (dataset) {
     diffDataset['nTextOutput'] = [];
     diffDataset['maxDateTextOutput'] = [];
     diffDataset['minDateTextOutput'] = [];
+    diffDataset['stats'] = [];
     diffDataset['glob_stats'] = {};
     diffDataset['xmax'] = -1 * Number.MAX_VALUE;
     diffDataset['xmin'] = Number.MAX_VALUE;
