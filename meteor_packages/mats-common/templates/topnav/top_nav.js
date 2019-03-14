@@ -2,8 +2,11 @@
 Template.topNav.events({
     'click .matshome' : function(event) {
         event.preventDefault();
-        var appref = Session.get("app").appref;
-        var homeref = appref.substring(0, appref.lastIndexOf("/"));
+        var homeref = document.referrer;
+        if (homeref === "" || homeref === undefined) {
+            var appref = Session.get("app").appref;
+            homeref = appref.substring(0, appref.lastIndexOf("/"));
+        }
         window.location.replace(homeref);
         return false;
     },
