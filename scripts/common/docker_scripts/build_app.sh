@@ -7,7 +7,8 @@ if [ -d /usr/app ]; then
     npm cache clean -f
     npm install -g n
     # NOTE this HAS TO MATCH what meteor node -v returns or the fibers won't install
-    n 8.11.4
+    echo "build_app => n ${METEOR_NODE_VERSION}"
+    n ${METEOR_NODE_VERSION}
     npm install -g
 else
     echo "build_app =>  You don't have an meteor app to run in this image."

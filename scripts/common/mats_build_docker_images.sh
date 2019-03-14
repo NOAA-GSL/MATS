@@ -12,12 +12,13 @@ touch $logname
 exec > >( tee -i $logname )
 exec 2>&1
 
-usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag]  \n\
-	where -a is force build all apps, \n\
+usage="USAGE $0 -e dev|int [-a][-r appReference][-t tag] [-b branch] \n\
+	where -a is force build all apps, -b branch lets you override the assigned branch\n\
 	appReference is build only requested appReferences (like upperair ceiling), \n\
 	default is build changed apps, and e is build environment"
 requestedApp=""
 requestedTag=""
+requestedBranch=""
 tag=""
 build_env=""
 while getopts "ar:e:t:" o; do
@@ -30,6 +31,10 @@ while getopts "ar:e:t:" o; do
         a)
         #all apps
             requestedApp="all"
+        ;;
+        b)
+            requestedBranch=(${OPTARG})
+            echo -e "requested branch ${requestedBranch}"
         ;;
         r)
             requestedApp=(${OPTARG})
@@ -60,6 +65,10 @@ if [ "X${build_env}" == "X" ]; then
     echo -e $usage
     echo "${RED}Must exit now${NC}"
     exit 1
+fi
+if [ "X${requestedBranch}" != "X" ]; then
+    echo -e "overriding git branch with ${requestedBranch}"
+    BUILD_CODE_BRANCH=${requestedBranch}
 fi
 echo "Building Mats apps - environment is ${build_env} requestedApps ${requestedApp[@]} requestedTag is ${requestedTag}: $(/bin/date +%F_%T)"
 # Environment vars are set from the appProduction databse. Example for int....
@@ -243,6 +252,9 @@ for app in ${apps[*]}; do
     export MONGO_DB=met-upperair
     export REPO=randytpierce/mats1
     export TAG=${app}-${tag}
+    # save and export the meteor node version for the build_app script
+    export METEOR_NODE_VERSION = $(meteor node -v | tr -d 'v')
+    export METEOR_NPM_VERSION = $(meteor meteor npm -v)
     #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
     cat <<-%EOFdockerfile > Dockerfile
         # have to mount meteor settings as usr/app/settings/${app} - so that settings.json can get picked up by run_app.sh
@@ -254,12 +266,14 @@ for app in ${apps[*]}; do
         # Pull base image.
         FROM node:8.11.4-alpine
         # Create app directory
-        ENV APPNAME="${app}" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
+        ENV METEOR_NODE_VERSION=${METEOR_NODE_VERSION} APPNAME="${app}" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
         RUN mkdir -p /usr/app
         WORKDIR /usr/app
-        ADD ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts ${METEORD_DIR}
+        ADD docker_scripts ${METEORD_DIR}
         RUN apk --update --no-cache add python ${BUILD_PACKAGES} \\
-             && npm install -g npm@6.4 \\
+             && npm install -g npm@${METEOR_NPM_VERSION} \\
+             && npm cache clean -f
+             && npm install -g n
              && npm install -g node-gyp \\
              && node-gyp install \\
              && pip install --upgrade pip \\
@@ -285,7 +299,9 @@ for app in ${apps[*]}; do
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-    docker push ${REPO}:${TAG}
+    #docker push ${REPO}:${TAG}
+    # example run command
+    # docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:met-upperair-2.0.1
     cd ${DEPLOYMENT_DIRECTORY}/apps
 done
 
