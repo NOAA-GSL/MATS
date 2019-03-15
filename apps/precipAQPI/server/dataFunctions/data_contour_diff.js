@@ -43,6 +43,11 @@ dataContourDiff = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var source = curve['truth'];
+        var sourceStr = "";
+        if (source !== "All") {
+            sourceStr = "_" + source;
+        }
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
@@ -57,18 +62,18 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
             var thresholdStr = curve['threshold'];
             var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
-            thresholdClause = "and m0.trsh = " + threshold + " ";
+            thresholdClause = "and m0.thresh = " + threshold + " ";
         }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
             var validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
             if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
-                validTimeClause = " and  m0.time%(24*3600)/3600 IN(" + validTimes + ")";
+                validTimeClause = " and  m0.valid_time%(24*3600)/3600 IN(" + validTimes + ")";
             }
         }
         if ((xAxisParam === 'Init Date' || yAxisParam === 'Init Date') && (xAxisParam !== 'Valid Date' && yAxisParam !== 'Valid Date')) {
-            dateClause = "m0.time-m0.fcst_len*3600";
+            dateClause = "m0.valid_time-m0.fcst_len*3600";
         } else {
-            dateClause = "m0.time";
+            dateClause = "m0.valid_time";
         }
 
         // for two contours it's faster to just take care of matching in the query
@@ -86,7 +91,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             matchModel = ", " + otherModel + "_" + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
-            matchClause = "and m0.time = a0.time";
+            matchClause = "and m0.valid_time = a0.valid_time";
 
             if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
                 var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
@@ -94,12 +99,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             }
             if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
                 var matchThreshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === curves[otherCurveIndex]['threshold']);
-                matchThresholdClause = "and a0.trsh = " + matchThreshold + " ";
+                matchThresholdClause = "and a0.thresh = " + matchThreshold + " ";
             }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
                 var matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
                 if (matchValidTimes.length > 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
-                    matchValidTimeClause = " and a0.time%(24*3600)/3600 IN(" + matchValidTimes + ")";
+                    matchValidTimeClause = " and a0.valid_time%(24*3600)/3600 IN(" + matchValidTimes + ")";
                 }
             }
         }
@@ -135,7 +140,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
         statement = statement.replace('{{xValClause}}', xValClause);
         statement = statement.replace('{{yValClause}}', yValClause);
-        statement = statement.replace('{{data_source}}', data_source + '_' + region);
+        statement = statement.replace('{{data_source}}', data_source + '_' + region + sourceStr);
         statement = statement.replace('{{matchModel}}', matchModel);
         statement = statement.replace('{{statistic}}', statistic);
         statement = statement.replace('{{threshold}}', threshold);

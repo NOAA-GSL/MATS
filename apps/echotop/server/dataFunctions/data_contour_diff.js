@@ -43,6 +43,8 @@ dataContourDiff = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var scaleStr = curve['scale'];
+        var grid_scale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === scaleStr);
         var statisticSelect = curve['statistic'];
         var statisticOptionsMap = matsCollections.CurveParams.findOne({name: 'statistic'}, {optionsMap: 1})['optionsMap'];
         var statistic = statisticOptionsMap[statisticSelect][0];
@@ -81,9 +83,10 @@ dataContourDiff = function (plotParams, plotFunction) {
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
             const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
+            const otherScale = Object.keys(matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'scale'}).valuesMap[key] === curves[otherCurveIndex]['scale']);
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
 
-            matchModel = ", " + otherModel + "_" + otherRegion + " as a0";
+            matchModel = ", " + otherModel + "_" + otherScale + '_' + otherRegion + " as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
             matchClause = "and m0.time = a0.time";
@@ -135,7 +138,7 @@ dataContourDiff = function (plotParams, plotFunction) {
 
         statement = statement.replace('{{xValClause}}', xValClause);
         statement = statement.replace('{{yValClause}}', yValClause);
-        statement = statement.replace('{{data_source}}', data_source + '_' + region);
+        statement = statement.replace('{{data_source}}', data_source + '_' + grid_scale + '_' + region);
         statement = statement.replace('{{matchModel}}', matchModel);
         statement = statement.replace('{{statistic}}', statistic);
         statement = statement.replace('{{threshold}}', threshold);
@@ -184,7 +187,12 @@ dataContourDiff = function (plotParams, plotFunction) {
             } else {
                 // this is an error returned by the mysql database
                 error += "Error from verification query: <br>" + queryResult.error + "<br> query: <br>" + statement + "<br>";
-                throw (new Error(error));
+                if (error.includes('ER_NO_SUCH_TABLE')) {
+                    throw new Error("INFO:  The region/scale combination [" + regionStr + " and " + scaleStr + "] is not supported by the database for the model [" + dataSourceStr + "]. " +
+                        "Choose a different scale to continue using this region.");
+                } else {
+                    throw new Error(error);
+                }
             }
         }
 
