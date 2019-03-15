@@ -48,7 +48,7 @@ fi
     /usr/sbin/nginx -t >> /builds/restart_nginx.log 2>&1
     syntaxCheck=$?
     echo "nginx syntax check return code is ${syntaxCheck}, fileCheck is ${fileCheck}" >> /builds/restart_nginx.log
-    if [[ ${syntaxCheck} -ne 0 ]]  || [[ "${fileCheck}" != "ASCII text" ]]; then
+    if [[ ${syntaxCheck} -ne 0 ]]  || [[ "${fileCheck}" != "ASCII text"* ]]; then
         echo "ERROR: Retrieved and decrypted ${prefix}_ssl.conf.gpg from mats and installed it in /etc/nginx/conf.d/ssl.conf - but 'nginx - t' failed." >> /builds/restart_nginx.log
         echo "Restoring the previous /etc/nginx/conf.d/ssl.conf - NO RESTART" >> /builds/restart_nginx.log
         /bin/cp /etc/nginx/conf.d/backups/ssl.conf.bak_${d} /etc/nginx/conf.d/ssl.conf
