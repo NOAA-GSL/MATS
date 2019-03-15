@@ -146,6 +146,7 @@ dataContour = function (plotParams, plotFunction) {
     }
 
     var postQueryStartMoment = moment();
+
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
     const mean = d.glob_stats.mean;

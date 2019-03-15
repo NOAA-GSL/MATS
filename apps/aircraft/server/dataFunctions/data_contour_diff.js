@@ -39,8 +39,7 @@ dataContourDiff = function (plotParams, plotFunction) {
         const yAxisParam = curve['y-axis-parameter'];
         const xValClause = matsCollections.CurveParams.findOne({name: 'x-axis-parameter'}).optionsMap[xAxisParam];
         const yValClause = matsCollections.CurveParams.findOne({name: 'y-axis-parameter'}).optionsMap[yAxisParam];
-        const model = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
-        const tablePrefix = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curve['data-source']];
+        const data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         const regionStr = curve['region'];
         const region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
         const variableStr = curve['variable'];
@@ -66,16 +65,12 @@ dataContourDiff = function (plotParams, plotFunction) {
         var varUnits = statVarUnitMap[statisticSelect][variableStr];
         var levelClause = "";
         var validTimeClause = "";
-        var forecastLengthClause = "";
         var dateClause = "";
-        if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-            var forecastLength = curve['forecast-length'];
-            forecastLengthClause = "and m0.fcst_len = " + forecastLength + " ";
-        }
         if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-            const validTimeStr = curve['valid-time'];
-            const validTimeOptionsMap = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'];
-            validTimeClause = validTimeOptionsMap[validTimeStr][0];
+            const validTimes = curve['valid-time'] === undefined ? [] : curve['valid-time'];
+            if (validTimes.length > 0 && validTimes !== matsTypes.InputTypes.unused) {
+                validTimeClause = " and  m0.hour IN(" + validTimes + ")";
+            }
         }
         if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
             const top = curve['top'];
@@ -87,32 +82,35 @@ dataContourDiff = function (plotParams, plotFunction) {
         } else {
             dateClause = "unix_timestamp(m0.date)+3600*m0.hour";
         }
+        var forecastLength = curve['forecast-length'];
+        const phaseStr = curve['phase'];
+        const phaseOptionsMap = matsCollections.CurveParams.findOne({name: 'phase'}, {optionsMap: 1})['optionsMap'];
+        const phase = phaseOptionsMap[phaseStr];
 
         // for two contours it's faster to just take care of matching in the query
         var matchModel = "";
         var matchDates = "";
         var matchValidTimeClause = "";
-        var matchForecastLengthClause = "";
         var matchLevelClause = "";
         var matchClause = "";
         if (matching) {
             const otherCurveIndex = curveIndex === 0 ? 1 : 0;
-            const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).tableMap[curves[otherCurveIndex]['data-source']];
+            const otherModel = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curves[otherCurveIndex]['data-source']][0];
+            const otherFHR = curves[otherCurveIndex]['forecast-length'];
             const otherRegion = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === curves[otherCurveIndex]['region']);
 
-            matchModel = ", " + otherModel + otherRegion + " as a0";
+            matchModel = ", " + otherModel + "_" + otherFHR + "_" + otherRegion + "_sums as a0";
             const matchDateClause = dateClause.split('m0').join('a0');
             matchDates = "and " + matchDateClause + " >= '" + fromSecs + "' and " + matchDateClause + " <= '" + toSecs + "' ";
             matchClause = "and m0.date = a0.date and m0.hour = a0.hour and m0.mb10 = a0.mb10";
 
-            if (xAxisParam !== 'Fcst lead time' && yAxisParam !== 'Fcst lead time') {
-                var matchForecastLength = curves[otherCurveIndex]['forecast-length'];
-                matchForecastLengthClause = "and a0.fcst_len = " + matchForecastLength + " ";
-            }
             if (xAxisParam !== 'Valid UTC hour' && yAxisParam !== 'Valid UTC hour') {
-                matchValidTimeClause = matsCollections.CurveParams.findOne({name: 'valid-time'}, {optionsMap: 1})['optionsMap'][curves[otherCurveIndex]['valid-time']][0];
-                matchValidTimeClause = matchValidTimeClause.split('m0').join('a0');
+                const matchValidTimes = curves[otherCurveIndex]['valid-time'] === undefined ? [] : curves[otherCurveIndex]['valid-time'];
+                if (matchValidTimes.length > 0 && matchValidTimes !== matsTypes.InputTypes.unused) {
+                    matchValidTimeClause = " and  a0.hour IN(" + matchValidTimes + ")";
+                }
             }
+
             if (xAxisParam !== 'Pressure level' && yAxisParam !== 'Pressure level') {
                 var matchTop = curves[otherCurveIndex]['top'];
                 var matchBottom = curves[otherCurveIndex]['bottom'];
@@ -132,7 +130,7 @@ dataContourDiff = function (plotParams, plotFunction) {
             "min({{dateClause}}) as min_secs, " +
             "max({{dateClause}}) as max_secs, " +
             "{{statistic}} " +
-            "from {{model}} as m0{{matchModel}} " +
+            "from {{data_source}} as m0{{matchModel}} " +
             "where 1=1 " +
             "and {{dateClause}} >= '{{fromSecs}}' " +
             "and {{dateClause}} <= '{{toSecs}}' " +
@@ -142,22 +140,19 @@ dataContourDiff = function (plotParams, plotFunction) {
             "{{matchClause}} " +
             "{{validTimeClause}} " +
             "{{matchValidTimeClause}} " +
-            "{{forecastLengthClause}} " +
-            "{{matchForecastLengthClause}} " +
-            "and m0.fcst_len >= 0 " +
+            "{{phase}} " +
             "group by xVal,yVal " +
             "order by xVal,yVal" +
             ";";
 
         statement = statement.replace('{{xValClause}}', xValClause);
         statement = statement.replace('{{yValClause}}', yValClause);
-        statement = statement.replace('{{model}}', tablePrefix + region);
+        statement = statement.replace('{{data_source}}', data_source + "_" + forecastLength + "_" + region + "_sums");
         statement = statement.replace('{{matchModel}}', matchModel);
         statement = statement.replace('{{statistic}}', statistic); // statistic replacement has to happen first
         statement = statement.replace('{{validTimeClause}}', validTimeClause);
         statement = statement.replace('{{matchValidTimeClause}}', matchValidTimeClause);
-        statement = statement.replace('{{forecastLengthClause}}', forecastLengthClause);
-        statement = statement.replace('{{matchForecastLengthClause}}', matchForecastLengthClause);
+        statement = statement.replace('{{phase}}', phase);
         statement = statement.replace('{{levelClause}}', levelClause);
         statement = statement.replace('{{matchLevelClause}}', matchLevelClause);
         statement = statement.split('{{dateClause}}').join(dateClause);

@@ -2,7 +2,6 @@ import {matsCollections} from 'meteor/randyp:mats-common';
 import {matsTypes} from 'meteor/randyp:mats-common';
 import {matsDataUtils} from 'meteor/randyp:mats-common';
 import {matsDataQueryUtils} from 'meteor/randyp:mats-common';
-import {matsDataDiffUtils} from 'meteor/randyp:mats-common';
 import {matsDataCurveOpsUtils} from 'meteor/randyp:mats-common';
 import {matsDataProcessUtils} from 'meteor/randyp:mats-common';
 import {mysql} from 'meteor/pcel:mysql';
@@ -19,14 +18,11 @@ dataContour = function (plotParams, plotFunction) {
     var toSecs = dateRange.toSeconds;
     var error = "";
     var curves = JSON.parse(JSON.stringify(plotParams.curves));
+    if (curves.length > 1) {
+        throw new Error("INFO:  There must only be one added curve.");
+    }
     var dataset = [];
     var axisMap = Object.create(null);
-    var xmax = -1 * Number.MAX_VALUE;
-    var ymax = -1 * Number.MAX_VALUE;
-    var zmax = -1 * Number.MAX_VALUE;
-    var xmin = Number.MAX_VALUE;
-    var ymin = Number.MAX_VALUE;
-    var zmin = Number.MAX_VALUE;
 
     // initialize variables specific to the curve
     var curve = curves[0];
@@ -49,7 +45,7 @@ dataContour = function (plotParams, plotFunction) {
         var forecastLength = Number(curve['forecast-length']);
         var forecastHour = Math.floor(forecastLength);
         var forecastMinute = (forecastLength - forecastHour) * 60;
-        forecastLengthClause = "and m0.fcst_len = " + forecastLength + " and m0.fcst_min = " + forecastMinute + " ";
+        forecastLengthClause = "and m0.fcst_len = " + forecastHour + " and m0.fcst_min = " + forecastMinute + " ";
     }
     if (xAxisParam !== 'Threshold' && yAxisParam !== 'Threshold') {
         var thresholdStr = curve['threshold'];
@@ -142,16 +138,7 @@ dataContour = function (plotParams, plotFunction) {
         }
     }
 
-    // set axis limits based on returned data
     var postQueryStartMoment = moment();
-    if (dataFoundForCurve) {
-        xmin = xmin < d.xmin ? xmin : d.xmin;
-        xmax = xmax > d.xmax ? xmax : d.xmax;
-        ymin = ymin < d.ymin ? ymin : d.ymin;
-        ymax = ymax > d.ymax ? ymax : d.ymax;
-        zmin = zmin < d.zmin ? zmin : d.zmin;
-        zmax = zmax > d.zmax ? zmax : d.zmax;
-    }
 
     // set curve annotation to be the curve mean -- may be recalculated later
     // also pass previously calculated axis stats to curve options
