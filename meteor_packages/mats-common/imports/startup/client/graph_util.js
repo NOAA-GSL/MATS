@@ -105,6 +105,7 @@ var width = function (plotType) {
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.reliability:
         default:
             // set the width wide
             return rectangleWidth();
@@ -128,6 +129,7 @@ var height = function (plotType) {
         case matsTypes.PlotTypes.map:
         case matsTypes.PlotTypes.histogram:
         case matsTypes.PlotTypes.contour:
+        case matsTypes.PlotTypes.reliability:
         default:
             // set the height wide
             return rectangleHeight();

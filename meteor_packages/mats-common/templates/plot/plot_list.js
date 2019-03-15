@@ -232,6 +232,9 @@ Template.plotList.events({
                             case matsTypes.PlotTypes.validtime:
                                 matsCurveUtils.showValidTimeFace();
                                 break;
+                            case matsTypes.PlotTypes.reliability:
+                                matsCurveUtils.showReliabilityFace();
+                                break;
                             case matsTypes.PlotTypes.dailyModelCycle:
                                 matsCurveUtils.showDailyModelCycleFace();
                                 break;

@@ -35,7 +35,8 @@ var PlotTypes = {
     dailyModelCycle: "DailyModelCycle",
     map: "Map",
     histogram: "Histogram",
-    contour: "Contour"
+    contour: "Contour",
+    reliability: "Reliability"
 };
 
 var ForecastTypes = {
@@ -96,6 +97,7 @@ var ReservedWords = {
     ideal7: "ideal7",
     ideal8: "ideal8",
     ideal9: "ideal9",
+    perfectReliability: "Perfect Reliability",
     blueCurveText: "blueCurveText",
     blackCurveText: "blackCurveText",
     redCurveText: "redCurveText"

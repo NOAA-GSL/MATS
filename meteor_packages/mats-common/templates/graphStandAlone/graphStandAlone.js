@@ -162,6 +162,8 @@ Template.GraphStandAlone.helpers({
                 return "Threshold: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
                 return "ValidTime: " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.reliability) {
+                return "Reliability: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
                 return "DailyModelCycle " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {

@@ -614,6 +614,50 @@ const showValidTimeFace = function () {
     }
 };
 
+// method to display the appropriate selectors for a reliability curve
+const showReliabilityFace = function () {
+    // move dates selector to curve parameters - one date range for each curve
+    if (document.getElementById('plot-type-' + matsTypes.PlotTypes.reliability).checked === true) {
+        var faceOptions = {
+            'curve-dates': 'block',
+            'dates': 'none',
+            'region': 'block',
+            'statistic': 'block',
+            'threshold': 'block',
+            'pres-level': 'block',
+            'forecast-length': 'block',
+            'dieoff-type': 'none',
+            'average': 'none',
+            'valid-time': 'none',
+            'utc-cycle-start': 'none',
+            'histogram-bin-controls': 'none',
+            'histogram-yaxis-controls': 'none',
+            'bin-number': 'none',
+            'bin-bounds': 'none',
+            'truth': 'block',
+            'sites' : 'none',
+            'sitesMap' : 'none',
+            'x-axis-parameter': 'none',
+            'y-axis-parameter': 'none'
+        };
+        const faceSelectors = Object.keys(faceOptions);
+        var elem;
+        for (var fidx = 0; fidx < faceSelectors.length; fidx++) {
+            elem = document.getElementById(faceSelectors[fidx] + '-item');
+            if (elem && elem.style) {
+                elem.style.display = faceOptions[faceSelectors[fidx]];
+            }
+        }
+        elem = document.getElementById(matsTypes.PlotTypes.scatter2d);
+        if (elem && elem.style) {
+            elem.style.display = "none";
+        }
+        Session.set('plotType', matsTypes.PlotTypes.reliability);
+        // matsParamUtils.setAllParamsToDefault();
+        Session.set('lastUpdate', Date.now());
+    }
+};
+
 // method to display the appropriate selectors for a daily model cycle curve
 const showDailyModelCycleFace = function () {
     // move dates selector to plot parameters - one date range for all curves
@@ -1020,6 +1064,7 @@ export default matsCurveUtils = {
     showDieOffFace: showDieOffFace,
     showThresholdFace: showThresholdFace,
     showValidTimeFace: showValidTimeFace,
+    showReliabilityFace: showReliabilityFace,
     showDailyModelCycleFace: showDailyModelCycleFace,
     showMapFace: showMapFace,
     showHistogramFace: showHistogramFace,

@@ -513,7 +513,7 @@ def parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, c
     data['sum'] = loop_sum
 
 
-# function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
+# function for parsing the data returned by a histogram query
 def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param):
     global error, error_bool, n0, n_times, data
 
@@ -558,6 +558,85 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
     data['subSecs'] = [item for sublist in sub_secs_all for item in sublist]
     if has_levels:
         data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
+
+# function for parsing the data returned by a reliability query
+def parse_query_data_reliability(cursor, has_levels):
+    global error, error_bool, n0, n_times, data
+
+    # redefine the data array to include the fields needed for reliability plots
+
+    threshold_all = []
+    oy_all = []
+    on_all = []
+    hit_rate = []
+    total_times = []
+    total_values = []
+
+    # get query data and calculate starting time interval of the returned data
+    query_data = cursor.fetchall()
+
+    # loop through the query results and store the returned values
+    for row in query_data:
+        bin_number = int(row['bin_number'])
+        threshold = row['threshold']
+        oy = int(row['oy_i'])
+        on = int(row['on_i'])
+        times = int(row['N_times'])
+        values = int(row['N0'])
+        #n0.append(int(row['N0']))
+        #n_times.append(int(row['N_times']))
+
+        #print(bin_number)
+
+        if bin_number != "null" and threshold != "NULL" and oy != "null" and on != "NULL" and times != "NULL" and values != "NULL":
+            # this function deals with pct and pct_thresh tables
+            # we must add up all of the observed and not-observed values for each probability bin
+            if len(oy_all) < bin_number:
+                oy_all.append(oy)
+            else:
+                oy_all[bin_number-1] = oy_all[bin_number-1] + oy
+            if len(on_all) < bin_number:
+                on_all.append(on)
+            else:
+                on_all[bin_number-1] = on_all[bin_number-1] + on
+            if len(total_times) < bin_number:
+                total_times.append(on)
+            else:
+                total_times[bin_number-1] = total_times[bin_number-1] + times
+            if len(total_values) < bin_number:
+                total_values.append(on)
+            else:
+                total_values[bin_number-1] = total_values[bin_number-1] + values
+            #print(oy_all[bin_number-1])
+            #print(on_all[bin_number-1])
+            if len(threshold_all) < bin_number:
+                threshold_all.append(threshold)
+            else:
+                continue
+
+    #print(threshold_all)
+    # Now, we must determine the hit rate for each probability bin
+    for i in range (0, len(threshold_all), 1):
+        #print('THRESH: '+str(threshold_all[i]))
+        #print('OY: '+str(oy_all[i]))
+        #print('ON: '+str(on_all[i]))
+        try:
+            hr = float(oy_all[i]) / (float(oy_all[i]) + float(on_all[i]))
+        except ZeroDivisionError:
+            hr = None
+        #print('HR: '+str(hr))
+        hit_rate.append(hr)
+
+    # Since everything is combined already, put it into the data structure
+    n0 = total_values
+    n_times = total_times
+    data['x'] = threshold_all
+    data['y'] = hit_rate
+    data['subVals'] = hit_rate
+    data['xmax'] = 1.0
+    data['xmin'] = 0.0
+    data['ymax'] = 1.0
+    data['ymin'] = 0.0
 
 
 # function for parsing the data returned by a contour query
@@ -685,6 +764,7 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
     if not error_bool:
         if cursor.rowcount == 0:
             error = "INFO:0 data records found"
+            print(error)
             error_bool = True
         else:
             if plot_type == 'TimeSeries':
@@ -704,6 +784,8 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
                 parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_param)
             elif plot_type == 'Contour':
                 parse_query_data_contour(cursor, statistic, has_levels)
+            elif plot_type == 'Reliability':
+                parse_query_data_reliability(cursor, has_levels)
             else:
                 parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param)
 

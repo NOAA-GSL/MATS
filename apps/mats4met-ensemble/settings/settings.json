@@ -29,7 +29,7 @@
     "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home",
     "MV_RSCRIPT": "/Users/molly.b.smith/anaconda/bin/Rscript",
     "PYTHON_PATH": "/usr/local/bin/python2.7",
-    "MYSQL_CONF_PATH": "/Users/jeffrey.a.hamilton/WebstormProjects/MATS_for_EMB/apps/met-upperair/settings/settings-mysql.cnf"
+    "MYSQL_CONF_PATH": "/Users/jeffrey.a.hamilton/WebstormProjects/MATS_for_EMB/apps/mats4met-ensemble/settings/settings-mysql.cnf"
   },
   "public": {}
 }

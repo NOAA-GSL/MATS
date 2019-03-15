@@ -122,7 +122,7 @@ Template.graph.helpers({
         }
     },
     confidenceDisplay: function () {
-        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram) {
+        if (Session.get('plotParameter') === "matched" && Session.get('plotType') !== matsTypes.PlotTypes.map && Session.get('plotType') !== matsTypes.PlotTypes.scatter2d && Session.get('plotType') !== matsTypes.PlotTypes.histogram && Session.get('plotType') !== matsTypes.PlotTypes.reliability) {
             return "block";
         } else {
             return "none";
@@ -160,6 +160,8 @@ Template.graph.helpers({
                 return "Threshold: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
                 return "ValidTime: " + format;
+            } else if (Session.get("plotType") === matsTypes.PlotTypes.reliability) {
+                return "Reliability: " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
                 return "DailyModelCycle " + p.dates + " : " + format;
             } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {

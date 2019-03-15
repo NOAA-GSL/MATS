@@ -68,6 +68,7 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.threshold:
                 header += "<th>label</th>\
                     <th>mean</th>\
@@ -154,6 +155,12 @@ Template.textOutput.helpers({
             case matsTypes.PlotTypes.validtime:
                 header += "<th>" + curve.label + " hour of day</th>\
                         <th>raw stat from query</th>\
+                        <th>plotted stat</th>\
+                        <th>std dev</th>\
+                        <th>n</th>";
+                break;
+            case matsTypes.PlotTypes.reliability:
+                header += "<th>" + curve.label + " Reliability</th>\
                         <th>plotted stat</th>\
                         <th>std dev</th>\
                         <th>n</th>";
@@ -259,6 +266,12 @@ Template.textOutput.helpers({
                     "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
+            case matsTypes.PlotTypes.reliability:
+                line += "<td>" + element[labelKey += " Reliability"] + "</td>" +
+                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
+                    "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
+                break;
             case matsTypes.PlotTypes.threshold:
                 line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +
                     "<td>" + (element['raw stat from query'] != undefined && element['raw stat from query'] !== null ? element['raw stat from query'].toPrecision(4) : fillStr) + "</td>" +
@@ -347,6 +360,7 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.validtime:
                 line += "<td>" + curve['label'] + "</td>" +
                     "<td>" + (stats['mean'] != undefined && stats['mean'] !== null ? stats['mean'].toPrecision(4) : "undefined").toString() + "</td>" +
