@@ -43,10 +43,10 @@ while getopts "ar:e:t:b:" o; do
         e)
             build_env="${OPTARG}"
             if [ "${build_env}" == "dev" ]; then
-                setBuildConfigVarsForDevelopmentServer
+                //setBuildConfigVarsForDevelopmentServer
             else
                 if [ "${build_env}" == "int" ]; then
-                    setBuildConfigVarsForIntegrationServer
+                    //setBuildConfigVarsForIntegrationServer
                 else
                     echo -e "${RED}invalid environment '${build_env}' - should be 'int' or 'dev' exiting${NC} \n$usage"
                     exit 1
@@ -235,10 +235,12 @@ for app in ${apps[*]}; do
     echo -e tagged repo with ${GRN}${tag}${NC}
 
     # build container....
-    # loosely based on excellent post at https://github.com/Treecom/alpine-meteor
-    # copy docker scripts
-    cp -a ${DEPLOYMENT_DIRECTORY}/scripts/common/docker_scripts/ ${BUNDLE_DIRECTORY}
+    echo "building container in ${BUNDLE_DIRECTORY}"
     cd ${BUNDLE_DIRECTORY}
+    # stop the container if it is running
+    docker stop ${REPO}:${TAG} || true && docker rm ${REPO}:${TAG} || true
+    # prune all stopped containers
+    docker container prune -f
     # Create the Dockerfile
     echo "=> Creating Dockerfile..."
     export app=met-upperair
@@ -256,68 +258,52 @@ for app in ${apps[*]}; do
     # save and export the meteor node version for the build_app script
     export METEOR_NODE_VERSION = $(meteor node -v | tr -d 'v')
     export METEOR_NPM_VERSION = $(meteor meteor npm -v)
+
     #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
     cat <<-%EOFdockerfile > Dockerfile
-        # have to mount meteor settings as usr/app/settings/${app} - so that settings.json can get picked up by run_app.sh
-        # the corresponding usr/app/settings/${app}/settings-mysql.cnf file needs to be referenced by
-        # "MYSQL_CONF_PATH": "/usr/app/settings/${app}/settings-mysql.cnf" in the settings.json file
+        # have to mount meteor settings as usr/app/settings/met-upperair - so that settings.json can get picked up by run_app.sh
+        # the corresponding usr/app/settings/met-upperair/settings-mysql.cnf file needs to be referenced by
+        # "MYSQL_CONF_PATH": "/usr/app/settings/met-upperair/settings-mysql.cnf" in the settings.json file
         # and the MYSQL_CONF_PATH entry in the settings.json
         # e.g.
         # docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:met-upperair-2.0.1
         # Pull base image.
         FROM node:8.11.4-alpine
         # Create app directory
-        ENV METEOR_NODE_VERSION=${METEOR_NODE_VERSION} APPNAME="${app}" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
+        ENV METEOR_NODE_VERSION=8.11.4 APPNAME="met-upperair" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
         RUN mkdir -p /usr/app
         WORKDIR /usr/app
-        ADD docker_scripts ${METEORD_DIR}
-        RUN apk --update --no-cache add python ${BUILD_PACKAGES} \\
-             && npm install -g npm@${METEOR_NPM_VERSION} \\
-             && npm cache clean -f
-             && npm install -g n
-             && npm install -g node-gyp \\
-             && node-gyp install \\
-             && pip install --upgrade pip \\
-             && pip2 install numpy \\
+        RUN apk --update --no-cache add python make gcc g++ python-dev py-pip mariadb-dev bash \
+                && npm install -g npm@6.4.1 \
+                && npm cache clean -f \
+                && npm install -g n \
+                && npm install -g node-gyp \
+                && node-gyp install \
+                && pip install --upgrade pip \
+                && pip2 install numpy \
              && pip2 install mysqlclient
 
-        ONBUILD COPY bundle /usr/app
-        ONBUILD RUN sh $METEORD_DIR/build_app.sh
-        ONBUILD RUN sh $METEORD_DIR/rebuild_npm_modules.sh
-        ONBUILD RUN sh $METEORD_DIR/rebuild_npm_modules.sh
-        ONBUILD RUN sh $METEORD_DIR/clean-final.sh
-        ENV APPNAME=${app}
-        ENV MONGO_URL=mongodb://mongo:27017/${app}
+        ADD bundle /usr/app
+        RUN cd /usr/app/programs/server && npm install --production
+        RUN apk del --purge  make gcc g++ python-dev py-pip mariadb-dev bash && npm uninstall -g node-gyp
+        RUN rm -rf $METEORD_DIR/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp
+        ENV APPNAME=met-upperair
+        ENV MONGO_URL=mongodb://mongo:27017/met-upperair
         ENV ROOT_URL=http://localhost:80/
         EXPOSE 80
-        ENTRYPOINT sh $METEORD_DIR/run_app.sh
+        ENTRYPOINT export PORT=${PORT:-80} && export NODE_ENV=production && export METEOR_SETTINGS=$(cat /usr/app/settings/${APPNAME}/settings.json) && node /usr/app/main.js
 
         # build container
         #docker build --no-cache --rm -t ${REPO}:${TAG} .
         #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
         #docker push ${REPO}:${TAG}
-    %EOFdockerfile
+%EOFdockerfile
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
     #docker push ${REPO}:${TAG}
     # example run command
-    # docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:met-upperair-2.0.1
-    cd ${DEPLOYMENT_DIRECTORY}/apps
-done
-
-# clean up /tmp files
-echo -e "cleaning up /tmp/npm-* files"
-rm -rf /tmp/npm-*
-
-# build the applist.json
-applistFile=`mktemp`
-echo $(getApplistJSONForServer ${SERVER}) > $applistFile
-mv $applistFile static/applist.json
-chmod a+r static/applist.json
-
-echo -e "$0 trigger nginx restart"
-/bin/touch /builds/restart_nginx
-echo -e "$0 ----------------- finished $(/bin/date +%F_%T)"
-exit 0
+    echo "to run ... docker run --net mynet -v ${HOME}/mats_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
+    echo "created container in ${BUNDLE_DIRECTORY}"
+    cd ${DEPLOYMENT_DIRECTORY}
 
