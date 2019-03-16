@@ -830,8 +830,6 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "anom_corr2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "anomalycor"});
 });
 
 // this object is global so that the reset code can get to it

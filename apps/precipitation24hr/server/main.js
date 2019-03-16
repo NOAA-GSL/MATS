@@ -850,8 +850,6 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
     matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "precipitation24hr"});
 });
 
 // this object is global so that the reset code can get to it

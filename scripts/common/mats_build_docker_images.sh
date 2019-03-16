@@ -207,13 +207,14 @@ for app in ${apps[*]}; do
     echo -e "$0 - building app ${GRN}${app}${NC}"
     /usr/local/bin/meteor reset
     /usr/local/bin/meteor npm install --production
-    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
-        rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
-    else
-        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
-            rollIntegrationVersionAndDateForAppForServer ${app} ${SERVER}
-        fi
-    fi
+# UNCOMMENT THIS WHEN WE ARE ONLY DOING NIGHTLY DOCKER BUILDS
+#    if [ "${DEPLOYMENT_ENVIRONMENT}" == "development" ]; then
+#        rollDevelopmentVersionAndDateForAppForServer ${app} ${SERVER}
+#    else
+#        if [ "${DEPLOYMENT_ENVIRONMENT}" == "integration" ]; then
+#            rollIntegrationVersionAndDateForAppForServer ${app} ${SERVER}
+#        fi
+#    fi
     exportCollections ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     /usr/bin/git commit -m"automated export" ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections
     cat ${DEPLOYMENT_DIRECTORY}/appProductionStatusCollections/deployment.json |

@@ -960,8 +960,6 @@ Meteor.startup(function () {
     metadataPool = mysql.createPool(metadataSettings);
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['anomalycor_mats_metadata']);
     matsMethods.resetApp(mdr, matsTypes.AppTypes.metexpress);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "met-anomalycor"});
 });
 
 // this object is global so that the reset code can get to it

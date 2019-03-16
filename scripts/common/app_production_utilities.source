@@ -598,7 +598,7 @@ getBuildDateForAppForServer() {
 # a development version. Therefore when the development version rolls we make sure that the patch number is one higher than the corresponding integration
 # patch number and we add the date postfix.
 # When the integration build happens, all that is necessary is to take the major, minor, patch part of the corresponding
-# development version i.e. drop the date postfix. When the nightly build next runs it will roll the minor number and the date.
+# development version i.e. drop the date postfix. When the nightly build next runs it will roll the patch number and the date.
 
 # This routine will update the version and buildDate fields in the app element identified by the app reference and server params
 # in the deployment collection of the appProductionStatus mongo database on mats.gsd.esrl.noaa.gov,
