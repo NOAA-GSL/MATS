@@ -434,6 +434,27 @@ const _getFlattenedResultData = function (rk, p, np) {
                         returnData.data[data[ci].label] = curveData;
                     }
                     break;
+                case matsTypes.PlotTypes.reliability:
+                    var returnData = {};
+                    returnData.stats = {};   // map of maps
+                    returnData.data = {};  // map of arrays of map
+                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
+                        var reservedWords = Object.values(matsTypes.ReservedWords);
+                        if (reservedWords.indexOf(data[ci].label) >= 0) {
+                            continue; // don't process the zero or max curves
+                        }
+
+                        var cdata = data[ci].data;
+                        var curveData = [];  // array of maps
+                        for (var cdi = 0; cdi < data[ci].x.length; cdi++) {  // for each datapoint
+                            var curveDataElement = {};
+                            curveDataElement[data[ci].label + ' probability bin'] = data[ci].stats[cdi].prob_bin;
+                            curveDataElement['hit rate'] = data[ci].stats[cdi].hit_rate;
+                            curveData.push(curveDataElement);
+                        }
+                        returnData.data[data[ci].label] = curveData;
+                    }
+                    break;
                 case matsTypes.PlotTypes.dieoff:
                 case matsTypes.PlotTypes.validtime:
                 case matsTypes.PlotTypes.threshold:

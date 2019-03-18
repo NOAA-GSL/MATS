@@ -706,6 +706,12 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
             data.subSecs[di] = [];
             data.subLevs[di] = [];
 
+            // store statistics for this di datapoint
+            data.stats[di] = {
+                prob_bin: data.x[di],
+                hit_rate: data.y[di],
+            };
+
             // this is the tooltip, it is the last element of each dataseries element.
             // also change the x array from epoch to date for timeseries and DMC, as we are now done with it for calculations.
             data.text[di] = label;

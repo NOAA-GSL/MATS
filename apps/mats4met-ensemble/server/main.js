@@ -347,7 +347,7 @@ const doCurveParams = function () {
                 options: Object.keys(modelOptionsMap[myDBs[0]]),   // convenience
                 levelsMap: levelOptionsMap, // need to know what levels the metadata allows for each model.
                 superiorNames: ["database"],
-                dependentNames: ["region", "variable", "forecast-length", "level", "dates", "curve-dates"],
+                dependentNames: ["region", "variable", "forecast-length", "level", "dates"],
                 controlButtonCovered: true,
                 default: Object.keys(modelOptionsMap[myDBs[0]])[0],
                 unique: false,
@@ -562,7 +562,7 @@ const doCurveParams = function () {
                 selected: '',
                 controlButtonCovered: true,
                 unique: false,
-                default: matsTypes.InputTypes.unused,
+                default: levelOptionsMap[myDBs[0]][Object.keys(levelOptionsMap[myDBs[0]])[0]][0],
                 controlButtonVisibility: 'block',
                 controlButtonText: "Level",
                 displayOrder: 3,
@@ -593,35 +593,6 @@ const doCurveParams = function () {
     minDate = matsParamUtils.getMinMaxDates(minDate, maxDate).minDate;
     dstr = minDate + ' - ' + maxDate;
 
-    if (matsCollections.CurveParams.findOne({name: 'curve-dates'}) == undefined) {
-        optionsMap = {
-            '1 day': ['1 day'],
-            '3 days': ['3 days'],
-            '7 days': ['7 days'],
-            '31 days': ['31 days'],
-            '90 days': ['90 days'],
-            '180 days': ['180 days'],
-            '365 days': ['365 days']
-        };
-        matsCollections.CurveParams.insert(
-            {
-                name: 'curve-dates',
-                type: matsTypes.InputTypes.dateRange,
-                optionsMap: optionsMap,
-                options: Object.keys(optionsMap).sort(),
-                startDate: minDate,
-                stopDate: maxDate,
-                superiorNames: ['database','data-source'],
-                controlButtonCovered: true,
-                unique: false,
-                default: dstr,
-                controlButtonVisibility: 'block',
-                displayOrder: 1,
-                displayPriority: 1,
-                displayGroup: 5,
-                help: "dateHelp.html"
-            });
-    }
 };
 
 /* The format of a curveTextPattern is an array of arrays, each sub array has
@@ -646,11 +617,10 @@ const doCurveTextPatterns = function () {
                 ['', 'region', ', '],
                 ['', 'variable', ' '],
                 ['level: ', 'level', ', '],
-                ['fcst_len: ', 'forecast-length', 'h, '],
-                ['', 'curve-dates', '']
+                ['fcst_len: ', 'forecast-length', 'h, ']
             ],
             displayParams: [
-                "label", "database", "data-source", "region", "variable", "forecast-length", "level", "curve-dates"
+                "label", "database", "data-source", "region", "variable", "forecast-length", "level"
             ],
             groupSize: 6
         });

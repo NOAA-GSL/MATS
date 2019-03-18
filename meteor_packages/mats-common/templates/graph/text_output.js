@@ -68,7 +68,6 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.dieoff:
             case matsTypes.PlotTypes.validtime:
-            case matsTypes.PlotTypes.reliability:
             case matsTypes.PlotTypes.threshold:
                 header += "<th>label</th>\
                     <th>mean</th>\
@@ -79,6 +78,9 @@ Template.textOutput.helpers({
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 // no stat for scatter
+                break;
+            case matsTypes.PlotTypes.reliability:
+                // no stat for reliability yet
                 break;
             case matsTypes.PlotTypes.map:
                 header += "<th>label</th>\
@@ -160,10 +162,8 @@ Template.textOutput.helpers({
                         <th>n</th>";
                 break;
             case matsTypes.PlotTypes.reliability:
-                header += "<th>" + curve.label + " Reliability</th>\
-                        <th>plotted stat</th>\
-                        <th>std dev</th>\
-                        <th>n</th>";
+                header += "<th>" + curve.label + " probability bin</th>\
+                        <th>hit rate</th>";
                 break;
             case matsTypes.PlotTypes.scatter2d:
                 header += "<th>" + curve.label + " x axis</th>\
