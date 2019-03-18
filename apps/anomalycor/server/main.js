@@ -728,6 +728,26 @@ const doCurveTextPatterns = function () {
             groupSize: 6
 
         });
+        matsCollections.CurveTextPatterns.insert({
+            plotType: matsTypes.PlotTypes.contourDiff,
+            textPattern: [
+                ['', 'label', ': '],
+                ['', 'data-source', ' in '],
+                ['', 'region', ', '],
+                ['', 'variable', ', '],
+                ['level: ', 'pres-level', ' hPa, '],
+                ['fcst_len: ', 'forecast-length', 'h, '],
+                ['valid-time: ', 'valid-time', ', '],
+                ['x-axis: ', 'x-axis-parameter', ', '],
+                ['y-axis: ', 'y-axis-parameter', '']
+
+            ],
+            displayParams: [
+                "label", "data-source", "region", "variable", "pres-level", "forecast-length", "valid-time", "utc-cycle-start", "x-axis-parameter", "y-axis-parameter"
+            ],
+            groupSize: 6
+
+        });
     }
 };
 
@@ -773,6 +793,12 @@ const doPlotGraph = function () {
             plotType: matsTypes.PlotTypes.contour,
             graphFunction: "graphPlotly",
             dataFunction: "dataContour",
+            checked: false
+        });
+        matsCollections.PlotGraphFunctions.insert({
+            plotType: matsTypes.PlotTypes.contourDiff,
+            graphFunction: "graphPlotly",
+            dataFunction: "dataContourDiff",
             checked: false
         });
     }

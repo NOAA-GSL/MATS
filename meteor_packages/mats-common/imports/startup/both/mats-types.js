@@ -36,6 +36,7 @@ var PlotTypes = {
     map: "Map",
     histogram: "Histogram",
     contour: "Contour",
+    contourDiff: "ContourDiff",
     reliability: "Reliability"
 };
 

@@ -68,7 +68,12 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         while (di < data.x.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
+            var errorResult;
+            if (appParams.hasLevels) {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di]);
+            } else {
+                errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], []);
+            }
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.y[di];
@@ -95,7 +100,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
             means.push(errorResult.d_mean);
 
             // store error bars if matching
-            const errorBar = errorResult.sd * 1.96;
+            const errorBar = errorResult.stde_betsy * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_y.array[di] = errorBar;
@@ -154,7 +159,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>n: " + errorResult.n_good +
                 // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.y[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>errorbars: " + Number((data.y[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.y[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -165,7 +170,7 @@ const processDataXYCurve = function (dataset, appParams, curveInfoParams, plotPa
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values, indVars);
+        const stats = matsDataUtils.get_err(values, indVars, []);
         const filteredMeans = means.filter(x => x);
         var miny = Math.min(...filteredMeans);
         var maxy = Math.max(...filteredMeans);
@@ -314,7 +319,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         while (di < data.y.length) {
 
             // errorResult holds all the calculated curve stats like mean, sd, etc.
-            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di]);
+            var errorResult = matsDataUtils.get_err(data.subVals[di], data.subSecs[di], data.subLevs[di]);
 
             // store raw statistic from query before recalculating that statistic to account for data removed due to matching, QC, etc.
             rawStat = data.x[di];
@@ -335,7 +340,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
             means.push(errorResult.d_mean);
 
             // store error bars if matching
-            const errorBar = errorResult.sd * 1.96;
+            const errorBar = errorResult.stde_betsy * 1.96;
             if (appParams.matching) {
                 errorMax = errorMax > errorBar ? errorMax : errorBar;
                 data.error_x.array[di] = errorBar;
@@ -367,7 +372,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
                 "<br>n: " + errorResult.n_good +
                 // "<br>lag1: " + (errorResult.lag1 === null ? null : errorResult.lag1.toPrecision(4)) +
                 // "<br>stde: " + errorResult.stde_betsy +
-                "<br>errorbars: " + Number((data.x[di]) - (errorResult.sd * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.sd * 1.96)).toPrecision(4);
+                "<br>errorbars: " + Number((data.x[di]) - (errorResult.stde_betsy * 1.96)).toPrecision(4) + " to " + Number((data.x[di]) + (errorResult.stde_betsy * 1.96)).toPrecision(4);
 
             di++;
         }
@@ -378,7 +383,7 @@ const processDataProfile = function (dataset, appParams, curveInfoParams, plotPa
         }
 
         // get the overall stats for the text output - this uses the means not the stats.
-        const stats = matsDataUtils.get_err(values.reverse(), levels.reverse()); // have to reverse because of data inversion
+        const stats = matsDataUtils.get_err(values.reverse(), levels.reverse(), []); // have to reverse because of data inversion
         const filteredMeans = means.filter(x => x);
         var minx = Math.min(...filteredMeans);
         var maxx = Math.max(...filteredMeans);

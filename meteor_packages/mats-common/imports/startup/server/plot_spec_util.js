@@ -119,7 +119,7 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
     if (forecastLength != null) {
         forecastLength = Array.isArray(forecastLength) ? forecastLength : [forecastLength];
         if (forecastLength.length > 0) {
-            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][model];
+            const forecastValueMap = matsCollections.CurveParams.findOne({name: 'forecast-length'}, {valuesMap: 1})['valuesMap'][database][dataSource];
             const forecastLengths = forecastLength.map(function (fl) {
                 return forecastValueMap[fl];
             }).join(',');
@@ -129,7 +129,7 @@ const _getUniqDates = function(dates, database, model, dataSource, region, varia
 
     var statement = "select ld.fcst_valid_beg as avtime " +
         "from " + database + ".stat_header h, " + database + ".line_data_sl1l2 ld " +
-        "where 1=1 and h.model = '" + dataSource + "' " +
+        "where 1=1 and h.model = '" + model + "' " +
         regionsClause +
         "and unix_timestamp(ld.fcst_valid_beg) >= '" + fromSecs + "' " +
         "and unix_timestamp(ld.fcst_valid_beg) <= '" + toSecs + "' " +
@@ -611,14 +611,22 @@ const addSeries = function(plot, dependentAxes, plotParams) {
                                 sValues = _getSortedDatesForDepRange(curve);
                                 break;
                             case 'utc-cycle-start':
-                                const v = curve['utc-cycle-start']
+                                const v = curve['utc-cycle-start'];
                                 const paddedV = _pad(v,2);
                                 sValues = [paddedV]; // turn single selection padded value into array
+                                break;
+                            case 'forecast-length':
+                                sValues = curve[sVar];
+                                if (sValues == null || sValues.length === 0) {
+                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the fcst leads
+                                }
+                                const forecastValueMap = matsParamUtils.getParameterForName(sVar).valuesMap[database][dataSource];
+                                sValues = sValues.map(function (fl) {return forecastValueMap[fl]}).join(',');
                                 break;
                             default:
                                 sValues = curve[sVar];
                                 if (sValues == null || sValues.length === 0) {
-                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the region
+                                    sValues = matsParamUtils.getParameterForName(sVar).optionsMap[database][dataSource]; // have to assign all the regions
                                 }
                         }
                         // check to see if this element was already added.

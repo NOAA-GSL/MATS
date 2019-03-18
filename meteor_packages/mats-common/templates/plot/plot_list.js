@@ -245,6 +245,7 @@ Template.plotList.events({
                                 matsCurveUtils.showHistogramFace();
                                 break;
                             case matsTypes.PlotTypes.contour:
+                            case matsTypes.PlotTypes.contourDiff:
                                 matsCurveUtils.showContourFace();
                                 break;
                             case matsTypes.PlotTypes.scatter2d:
@@ -373,6 +374,12 @@ Template.plotList.events({
                     }
                     Session.set('expireKey', false);
                     matsCurveUtils.setGraphResult(ret.result);
+                    const plotType = Session.get('plotType');
+                    if (plotType === matsTypes.PlotTypes.contourDiff) {
+                        const oldCurves = Session.get('Curves');
+                        Session.set('oldCurves', oldCurves);
+                        Session.set('Curves', ret.result.basis.plotParams.curves);
+                    }
                     Session.set("plotResultKey", ret.key);
                     delete ret;
                     Session.set('graphFunction', graphFunction);

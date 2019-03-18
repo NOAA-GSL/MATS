@@ -402,7 +402,7 @@ const _getFlattenedResultData = function (rk, p, np) {
                     var returnData = {};
                     returnData.stats = {};   // map of maps
                     returnData.data = {};  // map of arrays of map
-                    for (var ci = 0; ci < data[ci].x.length; ci++) {  // for each curve
+                    for (var ci = 0; ci < data.length; ci++) {  // for each curve
                         var reservedWords = Object.values(matsTypes.ReservedWords);
                         if (reservedWords.indexOf(data[ci].label) >= 0) {
                             continue; // don't process the zero or max curves
@@ -2141,14 +2141,18 @@ const saveLayout = new ValidatedMethod({
         },
         layout: {
             type: Object, blackbox: true
+        },
+        curveOpsUpdate: {
+            type: Object, blackbox: true
         }
     }).validator(),
     run(params) {
         if (Meteor.isServer) {
             var key = params.resultKey;
             var layout = params.layout;
+            var curveOpsUpdate = params.curveOpsUpdate;
             try {
-                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout}});
+                LayoutStoreCollection.upsert({key: key}, {$set: {"createdAt": new Date(), layout: layout, curveOpsUpdate: curveOpsUpdate}});
             } catch (error) {
                 throw new Meteor.Error("Error in saveLayout function:" + key + " : " + error.message);
             }

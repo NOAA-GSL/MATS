@@ -15,6 +15,7 @@ import {FlowRouter} from 'meteor/ostrio:flow-router-extra';
 import './graphStandAlone.html';
 
 var annotation = "";
+var resizeOptions;
 
 Template.GraphStandAlone.onCreated(function () {
     // get the params for what this window will contain from the route
@@ -32,8 +33,7 @@ Template.GraphStandAlone.onRendered(function () {
         document.getElementById('placeholder').style.width = matsGraphUtils.standAloneWidth();
         document.getElementById('placeholder').style.height = matsGraphUtils.standAloneHeight();
         var dataset = matsCurveUtils.getGraphResult().data;
-        var options = matsCurveUtils.getGraphResult().options;
-        Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+        Plotly.newPlot($("#placeholder")[0], dataset, resizeOptions, {showLink: true});
     });
     document.getElementById('graph-container').style.backgroundColor = 'white';
 });
@@ -72,8 +72,6 @@ Template.GraphStandAlone.helpers({
                 var plotType = Session.get('plotType');
                 var dataset = matsCurveUtils.getGraphResult().data;
                 var options = matsCurveUtils.getGraphResult().options;
-                $("#legendContainer").empty();
-                $("#placeholder").empty();
                 if (dataset === undefined) {
                     return false;
                 }
@@ -87,14 +85,32 @@ Template.GraphStandAlone.helpers({
                     if (plotType === matsTypes.PlotTypes.map) {
                         options.mapbox.zoom = 2.75;
                     }
-                    // initial plot
-                    Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink:true});
+                    resizeOptions = options;
 
+                    // initial plot
+                    $("#legendContainer").empty();
+                    $("#placeholder").empty();
+                    Plotly.newPlot($("#placeholder")[0], dataset, options, {showLink: true});
+
+                    // update changes to the curve ops
+                    const updates = ret.curveOpsUpdate.curveOpsUpdate;
+                    for (var uidx = 0; uidx < updates.length; uidx++) {
+                        var curveOpsUpdate = {};
+                        var updatedKeys = Object.keys(updates[uidx]);
+                        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+                            var jsonHappyKey = updatedKeys[kidx];
+                            // turn the json placeholder back into .
+                            var updatedKey = jsonHappyKey.split("____").join(".");
+                            curveOpsUpdate[updatedKey] = updates[uidx][jsonHappyKey];
+                        }
+                        Plotly.restyle($("#placeholder")[0], curveOpsUpdate, uidx);
+                    }
+
+                    // append annotations
                     if (plotType !== matsTypes.PlotTypes.map) {
-                        // append annotations
                         annotation = "";
                         for (var i = 0; i < dataset.length; i++) {
-                            if (plotType !== matsTypes.PlotTypes.histogram && plotType !== matsTypes.PlotTypes.profile && dataset[i].curveId !== undefined) {
+                            if (plotType !== matsTypes.PlotTypes.histogram && dataset[i].curveId !== undefined) {
                                 annotation = annotation + "<div id='" + dataset[i].curveId + "-annotation' style='color:" + dataset[i].annotateColor + "'>" + dataset[i].annotation + " </div>";
                             }
                         }
@@ -152,28 +168,34 @@ Template.GraphStandAlone.helpers({
             if (format === undefined) {
                 format = "Unmatched";
             }
-            if ((Session.get("plotType") === undefined) || Session.get("plotType") === matsTypes.PlotTypes.timeSeries) {
-                return "TimeSeries " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
-                return "Profile: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
-                return "Threshold: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
-                return "ValidTime: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.reliability) {
-                return "Reliability: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
-                return "DailyModelCycle " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-                return "Map " + p.dates + " ";
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
-                return "Histogram: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
-                return "Contour " + p.dates + " : " + format;
-            } else {
-                return "Scatter: " + p.dates + " : " + format;
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                    return "TimeSeries " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.profile:
+                    return "Profile: " + format;
+                case matsTypes.PlotTypes.dieoff:
+                    return "DieOff: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.threshold:
+                    return "Threshold: " + format;
+                case matsTypes.PlotTypes.validtime:
+                    return "ValidTime: " + format;
+                case matsTypes.PlotTypes.map:
+                    return "Map " + p.dates + " ";
+                case matsTypes.PlotTypes.histogram:
+                    return "Histogram: " + format;
+                case matsTypes.PlotTypes.reliability:
+                    return "Reliability: " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.contour:
+                    return "Contour " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.contourDiff:
+                    return "ContourDiff " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.scatter2d:
+                    break;
+                default:
+                    return "Scatter: " + p.dates + " : " + format;
             }
         } else {
             return "no plot params";
@@ -226,29 +248,67 @@ Template.GraphStandAlone.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.reliability:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
-            return 'block';
+        if (isMatched) {
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    return "block";
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.reliability:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
-            return 'none';
+            return "none";
         }
     },
     barsShowHideDisplay: function () {
@@ -261,7 +321,7 @@ Template.GraphStandAlone.helpers({
     },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.profile) {
+        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
             return 'none';
         } else {
             return 'block';
