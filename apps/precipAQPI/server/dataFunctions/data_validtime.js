@@ -37,6 +37,11 @@ dataValidTime = function (plotParams, plotFunction) {
         var data_source = matsCollections.CurveParams.findOne({name: 'data-source'}).optionsMap[curve['data-source']][0];
         var regionStr = curve['region'];
         var region = Object.keys(matsCollections.CurveParams.findOne({name: 'region'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'region'}).valuesMap[key] === regionStr);
+        var source = curve['truth'];
+        var sourceStr = "";
+        if (source !== "All") {
+            sourceStr = "_" + source;
+        }
         var thresholdStr = curve['threshold'];
         var threshold = Object.keys(matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap).find(key => matsCollections.CurveParams.findOne({name: 'threshold'}).valuesMap[key] === thresholdStr);
         var statisticSelect = curve['statistic'];
@@ -79,7 +84,7 @@ dataValidTime = function (plotParams, plotFunction) {
 
             statement = statement.replace('{{fromSecs}}', fromSecs);
             statement = statement.replace('{{toSecs}}', toSecs);
-            statement = statement.replace('{{data_source}}', data_source + '_' + region);
+            statement = statement.replace('{{data_source}}', data_source + '_' + region + sourceStr);
             statement = statement.replace('{{statistic}}', statistic);
             statement = statement.replace('{{threshold}}', threshold);
             statement = statement.replace('{{forecastLength}}', forecastLength);

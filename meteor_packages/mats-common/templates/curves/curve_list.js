@@ -99,6 +99,34 @@ Template.curveList.helpers({
         }
         return "none"
     },
+    mismatchContourDiffDisabled: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length < 2 || (Session.get('plotType') !== matsTypes.PlotTypes.contourDiff)) {
+            return "";
+        }
+        var xAxis0 = curves[0]['x-axis-parameter'];
+        var yAxis0 = curves[0]['y-axis-parameter'];
+        var xAxis1 = curves[1]['x-axis-parameter'];
+        var yAxis1 = curves[1]['y-axis-parameter'];
+        if (xAxis0 !== xAxis1 || yAxis0 !== yAxis1) {
+            return "disabled";
+        }
+        return "";
+    },
+    mismatchContourDiffHidden: function () {
+        var curves = Session.get('Curves');
+        if (curves === undefined || curves.length < 2 || (Session.get('plotType') !== matsTypes.PlotTypes.contourDiff)) {
+            return "none";
+        }
+        var xAxis0 = curves[0]['x-axis-parameter'];
+        var yAxis0 = curves[0]['y-axis-parameter'];
+        var xAxis1 = curves[1]['x-axis-parameter'];
+        var yAxis1 = curves[1]['y-axis-parameter'];
+        if (xAxis0 !== xAxis1 || yAxis0 !== yAxis1) {
+            return "block";
+        }
+        return "none"
+    },
     editMode: function() {
         if (Session.get('editMode') === '') {
             return '';

@@ -168,26 +168,32 @@ Template.GraphStandAlone.helpers({
             if (format === undefined) {
                 format = "Unmatched";
             }
-            if ((Session.get("plotType") === undefined) || Session.get("plotType") === matsTypes.PlotTypes.timeSeries) {
-                return "TimeSeries " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.profile) {
-                return "Profile: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dieoff) {
-                return "DieOff: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.threshold) {
-                return "Threshold: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.validtime) {
-                return "ValidTime: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.dailyModelCycle) {
-                return "DailyModelCycle " + p.dates + " : " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.map) {
-                return "Map " + p.dates + " ";
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.histogram) {
-                return "Histogram: " + format;
-            } else if (Session.get("plotType") === matsTypes.PlotTypes.contour) {
-                return "Contour " + p.dates + " : " + format;
-            } else {
-                return "Scatter: " + p.dates + " : " + format;
+            var plotType = Session.get('plotType');
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                    return "TimeSeries " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.profile:
+                    return "Profile: " + format;
+                case matsTypes.PlotTypes.dieoff:
+                    return "DieOff: " + format;
+                case matsTypes.PlotTypes.dailyModelCycle:
+                    return "DailyModelCycle " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.threshold:
+                    return "Threshold: " + format;
+                case matsTypes.PlotTypes.validtime:
+                    return "ValidTime: " + format;
+                case matsTypes.PlotTypes.map:
+                    return "Map " + p.dates + " ";
+                case matsTypes.PlotTypes.histogram:
+                    return "Histogram: " + format;
+                case matsTypes.PlotTypes.contour:
+                    return "Contour " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.contourDiff:
+                    return "ContourDiff " + p.dates + " : " + format;
+                case matsTypes.PlotTypes.scatter2d:
+                    break;
+                default:
+                    return "Scatter: " + p.dates + " : " + format;
             }
         } else {
             return "no plot params";
@@ -240,29 +246,64 @@ Template.GraphStandAlone.helpers({
     },
     curveShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     pointsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else {
-            return 'block';
+        switch (plotType) {
+            case matsTypes.PlotTypes.timeSeries:
+            case matsTypes.PlotTypes.profile:
+            case matsTypes.PlotTypes.dieoff:
+            case matsTypes.PlotTypes.dailyModelCycle:
+            case matsTypes.PlotTypes.threshold:
+            case matsTypes.PlotTypes.validtime:
+            case matsTypes.PlotTypes.scatter2d:
+                return "block";
+            case matsTypes.PlotTypes.map:
+            case matsTypes.PlotTypes.histogram:
+            case matsTypes.PlotTypes.contour:
+            case matsTypes.PlotTypes.contourDiff:
+            default:
+                return "none";
         }
     },
     errorbarsShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         var isMatched = Session.get('plotParameter') === "matched";
-        if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram || plotType === matsTypes.PlotTypes.contour) {
-            return 'none';
-        } else if (plotType !== matsTypes.PlotTypes.scatter2d && isMatched) {
-            return 'block';
+        if (isMatched) {
+            switch (plotType) {
+                case matsTypes.PlotTypes.timeSeries:
+                case matsTypes.PlotTypes.profile:
+                case matsTypes.PlotTypes.dieoff:
+                case matsTypes.PlotTypes.dailyModelCycle:
+                case matsTypes.PlotTypes.threshold:
+                case matsTypes.PlotTypes.validtime:
+                    return "block";
+                case matsTypes.PlotTypes.map:
+                case matsTypes.PlotTypes.histogram:
+                case matsTypes.PlotTypes.scatter2d:
+                case matsTypes.PlotTypes.contour:
+                case matsTypes.PlotTypes.contourDiff:
+                default:
+                    return "none";
+            }
         } else {
-            return 'none';
+            return "none";
         }
     },
     barsShowHideDisplay: function () {
