@@ -12,6 +12,8 @@ n_times = []  # one of the four fields to return at the end -- number of sub_sec
 data = {  # one of the four fields to return at the end -- the parsed data structure
     "x": [],
     "y": [],
+    "z": [],
+    "n": [],
     "error_x": [],
     "error_y": [],
     "subVals": [],
@@ -19,10 +21,24 @@ data = {  # one of the four fields to return at the end -- the parsed data struc
     "subLevs": [],
     "stats": [],
     "text": [],
+    "xTextOutput": [],
+    "yTextOutput": [],
+    "zTextOutput": [],
+    "nTextOutput": [],
+    "minDateTextOutput": [],
+    "maxDateTextOutput": [],
+    "glob_stats": {
+        "mean": 0,
+        "minDate": 0,
+        "maxDate": 0,
+        "n": 0
+    },
     "xmin": sys.float_info.max,
     "xmax": -1 * sys.float_info.max,
     "ymin": sys.float_info.max,
     "ymax": -1 * sys.float_info.max,
+    "zmin": sys.float_info.max,
+    "zmax": -1 * sys.float_info.max,
     "sum": 0
 }
 output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
@@ -564,29 +580,6 @@ def parse_query_data_histogram(cursor, statistic, has_levels, completeness_qc_pa
 def parse_query_data_contour(cursor, statistic, has_levels):
     global error, error_bool, n0, n_times, data
 
-    # redefine the data array to include the fields needed for contour plots
-    data = {
-        "x": [],
-        "y": [],
-        "z": [],
-        "n": [],
-        "text": [],
-        "xTextOutput": [],
-        "yTextOutput": [],
-        "zTextOutput": [],
-        "nTextOutput": [],
-        "minDateTextOutput": [],
-        "maxDateTextOutput": [],
-        "glob_stats": {},
-        "xmin": sys.float_info.max,
-        "xmax": -1 * sys.float_info.max,
-        "ymin": sys.float_info.max,
-        "ymax": -1 * sys.float_info.max,
-        "zmin": sys.float_info.max,
-        "zmax": -1 * sys.float_info.max,
-        "sum": 0
-    }
-
     curve_stat_lookup = {}
     curve_n_lookup = {}
 
@@ -659,13 +652,6 @@ def parse_query_data_contour(cursor, statistic, has_levels):
     data['zmin'] = min(min(z) for z in data['z'] if z != 'null' and z != 'NaN')
     data['zmax'] = max(max(z) for z in data['z'] if z != 'null' and z != 'NaN')
     data['sum'] = loop_sum
-
-    data['glob_stats'] = {
-        "mean": 0,
-        "minDate": 0,
-        "maxDate": 0,
-        "n": 0
-    }
     data['glob_stats']['mean'] = loop_sum / n_points
     data['glob_stats']['minDate'] = min(m for m in data['minDateTextOutput'] if m != 'null' and m != 'NaN')
     data['glob_stats']['maxDate'] = max(m for m in data['minDateTextOutput'] if m != 'null' and m != 'NaN')
