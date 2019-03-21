@@ -914,7 +914,7 @@ Meteor.startup(function () {
     let mdr = new matsTypes.MetaDataDBRecord("modelPool", "ceiling2", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "ceiling_sums2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'ceiling'});
 });
 
 // this object is global so that the reset code can get to it

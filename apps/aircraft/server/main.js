@@ -886,7 +886,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "acars_RR", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'aircraft'});
 });
 
 // this object is global so that the reset code can get to it

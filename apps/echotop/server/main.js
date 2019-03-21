@@ -978,7 +978,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "echotop", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "echotop", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'echotop'});
 });
 
 // this object is global so that the reset code can get to it

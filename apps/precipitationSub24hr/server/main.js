@@ -849,8 +849,7 @@ Meteor.startup(function () {
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "precip2", ['regions_per_model_mats_all_categories', 'threshold_descriptions', 'scale_descriptions', 'fcst_type_descriptions']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
-});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'precipitationSub24hr'});});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params

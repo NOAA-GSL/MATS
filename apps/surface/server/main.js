@@ -1124,8 +1124,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_common", ['region_descriptions']);
     mdr.addRecord("sumPool", "surface_sums2", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("sitePool", "madis3", ['metar_mats_test']);
-    matsMethods.resetApp(mdr);
-});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'surface'});});
 
 // this object is global so that the reset code can get to it --
 // These are application specific mongo data - like curve params

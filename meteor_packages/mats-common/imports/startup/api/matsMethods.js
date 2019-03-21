@@ -1898,17 +1898,49 @@ const removeDatabase = new ValidatedMethod({
 });
 
 // makes sure all of the parameters display appropriate selections in relation to one another
-const resetApp = function (metaDataTableRecords, type) {
+const resetApp = function (appRef) {
+    var fse = require('fs-extra');
+    const metaDataTableRecords = appRef.appMdr;
+    const type = appRef.appType;
+    const appName = appRef.app;
     var dep_env = process.env.NODE_ENV;
-    if (Meteor.settings.private.process.NODE_ENV != null) {
-        switch (Meteor.settings.private.process.NODE_ENV) {
+    // set some defaults for python processing - these can be overridden
+    if (Meteor.settings.private == null || Meteor.settings.private.PYTHON_PATH == null) {
+        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
+    }
+    if (Meteor.settings.private == null || Meteor.settings.private.MYSQL_CONF_PATH == null) {
+        Meteor.settings.private.MYSQL_CONF_PATH = "/usr/app/settings/" + appName + "/settings-mysql.cnf";
+    }
+    //file might not exist
+    if (fse.existsSync(Meteor.settings.private.MYSQL_CONF_PATH) === false) {
+        // create the file
+        const host = sumPool.config.connectionConfig.host;
+        const port = sumPool.config.connectionConfig.port;
+        const user = sumPool.config.connectionConfig.user;
+        const password = sumPool.config.connectionConfig.password;
+        const database = sumPool.config.connectionConfig.database;
+        const mysqlconf = "[client]\n" +
+            "host=" + host + "\n" +
+            "port=" + port + "\n" +
+            "user=" + user + "\n" +
+            "password=" + password + "\n" +
+            "database=" + database + "\n";
+        fse.writeFile(Meteor.settings.private.MYSQL_CONF_PATH, mysqlconf, 'utf8', function(err) {
+            if (err) {
+                throw new Meteor.Error("Server error: ", "resetApp: could not set Meteor.settings.private.MYSQL_CONF_PATH");
+            }
+        });
+    }
+
+    if (Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
+        switch (Meteor.settings.private.process.RUN_ENV) {
             case "development":
             case "integration":
             case "production":
-                dep_env = Meteor.settings.private.process.NODE_ENV
+                dep_env = Meteor.settings.private.process.RUN_ENV
                 break;
             default:
-                dep_env=process.env.NODE_ENV;
+                dep_env = process.env.NODE_ENV;
                break;
         }
     }
@@ -1921,8 +1953,8 @@ const resetApp = function (metaDataTableRecords, type) {
     for (var ai = 0; ai < deployment.length; ai++) {
         var dep = deployment[ai];
         if (dep.deployment_environment == dep_env) {
-            developmentApp = dep.apps.filter(function (app) {
-                return app.app === appReference
+            app = dep.apps.filter(function (app) {
+                return app.app === appName;
             })[0];
         }
     }
@@ -1930,7 +1962,7 @@ const resetApp = function (metaDataTableRecords, type) {
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
     const appType = type ? type : matsTypes.AppTypes.mats;
-    matsCollections.appName.replaceOne({},{app:app},{upsert:true});
+    matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
 
     // remember that we updated the metadata tables just now - create metaDataTableUpdates
     /*

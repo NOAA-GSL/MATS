@@ -884,7 +884,7 @@ Meteor.startup(function () {
     });
 
     const mdr = new matsTypes.MetaDataDBRecord("sumPool", "vgtyp_sums", ['regions_per_model_mats_all_categories', 'vgtyp_descriptions']);
-    matsMethods.resetApp(mdr);
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'landuse'});
 });
 
 // this object is global so that the reset code can get to it

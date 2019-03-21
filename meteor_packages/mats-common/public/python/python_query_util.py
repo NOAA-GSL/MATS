@@ -1,183 +1,153 @@
-import sys
-import MySQLdb
-import math
-import numpy as np
-import json
-from datetime import datetime
+class QueryUtil:
+    import getopt
+    import sys
+    import MySQLdb
+    import math
+    import numpy as np
+    import json
+    from MySQLdb import cursors
+    from datetime import datetime
+    from contextlib import closing
 
-error_bool = False  # global variable to keep track of whether we've had an error
-error = ""  # one of the four fields to return at the end -- records any error message
-n0 = []  # one of the four fields to return at the end -- number of sub_values for each independent variable
-n_times = []  # one of the four fields to return at the end -- number of sub_secs for each independent variable
-data = {  # one of the four fields to return at the end -- the parsed data structure
-    "x": [],
-    "y": [],
-    "error_x": [],
-    "error_y": [],
-    "subVals": [],
-    "subSecs": [],
-    "subLevs": [],
-    "stats": [],
-    "text": [],
-    "xmin": sys.float_info.max,
-    "xmax": -1 * sys.float_info.max,
-    "ymin": sys.float_info.max,
-    "ymax": -1 * sys.float_info.max,
-    "sum": 0
-}
-output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
-
-
-# function to open a connection to a mysql database
-def connect_to_mysql(mysql_conf_path):
-    global error, error_bool
-    try:
-        cnx = MySQLdb.connect(read_default_file=mysql_conf_path)
-        cnx.autocommit = True
-        cursor = cnx.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('set group_concat_max_len = 4294967295')
-        return cnx, cursor
-    except MySQLdb.Error as e:
-        error = "Error connecting to db: " + str(e)
-        error_bool = True
-
-
-# function for closing a connection to a mysql database
-def disconnect_mysql(cnx, cursor):
-    global error, error_bool
-    try:
-        cursor.close()
-        cnx.close()
-    except MySQLdb.Error as e:
-        error = "Error disconnecting from db: " + str(e)
-        error_bool = True
-
-
-# function for constructing and jsonifying a dictionary of the output variables
-def construct_output_json():
-    global output_JSON, error, n0, n_times, data
-    output_JSON = {
-        "data": data,
-        "N0": n0,
-        "N_times": n_times,
-        "error": error
+    error_bool = False  # global variable to keep track of whether we've had an error
+    error = ""  # one of the four fields to return at the end -- records any error message
+    n0 = []  # one of the four fields to return at the end -- number of sub_values for each independent variable
+    n_times = []  # one of the four fields to return at the end -- number of sub_secs for each independent variable
+    data = {  # one of the four fields to return at the end -- the parsed data structure
+        "x": [],
+        "y": [],
+        "error_x": [],
+        "error_y": [],
+        "subVals": [],
+        "subSecs": [],
+        "subLevs": [],
+        "stats": [],
+        "text": [],
+        "xmin": sys.float_info.max,
+        "xmax": -1 * sys.float_info.max,
+        "ymin": sys.float_info.max,
+        "ymax": -1 * sys.float_info.max,
+        "sum": 0
     }
-    output_JSON = json.dumps(output_JSON)
+    output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
 
+    # function for constructing and jsonifying a dictionary of the output variables
+    def construct_output_json():
+        global output_JSON, error, n0, n_times, data
+        output_JSON = {
+            "data": data,
+            "N0": n0,
+            "N_times": n_times,
+            "error": error
+        }
+        output_JSON = json.dumps(output_JSON)
 
-# function to check if a certain value is a float or int
-def is_number(s):
-    try:
-        if np.isnan(s):
+    # function to check if a certain value is a float or int
+    def is_number(s):
+        try:
+            if np.isnan(s):
+                return False
+        except TypeError:
             return False
-    except TypeError:
-        return False
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
 
+    # function for calculating anomaly correlation from MET partial sums
+    def calculate_acc(fbar, obar, ffbar, oobar, fobar, total):
+        global error, error_bool
+        try:
+            denom = (np.power(total, 2) * ffbar - np.power(total, 2) * np.power(fbar, 2)) \
+                    * (np.power(total, 2) * oobar - np.power(total, 2) * np.power(obar, 2))
+            acc = (np.power(total, 2) * fobar - np.power(total, 2) * fbar * obar) / np.sqrt(denom)
+        except TypeError as e:
+            error = "Error calculating RMS: " + str(e)
+            error_bool = True
+            acc = np.empty(len(ffbar))
+        except ValueError as e:
+            error = "Error calculating RMS: " + str(e)
+            error_bool = True
+            acc = np.empty(len(ffbar))
+        return acc
 
-# function for calculating anomaly correlation from MET partial sums
-def calculate_acc(fbar, obar, ffbar, oobar, fobar, total):
-    global error, error_bool
-    try:
-        denom = (np.power(total, 2) * ffbar - np.power(total, 2) * np.power(fbar, 2)) \
-                * (np.power(total, 2) * oobar - np.power(total, 2) * np.power(obar, 2))
-        acc = (np.power(total, 2) * fobar - np.power(total, 2) * fbar * obar) / np.sqrt(denom)
-    except TypeError as e:
-        error = "Error calculating RMS: " + str(e)
-        error_bool = True
-        acc = np.empty(len(ffbar))
-    except ValueError as e:
-        error = "Error calculating RMS: " + str(e)
-        error_bool = True
-        acc = np.empty(len(ffbar))
-    return acc
+    # function for calculating RMS from MET partial sums
+    def calculate_rms(ffbar, oobar, fobar):
+        global error, error_bool
+        try:
+            rms = np.sqrt(ffbar + oobar - 2 * fobar)
+        except TypeError as e:
+            error = "Error calculating RMS: " + str(e)
+            error_bool = True
+            rms = np.empty(len(ffbar))
+        except ValueError as e:
+            error = "Error calculating RMS: " + str(e)
+            error_bool = True
+            rms = np.empty(len(ffbar))
+        return rms
 
+    # function for calculating bias from MET partial sums
+    def calculate_bias(fbar, obar):
+        global error, error_bool
+        try:
+            bias = fbar - obar
+        except TypeError as e:
+            error = "Error calculating bias: " + str(e)
+            error_bool = True
+            bias = np.empty(len(fbar))
+        except ValueError as e:
+            error = "Error calculating bias: " + str(e)
+            error_bool = True
+            bias = np.empty(len(fbar))
+        return bias
 
-# function for calculating RMS from MET partial sums
-def calculate_rms(ffbar, oobar, fobar):
-    global error, error_bool
-    try:
-        rms = np.sqrt(ffbar + oobar - 2 * fobar)
-    except TypeError as e:
-        error = "Error calculating RMS: " + str(e)
-        error_bool = True
-        rms = np.empty(len(ffbar))
-    except ValueError as e:
-        error = "Error calculating RMS: " + str(e)
-        error_bool = True
-        rms = np.empty(len(ffbar))
-    return rms
+    # function for calculating N from MET partial sums
+    def calculate_n(total):
+        return total
 
+    # function for calculating model average from MET partial sums
+    def calculate_m_avg(fbar):
+        return fbar
 
-# function for calculating bias from MET partial sums
-def calculate_bias(fbar, obar):
-    global error, error_bool
-    try:
-        bias = fbar - obar
-    except TypeError as e:
-        error = "Error calculating bias: " + str(e)
-        error_bool = True
-        bias = np.empty(len(fbar))
-    except ValueError as e:
-        error = "Error calculating bias: " + str(e)
-        error_bool = True
-        bias = np.empty(len(fbar))
-    return bias
+    # function for calculating obs average from MET partial sums
+    def calculate_o_avg(obar):
+        return obar
 
-
-# function for calculating N from MET partial sums
-def calculate_n(total):
-    return total
-
-
-# function for calculating model average from MET partial sums
-def calculate_m_avg(fbar):
-    return fbar
-
-
-# function for calculating obs average from MET partial sums
-def calculate_o_avg(obar):
-    return obar
-
-
-# function for determining and calling the appropriate statistical calculation function
-def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
-    global error, error_bool
-    stat_switch = {  # dispatcher of statistical calculation functions
-        'ACC': calculate_acc,
-        'RMS': calculate_rms,
-        'Bias (Model - Obs)': calculate_bias,
-        'N': calculate_n,
-        'Model average': calculate_m_avg,
-        'Obs average': calculate_o_avg
-    }
-    args_switch = {  # dispatcher of arguments for statistical calculation functions
-        'ACC': (fbar, obar, ffbar, oobar, fobar, total),
-        'RMS': (ffbar, oobar, fobar),
-        'Bias (Model - Obs)': (fbar, obar),
-        'N': (total,),
-        'Model average': (fbar,),
-        'Obs average': (obar,)
-    }
-    try:
-        stat_args = args_switch[statistic]  # get args
-        sub_stats = stat_switch[statistic](*stat_args)  # call stat function
-        stat = np.nanmean(sub_stats)  # calculate overall stat
-    except KeyError as e:
-        error = "Error choosing statistic: " + str(e)
-        error_bool = True
-        sub_stats = np.empty(len(fbar))
-        stat = 'null'
-    except ValueError as e:
-        error = "Error calculating statistic: " + str(e)
-        error_bool = True
-        sub_stats = np.empty(len(fbar))
-        stat = 'null'
-    return sub_stats, stat
+    # function for determining and calling the appropriate statistical calculation function
+    def calculate_stat(statistic, fbar, obar, ffbar, oobar, fobar, total):
+        global error, error_bool
+        stat_switch = {  # dispatcher of statistical calculation functions
+            'ACC': calculate_acc,
+            'RMS': calculate_rms,
+            'Bias (Model - Obs)': calculate_bias,
+            'N': calculate_n,
+            'Model average': calculate_m_avg,
+            'Obs average': calculate_o_avg
+        }
+        args_switch = {  # dispatcher of arguments for statistical calculation functions
+            'ACC': (fbar, obar, ffbar, oobar, fobar, total),
+            'RMS': (ffbar, oobar, fobar),
+            'Bias (Model - Obs)': (fbar, obar),
+            'N': (total,),
+            'Model average': (fbar,),
+            'Obs average': (obar,)
+        }
+        try:
+            stat_args = args_switch[statistic]  # get args
+            sub_stats = stat_switch[statistic](*stat_args)  # call stat function
+            stat = np.nanmean(sub_stats)  # calculate overall stat
+        except KeyError as e:
+            error = "Error choosing statistic: " + str(e)
+            error_bool = True
+            sub_stats = np.empty(len(fbar))
+            stat = 'null'
+        except ValueError as e:
+            error = "Error calculating statistic: " + str(e)
+            error_bool = True
+            sub_stats = np.empty(len(fbar))
+            stat = 'null'
+        return sub_stats, stat
 
 
 # function for processing the sub-values from the query and calling calculate_stat
@@ -595,8 +565,10 @@ def parse_query_data_contour(cursor, statistic, has_levels):
 
     # loop through the query results and store the returned values
     for row in query_data:
-        row_x_val = float(str(row['xVal']).replace('P', ''))    # if it's a pressure level get rid of the P in front of the value
-        row_y_val = float(str(row['yVal']).replace('P', ''))    # if it's a pressure level get rid of the P in front of the value
+        row_x_val = float(
+            str(row['xVal']).replace('P', ''))  # if it's a pressure level get rid of the P in front of the value
+        row_y_val = float(
+            str(row['yVal']).replace('P', ''))  # if it's a pressure level get rid of the P in front of the value
         stat_key = str(row_x_val) + '_' + str(row_y_val)
         fbar = row['sub_fbar']
         obar = row['sub_obar']
@@ -708,19 +680,120 @@ def query_db(cursor, statement, statistic, plot_type, has_levels, completeness_q
                 parse_query_data_specialty_curve(cursor, statistic, plot_type, has_levels, completeness_qc_param)
 
 
+# process 'c' style options - using getopt - usage describes options
+def get_options(args):
+    usage = ["(h)ost=", "(P)ort=", "(u)ser=", "(p)assword=", "(d)atabase=", "(q)uery=",
+             "(s)tatistic=", "plot(t)ype=", "has(l)evels=", "(c)ompletenessQCParam=", "(v)ts="]
+    host = None
+    port = None
+    user = None
+    password = None
+    database = None
+    statement = None
+    statistic = None
+    plotType = None
+    hasLevels = None
+    completenessQCParam = None
+    vts = None
+
+    try:
+        opts, args = getopt.getopt(args[1:], "h:p:u:P:d:q:s:t:l:c:v:", usage)
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print
+        str(err)  # will print something like "option -a not recognized"
+        # print usage from last param to getopt
+        usage()
+        sys.exit(2)
+    for o, a in opts:
+        if o == "-?":
+            usage()
+            sys.exit(2)
+        if o == "-h":
+            host = a
+        elif o == "-P":
+            port = int(a)
+        elif o == "-u":
+            user = a
+        elif o == "-p":
+            password = a
+        elif o == "-d":
+            database = a
+        elif o == "-q":
+            statement = a
+        elif o == "-s":
+            statistic = a
+        elif o == "-t":
+            plotType = a
+        elif o == "-l":
+            hasLevels = a
+        elif o == "-c":
+            completenessQCParam = a
+        elif o == "-v":
+            vts = a
+        else:
+            assert False, "unhandled option"
+        # make sure none were left out...
+        assert True, host != None and port != None and user != None and password != None \
+                     and database != None and statement != None and statistic != None \
+                     and plotType != None and hasLevels != None and completenessQCParam != None \
+                     and vts != None
+    return host, port, user, password, database, statement, statistic, plotType, hasLevels, completenessQCParam, vts
+
+
+def validate_options(options):
+    assert True, options.host != None and options.port != None and options.user != None and \
+                 options.password != None and options.database != None and options.statement != None and \
+                 options.statistic != None and options.plotType != None and options.hasLevels != None and \
+                 options.completenessQCParam != None and options.vts != None
+
+
+def do_query(options):
+    validate_options(options)
+    cnx = MySQLdb.Connect(host=options.host, port=options.port, user=options.user, passwd=options.password,
+                          db=options.database, charset='utf8',
+                          cursorclass=MySQLdb.cursors.DictCursor)
+    with closing(cnx.cursor()) as cursor:
+        # cnx, cursor = connect_to_mysql(args[1])
+        query_db(cursor, options.statement, options.statistic, options.plotType, options.hasLevels,
+                 options.completenessQCParam, options.vts)
+    cnx.close()
+
+
 def main(args):
-    global output_JSON, error_bool
-    cnx, cursor = connect_to_mysql(args[1])
-    if not error_bool:
-        query_db(cursor, args[2], args[3], args[4], args[5], args[6], args[7])
+    global output_JSON, error
+    try:
+        try:
+            host, port, user, password, database, statement, statistic, plotType, hasLevels, completenessQCParam, vts = get_options(
+                args)
+        except AssertionError as e:
+            raise RuntimeError(e)
+        options = {
+            "host": host,
+            "port": port,
+            "user": user,
+            "password": password,
+            "database": database,
+            "statement": statement,
+            "statistic": statistic,
+            "plotType": plotType,
+            "hasLevels": hasLevels,
+            "completenessQCParam": completenessQCParam,
+            "vts": vts
+        }
+        do_query(completenessQCParam, database, hasLevels, host, password, plotType, port, statement, statistic, user,
+                 vts)
+    except RuntimeError as e:
+        # top level error handler
+        error = e
+    # we always need output for the exec'er to process
     construct_output_json()
-    disconnect_mysql(cnx, cursor)
+    # put output on standard out for the exec'er to process
     print(output_JSON)
 
 
 if __name__ == '__main__':
     # needed js args:
-    # [1] mysql_conf_path, [2] statement, [3] statistic, [4] plotType, [5] hasLevels, [6] completenessQCParam, [7] vts
     utc_now = str(datetime.now())
     msg = 'Calling python query function at: ' + utc_now
     # print(msg)
