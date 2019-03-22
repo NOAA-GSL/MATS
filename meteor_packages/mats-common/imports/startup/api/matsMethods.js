@@ -1905,11 +1905,11 @@ const resetApp = function (appRef) {
     const appName = appRef.app;
     var dep_env = process.env.NODE_ENV;
     // set some defaults for python processing - these can be overridden
-    if (Meteor.settings.private == null || Meteor.settings.private.PYTHON_PATH == null) {
+    if (Meteor.settings.private != null && Meteor.settings.private.PYTHON_PATH == null) {
         Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
     }
 
-    if (Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
+    if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
         switch (Meteor.settings.private.process.RUN_ENV) {
             case "development":
             case "integration":
