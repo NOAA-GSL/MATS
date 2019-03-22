@@ -98,9 +98,9 @@ if [ "X${requestedTag}" == "X" ]; then
 fi
 
 if [ "X${requestedTag}" == "X" ]; then
-     echo "building to current head ${currentCommit}
+     echo "building to current head ${currentCommit}"
 else
-     echo "building to ${requestedTag}
+     echo "building to ${requestedTag}"
     /usr/bin/git checkout ${requestedTag} ${BUILD_CODE_BRANCH}
     if [ $? -ne 0 ]; then
         echo -e "${failed} to /usr/bin/git checkout ${BUILD_CODE_BRANCH} - must exit now"

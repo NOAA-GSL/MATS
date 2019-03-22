@@ -16,10 +16,10 @@
     export DEPLOYMENT_DIRECTORY=$PWD
 
     export METEORD_DIR=/opt/meteord
-    export BUILD_PACKAGES="make gcc g++ python-dev py-pip mariadb-dev bash"
     export MONGO_URL="mongodb://mongo"
     export MONGO_PORT=27017
     export MONGO_DB=${APP_NAME}
+    export APPNAME=${APP_NAME}
     export REPO=randytpierce/mats1
     # save and export the meteor node version for the build_app script
     export METEOR_NODE_VERSION=$(meteor node -v | tr -d 'v')
@@ -52,45 +52,45 @@
     cp ${METEOR_PACKAGE_DIRS}/../scripts/common/docker_scripts/run_app.sh  .
     chmod +x run_app.sh
     #NOTE do not change the tabs to spaces in the here doc - it screws up the indentation
-    cat <<-%EOFdockerfile > Dockerfile
-		# have to mount meteor settings as usr/app/settings/${APP_NAME} - so that settings.json can get picked up by run_app.sh
-		# the corresponding usr/app/settings/${APP_NAME}/settings-mysql.cnf file needs to be referenced by
-		# "MYSQL_CONF_PATH": "/usr/app/settings/${APP_NAME}/settings-mysql.cnf" in the settings.json file
-		# and the MYSQL_CONF_PATH entry in the settings.json
-		# e.g.
-		# docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:${APP_NAME}-2.0.1
-		# Pull base image.
-		FROM node:8.11.4-alpine
-		# Create app directory
-		ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APP_NAME}" METEORD_DIR="/opt/meteord" BUILD_PACKAGES="make gcc g++ python-dev py-pip libmysqlclient-dev bash"
-		RUN mkdir -p /usr/app
-		WORKDIR /usr/app
-		RUN apk --update --no-cache add python make gcc g++ python-dev py-pip mariadb-dev python-mysqldbbash \
-				&& npm install -g npm@6.4.1 \
-				&& npm cache clean -f \
-				&& npm install -g n \
-				&& npm install -g node-gyp \
-				&& node-gyp install \
-				&& pip install --upgrade pip \
-				&& pip2 install numpy \
-				&& pip2 install mysqlclient
+cat <<-%EOFdockerfile > Dockerfile
+# have to mount meteor settings as usr/app/settings/${APPNAME} - so that settings.json can get picked up by run_app.sh
+# the corresponding usr/app/settings/${APPNAME}/settings-mysql.cnf file needs to be referenced by
+# "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
+# and the MYSQL_CONF_PATH entry in the settings.json
+# e.g.
+# docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:${APPNAME}-2.0.1
+# Pull base image.
+FROM node:8.11.4-alpine
+# Create app directory
+ENV METEOR_NODE_VERSION=8.11.4 APPNAME="${APPNAME}" METEORD_DIR="/opt/meteord"
+RUN mkdir -p /usr/app
+WORKDIR /usr/app
+RUN apk --update --no-cache add make gcc g++ python python3 python3-dev mariadb-dev bash && \\
+    npm install -g npm@6.4.1 && \\
+    npm cache clean -f && \\
+    npm install -g n && \\
+    npm install -g node-gyp && \\
+    node-gyp install && \\
+    python3 -m ensurepip && \\
+    pip3 install --upgrade pip setuptools && \\
+    pip3 install numpy && \\
+    pip3 install mysqlclient
+ADD bundle /usr/app
+COPY run_app.sh /usr/app
+RUN chmod +x /usr/app/run_app.sh
+RUN cd /usr/app/programs/server && npm install --production
+RUN apk del --purge  make gcc g++ bash && npm uninstall -g node-gyp
+RUN rm -rf /opt/meteord/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp rm -r /root/.cache
+ENV APPNAME=${APPNAME}
+ENV MONGO_URL=mongodb://mongo:27017/${APPNAME}
+ENV ROOT_URL=http://localhost:80/
+EXPOSE 80
+ENTRYPOINT ["/usr/app/run_app.sh"]
 
-		ADD bundle /usr/app
-		COPY run_app.sh /usr/app
-		RUN chmod +x /usr/app/run_app.sh
-		RUN cd /usr/app/programs/server && npm install --production
-		RUN apk del --purge  make gcc g++ python-dev py-pip bash && npm uninstall -g node-gyp
-		RUN rm -rf $METEORD_DIR/bin /usr/share/doc /usr/share/man /tmp/* /var/cache/apk/* /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp
-		ENV APPNAME=${APP_NAME}
-		ENV MONGO_URL=mongodb://mongo:27017/${APP_NAME}
-		ENV ROOT_URL=http://localhost:80/
-		EXPOSE 80
-		ENTRYPOINT ["/usr/app/run_app.sh"]
-
-		# build container
-        #docker build --no-cache --rm -t ${REPO}:${TAG} .
-        #docker tag ${REPO}:${TAG} ${REPO}:${TAG}
-        #docker push ${REPO}:${TAG}
+    # build container
+        #docker build --no-cache --rm -t randytpierce/mats1:${APPNAME}-2.0.1 .
+        #docker tag randytpierce/mats1:${APPNAME}-2.0.1 randytpierce/mats1:${APPNAME}-2.0.1
+        #docker push randytpierce/mats1:${APPNAME}-2.0.1
 	%EOFdockerfile
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
