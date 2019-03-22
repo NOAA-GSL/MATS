@@ -43,10 +43,10 @@ while getopts "ar:e:t:b:" o; do
         e)
             build_env="${OPTARG}"
             if [ "${build_env}" == "dev" ]; then
-                //setBuildConfigVarsForDevelopmentServer
+                setBuildConfigVarsForDevelopmentServer
             else
                 if [ "${build_env}" == "int" ]; then
-                    //setBuildConfigVarsForIntegrationServer
+                    setBuildConfigVarsForIntegrationServer
                 else
                     echo -e "${RED}invalid environment '${build_env}' - should be 'int' or 'dev' exiting${NC} \n$usage"
                     exit 1
