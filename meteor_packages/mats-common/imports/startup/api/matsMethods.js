@@ -1908,29 +1908,6 @@ const resetApp = function (appRef) {
     if (Meteor.settings.private == null || Meteor.settings.private.PYTHON_PATH == null) {
         Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
     }
-    if (Meteor.settings.private == null || Meteor.settings.private.MYSQL_CONF_PATH == null) {
-        Meteor.settings.private.MYSQL_CONF_PATH = "/usr/app/settings/" + appName + "/settings-mysql.cnf";
-    }
-    //file might not exist
-    if (fse.existsSync(Meteor.settings.private.MYSQL_CONF_PATH) === false) {
-        // create the file
-        const host = sumPool.config.connectionConfig.host;
-        const port = sumPool.config.connectionConfig.port;
-        const user = sumPool.config.connectionConfig.user;
-        const password = sumPool.config.connectionConfig.password;
-        const database = sumPool.config.connectionConfig.database;
-        const mysqlconf = "[client]\n" +
-            "host=" + host + "\n" +
-            "port=" + port + "\n" +
-            "user=" + user + "\n" +
-            "password=" + password + "\n" +
-            "database=" + database + "\n";
-        fse.writeFile(Meteor.settings.private.MYSQL_CONF_PATH, mysqlconf, 'utf8', function(err) {
-            if (err) {
-                throw new Meteor.Error("Server error: ", "resetApp: could not set Meteor.settings.private.MYSQL_CONF_PATH");
-            }
-        });
-    }
 
     if (Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
         switch (Meteor.settings.private.process.RUN_ENV) {

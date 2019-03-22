@@ -769,30 +769,9 @@ class QueryUtil:
         cnx.close()
 
 
-def main(args):
-    def __init__(self):
-        global output_JSON, error
-        try:
-            try:
-                options = self.get_options(args)
-            except AssertionError as e:
-                raise RuntimeError(e)
-            self.do_query(options)
-        except RuntimeError as e:
-            # top level error handler
-            error = e
-        # we always need output for the exec'er to process
-        self.construct_output_json()
-        # put output on standard out for the exec'er to process
-        print(output_JSON)
-
-
 if __name__ == '__main__':
-    # needed js args:
-    utc_now = str(datetime.now())
-    msg = 'Calling python query function at: ' + utc_now
-    # print(msg)
-    QueryUtil().main(sys.argv)
-    utc_now = str(datetime.now())
-    msg = 'Returning results from python query function at: ' + utc_now
-    # print(msg)
+    qutil = QueryUtil()
+    options = qutil.get_options(sys.argv)
+    qutil.do_query(options)
+    qutil.construct_output_json()
+    print(qutil.output_JSON)
