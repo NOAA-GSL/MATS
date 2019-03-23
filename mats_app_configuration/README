@@ -4,7 +4,7 @@ For questions or bugs you can use the "contact" link in the header at the top of
 if you have NOAA credentials you can use the "MATS bugs/issues" link at the top of each application.
 Failing that contact Randy Pierce at randy.pierce@noaa.gov 
 
-Retieve the Code:
+Retrieve the Code:
 From VLAB....
 git clone gerrit:MATS_for_EMB 
 In the top level of the MATS_for_EMB directory structure copy the mats_app_configuration directory tree.
@@ -20,9 +20,9 @@ NOTE:
 App images are currently kept in a public dockerHub registry at https://hub.docker.com/search/?q=randytpierce%2Fmats1&type=image
 This registry WILL CHANGE IN THE NEAR FUTURE.
 
-The applist is currently configured for three apps. When additional apps are added you will need to add "app" blocks to the applist
+The applist.json is currently configured for three apps. When additional apps are added you will need to add "app" blocks to the applist.json
 and corresponding service blocks to the docker-compose.yaml file.
-You can edit the applist file and the docker-compose.yml while the service is running and then perform "docker-compose restart" 
+You can edit the applist.json file and the docker-compose.yml while the service is running and then perform "docker-compose restart"
 from the mats_app_configuration directory. New apps will be automatically picked up.
 
 To add an app:
@@ -44,7 +44,7 @@ like...
   restart: always
 ....
 
-2) modify the matsconfiguration/web/applist.json to include a new app changing met-fred to the new app name and the prot to match the docker-compose.yml changes.
+2) modify the matsconfiguration/web/applist.json to include a new app changing met-fred to the new app name and the port to match the docker-compose.yml changes.
 like...
 {
   "app": "met-fred",
@@ -58,7 +58,7 @@ like...
 
 Using docker-compose:
 The command "docker-compose up -d" will start the entire application suite in detached mode. 
-After approximately 3 seconds the applicaations will be available through the landing page.
+After approximately 3 seconds the applications will be available through the landing page.
 The landing page is http://dockerhost:8080/metexpress.html
 The page is preconfigured to serve the apps (currently three).
 The three apps are 
