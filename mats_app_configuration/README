@@ -11,16 +11,21 @@ In the top level of the MATS_for_EMB directory structure copy the mats_app_confi
 Put your copy of mats_app_configuration in the $HOME of the docker user. 
 Create an empty data directory for the mongo container $HOME/mongodata and make sure that the docker user can read and write the directory. 
 
+NOTE: 
+You need to modify the mats_app_configuration/settings/*/settings.json files 
+and change the some_db_host, some_db_port, some_db_user, and some_db_password entries to conform to the database on your system. 
+These ones in vlab are dummy values. Normally these files are all the same, but they might change under special circumstances.
+
 NOTE:
-Apps are currently kept in a public dockerHub registry at https://hub.docker.com/search/?q=randytpierce%2Fmats1&type=image
+App images are currently kept in a public dockerHub registry at https://hub.docker.com/search/?q=randytpierce%2Fmats1&type=image
 This registry WILL CHANGE IN THE NEAR FUTURE.
 
 The applist is currently configured for three apps. When additional apps are added you will need to add "app" blocks to the applist
 and corresponding service blocks to the docker-compose.yaml file.
-You can edit the applist file and the docker-compose.yml while the service is running and then perform "docker-compose restart" from
-the mats_app_configuration directory. New apps will be automatically picked up.
-To add an app:
+You can edit the applist file and the docker-compose.yml while the service is running and then perform "docker-compose restart" 
+from the mats_app_configuration directory. New apps will be automatically picked up.
 
+To add an app:
 1) modify the mats_app_configuration/docker-compose.yaml to include a new appblock changing met-fred to the name of the new app and the port to a new port.
 like...
  met-fred:
@@ -52,7 +57,6 @@ like...
 3) perform "docker-compose restart" in the mats_app_configuration directory.
 
 Using docker-compose:
-The preferred way to start the tool suite is to use docker-compose.
 The command "docker-compose up -d" will start the entire application suite in detached mode. 
 After approximately 3 seconds the applicaations will be available through the landing page.
 The landing page is http://dockerhost:8080/metexpress.html
