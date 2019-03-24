@@ -263,7 +263,7 @@ cat <<-%EOFdockerfile > Dockerfile
 # "MYSQL_CONF_PATH": "/usr/app/settings/${APPNAME}/settings-mysql.cnf" in the settings.json file
 # and the MYSQL_CONF_PATH entry in the settings.json
 # e.g.
-# docker run -v /Users/pierce/mats_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:${APPNAME}-2.0.1
+# docker run -v /Users/pierce/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t randytpierce/mats1:${APPNAME}-2.0.1
 # Pull base image.
 FROM node:8.11.4-alpine
 # Create app directory
@@ -302,7 +302,7 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
     #docker push ${REPO}:${TAG}
     # example run command
-    echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/mats_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
+    echo "to run ... docker run --name ${APPNAME} -d -p 3002:80 --net mynet -v ${HOME}/[mats|metexpress]_app_configuration/settings:/usr/app/settings -i -t ${REPO}:${TAG}"
     echo "created container in ${BUNDLE_DIRECTORY}"
     rm -rf bundle
     cd ${APP_DIRECTORY}
