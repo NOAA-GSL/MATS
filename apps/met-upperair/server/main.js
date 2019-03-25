@@ -1049,9 +1049,7 @@ Meteor.startup(function () {
     // the pool is intended to be global
     metadataPool = mysql.createPool(metadataSettings);
     const mdr = new matsTypes.MetaDataDBRecord("metadataPool", "mats_metadata", ['upperair_mats_metadata', 'upperair_database_groups']);
-    matsMethods.resetApp(mdr, matsTypes.AppTypes.metexpress);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "met-upperair"});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.metexpress, app:'met-upperair'});
 });
 
 // this object is global so that the reset code can get to it

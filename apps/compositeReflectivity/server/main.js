@@ -1005,9 +1005,7 @@ Meteor.startup(function () {
     const mdr = new matsTypes.MetaDataDBRecord("modelPool", "cref", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "cref", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "compositeReflectivity"});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'compositeReflectivity'});
 });
 
 // this object is global so that the reset code can get to it

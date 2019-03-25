@@ -1898,46 +1898,49 @@ const removeDatabase = new ValidatedMethod({
 });
 
 // makes sure all of the parameters display appropriate selections in relation to one another
-const resetApp = function (metaDataTableRecords, type) {
+const resetApp = function (appRef) {
+    var fse = require('fs-extra');
+    const metaDataTableRecords = appRef.appMdr;
+    const type = appRef.appType;
+    const appName = appRef.app;
+    var dep_env = process.env.NODE_ENV;
+    // set some defaults for python processing - these can be overridden
+    if (Meteor.settings.private != null && Meteor.settings.private.PYTHON_PATH == null) {
+        Meteor.settings.private.PYTHON_PATH = "/usr/bin/python";
+    }
+
+    if (Meteor.settings.private != null && Meteor.settings.private.process != null && Meteor.settings.private.process.RUN_ENV != null) {
+        switch (Meteor.settings.private.process.RUN_ENV) {
+            case "development":
+            case "integration":
+            case "production":
+                dep_env = Meteor.settings.private.process.RUN_ENV
+                break;
+            default:
+                dep_env = process.env.NODE_ENV;
+               break;
+        }
+    }
     var deployment;
     var deploymentText = Assets.getText('public/deployment/deployment.json');
     if (deploymentText == null) {  // equivilent to deploymentText === null || deploymentText === undefined
     }
     deployment = JSON.parse(deploymentText);
-    const myUrlStr = Meteor.absoluteUrl();
-    var url = require('url');
-    var myUrl = url.parse(myUrlStr);
-    const hostName = myUrl.hostname.trim();
-    //console.log("url path is "+myUrl.pathname);
-    //console.log("PWD is "+process.env.PWD);
-    //console.log("CWD is "+process.cwd());
-    const urlPath = myUrl.pathname == "/" ? process.cwd() : myUrl.pathname.replace(/\/$/g, '');
-    const urlPathParts = urlPath.split("/");
-    //console.log("path parts are "+urlPathParts);
-    const appReference = myUrl.pathname == "/" ? urlPathParts[urlPathParts.length - 6].trim() : urlPathParts[urlPathParts.length - 1];
-    var developmentApp = {};
     var app = {};
     for (var ai = 0; ai < deployment.length; ai++) {
         var dep = deployment[ai];
-        if (dep.deployment_environment == "development") {
-            developmentApp = dep.apps.filter(function (app) {
-                return app.app === appReference
-            })[0];
-        }
-        if (dep.servers.indexOf(hostName) > -1) {
+        if (dep.deployment_environment == dep_env) {
             app = dep.apps.filter(function (app) {
-                return app.app === appReference
+                return app.app === appName;
             })[0];
-            break;
         }
-    }
-    if (app && Object.keys(app) && Object.keys(app).length === 0 && app.constructor === Object) {
-        app = developmentApp;
     }
     const appVersion = app ? app.version : "unknown";
     const appTitle = app ? app.title : "unknown";
     const buildDate = app ? app.buildDate : "unknown";
     const appType = type ? type : matsTypes.AppTypes.mats;
+    matsCollections.appName.upsert({app:appName},{$set:{app:appName}});
+
     // remember that we updated the metadata tables just now - create metaDataTableUpdates
     /*
         metaDataTableUpdates:

@@ -1013,10 +1013,7 @@ Meteor.startup(function () {
     let mdr = new matsTypes.MetaDataDBRecord("modelPool", "vis_1min", ['threshold_descriptions']);
     mdr.addRecord("sumPool", "vis_1min_sums", ['regions_per_model_mats_all_categories']);
     mdr.addRecord("metadataPool", "mats_common", ['region_descriptions']);
-    matsMethods.resetApp(mdr);
-    matsCollections.appName.remove({});
-    matsCollections.appName.insert({name: "appName", app: "visibility15"});
-});
+    matsMethods.resetApp({appMdr:mdr, appType:matsTypes.AppTypes.mats, app:'visibility15'});});
 
 // this object is global so that the reset code can get to it
 // These are application specific mongo data - like curve params
