@@ -297,6 +297,10 @@ ENTRYPOINT ["/usr/app/run_app.sh"]
         #docker tag randytpierce/mats1:${APPNAME}-2.0.1 randytpierce/mats1:${APPNAME}-2.0.1
         #docker push randytpierce/mats1:${APPNAME}-2.0.1
 %EOFdockerfile
+    # stop any running containers....
+    docker rm $(docker ps -a -q)
+    # clean up old images
+    docker system prune -af
     # build container
     docker build --no-cache --rm -t ${REPO}:${TAG} .
     docker tag ${REPO}:${TAG} ${REPO}:${TAG}
