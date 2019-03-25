@@ -267,10 +267,8 @@ Template.textOutput.helpers({
                     "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.reliability:
-                line += "<td>" + element[labelKey += " Reliability"] + "</td>" +
-                    "<td>" + (element['plotted stat'] != undefined && element['plotted stat'] !== null ? element['plotted stat'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (element['std dev'] != undefined && element['std dev'] !== null ? element['std dev'].toPrecision(4) : fillStr) + "</td>" +
-                    "<td>" + (('n' in element) ? element['n'] : fillStr) + "</td>";
+                line += "<td>" + element[labelKey += " probability bin"] + "</td>" +
+                    "<td>" + (element['hit rate'] != undefined && element['hit rate'] !== null ? element['hit rate'].toPrecision(4) : fillStr) + "</td>";
                 break;
             case matsTypes.PlotTypes.threshold:
                 line += "<td>" + element[labelKey += " threshold (in)"] + "</td>" +

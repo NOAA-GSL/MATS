@@ -665,7 +665,6 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
     // calculate data statistics (including error bars) for each curve
     for (var curveIndex = 0; curveIndex < curveInfoParams.curvesLength; curveIndex++) {
 
-        var statisticSelect = appName.indexOf("anomalycor") !== -1 ? "ACC" : curveInfoParams.curves[curveIndex]['statistic'];
         var data = dataset[curveIndex];
         const label = dataset[curveIndex].label;
 
@@ -772,17 +771,17 @@ const processDataReliability = function (dataset, appParams, curveInfoParams, pl
 
     // add black 0 line curve
     // need to define the minimum and maximum x value for making the zero curve
-    const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
-    dataset.push(zeroLine);
+    //const zeroLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, 0, matsTypes.ReservedWords.zero);
+    //dataset.push(zeroLine);
 
     //add ideal value lines, if any
-    var idealValueLine;
-    var idealLabel;
-    for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
-        idealLabel = "ideal" + ivIdx.toString();
-        idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
-        dataset.push(idealValueLine);
-    }
+    //var idealValueLine;
+    //var idealLabel;
+    //for (var ivIdx = 0; ivIdx < curveInfoParams.idealValues.length; ivIdx++) {
+    //    idealLabel = "ideal" + ivIdx.toString();
+    //    idealValueLine = matsDataCurveOpsUtils.getHorizontalValueLine(curveInfoParams.xmax, curveInfoParams.xmin, curveInfoParams.idealValues[ivIdx], matsTypes.ReservedWords[idealLabel]);
+    //    dataset.push(idealValueLine);
+    //}
 
     // generate plot options
     var resultOptions;
