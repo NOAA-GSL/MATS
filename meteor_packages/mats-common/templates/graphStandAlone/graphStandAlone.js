@@ -202,34 +202,6 @@ Template.GraphStandAlone.helpers({
     color: function () {
         return this.color;
     },
-    hideButtonText: function () {
-        var sval = this.label + "hideButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'hide curve');
-        }
-        return Session.get(sval);
-    },
-    pointsButtonText: function () {
-        var sval = this.label + "pointsButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'hide points');
-        }
-        return Session.get(sval);
-    },
-    errorBarButtonText: function () {
-        var sval = this.label + "errorBarButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'hide error bars');
-        }
-        return Session.get(sval);
-    },
-    barChartButtonText: function () {
-        var sval = this.label + "barChartButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'hide bars');
-        }
-        return Session.get(sval);
-    },
     annotateButtonText: function () {
         var sval = this.label + "annotateButtonText";
         if (Session.get(sval) === undefined) {
@@ -237,94 +209,9 @@ Template.GraphStandAlone.helpers({
         }
         return Session.get(sval);
     },
-    heatMapButtonText: function () {
-        var sval = this.label + "heatMapButtonText";
-        if (Session.get(sval) === undefined) {
-            Session.set(sval, 'show heat map');
-        }
-        return Session.get(sval);
-    },
-    curveShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        switch (plotType) {
-            case matsTypes.PlotTypes.timeSeries:
-            case matsTypes.PlotTypes.profile:
-            case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.dailyModelCycle:
-            case matsTypes.PlotTypes.threshold:
-            case matsTypes.PlotTypes.validtime:
-            case matsTypes.PlotTypes.scatter2d:
-                return "block";
-            case matsTypes.PlotTypes.map:
-            case matsTypes.PlotTypes.histogram:
-            case matsTypes.PlotTypes.contour:
-            case matsTypes.PlotTypes.contourDiff:
-            default:
-                return "none";
-        }
-    },
-    pointsShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        switch (plotType) {
-            case matsTypes.PlotTypes.timeSeries:
-            case matsTypes.PlotTypes.profile:
-            case matsTypes.PlotTypes.dieoff:
-            case matsTypes.PlotTypes.dailyModelCycle:
-            case matsTypes.PlotTypes.threshold:
-            case matsTypes.PlotTypes.validtime:
-            case matsTypes.PlotTypes.scatter2d:
-                return "block";
-            case matsTypes.PlotTypes.map:
-            case matsTypes.PlotTypes.histogram:
-            case matsTypes.PlotTypes.contour:
-            case matsTypes.PlotTypes.contourDiff:
-            default:
-                return "none";
-        }
-    },
-    errorbarsShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        var isMatched = Session.get('plotParameter') === "matched";
-        if (isMatched) {
-            switch (plotType) {
-                case matsTypes.PlotTypes.timeSeries:
-                case matsTypes.PlotTypes.profile:
-                case matsTypes.PlotTypes.dieoff:
-                case matsTypes.PlotTypes.dailyModelCycle:
-                case matsTypes.PlotTypes.threshold:
-                case matsTypes.PlotTypes.validtime:
-                    return "block";
-                case matsTypes.PlotTypes.map:
-                case matsTypes.PlotTypes.histogram:
-                case matsTypes.PlotTypes.scatter2d:
-                case matsTypes.PlotTypes.contour:
-                case matsTypes.PlotTypes.contourDiff:
-                default:
-                    return "none";
-            }
-        } else {
-            return "none";
-        }
-    },
-    barsShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        if (plotType === matsTypes.PlotTypes.histogram) {
-            return 'block';
-        } else {
-            return 'none';
-        }
-    },
     annotateShowHideDisplay: function () {
         var plotType = Session.get('plotType');
         if (plotType === matsTypes.PlotTypes.map || plotType === matsTypes.PlotTypes.histogram) {
-            return 'none';
-        } else {
-            return 'block';
-        }
-    },
-    heatMapShowHideDisplay: function () {
-        var plotType = Session.get('plotType');
-        if (plotType !== matsTypes.PlotTypes.map) {
             return 'none';
         } else {
             return 'block';

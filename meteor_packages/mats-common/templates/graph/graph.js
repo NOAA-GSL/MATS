@@ -70,8 +70,12 @@ Template.graph.helpers({
                     // saved curve options for line graphs
                     var lineTypeResetOpts = [];
                     for (var lidx = 0; lidx < dataset.length; lidx++) {
-                        if (dataset[lidx].label.startsWith("Curve")) {
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[lidx].label) === -1) {
                             lineTypeResetOpts.push({
+                                'visible': dataset[lidx].visible,
+                                'mode': dataset[lidx].mode,
+                                'error_y': dataset[lidx].error_y,
+                                'error_x': dataset[lidx].error_x,
                                 'line.dash': dataset[lidx].line.dash,
                                 'line.width': dataset[lidx].line.width,
                                 'marker.symbol': dataset[lidx].marker.symbol,
@@ -82,8 +86,33 @@ Template.graph.helpers({
                     }
                     Session.set('lineTypeResetOpts', lineTypeResetOpts);
                     break;
-                case matsTypes.PlotTypes.map:
                 case matsTypes.PlotTypes.histogram:
+                    // saved curve options for maps
+                    var barTypeResetOpts = [];
+                    for (var bidx = 0; bidx < dataset.length; bidx++) {
+                        if (Object.values(matsTypes.ReservedWords).indexOf(dataset[bidx].label) === -1) {
+                            barTypeResetOpts.push({
+                                'visible': dataset[bidx].visible,
+                            });
+                        } else {
+                            break;
+                        }
+                    }
+                    Session.set('barTypeResetOpts', barTypeResetOpts);
+                    break;
+                case matsTypes.PlotTypes.map:
+                    // saved curve options for maps
+                    var mapResetOpts = [];
+                    mapResetOpts[0] = {
+                        'marker.opacity': dataset[0].marker.opacity,
+                    };
+                    for (var midx = 1; midx < dataset.length; midx++) {
+                        mapResetOpts.push({
+                            'visible': dataset[midx].visible,
+                        });
+                    }
+                    Session.set('mapResetOpts', mapResetOpts);
+                    break;
                 case matsTypes.PlotTypes.scatter2d:
                 default:
                     break;
@@ -777,6 +806,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .pointsVisibility': function (event) {
         event.preventDefault();
@@ -815,6 +853,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .errorBarVisibility': function (event) {
         event.preventDefault();
@@ -850,6 +897,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .barVisibility': function (event) {
         event.preventDefault();
@@ -870,6 +926,15 @@ Template.graph.events({
             }
         }
         Plotly.restyle($("#placeholder")[0], update, myDataIdx);
+        // save the updates in case we want to pass them to a pop-out window.
+        curveOpsUpdate[myDataIdx] = curveOpsUpdate[myDataIdx] === undefined ? {} : curveOpsUpdate[myDataIdx];
+        var updatedKeys = Object.keys(update);
+        for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
+            var updatedKey = updatedKeys[kidx];
+            // json doesn't like . to be in keys, so replace it with a placeholder
+            var jsonHappyKey = updatedKey.split(".").join("____");
+            curveOpsUpdate[myDataIdx][jsonHappyKey] = update[updatedKey];
+        }
     },
     'click .annotateVisibility': function (event) {
         event.preventDefault();
@@ -897,11 +962,17 @@ Template.graph.events({
                     'marker.opacity': 1
                 };
                 Plotly.restyle($("#placeholder")[0], update, 0);
+                // save the updates in case we want to pass them to a pop-out window.
+                curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
+                curveOpsUpdate[0]['marker____opacity'] = update['marker.opacity'];
                 update = {
                     'visible': false
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
                     Plotly.restyle($("#placeholder")[0], update, didx);
+                    // save the updates in case we want to pass them to a pop-out window.
+                    curveOpsUpdate[didx] = curveOpsUpdate[didx] === undefined ? {} : curveOpsUpdate[didx];
+                    curveOpsUpdate[didx]['visible'] = update['visible'];
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "hide heat map";
             } else {
@@ -909,11 +980,17 @@ Template.graph.events({
                     'marker.opacity': 0
                 };
                 Plotly.restyle($("#placeholder")[0], update, 0);
+                // save the updates in case we want to pass them to a pop-out window.
+                curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
+                curveOpsUpdate[0]['marker____opacity'] = update['marker.opacity'];
                 update = {
                     'visible': true
                 };
                 for (didx = 1; didx < dataset.length; didx++) {
                     Plotly.restyle($("#placeholder")[0], update, didx);
+                    // save the updates in case we want to pass them to a pop-out window.
+                    curveOpsUpdate[didx] = curveOpsUpdate[didx] === undefined ? {} : curveOpsUpdate[didx];
+                    curveOpsUpdate[didx]['visible'] = update['visible'];
                 }
                 $('#' + label + "-curve-show-hide-heatmap")[0].value = "show heat map";
 
@@ -924,6 +1001,7 @@ Template.graph.events({
     'click #refresh-plot': function (event) {
         event.preventDefault();
         var plotType = Session.get('plotType');
+        var dataset = matsCurveUtils.getGraphResult().data;
         var options = Session.get('options');
         if (curveOpsUpdate.length === 0) {
             // we just need a relayout
@@ -931,7 +1009,6 @@ Template.graph.events({
         } else {
             // we need both a relayout and a restyle
             curveOpsUpdate = [];
-            Plotly.relayout($("#placeholder")[0], options);
             switch (plotType) {
                 case matsTypes.PlotTypes.contour:
                 case matsTypes.PlotTypes.contourDiff:
@@ -948,14 +1025,32 @@ Template.graph.events({
                     const lineTypeResetOpts = Session.get('lineTypeResetOpts');
                     for (var lidx = 0; lidx < lineTypeResetOpts.length; lidx++) {
                         Plotly.restyle($("#placeholder")[0], lineTypeResetOpts[lidx], lidx);
+                        $('#' + dataset[lidx].label + "-curve-show-hide")[0].value = "hide curve";
+                        $('#' + dataset[lidx].label + "-curve-show-hide-points")[0].value = "hide points";
+                        $('#' + dataset[lidx].label + "-curve-show-hide-errorbars")[0].value = "hide error bars";
+                    }
+                    break;
+                case matsTypes.PlotTypes.histogram:
+                    // restyle for bar plots
+                    const barTypeResetOpts = Session.get('barTypeResetOpts');
+                    for (var bidx = 0; bidx < barTypeResetOpts.length; bidx++) {
+                        Plotly.restyle($("#placeholder")[0], barTypeResetOpts[bidx], bidx);
+                        $('#' + dataset[bidx].label + "-curve-show-hide-bars")[0].value = "hide bars";
                     }
                     break;
                 case matsTypes.PlotTypes.map:
-                case matsTypes.PlotTypes.histogram:
+                    // restyle for maps
+                    const mapResetOpts = Session.get('mapResetOpts');
+                    for (var midx = 0; midx < mapResetOpts.length; midx++) {
+                        Plotly.restyle($("#placeholder")[0], mapResetOpts[midx], midx);
+                    }
+                    $('#' + dataset[0].label + "-curve-show-hide-heatmap")[0].value = "show heat map";
+                    break;
                 case matsTypes.PlotTypes.scatter2d:
                 default:
                     break;
             }
+            Plotly.relayout($("#placeholder")[0], options);
         }
     },
     // add axis customization modal submit button
@@ -1078,7 +1173,7 @@ Template.graph.events({
         $("#lineTypeModal").modal('hide');
         // save the updates in case we want to pass them to a pop-out window.
         for (uidx = 0; uidx < updates.length; uidx++) {
-            curveOpsUpdate[uidx] = {};
+            curveOpsUpdate[uidx] = curveOpsUpdate[uidx] === undefined ? {} : curveOpsUpdate[uidx];
             var updatedKeys = Object.keys(updates[uidx]);
             for (var kidx = 0; kidx < updatedKeys.length; kidx++) {
                 var updatedKey = updatedKeys[kidx];
@@ -1148,7 +1243,7 @@ Template.graph.events({
         Plotly.restyle($("#placeholder")[0], update, 0);
         $("#colorbarModal").modal('hide');
         // save the updates in case we want to pass them to a pop-out window.
-        curveOpsUpdate[0] = {};
+        curveOpsUpdate[0] = curveOpsUpdate[0] === undefined ? {} : curveOpsUpdate[0];
         const updatedKeys = Object.keys(update);
         for (var uidx = 0; uidx < updatedKeys.length; uidx++) {
             var updatedKey = updatedKeys[uidx];
