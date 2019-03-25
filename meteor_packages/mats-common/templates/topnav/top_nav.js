@@ -4,8 +4,8 @@ Template.topNav.events({
         event.preventDefault();
         var homeref = document.referrer;
         if (homeref === "" || homeref === undefined) {
-            var appref = Session.get("app").appref;
-            homeref = appref.substring(0, appref.lastIndexOf("/"));
+            var r = document.loaction.href;
+            homeref = r.split("://")[0] + "://" + r.split("://")[1].split(".").splice(1,10).join(".")
         }
         window.location.replace(homeref);
         return false;
