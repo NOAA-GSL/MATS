@@ -17,6 +17,8 @@ class QueryUtil:
     data = {  # one of the four fields to return at the end -- the parsed data structure
         "x": [],
         "y": [],
+        "z": [],
+        "n": [],
         "error_x": [],
         "error_y": [],
         "subVals": [],
@@ -24,13 +26,28 @@ class QueryUtil:
         "subLevs": [],
         "stats": [],
         "text": [],
+        "xTextOutput": [],
+        "yTextOutput": [],
+        "zTextOutput": [],
+        "nTextOutput": [],
+        "minDateTextOutput": [],
+        "maxDateTextOutput": [],
+        "glob_stats": {
+            "mean": 0,
+            "minDate": 0,
+            "maxDate": 0,
+            "n": 0
+        },
         "xmin": sys.float_info.max,
         "xmax": -1 * sys.float_info.max,
         "ymin": sys.float_info.max,
         "ymax": -1 * sys.float_info.max,
+        "zmin": sys.float_info.max,
+        "zmax": -1 * sys.float_info.max,
         "sum": 0
     }
     output_JSON = {}  # JSON structure to pass the five output fields back to the MATS JS
+
 
     # function for constructing and jsonifying a dictionary of the output variables
     def construct_output_json(self):
@@ -42,6 +59,7 @@ class QueryUtil:
             "error": self.error
         }
         self.output_JSON = json.dumps(output_JSON)
+
 
     # function to check if a certain value is a float or int
     def is_number(self, s):
@@ -55,6 +73,7 @@ class QueryUtil:
             return True
         except ValueError:
             return False
+
 
     # function for calculating anomaly correlation from MET partial sums
     def calculate_acc(self, fbar, obar, ffbar, oobar, fobar, total):
@@ -73,6 +92,7 @@ class QueryUtil:
             acc = np.empty(len(ffbar))
         return acc
 
+
     # function for calculating RMS from MET partial sums
     def calculate_rms(self, ffbar, oobar, fobar):
         global error, error_bool
@@ -87,6 +107,7 @@ class QueryUtil:
             error_bool = True
             rms = np.empty(len(ffbar))
         return rms
+
 
     # function for calculating bias from MET partial sums
     def calculate_bias(self, fbar, obar):
@@ -103,17 +124,21 @@ class QueryUtil:
             bias = np.empty(len(fbar))
         return bias
 
+
     # function for calculating N from MET partial sums
     def calculate_n(self, total):
         return total
+
 
     # function for calculating model average from MET partial sums
     def calculate_m_avg(self, fbar):
         return fbar
 
+
     # function for calculating obs average from MET partial sums
     def calculate_o_avg(self, obar):
         return obar
+
 
     # function for determining and calling the appropriate statistical calculation function
     def calculate_stat(self, statistic, fbar, obar, ffbar, oobar, fobar, total):
@@ -150,6 +175,7 @@ class QueryUtil:
             stat = 'null'
         return sub_stats, stat
 
+
     # function for processing the sub-values from the query and calling calculate_stat
     def get_scalar_stat(self, has_levels, row, statistic):
         global error, error_bool
@@ -184,6 +210,7 @@ class QueryUtil:
                                                sub_total)
         return stat, sub_levs, sub_secs, sub_values
 
+
     #  function for calculating the interval between the current time and the next time for models with irregular vts
     def get_time_interval(self, curr_time, time_interval, vts):
         full_day = 24 * 3600 * 1000
@@ -206,6 +233,7 @@ class QueryUtil:
             ti = time_interval
 
         return ti
+
 
     # function for parsing the data returned by a timeseries query
     def parse_query_data_timeseries(self, cursor, statistic, has_levels, completeness_qc_param, vts):
@@ -335,6 +363,7 @@ class QueryUtil:
         self.data['ymin'] = min(y for y in self.data['y'] if self.is_number(y))
         self.data['ymax'] = max(y for y in self.data['y'] if self.is_number(y))
         self.data['sum'] = loop_sum
+
 
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
     def parse_query_data_specialty_curve(self, cursor, statistic, plot_type, has_levels, completeness_qc_param):
@@ -480,6 +509,7 @@ class QueryUtil:
         self.data['ymax'] = max(y for y in self.data['y'] if self.is_number(y))
         self.data['sum'] = loop_sum
 
+
     # function for parsing the data returned by a profile/dieoff/validtime/threshold etc query
     def parse_query_data_histogram(self, cursor, statistic, has_levels, completeness_qc_param):
         global error, error_bool, n0, n_times, data
@@ -526,32 +556,10 @@ class QueryUtil:
         if has_levels:
             self.data['subLevs'] = [item for sublist in sub_levs_all for item in sublist]
 
+
     # function for parsing the data returned by a contour query
     def parse_query_data_contour(self, cursor, statistic, has_levels):
         global error, error_bool, n0, n_times, data
-
-        # redefine the data array to include the fields needed for contour plots
-        self.data = {
-            "x": [],
-            "y": [],
-            "z": [],
-            "n": [],
-            "text": [],
-            "xTextOutput": [],
-            "yTextOutput": [],
-            "zTextOutput": [],
-            "nTextOutput": [],
-            "minDateTextOutput": [],
-            "maxDateTextOutput": [],
-            "glob_stats": {},
-            "xmin": sys.float_info.max,
-            "xmax": -1 * sys.float_info.max,
-            "ymin": sys.float_info.max,
-            "ymax": -1 * sys.float_info.max,
-            "zmin": sys.float_info.max,
-            "zmax": -1 * sys.float_info.max,
-            "sum": 0
-        }
 
         curve_stat_lookup = {}
         curve_n_lookup = {}
@@ -627,19 +635,13 @@ class QueryUtil:
         self.data['zmin'] = min(min(z) for z in self.data['z'] if z != 'null' and z != 'NaN')
         self.data['zmax'] = max(max(z) for z in self.data['z'] if z != 'null' and z != 'NaN')
         self.data['sum'] = loop_sum
-
-        self.data['glob_stats'] = {
-            "mean": 0,
-            "minDate": 0,
-            "maxDate": 0,
-            "n": 0
-        }
         self.data['glob_stats']['mean'] = loop_sum / n_points
         self.data['glob_stats']['minDate'] = min(
             m for m in self.data['minDateTextOutput'] if m != 'null' and m != 'NaN')
         self.data['glob_stats']['maxDate'] = max(
             m for m in self.data['minDateTextOutput'] if m != 'null' and m != 'NaN')
         self.data['glob_stats']['n'] = n_points
+
 
     # function for querying the database and sending the returned data to the parser
     def query_db(self, cursor, statement, statistic, plot_type, has_levels, completeness_qc_param, vts):
@@ -682,6 +684,7 @@ class QueryUtil:
                      options.password != None and options.database != None and options.statement != None and \
                      options.statistic != None and options.plotType != None and options.hasLevels != None and \
                      options.completenessQCParam != None and options.vts != None
+
 
     # process 'c' style options - using getopt - usage describes options
     def get_options(self, args):
@@ -755,6 +758,7 @@ class QueryUtil:
             "vts": vts
         }
         return options
+
 
     def do_query(self, options):
         self.validate_options(options)
