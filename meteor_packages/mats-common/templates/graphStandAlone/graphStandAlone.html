@@ -19,25 +19,11 @@
             {{#each curves}}
                 <span style="color:{{color}};">--- </span><span style="font-size:small;">{{curveText}}</span>
                 <div id="curve-text-buttons-grp-{{this.label}}" class="btn-group btn-group-xs previewCurveButtons">
-                    <input type="button" class="curveVisibility btn btn-primary"
-                           value="{{hideButtonText}}" id="{{this.label}}-curve-show-hide"
-                           style="display:{{curveShowHideDisplay}};background-color: {{this.color}}">
-                    <input type="button" class="pointsVisibility btn btn-primary" value="{{pointsButtonText}}"
-                           id="{{this.label}}-curve-show-hide-points"
-                           style="display:{{pointsShowHideDisplay}};background-color: {{this.color}}">
-                    <input type="button" class="errorBarVisibility btn btn-primary"
-                           value="{{errorBarButtonText}}" id="{{this.label}}-curve-show-hide-errorbars"
-                           style="display:{{errorbarsShowHideDisplay}};background-color: {{this.color}}">
-                    <input type="button" class="barVisibility btn btn-primary"
-                           value="{{barChartButtonText}}" id="{{this.label}}-curve-show-hide-bars"
-                           style="display:{{barsShowHideDisplay}};background-color: {{this.color}}">
                     <input type="button" class="annotateVisibility btn btn-primary"
                            value="{{annotateButtonText}}" id="{{this.label}}-curve-show-hide-annotate"
                            style="border-radius: 5px; display:{{annotateShowHideDisplay}}; background-color: {{this.color}}">
-                    <input type="button" class="heatMapVisibility btn btn-primary"
-                           value="{{heatMapButtonText}}" id="{{this.label}}-curve-show-hide-heatmap"
-                           style="border-radius: 5px; display:{{heatMapShowHideDisplay}}; background-color: {{this.color}}">
                 </div>
+                <br>
             {{/each}}
             <hr/>
         </div>
